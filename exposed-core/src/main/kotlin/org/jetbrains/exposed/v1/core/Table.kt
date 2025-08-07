@@ -1030,7 +1030,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     @Deprecated(
         message = "This function will be removed in future releases.",
         replaceWith = ReplaceWith("autoIncrement(idSeqName)"),
-        level = DeprecationLevel.WARNING
+        level = DeprecationLevel.ERROR
     )
     fun <N : Any> Column<EntityID<N>>.autoinc(idSeqName: String? = null): Column<EntityID<N>> =
         cloneWithAutoInc(idSeqName).also { replaceColumn(this, it) }

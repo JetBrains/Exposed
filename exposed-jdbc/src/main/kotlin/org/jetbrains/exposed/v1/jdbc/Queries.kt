@@ -110,7 +110,7 @@ fun Table.deleteAll(): Int {
         "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-494/Inline-DSL-statement-and-query-functions) " +
         "with a use-case if a nullable condition cannot be replaced with the new `deleteReturning()` overloads.",
     ReplaceWith("deleteReturning(returning)"),
-    DeprecationLevel.WARNING
+    DeprecationLevel.ERROR
 )
 @JvmName("deleteReturningNullableParam")
 fun <T : Table> T.deleteReturning(
@@ -157,7 +157,7 @@ fun <T : Table> T.deleteReturning(
         "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-494/Inline-DSL-statement-and-query-functions) " +
         "with a use-case if a nullable condition cannot be replaced with the new `Join.delete()` overloads.",
     ReplaceWith("delete(targetTable, targetTables = targetTables, ignore, limit)"),
-    DeprecationLevel.WARNING
+    DeprecationLevel.ERROR
 )
 @JvmName("deleteJoinNullableParam")
 fun Join.delete(
@@ -517,7 +517,7 @@ private fun <E, S1 : BatchInsertStatement, S2 : BatchInsertBlockingExecutable<S1
         "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-494/Inline-DSL-statement-and-query-functions) " +
         "with a use-case if a nullable condition cannot be replaced with the new `update()` overloads.",
     ReplaceWith("update(limit = limit) { body.invoke() }"),
-    DeprecationLevel.WARNING
+    DeprecationLevel.ERROR
 )
 @JvmName("updateNullableParam")
 fun <T : Table> T.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: Int? = null, body: T.(UpdateStatement) -> Unit): Int {
@@ -567,7 +567,7 @@ fun <T : Table> T.update(
         "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-494/Inline-DSL-statement-and-query-functions) " +
         "with a use-case if a nullable condition cannot be replaced with the new `Join.update()` overloads.",
     ReplaceWith("update(limit = limit) { body.invoke() }"),
-    DeprecationLevel.WARNING
+    DeprecationLevel.ERROR
 )
 @JvmName("updateJoinNullableParam")
 fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: Int? = null, body: (UpdateStatement) -> Unit): Int {
@@ -611,7 +611,7 @@ fun Join.update(
         "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-494/Inline-DSL-statement-and-query-functions) " +
         "with a use-case if a nullable condition cannot be replaced with the new `updateReturning()` overloads.",
     ReplaceWith("updateReturning(returning) { body.invoke() }"),
-    DeprecationLevel.WARNING
+    DeprecationLevel.ERROR
 )
 @JvmName("updateReturningNullableParam")
 fun <T : Table> T.updateReturning(
@@ -797,7 +797,7 @@ private fun <T : Table, E> T.batchUpsert(
         "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-494/Inline-DSL-statement-and-query-functions) " +
         "with a use-case if a nullable condition cannot be replaced with the new `mergeFrom()` overloads.",
     ReplaceWith("mergeFrom(source) { body.invoke() }"),
-    DeprecationLevel.WARNING
+    DeprecationLevel.ERROR
 )
 @JvmName("mergeFromNullableParam")
 fun <D : Table, S : Table> D.mergeFrom(

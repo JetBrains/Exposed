@@ -205,7 +205,7 @@ open class Referrers<ParentID : Any, in Parent : Entity<ParentID>, ChildID : Any
 @Deprecated(
     message = "The OptionalReferrers class is a complete duplicate of the Referrers class; therefore, the latter should be used instead.",
     replaceWith = ReplaceWith("Referrers"),
-    level = DeprecationLevel.ERROR
+    level = DeprecationLevel.HIDDEN
 )
 class OptionalReferrers<ParentID : Any, in Parent : Entity<ParentID>, ChildID : Any, out Child : Entity<ChildID>, REF>(
     reference: Column<REF?>,
