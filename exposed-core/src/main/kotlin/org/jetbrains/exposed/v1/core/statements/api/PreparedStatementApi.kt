@@ -7,7 +7,6 @@ import java.math.MathContext
 import java.util.*
 
 /** Represents a precompiled SQL statement. */
-@Suppress("TooManyFunctions")
 interface PreparedStatementApi {
     /**
      * Sets the value for each column or expression in [args] into the appropriate statement parameter and
@@ -26,6 +25,7 @@ interface PreparedStatementApi {
             "Replace with the method `set(index, value, this)` that accepts a third argument for the IColumnType of the parameter value being bound.",
         level = DeprecationLevel.ERROR
     )
+    // another example of a pre-V1 method that was deprecated for V1, in 1.0.0-beta-3 specifically
     operator fun set(index: Int, value: Any) {
         set(index, value, VarCharColumnType())
     }

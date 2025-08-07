@@ -778,7 +778,7 @@ public final class org/jetbrains/exposed/v1/jdbc/transactions/ThreadLocalTransac
 	public final fun getThreadLocal ()Ljava/lang/ThreadLocal;
 	public final fun newTransaction (IZLorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;)Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
 	public static synthetic fun newTransaction$default (Lorg/jetbrains/exposed/v1/jdbc/transactions/ThreadLocalTransactionManager;IZLorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
-	public final synthetic fun setDefaultIsolationLevel (I)V
+	public final fun setDefaultIsolationLevel (I)V
 	public fun setDefaultMaxAttempts (I)V
 	public fun setDefaultMaxRetryDelay (J)V
 	public fun setDefaultMinRetryDelay (J)V

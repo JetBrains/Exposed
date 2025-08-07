@@ -23,7 +23,7 @@ open class UpsertStatement<Key : Any>(
 ) : InsertStatement<Key>(table), UpsertBuilder {
     @Deprecated(
         "This constructor with `onUpdate` that takes a List may be removed in future releases.",
-        level = DeprecationLevel.ERROR
+        level = DeprecationLevel.HIDDEN
     )
     constructor(
         table: Table,
@@ -37,7 +37,7 @@ open class UpsertStatement<Key : Any>(
         }
     }
 
-    @Deprecated("This property will be removed in future releases.", level = DeprecationLevel.ERROR)
+    @Deprecated("This property will be removed in future releases.", level = DeprecationLevel.HIDDEN)
     var onUpdate: List<Pair<Column<*>, Expression<*>>>? = null
         private set
 
