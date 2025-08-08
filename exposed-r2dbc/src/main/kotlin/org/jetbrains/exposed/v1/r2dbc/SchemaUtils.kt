@@ -3,7 +3,9 @@ package org.jetbrains.exposed.v1.r2dbc
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.vendors.currentDialectMetadata
@@ -95,13 +97,21 @@ object SchemaUtils : SchemaUtilityApi() {
 
         val dbSupportsAlterTableWithAddColumn = TransactionManager.current().db.supportsAlterTableWithAddColumn
 
+        val isIncorrectType = { columnMetadata: ColumnMetadata, column: Column<*> ->
+            // TODO remove run blocking with after introduction of synchronous metadata in r2dbc
+            runBlocking {
+                !TransactionManager.current().db.metadata { areEquivalentColumnTypes(columnMetadata.sqlType, columnMetadata.jdbcType, column.columnType.sqlType()) }
+            }
+        }
+
         @OptIn(InternalApi::class)
         for (table in tables) {
             table.mapMissingColumnStatementsTo(
                 statements,
                 existingTablesColumns[table].orEmpty(),
                 existingPrimaryKeys[table],
-                dbSupportsAlterTableWithAddColumn
+                dbSupportsAlterTableWithAddColumn,
+                isIncorrectType
             )
         }
 

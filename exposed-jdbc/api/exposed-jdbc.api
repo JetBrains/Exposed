@@ -13,6 +13,7 @@ public final class org/jetbrains/exposed/v1/jdbc/Database : org/jetbrains/expose
 	public fun getUrl ()Ljava/lang/String;
 	public fun getVendor ()Ljava/lang/String;
 	public fun getVersion ()Lorg/jetbrains/exposed/v1/core/Version;
+	public final fun metadata (Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/v1/jdbc/Database$Companion {

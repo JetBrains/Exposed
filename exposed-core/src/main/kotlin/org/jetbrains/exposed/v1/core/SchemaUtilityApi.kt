@@ -57,7 +57,8 @@ abstract class SchemaUtilityApi {
         destination: C,
         existingColumns: List<ColumnMetadata>,
         existingPrimaryKey: PrimaryKeyMetadata?,
-        alterTableAddColumnSupported: Boolean
+        alterTableAddColumnSupported: Boolean,
+        isIncorrectType: (columnMetadata: ColumnMetadata, column: Column<*>) -> Boolean
     ): C {
         // create columns
         val existingTableColumns = columns.mapNotNull { column ->
@@ -73,7 +74,7 @@ abstract class SchemaUtilityApi {
             }.forEach { destination.addAll(it.createStatement()) }
             // sync existing columns
             existingTableColumns
-                .mapColumnDiffs()
+                .mapColumnDiffs(isIncorrectType)
                 .flatMapTo(destination) { (col, changedState) ->
                     col.modifyStatements(changedState)
                 }
@@ -273,7 +274,9 @@ abstract class SchemaUtilityApi {
     }
 
     @OptIn(InternalApi::class)
-    private fun Map<Column<*>, ColumnMetadata>.mapColumnDiffs(): Map<Column<*>, ColumnDiff> {
+    private fun Map<Column<*>, ColumnMetadata>.mapColumnDiffs(
+        isColumnTypeIncorrect: (columnMetadata: ColumnMetadata, column: Column<*>) -> Boolean
+    ): Map<Column<*>, ColumnDiff> {
         val dialect = currentDialect
         return mapValues { (col, existingCol) ->
             val columnType = col.columnType
@@ -283,7 +286,11 @@ abstract class SchemaUtilityApi {
             } else {
                 columnType.nullable
             }
-            val incorrectType = if (currentDialect.supportsColumnTypeChange) isIncorrectType(existingCol, col) else false
+            val incorrectType = if (currentDialect.supportsColumnTypeChange) {
+                isColumnTypeIncorrect(existingCol, col)
+            } else {
+                false
+            }
             val incorrectNullability = existingCol.nullable != colNullable
             val incorrectAutoInc = isIncorrectAutoInc(existingCol, col)
             // 'isDatabaseGenerated' property means that the column has generation of the value on the database side,
@@ -303,10 +310,6 @@ abstract class SchemaUtilityApi {
                 incorrectSizeOrScale
             )
         }.filterValues { it.hasDifferences() }
-    }
-
-    private fun isIncorrectType(columnMetadata: ColumnMetadata, column: Column<*>): Boolean {
-        return !currentDialect.areEquivalentColumnTypes(columnMetadata.sqlType, columnMetadata.jdbcType, column.columnType.sqlType())
     }
 
     private fun isIncorrectAutoInc(existingColumn: ColumnMetadata, column: Column<*>): Boolean {

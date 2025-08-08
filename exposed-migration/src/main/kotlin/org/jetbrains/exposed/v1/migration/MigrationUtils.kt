@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.migration
 
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.jdbc.exists
@@ -109,6 +110,7 @@ object MigrationUtils : MigrationUtilityApi() {
         } + alters
     }
 
+    @OptIn(InternalApi::class)
     private fun addMissingAndDropUnmappedColumns(vararg tables: Table, withLogs: Boolean = true): List<String> {
         if (tables.isEmpty()) return emptyList()
         val statements = ArrayList<String>()
@@ -125,10 +127,15 @@ object MigrationUtils : MigrationUtilityApi() {
         val tr = TransactionManager.current()
         val dbSupportsAlterTableWithAddColumn = tr.db.supportsAlterTableWithAddColumn
         val dbSupportsAlterTableWithDropColumn = tr.db.supportsAlterTableWithDropColumn
+
+        val isIncorrectType = { columnMetadata: ColumnMetadata, column: Column<*> ->
+            !TransactionManager.current().db.metadata { areEquivalentColumnTypes(columnMetadata.sqlType, columnMetadata.jdbcType, column.columnType.sqlType()) }
+        }
+
         @OptIn(InternalApi::class)
         for (table in tables) {
             table.mapMissingColumnStatementsTo(
-                statements, existingTablesColumns[table].orEmpty(), existingPrimaryKeys[table], dbSupportsAlterTableWithAddColumn
+                statements, existingTablesColumns[table].orEmpty(), existingPrimaryKeys[table], dbSupportsAlterTableWithAddColumn, isIncorrectType
             )
         }
         @OptIn(InternalApi::class)
