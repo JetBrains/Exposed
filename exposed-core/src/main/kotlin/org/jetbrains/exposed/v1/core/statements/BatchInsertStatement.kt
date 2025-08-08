@@ -17,7 +17,6 @@ class BatchDataInconsistentException(message: String) : Exception(message)
  * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs)
  * should be returned. See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
  */
-@Suppress("ForbiddenComment")
 open class BatchInsertStatement(
     table: Table,
     ignore: Boolean = false,

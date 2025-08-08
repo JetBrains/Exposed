@@ -16,7 +16,6 @@ import org.jetbrains.exposed.v1.exceptions.throwUnsupportedException
  * @param limit Maximum number of rows to delete.
  * @param targetTables List of specific tables from [targetsSet] to delete rows from.
  */
-@Suppress("ForbiddenComment", "AnnotationSpacing")
 open class DeleteStatement(
     val targetsSet: ColumnSet,
     val where: Op<Boolean>? = null,
@@ -27,7 +26,7 @@ open class DeleteStatement(
     @Deprecated(
         "This constructor will be removed in future releases.",
         ReplaceWith("DeleteStatement(targetsSet = table, where, isIgnore, limit, emptyList())"),
-        DeprecationLevel.ERROR
+        DeprecationLevel.HIDDEN
     )
     @Suppress("UnusedPrivateProperty")
     constructor(
@@ -42,7 +41,7 @@ open class DeleteStatement(
         "This property will be removed in future releases and replaced with a property that stores a `ColumnSet`," +
             "which may be a `Table` or a `Join`. To access the table(s) to which the columns belong, use `ColumnSet.targetTables()`",
         ReplaceWith("targetsSet"),
-        DeprecationLevel.ERROR
+        DeprecationLevel.HIDDEN
     )
     val table: Table = targets.first()
 
@@ -50,7 +49,7 @@ open class DeleteStatement(
         "This property is not being used and will be removed in future releases. Please leave a comment on " +
             "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-550/DeleteStatement-holds-unused-offset-property) " +
             "with a use-case if your database supports the OFFSET clause in a DELETE statement.",
-        level = DeprecationLevel.ERROR
+        level = DeprecationLevel.HIDDEN
     )
     val offset: Long? = null
 
@@ -94,6 +93,7 @@ open class DeleteStatement(
                     `buildStatement { table.deleteWhere(limit, { op }) }.toExecutable().execute(transaction) ?: 0`
             """,
             level = DeprecationLevel.ERROR
+            // comment just to confirm whether this deprecation from 1.0.0-beta-1 (& 1 below) should remain in RC
         )
         fun where(transaction: Transaction, table: Table, op: Op<Boolean>, isIgnore: Boolean = false, limit: Int? = null): Int = 0
 

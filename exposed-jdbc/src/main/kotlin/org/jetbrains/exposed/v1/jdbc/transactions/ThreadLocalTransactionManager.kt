@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.v1.jdbc.transactions
 
-import org.jetbrains.annotations.TestOnly
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
 import org.jetbrains.exposed.v1.core.transactions.TransactionInterface
@@ -9,6 +8,7 @@ import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.statements.api.ExposedConnection
 
+// another example of a pre-V1 api that was deprecated for V1, in 1.0.0-beta-1 specifically
 @Deprecated(
     message = "This class will be removed entirely in future releases.",
     replaceWith = ReplaceWith("TransactionManager"),
@@ -44,10 +44,6 @@ class ThreadLocalTransactionManager(
             }
             return field
         }
-
-        @Deprecated("Use DatabaseConfig to define the defaultIsolationLevel", level = DeprecationLevel.HIDDEN)
-        @TestOnly
-        set
 
     private var loadDataSourceIsolationLevel = false
 
