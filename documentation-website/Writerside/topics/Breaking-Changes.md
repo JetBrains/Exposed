@@ -6,6 +6,10 @@
   as per the JDBC variant, but it always returned a value of zero due to the nature of R2DBC result processing. If you wish to still retrieve the affected
   row count manually after calling `executeUpdate()` (and have no further need of the statement results after), this can be achieved by calling
   `R2dbcPreparedStatementApi.getResultRow()?.rowsUpdated()?.singleOrNull()`.
+* We refactored the datetime modules by extracting common logic to the core module, where each datetime column type now extends a base class (e.g.,
+  `JavaLocalDateColumnType` extends `LocalDateColumnType`, `JavaLocalDateTimeColumnType` extends `LocalDateTimeColumnType`, etc.), split the `DateColumnType` from
+  `exposed-jodatime` into `JodaLocalDateColumnType` (formerly `time: false`) and `JodaLocalDateTimeColumnType` (formerly `time: true`), and renamed
+  `LocalTimeColumnType` to `JodaLocalTimeColumnType`.
 
 ## 1.0.0-beta-5
 
