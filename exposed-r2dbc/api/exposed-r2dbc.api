@@ -297,6 +297,7 @@ public class org/jetbrains/exposed/v1/r2dbc/R2dbcTransaction : org/jetbrains/exp
 	public static synthetic fun exec$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Ljava/lang/Iterable;Lorg/jetbrains/exposed/v1/core/statements/StatementType;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun exec$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Ljava/lang/Iterable;Lorg/jetbrains/exposed/v1/core/statements/StatementType;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun execInBatch (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun execQuery (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable;Lkotlin/jvm/functions/Function3;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getConnection ()Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposedConnection;
 	public final fun getCurrentStatement ()Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;
 	public synthetic fun getDb ()Lorg/jetbrains/exposed/v1/core/DatabaseApi;

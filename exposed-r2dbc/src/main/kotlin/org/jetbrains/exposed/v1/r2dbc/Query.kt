@@ -264,7 +264,7 @@ open class Query(
         } else {
             try {
                 count = true
-                val rs = transaction.exec(this) as R2dbcResult
+                val rs = transaction.execQuery(this)
                 rs.mapRows { (it.getObject(1) as? Number)?.toLong() }.single()
                     ?: error("The query did not return a single count result. Please check the SQL logs.")
             } catch (cause: R2dbcException) {
@@ -284,7 +284,7 @@ open class Query(
         val oldLimit = limit
         try {
             if (!isForUpdate()) limit = 1
-            val rs = transaction.exec(this) as R2dbcResult
+            val rs = transaction.execQuery(this)
             return rs.mapRows { }.firstOrNull() == null
         } catch (cause: R2dbcException) {
             throw ExposedR2dbcException(cause, this.getContexts(), TransactionManager.current())
@@ -316,7 +316,7 @@ open class Query(
             .mapIndexed { index, expression -> expression to index }
             .toMap()
         val tx = TransactionManager.current()
-        val rs = tx.exec(queryToExecute)!! as R2dbcResult
+        val rs = tx.execQuery(queryToExecute)
 
         try {
             rs.mapRows {

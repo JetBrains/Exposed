@@ -24,7 +24,7 @@ open class ReturningSuspendExecutable(
     override suspend fun collect(collector: FlowCollector<ResultRow>) {
         val fieldIndex = statement.returningExpressions.withIndex()
             .associateBy({ it.value }, { it.index })
-        val rs = TransactionManager.current().exec(this)!!
+        val rs = TransactionManager.current().execQuery(this)
         try {
             rs.mapRows {
                 ResultRow.create(it, fieldIndex)

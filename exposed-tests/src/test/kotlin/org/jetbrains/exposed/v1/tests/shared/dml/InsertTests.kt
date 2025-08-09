@@ -17,7 +17,7 @@ import org.jetbrains.exposed.v1.datetime.XCurrentTimestamp
 import org.jetbrains.exposed.v1.datetime.timestamp
 import org.jetbrains.exposed.v1.datetime.xTimestamp
 import org.jetbrains.exposed.v1.jdbc.*
-import org.jetbrains.exposed.v1.jdbc.statements.BatchInsertBlockingExecutable
+import org.jetbrains.exposed.v1.jdbc.statements.toExecutable
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
@@ -635,9 +635,7 @@ class InsertTests : DatabaseTestsBase() {
         withTables(excludeSettings = insertIgnoreUnsupportedDB, tab) {
             tab.insert { it[id] = "foo" }
 
-            val executable = BatchInsertBlockingExecutable(
-                BatchInsertOnConflictDoNothing(tab)
-            )
+            val executable = BatchInsertOnConflictDoNothing(tab).toExecutable()
             val numInserted = executable.run {
                 statement.addBatch()
                 statement[tab.id] = "foo"

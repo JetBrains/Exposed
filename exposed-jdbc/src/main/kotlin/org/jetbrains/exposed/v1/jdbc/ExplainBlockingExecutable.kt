@@ -22,8 +22,8 @@ open class ExplainBlockingExecutable(
     override fun JdbcPreparedStatementApi.executeInternal(transaction: JdbcTransaction): JdbcResult = executeQuery()
 
     override fun iterator(): Iterator<ExplainResultRow> {
-        val rs = TransactionManager.current().exec(this)!! as JdbcResult
-        val resultIterator = ResultIterator(rs.result)
+        val rs = TransactionManager.current().execQuery(this)
+        val resultIterator = ResultIterator(rs)
         return Iterable { resultIterator }.iterator()
     }
 

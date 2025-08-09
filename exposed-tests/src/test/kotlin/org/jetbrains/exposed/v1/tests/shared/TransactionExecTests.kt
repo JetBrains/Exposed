@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.tests.shared
 
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.autoIncColumnType
 import org.jetbrains.exposed.v1.core.statements.StatementType
@@ -9,6 +10,7 @@ import org.jetbrains.exposed.v1.core.statements.buildStatement
 import org.jetbrains.exposed.v1.core.upperCase
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.statements.jdbc.JdbcResult
 import org.jetbrains.exposed.v1.jdbc.statements.toExecutable
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -223,6 +225,54 @@ class TransactionExecTests : DatabaseTestsBase() {
             val rowsDeleted = exec(deleteAllUserData.toExecutable())
             assertEquals(initialUserDataCount, rowsDeleted?.toLong())
             assertEquals(0, userData.selectAll().count())
+        }
+    }
+
+    @Test
+    fun testExecWithQueryInstance() {
+        withTables(ExecTable) {
+            addLogger(StdOutSqlLogger)
+            val selectQuery = ExecTable.select(ExecTable.amount).where { ExecTable.amount less 100 }
+
+            val amounts = (90..99).toList()
+            ExecTable.batchInsert(amounts, shouldReturnGeneratedValues = false) { amount ->
+                this[ExecTable.id] = (amount % 10 + 1)
+                this[ExecTable.amount] = amount
+            }
+
+            val expectedSum = amounts.sum()
+
+            // using broader exec(BlockingExecutable) with JdbcResult wrapper
+            val result1 = exec(selectQuery) {
+                it as JdbcResult
+                var sum = 0
+                while (it.next()) {
+                    sum += it.getObject(1, java.lang.Integer::class.java)?.toInt() ?: 0
+                }
+                sum
+            }
+            assertEquals(expectedSum, result1)
+
+            // using broader exec(BlockingExecutable) with wrapped ResultSet directly
+            val result2 = exec(selectQuery) {
+                val result = (it as JdbcResult).result
+                var sum = 0
+                while (result.next()) {
+                    sum += result.getInt(1)
+                }
+                sum
+            }
+            assertEquals(expectedSum, result2)
+
+            // using typed exec(AbstractQuery) that exposes ResultSet directly
+            val result3 = execQuery(selectQuery) {
+                var sum = 0
+                while (it.next()) {
+                    sum += it.getInt(1)
+                }
+                sum
+            }
+            assertEquals(expectedSum, result3)
         }
     }
 }
