@@ -13,6 +13,9 @@
             exposed-logo.svg
         </custom-favicons>
         <analytics-head-script-file>google-search.html</analytics-head-script-file>
+        <feedback-url>https://forms-service.jetbrains.com/feedback</feedback-url>
+        <feedback-enabled>true</feedback-enabled>
+        <feedback-widget>true</feedback-widget>
     </variables>
     <build-profile instance="hi">
         <variables>
