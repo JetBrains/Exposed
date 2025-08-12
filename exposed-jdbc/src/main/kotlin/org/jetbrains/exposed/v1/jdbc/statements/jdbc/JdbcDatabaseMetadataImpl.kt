@@ -4,6 +4,7 @@ import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.api.ExposedMetadataUtils
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
+import org.jetbrains.exposed.v1.core.statements.api.areEquivalentColumnTypesInternal
 import org.jetbrains.exposed.v1.core.utils.CachableMapWithDefault
 import org.jetbrains.exposed.v1.core.utils.CacheWithDefault
 import org.jetbrains.exposed.v1.core.vendors.*
@@ -567,6 +568,10 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     override fun cleanCache() {
         existingIndicesCache.clear()
     }
+
+    @OptIn(InternalApi::class)
+    override fun areEquivalentColumnTypes(columnMetadataSqlType: String, columnMetadataType: Int, columnType: String) =
+        areEquivalentColumnTypesInternal(columnMetadataSqlType, columnMetadataType, columnType)
 
     private fun <T> lazyMetadata(body: DatabaseMetaData.() -> T) = lazy { metadata.body() }
 

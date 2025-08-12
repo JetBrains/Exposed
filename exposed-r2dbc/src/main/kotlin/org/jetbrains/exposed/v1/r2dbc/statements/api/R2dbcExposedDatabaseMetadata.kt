@@ -98,4 +98,6 @@ abstract class R2dbcExposedDatabaseMetadata(database: String) : ExposedDatabaseM
      * with the table name used as the key.
      */
     abstract suspend fun tableConstraints(tables: List<Table>): Map<String, List<ForeignKeyConstraint>>
+
+    abstract suspend fun areEquivalentColumnTypes(columnMetadataSqlType: String, columnMetadataType: Int, columnType: String): Boolean
 }

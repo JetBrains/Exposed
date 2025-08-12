@@ -3503,12 +3503,15 @@ public final class org/jetbrains/exposed/v1/core/statements/api/ExposedBlob {
 
 public abstract class org/jetbrains/exposed/v1/core/statements/api/ExposedDatabaseMetadata {
 	public fun <init> (Ljava/lang/String;)V
-	public final fun areEquivalentColumnTypes (Ljava/lang/String;ILjava/lang/String;)Z
 	public abstract fun cleanCache ()V
 	public final fun getDatabase ()Ljava/lang/String;
 	public abstract fun getIdentifierManager ()Lorg/jetbrains/exposed/v1/core/statements/api/IdentifierManagerApi;
 	public abstract fun resetCurrentScheme ()V
 	public abstract fun resolveReferenceOption (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/ReferenceOption;
+}
+
+public final class org/jetbrains/exposed/v1/core/statements/api/ExposedDatabaseMetadataKt {
+	public static final fun areEquivalentColumnTypesInternal (Ljava/lang/String;ILjava/lang/String;)Z
 }
 
 public final class org/jetbrains/exposed/v1/core/statements/api/ExposedMetadataUtils {

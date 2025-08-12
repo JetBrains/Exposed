@@ -11,6 +11,7 @@ import kotlinx.coroutines.reactive.collect
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.api.ExposedMetadataUtils
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
+import org.jetbrains.exposed.v1.core.statements.api.areEquivalentColumnTypesInternal
 import org.jetbrains.exposed.v1.core.utils.CachableMapWithSuspendableDefault
 import org.jetbrains.exposed.v1.core.utils.CacheWithSuspendableDefault
 import org.jetbrains.exposed.v1.core.vendors.*
@@ -367,6 +368,10 @@ class R2dbcDatabaseMetadataImpl(
                 .map { it.reduce(ForeignKeyConstraint::plus) }
         }
     }
+
+    @OptIn(InternalApi::class)
+    override suspend fun areEquivalentColumnTypes(columnMetadataSqlType: String, columnMetadataType: Int, columnType: String) =
+        areEquivalentColumnTypesInternal(columnMetadataSqlType, columnMetadataType, columnType)
 
     private fun Row.extractForeignKeys(
         allTables: Map<String, Table>,
