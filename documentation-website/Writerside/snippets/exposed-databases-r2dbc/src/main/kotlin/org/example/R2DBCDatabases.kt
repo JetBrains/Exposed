@@ -1,6 +1,5 @@
 package org.example
 
-import io.r2dbc.spi.ConnectionFactoryOptions
 import io.r2dbc.spi.IsolationLevel
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 
@@ -29,12 +28,9 @@ class R2DBCDatabases {
     fun getMySQLDB(): R2dbcDatabase {
         val mysqldb = R2dbcDatabase.connect(
             "r2dbc:mysql://localhost:3306/test",
-            databaseConfig = {
-                connectionFactoryOptions {
-                    option(ConnectionFactoryOptions.USER, "user")
-                    option(ConnectionFactoryOptions.PASSWORD, "password")
-                }
-            }
+            driver = "mysql",
+            user = "user",
+            password = "password"
         )
         return mysqldb
     }
@@ -42,12 +38,9 @@ class R2DBCDatabases {
     fun getOracleDB(): R2dbcDatabase {
         val oracledb = R2dbcDatabase.connect(
             "r2dbc:oracle://localhost:3306/test",
-            databaseConfig = {
-                connectionFactoryOptions {
-                    option(ConnectionFactoryOptions.USER, "user")
-                    option(ConnectionFactoryOptions.PASSWORD, "password")
-                }
-            }
+            driver = "oracle",
+            user = "user",
+            password = "password"
         )
         return oracledb
     }
@@ -55,12 +48,9 @@ class R2DBCDatabases {
     fun getPostgreSQLDB(): R2dbcDatabase {
         val postgresqldb = R2dbcDatabase.connect(
             url = "r2dbc:postgresql://db:5432/test",
-            databaseConfig = {
-                connectionFactoryOptions {
-                    option(ConnectionFactoryOptions.USER, "user")
-                    option(ConnectionFactoryOptions.PASSWORD, "password")
-                }
-            }
+            driver = "postgres",
+            user = "user",
+            password = "password"
         )
         return postgresqldb
     }
@@ -68,12 +58,9 @@ class R2DBCDatabases {
     fun getMariaDB(): R2dbcDatabase {
         val mariadb = R2dbcDatabase.connect(
             "r2dbc:mariadb://localhost:3306/test",
-            databaseConfig = {
-                connectionFactoryOptions {
-                    option(ConnectionFactoryOptions.USER, "root")
-                    option(ConnectionFactoryOptions.PASSWORD, "your_pwd")
-                }
-            }
+            driver = "mariadb",
+            user = "root",
+            password = "your_pwd"
         )
         return mariadb
     }
@@ -81,12 +68,9 @@ class R2DBCDatabases {
     fun getSQLServerDB(): R2dbcDatabase {
         val sqlserverdb = R2dbcDatabase.connect(
             "r2dbc:mssql://localhost:32768;databaseName=test",
-            databaseConfig = {
-                connectionFactoryOptions {
-                    option(ConnectionFactoryOptions.USER, "user")
-                    option(ConnectionFactoryOptions.PASSWORD, "password")
-                }
-            }
+            driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver",
+            user = "user",
+            password = "password"
         )
         return sqlserverdb
     }

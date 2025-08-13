@@ -36,7 +36,6 @@ dependencies {
     implementation(libs.r2dbc.mysql)
     implementation(libs.slf4j)
     implementation(libs.jackson.kotlin)
-    implementation(libs.postgresql)
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
