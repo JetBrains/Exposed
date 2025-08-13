@@ -48,7 +48,7 @@ class R2DBCDatabases {
     fun getPostgreSQLDB(): R2dbcDatabase {
         val postgresqldb = R2dbcDatabase.connect(
             url = "r2dbc:postgresql://db:5432/test",
-            driver = "postgres",
+            driver = "postgresql",
             user = "user",
             password = "password"
         )
@@ -68,7 +68,7 @@ class R2DBCDatabases {
     fun getSQLServerDB(): R2dbcDatabase {
         val sqlserverdb = R2dbcDatabase.connect(
             "r2dbc:mssql://localhost:32768;databaseName=test",
-            driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver",
+            driver = "sqlserver",
             user = "user",
             password = "password"
         )
