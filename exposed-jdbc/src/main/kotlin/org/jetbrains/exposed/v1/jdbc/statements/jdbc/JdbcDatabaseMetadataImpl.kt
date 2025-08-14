@@ -520,7 +520,6 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         )
     }
 
-    @OptIn(InternalApi::class)
     override fun resolveReferenceOption(refOption: String): ReferenceOption? {
         val dialect = currentDialect
 
