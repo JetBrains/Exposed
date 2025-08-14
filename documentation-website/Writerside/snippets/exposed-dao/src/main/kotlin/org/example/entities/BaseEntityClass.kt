@@ -1,6 +1,5 @@
 package org.example.entities
 
-import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -8,6 +7,8 @@ import org.example.tables.BaseTable
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.exposedLogger
 import org.jetbrains.exposed.v1.dao.*
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 abstract class BaseEntityClass<out E : BaseEntity>(
     table: BaseTable
@@ -30,6 +31,7 @@ abstract class BaseEntityClass<out E : BaseEntity>(
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     private fun nowUTC() = Clock.System.now().toLocalDateTime(TimeZone.UTC)
 
     private fun logChange(entity: E?, type: EntityChangeType, dateTime: LocalDateTime? = null) {
