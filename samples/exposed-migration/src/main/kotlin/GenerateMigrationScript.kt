@@ -1,8 +1,9 @@
 @file:OptIn(ExperimentalDatabaseMigrationApi::class)
 
-import org.jetbrains.exposed.v1.Database
-import org.jetbrains.exposed.v1.ExperimentalDatabaseMigrationApi
-import org.jetbrains.exposed.v1.transactions.transaction
+import org.jetbrains.exposed.v1.core.ExperimentalDatabaseMigrationApi
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.migration.MigrationUtils
 
 const val URL = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"
 const val USER = "root"

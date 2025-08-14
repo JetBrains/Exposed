@@ -2,11 +2,11 @@
 
 package org.jetbrains.exposed.samples.r2dbc.domain.issue
 
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.samples.r2dbc.domain.comment.Comment
 import org.jetbrains.exposed.samples.r2dbc.domain.project.ProjectId
 import org.jetbrains.exposed.samples.r2dbc.domain.user.UserId
+import kotlin.time.Instant
 
 @Serializable
 data class Issue(

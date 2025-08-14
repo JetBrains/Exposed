@@ -1,7 +1,7 @@
 import org.flywaydb.core.Flyway
-import org.jetbrains.exposed.v1.core.vendors.currentDialect
-import org.jetbrains.exposed.v1.insert
-import org.jetbrains.exposed.v1.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.vendors.currentDialectMetadata
 import java.util.*
 
 fun main() {
@@ -15,7 +15,7 @@ fun main() {
 
     transaction(database) {
         println("*** Before migration ***")
-        println("Primary key: ${currentDialect.existingPrimaryKeys(Users)[Users]}")
+        println("Primary key: ${currentDialectMetadata.existingPrimaryKeys(Users)[Users]}")
 
         generateMigrationScript()
     }
@@ -27,7 +27,7 @@ fun main() {
 
     transaction(database) {
         println("*** After migration ***")
-        println("Primary key: ${currentDialect.existingPrimaryKeys(Users)[Users]}")
+        println("Primary key: ${currentDialectMetadata.existingPrimaryKeys(Users)[Users]}")
 
         Users.insert {
             it[id] = UUID.randomUUID()
