@@ -359,6 +359,10 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     override fun dropDatabase(name: String) = "DROP SCHEMA IF EXISTS ${name.inProperCase()}"
 
     @Suppress("CyclomaticComplexMethod")
+    @Deprecated(
+        "This method was moved to ExposedDatabaseMetadata and should not be used anymore from here.",
+        ReplaceWith("TransactionManager.current().db.metadata { areEquivalentColumnTypes() }")
+    )
     override fun areEquivalentColumnTypes(columnMetadataSqlType: String, columnMetadataJdbcType: Int, columnType: String): Boolean {
         if (super.areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataJdbcType, columnType)) {
             return true

@@ -27,7 +27,8 @@ class Database private constructor(
     config: DatabaseConfig,
     val connector: () -> ExposedConnection<*>
 ) : DatabaseApi(resolvedVendor, config) {
-    internal fun <T> metadata(body: JdbcExposedDatabaseMetadata.() -> T): T {
+    @InternalApi
+    fun <T> metadata(body: JdbcExposedDatabaseMetadata.() -> T): T {
         val transaction = TransactionManager.currentOrNull()
         return if (transaction == null) {
             val connection = connector()
@@ -41,8 +42,10 @@ class Database private constructor(
         }
     }
 
+    @OptIn(InternalApi::class)
     override val url: String by lazy { metadata { url } }
 
+    @OptIn(InternalApi::class)
     override val vendor: String by lazy {
         resolvedVendor ?: metadata { databaseDialectName }
     }
@@ -62,24 +65,31 @@ class Database private constructor(
             ?: error("No dialect metadata registered for $name. URL=$url")
     }
 
+    @OptIn(InternalApi::class)
     override val dialectMode: String? by lazy { metadata { databaseDialectMode } }
 
+    @OptIn(InternalApi::class)
     override val version: Version by lazy { metadata { Version.from(version) } }
 
+    @OptIn(InternalApi::class)
     override val fullVersion: String by lazy { metadata { databaseProductVersion } }
 
+    @OptIn(InternalApi::class)
     override val supportsAlterTableWithAddColumn: Boolean by lazy(
         LazyThreadSafetyMode.NONE
     ) { metadata { supportsAlterTableWithAddColumn } }
 
+    @OptIn(InternalApi::class)
     override val supportsAlterTableWithDropColumn: Boolean by lazy(
         LazyThreadSafetyMode.NONE
     ) { metadata { supportsAlterTableWithDropColumn } }
 
+    @OptIn(InternalApi::class)
     override val supportsMultipleResultSets: Boolean by lazy(
         LazyThreadSafetyMode.NONE
     ) { metadata { supportsMultipleResultSets } }
 
+    @OptIn(InternalApi::class)
     override val identifierManager: IdentifierManagerApi by lazy { metadata { identifierManager } }
 
     /** Whether [Database.connect] was invoked with a [DataSource] argument. */

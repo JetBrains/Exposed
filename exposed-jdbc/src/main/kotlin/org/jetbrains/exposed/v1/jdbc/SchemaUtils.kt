@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.jdbc
 
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
@@ -78,6 +79,7 @@ object SchemaUtils : SchemaUtilityApi() {
      * refer to the relevant documentation.
      * For SQLite, see [ALTER TABLE restrictions](https://www.sqlite.org/lang_altertable.html#alter_table_add_column).
      */
+    @OptIn(InternalApi::class)
     fun addMissingColumnsStatements(vararg tables: Table, withLogs: Boolean = true): List<String> {
         if (tables.isEmpty()) return emptyList()
 
@@ -95,13 +97,18 @@ object SchemaUtils : SchemaUtilityApi() {
 
         val dbSupportsAlterTableWithAddColumn = TransactionManager.current().db.supportsAlterTableWithAddColumn
 
+        val isIncorrectType = { columnMetadata: ColumnMetadata, column: Column<*> ->
+            !TransactionManager.current().db.metadata { areEquivalentColumnTypes(columnMetadata.sqlType, columnMetadata.jdbcType, column.columnType.sqlType()) }
+        }
+
         @OptIn(InternalApi::class)
         for (table in tables) {
             table.mapMissingColumnStatementsTo(
                 statements,
                 existingTablesColumns[table].orEmpty(),
                 existingPrimaryKeys[table],
-                dbSupportsAlterTableWithAddColumn
+                dbSupportsAlterTableWithAddColumn,
+                isIncorrectType
             )
         }
 

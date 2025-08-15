@@ -17,6 +17,7 @@ import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.datetime.*
 import org.jetbrains.exposed.v1.jdbc.exists
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.json.json
 import org.jetbrains.exposed.v1.json.jsonb
 import org.jetbrains.exposed.v1.migration.MigrationUtils
@@ -779,6 +780,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testNoColumnTypeChangeStatementsGenerated() {
         withDb(excludeSettings = columnTypeChangeUnsupportedDb) {
@@ -792,6 +794,8 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                 columnsMetadata.forEachIndexed { index, columnMetadataItem ->
                     val columnType = columns[index].columnType.sqlType()
                     val columnMetadataSqlType = columnMetadataItem.sqlType
+
+                    assertTrue(TransactionManager.current().db.metadata { areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataItem.jdbcType, columnType) })
                     assertTrue(currentDialectTest.areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataItem.jdbcType, columnType))
                 }
 
@@ -803,6 +807,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testCorrectColumnTypeChangeStatementsGenerated() {
         withDb(excludeSettings = columnTypeChangeUnsupportedDb) {
@@ -822,11 +827,13 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                     val oldColumnMetadataItem = columnsMetadata.single()
 
                     for (newColumn in columns) {
-                        if (currentDialectTest.areEquivalentColumnTypes(
-                                oldColumnMetadataItem.sqlType,
-                                oldColumnMetadataItem.jdbcType,
-                                newColumn.columnType.sqlType()
-                            )
+                        if (TransactionManager.current().db.metadata {
+                                areEquivalentColumnTypes(
+                                    oldColumnMetadataItem.sqlType,
+                                    oldColumnMetadataItem.jdbcType,
+                                    newColumn.columnType.sqlType()
+                                )
+                            }
                         ) {
                             continue
                         }
@@ -845,6 +852,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testNoColumnTypeChangeStatementsGeneratedForArrayColumnType() {
         withTables(TestDB.ALL - setOf(TestDB.H2_V2, TestDB.H2_V2_PSQL), arraysTester) {
@@ -855,6 +863,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             columnMetadata.forEachIndexed { index, columnMetadataItem ->
                 val columnType = columns[index].columnType.sqlType()
                 val columnMetadataSqlType = columnMetadataItem.sqlType
+                assertTrue(TransactionManager.current().db.metadata { areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataItem.jdbcType, columnType) })
                 assertTrue(currentDialectTest.areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataItem.jdbcType, columnType))
             }
             val statements = MigrationUtils.statementsRequiredForDatabaseMigration(arraysTester, withLogs = false)
@@ -862,6 +871,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testCorrectColumnTypeChangeStatementsGeneratedForArrayColumnType() {
         withDb(excludeSettings = TestDB.ALL - setOf(TestDB.H2_V2, TestDB.H2_V2_PSQL)) {
@@ -881,11 +891,13 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                     val oldColumnMetadataItem = columnsMetadata.single()
 
                     for (newColumn in columns) {
-                        if (currentDialectTest.areEquivalentColumnTypes(
-                                oldColumnMetadataItem.sqlType,
-                                oldColumnMetadataItem.jdbcType,
-                                newColumn.columnType.sqlType()
-                            )
+                        if (TransactionManager.current().db.metadata {
+                                areEquivalentColumnTypes(
+                                    oldColumnMetadataItem.sqlType,
+                                    oldColumnMetadataItem.jdbcType,
+                                    newColumn.columnType.sqlType()
+                                )
+                            }
                         ) {
                             continue
                         }
