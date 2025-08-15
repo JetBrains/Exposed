@@ -202,10 +202,9 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     /** Represents the major version number x.0.0 of the H2 Database. */
     enum class H2MajorVersion {
-        // another example of a pre-V1 api that was deprecated for V1, in 1.0.0-beta-5 specifically
         @Deprecated(
-            message = "This H2 database version is no longer supported and will be removed in future releases.",
-            level = DeprecationLevel.WARNING
+            message = "This H2 database version is no longer supported and will be removed in release 1.0.0.",
+            level = DeprecationLevel.ERROR
         )
         One,
 

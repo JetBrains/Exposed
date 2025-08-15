@@ -8,11 +8,10 @@ import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.statements.api.ExposedConnection
 
-// another example of a pre-V1 api that was deprecated for V1, in 1.0.0-beta-1 specifically
 @Deprecated(
-    message = "This class will be removed entirely in future releases.",
+    message = "This class will be removed entirely in release 1.0.0.",
     replaceWith = ReplaceWith("TransactionManager"),
-    level = DeprecationLevel.WARNING
+    level = DeprecationLevel.ERROR
 )
 class ThreadLocalTransactionManager(
     private val db: Database,

@@ -85,7 +85,7 @@ open class DeleteStatement(
         @Suppress("FunctionOnlyReturningConstant", "UnusedParameter")
         @Deprecated(
             message = """
-                Statement execution has been removed from exposed-core.
+                This method will be removed in release 1.0.0. Statement execution has been removed from exposed-core.
                 Replace directly with a table extension function:
                     `table.deleteWhere(limit) { op }` OR `table.deleteIgnoreWhere(limit) { op }`
 
@@ -93,14 +93,13 @@ open class DeleteStatement(
                     `buildStatement { table.deleteWhere(limit, { op }) }.toExecutable().execute(transaction) ?: 0`
             """,
             level = DeprecationLevel.ERROR
-            // comment just to confirm whether this deprecation from 1.0.0-beta-1 (& 1 below) should remain in RC
         )
         fun where(transaction: Transaction, table: Table, op: Op<Boolean>, isIgnore: Boolean = false, limit: Int? = null): Int = 0
 
         @Suppress("FunctionOnlyReturningConstant", "UnusedParameter")
         @Deprecated(
             message = """
-                Statement execution has been removed from exposed-core.
+                This method will be removed in release 1.0.0. Statement execution has been removed from exposed-core.
                 Replace directly with a table extension function or convert the expected statement to an instance of Executable:
                     `buildStatement { table.deleteAll() }.toExecutable().execute(transaction) ?: 0`
             """,

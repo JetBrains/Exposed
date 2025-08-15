@@ -6,6 +6,8 @@
   as per the JDBC variant, but it always returned a value of zero due to the nature of R2DBC result processing. If you wish to still retrieve the affected
   row count manually after calling `executeUpdate()` (and have no further need of the statement results after), this can be achieved by calling
   `R2dbcPreparedStatementApi.getResultRow()?.rowsUpdated()?.singleOrNull()`.
+* Levels of deprecated API have been bumped. See [PR #2588](https://github.com/JetBrains/Exposed/pull/2588) and
+  [Migration Guide](https://www.jetbrains.com/help/exposed/migration-guide-1-0-0.html) for full details.
 
 ## 1.0.0-beta-5
 
