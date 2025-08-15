@@ -1,197 +1,64 @@
 package org.jetbrains.exposed.v1.jodatime
 
 import org.jetbrains.exposed.v1.core.Column
-import org.jetbrains.exposed.v1.core.ColumnType
-import org.jetbrains.exposed.v1.core.IDateColumnType
+import org.jetbrains.exposed.v1.core.LocalDateColumnType
+import org.jetbrains.exposed.v1.core.LocalDateTimeColumnType
+import org.jetbrains.exposed.v1.core.LocalTimeColumnType
+import org.jetbrains.exposed.v1.core.OffsetDateTimeColumnType
 import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.core.statements.api.RowApi
-import org.jetbrains.exposed.v1.core.vendors.*
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
-import org.joda.time.Instant
 import org.joda.time.LocalTime
-import org.joda.time.format.DateTimeFormat
-import org.joda.time.format.DateTimeFormatter
-import org.joda.time.format.ISODateTimeFormat
-import java.sql.Timestamp
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
-import java.time.ZoneOffset.UTC
-import java.time.ZonedDateTime
-import java.time.temporal.ChronoField
-import java.util.*
+import java.time.ZoneId
+import java.time.ZoneOffset
 
-private val DEFAULT_DATE_STRING_FORMATTER by lazy { DateTimeFormat.forPattern("YYYY-MM-dd").withLocale(Locale.ROOT) }
-private val DEFAULT_DATE_TIME_STRING_FORMATTER by lazy { DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSS").withLocale(Locale.ROOT) }
-private val MYSQL_DATE_TIME_STRING_FORMATTER by lazy { DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss").withLocale(Locale.ROOT) }
-private val SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER by lazy { DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSS") }
-private val SQLITE_DATE_STRING_FORMATTER by lazy { ISODateTimeFormat.yearMonthDay() }
+class JodaLocalDateColumnType : LocalDateColumnType<DateTime>() {
+    override fun toLocalDate(value: DateTime): LocalDate {
+        return LocalDate.of(
+            value.year,
+            value.monthOfYear,
+            value.dayOfMonth
+        )
+    }
 
-// Example result: 2023-07-07 14:42:29.343+02:00 or 2023-07-07 12:42:29.343Z
-private val SQLITE_OFFSET_DATE_TIME_FORMATTER by lazy {
-    java.time.format.DateTimeFormatterBuilder()
-        .appendPattern("yyyy-MM-dd HH:mm:ss")
-        .optionalStart()
-        .appendPattern(".SSS")
-        .optionalEnd()
-        .optionalStart()
-        .appendPattern("XXX")
-        .optionalEnd()
-        .toFormatter()
-        .withLocale(Locale.ROOT)
+    override fun fromLocalDate(value: LocalDate): DateTime {
+        return DateTime(
+            value.year,
+            value.monthValue,
+            value.dayOfMonth,
+            0, 0
+        )
+    }
+
+    override fun valueFromDB(value: Any) = when (value) {
+        is DateTime -> value
+        else -> super.valueFromDB(value)
+    }
 }
-
-private val SQLITE_AND_MYSQL_DATE_TIME_WITH_TIME_ZONE_FORMATTER by lazy {
-    DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSSZZ").withLocale(Locale.ROOT)
-}
-
-private val ORACLE_DATE_TIME_WITH_TIME_ZONE_FORMATTER by lazy {
-    DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS ZZ").withLocale(Locale.ROOT)
-}
-
-private val DEFAULT_DATE_TIME_WITH_TIME_ZONE_FORMATTER by lazy {
-    ISODateTimeFormat.dateTime().withLocale(Locale.ROOT)
-}
-
-private val MYSQL_FRACTION_DATE_TIME_AS_DEFAULT_FORMATTER by lazy {
-    DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSSSSS").withLocale(Locale.ROOT)
-}
-
-private val ORACLE_TIME_STRING_FORMATTER by lazy {
-    DateTimeFormat.forPattern("1970-01-01 HH:mm:ss").withLocale(Locale.ROOT).withZone(DateTimeZone.UTC)
-}
-
-private val DEFAULT_TIME_STRING_FORMATTER_NOTZ by lazy {
-    DateTimeFormat.forPattern("HH:mm:ss").withLocale(Locale.ROOT)
-}
-
-private val DEFAULT_TIME_STRING_FORMATTER
-    get() = DEFAULT_TIME_STRING_FORMATTER_NOTZ.withZone(DateTimeZone.getDefault())
-
-private fun formatterForDateTimeString(date: String) = dateTimeWithFractionFormat(
-    date.substringAfterLast('.', "").length
-)
-
-private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
-    val baseFormat = "YYYY-MM-dd HH:mm:ss"
-    val newFormat = baseFormat + if (fraction in 1..9) ".${"S".repeat(fraction)}" else ""
-    return DateTimeFormat.forPattern(newFormat)
-}
-
-private fun oracleDateTimeLiteral(dateTime: DateTime) =
-    "TO_TIMESTAMP('${DEFAULT_DATE_TIME_STRING_FORMATTER.print(dateTime)}', 'YYYY-MM-DD HH24:MI:SS.FF3')"
-
-private fun oracleDateTimeWithTimezoneLiteral(dateTime: DateTime) =
-    "TO_TIMESTAMP_TZ('${ORACLE_DATE_TIME_WITH_TIME_ZONE_FORMATTER.print(dateTime)}', 'YYYY-MM-DD HH24:MI:SS.FF3 TZH:TZM')"
-
-private fun oracleDateLiteral(dateTime: DateTime) =
-    "TO_DATE('${DEFAULT_DATE_STRING_FORMATTER.print(dateTime)}', 'YYYY-MM-DD')"
 
 /**
  * Column for storing dates, as [DateTime]. If [time] is set to `true`, both date and time data is stored.
  *
  * @sample datetime
  */
-class DateColumnType(val time: Boolean) : ColumnType<DateTime>(), IDateColumnType {
-    override val hasTimePart: Boolean = time
-    override fun sqlType(): String = if (time) {
-        currentDialect.dataTypeProvider.dateTimeType()
-    } else {
-        currentDialect.dataTypeProvider.dateType()
+class JodaLocalDateTimeColumnType : LocalDateTimeColumnType<DateTime>() {
+    override fun toLocalDateTime(value: DateTime): LocalDateTime {
+        return value.toDate()
+            .toInstant()
+            .atZone(ZoneId.systemDefault())
+            .toLocalDateTime()
     }
 
-    override fun nonNullValueToString(value: DateTime): String {
-        return if (time) {
-            when {
-                currentDialect is OracleDialect -> oracleDateTimeLiteral(value.toDateTime(DateTimeZone.getDefault()))
-                (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == false ->
-                    "'${MYSQL_DATE_TIME_STRING_FORMATTER.print(value.toDateTime(DateTimeZone.getDefault()))}'"
-                else -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(value.toDateTime(DateTimeZone.getDefault()))}'"
-            }
-        } else {
-            if (currentDialect is OracleDialect) {
-                return oracleDateLiteral(value)
-            }
-            return "'${DEFAULT_DATE_STRING_FORMATTER.print(value)}'"
-        }
+    override fun fromLocalDateTime(value: LocalDateTime): DateTime {
+        return DateTime(value.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
     }
 
-    override fun valueFromDB(value: Any): DateTime? {
-        val dateTime = when (value) {
-            is DateTime -> value
-            is java.sql.Date -> DateTime(value.time)
-            is java.sql.Timestamp -> DateTime(value.time)
-            is Int -> DateTime(value.toLong())
-            is Long -> DateTime(value)
-            is String -> when {
-                time -> DateTime.parse(value, formatterForDateTimeString(value))
-                currentDialect is SQLiteDialect -> SQLITE_DATE_STRING_FORMATTER.parseDateTime(value)
-                else -> DEFAULT_DATE_STRING_FORMATTER.parseDateTime(value)
-            }
-            is java.time.LocalDateTime -> DateTime.parse(value.toString())
-            is OffsetDateTime -> valueFromDB(value.toLocalDateTime()) as DateTime
-            else -> valueFromDB(value.toString()) as DateTime
-        }
-        return when (time) {
-            true -> dateTime
-            false -> dateTime.withTimeAtStartOfDay()
-        }
-    }
-
-    override fun readObject(rs: RowApi, index: Int): Any? {
-        // Since MySQL ConnectorJ 8.0.23, driver returns LocalDateTime instead of String for DateTime columns.
-        val dialect = currentDialect
-        return when {
-            time && dialect is MysqlDialect -> {
-                rs.getObject(index, java.time.LocalDateTime::class.java, this)
-            }
-            time && dialect is OracleDialect -> rs.getObject(index, java.sql.Timestamp::class.java, this)
-            else -> super.readObject(rs, index)
-        }
-    }
-
-    override fun notNullValueToDB(value: DateTime): Any {
-        val dialect = currentDialect
-        return when {
-            time && dialect is SQLiteDialect -> SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.print(value)
-            time -> java.sql.Timestamp(value.millis)
-            dialect is SQLiteDialect -> DEFAULT_DATE_STRING_FORMATTER.print(value)
-            else -> java.sql.Date(value.millis)
-        }
-    }
-
-    override fun nonNullValueAsDefaultString(value: DateTime): String {
-        val dialect = currentDialect
-        return when {
-            dialect is PostgreSQLDialect -> {
-                if (time) {
-                    "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(value).trimEnd('0').trimEnd('.')}'::timestamp without time zone"
-                } else {
-                    "'${DEFAULT_DATE_STRING_FORMATTER.print(value)}'::date"
-                }
-            }
-            time && (dialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
-                "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(value).trimEnd('0').trimEnd('.')}'"
-            time && dialect is MysqlDialect && dialect.isFractionDateTimeSupported() -> {
-                "'${MYSQL_FRACTION_DATE_TIME_AS_DEFAULT_FORMATTER.print(value)}'"
-            }
-            else -> super.nonNullValueAsDefaultString(value)
-        }
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is DateColumnType) return false
-        if (!super.equals(other)) return false
-
-        if (time != other.time) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = super.hashCode()
-        result = 31 * result + time.hashCode()
-        return result
+    override fun valueFromDB(value: Any): DateTime? = when (value) {
+        is DateTime -> value
+        else -> super.valueFromDB(value)
     }
 }
 
@@ -200,59 +67,20 @@ class DateColumnType(val time: Boolean) : ColumnType<DateTime>(), IDateColumnTyp
  *
  * @sample time
  */
-class LocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
-    override val hasTimePart: Boolean = true
+class JodaLocalTimeColumnType : LocalTimeColumnType<LocalTime>() {
+    override fun toLocalTime(value: LocalTime): java.time.LocalTime = java.time.LocalTime.of(
+        value.hourOfDay,
+        value.minuteOfHour,
+        value.secondOfMinute
+    )
 
-    override fun sqlType(): String = currentDialect.dataTypeProvider.timeType()
-
-    override fun nonNullValueToString(value: LocalTime): String {
-        val dialect = currentDialect
-        if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
-            return "TIMESTAMP '${ORACLE_TIME_STRING_FORMATTER.print(value)}'"
-        }
-        return "'${DEFAULT_TIME_STRING_FORMATTER.print(value)}'"
-    }
-
-    override fun valueFromDB(value: Any): LocalTime? = when (value) {
-        is LocalTime -> value
-        is java.sql.Time -> value.toLocalTime().let { LocalTime(it.hour, it.minute, it.second) }
-        is java.sql.Timestamp -> value.toLocalDateTime().toLocalTime().let { LocalTime(it.hour, it.minute, it.second) }
-        is Int -> longToLocalTime(value.toLong())
-        is Long -> longToLocalTime(value)
-        is String -> {
-            val dialect = currentDialect
-            if (value.contains('T')) {
-                // Handle ISO format like "1970-01-01T12:00"
-                val timeStr = value.substringAfter('T')
-                val formatter = ISODateTimeFormat.timeParser().withLocale(Locale.ROOT).withZone(DateTimeZone.getDefault())
-                LocalTime.parse(timeStr, formatter)
-            } else if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
-                val formatter = formatterForDateTimeString(value)
-                LocalTime.parse(value, formatter)
-            } else {
-                val formatter = ISODateTimeFormat.timeParser().withLocale(Locale.ROOT).withZone(DateTimeZone.getDefault())
-                LocalTime.parse(value, formatter)
-            }
-        }
-        else -> valueFromDB(value.toString())
-    }
-
-    override fun notNullValueToDB(value: LocalTime): Any = when {
-        currentDialect is SQLiteDialect -> DEFAULT_TIME_STRING_FORMATTER.print(value)
-        currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> {
-            Timestamp.valueOf(ORACLE_TIME_STRING_FORMATTER.print(value)).toInstant()
-        }
-        else -> java.sql.Time.valueOf(DEFAULT_TIME_STRING_FORMATTER.print(value))
-    }
-
-    override fun nonNullValueAsDefaultString(value: LocalTime): String = when (currentDialect) {
-        is PostgreSQLDialect -> "${nonNullValueToString(value)}::time without time zone"
-        is MysqlDialect -> "'${DEFAULT_TIME_STRING_FORMATTER.print(value)}'"
-        else -> super.nonNullValueAsDefaultString(value)
-    }
-
-    private fun longToLocalTime(millis: Long): LocalTime =
-        Instant.ofEpochMilli(millis).toDateTime(DateTimeZone.getDefault()).toLocalTime()
+    @Suppress("MagicNumber")
+    override fun fromLocalTime(value: java.time.LocalTime): LocalTime = LocalTime(
+        value.hour,
+        value.minute,
+        value.second,
+        (value.nano / 1_000_000) % 1000
+    )
 }
 
 /**
@@ -260,70 +88,35 @@ class LocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
  *
  * @sample timestampWithTimeZone
  */
-class DateTimeWithTimeZoneColumnType : ColumnType<DateTime>(), IDateColumnType {
-    override val hasTimePart: Boolean = true
+class DateTimeWithTimeZoneColumnType : OffsetDateTimeColumnType<DateTime>() {
+    @Suppress("MagicNumber")
+    override fun toOffsetDateTime(value: DateTime): OffsetDateTime {
+        val offsetSeconds: Int = value.zone.getOffset(value) / 1000
+        val zoneOffset = ZoneOffset.ofTotalSeconds(offsetSeconds)
 
-    override fun sqlType(): String = currentDialect.dataTypeProvider.timestampWithTimeZoneType()
-
-    override fun nonNullValueToString(value: DateTime): String = when (currentDialect) {
-        is SQLiteDialect -> {
-            val instant = java.time.Instant.ofEpochMilli(value.millis)
-            val offsetDateTime = OffsetDateTime.ofInstant(instant, value.zone.toTimeZone().toZoneId())
-            "'${offsetDateTime.format(SQLITE_OFFSET_DATE_TIME_FORMATTER)}'"
-        }
-        is MysqlDialect -> "'${SQLITE_AND_MYSQL_DATE_TIME_WITH_TIME_ZONE_FORMATTER.print(value)}'"
-        is OracleDialect -> oracleDateTimeWithTimezoneLiteral(value.toDateTime(DateTimeZone.getDefault()))
-        else -> "'${DEFAULT_DATE_TIME_WITH_TIME_ZONE_FORMATTER.print(value)}'"
+        return OffsetDateTime.of(
+            value.year,
+            value.monthOfYear,
+            value.dayOfMonth,
+            value.hourOfDay,
+            value.minuteOfHour,
+            value.secondOfMinute,
+            value.millisOfSecond * 1000000,
+            zoneOffset
+        )
     }
 
-    override fun valueFromDB(value: Any): DateTime = when (value) {
+    @Suppress("MagicNumber")
+    override fun fromOffsetDateTime(datetime: OffsetDateTime): DateTime {
+        val epochMilli: Long = datetime.toInstant().toEpochMilli()
+        val dateTimeZone = DateTimeZone.forOffsetMillis(datetime.offset.totalSeconds * 1000)
+
+        return DateTime(epochMilli, dateTimeZone)
+    }
+
+    override fun valueFromDB(value: Any) = when (value) {
         is DateTime -> value
-        is OffsetDateTime -> DateTime.parse(value.toString())
-        is ZonedDateTime -> DateTime.parse(value.toOffsetDateTime().toString())
-        is String -> {
-            if (currentDialect is SQLiteDialect) {
-                val temporalAccessor = SQLITE_OFFSET_DATE_TIME_FORMATTER.parse(value)
-                val offsetDateTime = if (temporalAccessor.isSupported(ChronoField.OFFSET_SECONDS)) {
-                    OffsetDateTime.from(temporalAccessor)
-                } else {
-                    OffsetDateTime.from(java.time.LocalDateTime.from(temporalAccessor).atOffset(UTC))
-                }
-                val dateTimeZone: DateTimeZone = DateTimeZone.forID(offsetDateTime.toZonedDateTime().offset.id)
-                DateTime(offsetDateTime.toInstant().toEpochMilli(), dateTimeZone)
-            } else {
-                DateTime.parse(value)
-            }
-        }
-        is java.sql.Timestamp -> DateTime(value.time)
-        else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
-    }
-
-    override fun readObject(rs: RowApi, index: Int): Any? = when (currentDialect) {
-        is SQLiteDialect -> super.readObject(rs, index)
-        is OracleDialect -> rs.getObject(index, ZonedDateTime::class.java, this)
-        else -> rs.getObject(index, OffsetDateTime::class.java, this)
-    }
-
-    override fun notNullValueToDB(value: DateTime): Any = when (currentDialect) {
-        is SQLiteDialect -> {
-            val instant = java.time.Instant.ofEpochMilli(value.millis)
-            val offsetDateTime = OffsetDateTime.ofInstant(instant, value.zone.toTimeZone().toZoneId())
-            offsetDateTime.format(SQLITE_OFFSET_DATE_TIME_FORMATTER)
-        }
-        is MysqlDialect -> SQLITE_AND_MYSQL_DATE_TIME_WITH_TIME_ZONE_FORMATTER.print(value)
-        else -> java.sql.Timestamp(value.millis)
-    }
-
-    override fun nonNullValueAsDefaultString(value: DateTime): String {
-        val dialect = currentDialect
-        return when {
-            dialect is PostgreSQLDialect -> // +00 appended because PostgreSQL stores it in UTC time zone
-                "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(value).trimEnd('0').trimEnd('.')}+00'::timestamp with time zone"
-            (dialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
-                "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(value)}'"
-            dialect is MysqlDialect -> "'${MYSQL_FRACTION_DATE_TIME_AS_DEFAULT_FORMATTER.print(value)}'"
-            else -> super.nonNullValueAsDefaultString(value)
-        }
+        else -> super.valueFromDB(value)
     }
 }
 
@@ -332,21 +125,21 @@ class DateTimeWithTimeZoneColumnType : ColumnType<DateTime>(), IDateColumnType {
  *
  * @param name The column name
  */
-fun Table.date(name: String): Column<DateTime> = registerColumn(name, DateColumnType(false))
+fun Table.date(name: String): Column<DateTime> = registerColumn(name, JodaLocalDateColumnType())
 
 /**
  * A datetime column to store both a date and a time.
  *
  * @param name The column name
  */
-fun Table.datetime(name: String): Column<DateTime> = registerColumn(name, DateColumnType(true))
+fun Table.datetime(name: String): Column<DateTime> = registerColumn(name, JodaLocalDateTimeColumnType())
 
 /**
  * A time column to store a time.
  *
  * @param name The column name
  */
-fun Table.time(name: String): Column<LocalTime> = registerColumn(name, LocalTimeColumnType())
+fun Table.time(name: String): Column<LocalTime> = registerColumn(name, JodaLocalTimeColumnType())
 
 /**
  * A timestamp column to store both a date and a time with time zone.
