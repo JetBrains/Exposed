@@ -15,7 +15,7 @@ All dependencies have been updated to follow the import path pattern of `org.jet
 This means that imports from `exposed-core`, for example, which were previously located under `org.jetbrains.exposed.sql.*`,
 are now located under `org.jetbrains.exposed.v1.core.*`. The table below shows example changes:
 
-| 0.61.0                                        | 1.0.0-beta-1                                    |
+| 0.61.0                                        | 1.0.0                                           |
 |-----------------------------------------------|-------------------------------------------------|
 | `org.jetbrains.exposed.sql.Table`             | `org.jetbrains.exposed.v1.core.Table`           |
 | `org.jetbrains.exposed.sql.AbstractQuery`     | `org.jetbrains.exposed.v1.core.AbstractQuery`   |
@@ -33,7 +33,7 @@ The major design change for allowing R2DBC functionality involved extracting som
 from `exposed-core` and moving them to `exposed-jdbc`, so that new R2DBC variants could also be created in `exposed-r2dbc`.
 The table below shows example changes:
 
-| 0.61.0                                                      | 1.0.0-beta-1                                                    |
+| 0.61.0                                                      | 1.0.0                                                           |
 |-------------------------------------------------------------|-----------------------------------------------------------------|
 | `org.jetbrains.exposed.sql.Database`                        | `org.jetbrains.exposed.v1.jdbc.Database`                        |
 | `org.jetbrains.exposed.sql.SchemaUtils`                     | `org.jetbrains.exposed.v1.jdbc.SchemaUtils`                     |
@@ -44,7 +44,7 @@ Additionally, top-level query and statement functions that required an R2DBC var
 This also applies to certain class methods that perform metadata query checks, namely the `exists()` method from the classes
 `Table`, `Schema`, and `Sequence`. The table below shows example changes:
 
-| 0.61.0                                | 1.0.0-beta-1                              |
+| 0.61.0                                | 1.0.0                                     |
 |---------------------------------------|-------------------------------------------|
 | `org.jetbrains.exposed.sql.select`    | `org.jetbrains.exposed.v1.jdbc.select`    |
 | `org.jetbrains.exposed.sql.selectAll` | `org.jetbrains.exposed.v1.jdbc.selectAll` |
@@ -81,19 +81,19 @@ The class `Transaction` remains in `exposed-core` but it is now abstract and all
 are now accessible from the new open classes `JdbcTransaction` and `R2dbcTransaction`.
 The following shows some examples of the ownership changes:
 
-| 0.61.0                    | 1.0.0-beta-1                       |
-|---------------------------|------------------------------------|
-| `Transaction.connection`  | `JdbcTransaction.connection`       |
-| `Transaction.db`          | `JdbcTransaction.db`               |
-| `Transaction.exec()`      | `JdbcTransaction.exec()`           |
-| `Transaction.rollback()`  | `JdbcTransaction.rollback()`       |
+| 0.61.0                    | 1.0.0                        |
+|---------------------------|------------------------------|
+| `Transaction.connection`  | `JdbcTransaction.connection` |
+| `Transaction.db`          | `JdbcTransaction.db`         |
+| `Transaction.exec()`      | `JdbcTransaction.exec()`     |
+| `Transaction.rollback()`  | `JdbcTransaction.rollback()` |
 
 ### Custom functions
 
 Any custom transaction-scoped extension functions will most likely require the receiver to be changed from `Transaction`
 to `JdbcTransaction`, as may any functions that used to accept a `Transaction` as an argument:
 
-<compare first-title="0.61.0" second-title="1.0.0-beta-1">
+<compare first-title="0.61.0" second-title="1.0.0">
 
 ```kotlin
 import org.jetbrains.exposed.sql.Transaction
@@ -134,7 +134,7 @@ With version 1.0.0, you can still call companion object methods on `TransactionM
 have been introduced to both `exposed-jdbc` and `exposed-r2dbc`. The return type of some of these methods may have changed to
 reflect the exact `Transaction` implementation:
 
-<compare first-title="0.61.0" second-title="1.0.0-beta-1">
+<compare first-title="0.61.0" second-title="1.0.0">
 
 ```kotlin
 import org.jetbrains.exposed.sql.Transaction
@@ -180,7 +180,7 @@ The R2DBC variant is `SuspendExecutable` in `exposed-r2dbc`. Each core statement
 executable implementation, like `InsertBlockingExecutable`, which stores the former in its `statement` property.
 The following shows some examples of the ownership changes:
 
-| 0.61.0                                                       | 1.0.0-beta-1                                                              |
+| 0.61.0                                                       | 1.0.0                                                                     |
 |--------------------------------------------------------------|---------------------------------------------------------------------------|
 | `Statement.execute()`                                        | `BlockingExecutable.execute()`                                            |
 | `Statement.prepared()`                                       | `BlockingExecutable.prepared()`                                           |
@@ -192,10 +192,10 @@ If a statement implementation originally held a protected `transaction` property
 ### Custom statements
 
 This separation of responsibility means that any custom `Statement` implementation now requires an associated `BlockingExecutable`
-implementation to be sent to the database. This `BlockingExecutable` can be custom or you can use an existing class if it provides sufficient
+implementation to be sent to the database. This `BlockingExecutable` can be custom, or you can use an existing class if it provides sufficient
 execution logic, as shown in the following example:
 
-<compare first-title="0.61.0" second-title="1.0.0-beta-1">
+<compare first-title="0.61.0" second-title="1.0.0">
 
 ```kotlin
 import org.jetbrains.exposed.sql.Table
@@ -237,7 +237,7 @@ transaction {
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
-import org.jetbrains.exposed.v1.jdbc.statements.BatchInsertBlockingExecutable
+import org.jetbrains.exposed.v1.jdbc.statements.toExecutable
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 class BatchInsertOnConflictDoNothing(
@@ -256,9 +256,7 @@ class BatchInsertOnConflictDoNothing(
 }
 
 transaction {
-    val executable = BatchInsertBlockingExecutable(
-        statement = BatchInsertOnConflictDoNothing(TableA)
-    )
+    val executable = BatchInsertOnConflictDoNothing(TableA).toExecutable()
     val insertedCount: Int? = executable.run {
         statement.addBatch()
         // set column values using statement[column] = value
@@ -274,12 +272,11 @@ transaction {
 </compare>
 
 <note>
-Starting from version 1.0.0-beta-5, the appropriate executable class instance can be resolved for you by calling <code>.toExecutable()</code>,
-as long as the custom statement extends an existing subclass from the Exposed API.
-In the example above, the <code>executable</code> variable would instead look like:
-<code-block lang="kotlin">
-val executable = BatchInsertOnConflictDoNothing(TableA).toExecutable()
-</code-block>
+The appropriate executable class instance can be resolved for you by calling <code>.toExecutable()</code> (
+<a href="https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc.statements/to-executable.html">JDBC</a>,
+<a href="https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc.statements/to-executable.html">R2DBC</a>,
+), as long as the custom statement extends an existing subclass from the Exposed API. Alternatively, the custom statement can
+be passed as an argument to the known executable class constructor.
 </note>
 
 ### `exec()` parameter type changed
@@ -290,7 +287,7 @@ and send it to the database by passing it as an argument to `exec()`.
 In version 1.0.0, since statements are no longer responsible for execution, the same `exec()` method only accepts a
 `BlockingExecutable` as its argument:
 
-<compare first-title="0.61.0" second-title="1.0.0-beta-1">
+<compare first-title="0.61.0" second-title="1.0.0">
 
 ```kotlin
 import org.jetbrains.exposed.sql.statements.DeleteStatement
@@ -309,7 +306,7 @@ transaction {
 
 ```kotlin
 import org.jetbrains.exposed.v1.core.statements.DeleteStatement
-import org.jetbrains.exposed.v1.jdbc.statements.DeleteBlockingExecutable
+import org.jetbrains.exposed.v1.jdbc.statements.toExecutable
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 transaction {
@@ -317,9 +314,7 @@ transaction {
         targetsSet = TableA,
         where = null
     )
-    val delete = DeleteBlockingExecutable(
-        statement = deleteStmt
-    )
+    val delete = deleteStmt.toExecutable()
     val result = exec(delete) {
         // do something with deleted row count
     }
@@ -329,11 +324,10 @@ transaction {
 </compare>
 
 <note>
-Starting from version 1.0.0-beta-5, the appropriate executable class instance can be resolved for you by calling <code>.toExecutable()</code>.
-In the example above, the <code>delete</code> variable would instead look like:
-<code-block lang="kotlin">
-val delete = deleteStmt.toExecutable()
-</code-block>
+The appropriate executable class instance can be resolved for you by calling <code>.toExecutable()</code> (
+<a href="https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc.statements/to-executable.html">JDBC</a>,
+<a href="https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc.statements/to-executable.html">R2DBC</a>).
+Alternatively, the statement can be passed as an argument directly to the <code>DeleteBlockingExecutable</code> constructor.
 </note>
 
 This signature change does not affect the method's use with a `Query` argument, as `Query` implements `BlockingExecutable` directly.
@@ -341,9 +335,9 @@ But changes to how Exposed processes query results does affect the type of the l
 
 Prior to version 1.0.0, the `java.sql.ResultSet` retrieved from the database was passed directly as the argument.
 In version 1.0.0, this result is wrapped by a common `ResultApi` object and requires casting to a `JdbcResult`
-if you want to process the underlying `ResultSet` directly:
+if you want to process the underlying `ResultSet` directly using the original `exec()`:
 
-<compare first-title="0.61.0" second-title="1.0.0-beta-1">
+<compare first-title="0.61.0" second-title="1.0.0">
 
 ```kotlin
 import org.jetbrains.exposed.sql.*
@@ -387,12 +381,33 @@ transaction {
 
 </compare>
 
+You can avoid this casting and continue to use the original pre-version 1.0.0 code in your lambda by replacing `exec()` with
+`execQuery()`.
+The latter automatically performs the necessary casting and unwrapping under-the-hood, so you can continue to use `ResultSet` directly as before:
+
+```kotlin
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.statements.jdbc.JdbcResult
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+
+transaction {
+    val query = TablA
+        .select(TableA.amount)
+        .where { TableA.amount greater 100 }
+
+    val result = execQuery(query) {
+        val amounts = mutableListOf<Int>()
+        while (it.next()) {
+            amounts += it.getInt("amount") % 10
+        }
+        amounts
+    }
+}
+```
+
 <note>
-Starting from version 1.0.0-beta-6, the original pre-version 1.0.0 code in your lambda can once again be used by replacing <code>exec(query)</code>
-with <code>execQuery(query)</code>. The latter automatically performs the necessary casting and unwrapping under-the-hood,
-so you can continue to use <code>ResultSet</code> directly as before. It is also recommended to use this method
-if the statement originally passed to <code>exec()</code> was obtained via <code>explain()</code> or any DML
-functions that return results, for example, <code>.insertReturning()</code>.
+It is also recommended to use <code>execQuery()</code> if the statement originally passed to <code>exec()</code>
+was obtained via <code>explain()</code> or any DML functions that return results, for example, <code>.insertReturning()</code>.
 </note>
 
 See [result wrappers](#result-wrappers) for more details behind the changes made to how Exposed handles query results.
@@ -432,7 +447,7 @@ down from the subclass into superclass `AbstractQuery` so that they remain commo
 This also includes the`comments` property and its related enum class `CommentPosition`,
 which is now only accessible from `AbstractQuery`:
 
-<compare first-title="0.61.0" second-title="1.0.0-beta-1">
+<compare first-title="0.61.0" second-title="1.0.0">
 
 ```kotlin
 import org.jetbrains.exposed.sql.Query
@@ -476,7 +491,7 @@ accessing an object at a specific index in the result.
 The signature of this method has changed to use `RowApi` instead of `ResultSet`, which still allows access to either the
 underlying JDBC `ResultSet` or R2DBC `Row` via `getObject()`:
 
-<compare first-title="0.61.0" second-title="1.0.0-beta-1">
+<compare first-title="0.61.0" second-title="1.0.0">
 
 ```kotlin
 import org.jetbrains.exposed.sql.TextColumnType
@@ -523,7 +538,7 @@ class ShortTextColumnType : TextColumnType() {
 Instead of switching to `getObject()` as above, the original code called on a `ResultSet` could still be used by accessing
 the underlying wrapped result via `RowApi.origin`:
 
-<compare first-title="0.61.0" second-title="1.0.0-beta-1">
+<compare first-title="0.61.0" second-title="1.0.0">
 
 ```kotlin
 import org.jetbrains.exposed.sql.TextColumnType
@@ -578,7 +593,7 @@ execution now accepts a `RowApi` as an argument.
 Calling `execute()` directly on a `Query` no longer returns a `ResultSet`. It instead returns a `ResultApi`,
 which must be cast if you need to access the original wrapped result type:
 
-<compare first-title="0.61.0" second-title="1.0.0-beta-1">
+<compare first-title="0.61.0" second-title="1.0.0">
 
 ```kotlin
 import org.jetbrains.exposed.sql.selectAll
@@ -622,12 +637,12 @@ If moved, the method is now accessible from the new abstract class `DatabaseDial
 This also applies to such methods and properties from the core `VendorDialect` implementations.
 The following shows some examples of the ownership changes:
 
-| 0.61.0                                              | 1.0.0-beta-1                                                |
-|-----------------------------------------------------|-------------------------------------------------------------|
-| `DatabaseDialect.allTablesNames()`                  | `DatabaseDialectMetadata.allTablesNames()`                  |
-| `DatabaseDialect.tableColumns()`                    | `DatabaseDialectMetadata.tableColumns()`                    |
-| `DatabaseDialect.catalog()`                         | `DatabaseDialectMetadata.catalog()`                         |
-| `DatabaseDialect.existingIndices()`                 | `DatabaseDialectMetadata.existingIndices()`                 |
+| 0.61.0                                              | 1.0.0                                       |
+|-----------------------------------------------------|---------------------------------------------|
+| `DatabaseDialect.allTablesNames()`                  | `DatabaseDialectMetadata.allTablesNames()`  |
+| `DatabaseDialect.tableColumns()`                    | `DatabaseDialectMetadata.tableColumns()`    |
+| `DatabaseDialect.catalog()`                         | `DatabaseDialectMetadata.catalog()`         |
+| `DatabaseDialect.existingIndices()`                 | `DatabaseDialectMetadata.existingIndices()` |
 
 <note>
 Corresponding ownership changes for the underlying metadata query functions originally called by the above <code>DatabaseDialect</code> methods
@@ -638,7 +653,7 @@ had some of its methods extracted to the driver-specific implementations in <cod
 These methods would have previously been most commonly invoked on the top-level property `currentDialect`.
 To follow a similar pattern, a related property, `currentDialectMetadata`, has been added to replace the original call:
 
-<compare first-title="0.61.0" second-title="1.0.0-beta-1">
+<compare first-title="0.61.0" second-title="1.0.0">
 
 ```kotlin
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -704,12 +719,12 @@ The `PreparedStatementApi` interface no longer holds methods that perform any st
 With version 1.0.0, these are now only accessible from the new driver-specific interface implementation,
 `JdbcPreparedStatementApi`. The following shows some examples of the ownership changes:
 
-| 0.61.0                                       | 1.0.0-beta-1                                 |
-|----------------------------------------------|----------------------------------------------|
-| `PreparedStatementApi.executeQuery()`        | `JdbcPreparedStatementApi.executeQuery()`    |
-| `PreparedStatementApi.executeUpdate()`       | `JdbcPreparedStatementApi.executeUpdate()`   |
-| `PreparedStatementApi.addBatch()`            | `JdbcPreparedStatementApi.addBatch()`        |
-| `PreparedStatementApi.cancel()`              | `JdbcPreparedStatementApi.cancel()`          |
+| 0.61.0                                       | 1.0.0                                      |
+|----------------------------------------------|--------------------------------------------|
+| `PreparedStatementApi.executeQuery()`        | `JdbcPreparedStatementApi.executeQuery()`  |
+| `PreparedStatementApi.executeUpdate()`       | `JdbcPreparedStatementApi.executeUpdate()` |
+| `PreparedStatementApi.addBatch()`            | `JdbcPreparedStatementApi.addBatch()`      |
+| `PreparedStatementApi.cancel()`              | `JdbcPreparedStatementApi.cancel()`        |
 
 #### `set()` deprecated
 
