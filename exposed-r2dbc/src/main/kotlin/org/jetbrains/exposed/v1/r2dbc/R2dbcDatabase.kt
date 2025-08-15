@@ -159,7 +159,23 @@ class R2dbcDatabase private constructor(
         fun connect(
             manager: (R2dbcDatabase) -> TransactionManagerApi = { TransactionManager(it) },
             databaseConfig: R2dbcDatabaseConfig.Builder.() -> Unit = {}
-        ): R2dbcDatabase = doConnect(manager, null, R2dbcDatabaseConfig(databaseConfig))
+        ): R2dbcDatabase = doConnect(manager, null, R2dbcDatabaseConfig(databaseConfig).build())
+
+        /**
+         * Creates an [R2dbcDatabase] instance.
+         *
+         * **Note:** This function does not immediately instantiate an actual connection to a database,
+         * but instead provides the details necessary to do so whenever a connection is required by a transaction.
+         *
+         * @param manager The [TransactionManager] responsible for new transactions that use this [R2dbcDatabase] instance.
+         * @param databaseConfig Builder of configuration parameters for this [R2dbcDatabase] instance.
+         * @throws IllegalStateException If a corresponding database dialect cannot be resolved from values
+         * provided to [databaseConfig].
+         */
+        fun connect(
+            manager: (R2dbcDatabase) -> TransactionManagerApi = { TransactionManager(it) },
+            databaseConfig: R2dbcDatabaseConfig.Builder = R2dbcDatabaseConfig.Builder()
+        ): R2dbcDatabase = doConnect(manager, null, databaseConfig.build())
 
         /**
          * Creates an [R2dbcDatabase] instance.
@@ -176,9 +192,9 @@ class R2dbcDatabase private constructor(
          */
         fun connect(
             connectionFactory: ConnectionFactory,
-            databaseConfig: R2dbcDatabaseConfig,
+            databaseConfig: R2dbcDatabaseConfig.Builder,
             manager: (R2dbcDatabase) -> TransactionManagerApi = { TransactionManager(it) }
-        ): R2dbcDatabase = doConnect(manager, connectionFactory, databaseConfig)
+        ): R2dbcDatabase = doConnect(manager, connectionFactory, databaseConfig.build())
 
         /**
          * Creates an [R2dbcDatabase] instance.
@@ -202,19 +218,41 @@ class R2dbcDatabase private constructor(
             password: String = "",
             manager: (R2dbcDatabase) -> TransactionManagerApi = { TransactionManager(it) },
             databaseConfig: R2dbcDatabaseConfig.Builder.() -> Unit = {},
+        ): R2dbcDatabase = connect(url, driver, user, password, manager, R2dbcDatabaseConfig(databaseConfig))
+
+        /**
+         * Creates an [R2dbcDatabase] instance.
+         *
+         * **Note:** This function does not immediately instantiate an actual connection to a database,
+         * but instead provides the details necessary to do so whenever a connection is required by a transaction.
+         *
+         * @param url The URL that represents the database when getting a connection.
+         * @param driver The R2DBC driver class. If not provided, the specified [url] will be used to find
+         * a match from the existing driver mappings.
+         * @param user The database user that owns the new connections.
+         * @param password The password specific for the database [user].
+         * @param databaseConfig Configuration parameters for this [R2dbcDatabase] instance.
+         * @param manager The [TransactionManager] responsible for new transactions that use this [R2dbcDatabase] instance.
+         * @throws IllegalStateException If a corresponding database dialect cannot be resolved from the provided [url].
+         */
+        fun connect(
+            url: String,
+            driver: String = getDriver(url),
+            user: String = "",
+            password: String = "",
+            manager: (R2dbcDatabase) -> TransactionManagerApi = { TransactionManager(it) },
+            databaseConfig: R2dbcDatabaseConfig.Builder,
         ): R2dbcDatabase {
-            val builder = R2dbcDatabaseConfig.Builder()
-            builder.setUrl(url)
-            builder.connectionFactoryOptions {
+            databaseConfig.setUrl(url)
+            databaseConfig.connectionFactoryOptions {
                 option(ConnectionFactoryOptions.DRIVER, driver)
                 user.takeUnless { it.isEmpty() }
                     ?.let { option(ConnectionFactoryOptions.USER, it) }
                 password.takeUnless { it.isEmpty() }
                     ?.let { option(ConnectionFactoryOptions.PASSWORD, it) }
             }
-            databaseConfig(builder)
 
-            return doConnect(manager, null, builder.build())
+            return doConnect(manager, null, databaseConfig.build())
         }
 
         /**

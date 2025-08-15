@@ -22,7 +22,8 @@ import javax.sql.DataSource
  *
  * @param connector Accessor for retrieving database connections wrapped as [ExposedConnection]
  */
-class Database private constructor(
+class
+Database private constructor(
     resolvedVendor: String? = null,
     config: DatabaseConfig,
     val connector: () -> ExposedConnection<*>
