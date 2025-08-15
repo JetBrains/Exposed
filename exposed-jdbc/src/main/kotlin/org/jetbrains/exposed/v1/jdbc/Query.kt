@@ -255,12 +255,9 @@ open class Query(
         } else {
             try {
                 count = true
-                // TODO !!! it would be not nice if users have to cast `rs` to `JdbcResult`, it's large breaking change.
-                transaction.exec(this) { rs ->
-                    check(rs is JdbcResult) { "Unexpected result type: $rs" }
-
+                transaction.execQuery(this) { rs ->
                     rs.next()
-                    (rs.getObject(1) as? Number)?.toLong().also {
+                    rs.getLong(1).also {
                         rs.close()
                     }
                 }!!
@@ -279,8 +276,7 @@ open class Query(
         val oldLimit = limit
         try {
             if (!isForUpdate()) limit = 1
-            val resultSet = transaction.exec(this)!!
-            check(resultSet is JdbcResult) { "Unexpected result type: $resultSet" }
+            val resultSet = transaction.execQuery(this)
             return !resultSet.next().also { resultSet.close() }
         } finally {
             limit = oldLimit
@@ -306,8 +302,8 @@ open class Query(
         }
 
     override fun iterator(): Iterator<ResultRow> {
-        val rs = transaction.exec(queryToExecute)!! as JdbcResult
-        val resultIterator = ResultIterator(rs.result)
+        val rs = transaction.execQuery(queryToExecute)
+        val resultIterator = ResultIterator(rs)
         return if (transaction.db.supportsMultipleResultSets) {
             resultIterator
         } else {
