@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.v1.jdbc.transactions
 
-import org.jetbrains.annotations.TestOnly
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
 import org.jetbrains.exposed.v1.core.transactions.TransactionInterface
@@ -10,9 +9,9 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.statements.api.ExposedConnection
 
 @Deprecated(
-    message = "This class will be removed entirely in future releases.",
+    message = "This class will be removed entirely in release 1.0.0.",
     replaceWith = ReplaceWith("TransactionManager"),
-    level = DeprecationLevel.WARNING
+    level = DeprecationLevel.ERROR
 )
 class ThreadLocalTransactionManager(
     private val db: Database,
@@ -44,10 +43,6 @@ class ThreadLocalTransactionManager(
             }
             return field
         }
-
-        @Deprecated("Use DatabaseConfig to define the defaultIsolationLevel", level = DeprecationLevel.HIDDEN)
-        @TestOnly
-        set
 
     private var loadDataSourceIsolationLevel = false
 

@@ -148,11 +148,17 @@ val tx2: Transaction = TransactionManager.current()
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 
-val tx1: R2dbcTransaction? = TransactionManager.currentOrNull()
-val tx2: R2dbcTransaction = TransactionManager.current()
+val tx1: JdbcTransaction? = TransactionManager.currentOrNull()
+val tx2: JdbcTransaction = TransactionManager.current()
 ```
 
 </compare>
+
+This also means that the type of the `manager` parameter in all `Database.connect()` methods has changed to accept a
+function that still takes a `Database` instance, but instead now returns a `TransactionManagerApi`. The default argument
+for a connection `manager` is no longer `ThreadLocalTransactionManager`, which has now been deprecated. The newly implemented
+[`TransactionManager`](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc.transactions/-transaction-manager/index.html)
+is now passed as the default argument instead.
 
 ### JDBC `suspend` functions deprecated
 
@@ -589,6 +595,16 @@ transaction {
 ```
 
 </compare>
+
+### H2 version 1.x.x
+
+Support for H2 versions earlier than 2.0.202 (namely 1.4.200 and earlier) has now been fully phased out. In addition,
+`H2Dialect.H2MajorVersion.One` is now deprecated and `H2Dialect`-specific properties, like `majorVersion` and `isSecondVersion`,
+now throw an exception if H2 version 1.x.x is detected.
+
+Moving forward, new features will no longer be tested on H2 version 1.x.x, so support for those versions will not be guaranteed.
+Depending on the built-in support from these older H2 versions, Exposed API may still mostly be compatible,
+but may now throw syntax or unsupported exceptions when generating certain SQL clauses.
 
 ### Custom dialects
 

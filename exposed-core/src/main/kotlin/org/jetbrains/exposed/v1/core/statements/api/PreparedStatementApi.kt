@@ -7,7 +7,6 @@ import java.math.MathContext
 import java.util.*
 
 /** Represents a precompiled SQL statement. */
-@Suppress("TooManyFunctions")
 interface PreparedStatementApi {
     /**
      * Sets the value for each column or expression in [args] into the appropriate statement parameter and
@@ -22,7 +21,7 @@ interface PreparedStatementApi {
     }
 
     @Deprecated(
-        message = "This operator function will be removed in future releases. " +
+        message = "This operator function will be removed in release 1.0.0. " +
             "Replace with the method `set(index, value, this)` that accepts a third argument for the IColumnType of the parameter value being bound.",
         level = DeprecationLevel.ERROR
     )
@@ -46,7 +45,7 @@ interface PreparedStatementApi {
     fun setInputStream(index: Int, inputStream: InputStream, setAsBlobObject: Boolean)
 
     @Deprecated(
-        message = "This function will be removed in future releases. " +
+        message = "This function will be removed in release 1.0.0. " +
             "Replace with the method `setArray(index, this, array)` that accepts an ArrayColumnType as the second argument instead of a string type representation.",
         level = DeprecationLevel.ERROR
     )
