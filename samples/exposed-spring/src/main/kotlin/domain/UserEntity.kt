@@ -2,7 +2,7 @@
 
 package org.jetbrains.exposed.samples.spring.domain
 
-import org.jetbrains.exposed.v1.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 
 object UserEntity : LongIdTable() {
     val name = varchar("name", length = 50)

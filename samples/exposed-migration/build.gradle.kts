@@ -4,7 +4,7 @@ val flywayVersion: String by project
 
 plugins {
     id("application")
-    kotlin("jvm") version "2.0.0"
+    kotlin("jvm") version "2.2.0"
 }
 
 group = "org.jetbrains.exposed.samples.migration"

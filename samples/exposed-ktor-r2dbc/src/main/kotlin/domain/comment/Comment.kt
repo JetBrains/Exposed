@@ -2,10 +2,10 @@
 
 package org.jetbrains.exposed.samples.r2dbc.domain.comment
 
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.samples.r2dbc.domain.project.ProjectId
 import org.jetbrains.exposed.samples.r2dbc.domain.user.UserId
+import kotlin.time.Instant
 
 @JvmInline
 @Serializable
