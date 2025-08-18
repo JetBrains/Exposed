@@ -33,7 +33,11 @@ dependencies {
     implementation(libs.postgresql.r2dbc)
     runtimeOnly(libs.postgresql)
 
-    implementation(libs.kotlinx.datetime)
-
     implementation(libs.logback.classic)
+}
+
+kotlin {
+    compilerOptions {
+        optIn.add("kotlin.time.ExperimentalTime")
+    }
 }
