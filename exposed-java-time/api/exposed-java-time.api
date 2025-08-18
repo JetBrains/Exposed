@@ -76,7 +76,7 @@ public final class org/jetbrains/exposed/v1/javatime/JavaDateFunctionsKt {
 	public static final fun year (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/javatime/Year;
 }
 
-public final class org/jetbrains/exposed/v1/javatime/JavaDurationColumnType : org/jetbrains/exposed/v1/core/DurationColumnType {
+public final class org/jetbrains/exposed/v1/javatime/JavaDurationColumnType : org/jetbrains/exposed/v1/core/datetime/DurationColumnType {
 	public static final field Companion Lorg/jetbrains/exposed/v1/javatime/JavaDurationColumnType$Companion;
 	public fun <init> ()V
 	public synthetic fun fromDuration-LRDsOJo (J)Ljava/lang/Object;
@@ -88,55 +88,55 @@ public final class org/jetbrains/exposed/v1/javatime/JavaDurationColumnType : or
 public final class org/jetbrains/exposed/v1/javatime/JavaDurationColumnType$Companion {
 }
 
-public final class org/jetbrains/exposed/v1/javatime/JavaInstantColumnType : org/jetbrains/exposed/v1/core/DatetimeColumnType {
+public final class org/jetbrains/exposed/v1/javatime/JavaInstantColumnType : org/jetbrains/exposed/v1/core/datetime/InstantColumnType {
 	public static final field Companion Lorg/jetbrains/exposed/v1/javatime/JavaInstantColumnType$Companion;
 	public fun <init> ()V
-	public synthetic fun fromInstant (Ljava/time/Instant;)Ljava/lang/Object;
-	public fun fromInstant (Ljava/time/Instant;)Ljava/time/Instant;
-	public synthetic fun toInstant (Ljava/lang/Object;)Ljava/time/Instant;
-	public fun toInstant (Ljava/time/Instant;)Ljava/time/Instant;
+	public synthetic fun fromInstant (Lkotlin/time/Instant;)Ljava/lang/Object;
+	public fun fromInstant (Lkotlin/time/Instant;)Ljava/time/Instant;
+	public synthetic fun toInstant (Ljava/lang/Object;)Lkotlin/time/Instant;
+	public fun toInstant (Ljava/time/Instant;)Lkotlin/time/Instant;
 }
 
 public final class org/jetbrains/exposed/v1/javatime/JavaInstantColumnType$Companion {
 }
 
-public final class org/jetbrains/exposed/v1/javatime/JavaLocalDateColumnType : org/jetbrains/exposed/v1/core/LocalDateColumnType {
+public final class org/jetbrains/exposed/v1/javatime/JavaLocalDateColumnType : org/jetbrains/exposed/v1/core/datetime/LocalDateColumnType {
 	public static final field Companion Lorg/jetbrains/exposed/v1/javatime/JavaLocalDateColumnType$Companion;
 	public fun <init> ()V
-	public synthetic fun fromLocalDate (Ljava/time/LocalDate;)Ljava/lang/Object;
-	public fun fromLocalDate (Ljava/time/LocalDate;)Ljava/time/LocalDate;
-	public synthetic fun toLocalDate (Ljava/lang/Object;)Ljava/time/LocalDate;
-	public fun toLocalDate (Ljava/time/LocalDate;)Ljava/time/LocalDate;
+	public synthetic fun fromLocalDate (Lkotlinx/datetime/LocalDate;)Ljava/lang/Object;
+	public fun fromLocalDate (Lkotlinx/datetime/LocalDate;)Ljava/time/LocalDate;
+	public synthetic fun toLocalDate (Ljava/lang/Object;)Lkotlinx/datetime/LocalDate;
+	public fun toLocalDate (Ljava/time/LocalDate;)Lkotlinx/datetime/LocalDate;
 }
 
 public final class org/jetbrains/exposed/v1/javatime/JavaLocalDateColumnType$Companion {
 }
 
-public final class org/jetbrains/exposed/v1/javatime/JavaLocalDateTimeColumnType : org/jetbrains/exposed/v1/core/LocalDateTimeColumnType {
+public final class org/jetbrains/exposed/v1/javatime/JavaLocalDateTimeColumnType : org/jetbrains/exposed/v1/core/datetime/LocalDateTimeColumnType {
 	public static final field Companion Lorg/jetbrains/exposed/v1/javatime/JavaLocalDateTimeColumnType$Companion;
 	public fun <init> ()V
-	public synthetic fun fromLocalDateTime (Ljava/time/LocalDateTime;)Ljava/lang/Object;
-	public fun fromLocalDateTime (Ljava/time/LocalDateTime;)Ljava/time/LocalDateTime;
-	public synthetic fun toLocalDateTime (Ljava/lang/Object;)Ljava/time/LocalDateTime;
-	public fun toLocalDateTime (Ljava/time/LocalDateTime;)Ljava/time/LocalDateTime;
+	public synthetic fun fromLocalDateTime (Lkotlinx/datetime/LocalDateTime;)Ljava/lang/Object;
+	public fun fromLocalDateTime (Lkotlinx/datetime/LocalDateTime;)Ljava/time/LocalDateTime;
+	public synthetic fun toLocalDateTime (Ljava/lang/Object;)Lkotlinx/datetime/LocalDateTime;
+	public fun toLocalDateTime (Ljava/time/LocalDateTime;)Lkotlinx/datetime/LocalDateTime;
 }
 
 public final class org/jetbrains/exposed/v1/javatime/JavaLocalDateTimeColumnType$Companion {
 }
 
-public final class org/jetbrains/exposed/v1/javatime/JavaLocalTimeColumnType : org/jetbrains/exposed/v1/core/LocalTimeColumnType {
+public final class org/jetbrains/exposed/v1/javatime/JavaLocalTimeColumnType : org/jetbrains/exposed/v1/core/datetime/LocalTimeColumnType {
 	public static final field Companion Lorg/jetbrains/exposed/v1/javatime/JavaLocalTimeColumnType$Companion;
 	public fun <init> ()V
-	public synthetic fun fromLocalTime (Ljava/time/LocalTime;)Ljava/lang/Object;
-	public fun fromLocalTime (Ljava/time/LocalTime;)Ljava/time/LocalTime;
-	public synthetic fun toLocalTime (Ljava/lang/Object;)Ljava/time/LocalTime;
-	public fun toLocalTime (Ljava/time/LocalTime;)Ljava/time/LocalTime;
+	public synthetic fun fromLocalTime (Lkotlinx/datetime/LocalTime;)Ljava/lang/Object;
+	public fun fromLocalTime (Lkotlinx/datetime/LocalTime;)Ljava/time/LocalTime;
+	public synthetic fun toLocalTime (Ljava/lang/Object;)Lkotlinx/datetime/LocalTime;
+	public fun toLocalTime (Ljava/time/LocalTime;)Lkotlinx/datetime/LocalTime;
 }
 
 public final class org/jetbrains/exposed/v1/javatime/JavaLocalTimeColumnType$Companion {
 }
 
-public final class org/jetbrains/exposed/v1/javatime/JavaOffsetDateTimeColumnType : org/jetbrains/exposed/v1/core/OffsetDateTimeColumnType {
+public final class org/jetbrains/exposed/v1/javatime/JavaOffsetDateTimeColumnType : org/jetbrains/exposed/v1/core/datetime/OffsetDateTimeColumnType {
 	public static final field Companion Lorg/jetbrains/exposed/v1/javatime/JavaOffsetDateTimeColumnType$Companion;
 	public fun <init> ()V
 	public synthetic fun fromOffsetDateTime (Ljava/time/OffsetDateTime;)Ljava/lang/Object;

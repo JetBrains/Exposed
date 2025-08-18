@@ -3,7 +3,14 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared
 import io.r2dbc.h2.H2ConnectionConfiguration
 import io.r2dbc.h2.H2ConnectionFactory
 import io.r2dbc.h2.H2ConnectionOption
+import io.r2dbc.postgresql.PostgresqlConnectionFactoryProvider.OPTIONS
 import io.r2dbc.spi.ConnectionFactoryOptions
+import io.r2dbc.spi.ConnectionFactoryOptions.DATABASE
+import io.r2dbc.spi.ConnectionFactoryOptions.DRIVER
+import io.r2dbc.spi.ConnectionFactoryOptions.HOST
+import io.r2dbc.spi.ConnectionFactoryOptions.PASSWORD
+import io.r2dbc.spi.ConnectionFactoryOptions.PORT
+import io.r2dbc.spi.ConnectionFactoryOptions.USER
 import io.r2dbc.spi.Option
 import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.test.runTest
@@ -12,6 +19,8 @@ import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
+import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
+import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.name
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
@@ -219,6 +228,48 @@ class ConnectionTests : R2dbcDatabaseTestsBase() {
             }?.singleOrNull()
             assertNotNull(mode)
             assertEquals("MySQL", mode)
+        }
+    }
+
+    @Test
+    fun testNoTransactionInContext() {
+        runTest {
+            val tester = object : LongIdTable("users") {
+                val name = varchar("name", 50)
+            }
+
+            val db = createDB()
+
+            suspendTransaction(db = db) {
+                SchemaUtils.drop(tester)
+                SchemaUtils.create(tester)
+            }
+
+            suspendTransaction(db = db) {
+                tester.insert {
+                    it[tester.name] = "tester1"
+                }
+            }
+        }
+    }
+
+    private fun createDB(): R2dbcDatabase {
+        val options: MutableMap<String?, String?> = HashMap<String?, String?>()
+        options.put("lock_timeout", "10s")
+
+        return R2dbcDatabase.connect {
+            useNestedTransactions = true
+            defaultMaxAttempts = 1
+
+            connectionFactoryOptions {
+                option(DRIVER, "postgresql")
+                option(HOST, "127.0.0.1")
+                option(PORT, 3004)
+                option(USER, "root")
+                option(PASSWORD, "Exposed_password_1!")
+                option(DATABASE, "postgres")
+                option(OPTIONS, options)
+            }
         }
     }
 }

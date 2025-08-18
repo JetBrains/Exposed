@@ -1,14 +1,29 @@
 package org.jetbrains.exposed.v1.javatime
 
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toJavaLocalDateTime
+import kotlinx.datetime.toJavaLocalTime
+import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.toKotlinLocalDateTime
+import kotlinx.datetime.toKotlinLocalTime
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.datetime.DurationColumnType
+import org.jetbrains.exposed.v1.core.datetime.InstantColumnType
+import org.jetbrains.exposed.v1.core.datetime.LocalDateColumnType
+import org.jetbrains.exposed.v1.core.datetime.LocalDateTimeColumnType
+import org.jetbrains.exposed.v1.core.datetime.LocalTimeColumnType
+import org.jetbrains.exposed.v1.core.datetime.OffsetDateTimeColumnType
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.OffsetDateTime
+import kotlin.time.ExperimentalTime
 import kotlin.time.toJavaDuration
+import kotlin.time.toJavaInstant
 import kotlin.time.toKotlinDuration
+import kotlin.time.toKotlinInstant
 
 /**
  * Column for storing dates, as [LocalDate].
@@ -17,9 +32,9 @@ import kotlin.time.toKotlinDuration
  */
 @Suppress("MagicNumber")
 class JavaLocalDateColumnType : LocalDateColumnType<LocalDate>() {
-    override fun toLocalDate(value: LocalDate) = value
+    override fun toLocalDate(value: LocalDate) = value.toKotlinLocalDate()
 
-    override fun fromLocalDate(value: LocalDate) = value
+    override fun fromLocalDate(value: kotlinx.datetime.LocalDate) = value.toJavaLocalDate()
 
     companion object {
         internal val INSTANCE = JavaLocalDateColumnType()
@@ -33,9 +48,9 @@ class JavaLocalDateColumnType : LocalDateColumnType<LocalDate>() {
  */
 @Suppress("MagicNumber")
 class JavaLocalDateTimeColumnType : LocalDateTimeColumnType<LocalDateTime>() {
-    override fun toLocalDateTime(value: LocalDateTime) = value
+    override fun toLocalDateTime(value: LocalDateTime) = value.toKotlinLocalDateTime()
 
-    override fun fromLocalDateTime(value: LocalDateTime) = value
+    override fun fromLocalDateTime(value: kotlinx.datetime.LocalDateTime) = value.toJavaLocalDateTime()
 
     companion object {
         internal val INSTANCE = JavaLocalDateTimeColumnType()
@@ -48,9 +63,9 @@ class JavaLocalDateTimeColumnType : LocalDateTimeColumnType<LocalDateTime>() {
  * @sample time
  */
 class JavaLocalTimeColumnType : LocalTimeColumnType<LocalTime>() {
-    override fun toLocalTime(value: LocalTime) = value
+    override fun toLocalTime(value: LocalTime) = value.toKotlinLocalTime()
 
-    override fun fromLocalTime(value: LocalTime) = value
+    override fun fromLocalTime(value: kotlinx.datetime.LocalTime) = value.toJavaLocalTime()
 
     companion object {
         internal val INSTANCE = JavaLocalTimeColumnType()
@@ -62,10 +77,12 @@ class JavaLocalTimeColumnType : LocalTimeColumnType<LocalTime>() {
  *
  * @sample timestamp
  */
-class JavaInstantColumnType : DatetimeColumnType<Instant>() {
-    override fun toInstant(value: Instant) = value
+class JavaInstantColumnType : InstantColumnType<Instant>() {
+    @OptIn(ExperimentalTime::class)
+    override fun toInstant(value: Instant) = value.toKotlinInstant()
 
-    override fun fromInstant(instant: Instant) = instant
+    @OptIn(ExperimentalTime::class)
+    override fun fromInstant(instant: kotlin.time.Instant) = instant.toJavaInstant()
 
     companion object {
         internal val INSTANCE = JavaInstantColumnType()
@@ -92,7 +109,7 @@ class JavaOffsetDateTimeColumnType : OffsetDateTimeColumnType<OffsetDateTime>() 
  *
  * @sample duration
  */
-class JavaDurationColumnType : DurationColumnType<java.time.Duration>() {
+class JavaDurationColumnType : DurationColumnType<Duration>() {
     override fun toDuration(value: Duration): kotlin.time.Duration = value.toKotlinDuration()
 
     override fun fromDuration(value: kotlin.time.Duration): Duration = value.toJavaDuration()

@@ -1,33 +1,36 @@
 package org.jetbrains.exposed.v1.jodatime
 
+import kotlinx.datetime.number
+import kotlinx.datetime.toJavaLocalDateTime
+import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.toKotlinLocalDateTime
 import org.jetbrains.exposed.v1.core.Column
-import org.jetbrains.exposed.v1.core.LocalDateColumnType
-import org.jetbrains.exposed.v1.core.LocalDateTimeColumnType
-import org.jetbrains.exposed.v1.core.LocalTimeColumnType
-import org.jetbrains.exposed.v1.core.OffsetDateTimeColumnType
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.datetime.LocalDateColumnType
+import org.jetbrains.exposed.v1.core.datetime.LocalDateTimeColumnType
+import org.jetbrains.exposed.v1.core.datetime.LocalTimeColumnType
+import org.jetbrains.exposed.v1.core.datetime.OffsetDateTimeColumnType
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.LocalTime
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 
 class JodaLocalDateColumnType : LocalDateColumnType<DateTime>() {
-    override fun toLocalDate(value: DateTime): LocalDate {
+    override fun toLocalDate(value: DateTime): kotlinx.datetime.LocalDate {
         return LocalDate.of(
             value.year,
             value.monthOfYear,
             value.dayOfMonth
-        )
+        ).toKotlinLocalDate()
     }
 
-    override fun fromLocalDate(value: LocalDate): DateTime {
+    override fun fromLocalDate(value: kotlinx.datetime.LocalDate): DateTime {
         return DateTime(
             value.year,
-            value.monthValue,
+            value.month.number,
             value.dayOfMonth,
             0, 0
         )
@@ -45,15 +48,15 @@ class JodaLocalDateColumnType : LocalDateColumnType<DateTime>() {
  * @sample datetime
  */
 class JodaLocalDateTimeColumnType : LocalDateTimeColumnType<DateTime>() {
-    override fun toLocalDateTime(value: DateTime): LocalDateTime {
+    override fun toLocalDateTime(value: DateTime): kotlinx.datetime.LocalDateTime {
         return value.toDate()
             .toInstant()
             .atZone(ZoneId.systemDefault())
-            .toLocalDateTime()
+            .toLocalDateTime().toKotlinLocalDateTime()
     }
 
-    override fun fromLocalDateTime(value: LocalDateTime): DateTime {
-        return DateTime(value.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
+    override fun fromLocalDateTime(value: kotlinx.datetime.LocalDateTime): DateTime {
+        return DateTime(value.toJavaLocalDateTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
     }
 
     override fun valueFromDB(value: Any): DateTime? = when (value) {
@@ -68,18 +71,21 @@ class JodaLocalDateTimeColumnType : LocalDateTimeColumnType<DateTime>() {
  * @sample time
  */
 class JodaLocalTimeColumnType : LocalTimeColumnType<LocalTime>() {
-    override fun toLocalTime(value: LocalTime): java.time.LocalTime = java.time.LocalTime.of(
-        value.hourOfDay,
-        value.minuteOfHour,
-        value.secondOfMinute
-    )
+    @Suppress("MagicNumber")
+    override fun toLocalTime(value: LocalTime): kotlinx.datetime.LocalTime =
+        kotlinx.datetime.LocalTime(
+            value.hourOfDay,
+            value.minuteOfHour,
+            value.secondOfMinute,
+            value.millisOfSecond * 1000
+        )
 
     @Suppress("MagicNumber")
-    override fun fromLocalTime(value: java.time.LocalTime): LocalTime = LocalTime(
+    override fun fromLocalTime(value: kotlinx.datetime.LocalTime): LocalTime = LocalTime(
         value.hour,
         value.minute,
         value.second,
-        (value.nano / 1_000_000) % 1000
+        (value.nanosecond / 1_000_000) % 1000
     )
 }
 

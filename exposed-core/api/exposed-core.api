@@ -644,17 +644,23 @@ public final class org/jetbrains/exposed/v1/core/DatabaseConfig$Companion {
 	public static synthetic fun invoke$default (Lorg/jetbrains/exposed/v1/core/DatabaseConfig$Companion;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/DatabaseConfig;
 }
 
-public abstract class org/jetbrains/exposed/v1/core/DatetimeColumnType : org/jetbrains/exposed/v1/core/ColumnType, org/jetbrains/exposed/v1/core/IDateColumnType {
-	public fun <init> ()V
-	public abstract fun fromInstant (Ljava/time/Instant;)Ljava/lang/Object;
-	public fun getHasTimePart ()Z
-	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
-	public fun sqlType ()Ljava/lang/String;
-	public abstract fun toInstant (Ljava/lang/Object;)Ljava/time/Instant;
-	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+public class org/jetbrains/exposed/v1/core/DatabaseConfigImpl : org/jetbrains/exposed/v1/core/DatabaseConfig {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/DatabaseConfig$Builder;)V
+	public fun getDefaultFetchSize ()Ljava/lang/Integer;
+	public fun getDefaultIsolationLevel ()I
+	public fun getDefaultMaxAttempts ()I
+	public fun getDefaultMaxRetryDelay ()J
+	public fun getDefaultMinRetryDelay ()J
+	public fun getDefaultReadOnly ()Z
+	public fun getDefaultSchema ()Lorg/jetbrains/exposed/v1/core/Schema;
+	public fun getExplicitDialect ()Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;
+	public fun getKeepLoadedReferencesOutOfTransaction ()Z
+	public fun getLogTooMuchResultSetsThreshold ()I
+	public fun getMaxEntitiesToStoreInCachePerEntity ()I
+	public fun getPreserveKeywordCasing ()Z
+	public fun getSqlLogger ()Lorg/jetbrains/exposed/v1/core/SqlLogger;
+	public fun getUseNestedTransactions ()Z
+	public fun getWarnLongQueriesDuration ()Ljava/lang/Long;
 }
 
 public abstract interface class org/jetbrains/exposed/v1/core/DdlAware {
@@ -705,16 +711,6 @@ public final class org/jetbrains/exposed/v1/core/DoubleColumnType : org/jetbrain
 	public fun sqlType ()Ljava/lang/String;
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Double;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
-}
-
-public abstract class org/jetbrains/exposed/v1/core/DurationColumnType : org/jetbrains/exposed/v1/core/ColumnType {
-	public fun <init> ()V
-	public abstract fun fromDuration-LRDsOJo (J)Ljava/lang/Object;
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun sqlType ()Ljava/lang/String;
-	public abstract fun toDuration-5sfh64U (Ljava/lang/Object;)J
-	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/v1/core/EntityIDColumnType : org/jetbrains/exposed/v1/core/ColumnType {
@@ -1456,45 +1452,6 @@ public final class org/jetbrains/exposed/v1/core/LiteralOp : org/jetbrains/expos
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 }
 
-public abstract class org/jetbrains/exposed/v1/core/LocalDateColumnType : org/jetbrains/exposed/v1/core/ColumnType, org/jetbrains/exposed/v1/core/IDateColumnType {
-	public fun <init> ()V
-	public abstract fun fromLocalDate (Ljava/time/LocalDate;)Ljava/lang/Object;
-	public fun getHasTimePart ()Z
-	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
-	public fun sqlType ()Ljava/lang/String;
-	public abstract fun toLocalDate (Ljava/lang/Object;)Ljava/time/LocalDate;
-	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
-}
-
-public abstract class org/jetbrains/exposed/v1/core/LocalDateTimeColumnType : org/jetbrains/exposed/v1/core/ColumnType, org/jetbrains/exposed/v1/core/IDateColumnType {
-	public fun <init> ()V
-	public abstract fun fromLocalDateTime (Ljava/time/LocalDateTime;)Ljava/lang/Object;
-	public fun getHasTimePart ()Z
-	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
-	public fun sqlType ()Ljava/lang/String;
-	public abstract fun toLocalDateTime (Ljava/lang/Object;)Ljava/time/LocalDateTime;
-	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
-}
-
-public abstract class org/jetbrains/exposed/v1/core/LocalTimeColumnType : org/jetbrains/exposed/v1/core/ColumnType, org/jetbrains/exposed/v1/core/IDateColumnType {
-	public fun <init> ()V
-	public abstract fun fromLocalTime (Ljava/time/LocalTime;)Ljava/lang/Object;
-	public fun getHasTimePart ()Z
-	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
-	public fun sqlType ()Ljava/lang/String;
-	public abstract fun toLocalTime (Ljava/lang/Object;)Ljava/time/LocalTime;
-	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
-}
-
 public final class org/jetbrains/exposed/v1/core/Locate : org/jetbrains/exposed/v1/core/Function {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Expression;Ljava/lang/String;)V
 	public final fun getExpr ()Lorg/jetbrains/exposed/v1/core/Expression;
@@ -1618,19 +1575,6 @@ public class org/jetbrains/exposed/v1/core/NullableColumnWithTransform : org/jet
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueToString (Ljava/lang/Object;)Ljava/lang/String;
-}
-
-public abstract class org/jetbrains/exposed/v1/core/OffsetDateTimeColumnType : org/jetbrains/exposed/v1/core/ColumnType, org/jetbrains/exposed/v1/core/IDateColumnType {
-	public fun <init> ()V
-	public abstract fun fromOffsetDateTime (Ljava/time/OffsetDateTime;)Ljava/lang/Object;
-	public fun getHasTimePart ()Z
-	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
-	public fun sqlType ()Ljava/lang/String;
-	public abstract fun toOffsetDateTime (Ljava/lang/Object;)Ljava/time/OffsetDateTime;
-	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/v1/core/OffsetFollowingWindowFrameBound : org/jetbrains/exposed/v1/core/OffsetWindowFrameBound, org/jetbrains/exposed/v1/core/CurrentOrFollowing {
@@ -2736,6 +2680,81 @@ public class org/jetbrains/exposed/v1/core/dao/id/UUIDTable : org/jetbrains/expo
 	public final fun getPrimaryKey ()Lorg/jetbrains/exposed/v1/core/Table$PrimaryKey;
 }
 
+public abstract class org/jetbrains/exposed/v1/core/datetime/DurationColumnType : org/jetbrains/exposed/v1/core/ColumnType {
+	public fun <init> ()V
+	public abstract fun fromDuration-LRDsOJo (J)Ljava/lang/Object;
+	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun sqlType ()Ljava/lang/String;
+	public abstract fun toDuration-5sfh64U (Ljava/lang/Object;)J
+	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract class org/jetbrains/exposed/v1/core/datetime/InstantColumnType : org/jetbrains/exposed/v1/core/ColumnType, org/jetbrains/exposed/v1/core/IDateColumnType {
+	public fun <init> ()V
+	public abstract fun fromInstant (Lkotlin/time/Instant;)Ljava/lang/Object;
+	public fun getHasTimePart ()Z
+	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
+	public fun sqlType ()Ljava/lang/String;
+	public abstract fun toInstant (Ljava/lang/Object;)Lkotlin/time/Instant;
+	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract class org/jetbrains/exposed/v1/core/datetime/LocalDateColumnType : org/jetbrains/exposed/v1/core/ColumnType, org/jetbrains/exposed/v1/core/IDateColumnType {
+	public fun <init> ()V
+	public abstract fun fromLocalDate (Lkotlinx/datetime/LocalDate;)Ljava/lang/Object;
+	public fun getHasTimePart ()Z
+	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
+	public fun sqlType ()Ljava/lang/String;
+	public abstract fun toLocalDate (Ljava/lang/Object;)Lkotlinx/datetime/LocalDate;
+	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract class org/jetbrains/exposed/v1/core/datetime/LocalDateTimeColumnType : org/jetbrains/exposed/v1/core/ColumnType, org/jetbrains/exposed/v1/core/IDateColumnType {
+	public fun <init> ()V
+	public abstract fun fromLocalDateTime (Lkotlinx/datetime/LocalDateTime;)Ljava/lang/Object;
+	public fun getHasTimePart ()Z
+	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
+	public fun sqlType ()Ljava/lang/String;
+	public abstract fun toLocalDateTime (Ljava/lang/Object;)Lkotlinx/datetime/LocalDateTime;
+	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract class org/jetbrains/exposed/v1/core/datetime/LocalTimeColumnType : org/jetbrains/exposed/v1/core/ColumnType, org/jetbrains/exposed/v1/core/IDateColumnType {
+	public fun <init> ()V
+	public abstract fun fromLocalTime (Lkotlinx/datetime/LocalTime;)Ljava/lang/Object;
+	public fun getHasTimePart ()Z
+	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
+	public fun sqlType ()Ljava/lang/String;
+	public abstract fun toLocalTime (Ljava/lang/Object;)Lkotlinx/datetime/LocalTime;
+	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract class org/jetbrains/exposed/v1/core/datetime/OffsetDateTimeColumnType : org/jetbrains/exposed/v1/core/ColumnType, org/jetbrains/exposed/v1/core/IDateColumnType {
+	public fun <init> ()V
+	public abstract fun fromOffsetDateTime (Ljava/time/OffsetDateTime;)Ljava/lang/Object;
+	public fun getHasTimePart ()Z
+	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
+	public fun sqlType ()Ljava/lang/String;
+	public abstract fun toOffsetDateTime (Ljava/lang/Object;)Ljava/time/OffsetDateTime;
+	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
 public final class org/jetbrains/exposed/v1/core/functions/array/ArrayGet : org/jetbrains/exposed/v1/core/Function {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Expression;ILorg/jetbrains/exposed/v1/core/IColumnType;)V
 	public final fun getExpression ()Lorg/jetbrains/exposed/v1/core/Expression;
@@ -2944,13 +2963,13 @@ public class org/jetbrains/exposed/v1/core/statements/BatchUpdateStatement : org
 }
 
 public class org/jetbrains/exposed/v1/core/statements/BatchUpsertStatement : org/jetbrains/exposed/v1/core/statements/BatchInsertStatement, org/jetbrains/exposed/v1/core/statements/UpsertBuilder {
-	public fun <init> (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Ljava/util/List;Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Op;Z)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Ljava/util/List;Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Op;Z)V
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Op;Z)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Op;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun arguments ()Ljava/lang/Iterable;
 	public fun arguments ()Ljava/util/List;
 	public final fun getKeys ()[Lorg/jetbrains/exposed/v1/core/Column;
-	public final fun getOnUpdate ()Ljava/util/List;
+	public final synthetic fun getOnUpdate ()Ljava/util/List;
 	public final fun getOnUpdateExclude ()Ljava/util/List;
 	public final fun getWhere ()Lorg/jetbrains/exposed/v1/core/Op;
 	public fun insertValue (Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;
@@ -2962,11 +2981,11 @@ public class org/jetbrains/exposed/v1/core/statements/DeleteStatement : org/jetb
 	public static final field Companion Lorg/jetbrains/exposed/v1/core/statements/DeleteStatement$Companion;
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/ColumnSet;Lorg/jetbrains/exposed/v1/core/Op;ZLjava/lang/Integer;Ljava/util/List;)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/ColumnSet;Lorg/jetbrains/exposed/v1/core/Op;ZLjava/lang/Integer;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun <init> (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/Op;ZLjava/lang/Integer;Ljava/lang/Long;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/Op;ZLjava/lang/Integer;Ljava/lang/Long;)V
 	public fun arguments ()Ljava/lang/Iterable;
 	public final fun getLimit ()Ljava/lang/Integer;
-	public final fun getOffset ()Ljava/lang/Long;
-	public final fun getTable ()Lorg/jetbrains/exposed/v1/core/Table;
+	public final synthetic fun getOffset ()Ljava/lang/Long;
+	public final synthetic fun getTable ()Lorg/jetbrains/exposed/v1/core/Table;
 	public final fun getTargetTables ()Ljava/util/List;
 	public final fun getTargetsSet ()Lorg/jetbrains/exposed/v1/core/ColumnSet;
 	public final fun getWhere ()Lorg/jetbrains/exposed/v1/core/Op;
@@ -2992,73 +3011,6 @@ public final class org/jetbrains/exposed/v1/core/statements/GlobalStatementInter
 	public static fun beforeExecution (Lorg/jetbrains/exposed/v1/core/statements/GlobalStatementInterceptor;Lorg/jetbrains/exposed/v1/core/Transaction;Lorg/jetbrains/exposed/v1/core/statements/StatementContext;)V
 	public static fun beforeRollback (Lorg/jetbrains/exposed/v1/core/statements/GlobalStatementInterceptor;Lorg/jetbrains/exposed/v1/core/Transaction;)V
 	public static fun keepUserDataInTransactionStoreOnCommit (Lorg/jetbrains/exposed/v1/core/statements/GlobalStatementInterceptor;Ljava/util/Map;)Ljava/util/Map;
-}
-
-public abstract interface class org/jetbrains/exposed/v1/core/statements/IStatementBuilder {
-	public abstract fun batchInsert (Lorg/jetbrains/exposed/v1/core/Table;ZZLkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
-	public abstract fun batchReplace (Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/BatchReplaceStatement;
-	public abstract fun batchUpsert (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function1;Z[Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/BatchUpsertStatement;
-	public abstract fun delete (Lorg/jetbrains/exposed/v1/core/Join;Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Table;ZLjava/lang/Integer;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/core/statements/DeleteStatement;
-	public abstract fun deleteAll (Lorg/jetbrains/exposed/v1/core/Table;)Lorg/jetbrains/exposed/v1/core/statements/DeleteStatement;
-	public abstract fun deleteIgnoreWhere (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/DeleteStatement;
-	public abstract fun deleteReturning (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/core/statements/ReturningStatement;
-	public abstract fun deleteWhere (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/DeleteStatement;
-	public abstract fun insert (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/InsertStatement;
-	public abstract fun insert (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Ljava/util/List;)Lorg/jetbrains/exposed/v1/core/statements/InsertSelectStatement;
-	public abstract fun insertIgnore (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/InsertStatement;
-	public abstract fun insertIgnore (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Ljava/util/List;)Lorg/jetbrains/exposed/v1/core/statements/InsertSelectStatement;
-	public abstract fun insertReturning (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;ZLkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/ReturningStatement;
-	public abstract fun mergeFrom (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/QueryAlias;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/core/statements/MergeSelectStatement;
-	public abstract fun mergeFrom (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/core/statements/MergeTableStatement;
-	public abstract fun replace (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/ReplaceStatement;
-	public abstract fun replace (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Ljava/util/List;)Lorg/jetbrains/exposed/v1/core/statements/ReplaceSelectStatement;
-	public abstract fun update (Lorg/jetbrains/exposed/v1/core/Join;Lkotlin/jvm/functions/Function1;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/core/statements/UpdateStatement;
-	public abstract fun update (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function1;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/UpdateStatement;
-	public abstract fun updateReturning (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/ReturningStatement;
-	public abstract fun upsert (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/UpsertStatement;
-	public abstract fun upsertReturning (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Ljava/util/List;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/ReturningStatement;
-}
-
-public final class org/jetbrains/exposed/v1/core/statements/IStatementBuilder$DefaultImpls {
-	public static fun batchInsert (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;ZZLkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
-	public static synthetic fun batchInsert$default (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;ZZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
-	public static fun batchReplace (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/BatchReplaceStatement;
-	public static synthetic fun batchReplace$default (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/BatchReplaceStatement;
-	public static fun batchUpsert (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function1;Z[Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/BatchUpsertStatement;
-	public static synthetic fun batchUpsert$default (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function1;Z[Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/BatchUpsertStatement;
-	public static fun delete (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Join;Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Table;ZLjava/lang/Integer;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/core/statements/DeleteStatement;
-	public static synthetic fun delete$default (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Join;Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Table;ZLjava/lang/Integer;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/DeleteStatement;
-	public static fun deleteAll (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;)Lorg/jetbrains/exposed/v1/core/statements/DeleteStatement;
-	public static fun deleteIgnoreWhere (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/DeleteStatement;
-	public static synthetic fun deleteIgnoreWhere$default (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/DeleteStatement;
-	public static fun deleteReturning (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/core/statements/ReturningStatement;
-	public static synthetic fun deleteReturning$default (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/ReturningStatement;
-	public static fun deleteWhere (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/DeleteStatement;
-	public static synthetic fun deleteWhere$default (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/DeleteStatement;
-	public static fun insert (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/InsertStatement;
-	public static fun insert (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Ljava/util/List;)Lorg/jetbrains/exposed/v1/core/statements/InsertSelectStatement;
-	public static synthetic fun insert$default (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Ljava/util/List;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/InsertSelectStatement;
-	public static fun insertIgnore (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/InsertStatement;
-	public static fun insertIgnore (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Ljava/util/List;)Lorg/jetbrains/exposed/v1/core/statements/InsertSelectStatement;
-	public static synthetic fun insertIgnore$default (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Ljava/util/List;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/InsertSelectStatement;
-	public static fun insertReturning (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;ZLkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/ReturningStatement;
-	public static synthetic fun insertReturning$default (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;ZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/ReturningStatement;
-	public static fun mergeFrom (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/QueryAlias;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/core/statements/MergeSelectStatement;
-	public static fun mergeFrom (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/core/statements/MergeTableStatement;
-	public static synthetic fun mergeFrom$default (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/MergeTableStatement;
-	public static fun replace (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/ReplaceStatement;
-	public static fun replace (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Ljava/util/List;)Lorg/jetbrains/exposed/v1/core/statements/ReplaceSelectStatement;
-	public static synthetic fun replace$default (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Ljava/util/List;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/ReplaceSelectStatement;
-	public static fun update (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Join;Lkotlin/jvm/functions/Function1;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/core/statements/UpdateStatement;
-	public static fun update (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function1;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/UpdateStatement;
-	public static synthetic fun update$default (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Join;Lkotlin/jvm/functions/Function1;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/UpdateStatement;
-	public static synthetic fun update$default (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function1;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/UpdateStatement;
-	public static fun updateReturning (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/ReturningStatement;
-	public static synthetic fun updateReturning$default (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/ReturningStatement;
-	public static fun upsert (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/UpsertStatement;
-	public static synthetic fun upsert$default (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/UpsertStatement;
-	public static fun upsertReturning (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Ljava/util/List;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/ReturningStatement;
-	public static synthetic fun upsertReturning$default (Lorg/jetbrains/exposed/v1/core/statements/IStatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Ljava/util/List;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/ReturningStatement;
 }
 
 public class org/jetbrains/exposed/v1/core/statements/InsertSelectStatement : org/jetbrains/exposed/v1/core/statements/Statement {
@@ -3553,12 +3505,12 @@ public final class org/jetbrains/exposed/v1/core/statements/UpsertSqlExpressionB
 }
 
 public class org/jetbrains/exposed/v1/core/statements/UpsertStatement : org/jetbrains/exposed/v1/core/statements/InsertStatement, org/jetbrains/exposed/v1/core/statements/UpsertBuilder {
-	public fun <init> (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Ljava/util/List;Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Op;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Ljava/util/List;Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Op;)V
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Op;)V
 	public synthetic fun arguments ()Ljava/lang/Iterable;
 	public fun arguments ()Ljava/util/List;
 	public final fun getKeys ()[Lorg/jetbrains/exposed/v1/core/Column;
-	public final fun getOnUpdate ()Ljava/util/List;
+	public final synthetic fun getOnUpdate ()Ljava/util/List;
 	public final fun getOnUpdateExclude ()Ljava/util/List;
 	public final fun getWhere ()Lorg/jetbrains/exposed/v1/core/Op;
 	public fun insertValue (Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;
@@ -3582,7 +3534,7 @@ public abstract class org/jetbrains/exposed/v1/core/statements/api/ExposedDataba
 	public final fun getDatabase ()Ljava/lang/String;
 	public abstract fun getIdentifierManager ()Lorg/jetbrains/exposed/v1/core/statements/api/IdentifierManagerApi;
 	public abstract fun resetCurrentScheme ()V
-	public abstract fun resolveReferenceOption (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/ReferenceOption;
+	protected abstract fun resolveReferenceOption (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/ReferenceOption;
 }
 
 public final class org/jetbrains/exposed/v1/core/statements/api/ExposedDatabaseMetadataKt {
@@ -4051,7 +4003,7 @@ public abstract class org/jetbrains/exposed/v1/core/vendors/FunctionProvider {
 	public fun minute (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 	public fun month (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 	public fun nextVal (Lorg/jetbrains/exposed/v1/core/Sequence;Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
-	public fun queryLimit (IJZ)Ljava/lang/String;
+	public synthetic fun queryLimit (IJZ)Ljava/lang/String;
 	public fun queryLimitAndOffset (Ljava/lang/Integer;JZ)Ljava/lang/String;
 	public fun random (Ljava/lang/Integer;)Ljava/lang/String;
 	public fun regexp (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;ZLorg/jetbrains/exposed/v1/core/QueryBuilder;)V

@@ -558,7 +558,7 @@ class KotlinTimeTests : R2dbcDatabaseTestsBase() {
             val ts = text("ts")
         }
 
-        withTables(tester) {
+        withTables(tester, configure = { sqlLogger = StdOutSqlLogger }) {
             val now = Clock.System.now()
 
             tester.insert {
@@ -571,6 +571,7 @@ class KotlinTimeTests : R2dbcDatabaseTestsBase() {
             // This check validates that the value on database has local time (instead of UTC)
             // It should prevent from the case when we convert value to UTC on insert, and back from UTC to local on reading
             testerText.selectAll().first()[testerText.ts].let { valueAsText ->
+                // valueAsText - 2025-08-20T11:47:06.289, nowTimeString - 11:47:06.289219
                 kotlin.test.assertTrue(
                     valueAsText.contains(nowTimeString),
                     "Timestamp as text from database must contain the time in local time zone. Timestamp: $valueAsText, timeString: $nowTimeString"

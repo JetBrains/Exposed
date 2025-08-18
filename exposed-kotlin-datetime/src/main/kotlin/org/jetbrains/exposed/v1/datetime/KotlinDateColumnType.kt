@@ -2,12 +2,16 @@ package org.jetbrains.exposed.v1.datetime
 
 import kotlinx.datetime.*
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.datetime.DurationColumnType
+import org.jetbrains.exposed.v1.core.datetime.InstantColumnType
+import org.jetbrains.exposed.v1.core.datetime.LocalDateColumnType
+import org.jetbrains.exposed.v1.core.datetime.LocalDateTimeColumnType
+import org.jetbrains.exposed.v1.core.datetime.LocalTimeColumnType
+import org.jetbrains.exposed.v1.core.datetime.OffsetDateTimeColumnType
 import java.sql.Timestamp
 import java.time.OffsetDateTime
 import kotlin.time.Duration
 import kotlin.time.Instant
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
 import kotlinx.datetime.Instant as xInstant
 
 /**
@@ -16,9 +20,9 @@ import kotlinx.datetime.Instant as xInstant
  * @sample date
  */
 class KotlinLocalDateColumnType : LocalDateColumnType<LocalDate>() {
-    override fun toLocalDate(value: LocalDate) = value.toJavaLocalDate()
+    override fun toLocalDate(value: LocalDate) = value
 
-    override fun fromLocalDate(value: java.time.LocalDate) = value.toKotlinLocalDate()
+    override fun fromLocalDate(value: LocalDate) = value
 
     companion object {
         internal val INSTANCE = KotlinLocalDateColumnType()
@@ -31,9 +35,9 @@ class KotlinLocalDateColumnType : LocalDateColumnType<LocalDate>() {
  * @sample datetime
  */
 class KotlinLocalDateTimeColumnType : LocalDateTimeColumnType<LocalDateTime>() {
-    override fun toLocalDateTime(value: LocalDateTime) = value.toJavaLocalDateTime()
+    override fun toLocalDateTime(value: LocalDateTime) = value
 
-    override fun fromLocalDateTime(value: java.time.LocalDateTime) = value.toKotlinLocalDateTime()
+    override fun fromLocalDateTime(value: LocalDateTime) = value
 
     override fun valueFromDB(value: Any): LocalDateTime? = when (value) {
         is LocalDateTime -> value
@@ -51,9 +55,9 @@ class KotlinLocalDateTimeColumnType : LocalDateTimeColumnType<LocalDateTime>() {
  * @sample time
  */
 class KotlinLocalTimeColumnType : LocalTimeColumnType<LocalTime>() {
-    override fun toLocalTime(value: LocalTime): java.time.LocalTime = value.toJavaLocalTime()
+    override fun toLocalTime(value: LocalTime): LocalTime = value
 
-    override fun fromLocalTime(value: java.time.LocalTime) = value.toKotlinLocalTime()
+    override fun fromLocalTime(value: LocalTime) = value
 
     override fun valueFromDB(value: Any): LocalTime? = when (value) {
         is LocalTime -> value
@@ -74,10 +78,10 @@ class KotlinLocalTimeColumnType : LocalTimeColumnType<LocalTime>() {
     "Deprecated due to usage of old kotlinx.datetime.Instant",
     replaceWith = ReplaceWith("KotlinInstantColumnType")
 )
-class XKotlinInstantColumnType : DatetimeColumnType<xInstant>() {
-    override fun toInstant(value: xInstant) = value.toStdlibInstant().toJavaInstant()
+class XKotlinInstantColumnType : InstantColumnType<xInstant>() {
+    override fun toInstant(value: xInstant) = value.toStdlibInstant()
 
-    override fun fromInstant(instant: java.time.Instant) = instant.toKotlinInstant().toDeprecatedInstant()
+    override fun fromInstant(instant: Instant) = instant.toDeprecatedInstant()
 
     companion object {
         internal val INSTANCE = XKotlinInstantColumnType()
@@ -89,10 +93,10 @@ class XKotlinInstantColumnType : DatetimeColumnType<xInstant>() {
  *
  * @sample Timestamp
  */
-class KotlinInstantColumnType : DatetimeColumnType<Instant>() {
-    override fun toInstant(value: Instant) = value.toJavaInstant()
+class KotlinInstantColumnType : InstantColumnType<Instant>() {
+    override fun toInstant(value: Instant) = value
 
-    override fun fromInstant(instant: java.time.Instant) = instant.toKotlinInstant()
+    override fun fromInstant(instant: Instant) = instant
 
     companion object {
         internal val INSTANCE = KotlinInstantColumnType()
