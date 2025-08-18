@@ -111,6 +111,7 @@ public class org/jetbrains/exposed/v1/jdbc/JdbcTransaction : org/jetbrains/expos
 	public static synthetic fun exec$default (Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;Ljava/lang/String;Ljava/lang/Iterable;Lorg/jetbrains/exposed/v1/core/statements/StatementType;ILjava/lang/Object;)Lkotlin/Unit;
 	public static synthetic fun exec$default (Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;Ljava/lang/String;Ljava/lang/Iterable;Lorg/jetbrains/exposed/v1/core/statements/StatementType;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun execInBatch (Ljava/util/List;)V
+	public final fun execQuery (Lorg/jetbrains/exposed/v1/jdbc/statements/BlockingExecutable;Lkotlin/jvm/functions/Function2;)Ljava/lang/Object;
 	public fun getConnection ()Lorg/jetbrains/exposed/v1/jdbc/statements/api/ExposedConnection;
 	public final fun getCurrentStatement ()Lorg/jetbrains/exposed/v1/jdbc/statements/api/JdbcPreparedStatementApi;
 	public synthetic fun getDb ()Lorg/jetbrains/exposed/v1/core/DatabaseApi;

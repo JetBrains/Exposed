@@ -21,7 +21,7 @@ import org.jetbrains.exposed.v1.datetime.XCurrentTimestamp
 import org.jetbrains.exposed.v1.datetime.timestamp
 import org.jetbrains.exposed.v1.datetime.xTimestamp
 import org.jetbrains.exposed.v1.r2dbc.*
-import org.jetbrains.exposed.v1.r2dbc.statements.BatchInsertSuspendExecutable
+import org.jetbrains.exposed.v1.r2dbc.statements.toExecutable
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.currentTestDB
@@ -538,10 +538,6 @@ class InsertTests : R2dbcDatabaseTestsBase() {
         }
     }
 
-    class BatchInsertOnConflictDoNothingExecutable(
-        override val statement: BatchInsertOnConflictDoNothing
-    ) : BatchInsertSuspendExecutable<BatchInsertOnConflictDoNothing>(statement)
-
     @Test
     fun testBatchInsertNumberOfInsertedRows() {
         val tab = object : Table("tab") {
@@ -551,9 +547,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
         withTables(excludeSettings = insertIgnoreUnsupportedDB, tab) {
             tab.insert { it[id] = "foo" }
 
-            val executable = BatchInsertOnConflictDoNothingExecutable(
-                BatchInsertOnConflictDoNothing(tab)
-            )
+            val executable = BatchInsertOnConflictDoNothing(tab).toExecutable()
             val numInserted = executable.run {
                 statement.addBatch()
                 statement[tab.id] = "foo"

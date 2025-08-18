@@ -74,10 +74,9 @@ sealed class SetOperation(
     override fun count(): Long {
         try {
             count = true
-            return transaction.exec(this) { rs ->
-                check(rs is JdbcResult) { "Unexpected result type: $rs" }
+            return transaction.execQuery(this) { rs ->
                 rs.next()
-                (rs.getObject(1) as? Number)?.toLong().also {
+                rs.getLong(1).also {
                     rs.close()
                 }
             }!!
@@ -91,8 +90,7 @@ sealed class SetOperation(
         val oldLimit = limit
         try {
             limit = 1
-            val rs = transaction.exec(this)!!
-            check(rs is JdbcResult) { "Unexpected result type: $rs" }
+            val rs = transaction.execQuery(this)
             return !rs.next().also { rs.close() }
         } finally {
             limit = oldLimit
@@ -156,8 +154,8 @@ sealed class SetOperation(
         get() = this
 
     override fun iterator(): Iterator<ResultRow> {
-        val rs = transaction.exec(queryToExecute)!! as JdbcResult
-        val resultIterator = ResultIterator(rs.result)
+        val rs = transaction.execQuery(queryToExecute)
+        val resultIterator = ResultIterator(rs)
         return if (transaction.db.supportsMultipleResultSets) {
             resultIterator
         } else {

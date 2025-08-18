@@ -76,7 +76,7 @@ sealed class SetOperation(
     override suspend fun count(): Long {
         return try {
             count = true
-            val rs = transaction.exec(this) as R2dbcResult
+            val rs = transaction.execQuery(this)
             rs.mapRows { (it.getObject(1) as? Number)?.toLong() }.single()
                 ?: error("Count query didn't return any results")
         } catch (cause: R2dbcException) {
@@ -91,7 +91,7 @@ sealed class SetOperation(
         val oldLimit = limit
         try {
             limit = 1
-            val rs = transaction.exec(this)!!
+            val rs = transaction.execQuery(this)
             return rs.rowsCount() == 0
         } catch (cause: R2dbcException) {
             throw ExposedR2dbcException(cause, this.getContexts(), TransactionManager.current())
@@ -161,7 +161,7 @@ sealed class SetOperation(
             .mapIndexed { index, expression -> expression to index }
             .toMap()
         val tx = TransactionManager.current()
-        val rs = tx.exec(queryToExecute)!! as R2dbcResult
+        val rs = tx.execQuery(queryToExecute)
 
         rs.mapRows { row ->
             val value = ResultRow.create(row, fieldIndex)
