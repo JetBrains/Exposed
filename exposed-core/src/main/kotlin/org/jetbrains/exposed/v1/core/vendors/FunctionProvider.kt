@@ -919,7 +919,7 @@ private fun QueryBuilder.addClausesToMergeStatement(transaction: Transaction, ta
         val defaultValuesStatementSupported = currentDialect !is H2Dialect
         when (clause.action) {
             MergeStatement.ClauseAction.INSERT -> {
-                val nextValExpression = autoIncColumn?.autoIncColumnType?.nextValExpression?.takeIf { autoIncColumn !in clause.arguments.map { it.first } }
+                val nextValExpression = autoIncColumn?.autoIncColumnType?.nextValExpression?.takeIf { autoIncColumn !in clause.arguments.map { (key, _) -> key } }
 
                 val extraArg = if (nextValExpression != null) listOf(autoIncColumn to nextValExpression) else emptyList()
 

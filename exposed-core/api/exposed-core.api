@@ -644,6 +644,25 @@ public final class org/jetbrains/exposed/v1/core/DatabaseConfig$Companion {
 	public static synthetic fun invoke$default (Lorg/jetbrains/exposed/v1/core/DatabaseConfig$Companion;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/DatabaseConfig;
 }
 
+public class org/jetbrains/exposed/v1/core/DatabaseConfigImpl : org/jetbrains/exposed/v1/core/DatabaseConfig {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/DatabaseConfig$Builder;)V
+	public fun getDefaultFetchSize ()Ljava/lang/Integer;
+	public fun getDefaultIsolationLevel ()I
+	public fun getDefaultMaxAttempts ()I
+	public fun getDefaultMaxRetryDelay ()J
+	public fun getDefaultMinRetryDelay ()J
+	public fun getDefaultReadOnly ()Z
+	public fun getDefaultSchema ()Lorg/jetbrains/exposed/v1/core/Schema;
+	public fun getExplicitDialect ()Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;
+	public fun getKeepLoadedReferencesOutOfTransaction ()Z
+	public fun getLogTooMuchResultSetsThreshold ()I
+	public fun getMaxEntitiesToStoreInCachePerEntity ()I
+	public fun getPreserveKeywordCasing ()Z
+	public fun getSqlLogger ()Lorg/jetbrains/exposed/v1/core/SqlLogger;
+	public fun getUseNestedTransactions ()Z
+	public fun getWarnLongQueriesDuration ()Ljava/lang/Long;
+}
+
 public abstract interface class org/jetbrains/exposed/v1/core/DdlAware {
 	public abstract fun createStatement ()Ljava/util/List;
 	public abstract fun dropStatement ()Ljava/util/List;

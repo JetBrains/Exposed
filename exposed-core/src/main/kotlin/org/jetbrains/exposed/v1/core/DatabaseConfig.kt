@@ -140,45 +140,48 @@ interface DatabaseConfig {
     }
 
     companion object {
-        // TODO make sure R2dbcDatabaseConfig has constructor function so that it is compatible with JDBC
         operator fun invoke(body: Builder.() -> Unit = {}): DatabaseConfig {
             val builder = Builder().apply(body)
             require(builder.defaultMaxAttempts > 0) { "defaultMaxAttempts must be set to perform at least 1 attempt." }
 
-            return object : DatabaseConfig {
-                override val sqlLogger: SqlLogger
-                    get() = builder.sqlLogger ?: Slf4jSqlDebugLogger
-                override val useNestedTransactions: Boolean
-                    get() = builder.useNestedTransactions
-                override val defaultFetchSize: Int?
-                    get() = builder.defaultFetchSize
-                override val defaultIsolationLevel: Int
-                    get() = builder.defaultIsolationLevel
-                override val defaultMaxAttempts: Int
-                    get() = builder.defaultMaxAttempts
-                override val defaultMinRetryDelay: Long
-                    get() = builder.defaultMinRetryDelay
-                override val defaultMaxRetryDelay: Long
-                    get() = builder.defaultMaxRetryDelay
-                override val defaultReadOnly: Boolean
-                    get() = builder.defaultReadOnly
-                override val warnLongQueriesDuration: Long?
-                    get() = builder.warnLongQueriesDuration
-                override val maxEntitiesToStoreInCachePerEntity: Int
-                    get() = builder.maxEntitiesToStoreInCachePerEntity
-                override val keepLoadedReferencesOutOfTransaction: Boolean
-                    get() = builder.keepLoadedReferencesOutOfTransaction
-                override val explicitDialect: DatabaseDialect?
-                    get() = builder.explicitDialect
-                override val defaultSchema: Schema?
-                    get() = builder.defaultSchema
-                override val logTooMuchResultSetsThreshold: Int
-                    get() = builder.logTooMuchResultSetsThreshold
-
-                @OptIn(ExperimentalKeywordApi::class)
-                override val preserveKeywordCasing: Boolean
-                    get() = builder.preserveKeywordCasing
-            }
+            @OptIn(InternalApi::class)
+            return DatabaseConfigImpl(builder)
         }
     }
+}
+
+@InternalApi
+open class DatabaseConfigImpl(private val builder: DatabaseConfig.Builder) : DatabaseConfig {
+    override val sqlLogger: SqlLogger
+        get() = builder.sqlLogger ?: Slf4jSqlDebugLogger
+    override val useNestedTransactions: Boolean
+        get() = builder.useNestedTransactions
+    override val defaultFetchSize: Int?
+        get() = builder.defaultFetchSize
+    override val defaultIsolationLevel: Int
+        get() = builder.defaultIsolationLevel
+    override val defaultMaxAttempts: Int
+        get() = builder.defaultMaxAttempts
+    override val defaultMinRetryDelay: Long
+        get() = builder.defaultMinRetryDelay
+    override val defaultMaxRetryDelay: Long
+        get() = builder.defaultMaxRetryDelay
+    override val defaultReadOnly: Boolean
+        get() = builder.defaultReadOnly
+    override val warnLongQueriesDuration: Long?
+        get() = builder.warnLongQueriesDuration
+    override val maxEntitiesToStoreInCachePerEntity: Int
+        get() = builder.maxEntitiesToStoreInCachePerEntity
+    override val keepLoadedReferencesOutOfTransaction: Boolean
+        get() = builder.keepLoadedReferencesOutOfTransaction
+    override val explicitDialect: DatabaseDialect?
+        get() = builder.explicitDialect
+    override val defaultSchema: Schema?
+        get() = builder.defaultSchema
+    override val logTooMuchResultSetsThreshold: Int
+        get() = builder.logTooMuchResultSetsThreshold
+
+    @OptIn(ExperimentalKeywordApi::class)
+    override val preserveKeywordCasing: Boolean
+        get() = builder.preserveKeywordCasing
 }

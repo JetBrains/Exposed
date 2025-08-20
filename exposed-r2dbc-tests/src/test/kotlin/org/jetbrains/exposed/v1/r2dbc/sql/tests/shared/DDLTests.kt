@@ -108,7 +108,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
     private val keywordFlagDB by lazy {
         R2dbcDatabase.connect(
             url = "r2dbc:h2:mem:///flagtest;DB_CLOSE_DELAY=-1;",
-            databaseConfig = {
+            databaseConfig = R2dbcDatabaseConfig {
                 @OptIn(ExperimentalKeywordApi::class)
                 preserveKeywordCasing = false
             }
