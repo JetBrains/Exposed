@@ -4,8 +4,8 @@
 **Summary of the change**: Provide a concise summary of this PR. Describe the changes made in a single sentence or short paragraph.
 
 **Detailed description**:
-- **What**: Detail what changes have been made in the PR.
 - **Why**: Explain the reasons behind the changes. Why were they necessary?
+- **What**: Detail what changes have been made in the PR.
 - **How**: Describe how the changes were implemented, including any key aspects of the code modified or new features added.
 
 ---
