@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.v1.core.dao.id
 
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.wrap
+import org.jetbrains.exposed.v1.core.wrap
 import java.util.*
 
 /** Base class representing a producer of [EntityID] instances.  */

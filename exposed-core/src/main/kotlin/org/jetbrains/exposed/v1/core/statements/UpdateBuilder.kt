@@ -111,7 +111,7 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
     }
 
     /** Updates the mapping of the specified [column] with the value of the provided expression. */
-    open fun <T, S : T?> update(column: Column<T>, value: SqlExpressionBuilder.() -> Expression<S>) {
-        update(column, SqlExpressionBuilder.value())
+    open fun <T, S : T?> update(column: Column<T>, value: () -> Expression<S>) {
+        update(column, value())
     }
 }

@@ -2,7 +2,6 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.ddl
 
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.isNull
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable

@@ -12,6 +12,10 @@ import kotlinx.datetime.toDeprecatedInstant
 import org.jetbrains.exposed.v1.core.Cast
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.isNotNull
+import org.jetbrains.exposed.v1.core.isNull
+import org.jetbrains.exposed.v1.core.neq
 import org.jetbrains.exposed.v1.core.substring
 import org.jetbrains.exposed.v1.datetime.*
 import org.jetbrains.exposed.v1.r2dbc.insert

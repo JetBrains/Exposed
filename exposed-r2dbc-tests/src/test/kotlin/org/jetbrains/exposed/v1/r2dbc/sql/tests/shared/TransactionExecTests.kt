@@ -5,9 +5,10 @@ import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.InternalApi
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.autoIncColumnType
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.statements.buildStatement
 import org.jetbrains.exposed.v1.core.upperCase

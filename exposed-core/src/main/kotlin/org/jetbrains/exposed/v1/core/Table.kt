@@ -2,7 +2,6 @@
 
 package org.jetbrains.exposed.v1.core
 
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.wrap
 import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.EntityIDFunctionProvider
@@ -90,7 +89,7 @@ abstract class ColumnSet : FieldSet {
         onColumn: Expression<*>? = null,
         otherColumn: Expression<*>? = null,
         lateral: Boolean = false,
-        additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+        additionalConstraint: (() -> Op<Boolean>)? = null,
     ): Join
 
     /** Creates an inner join relation with [otherTable]. */
@@ -119,7 +118,7 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.innerJoin(
     otherTable: C2,
     onColumn: (C1.() -> Expression<*>)? = null,
     otherColumn: (C2.() -> Expression<*>)? = null,
-    additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    additionalConstraint: (() -> Op<Boolean>)? = null,
 ): Join = join(otherTable, JoinType.INNER, onColumn?.invoke(this), otherColumn?.invoke(otherTable), false, additionalConstraint)
 
 /**
@@ -132,7 +131,7 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.leftJoin(
     otherTable: C2,
     onColumn: (C1.() -> Expression<*>)? = null,
     otherColumn: (C2.() -> Expression<*>)? = null,
-    additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    additionalConstraint: (() -> Op<Boolean>)? = null,
 ): Join = join(otherTable, JoinType.LEFT, onColumn?.invoke(this), otherColumn?.invoke(otherTable), false, additionalConstraint)
 
 /**
@@ -145,7 +144,7 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.rightJoin(
     otherTable: C2,
     onColumn: (C1.() -> Expression<*>)? = null,
     otherColumn: (C2.() -> Expression<*>)? = null,
-    additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    additionalConstraint: (() -> Op<Boolean>)? = null,
 ): Join = join(otherTable, JoinType.RIGHT, onColumn?.invoke(this), otherColumn?.invoke(otherTable), false, additionalConstraint)
 
 /**
@@ -158,7 +157,7 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.fullJoin(
     otherTable: C2,
     onColumn: (C1.() -> Expression<*>)? = null,
     otherColumn: (C2.() -> Expression<*>)? = null,
-    additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    additionalConstraint: (() -> Op<Boolean>)? = null,
 ): Join = join(otherTable, JoinType.FULL, onColumn?.invoke(this), otherColumn?.invoke(otherTable), false, additionalConstraint)
 
 /**
@@ -171,7 +170,7 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.crossJoin(
     otherTable: C2,
     onColumn: (C1.() -> Expression<*>)? = null,
     otherColumn: (C2.() -> Expression<*>)? = null,
-    additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    additionalConstraint: (() -> Op<Boolean>)? = null,
 ): Join = join(otherTable, JoinType.CROSS, onColumn?.invoke(this), otherColumn?.invoke(otherTable), false, additionalConstraint)
 
 /**
@@ -229,7 +228,7 @@ class Join(
         onColumn: Expression<*>? = null,
         otherColumn: Expression<*>? = null,
         lateral: Boolean = false,
-        additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+        additionalConstraint: (() -> Op<Boolean>)? = null,
     ) : this(table) {
         val newJoin = when {
             onColumn != null && otherColumn != null -> {
@@ -264,7 +263,7 @@ class Join(
         onColumn: Expression<*>?,
         otherColumn: Expression<*>?,
         lateral: Boolean,
-        additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?
+        additionalConstraint: (() -> Op<Boolean>)?
     ): Join {
         val cond = if (onColumn != null && otherColumn != null) {
             listOf(JoinCondition(onColumn, otherColumn))
@@ -322,7 +321,7 @@ class Join(
         otherTable: ColumnSet,
         joinType: JoinType,
         cond: List<JoinCondition>,
-        additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?,
+        additionalConstraint: (() -> Op<Boolean>)?,
         lateral: Boolean = false
     ): Join = join(JoinPart(joinType, otherTable, cond, lateral, additionalConstraint))
 
@@ -345,7 +344,7 @@ class Join(
         /** Indicates whether the LATERAL keyword should be included in the JOIN operation. */
         val lateral: Boolean = false,
         /** The conditions used to join tables, placed in the `ON` clause. */
-        val additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
+        val additionalConstraint: (() -> Op<Boolean>)? = null
     ) {
         init {
             require(
@@ -387,7 +386,7 @@ class Join(
                     append(" AND ")
                 }
                 append(" (")
-                append(SqlExpressionBuilder.(additionalConstraint)())
+                append(additionalConstraint())
                 append(")")
             }
         }
@@ -559,7 +558,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         onColumn: Expression<*>?,
         otherColumn: Expression<*>?,
         lateral: Boolean,
-        additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?
+        additionalConstraint: (() -> Op<Boolean>)?
     ): Join = Join(this, otherTable, joinType, onColumn, otherColumn, lateral, additionalConstraint)
 
     override infix fun innerJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.INNER)
@@ -1037,7 +1036,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     /** Sets the default value for this column in the database side. */
     fun <T> Column<T>.default(defaultValue: T): Column<T> = apply {
-        dbDefaultValue = with(SqlExpressionBuilder) { asLiteral(defaultValue) }
+        dbDefaultValue = asLiteral(defaultValue)
         defaultValueFun = { defaultValue }
     }
 
@@ -1523,7 +1522,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
                 isUnique,
                 customIndexName,
                 indexType,
-                filterCondition?.invoke(SqlExpressionBuilder),
+                filterCondition?.invoke(),
                 functions,
                 functions?.let { this }
             )
@@ -1630,9 +1629,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * the database engine decides the default name.
      * @param op The expression against which the newly inserted values will be compared.
      */
-    fun <T> Column<T>.check(name: String = "", op: SqlExpressionBuilder.(Column<T>) -> Op<Boolean>): Column<T> = apply {
+    fun <T> Column<T>.check(name: String = "", op: (Column<T>) -> Op<Boolean>): Column<T> = apply {
         if (name.isEmpty() || table.checkConstraints.none { it.first.equals(name, true) }) {
-            table.checkConstraints.add(name to SqlExpressionBuilder.op(this))
+            table.checkConstraints.add(name to op(this))
         } else {
             exposedLogger
                 .warn("A CHECK constraint with name '$name' was ignored because there is already one with that name")
@@ -1646,9 +1645,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * the database engine decides the default name.
      * @param op The expression against which the newly inserted values will be compared.
      */
-    fun check(name: String = "", op: SqlExpressionBuilder.() -> Op<Boolean>) {
+    fun check(name: String = "", op: () -> Op<Boolean>) {
         if (name.isEmpty() || checkConstraints.none { it.first.equals(name, true) }) {
-            checkConstraints.add(name to SqlExpressionBuilder.op())
+            checkConstraints.add(name to op())
         } else {
             exposedLogger
                 .warn("A CHECK constraint with name '$name' was ignored because there is already one with that name")

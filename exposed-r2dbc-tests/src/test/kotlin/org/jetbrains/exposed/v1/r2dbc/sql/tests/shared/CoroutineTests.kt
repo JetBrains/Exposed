@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.insert

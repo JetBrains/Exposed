@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.v1.dao
 
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -177,7 +176,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
             return SizedCollection(cached)
         }
 
-        return wrapRows(searchQuery(Op.build { table.id inList distinctIds }))
+        return wrapRows(searchQuery(table.id inList distinctIds))
     }
 
     /** Returns a [SizedIterable] containing all entities with id values from the provided [ids] list. */
@@ -296,7 +295,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * @return A [SizedIterable] of all the entities that conform to this condition.
      * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.preloadOptionalReferencesOnAnEntity
      */
-    fun find(op: SqlExpressionBuilder.() -> Op<Boolean>): SizedIterable<T> = find(SqlExpressionBuilder.op())
+    fun find(op: () -> Op<Boolean>): SizedIterable<T> = find(op())
 
     /**
      * Searches the current [EntityCache] for all [Entity] instances that match the provided [cacheCheckCondition].
@@ -305,7 +304,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * @return A sequence of matching entities found.
      */
-    fun findWithCacheCondition(cacheCheckCondition: T.() -> Boolean, op: SqlExpressionBuilder.() -> Op<Boolean>): Sequence<T> {
+    fun findWithCacheCondition(cacheCheckCondition: T.() -> Boolean, op: () -> Op<Boolean>): Sequence<T> {
         val cached = testCache(cacheCheckCondition)
         return if (cached.any()) cached else find(op).asSequence()
     }
@@ -405,7 +404,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * Creates a [View] or subset of [Entity] instances, which are managed by this [EntityClass] and
      * conform to the specified [op] conditional expression.
      */
-    inline fun view(op: SqlExpressionBuilder.() -> Op<Boolean>) = View(SqlExpressionBuilder.op(), this)
+    inline fun view(op: () -> Op<Boolean>) = View(op(), this)
 
     private val refDefinitions = HashMap<Pair<Column<*>, KClass<*>>, Any>()
 
@@ -870,7 +869,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
 
             return distinctRefIds.flatMap { cache.getReferrers<T>(it, refColumn)?.toList().orEmpty() }
         } else {
-            val baseQuery = searchQuery(Op.build { refColumn inList distinctRefIds })
+            val baseQuery = searchQuery(refColumn inList distinctRefIds)
             val finalQuery = if (parentTable.id in baseQuery.set.fields) {
                 baseQuery
             } else {
@@ -932,7 +931,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
 
             return distinctRefIds.flatMap { cache.getReferrers<T>(it, delegateRefColumn)?.toList().orEmpty() }
         } else {
-            val baseQuery = searchQuery(Op.build { refColumns.keys.toList() inList distinctRefIds.map { it.value } })
+            val baseQuery = searchQuery(refColumns.keys.toList() inList distinctRefIds.map { it.value })
             val findQuery = wrapRows(baseQuery)
             val entities = getEntities(forUpdate, findQuery).distinct()
             val result = entities.groupByReference<CompositeID>(refColumns = refColumns)

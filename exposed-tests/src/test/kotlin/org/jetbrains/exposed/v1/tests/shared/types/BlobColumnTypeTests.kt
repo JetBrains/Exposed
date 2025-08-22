@@ -4,6 +4,7 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.blobParam
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.statements.api.ExposedBlob
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException

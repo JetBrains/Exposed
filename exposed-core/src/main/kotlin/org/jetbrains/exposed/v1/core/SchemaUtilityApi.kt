@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.v1.core
 
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.asLiteral
 import org.jetbrains.exposed.v1.core.vendors.*
 import java.math.BigDecimal
 

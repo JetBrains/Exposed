@@ -63,13 +63,13 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
             SortOrder.DESC_NULLS_LAST -> super.precessOrderByClause(queryBuilder, expression, SortOrder.DESC)
             else -> {
                 val sortOrderClause = if (sortOrder == SortOrder.ASC_NULLS_LAST) {
-                    Expression.build {
-                        Case().When(expression.isNull(), intLiteral(1)).Else(intLiteral(0))
-                    } to SortOrder.ASC
+                    Case()
+                        .When(expression.isNull(), intLiteral(1))
+                        .Else(intLiteral(0)) to SortOrder.ASC
                 } else {
-                    Expression.build {
-                        Case().When(expression.isNull(), intLiteral(0)).Else(intLiteral(1))
-                    } to SortOrder.DESC
+                    Case()
+                        .When(expression.isNull(), intLiteral(0))
+                        .Else(intLiteral(1)) to SortOrder.DESC
                 }
                 queryBuilder.append(sortOrderClause.first, ", ")
                 super.precessOrderByClause(queryBuilder, expression, sortOrderClause.second)

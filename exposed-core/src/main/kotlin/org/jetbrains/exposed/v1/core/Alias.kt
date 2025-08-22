@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.v1.core
 
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.wrap
 import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -214,7 +213,7 @@ class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
         onColumn: Expression<*>?,
         otherColumn: Expression<*>?,
         lateral: Boolean,
-        additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?,
+        additionalConstraint: (() -> Op<Boolean>)?,
     ): Join =
         Join(this, otherTable, joinType, onColumn, otherColumn, lateral, additionalConstraint)
 
@@ -280,7 +279,7 @@ fun <T> ExpressionWithColumnType<T>.alias(alias: String) = ExpressionWithColumnT
  * @sample org.jetbrains.exposed.v1.tests.shared.AliasesTests.testJoinSubQuery02
  */
 fun Join.joinQuery(
-    on: (SqlExpressionBuilder.(QueryAlias) -> Op<Boolean>)? = null,
+    on: ((QueryAlias) -> Op<Boolean>)? = null,
     joinType: JoinType = JoinType.INNER,
     lateral: Boolean = false,
     joinPart: () -> AbstractQuery<*>
@@ -297,7 +296,7 @@ fun Join.joinQuery(
  * @param joinPart The query to join with.
  */
 fun Table.joinQuery(
-    on: (SqlExpressionBuilder.(QueryAlias) -> Op<Boolean>)? = null,
+    on: ((QueryAlias) -> Op<Boolean>)? = null,
     joinType: JoinType = JoinType.INNER,
     lateral: Boolean = false,
     joinPart: () -> AbstractQuery<*>

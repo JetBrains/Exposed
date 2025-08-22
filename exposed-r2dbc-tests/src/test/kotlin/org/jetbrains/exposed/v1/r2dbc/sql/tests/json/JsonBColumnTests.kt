@@ -9,8 +9,6 @@ import kotlinx.serialization.builtins.ArraySerializer
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException

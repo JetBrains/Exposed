@@ -58,6 +58,127 @@ This means that a project with a dependency on <code>exposed-spring-boot-starter
 additional dependency on <code>exposed-jdbc</code>.
 </note>
 
+### `SqlExpressionBuilder` method imports {id = sql-expression-builder-imports}
+
+The interface `ISqlExpressionBuilder` (and all its methods) has been deprecated, along with its implementation objects, 
+`SqlExpressionBuilder` and `UpsertSqlExpressionBuilder`. All methods previously restricted to this interface should now
+be replaced with their new equivalent top-level functions. This will require the addition of new import statements if
+`org.jetbrains.exposed.v1.core.*` is not already present:
+
+<compare first-title="0.61.0" second-title="1.0.0">
+
+```kotlin
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
+import org.jetbrains.exposed.sql.selectAll
+    
+val amountIsLow = TableA.amount less 10
+TableA
+    .selectAll()
+    .where(amountIsLow)
+```
+
+```kotlin
+import org.jetbrains.exposed.v1.core.less
+import org.jetbrains.exposed.v1.jdbc.selectAll
+
+val amountIsLow = TableA.amount less 10
+TableA
+    .selectAll()
+    .where(amountIsLow)
+```
+
+</compare>
+
+<compare first-title="0.61.0" second-title="1.0.0">
+
+```kotlin
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNotNull
+    
+val isValid = TableA.value.isNotNull() and
+    (TableA.amount greaterEq 10)
+TableA
+    .selectAll()
+    .where(isValid)
+```
+
+```kotlin
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.jdbc.selectAll
+
+val isValid = TableA.value.isNotNull() and
+    (TableA.amount greaterEq 10)
+TableA
+    .selectAll()
+    .where(isValid)
+```
+
+</compare>
+
+This means that it is no longer necessary to use a scope function with `SqlExpressionBuilder` as the receiver,
+so builder methods like `Op.build()` and `Expression.build()` have also been deprecated:
+
+<compare first-title="0.61.0" second-title="1.0.0">
+
+```kotlin
+import org.jetbrains.exposed.sql.Case
+import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.SqlExpressionBuilder
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat
+import org.jetbrains.exposed.sql.alias
+import org.jetbrains.exposed.sql.update
+    
+val calculatedAmount = Expression.build {
+    (TableA.amount * 2) - 10
+}
+
+val detailsInvalid = Op.build {
+    TableA.details like "% - N/A"
+}
+
+val newDetails = with(SqlExpressionBuilder) {
+    Case()
+        .When(TableA.amount eq 0, TableA.details + " - S/O")
+        .When(TableA.warranty.isNull(), TableA.details + " - N/A")
+        .Else(TableA.details)
+}.alias("nl")
+
+TableA.update {
+    it[TableA.details] = concat(TableA.details.upperCase(), stringLiteral(" - UPDATED"))
+    it.update(TableA.amount) { TableA.amount plus 3 }
+}
+```
+
+```kotlin
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.jdbc.update
+
+val calculatedAmount = (TableA.amount * 2) - 10
+
+val detailsInvalid = TableA.details like "% - N/A"
+
+val newDetails = Case()
+    .When(TableA.amount eq 0, TableA.details + " - S/O")
+    .When(TableA.warranty.isNull(), TableA.details + " - N/A")
+    .Else(TableA.details)
+    .alias("nl")
+
+TableA.update {
+    it[TableA.details] = concat(TableA.details.upperCase(), stringLiteral(" - UPDATED"))
+    it[TableA.amount] = TableA.amount plus 3
+}
+```
+
+</compare>
+
+<note>
+Any higher-order function with a parameter that accepts <code>SqlExpressionBuilder</code> as the receiver (or argument)
+has also changed to no longer use this object, meaning that import statements may need to be added.
+See the <a href="#sql-expression-builder-lambda">section below</a> for more details.
+</note>
+
 ### IDE auto-import assistance
 
 The above changes to the import paths will present as multiple unresolved errors in your IDE and may be tedious to resolve and add manually.
@@ -437,6 +558,72 @@ to calling `Table.deleteAll()` or `Table.deleteWhere()`.
 Following version 1.0.0's removal of statement execution logic from
 `exposed-core`, these companion methods have now been deprecated. It is recommended to use the table extension functions
 directly or combine a `DeleteStatement` constructor with `DeleteBlockingExecutable`.
+
+### `SqlExpressionBuilder` lambda blocks {id = sql-expression-builder-lambda}
+
+As mentioned in the [imports section above](#sql-expression-builder-imports), `SqlExpressionBuilder` object has been deprecated.
+
+Prior to version 1.0.0, many higher-order functions used this object as a parameter receiver to allow access to its methods
+without needing import statements for every single method used. Since all these object methods have been replaced with
+top-level functions, such receivers are now redundant and have been removed.
+
+All expression builder methods passed to these function parameters will now be unresolved unless either a statement such as
+`import org.jetbrains.exposed.v1.core.*` is already present, or the prompted import statements are added:
+
+<compare first-title="0.61.0" second-title="1.0.0">
+
+```kotlin
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.count
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.update
+
+TableA.update(
+    where = { TableA.details like "%S/O" }
+) {
+    it.update(TableA.amount) { TableA.amount plus 3 }
+}
+
+TableA
+    .selectAll()
+    .where {
+        TableA.details eq "N/A" and TableA.warranty.isNull()
+    }
+    .groupBy(TableA.label)
+    .having {
+        TableA.label.count() greaterEq longLiteral(1)
+    }
+```
+
+```kotlin
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.count
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greaterEq
+import org.jetbrains.exposed.v1.core.isNull
+import org.jetbrains.exposed.v1.core.like
+import org.jetbrains.exposed.v1.core.plus
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
+
+TableA.update(
+    where = { TableA.details like "%S/O" }
+) {
+    it.update(TableA.amount) { TableA.amount plus 3 }
+}
+
+TableA
+    .selectAll()
+    .where {
+        TableA.details eq "N/A" and TableA.warranty.isNull()
+    }
+    .groupBy(TableA.label)
+    .having {
+        TableA.label.count() greaterEq longLiteral(1)
+    }
+```
+
+</compare>
 
 ## Queries
 

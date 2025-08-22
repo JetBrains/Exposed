@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.v1.tests.shared.dml
 
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.longLiteral
 import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.core.trim

@@ -234,7 +234,7 @@ data class CheckConstraint(
 }
 
 /** A conditional expression used as a filter when creating a partial index. */
-typealias FilterCondition = (SqlExpressionBuilder.() -> Op<Boolean>)?
+typealias FilterCondition = (() -> Op<Boolean>)?
 
 /**
  * Represents an index.

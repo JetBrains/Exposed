@@ -3,6 +3,8 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.javatime
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.javatime.date
 import org.jetbrains.exposed.v1.javatime.dateLiteral
 import org.jetbrains.exposed.v1.javatime.dateTimeLiteral

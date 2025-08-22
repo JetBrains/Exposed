@@ -74,7 +74,7 @@ open class DeleteStatement(
         if (targetsSet is Join) {
             targetsSet.joinParts.forEach {
                 (it.joinPart as? QueryAlias)?.query?.prepareSQL(this)
-                it.additionalConstraint?.invoke(SqlExpressionBuilder)?.toQueryBuilder(this)
+                it.additionalConstraint?.invoke()?.toQueryBuilder(this)
             }
         }
         where?.toQueryBuilder(this)

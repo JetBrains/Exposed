@@ -121,13 +121,13 @@ public abstract class org/jetbrains/exposed/v1/dao/EntityClass {
 	public final fun count (Lorg/jetbrains/exposed/v1/core/Op;)J
 	public static synthetic fun count$default (Lorg/jetbrains/exposed/v1/dao/EntityClass;Lorg/jetbrains/exposed/v1/core/Op;ILjava/lang/Object;)J
 	protected fun createInstance (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;Lorg/jetbrains/exposed/v1/core/ResultRow;)Lorg/jetbrains/exposed/v1/dao/Entity;
-	public final fun find (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
+	public final fun find (Lkotlin/jvm/functions/Function0;)Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
 	public final fun find (Lorg/jetbrains/exposed/v1/core/Op;)Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
 	public final fun findById (Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/dao/Entity;
 	public fun findById (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;)Lorg/jetbrains/exposed/v1/dao/Entity;
 	public final fun findByIdAndUpdate (Ljava/lang/Object;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/dao/Entity;
 	public final fun findSingleByAndUpdate (Lorg/jetbrains/exposed/v1/core/Op;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/dao/Entity;
-	public final fun findWithCacheCondition (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lkotlin/sequences/Sequence;
+	public final fun findWithCacheCondition (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;)Lkotlin/sequences/Sequence;
 	public fun forEntityIds (Ljava/util/List;)Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
 	public final fun forIds (Ljava/util/List;)Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
 	public final fun get (Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/dao/Entity;
@@ -167,7 +167,7 @@ public abstract class org/jetbrains/exposed/v1/dao/EntityClass {
 	public final fun transform (Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/dao/EntityFieldWithTransform;
 	public final fun transform (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnTransformer;)Lorg/jetbrains/exposed/v1/dao/EntityFieldWithTransform;
 	public final fun transform (Lorg/jetbrains/exposed/v1/dao/EntityFieldWithTransform;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/dao/EntityFieldWithTransform;
-	public final fun view (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/dao/View;
+	public final fun view (Lkotlin/jvm/functions/Function0;)Lorg/jetbrains/exposed/v1/dao/View;
 	protected fun warmCache ()Lorg/jetbrains/exposed/v1/dao/EntityCache;
 	public final fun warmUpLinkedReferences (Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Boolean;Z)Ljava/util/List;
 	public static synthetic fun warmUpLinkedReferences$default (Lorg/jetbrains/exposed/v1/dao/EntityClass;Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Boolean;ZILjava/lang/Object;)Ljava/util/List;

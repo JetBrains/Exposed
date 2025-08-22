@@ -1,6 +1,6 @@
 # Breaking Changes
 
-## 1.0.0-beta-6 <!--- temp name; potential RC -->
+## 1.0.0-RC
 
 * `R2dbcPreparedStatementApi.executeUpdate()` no longer returns a value. It was previously defined as returning an integer of the affected row count,
   as per the JDBC variant, but it always returned a value of zero due to the nature of R2DBC result processing. If you wish to still retrieve the affected
@@ -8,6 +8,14 @@
   `R2dbcPreparedStatementApi.getResultRow()?.rowsUpdated()?.singleOrNull()`.
 * Levels of deprecated API have been bumped. See [PR #2588](https://github.com/JetBrains/Exposed/pull/2588) and
   [Migration Guide](https://www.jetbrains.com/help/exposed/migration-guide-1-0-0.html) for full details.
+* The interface `ISqlExpressionBuilder` (and all its methods) has been deprecated, along with its implementation objects,
+  `SqlExpressionBuilder` and `UpsertSqlExpressionBuilder`. All methods previously restricted to this interface should now
+  be replaced with their new equivalent top-level functions. This will require the addition of new import statements if
+  `org.jetbrains.exposed.v1.core.*` is not already present. This means that any higher-order function that used either of
+  the objects as the receiver (or argument) have been changed to no longer rely on these objects. In such cases, expression
+  builder methods in the function parameter blocks will now be unresolved unless the appropriate import is added.
+  See the migration guide for full details on `SqlExpressionBuilder` [imports](https://www.jetbrains.com/help/exposed/migration-guide-1-0-0.html#sql-expression-builder-imports)
+  and [higher-order functions](https://www.jetbrains.com/help/exposed/migration-guide-1-0-0.html#sql-expression-builder-lambda).
 * Parameter `supportsSelectForUpdate` from `DatabaseDialect` was deprecated and should not be used. The parameter was moved to `JdbcExposedDatabaseMetadata`/
   `R2dbcExposedDatabaseMetadata` classes. It could be used with call `TransactionManager.current().connection.metadata { supportsSelectForUpdate }` now.
 

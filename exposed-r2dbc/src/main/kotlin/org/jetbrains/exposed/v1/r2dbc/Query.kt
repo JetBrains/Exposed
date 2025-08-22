@@ -9,8 +9,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greater
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.less
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
@@ -126,7 +124,7 @@ open class Query(
      *
      * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.SelectTests.testSelect
      */
-    fun where(predicate: SqlExpressionBuilder.() -> Op<Boolean>): Query = where(SqlExpressionBuilder.predicate())
+    fun where(predicate: () -> Op<Boolean>): Query = where(predicate())
 
     /**
      * Appends a `WHERE` clause with the specified [predicate] to this `SELECT` query.
@@ -350,8 +348,8 @@ open class Query(
  * Mutate Query instance and add `andPart` to having condition with `and` operator.
  * @return same Query instance which was provided as a receiver.
  */
-fun Query.andHaving(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHaving {
-    val expr = Op.build { andPart() }
+fun Query.andHaving(andPart: () -> Op<Boolean>) = adjustHaving {
+    val expr = andPart()
     if (this == null) expr else this and expr
 }
 
@@ -359,8 +357,8 @@ fun Query.andHaving(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHav
  * Mutate Query instance and add `orPart` to having condition with `or` operator.
  * @return same Query instance which was provided as a receiver.
  */
-fun Query.orHaving(orPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHaving {
-    val expr = Op.build { orPart() }
+fun Query.orHaving(orPart: () -> Op<Boolean>) = adjustHaving {
+    val expr = orPart()
     if (this == null) expr else this or expr
 }
 
@@ -368,8 +366,8 @@ fun Query.orHaving(orPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHavin
  * Mutate Query instance and add `andPart` to where condition with `and` operator.
  * @return same Query instance which was provided as a receiver.
  */
-fun Query.andWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
-    val expr = Op.build { andPart() }
+fun Query.andWhere(andPart: () -> Op<Boolean>) = adjustWhere {
+    val expr = andPart()
     if (this == null) expr else this and expr
 }
 
@@ -377,7 +375,7 @@ fun Query.andWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWher
  * Mutate Query instance and add `orPart` to where condition with `or` operator.
  * @return same Query instance which was provided as a receiver.
  */
-fun Query.orWhere(orPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
-    val expr = Op.build { orPart() }
+fun Query.orWhere(orPart: () -> Op<Boolean>) = adjustWhere {
+    val expr = orPart()
     if (this == null) expr else this or expr
 }

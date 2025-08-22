@@ -5,14 +5,14 @@ import org.jetbrains.exposed.v1.core.EntityIDColumnType
 import org.jetbrains.exposed.v1.core.EqOp
 import org.jetbrains.exposed.v1.core.Expression
 import org.jetbrains.exposed.v1.core.SortOrder
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.inList
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.wrap
 import org.jetbrains.exposed.v1.core.compoundAnd
 import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.wrap
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import kotlin.properties.ReadOnlyProperty

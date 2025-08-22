@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
@@ -798,7 +797,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
                 it[txtLong] = "1TxtLong"
             }
 
-            val concat = SqlExpressionBuilder.concat(
+            val concat = concat(
                 separator = " ", listOf(LowerCase(testTable.txt), UpperCase(testTable.txtMed), LowerCase(testTable.txtLong))
             )
 

@@ -4,6 +4,7 @@ import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect

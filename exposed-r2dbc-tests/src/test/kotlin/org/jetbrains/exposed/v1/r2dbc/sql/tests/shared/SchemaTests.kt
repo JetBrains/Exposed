@@ -4,6 +4,9 @@ import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.Schema
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.less
+import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils

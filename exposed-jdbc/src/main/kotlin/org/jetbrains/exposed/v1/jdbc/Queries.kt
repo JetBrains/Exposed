@@ -64,7 +64,7 @@ fun ColumnSet.select(columns: List<Expression<*>>): Query = Query(Select(this, c
  */
 fun <T : Table> T.deleteWhere(
     limit: Int? = null,
-    op: T.(ISqlExpressionBuilder) -> Op<Boolean>
+    op: T.() -> Op<Boolean>
 ): Int {
     if (limit != null && !currentDialectMetadata.supportsLimitWithUpdateOrDelete()) {
         throw UnsupportedByDialectException("LIMIT clause is not supported in DELETE statement.", currentDialect)
@@ -85,7 +85,7 @@ fun <T : Table> T.deleteWhere(
  */
 fun <T : Table> T.deleteIgnoreWhere(
     limit: Int? = null,
-    op: T.(ISqlExpressionBuilder) -> Op<Boolean>
+    op: T.() -> Op<Boolean>
 ): Int {
     if (limit != null && !currentDialectMetadata.supportsLimitWithUpdateOrDelete()) {
         throw UnsupportedByDialectException("LIMIT clause is not supported in DELETE statement.", currentDialect)
@@ -115,7 +115,7 @@ fun Table.deleteAll(): Int {
 @JvmName("deleteReturningNullableParam")
 fun <T : Table> T.deleteReturning(
     returning: List<Expression<*>> = columns,
-    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
+    where: (() -> Op<Boolean>)? = null
 ): ReturningBlockingExecutable {
     return where?.let { deleteReturning(returning, it) } ?: deleteReturning(returning)
 }
@@ -131,7 +131,7 @@ fun <T : Table> T.deleteReturning(
  */
 fun <T : Table> T.deleteReturning(
     returning: List<Expression<*>> = columns,
-    where: SqlExpressionBuilder.() -> Op<Boolean>
+    where: () -> Op<Boolean>
 ): ReturningBlockingExecutable {
     val stmt = buildStatement { deleteReturning(returning, where) }
     return ReturningBlockingExecutable(stmt)
@@ -165,7 +165,7 @@ fun Join.delete(
     vararg targetTables: Table,
     ignore: Boolean = false,
     limit: Int? = null,
-    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
+    where: (() -> Op<Boolean>)? = null
 ): Int {
     return where?.let {
         delete(targetTable, targetTables = targetTables, ignore, limit, it)
@@ -191,7 +191,7 @@ fun Join.delete(
     vararg targetTables: Table,
     ignore: Boolean = false,
     limit: Int? = null,
-    where: SqlExpressionBuilder.() -> Op<Boolean>
+    where: () -> Op<Boolean>
 ): Int {
     val stmt = buildStatement { delete(targetTable, targetTables = targetTables, ignore, limit, where) }
     return DeleteBlockingExecutable(stmt).execute(TransactionManager.current()) ?: 0
@@ -520,7 +520,7 @@ private fun <E, S1 : BatchInsertStatement, S2 : BatchInsertBlockingExecutable<S1
     DeprecationLevel.ERROR
 )
 @JvmName("updateNullableParam")
-fun <T : Table> T.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: Int? = null, body: T.(UpdateStatement) -> Unit): Int {
+fun <T : Table> T.update(where: (() -> Op<Boolean>)? = null, limit: Int? = null, body: T.(UpdateStatement) -> Unit): Int {
     return where?.let { update(it, limit, body) } ?: update(limit, body)
 }
 
@@ -533,7 +533,7 @@ fun <T : Table> T.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
  * @sample org.jetbrains.exposed.v1.tests.shared.dml.UpdateTests.testUpdate01
  */
 fun <T : Table> T.update(
-    where: SqlExpressionBuilder.() -> Op<Boolean>,
+    where: () -> Op<Boolean>,
     limit: Int? = null,
     body: T.(UpdateStatement) -> Unit
 ): Int {
@@ -570,7 +570,7 @@ fun <T : Table> T.update(
     DeprecationLevel.ERROR
 )
 @JvmName("updateJoinNullableParam")
-fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: Int? = null, body: (UpdateStatement) -> Unit): Int {
+fun Join.update(where: (() -> Op<Boolean>)? = null, limit: Int? = null, body: (UpdateStatement) -> Unit): Int {
     return where?.let { update(it, limit, body) } ?: update(limit, body)
 }
 
@@ -583,7 +583,7 @@ fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: 
  * @sample org.jetbrains.exposed.v1.tests.shared.dml.UpdateTests.testUpdateWithSingleJoin
  */
 fun Join.update(
-    where: SqlExpressionBuilder.() -> Op<Boolean>,
+    where: () -> Op<Boolean>,
     limit: Int? = null,
     body: (UpdateStatement) -> Unit
 ): Int {
@@ -616,7 +616,7 @@ fun Join.update(
 @JvmName("updateReturningNullableParam")
 fun <T : Table> T.updateReturning(
     returning: List<Expression<*>> = columns,
-    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    where: (() -> Op<Boolean>)? = null,
     body: T.(UpdateStatement) -> Unit
 ): ReturningBlockingExecutable {
     return where?.let { updateReturning(returning, it, body) } ?: updateReturning(returning, body)
@@ -633,7 +633,7 @@ fun <T : Table> T.updateReturning(
  */
 fun <T : Table> T.updateReturning(
     returning: List<Expression<*>> = columns,
-    where: SqlExpressionBuilder.() -> Op<Boolean>,
+    where: () -> Op<Boolean>,
     body: T.(UpdateStatement) -> Unit
 ): ReturningBlockingExecutable {
     val stmt = buildStatement { updateReturning(returning, where, body) }
@@ -680,7 +680,7 @@ fun <T : Table> T.upsert(
     vararg keys: Column<*>,
     onUpdate: (UpsertBuilder.(UpdateStatement) -> Unit)? = null,
     onUpdateExclude: List<Column<*>>? = null,
-    where: (UpsertSqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    where: (() -> Op<Boolean>)? = null,
     body: T.(UpsertStatement<Long>) -> Unit
 ): UpsertStatement<Long> {
     val stmt = buildStatement { upsert(keys = keys, onUpdate, onUpdateExclude, where, body) }
@@ -710,7 +710,7 @@ fun <T : Table> T.upsertReturning(
     returning: List<Expression<*>> = columns,
     onUpdate: (UpsertBuilder.(UpdateStatement) -> Unit)? = null,
     onUpdateExclude: List<Column<*>>? = null,
-    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    where: (() -> Op<Boolean>)? = null,
     body: T.(UpsertStatement<Long>) -> Unit
 ): ReturningBlockingExecutable {
     val stmt = buildStatement { upsertReturning(keys = keys, returning, onUpdate, onUpdateExclude, where, body) }
@@ -739,7 +739,7 @@ fun <T : Table, E : Any> T.batchUpsert(
     vararg keys: Column<*>,
     onUpdate: (UpsertBuilder.(UpdateStatement) -> Unit)? = null,
     onUpdateExclude: List<Column<*>>? = null,
-    where: (UpsertSqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    where: (() -> Op<Boolean>)? = null,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchUpsertStatement.(E) -> Unit
 ): List<ResultRow> {
@@ -768,7 +768,7 @@ fun <T : Table, E : Any> T.batchUpsert(
     vararg keys: Column<*>,
     onUpdate: (UpsertBuilder.(UpdateStatement) -> Unit)? = null,
     onUpdateExclude: List<Column<*>>? = null,
-    where: (UpsertSqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    where: (() -> Op<Boolean>)? = null,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchUpsertStatement.(E) -> Unit
 ): List<ResultRow> {
@@ -781,7 +781,7 @@ private fun <T : Table, E> T.batchUpsert(
     onUpdateList: List<Pair<Column<*>, Any?>>? = null,
     onUpdate: (UpsertBuilder.(UpdateStatement) -> Unit)? = null,
     onUpdateExclude: List<Column<*>>? = null,
-    where: (UpsertSqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    where: (() -> Op<Boolean>)? = null,
     shouldReturnGeneratedValues: Boolean = true,
     vararg keys: Column<*>,
     body: BatchUpsertStatement.(E) -> Unit
@@ -802,7 +802,7 @@ private fun <T : Table, E> T.batchUpsert(
 @JvmName("mergeFromNullableParam")
 fun <D : Table, S : Table> D.mergeFrom(
     source: S,
-    on: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    on: (() -> Op<Boolean>)? = null,
     body: MergeTableStatement.() -> Unit
 ): MergeTableStatement {
     return on?.let { mergeFrom(source, it, body) } ?: mergeFrom(source, body)
@@ -815,7 +815,7 @@ fun <D : Table, S : Table> D.mergeFrom(
  * @param D The target table type extending from [Table].
  * @param S The source table type extending from [Table].
  * @param source An instance of the source table.
- * @param on A lambda function with [SqlExpressionBuilder] as its receiver that should return a [Op<Boolean>] condition.
+ * @param on A lambda function that should return a [Op<Boolean>] condition.
  *           This condition is used to match records between the source and target tables.
  * @param body A lambda where [MergeTableStatement] can be configured with specific actions to perform
  *             when records are matched or not matched.
@@ -823,7 +823,7 @@ fun <D : Table, S : Table> D.mergeFrom(
  */
 fun <D : Table, S : Table> D.mergeFrom(
     source: S,
-    on: SqlExpressionBuilder.() -> Op<Boolean>,
+    on: () -> Op<Boolean>,
     body: MergeTableStatement.() -> Unit
 ): MergeTableStatement {
     val stmt = buildStatement { mergeFrom(source, on, body) }
@@ -855,7 +855,7 @@ fun <D : Table, S : Table> D.mergeFrom(
  *
  * @param T The target table type extending from [Table].
  * @param selectQuery represents the aliased query for a complex subquery to be used as the source.
- * @param on A lambda with a receiver of type [SqlExpressionBuilder] that returns a condition [Op<Boolean>]
+ * @param on A lambda that returns a condition [Op<Boolean>]
  *           used to match records between the source query and the target table.
  * @param body A lambda where [MergeSelectStatement] can be configured with specific actions to perform
  *             when records are matched or not matched.
@@ -863,7 +863,7 @@ fun <D : Table, S : Table> D.mergeFrom(
  */
 fun <T : Table> T.mergeFrom(
     selectQuery: QueryAlias,
-    on: SqlExpressionBuilder.() -> Op<Boolean>,
+    on: () -> Op<Boolean>,
     body: MergeSelectStatement.() -> Unit
 ): MergeSelectStatement {
     val stmt = buildStatement { mergeFrom(selectQuery, on, body) }

@@ -4,12 +4,12 @@ import junit.framework.TestCase.assertNull
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.v1.core.Join
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
 import org.jetbrains.exposed.v1.core.alias
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.innerJoin
 import org.jetbrains.exposed.v1.core.joinQuery
 import org.jetbrains.exposed.v1.core.lastQueryAlias
+import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
