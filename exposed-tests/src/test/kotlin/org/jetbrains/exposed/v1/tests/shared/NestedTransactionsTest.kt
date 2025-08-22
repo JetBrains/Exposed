@@ -97,14 +97,14 @@ class NestedTransactionsTest : DatabaseTestsBase() {
         }
 
         transaction(db) {
-            val outerTxId = this.id
+            val outerTxId = this.txId
 
             DMLTestsData.Cities.insert { it[name] = "City A" }
             assertEquals(1, DMLTestsData.Cities.selectAll().count())
 
             try {
                 inTopLevelTransaction(db.transactionManager.defaultIsolationLevel, db = db) {
-                    val innerTxId = this.id
+                    val innerTxId = this.txId
                     assertNotEquals(outerTxId, innerTxId)
 
                     DMLTestsData.Cities.insert { it[name] = "City B" }
@@ -119,14 +119,14 @@ class NestedTransactionsTest : DatabaseTestsBase() {
         assertSingleRecordInNewTransactionAndReset()
 
         transaction(db) {
-            val outerTxId = this.id
+            val outerTxId = this.txId
 
             DMLTestsData.Cities.insert { it[name] = "City A" }
             assertEquals(1, DMLTestsData.Cities.selectAll().count())
 
             try {
                 transaction(db) {
-                    val innerTxId = this.id
+                    val innerTxId = this.txId
                     assertNotEquals(outerTxId, innerTxId)
 
                     DMLTestsData.Cities.insert { it[name] = "City B" }
@@ -156,14 +156,14 @@ class NestedTransactionsTest : DatabaseTestsBase() {
         }
 
         transaction(db) {
-            val outerTxId = this.id
+            val outerTxId = this.txId
 
             DMLTestsData.Cities.insert { it[name] = "City A" }
             assertEquals(1, DMLTestsData.Cities.selectAll().count())
 
             try {
                 inTopLevelTransaction(db.transactionManager.defaultIsolationLevel, db = db) {
-                    val innerTxId = this.id
+                    val innerTxId = this.txId
                     assertNotEquals(outerTxId, innerTxId)
 
                     DMLTestsData.Cities.insert { it[name] = "City B" }
@@ -177,14 +177,14 @@ class NestedTransactionsTest : DatabaseTestsBase() {
         assertSingleRecordInNewTransactionAndReset()
 
         transaction(db) {
-            val outerTxId = this.id
+            val outerTxId = this.txId
 
             DMLTestsData.Cities.insert { it[name] = "City A" }
             assertEquals(1, DMLTestsData.Cities.selectAll().count())
 
             try {
                 transaction(db) {
-                    val innerTxId = this.id
+                    val innerTxId = this.txId
                     assertNotEquals(outerTxId, innerTxId)
 
                     DMLTestsData.Cities.insert { it[name] = "City B" }
