@@ -5,7 +5,7 @@ package org.jetbrains.exposed.samples.r2dbc.domain
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.samples.r2dbc.domain.issue.Issues
 import org.jetbrains.exposed.v1.core.Op
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction

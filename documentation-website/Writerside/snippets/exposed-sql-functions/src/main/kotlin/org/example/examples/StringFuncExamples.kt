@@ -2,7 +2,7 @@ package org.example.examples
 
 import org.example.tables.FilmBoxOfficeTable
 import org.jetbrains.exposed.v1.core.Concat
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.concat
+import org.jetbrains.exposed.v1.core.concat
 import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.charLength
 import org.jetbrains.exposed.v1.core.locate

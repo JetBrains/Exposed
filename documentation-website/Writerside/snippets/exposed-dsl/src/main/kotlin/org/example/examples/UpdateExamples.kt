@@ -1,7 +1,6 @@
 package org.example.examples
 
 import org.example.tables.StarWarsFilmsTable
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder
 import org.jetbrains.exposed.v1.jdbc.update
 
 private const val MOVIE_SEQUEL_ID = 7
@@ -23,11 +22,9 @@ class UpdateExamples {
          */
 
         val updatedRowsWithIncrement = StarWarsFilmsTable.update({ StarWarsFilmsTable.sequelId eq MOVIE_SEQUEL_ID }) {
-            with(SqlExpressionBuilder) {
-                it[sequelId] = sequelId + 1
-                // or
-                it.update(sequelId, sequelId + 1)
-            }
+            it[sequelId] = sequelId + 1
+            // or
+            it.update(sequelId, sequelId + 1)
         }
         println(updatedRowsWithIncrement)
     }
