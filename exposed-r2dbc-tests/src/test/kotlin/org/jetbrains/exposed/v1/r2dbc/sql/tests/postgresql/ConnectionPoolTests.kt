@@ -38,7 +38,7 @@ class ConnectionPoolTests : LogDbInTestName() {
 
         // setting default schema directly in connection options should not throw exception when Exposed creates
         // a new transaction and checks if connection parameters need to be reset
-        suspendTransaction(db = poolPG) {
+        suspendTransaction(poolPG) {
             val schema = exec("SELECT CURRENT_SCHEMA;") {
                 it.getString(1)
             }?.single()

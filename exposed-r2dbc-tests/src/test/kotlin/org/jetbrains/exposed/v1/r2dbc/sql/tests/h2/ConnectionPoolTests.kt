@@ -25,20 +25,20 @@ class ConnectionPoolTests : LogDbInTestName() {
     @Test
     fun testSuspendTransactionsExceedingPoolSize() = runTest {
         Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
-        suspendTransaction(db = h2PoolDB1) {
+        suspendTransaction(h2PoolDB1) {
             SchemaUtils.create(TestTable)
         }
 
         val exceedsPoolSize = (maximumPoolSize * 2 + 1).coerceAtMost(50)
         repeat(exceedsPoolSize) { i ->
-            org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction {
+            suspendTransaction {
                 delay(100)
 //                TestEntity.new { testValue = "test$it" }
                 TestTable.insert { it[TestTable.testValue] = "test$i" }
             }
         }
 
-        suspendTransaction(db = h2PoolDB1) {
+        suspendTransaction(h2PoolDB1) {
 //            assertEquals(exceedsPoolSize, TestEntity.all().toList().count())
             assertEquals(exceedsPoolSize, TestTable.selectAll().toList().count())
 

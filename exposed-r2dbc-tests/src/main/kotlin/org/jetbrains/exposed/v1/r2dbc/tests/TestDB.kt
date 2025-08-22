@@ -74,7 +74,7 @@ enum class TestDB(
         beforeConnection = {
             Locale.setDefault(Locale.ENGLISH)
             val tmp = R2dbcDatabase.connect("r2dbc:oracle://sys%20as%20sysdba:Oracle18@127.0.0.1:3003/FREEPDB1")
-            suspendTransaction(transactionIsolation = IsolationLevel.READ_COMMITTED, db = tmp) {
+            suspendTransaction(IsolationLevel.READ_COMMITTED, db = tmp) {
                 maxAttempts = 1
 
                 @Suppress("SwallowedException", "TooGenericExceptionCaught")

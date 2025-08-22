@@ -4,6 +4,7 @@ import io.r2dbc.postgresql.PostgresqlConnectionConfiguration
 import io.r2dbc.postgresql.PostgresqlConnectionFactory
 import io.r2dbc.postgresql.codec.EnumCodec
 import kotlinx.coroutines.flow.single
+import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
@@ -20,6 +21,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.update
+import org.junit.Assume
 import org.junit.Test
 
 class EnumerationTests : R2dbcDatabaseTestsBase() {
@@ -72,35 +74,41 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
 
     // NOTE: DAO part of test uncommented
     @Test
-    fun testCustomEnumeration01() {
-        withDb(supportsCustomEnumerationDB) { testDb ->
-            val sqlType = when (currentDialectTest) {
-                is MysqlDialect -> "ENUM('Bar', 'Baz')"
-                is PostgreSQLDialect -> "FooEnum"
-                else -> error("Unsupported case")
-            }
+    fun testCustomEnumeration01() = runTest {
+        Assume.assumeTrue(supportsCustomEnumerationDB.containsAll(TestDB.enabledDialects()))
+        var sqlType = ""
 
-//            class EnumEntity(id: EntityID<Int>) : IntEntity(id) {
-//                var enum by EnumTable.enumColumn
-//            }
+//          class EnumEntity(id: EntityID<Int>) : IntEntity(id) {
+//            var enum by EnumTable.enumColumn
+//          }
 
-//            val enumClass = object : IntEntityClass<EnumEntity>(EnumTable, EnumEntity::class.java) {}
+//          val enumClass = object : IntEntityClass<EnumEntity>(EnumTable, EnumEntity::class.java) {}
 
+        supportsCustomEnumerationDB.forEach { db ->
+            val initialDb = db.connect()
             try {
-                // PG enum codec can only be registered on connection if enum type already exists in database
-                if (currentDialectTest is PostgreSQLDialect) {
-                    exec("DROP TYPE IF EXISTS FooEnum;")
-                    exec("CREATE TYPE FooEnum AS ENUM ('Bar', 'Baz');")
-                }
-                EnumTable.initEnumColumn(sqlType)
-                SchemaUtils.create(EnumTable)
-                // drop shared table object's unique index if created in other test
-                if (EnumTable.indices.isNotEmpty()) {
-                    exec(EnumTable.indices.first().dropStatement().single())
+                suspendTransaction(initialDb) {
+                    sqlType = when (currentDialectTest) {
+                        is MysqlDialect -> "ENUM('Bar', 'Baz')"
+                        is PostgreSQLDialect -> "FooEnum"
+                        else -> error("Unsupported case")
+                    }
+                    // PG enum codec can only be registered on connection if enum type already exists in database
+                    if (currentDialectTest is PostgreSQLDialect) {
+                        exec("DROP TYPE IF EXISTS FooEnum;")
+                        exec("CREATE TYPE FooEnum AS ENUM ('Bar', 'Baz');")
+                    }
+                    EnumTable.initEnumColumn(sqlType)
+                    SchemaUtils.create(EnumTable)
+                    // drop shared table object's unique index if created in other test
+                    if (EnumTable.indices.isNotEmpty()) {
+                        exec(EnumTable.indices.first().dropStatement().single())
+                    }
                 }
 
+                // PG needs 1 db connection to simulate an existing enum type, then another to actually test the codec
                 suspendTransaction(
-                    db = if (testDb in TestDB.ALL_POSTGRES) connectWithEnumCodec(sqlType) else this.db
+                    db = if (db in TestDB.ALL_POSTGRES) connectWithEnumCodec(sqlType) else initialDb
                 ) {
                     EnumTable.insert {
                         it[EnumTable.enumColumn] = Foo.Bar
@@ -124,7 +132,9 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
                 }
             } finally {
                 try {
-                    SchemaUtils.drop(EnumTable)
+                    suspendTransaction(initialDb) {
+                        SchemaUtils.drop(EnumTable)
+                    }
                 } catch (ignore: Exception) {}
             }
         }
@@ -166,7 +176,10 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
     }
 
     @Test
-    fun testCustomEnumerationWithReference() {
+    fun testCustomEnumerationWithReference() = runTest {
+        Assume.assumeTrue(supportsCustomEnumerationDB.containsAll(TestDB.enabledDialects()))
+        var sqlType = ""
+
         val referenceTable = object : Table("ref_table") {
             var referenceColumn: Column<Foo> = enumeration("ref_column")
 
@@ -176,28 +189,33 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
             }
         }
 
-        withDb(supportsCustomEnumerationDB) { testDb ->
-            val sqlType = when (currentDialectTest) {
-                is MysqlDialect -> "ENUM('Bar', 'Baz')"
-                is PostgreSQLDialect -> "RefEnum"
-                else -> error("Unsupported case")
-            }
+        supportsCustomEnumerationDB.forEach { db ->
+            val initialDb = db.connect()
             try {
-                if (currentDialectTest is PostgreSQLDialect) {
-                    exec("DROP TYPE IF EXISTS $sqlType;")
-                    exec("CREATE TYPE $sqlType AS ENUM ('Bar', 'Baz');")
-                }
-                EnumTable.initEnumColumn(sqlType)
-                with(EnumTable) {
-                    if (indices.isEmpty()) enumColumn.uniqueIndex()
-                }
-                SchemaUtils.create(EnumTable)
+                suspendTransaction(initialDb) {
+                    sqlType = when (currentDialectTest) {
+                        is MysqlDialect -> "ENUM('Bar', 'Baz')"
+                        is PostgreSQLDialect -> "RefEnum"
+                        else -> error("Unsupported case")
+                    }
+                    // PG enum codec can only be registered on connection if enum type already exists in database
+                    if (currentDialectTest is PostgreSQLDialect) {
+                        exec("DROP TYPE IF EXISTS $sqlType;")
+                        exec("CREATE TYPE $sqlType AS ENUM ('Bar', 'Baz');")
+                    }
+                    EnumTable.initEnumColumn(sqlType)
+                    with(EnumTable) {
+                        if (indices.isEmpty()) enumColumn.uniqueIndex()
+                    }
+                    SchemaUtils.create(EnumTable)
 
-                referenceTable.initRefColumn()
-                SchemaUtils.create(referenceTable)
+                    referenceTable.initRefColumn()
+                    SchemaUtils.create(referenceTable)
+                }
 
+                // PG needs 1 db connection to simulate an existing enum type, then another to actually test the codec
                 suspendTransaction(
-                    db = if (testDb in TestDB.ALL_POSTGRES) connectWithEnumCodec(sqlType) else this.db
+                    db = if (db in TestDB.ALL_POSTGRES) connectWithEnumCodec(sqlType) else initialDb
                 ) {
                     val fooBar = Foo.Bar
                     val id1 = EnumTable.insert {
@@ -211,9 +229,14 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
                     assertEquals(fooBar, referenceTable.selectAll().single()[referenceTable.referenceColumn])
                 }
             } finally {
-                SchemaUtils.drop(referenceTable)
-                exec(EnumTable.indices.first().dropStatement().single())
-                SchemaUtils.drop(EnumTable)
+                try {
+                    suspendTransaction(initialDb) {
+                        SchemaUtils.drop(referenceTable)
+                        exec(EnumTable.indices.first().dropStatement().single())
+                        SchemaUtils.drop(EnumTable)
+                    }
+                } catch (ignore: Exception) {
+                }
             }
         }
     }

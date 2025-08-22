@@ -174,7 +174,7 @@ class SchemaTests : R2dbcDatabaseTestsBase() {
             defaultSchema = schema
         }
 
-        suspendTransaction(db = db) {
+        suspendTransaction(db) {
             connection().metadata {
                 val currentScheme = db.identifierManager.cutIfNecessaryAndQuote(
                     tableNamesByCurrentSchema(null).schemaName
@@ -182,7 +182,7 @@ class SchemaTests : R2dbcDatabaseTestsBase() {
                 assertEquals(schema.identifier, currentScheme)
             }
             // Nested transaction
-            suspendTransaction(db = db) {
+            suspendTransaction(db) {
                 connection().metadata {
                     val currentScheme = db.identifierManager.cutIfNecessaryAndQuote(
                         tableNamesByCurrentSchema(null).schemaName

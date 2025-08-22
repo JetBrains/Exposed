@@ -8,6 +8,8 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
 import org.jetbrains.exposed.v1.core.transactions.nullableTransactionScope
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
+import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
+import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.transactions.transactionManager
 import org.junit.Assume
@@ -84,7 +86,7 @@ abstract class R2dbcDatabaseTestsBase {
             dbSettings.db = dbSettings.connect(configure ?: {})
         }
         val database = dbSettings.db!!
-        suspendTransaction(transactionIsolation = database.transactionManager.defaultIsolationLevel, db = database) {
+        suspendTransaction(database.transactionManager.defaultIsolationLevel!!, db = database) {
             maxAttempts = 1
             registerInterceptor(CurrentTestDBInterceptor)
             currentTestDB = dbSettings
@@ -131,23 +133,23 @@ abstract class R2dbcDatabaseTestsBase {
 
         withDb(dialect, configure = configure) {
             try {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(*tables)
+                SchemaUtils.drop(*tables)
             } catch (_: Throwable) {
             }
 
-            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(*tables)
+            SchemaUtils.create(*tables)
             try {
                 statement(dialect)
                 commit() // Need commit to persist data before drop tables
             } finally {
                 try {
-                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(*tables)
+                    SchemaUtils.drop(*tables)
                     commit()
                 } catch (_: Exception) {
                     val database = dialect.db!!
-                    suspendTransaction(transactionIsolation = database.transactionManager.defaultIsolationLevel, db = database) {
+                    inTopLevelSuspendTransaction(database.transactionManager.defaultIsolationLevel!!, db = database) {
                         maxAttempts = 1
-                        org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(*tables)
+                        SchemaUtils.drop(*tables)
                     }
                 }
             }
@@ -172,13 +174,13 @@ abstract class R2dbcDatabaseTestsBase {
 
         withDb(dialect, configure) {
             if (currentDialectTest.supportsCreateSchema) {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createSchema(*schemas)
+                SchemaUtils.createSchema(*schemas)
                 try {
                     statement()
                     commit() // Need commit to persist data before drop schemas
                 } finally {
                     val cascade = it != TestDB.SQLSERVER
-                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.dropSchema(*schemas, cascade = cascade)
+                    SchemaUtils.dropSchema(*schemas, cascade = cascade)
                     commit()
                 }
             }

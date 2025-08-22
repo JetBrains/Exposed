@@ -1,24 +1,26 @@
-package org.jetbrains.exposed.v1.tests.shared
+package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared
 
+import io.r2dbc.spi.IsolationLevel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
-import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
-import org.jetbrains.exposed.v1.jdbc.update
-import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
+import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
+import org.jetbrains.exposed.v1.r2dbc.update
 import org.junit.Test
-import java.sql.Connection.TRANSACTION_SERIALIZABLE
-import java.util.*
+import java.util.UUID
 
-class SuspendTransactionTests : DatabaseTestsBase() {
+class SuspendTransactionTests : R2dbcDatabaseTestsBase() {
     private val uuid = UUID.fromString("b1dd54af-314f-4dac-9b8d-a6eacb825b61")
 
     object TestConflictTable : UUIDTable("test_conflict") {
@@ -28,14 +30,13 @@ class SuspendTransactionTests : DatabaseTestsBase() {
     @Test
     fun testClosedSuspendTransaction() {
         withTables(
-            // Test is quite flaky by unknown yet reason. Locally it works without problem, but fails on CI.
             excludeSettings = TestDB.ALL - TestDB.POSTGRESQL,
             TestConflictTable,
             configure = {
                 defaultMaxAttempts = 20
             }
         ) {
-            inTopLevelTransaction(TRANSACTION_SERIALIZABLE) {
+            inTopLevelSuspendTransaction(IsolationLevel.SERIALIZABLE) {
                 TestConflictTable.insert {
                     it[id] = uuid
                     it[value] = 0
@@ -44,9 +45,9 @@ class SuspendTransactionTests : DatabaseTestsBase() {
 
             val concurrentTransactions = 3
 
-            runBlocking {
+            withContext(Dispatchers.IO) {
                 List(concurrentTransactions) {
-                    launch(Dispatchers.IO) {
+                    launch {
                         runExposedTransaction()
                     }
                 }.joinAll()
@@ -57,7 +58,8 @@ class SuspendTransactionTests : DatabaseTestsBase() {
     }
 
     private suspend fun runExposedTransaction() {
-        newSuspendedTransaction(Dispatchers.IO, transactionIsolation = TRANSACTION_SERIALIZABLE) {
+        // how to pass context... withContext()?
+        suspendTransaction(transactionIsolation = IsolationLevel.SERIALIZABLE) {
             val current = TestConflictTable
                 .selectAll()
                 .where({ TestConflictTable.id eq uuid })

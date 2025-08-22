@@ -207,7 +207,7 @@ class ConnectionTests : R2dbcDatabaseTestsBase() {
     }
 
     private suspend fun testConnectMethod(db: R2dbcDatabase) {
-        suspendTransaction(db = db) {
+        suspendTransaction(db) {
             val user = exec("SELECT CURRENT_USER;") {
                 it.get(0) as? String
             }?.singleOrNull()
