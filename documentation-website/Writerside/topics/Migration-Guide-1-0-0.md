@@ -122,13 +122,8 @@ so builder methods like `Op.build()` and `Expression.build()` have also been dep
 <compare first-title="0.61.0" second-title="1.0.0">
 
 ```kotlin
-import org.jetbrains.exposed.sql.Case
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.SqlExpressionBuilder
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat
-import org.jetbrains.exposed.sql.alias
-import org.jetbrains.exposed.sql.update
     
 val calculatedAmount = Expression.build {
     (TableA.amount * 2) - 10
@@ -575,6 +570,7 @@ All expression builder methods passed to these function parameters will now be u
 ```kotlin
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.count
+import org.jetbrains.exposed.sql.longLiteral
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
 
@@ -602,6 +598,7 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.like
+import org.jetbrains.exposed.v1.core.longLiteral
 import org.jetbrains.exposed.v1.core.plus
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
