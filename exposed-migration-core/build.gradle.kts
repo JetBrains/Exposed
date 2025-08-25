@@ -1,7 +1,6 @@
 plugins {
     kotlin("jvm")
 
-    // IS THIS NECESSARY?
     alias(libs.plugins.dokka)
 }
 

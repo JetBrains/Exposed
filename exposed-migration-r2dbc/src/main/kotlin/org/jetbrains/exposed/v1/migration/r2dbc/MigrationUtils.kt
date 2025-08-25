@@ -55,10 +55,9 @@ object MigrationUtils : MigrationUtilityApi() {
      * the table objects defined using Exposed. Unlike `SchemaUtils.statementsRequiredToActualizeScheme()`,
      * DROP/DELETE statements are included.
      *
-     * **Note:** Some databases, like **SQLite**, only support `ALTER TABLE ADD COLUMN` syntax in very restricted cases,
+     * **Note:** Some databases only support `ALTER TABLE ADD COLUMN` syntax in very restricted cases,
      * which may cause unexpected behavior when adding some missing columns. For more information,
      * refer to the relevant documentation.
-     * For SQLite, see [ALTER TABLE restrictions](https://www.sqlite.org/lang_altertable.html#alter_table_add_column).
      *
      * **Note:** If this method is called on a **PostgreSQL** database, it will check for a mapping inconsistency
      * between the specified [tables] and existing sequences that have a relational dependency on any of these [tables]
@@ -157,10 +156,9 @@ object MigrationUtils : MigrationUtilityApi() {
      * By default, a description for each intermediate step, as well as its execution time, is logged at the INFO level.
      * This can be disabled by setting [withLogs] to `false`.
      *
-     * **Note:** Some databases, like **SQLite**, only support `ALTER TABLE DROP COLUMN` syntax in very restricted cases,
+     * **Note:** Some databases only support `ALTER TABLE DROP COLUMN` syntax in very restricted cases,
      * which may cause unexpected behavior when dropping some unmapped columns. For more information,
      * refer to the relevant documentation.
-     * For SQLite, see [ALTER TABLE restrictions](https://www.sqlite.org/lang_altertable.html#alter_table_drop_column).
      */
     suspend fun dropUnmappedColumnsStatements(vararg tables: Table, withLogs: Boolean = true): List<String> {
         if (tables.isEmpty()) return emptyList()
