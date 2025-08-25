@@ -461,13 +461,6 @@
                         src="exposed-dsl/src/main/kotlin/org/example/examples/DeleteExamples.kt"
                         include-symbol="deletedRowsCount"
             />
-            <p>
-                Any <code>SqlExpressionBuilder</code> comparison operators or extension functions used in the <code>op</code>
-                parameter lambda block will require inclusion of an import statement:
-            </p>
-            <code-block lang="kotlin">
-                import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.*
-            </code-block>
         </chapter>
         <chapter title="Delete and ignore" id="deleteIgnoreWhere">
             <tldr>

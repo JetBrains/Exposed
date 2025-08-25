@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.v1.json
 
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.asLiteral
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 
 // Operator Classes

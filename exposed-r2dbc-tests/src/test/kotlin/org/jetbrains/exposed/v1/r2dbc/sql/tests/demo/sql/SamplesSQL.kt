@@ -3,7 +3,6 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.demo.sql
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
 import org.jetbrains.exposed.v1.r2dbc.*
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.forEach

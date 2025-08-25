@@ -40,8 +40,8 @@ You can use `Statement.prepareSQL()`, and potentially `buildStatement()`. For mo
 
 ### Is it possible to update a field relative to current field value?
 
-Yes. You can achieve this by using the `.update()` function with the `SqlExpressionBuilder`. For more information, see
-[how to update a record](DSL-CRUD-operations.topic#update-record).
+Yes. You can achieve this by using the `.update()` function with the desired `Expression` or setting the value of the field directly.
+For more information, see [how to update a record](DSL-CRUD-operations.topic#update-record).
 
 ### How do I prepare query like `SELECT * FROM table WHERE (x,y) IN ((1, 2), (3, 4), (5, 6))`?
 

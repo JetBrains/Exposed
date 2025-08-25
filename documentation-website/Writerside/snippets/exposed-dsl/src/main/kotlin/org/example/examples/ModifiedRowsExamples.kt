@@ -3,7 +3,6 @@ package org.example.examples
 import kotlinx.datetime.LocalDateTime
 import org.example.tables.StarWarsFilmsTable
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.times
 import org.jetbrains.exposed.v1.datetime.CurrentDateTime
 import org.jetbrains.exposed.v1.datetime.datetime
 import org.jetbrains.exposed.v1.jdbc.insertIgnore

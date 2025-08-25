@@ -551,11 +551,11 @@ class SelectTests : DatabaseTestsBase() {
                 "Alex",
                 "Something"
             )
-            val orOp = allUsers.map { Op.build { users.name eq it } }.compoundOr()
+            val orOp = allUsers.map { users.name eq it }.compoundOr()
             val userNamesOr = users.selectAll().where(orOp).map { it[users.name] }.toSet()
             assertEquals(allUsers, userNamesOr)
 
-            val andOp = allUsers.map { Op.build { users.name eq it } }.compoundAnd()
+            val andOp = allUsers.map { users.name eq it }.compoundAnd()
             assertEquals(0L, users.selectAll().where(andOp).count())
         }
     }

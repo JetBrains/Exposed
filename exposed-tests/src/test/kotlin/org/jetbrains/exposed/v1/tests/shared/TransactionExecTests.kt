@@ -1,10 +1,10 @@
 package org.jetbrains.exposed.v1.tests.shared
 
 import org.jetbrains.exposed.v1.core.InternalApi
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.autoIncColumnType
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.statements.buildStatement
 import org.jetbrains.exposed.v1.core.upperCase
@@ -231,7 +231,6 @@ class TransactionExecTests : DatabaseTestsBase() {
     @Test
     fun testExecWithQueryInstance() {
         withTables(ExecTable) {
-            addLogger(StdOutSqlLogger)
             val selectQuery = ExecTable.select(ExecTable.amount).where { ExecTable.amount less 100 }
 
             val amounts = (90..99).toList()

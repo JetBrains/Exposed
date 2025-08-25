@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.v1.dao
 
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -75,7 +74,7 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
     val readValues: ResultRow
         get() = _readValues ?: run {
             val table = klass.table
-            _readValues = klass.searchQuery(Op.build { table.id eq id }).firstOrNull()
+            _readValues = klass.searchQuery(table.id eq id).firstOrNull()
                 ?: table.selectAll().where { table.id eq id }.first()
             _readValues!!
         }

@@ -1,9 +1,6 @@
 package org.jetbrains.exposed.v1.core
 
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.wrap
-import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.core.statements.api.ExposedBlob
 import org.jetbrains.exposed.v1.core.vendors.*
 import java.math.BigDecimal
 
@@ -13,8 +10,18 @@ import java.math.BigDecimal
 @Suppress("UnnecessaryAbstractClass")
 abstract class Op<T> : Expression<T>() {
     companion object {
-        /** Builds a new operator using provided [op]. */
-        inline fun <T> build(op: SqlExpressionBuilder.() -> Op<T>): Op<T> = SqlExpressionBuilder.op()
+        @Deprecated(
+            message = "This builder method will continue to be phased out following release 1.0.0 and should be replaced " +
+                "with the contents of the lambda block pulled out of the parentheses. The `SqlExpressionBuilder` receiver " +
+                "has been deprecated, as well as all expression builder methods previously restricted to the object, " +
+                "in favor of equivalent top-level functions, making this scope function redundant. " +
+                "It will no longer be necessary to import each individual method when used outside a scoped block, " +
+                "and on demand imports will now be possible via 'import org.jetbrains.exposed.v1.core.*', if required. " +
+                "",
+            replaceWith = ReplaceWith("op()"),
+            level = DeprecationLevel.ERROR
+        )
+        inline fun <T> build(op: () -> Op<T>): Op<T> = op()
 
         fun <T> nullOp(): Op<T> = NULL as Op<T>
     }
@@ -31,7 +38,7 @@ abstract class Op<T> : Expression<T>() {
         override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
             when {
                 currentDialect is SQLServerDialect || currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
-                    build { booleanLiteral(true) eq booleanLiteral(true) }.toQueryBuilder(this)
+                    (booleanLiteral(true) eq booleanLiteral(true)).toQueryBuilder(this)
 
                 else -> append(currentDialect.dataTypeProvider.booleanToStatementString(true))
             }
@@ -48,7 +55,7 @@ abstract class Op<T> : Expression<T>() {
         override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
             when {
                 currentDialect is SQLServerDialect || currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
-                    build { booleanLiteral(true) eq booleanLiteral(false) }.toQueryBuilder(this)
+                    (booleanLiteral(true) eq booleanLiteral(false)).toQueryBuilder(this)
                 else -> append(currentDialect.dataTypeProvider.booleanToStatementString(false))
             }
         }
@@ -103,79 +110,6 @@ class AndOp(expressions: List<Expression<Boolean>>) : CompoundBooleanOp(" AND ",
  * Represents a logical operator that performs an `or` operation between all the specified [expressions].
  */
 class OrOp(expressions: List<Expression<Boolean>>) : CompoundBooleanOp(" OR ", expressions)
-
-/** Returns the inverse of this boolean expression. */
-fun not(op: Expression<Boolean>): Op<Boolean> = NotOp(op)
-
-/** Returns the result of performing a logical `and` operation between this expression and the [op]. */
-infix fun Expression<Boolean>.and(op: Expression<Boolean>): Op<Boolean> = when {
-    this is AndOp && op is AndOp -> AndOp(expressions + op.expressions)
-    this is AndOp -> AndOp(expressions + op)
-    op is AndOp -> AndOp(
-        ArrayList<Expression<Boolean>>(op.expressions.size + 1).also {
-            it.add(this)
-            it.addAll(op.expressions)
-        }
-    )
-    else -> AndOp(listOf(this, op))
-}
-
-/** Returns the result of performing a logical `or` operation between this expression and the [op]. */
-infix fun Expression<Boolean>.or(op: Expression<Boolean>): Op<Boolean> = when {
-    this is OrOp && op is OrOp -> OrOp(expressions + op.expressions)
-    this is OrOp -> OrOp(expressions + op)
-    op is OrOp -> OrOp(
-        ArrayList<Expression<Boolean>>(op.expressions.size + 1).also {
-            it.add(this)
-            it.addAll(op.expressions)
-        }
-    )
-    else -> OrOp(listOf(this, op))
-}
-
-/**
- * Returns the result of performing a logical `and` operation between this expression and the [op] **if** [op] is not null.
- * Otherwise, this expression will be returned.
- */
-infix fun Op<Boolean>.andIfNotNull(op: Expression<Boolean>?): Op<Boolean> =
-    op?.let { this and it } ?: this
-
-/**
- * Returns the result of performing a logical `or` operation between this expression and the [op] **if** [op] is not null.
- * Otherwise, this expression will be returned.
- */
-infix fun Op<Boolean>.orIfNotNull(op: Expression<Boolean>?): Op<Boolean> =
-    op?.let { this or it } ?: this
-
-/** Reduces this list to a single expression by performing an `and` operation between all the expressions in the list. */
-fun List<Op<Boolean>>.compoundAnd(): Op<Boolean> = reduce(Op<Boolean>::and)
-
-/** Reduces this list to a single expression by performing an `or` operation between all the expressions in the list. */
-fun List<Op<Boolean>>.compoundOr(): Op<Boolean> = reduce(Op<Boolean>::or)
-
-/** Returns the result of performing a logical `and` operation between this expression and the [op]. */
-inline fun Expression<Boolean>.and(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = and(Op.build(op))
-
-/**  Returns the result of performing a logical `or` operation between this expression and the [op].*/
-inline fun Expression<Boolean>.or(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = or(Op.build(op))
-
-/** Returns the result of performing a logical `and` operation between this expression and the negate [op]. */
-inline fun Expression<Boolean>.andNot(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = and(not(Op.build(op)))
-
-/** Returns the result of performing a logical `or` operation between this expression and the negate [op]. */
-inline fun Expression<Boolean>.orNot(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = or(not(Op.build(op)))
-
-/**
- * Returns the result of performing a logical `and` operation between this expression and the [op] **if** [op] is not null.
- * Otherwise, this expression will be returned.
- */
-inline fun Op<Boolean>.andIfNotNull(op: SqlExpressionBuilder.() -> Op<Boolean>?): Op<Boolean> = andIfNotNull(SqlExpressionBuilder.op())
-
-/**
- * Returns the result of performing a logical `or` operation between this expression and the [op] **if** [op] is not null.
- * Otherwise, this expression will be returned.
- */
-inline fun Op<Boolean>.orIfNotNull(op: SqlExpressionBuilder.() -> Op<Boolean>?): Op<Boolean> = orIfNotNull(SqlExpressionBuilder.op())
 
 // Comparison Operators
 
@@ -423,6 +357,8 @@ private fun <T> ExpressionWithColumnType<T>.castToExpressionTypeForH2BitWiseIps(
     }
 }
 
+// Bitwise Operators
+
 /**
  * Represents an SQL operator that performs a bitwise `and` on [expr1] and [expr2].
  */
@@ -556,9 +492,6 @@ class Exists(
     }
 }
 
-/** Returns an SQL operator that checks if [query] returns at least one row. */
-fun exists(query: AbstractQuery<*>) = Exists(query)
-
 /**
  * Represents an SQL operator that checks if [query] doesn't returns any row.
  */
@@ -572,9 +505,6 @@ class NotExists(
         append(")")
     }
 }
-
-/** Returns an SQL operator that checks if [query] doesn't returns any row. */
-fun notExists(query: AbstractQuery<*>) = NotExists(query)
 
 /** Represents an SQL operator that compares [expr] to any row returned from [query]. */
 sealed class SubQueryOp<T>(
@@ -632,191 +562,7 @@ class GreaterSubQueryOp<T>(expr: Expression<T>, query: AbstractQuery<*>) : SubQu
  */
 class GreaterEqSubQueryOp<T>(expr: Expression<T>, query: AbstractQuery<*>) : SubQueryOp<T>(">=", expr, query)
 
-// Literals
-
-/**
- * Represents the specified [value] as an SQL literal, using the specified [columnType] to convert the value.
- */
-class LiteralOp<T>(
-    override val columnType: IColumnType<T & Any>,
-    /** Returns the value being used as a literal. */
-    val value: T
-) : ExpressionWithColumnType<T>() {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { +columnType.valueToString(value) }
-}
-
-/** Returns the specified [value] as a boolean literal. */
-fun booleanLiteral(value: Boolean): LiteralOp<Boolean> = LiteralOp(BooleanColumnType.INSTANCE, value)
-
-/** Returns the specified [value] as a byte literal. */
-fun byteLiteral(value: Byte): LiteralOp<Byte> = LiteralOp(ByteColumnType(), value)
-
-/** Returns the specified [value] as a unsigned byte literal. */
-fun ubyteLiteral(value: UByte): LiteralOp<UByte> = LiteralOp(UByteColumnType(), value)
-
-/** Returns the specified [value] as a short literal. */
-fun shortLiteral(value: Short): LiteralOp<Short> = LiteralOp(ShortColumnType(), value)
-
-/** Returns the specified [value] as a unsigned short literal. */
-fun ushortLiteral(value: UShort): LiteralOp<UShort> = LiteralOp(UShortColumnType(), value)
-
-/** Returns the specified [value] as an int literal. */
-fun intLiteral(value: Int): LiteralOp<Int> = LiteralOp(IntegerColumnType(), value)
-
-/** Returns the specified [value] as a unsigned int literal. */
-fun uintLiteral(value: UInt): LiteralOp<UInt> = LiteralOp(UIntegerColumnType(), value)
-
-/** Returns the specified [value] as a long literal. */
-fun longLiteral(value: Long): LiteralOp<Long> = LiteralOp(LongColumnType(), value)
-
-/** Returns the specified [value] as a unsigned long literal. */
-fun ulongLiteral(value: ULong): LiteralOp<ULong> = LiteralOp(ULongColumnType(), value)
-
-/** Returns the specified [value] as a float literal. */
-fun floatLiteral(value: Float): LiteralOp<Float> = LiteralOp(FloatColumnType(), value)
-
-/** Returns the specified [value] as a double literal. */
-fun doubleLiteral(value: Double): LiteralOp<Double> = LiteralOp(DoubleColumnType(), value)
-
-/** Returns the specified [value] as a string literal. */
-fun stringLiteral(value: String): LiteralOp<String> = LiteralOp(TextColumnType(), value)
-
-/** Returns the specified [value] as a decimal literal. */
-fun decimalLiteral(value: BigDecimal): LiteralOp<BigDecimal> = LiteralOp(DecimalColumnType(value.precision(), value.scale()), value)
-
-/**
- * Returns the specified [value] as an array literal, with elements parsed by the [delegateType] if provided.
- *
- * **Note** If [delegateType] is left `null`, the associated column type will be resolved according to the
- * internal mapping of the element's type in [resolveColumnType].
- *
- * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
- */
-inline fun <reified T : Any> arrayLiteral(value: List<T>, delegateType: ColumnType<T>? = null): LiteralOp<List<T>> =
-    arrayLiteral(value, 1, delegateType)
-
-/**
- * Returns the specified [value] as an array literal, with elements parsed by the [delegateType] if provided.
- *
- * **Note** If [delegateType] is left `null`, the associated column type will be resolved according to the
- * internal mapping of the element's type in [resolveColumnType].
- *
- * **Note:** Because arrays can have varying dimensions, you must specify the type of elements
- * and the number of dimensions when using array literals.
- * For example, use `arrayLiteral<Int, List<List<Int>>>(list, dimensions = 2)`.
- *
- * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
- */
-inline fun <reified T : Any, R : List<Any>> arrayLiteral(value: R, dimensions: Int, delegateType: ColumnType<T>? = null): LiteralOp<R> {
-    @OptIn(InternalApi::class)
-    return LiteralOp(ArrayColumnType(delegateType ?: resolveColumnType(T::class), dimensions = dimensions), value)
-}
-
-// Query Parameters
-
-/**
- * Represents the specified [value] as a query parameter, using the specified [columnType] to convert the value.
- */
-class QueryParameter<T>(
-    /** Returns the value being used as a query parameter. */
-    val value: T,
-    /** Returns the column type of this expression. */
-    override val columnType: IColumnType<T & Any>
-) : ExpressionWithColumnType<T>() {
-    internal val compositeValue: CompositeID? = (value as? EntityID<*>)?.value as? CompositeID
-
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
-        queryBuilder {
-            compositeValue?.let {
-                it.values.entries.appendTo { (column, value) ->
-                    registerArgument(column.columnType, value)
-                }
-            } ?: registerArgument(columnType, value)
-        }
-    }
-}
-
-/** Returns the specified [value] as a query parameter with the same type as [column]. */
-fun <T : Any> idParam(value: EntityID<T>, column: Column<EntityID<T>>): Expression<EntityID<T>> =
-    QueryParameter(value, column.columnType)
-
-/** Returns the specified [value] as a boolean query parameter. */
-fun booleanParam(value: Boolean): Expression<Boolean> = QueryParameter(value, BooleanColumnType.INSTANCE)
-
-/** Returns the specified [value] as a byte query parameter. */
-fun byteParam(value: Byte): Expression<Byte> = QueryParameter(value, ByteColumnType())
-
-/** Returns the specified [value] as a unsigned byte query parameter. */
-fun ubyteParam(value: UByte): Expression<UByte> = QueryParameter(value, UByteColumnType())
-
-/** Returns the specified [value] as a short query parameter. */
-fun shortParam(value: Short): Expression<Short> = QueryParameter(value, ShortColumnType())
-
-/** Returns the specified [value] as a unsigned short query parameter. */
-fun ushortParam(value: UShort): Expression<UShort> = QueryParameter(value, UShortColumnType())
-
-/** Returns the specified [value] as an int query parameter. */
-fun intParam(value: Int): Expression<Int> = QueryParameter(value, IntegerColumnType())
-
-/** Returns the specified [value] as a unsigned int query parameter. */
-fun uintParam(value: UInt): Expression<UInt> = QueryParameter(value, UIntegerColumnType())
-
-/** Returns the specified [value] as a long query parameter. */
-fun longParam(value: Long): Expression<Long> = QueryParameter(value, LongColumnType())
-
-/** Returns the specified [value] as a unsigned long query parameter. */
-fun ulongParam(value: ULong): Expression<ULong> = QueryParameter(value, ULongColumnType())
-
-/** Returns the specified [value] as a float query parameter. */
-fun floatParam(value: Float): Expression<Float> = QueryParameter(value, FloatColumnType())
-
-/** Returns the specified [value] as a double query parameter. */
-fun doubleParam(value: Double): Expression<Double> = QueryParameter(value, DoubleColumnType())
-
-/** Returns the specified [value] as a string query parameter. */
-fun stringParam(value: String): Expression<String> = QueryParameter(value, TextColumnType())
-
-/** Returns the specified [value] as a decimal query parameter. */
-fun decimalParam(value: BigDecimal): Expression<BigDecimal> = QueryParameter(value, DecimalColumnType(value.precision(), value.scale()))
-
-/**
- * Returns the specified [value] as a blob query parameter.
- *
- * Set [useObjectIdentifier] to `true` if the parameter should be processed using an OID column instead of a
- * BYTEA column. This is only supported by PostgreSQL databases.
- */
-fun blobParam(value: ExposedBlob, useObjectIdentifier: Boolean = false): Expression<ExposedBlob> =
-    QueryParameter(value, BlobColumnType(useObjectIdentifier))
-
-/**
- * Returns the specified [value] as an array query parameter, with elements parsed by the [delegateType] if provided.
- *
- * **Note** If [delegateType] is left `null`, the associated column type will be resolved according to the
- * internal mapping of the element's type in [resolveColumnType].
- *
- * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
- */
-inline fun <reified T : Any> arrayParam(value: List<T>, delegateType: ColumnType<T>? = null): Expression<List<T>> =
-    arrayParam(value, 1, delegateType)
-
-/**
- * Returns the specified [value] as an array query parameter, with elements parsed by the [delegateType] if provided.
- *
- * **Note** If [delegateType] is left `null`, the associated column type will be resolved according to the
- * internal mapping of the element's type in [resolveColumnType].
- *
- * **Note:** Because arrays can have varying dimensions, you must specify the type of elements
- * and the number of dimensions when using array literals.
- * For example, use `arrayParam<Int, List<List<Int>>>(list, dimensions = 2)`.
- *
- * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
- */
-inline fun <reified T : Any, R : List<Any>> arrayParam(value: R, dimensions: Int, delegateType: ColumnType<T>? = null): Expression<R> {
-    @OptIn(InternalApi::class)
-    return QueryParameter(value, ArrayColumnType(delegateType ?: resolveColumnType(T::class), dimensions = dimensions))
-}
-
-// Misc.
+// Value Operators
 
 /**
  * Represents an SQL operator that doesn't perform any operation.
@@ -828,6 +574,58 @@ class NoOpConversion<T, S>(
     override val columnType: IColumnType<S & Any>
 ) : ExpressionWithColumnType<S>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { +expr }
+}
+
+/** Represents a pattern used for the comparison of string expressions. */
+data class LikePattern(
+    /** The string representation of a pattern to match. */
+    val pattern: String,
+    /** The special character to use as the escape character. */
+    val escapeChar: Char? = null
+) {
+
+    infix operator fun plus(rhs: LikePattern): LikePattern {
+        require(escapeChar == rhs.escapeChar) { "Mixing escape chars '$escapeChar' vs. '${rhs.escapeChar} is not allowed" }
+        return LikePattern(pattern + rhs.pattern, rhs.escapeChar)
+    }
+
+    infix operator fun plus(rhs: String): LikePattern {
+        return LikePattern(pattern + rhs, escapeChar)
+    }
+
+    companion object {
+        /** Creates a [LikePattern] from the provided [text], with any special characters escaped using [escapeChar]. */
+        fun ofLiteral(text: String, escapeChar: Char = '\\'): LikePattern {
+            val likePatternSpecialChars = currentDialect.likePatternSpecialChars
+            val nextExpectedPatternQueue = arrayListOf<Char>()
+            var nextCharToEscape: Char? = null
+            val escapedPattern = buildString {
+                text.forEach {
+                    val shouldEscape = when (it) {
+                        escapeChar -> true
+                        in likePatternSpecialChars -> {
+                            likePatternSpecialChars[it]?.let { nextChar ->
+                                nextExpectedPatternQueue.add(nextChar)
+                                nextCharToEscape = nextChar
+                            }
+                            true
+                        }
+                        nextCharToEscape -> {
+                            nextExpectedPatternQueue.removeLast()
+                            nextCharToEscape = nextExpectedPatternQueue.lastOrNull()
+                            true
+                        }
+                        else -> false
+                    }
+                    if (shouldEscape) {
+                        append(escapeChar)
+                    }
+                    append(it)
+                }
+            }
+            return LikePattern(escapedPattern, escapeChar)
+        }
+    }
 }
 
 /** Appends an expression that is wrapped in parentheses (if necessary by [ComplexExpression]). */

@@ -57,10 +57,6 @@ function returns a string value that concatenates the text representations of al
             src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt"
             include-lines="53-57"/>
 
-<note>
-This <code>concat()</code> requires import statement <code>import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.concat</code>.
-</note>
-
 ### Locate
 The [`.locate()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/locate.html)
 function returns the index of the first occurrence of a specified substring, or 0 if the substring is not found.

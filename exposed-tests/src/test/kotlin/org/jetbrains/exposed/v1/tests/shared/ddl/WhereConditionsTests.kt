@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.v1.tests.shared.ddl
 
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.like
+import org.jetbrains.exposed.v1.core.notLike
 import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.core.upperCase
 import org.jetbrains.exposed.v1.jdbc.insert

@@ -155,7 +155,14 @@ internal class InsertValue<T>(
     }
 }
 
-/** Builder object for creating SQL expressions in UpsertStatement */
-object UpsertSqlExpressionBuilder : ISqlExpressionBuilder by SqlExpressionBuilder {
-    fun <T> insertValue(column: Column<T>): ExpressionWithColumnType<T> = InsertValue(column, column.columnType)
-}
+@Deprecated(
+    message = "This builder interface will continue to be phased out following release 1.0.0. " +
+        "All expression builder methods previously restricted to this interface have also been deprecated in favor of " +
+        "equivalent top-level functions, making implementations of this interface useless as a receiver in any scope. " +
+        "It will no longer be necessary to import each individual method when used outside a scoped block, " +
+        "and on demand imports will now be possible via 'import org.jetbrains.exposed.v1.core.*', if required.",
+    level = DeprecationLevel.ERROR
+)
+object UpsertSqlExpressionBuilder : ISqlExpressionBuilder
+
+fun <T> insertValue(column: Column<T>): ExpressionWithColumnType<T> = InsertValue(column, column.columnType)

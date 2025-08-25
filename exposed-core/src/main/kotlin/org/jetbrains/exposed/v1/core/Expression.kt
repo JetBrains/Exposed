@@ -163,8 +163,18 @@ abstract class Expression<T> {
     override fun toString(): String = QueryBuilder(false).append(this).toString()
 
     companion object {
-        /** Builds a new [Expression] using the provided [builder]. */
-        inline fun <T, E : Expression<T>> build(builder: SqlExpressionBuilder.() -> E): E = SqlExpressionBuilder.builder()
+        @Deprecated(
+            message = "This builder method will continue to be phased out following release 1.0.0 and should be replaced " +
+                "with the contents of the lambda block pulled out of the parentheses. The `SqlExpressionBuilder` receiver " +
+                "has been deprecated, as well as all expression builder methods previously restricted to the object, " +
+                "in favor of equivalent top-level functions, making this scope function redundant. " +
+                "It will no longer be necessary to import each individual method when used outside a scoped block, " +
+                "and on demand imports will now be possible via 'import org.jetbrains.exposed.v1.core.*', if required. " +
+                "",
+            replaceWith = ReplaceWith("builder()"),
+            level = DeprecationLevel.ERROR
+        )
+        inline fun <T, E : Expression<T>> build(builder: () -> E): E = builder()
     }
 }
 

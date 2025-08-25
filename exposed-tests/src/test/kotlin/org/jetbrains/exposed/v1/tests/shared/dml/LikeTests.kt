@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.tests.shared.dml
 
 import org.jetbrains.exposed.v1.core.LikePattern
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase

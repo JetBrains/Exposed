@@ -7,994 +7,1016 @@ import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
-import org.jetbrains.exposed.v1.core.functions.array.ArrayGet
-import org.jetbrains.exposed.v1.core.functions.array.ArraySlice
 import org.jetbrains.exposed.v1.core.ops.*
 import org.jetbrains.exposed.v1.core.vendors.FunctionProvider
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import java.math.BigDecimal
 import kotlin.internal.LowPriorityInOverloadResolution
+import org.jetbrains.exposed.v1.core.inList as topLevelInList
+import org.jetbrains.exposed.v1.core.notInList as topLevelNotInList
+import org.jetbrains.exposed.v1.core.rem as topLevelRem
+import org.jetbrains.exposed.v1.core.wrap as topLevelWrap
 
-// String Functions
-
-/** Returns the length of this string expression, measured in characters, or `null` if this expression is null. */
-fun <T : String?> Expression<T>.charLength(): CharLength<T> = CharLength(this)
-
-/** Converts this string expression to lower case. */
-fun <T : String?> Expression<T>.lowerCase(): LowerCase<T> = LowerCase(this)
-
-/** Converts this string expression to upper case. */
-fun <T : String?> Expression<T>.upperCase(): UpperCase<T> = UpperCase(this)
-
-/**
- * Concatenates all non-null input values of each group from [this] string expression, separated by [separator].
- *
- * @param separator The separator to use between concatenated values. If left `null`, the database default will be used.
- * @param distinct If set to `true`, duplicate values will be eliminated.
- * @param orderBy If specified, values will be sorted in the concatenated string.
- * @sample org.jetbrains.exposed.v1.tests.shared.dml.GroupByTests.testGroupConcat
- */
-fun <T : String?> Expression<T>.groupConcat(
-    separator: String? = null,
-    distinct: Boolean = false,
-    orderBy: Pair<Expression<*>, SortOrder>
-): GroupConcat<T> = GroupConcat(this, separator, distinct, orderBy)
-
-/**
- * Concatenates all non-null input values of each group from [this] string expression, separated by [separator].
- *
- * @param separator The separator to use between concatenated values. If left `null`, the database default will be used.
- * @param distinct If set to `true`, duplicate values will be eliminated.
- * @param orderBy If specified, values will be sorted in the concatenated string.
- * @sample org.jetbrains.exposed.v1.tests.shared.dml.GroupByTests.testGroupConcat
- */
-fun <T : String?> Expression<T>.groupConcat(
-    separator: String? = null,
-    distinct: Boolean = false,
-    orderBy: Array<Pair<Expression<*>, SortOrder>> = emptyArray()
-): GroupConcat<T> = GroupConcat(this, separator, distinct, orderBy = orderBy)
-
-/** Extract a substring from this string expression that begins at the specified [start] and with the specified [length]. */
-fun <T : String?> Expression<T>.substring(start: Int, length: Int): Substring<T> = Substring(this, intLiteral(start), intLiteral(length))
-
-/** Removes the longest string containing only spaces from both ends of string expression. */
-fun <T : String?> Expression<T>.trim(): Trim<T> = Trim(this)
-
-/** Returns the index of the first occurrence of [substring] in this string expression or 0 if it doesn't contain [substring] */
-fun <T : String?> Expression<T>.locate(substring: String): Locate<T> = Locate(this, substring)
-
-// General-Purpose Aggregate Functions
-
-/** Returns the minimum value of this expression across all non-null input values, or `null` if there are no non-null values. */
-fun <T : Any, S : T?> ExpressionWithColumnType<in S>.min(): Min<T, S> = Min<T, S>(this, this.columnType as IColumnType<T>)
-
-/** Returns the maximum value of this expression across all non-null input values, or `null` if there are no non-null values. */
-fun <T : Any, S : T?> ExpressionWithColumnType<in S>.max(): Max<T, S> = Max<T, S>(this, this.columnType as IColumnType<T>)
-
-/** Returns the average (arithmetic mean) value of this expression across all non-null input values, or `null` if there are no non-null values. */
-fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<S>.avg(scale: Int = 2): Avg<T, S> = Avg<T, S>(this, scale)
-
-/** Returns the sum of this expression across all non-null input values, or `null` if there are no non-null values. */
-fun <T> ExpressionWithColumnType<T>.sum(): Sum<T> = Sum(this, this.columnType)
-
-/** Returns the number of input rows for which the value of this expression is not null. */
-fun ExpressionWithColumnType<*>.count(): Count = Count(this)
-
-/** Returns the number of distinct input rows for which the value of this expression is not null. */
-fun Column<*>.countDistinct(): Count = Count(this, true)
-
-// Aggregate Functions for Statistics
-
-/**
- * Returns the population standard deviation of the non-null input values, or `null` if there are no non-null values.
- *
- * @param scale The scale of the decimal column expression returned.
- */
-fun <T : Any?> ExpressionWithColumnType<T>.stdDevPop(scale: Int = 2): StdDevPop<T> = StdDevPop(this, scale)
-
-/**
- * Returns the sample standard deviation of the non-null input values, or `null` if there are no non-null values.
- *
- * @param scale The scale of the decimal column expression returned.
- */
-fun <T : Any?> ExpressionWithColumnType<T>.stdDevSamp(scale: Int = 2): StdDevSamp<T> = StdDevSamp(this, scale)
-
-/**
- * Returns the population variance of the non-null input values (square of the population standard deviation), or `null` if there are no non-null values.
- *
- * @param scale The scale of the decimal column expression returned.
- */
-fun <T : Any?> ExpressionWithColumnType<T>.varPop(scale: Int = 2): VarPop<T> = VarPop(this, scale)
-
-/**
- * Returns the sample variance of the non-null input values (square of the sample standard deviation), or `null` if there are no non-null values.
- *
- * @param scale The scale of the decimal column expression returned.
- */
-fun <T : Any?> ExpressionWithColumnType<T>.varSamp(scale: Int = 2): VarSamp<T> = VarSamp(this, scale)
-
-// Array Comparisons
-
-/** Returns this subquery wrapped in the `ANY` operator. This function is not supported by the SQLite dialect. */
-fun <T> anyFrom(subQuery: AbstractQuery<*>): Op<T> = AllAnyFromSubQueryOp(true, subQuery)
-
-/**
- * Returns this array of data wrapped in the `ANY` operator. This function is only supported by PostgreSQL and H2 dialects.
- *
- * **Note** If [delegateType] is left `null`, the base column type associated with storing elements of type [T] will be
- * resolved according to the internal mapping of the element's type in [resolveColumnType].
- *
- * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
- */
-inline fun <reified T : Any> anyFrom(array: Array<T>, delegateType: ColumnType<T>? = null): Op<T> {
-    // emptyArray() without type info generates ARRAY[]
-    @OptIn(InternalApi::class)
-    val columnType = delegateType ?: resolveColumnType(T::class, if (array.isEmpty()) TextColumnType() else null)
-    return AllAnyFromArrayOp(true, array.toList(), columnType)
-}
-
-/**
- * Returns this list of data wrapped in the `ANY` operator. This function is only supported by PostgreSQL and H2 dialects.
- *
- * **Note** If [delegateType] is left `null`, the base column type associated with storing elements of type [T] will be
- * resolved according to the internal mapping of the element's type in [resolveColumnType].
- *
- * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
- */
-inline fun <reified T : Any> anyFrom(array: List<T>, delegateType: ColumnType<T>? = null): Op<T> {
-    // emptyList() without type info generates ARRAY[]
-    @OptIn(InternalApi::class)
-    val columnType = delegateType ?: resolveColumnType(T::class, if (array.isEmpty()) TextColumnType() else null)
-    return AllAnyFromArrayOp(true, array, columnType)
-}
-
-/** Returns this table wrapped in the `ANY` operator. This function is only supported by MySQL, PostgreSQL, and H2 dialects. */
-fun <T> anyFrom(table: Table): Op<T> = AllAnyFromTableOp(true, table)
-
-/** Returns this expression wrapped in the `ANY` operator. This function is only supported by PostgreSQL and H2 dialects. */
-fun <E, T : List<E>?> anyFrom(expression: Expression<T>): Op<E> = AllAnyFromExpressionOp(true, expression)
-
-/** Returns this subquery wrapped in the `ALL` operator. This function is not supported by the SQLite dialect. */
-fun <T> allFrom(subQuery: AbstractQuery<*>): Op<T> = AllAnyFromSubQueryOp(false, subQuery)
-
-/**
- * Returns this array of data wrapped in the `ALL` operator. This function is only supported by PostgreSQL and H2 dialects.
- *
- * **Note** If [delegateType] is left `null`, the base column type associated with storing elements of type [T] will be
- * resolved according to the internal mapping of the element's type in [resolveColumnType].
- *
- * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
- */
-inline fun <reified T : Any> allFrom(array: Array<T>, delegateType: ColumnType<T>? = null): Op<T> {
-    // emptyArray() without type info generates ARRAY[]
-    @OptIn(InternalApi::class)
-    val columnType = delegateType ?: resolveColumnType(T::class, if (array.isEmpty()) TextColumnType() else null)
-    return AllAnyFromArrayOp(false, array.toList(), columnType)
-}
-
-/**
- * Returns this list of data wrapped in the `ALL` operator. This function is only supported by PostgreSQL and H2 dialects.
- *
- * **Note** If [delegateType] is left `null`, the base column type associated with storing elements of type [T] will be
- * resolved according to the internal mapping of the element's type in [resolveColumnType].
- *
- * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
- */
-inline fun <reified T : Any> allFrom(array: List<T>, delegateType: ColumnType<T>? = null): Op<T> {
-    // emptyList() without type info generates ARRAY[]
-    @OptIn(InternalApi::class)
-    val columnType = delegateType ?: resolveColumnType(T::class, if (array.isEmpty()) TextColumnType() else null)
-    return AllAnyFromArrayOp(false, array, columnType)
-}
-
-/** Returns this table wrapped in the `ALL` operator. This function is only supported by MySQL, PostgreSQL, and H2 dialects. */
-fun <T> allFrom(table: Table): Op<T> = AllAnyFromTableOp(false, table)
-
-/** Returns this expression wrapped in the `ALL` operator. This function is only supported by PostgreSQL and H2 dialects. */
-fun <E, T : List<E>?> allFrom(expression: Expression<T>): Op<E> = AllAnyFromExpressionOp(false, expression)
-
-/**
- * Returns the array element stored at the one-based [index] position, or `null` if the stored array itself is null.
- *
- * @sample org.jetbrains.exposed.v1.tests.shared.types.ArrayColumnTypeTests.testSelectUsingArrayGet
- */
-infix operator fun <E, T : List<E>?> ExpressionWithColumnType<T>.get(index: Int): ArrayGet<E, T> {
-    return when (this) {
-        is ArrayGet<*, *> -> ArrayGet(this as Expression<T>, index, this.columnType as IColumnType<E & Any>) as ArrayGet<E, T>
-        else -> ArrayGet(this, index, (this.columnType as ArrayColumnType<E, List<E>>).delegate)
-    }
-}
-
-/**
- * Returns a subarray of elements stored from between [lower] and [upper] bounds (inclusive),
- * or `null` if the stored array itself is null.
- * **Note** If either bounds is left `null`, the database will use the stored array's respective lower or upper limit.
- *
- * @sample org.jetbrains.exposed.v1.tests.shared.types.ArrayColumnTypeTests.testSelectUsingArraySlice
- */
-fun <E, T : List<E>?> ExpressionWithColumnType<T>.slice(lower: Int? = null, upper: Int? = null): ArraySlice<E, T> =
-    ArraySlice(this, lower, upper, this.columnType)
-
-// Sequence Manipulation Functions
-
-/** Advances this sequence and returns the new value. */
-fun Sequence.nextIntVal(): NextVal<Int> = NextVal.IntNextVal(this)
-
-/** Advances this sequence and returns the new value. */
-fun Sequence.nextLongVal(): NextVal<Long> = NextVal.LongNextVal(this)
-
-// Value Expressions
-
-/** Specifies a conversion from one data type to another. */
-fun <R> Expression<*>.castTo(columnType: IColumnType<R & Any>): ExpressionWithColumnType<R> = Cast(this, columnType)
-
-// Misc.
-
-/**
- * Calls a custom SQL function with the specified [functionName] and passes this expression as its only argument.
- */
-fun <T> ExpressionWithColumnType<T>.function(functionName: String): CustomFunction<T?> = CustomFunction(functionName, columnType, this)
-
-/**
- * Calls a custom SQL function with the specified [functionName], that returns a string, and passing [params] as its arguments.
- */
-@Suppress("FunctionNaming")
-fun CustomStringFunction(
-    functionName: String,
-    vararg params: Expression<*>
-): CustomFunction<String?> = CustomFunction(functionName, TextColumnType(), *params)
-
-/**
- * Calls a custom SQL function with the specified [functionName], that returns a long, and passing [params] as its arguments.
- */
-@Suppress("FunctionNaming")
-fun CustomLongFunction(
-    functionName: String,
-    vararg params: Expression<*>
-): CustomFunction<Long?> = CustomFunction(functionName, LongColumnType(), *params)
-
-/** Represents a pattern used for the comparison of string expressions. */
-data class LikePattern(
-    /** The string representation of a pattern to match. */
-    val pattern: String,
-    /** The special character to use as the escape character. */
-    val escapeChar: Char? = null
-) {
-
-    infix operator fun plus(rhs: LikePattern): LikePattern {
-        require(escapeChar == rhs.escapeChar) { "Mixing escape chars '$escapeChar' vs. '${rhs.escapeChar} is not allowed" }
-        return LikePattern(pattern + rhs.pattern, rhs.escapeChar)
-    }
-
-    infix operator fun plus(rhs: String): LikePattern {
-        return LikePattern(pattern + rhs, escapeChar)
-    }
-
-    companion object {
-        /** Creates a [LikePattern] from the provided [text], with any special characters escaped using [escapeChar]. */
-        fun ofLiteral(text: String, escapeChar: Char = '\\'): LikePattern {
-            val likePatternSpecialChars = currentDialect.likePatternSpecialChars
-            val nextExpectedPatternQueue = arrayListOf<Char>()
-            var nextCharToEscape: Char? = null
-            val escapedPattern = buildString {
-                text.forEach {
-                    val shouldEscape = when (it) {
-                        escapeChar -> true
-                        in likePatternSpecialChars -> {
-                            likePatternSpecialChars[it]?.let { nextChar ->
-                                nextExpectedPatternQueue.add(nextChar)
-                                nextCharToEscape = nextChar
-                            }
-                            true
-                        }
-                        nextCharToEscape -> {
-                            nextExpectedPatternQueue.removeLast()
-                            nextCharToEscape = nextExpectedPatternQueue.lastOrNull()
-                            true
-                        }
-                        else -> false
-                    }
-                    if (shouldEscape) {
-                        append(escapeChar)
-                    }
-                    append(it)
-                }
-            }
-            return LikePattern(escapedPattern, escapeChar)
-        }
-    }
-}
-
-/** Represents all the operators available when building SQL expressions. */
-@Suppress("INAPPLICABLE_JVM_NAME", "TooManyFunctions")
+@Deprecated(
+    message = "This builder interface will continue to be phased out following release 1.0.0. " +
+        "All expression builder methods previously restricted to this interface have also been deprecated in favor of " +
+        "equivalent top-level functions, making implementations of this interface useless as a receiver in any scope. " +
+        "It will no longer be necessary to import each individual method when used outside a scoped block, " +
+        "and on demand imports will now be possible via 'import org.jetbrains.exposed.v1.core.*', if required.",
+    level = DeprecationLevel.WARNING
+)
+@Suppress("INAPPLICABLE_JVM_NAME", "TooManyFunctions", "LargeClass")
 interface ISqlExpressionBuilder {
-
-    // Comparison Operators
-    // EQUAL
-
-    /** Checks if this expression is equal to some [t] value. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this eq t", "org.jetbrains.exposed.v1.core.eq"),
+        level = DeprecationLevel.ERROR
+    )
     @LowPriorityInOverloadResolution
-    infix fun <T> ExpressionWithColumnType<T>.eq(t: T): Op<Boolean> = when {
-        t == null -> isNull()
-        (this as? Column<*>)?.isEntityIdentifier() == true -> table.mapIdComparison(t, ::EqOp)
-        else -> EqOp(this, wrap(t))
-    }
+    infix fun <T> ExpressionWithColumnType<T>.eq(t: T): Op<Boolean> = Op.TRUE
 
-    /** Checks if this expression is equal to some [t] value. */
-    infix fun <T> CompositeColumn<T>.eq(t: T): Op<Boolean> {
-        // For the composite column, create "EqOps" for each real column and combine it using "and" operator
-        return this.getRealColumnsWithValues(t).entries
-            .map { e -> (e.key as Column<Any?>).eq(e.value) }
-            .compoundAnd()
-    }
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this eq t", "org.jetbrains.exposed.v1.core.eq"),
+        level = DeprecationLevel.ERROR
+    )
+    infix fun <T> CompositeColumn<T>.eq(t: T): Op<Boolean> = Op.TRUE
 
-    /** Checks if this expression is equal to some [other] expression. */
-    infix fun <T, S1 : T?, S2 : T?> Expression<in S1>.eq(other: Expression<in S2>): Op<Boolean> = when {
-        (other as Expression<*>) is Op.NULL -> isNull()
-        (other as? QueryParameter)?.compositeValue != null -> (this as Column<*>).table.mapIdComparison(other.value, ::EqOp)
-        else -> EqOp(this, other)
-    }
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this eq other", "org.jetbrains.exposed.v1.core.eq"),
+        level = DeprecationLevel.ERROR
+    )
+    infix fun <T, S1 : T?, S2 : T?> Expression<in S1>.eq(other: Expression<in S2>): Op<Boolean> = Op.TRUE
 
-    /** Checks if this [EntityID] expression is equal to some [t] value. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this eq t", "org.jetbrains.exposed.v1.core.eq"),
+        level = DeprecationLevel.ERROR
+    )
     @JvmName("eqEntityIDValue")
-    infix fun <T : Any, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.eq(t: V): Op<Boolean> {
-        if (t == null) return isNull()
+    infix fun <T : Any, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.eq(t: V): Op<Boolean> = Op.TRUE
 
-        @Suppress("UNCHECKED_CAST")
-        val table = (columnType as EntityIDColumnType<*>).idColumn.table as IdTable<T>
-        val entityID = EntityID(t, table)
-        return if ((this as? Column<*>)?.isEntityIdentifier() == true) {
-            this.table.mapIdComparison(entityID, ::EqOp)
-        } else {
-            EqOp(this, wrap(entityID))
-        }
-    }
-
-    /** Checks if this [EntityID] expression is equal to some [other] expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this eq other", "org.jetbrains.exposed.v1.core.eq"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : Any, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.eq(
         other: Expression<V>
-    ): Op<Boolean> = when (other as Expression<*>) {
-        is Op.NULL -> isNull()
-        else -> EqOp(this, other)
-    }
+    ): Op<Boolean> = Op.TRUE
 
-    /** Checks if this expression is equal to some [other] [EntityID] expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this eq other", "org.jetbrains.exposed.v1.core.eq"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : Any, V : T?, E : EntityID<T>?> Expression<V>.eq(
         other: ExpressionWithColumnType<E>
-    ): Op<Boolean> = other eq this
+    ): Op<Boolean> = Op.TRUE
 
-    // NOT EQUAL
-
-    /** Checks if this expression is not equal to some [other] value. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this neq other", "org.jetbrains.exposed.v1.core.neq"),
+        level = DeprecationLevel.ERROR
+    )
     @LowPriorityInOverloadResolution
-    infix fun <T> ExpressionWithColumnType<T>.neq(other: T): Op<Boolean> = when {
-        other == null -> isNotNull()
-        (this as? Column<*>)?.isEntityIdentifier() == true -> table.mapIdComparison(other, ::NeqOp)
-        else -> NeqOp(this, wrap(other))
-    }
+    infix fun <T> ExpressionWithColumnType<T>.neq(other: T): Op<Boolean> = Op.TRUE
 
-    /** Checks if this expression is not equal to some [other] expression. */
-    infix fun <T, S1 : T?, S2 : T?> Expression<in S1>.neq(other: Expression<in S2>): Op<Boolean> = when {
-        (other as Expression<*>) is Op.NULL -> isNotNull()
-        (other as? QueryParameter)?.compositeValue != null -> (this as Column<*>).table.mapIdComparison(other.value, ::NeqOp)
-        else -> NeqOp(this, other)
-    }
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this neq other", "org.jetbrains.exposed.v1.core.neq"),
+        level = DeprecationLevel.ERROR
+    )
+    infix fun <T, S1 : T?, S2 : T?> Expression<in S1>.neq(other: Expression<in S2>): Op<Boolean> = Op.TRUE
 
-    /** Checks if this [EntityID] expression is not equal to some [t] value. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this neq t", "org.jetbrains.exposed.v1.core.neq"),
+        level = DeprecationLevel.ERROR
+    )
     @JvmName("neqEntityIDValue")
-    infix fun <T : Any, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.neq(t: V): Op<Boolean> {
-        if (t == null) return isNotNull()
-        @Suppress("UNCHECKED_CAST")
-        val table = (columnType as EntityIDColumnType<*>).idColumn.table as IdTable<T>
-        val entityID = EntityID(t, table)
-        return if ((this as? Column<*>)?.isEntityIdentifier() == true) {
-            this.table.mapIdComparison(entityID, ::NeqOp)
-        } else {
-            NeqOp(this, wrap(entityID))
-        }
-    }
+    infix fun <T : Any, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.neq(t: V): Op<Boolean> = Op.TRUE
 
-    /** Checks if this [EntityID] expression is not equal to some [other] expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this neq other", "org.jetbrains.exposed.v1.core.neq"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : Any, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.neq(
         other: Expression<V>
-    ): Op<Boolean> = when (other as Expression<*>) {
-        is Op.NULL -> isNotNull()
-        else -> NeqOp(this, other)
-    }
+    ): Op<Boolean> = Op.TRUE
 
-    /** Checks if this expression is not equal to some [other] [EntityID] expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this neq other", "org.jetbrains.exposed.v1.core.neq"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : Any, V : T?, E : EntityID<T>?> Expression<V>.neq(
         other: ExpressionWithColumnType<E>
-    ): Op<Boolean> = other neq this
+    ): Op<Boolean> = Op.TRUE
 
-    // LESS THAN
-
-    /** Checks if this expression is less than some [t] value. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this less t", "org.jetbrains.exposed.v1.core.less"),
+        level = DeprecationLevel.ERROR
+    )
     @LowPriorityInOverloadResolution
-    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.less(t: T): LessOp = LessOp(this, wrap(t))
+    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.less(t: T): LessOp = LessOp(this, topLevelWrap(t))
 
-    /** Checks if this expression is less than some [other] expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this less other", "org.jetbrains.exposed.v1.core.less"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : Comparable<T>, S : T?> Expression<in S>.less(other: Expression<in S>): LessOp = LessOp(this, other)
 
-    /** Checks if this [EntityID] expression is less than some [t] value. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this less t", "org.jetbrains.exposed.v1.core.less"),
+        level = DeprecationLevel.ERROR
+    )
     @JvmName("lessEntityID")
     infix fun <T : Comparable<T>> Column<EntityID<T>>.less(t: T): LessOp =
-        LessOp(this, wrap(EntityID(t, this.idTable())))
+        LessOp(this, topLevelWrap(EntityID(t, this.idTable())))
 
-    /** Checks if this [EntityID] expression is less than some [other] expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this less other", "org.jetbrains.exposed.v1.core.less"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.less(
         other: Expression<in V>
     ): LessOp = LessOp(this, other)
 
-    /** Checks if this expression is less than some [other] [EntityID] expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this less other", "org.jetbrains.exposed.v1.core.less"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.less(
         other: ExpressionWithColumnType<E>
     ): LessOp = LessOp(this, other)
 
-    /** Checks if this [EntityID] expression is less than some [other] [EntityID] expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this less other", "org.jetbrains.exposed.v1.core.less"),
+        level = DeprecationLevel.ERROR
+    )
     @JvmName("lessBetweenEntityIDs")
     infix fun <T : Comparable<T>, E : EntityID<T>?> Expression<E>.less(
         other: Expression<E>
     ): LessOp = LessOp(this, other)
 
-    // LESS THAN OR EQUAL
-
-    /** Checks if this expression is less than or equal to some [t] value */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("thie lessEq t", "org.jetbrains.exposed.v1.core.lessEq"),
+        level = DeprecationLevel.ERROR
+    )
     @LowPriorityInOverloadResolution
-    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.lessEq(t: T): LessEqOp = LessEqOp(this, wrap(t))
+    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.lessEq(t: T): LessEqOp = LessEqOp(this, topLevelWrap(t))
 
-    /** Checks if this expression is less than or equal to some [other] expression */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this lessEq other", "org.jetbrains.exposed.v1.core.lessEq"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : Comparable<T>, S : T?> Expression<in S>.lessEq(other: Expression<in S>): LessEqOp = LessEqOp(this, other)
 
-    /** Checks if this [EntityID] expression is less than or equal to some [t] value */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this lessEq t", "org.jetbrains.exposed.v1.core.lessEq"),
+        level = DeprecationLevel.ERROR
+    )
     @JvmName("lessEqEntityID")
     infix fun <T : Comparable<T>> Column<EntityID<T>>.lessEq(t: T): LessEqOp =
-        LessEqOp(this, wrap(EntityID(t, this.idTable())))
+        LessEqOp(this, topLevelWrap(EntityID(t, this.idTable())))
 
-    /** Checks if this [EntityID] expression is less than or equal to some [other] expression */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this lessEq other", "org.jetbrains.exposed.v1.core.lessEq"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.lessEq(
         other: Expression<in V>
     ): LessEqOp = LessEqOp(this, other)
 
-    /** Checks if this expression is less than or equal to some [other] [EntityID] expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this lessEq other", "org.jetbrains.exposed.v1.core.lessEq"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.lessEq(
         other: ExpressionWithColumnType<E>
     ): LessEqOp = LessEqOp(this, other)
 
-    /** Checks if this [EntityID] expression is less than or equal to some [other] [EntityID] expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this lessEq other", "org.jetbrains.exposed.v1.core.lessEq"),
+        level = DeprecationLevel.ERROR
+    )
     @JvmName("lessEqBetweenEntityIDs")
     infix fun <T : Comparable<T>, E : EntityID<T>?> Expression<E>.lessEq(
         other: Expression<E>
     ): LessEqOp = LessEqOp(this, other)
 
-    // GREATER THAN
-
-    /** Checks if this expression is greater than some [t] value. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this greater t", "org.jetbrains.exposed.v1.core.greater"),
+        level = DeprecationLevel.ERROR
+    )
     @LowPriorityInOverloadResolution
-    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.greater(t: T): GreaterOp = GreaterOp(this, wrap(t))
+    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.greater(t: T): GreaterOp = GreaterOp(this, topLevelWrap(t))
 
-    /** Checks if this expression is greater than some [other] expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this greater other", "org.jetbrains.exposed.v1.core.greater"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : Comparable<T>, S : T?> Expression<in S>.greater(other: Expression<in S>): GreaterOp = GreaterOp(this, other)
 
-    /** Checks if this [EntityID] expression is greater than some [t] value. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this greater t", "org.jetbrains.exposed.v1.core.greater"),
+        level = DeprecationLevel.ERROR
+    )
     @JvmName("greaterEntityID")
     infix fun <T : Comparable<T>> Column<EntityID<T>>.greater(t: T): GreaterOp =
-        GreaterOp(this, wrap(EntityID(t, this.idTable())))
+        GreaterOp(this, topLevelWrap(EntityID(t, this.idTable())))
 
-    /** Checks if this [EntityID] expression is greater than some [other] expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this greater other", "org.jetbrains.exposed.v1.core.greater"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.greater(
         other: Expression<in V>
     ): GreaterOp = GreaterOp(this, other)
 
-    /** Checks if this expression is greater than some [other] [EntityID] expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this greater other", "org.jetbrains.exposed.v1.core.greater"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.greater(
         other: ExpressionWithColumnType<E>
     ): GreaterOp = GreaterOp(this, other)
 
-    /** Checks if this [EntityID] expression is greater than some [other] [EntityID] expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this greater other", "org.jetbrains.exposed.v1.core.greater"),
+        level = DeprecationLevel.ERROR
+    )
     @JvmName("greaterBetweenEntityIDs")
     infix fun <T : Comparable<T>, E : EntityID<T>?> Expression<E>.greater(
         other: Expression<E>
     ): GreaterOp = GreaterOp(this, other)
 
-    // GREATER THAN OR EQUAL
-
-    /** Checks if this expression is greater than or equal to some [t] value */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this greaterEq t", "org.jetbrains.exposed.v1.core.greaterEq"),
+        level = DeprecationLevel.ERROR
+    )
     @LowPriorityInOverloadResolution
-    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.greaterEq(t: T): GreaterEqOp = GreaterEqOp(this, wrap(t))
+    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.greaterEq(t: T): GreaterEqOp = GreaterEqOp(this, topLevelWrap(t))
 
-    /** Checks if this expression is greater than or equal to some [other] expression */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this greaterEq other", "org.jetbrains.exposed.v1.core.greaterEq"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : Comparable<T>, S : T?> Expression<in S>.greaterEq(other: Expression<in S>): GreaterEqOp = GreaterEqOp(this, other)
 
-    /** Checks if this [EntityID] expression is greater than or equal to some [t] value */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this greaterEq t", "org.jetbrains.exposed.v1.core.greaterEq"),
+        level = DeprecationLevel.ERROR
+    )
     @JvmName("greaterEqEntityID")
     infix fun <T : Comparable<T>> Column<EntityID<T>>.greaterEq(t: T): GreaterEqOp =
-        GreaterEqOp(this, wrap(EntityID(t, this.idTable())))
+        GreaterEqOp(this, topLevelWrap(EntityID(t, this.idTable())))
 
-    /** Checks if this [EntityID] expression is greater than or equal to some [other] expression */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this greaterEq other", "org.jetbrains.exposed.v1.core.greaterEq"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.greaterEq(
         other: Expression<in V>
     ): GreaterEqOp = GreaterEqOp(this, other)
 
-    /** Checks if this expression is greater than or equal to some [other] [EntityID] expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this greaterEq other", "org.jetbrains.exposed.v1.core.greaterEq"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.greaterEq(
         other: ExpressionWithColumnType<E>
     ): GreaterEqOp = GreaterEqOp(this, other)
 
-    /** Checks if this [EntityID] expression is greater than or equal to some [other] [EntityID] expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this greaterEq other", "org.jetbrains.exposed.v1.core.greaterEq"),
+        level = DeprecationLevel.ERROR
+    )
     @JvmName("greaterEqBetweenEntityIDs")
     infix fun <T : Comparable<T>, E : EntityID<T>?> Expression<E>.greaterEq(
         other: Expression<E>
     ): GreaterEqOp = GreaterEqOp(this, other)
 
-    // Comparison Predicates
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("between(from, to)", "org.jetbrains.exposed.v1.core.between"),
+        level = DeprecationLevel.ERROR
+    )
+    fun <T, S : T?> ExpressionWithColumnType<in S>.between(from: T, to: T): Between = Between(this, topLevelWrap(from), topLevelWrap(to))
 
-    /** Returns `true` if this expression is between the values [from] and [to], `false` otherwise. */
-    fun <T, S : T?> ExpressionWithColumnType<in S>.between(from: T, to: T): Between = Between(this, wrap(from), wrap(to))
-
-    /** Returns `true` if this [EntityID] expression is between the values [from] and [to], `false` otherwise. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("between(from, to)", "org.jetbrains.exposed.v1.core.between"),
+        level = DeprecationLevel.ERROR
+    )
     fun <T : Any, E : EntityID<T>?> Column<E>.between(from: T, to: T): Between =
-        Between(this, wrap(EntityID(from, this.idTable())), wrap(EntityID(to, this.idTable())))
+        Between(this, topLevelWrap(EntityID(from, this.idTable())), topLevelWrap(EntityID(to, this.idTable())))
 
-    /** Returns `true` if this expression is null, `false` otherwise. */
-    fun <T> Expression<T>.isNull() = when {
-        this is Column<*> && isEntityIdentifier() -> table.mapIdOperator(::IsNullOp)
-        this is QueryParameter && compositeValue != null -> {
-            val table = compositeValue.values.keys.first().table
-            table.mapIdOperator(::IsNullOp)
-        }
-        else -> IsNullOp(this)
-    }
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("isNull()", "org.jetbrains.exposed.v1.core.isNull"),
+        level = DeprecationLevel.ERROR
+    )
+    fun <T> Expression<T>.isNull(): Op<Boolean> = Op.TRUE
 
-    /** Returns `true` if this string expression is null or empty, `false` otherwise. */
-    fun <T : String?> Expression<T>.isNullOrEmpty() = IsNullOp(this).or { this@isNullOrEmpty.charLength() eq 0 }
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("isNullOrEmpty()", "org.jetbrains.exposed.v1.core.isNullOrEmpty"),
+        level = DeprecationLevel.ERROR
+    )
+    fun <T : String?> Expression<T>.isNullOrEmpty(): Op<Boolean> = Op.TRUE
 
-    /** Returns `true` if this expression is not null, `false` otherwise. */
-    fun <T> Expression<T>.isNotNull() = when {
-        this is Column<*> && isEntityIdentifier() -> table.mapIdOperator(::IsNotNullOp)
-        this is QueryParameter && compositeValue != null -> {
-            val table = compositeValue.values.keys.first().table
-            table.mapIdOperator(::IsNotNullOp)
-        }
-        else -> IsNotNullOp(this)
-    }
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("isNotNull()", "org.jetbrains.exposed.v1.core.isNotNull"),
+        level = DeprecationLevel.ERROR
+    )
+    fun <T> Expression<T>.isNotNull(): Op<Boolean> = Op.TRUE
 
-    /** Checks if this expression is equal to some [t] value, with `null` treated as a comparable value */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this isNotDistinctFrom t", "org.jetbrains.exposed.v1.core.isNotDistinctFrom"),
+        level = DeprecationLevel.ERROR
+    )
     @LowPriorityInOverloadResolution
-    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.isNotDistinctFrom(t: T): IsNotDistinctFromOp = IsNotDistinctFromOp(this, wrap(t))
+    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.isNotDistinctFrom(t: T): IsNotDistinctFromOp = IsNotDistinctFromOp(this, topLevelWrap(t))
 
-    /** Checks if this expression is equal to some [other] expression, with `null` treated as a comparable value */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this isNotDistinctFrom other", "org.jetbrains.exposed.v1.core.isNotDistinctFrom"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : Comparable<T>, S : T?> Expression<in S>.isNotDistinctFrom(other: Expression<in S>): IsNotDistinctFromOp = IsNotDistinctFromOp(this, other)
 
-    /** Checks if this expression is equal to some [t] value, with `null` treated as a comparable value */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this isNotDistinctFrom t", "org.jetbrains.exposed.v1.core.isNotDistinctFrom"),
+        level = DeprecationLevel.ERROR
+    )
     @JvmName("isNotDistinctFromEntityID")
     infix fun <T : Any> Column<EntityID<T>>.isNotDistinctFrom(t: T): IsNotDistinctFromOp =
-        IsNotDistinctFromOp(this, wrap(EntityID(t, this.idTable())))
+        IsNotDistinctFromOp(this, topLevelWrap(EntityID(t, this.idTable())))
 
-    /** Checks if this [EntityID] expression is equal to some [other] expression */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this isNotDistinctFrom other", "org.jetbrains.exposed.v1.core.isNotDistinctFrom"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : Any, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.isNotDistinctFrom(
         other: Expression<in V>
     ): IsNotDistinctFromOp = IsNotDistinctFromOp(this, other)
 
-    /** Checks if this expression is equal to some [other] [EntityID] expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this isNotDistinctFrom other", "org.jetbrains.exposed.v1.core.isNotDistinctFrom"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : Any, V : T?, E : EntityID<T>?> Expression<V>.isNotDistinctFrom(
         other: ExpressionWithColumnType<E>
     ): IsNotDistinctFromOp = IsNotDistinctFromOp(this, other)
 
-    /** Checks if this expression is not equal to some [t] value, with `null` treated as a comparable value */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this isDistinctFrom t", "org.jetbrains.exposed.v1.core.isDistinctFrom"),
+        level = DeprecationLevel.ERROR
+    )
     @LowPriorityInOverloadResolution
-    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.isDistinctFrom(t: T): IsDistinctFromOp = IsDistinctFromOp(this, wrap(t))
+    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.isDistinctFrom(t: T): IsDistinctFromOp = IsDistinctFromOp(this, topLevelWrap(t))
 
-    /** Checks if this expression is not equal to some [other] expression, with `null` treated as a comparable value */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this isDistinctFrom other", "org.jetbrains.exposed.v1.core.isDistinctFrom"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : Comparable<T>, S : T?> Expression<in S>.isDistinctFrom(other: Expression<in S>): IsDistinctFromOp = IsDistinctFromOp(this, other)
 
-    /** Checks if this expression is not equal to some [t] value, with `null` treated as a comparable value */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this isDistinctFrom t", "org.jetbrains.exposed.v1.core.isDistinctFrom"),
+        level = DeprecationLevel.ERROR
+    )
     @JvmName("isDistinctFromEntityID")
     infix fun <T : Any> Column<EntityID<T>>.isDistinctFrom(t: T): IsDistinctFromOp =
-        IsDistinctFromOp(this, wrap(EntityID(t, this.idTable())))
+        IsDistinctFromOp(this, topLevelWrap(EntityID(t, this.idTable())))
 
-    /** Checks if this [EntityID] expression is not equal to some [other] expression */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this isDistinctFrom other", "org.jetbrains.exposed.v1.core.isDistinctFrom"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : Any, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.isDistinctFrom(
         other: Expression<in V>
     ): IsDistinctFromOp = IsDistinctFromOp(this, other)
 
-    /** Checks if this expression is not equal to some [other] [EntityID] expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this isDistinctFrom other", "org.jetbrains.exposed.v1.core.isDistinctFrom"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : Any, V : T?, E : EntityID<T>?> Expression<in V>.isDistinctFrom(
         other: ExpressionWithColumnType<E>
     ): IsDistinctFromOp = IsDistinctFromOp(this, other)
 
-    // Mathematical Operators
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this + t", "org.jetbrains.exposed.v1.core.plus"),
+        level = DeprecationLevel.ERROR
+    )
+    infix operator fun <T> ExpressionWithColumnType<T>.plus(t: T): PlusOp<T, T> = PlusOp(this, topLevelWrap(t), columnType)
 
-    /** Adds the [t] value to this expression. */
-    infix operator fun <T> ExpressionWithColumnType<T>.plus(t: T): PlusOp<T, T> = PlusOp(this, wrap(t), columnType)
-
-    /** Adds the [other] expression to this expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this + other", "org.jetbrains.exposed.v1.core.plus"),
+        level = DeprecationLevel.ERROR
+    )
     infix operator fun <T, S : T> ExpressionWithColumnType<T>.plus(other: Expression<S>): PlusOp<T, S> = PlusOp(this, other, columnType)
 
-    /**
-     * Concatenate the value to the input expression.
-     *
-     * @param value The string value to be concatenated.
-     * @return The concatenated expression.
-     */
-    infix operator fun Expression<String>.plus(value: String): Concat = concat(this, stringLiteral(value))
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this + value", "org.jetbrains.exposed.v1.core.plus"),
+        level = DeprecationLevel.ERROR
+    )
+    infix operator fun Expression<String>.plus(value: String): Concat = Concat("", this, stringLiteral(value))
 
-    /**
-     * Concatenate the value to the input expression.
-     *
-     * @param value The string value to be concatenated.
-     * @return The concatenated expression.
-     */
-    infix operator fun Expression<String>.plus(value: Expression<String>): Concat = concat(this, value)
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this + value", "org.jetbrains.exposed.v1.core.plus"),
+        level = DeprecationLevel.ERROR
+    )
+    infix operator fun Expression<String>.plus(value: Expression<String>): Concat = Concat("", this, value)
 
-    /**
-     * Concatenate the value to the input expression.
-     *
-     * @param value The string value to be concatenated.
-     * @return The concatenated expression.
-     */
-    infix operator fun String.plus(value: Expression<String>): Concat = concat(stringLiteral(this), value)
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this + value", "org.jetbrains.exposed.v1.core.plus"),
+        level = DeprecationLevel.ERROR
+    )
+    infix operator fun String.plus(value: Expression<String>): Concat = Concat("", stringLiteral(this), value)
 
-    /** Subtracts the [t] value from this expression. */
-    infix operator fun <T> ExpressionWithColumnType<T>.minus(t: T): MinusOp<T, T> = MinusOp(this, wrap(t), columnType)
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this - t", "org.jetbrains.exposed.v1.core.minus"),
+        level = DeprecationLevel.ERROR
+    )
+    infix operator fun <T> ExpressionWithColumnType<T>.minus(t: T): MinusOp<T, T> = MinusOp(this, topLevelWrap(t), columnType)
 
-    /** Subtracts the [other] expression from this expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this - other", "org.jetbrains.exposed.v1.core.minus"),
+        level = DeprecationLevel.ERROR
+    )
     infix operator fun <T, S : T> ExpressionWithColumnType<T>.minus(other: Expression<S>): MinusOp<T, S> = MinusOp(this, other, columnType)
 
-    /** Multiplies this expression by the [t] value. */
-    infix operator fun <T> ExpressionWithColumnType<T>.times(t: T): TimesOp<T, T> = TimesOp(this, wrap(t), columnType)
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this * t", "org.jetbrains.exposed.v1.core.times"),
+        level = DeprecationLevel.ERROR
+    )
+    infix operator fun <T> ExpressionWithColumnType<T>.times(t: T): TimesOp<T, T> = TimesOp(this, topLevelWrap(t), columnType)
 
-    /** Multiplies this expression by the [other] expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this * other", "org.jetbrains.exposed.v1.core.times"),
+        level = DeprecationLevel.ERROR
+    )
     infix operator fun <T, S : T> ExpressionWithColumnType<T>.times(other: Expression<S>): TimesOp<T, S> = TimesOp(this, other, columnType)
 
-    /** Divides this expression by the [t] value. */
-    infix operator fun <T> ExpressionWithColumnType<T>.div(t: T): DivideOp<T, T> = DivideOp(this, wrap(t), columnType)
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this / t", "org.jetbrains.exposed.v1.core.div"),
+        level = DeprecationLevel.ERROR
+    )
+    infix operator fun <T> ExpressionWithColumnType<T>.div(t: T): DivideOp<T, T> = DivideOp(this, topLevelWrap(t), columnType)
 
-    /** Divides this expression by the [other] expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this / other", "org.jetbrains.exposed.v1.core.div"),
+        level = DeprecationLevel.ERROR
+    )
     infix operator fun <T, S : T> ExpressionWithColumnType<T>.div(other: Expression<S>): DivideOp<T, S> = DivideOp(this, other, columnType)
 
-    /** Calculates the remainder of dividing this expression by the [t] value. */
-    infix operator fun <T : Number?, S : T> ExpressionWithColumnType<T>.rem(t: S) = ModOp<T, S, T>(this, wrap(t), columnType)
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this % t", "org.jetbrains.exposed.v1.core.rem"),
+        level = DeprecationLevel.ERROR
+    )
+    infix operator fun <T : Number?, S : T> ExpressionWithColumnType<T>.rem(t: S) = ModOp<T, S, T>(this, topLevelWrap(t), columnType)
 
-    /** Calculates the remainder of dividing this expression by the [other] expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this % other", "org.jetbrains.exposed.v1.core.rem"),
+        level = DeprecationLevel.ERROR
+    )
     infix operator fun <T : Number?, S : Number> ExpressionWithColumnType<T>.rem(other: Expression<S>) = ModOp<T, S, T>(this, other, columnType)
 
-    /** Calculates the remainder of dividing the value of [this] numeric PK by the [other] number. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this % other", "org.jetbrains.exposed.v1.core.rem"),
+        level = DeprecationLevel.ERROR
+    )
     @JvmName("remWithEntityId")
     infix operator fun <T, S : Number, ID : EntityID<T>?> ExpressionWithColumnType<ID>.rem(other: S) where T : Number, T : Comparable<T> =
         ModOp(this, other)
 
-    /** Calculates the remainder of dividing [this] number expression by [other] numeric PK */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this % other", "org.jetbrains.exposed.v1.core.rem"),
+        level = DeprecationLevel.ERROR
+    )
     @JvmName("remWithEntityId2")
     infix operator fun <T, S : Number, ID : EntityID<T>?> Expression<S>.rem(other: ExpressionWithColumnType<ID>) where T : Number, T : Comparable<T> =
         ModOp(this, other)
 
-    /** Calculates the remainder of dividing the value of [this] numeric PK by the [other] number expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this % other", "org.jetbrains.exposed.v1.core.rem"),
+        level = DeprecationLevel.ERROR
+    )
     @JvmName("remWithEntityId3")
     infix operator fun <T, S : Number, ID : EntityID<T>?> ExpressionWithColumnType<ID>.rem(other: Expression<S>) where T : Number, T : Comparable<T> =
         ModOp(this, other)
 
-    /** Calculates the remainder of dividing this expression by the [t] value. */
-    infix fun <T : Number?, S : T> ExpressionWithColumnType<T>.mod(t: S) = this % t
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this mod t", "org.jetbrains.exposed.v1.core.mod"),
+        level = DeprecationLevel.ERROR
+    )
+    infix fun <T : Number?, S : T> ExpressionWithColumnType<T>.mod(t: S) = this topLevelRem t
 
-    /** Calculates the remainder of dividing this expression by the [other] expression. */
-    infix fun <T : Number?, S : Number> ExpressionWithColumnType<T>.mod(other: Expression<S>) = this % other
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this mod other", "org.jetbrains.exposed.v1.core.mod"),
+        level = DeprecationLevel.ERROR
+    )
+    infix fun <T : Number?, S : Number> ExpressionWithColumnType<T>.mod(other: Expression<S>) = this topLevelRem other
 
-    /** Calculates the remainder of dividing the value of [this] numeric PK by the [other] number. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this mod other", "org.jetbrains.exposed.v1.core.mod"),
+        level = DeprecationLevel.ERROR
+    )
     @JvmName("modWithEntityId")
-    infix fun <T, S : Number, ID : EntityID<T>?> ExpressionWithColumnType<ID>.mod(other: S) where T : Number, T : Comparable<T> = this % other
+    infix fun <T, S : Number, ID : EntityID<T>?> ExpressionWithColumnType<ID>.mod(other: S) where T : Number, T : Comparable<T> = this topLevelRem other
 
-    /** Calculates the remainder of dividing [this] number expression by [other] numeric PK */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this mod other", "org.jetbrains.exposed.v1.core.mod"),
+        level = DeprecationLevel.ERROR
+    )
     @JvmName("modWithEntityId2")
-    infix fun <T, S : Number, ID : EntityID<T>?> Expression<S>.mod(other: ExpressionWithColumnType<ID>) where T : Number, T : Comparable<T> = this % other
+    infix fun <T, S : Number, ID : EntityID<T>?> Expression<S>.mod(other: ExpressionWithColumnType<ID>) where T : Number, T : Comparable<T> = this topLevelRem other
 
-    /** Calculates the remainder of dividing the value of [this] numeric PK by the [other] number expression. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this mod other", "org.jetbrains.exposed.v1.core.mod"),
+        level = DeprecationLevel.ERROR
+    )
     @JvmName("modWithEntityId3")
     infix fun <T, S : Number, ID : EntityID<T>?> ExpressionWithColumnType<ID>.mod(other: Expression<S>) where T : Number, T : Comparable<T> =
         ModOp(this, other)
 
-    /**
-     * Performs a bitwise `and` on this expression and [t].
-     */
-    infix fun <T> ExpressionWithColumnType<T>.bitwiseAnd(t: T): AndBitOp<T, T> = AndBitOp(this, wrap(t), columnType)
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this bitwiseAnd t", "org.jetbrains.exposed.v1.core.bitwiseAnd"),
+        level = DeprecationLevel.ERROR
+    )
+    infix fun <T> ExpressionWithColumnType<T>.bitwiseAnd(t: T): AndBitOp<T, T> = AndBitOp(this, topLevelWrap(t), columnType)
 
-    /**
-     * Performs a bitwise `and` on this expression and expression [t].
-     */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this bitwiseAnd t", "org.jetbrains.exposed.v1.core.bitwiseAnd"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T> ExpressionWithColumnType<T>.bitwiseAnd(t: Expression<T>): AndBitOp<T, T> = AndBitOp(this, t, columnType)
 
-    /**
-     * Performs a bitwise `or` on this expression and [t].
-     */
-    infix fun <T> ExpressionWithColumnType<T>.bitwiseOr(t: T): OrBitOp<T, T> = OrBitOp(this, wrap(t), columnType)
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this bitwiseOr t", "org.jetbrains.exposed.v1.core.bitwiseOr"),
+        level = DeprecationLevel.ERROR
+    )
+    infix fun <T> ExpressionWithColumnType<T>.bitwiseOr(t: T): OrBitOp<T, T> = OrBitOp(this, topLevelWrap(t), columnType)
 
-    /**
-     * Performs a bitwise `or` on this expression and expression [t].
-     */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this bitwiseOr t", "org.jetbrains.exposed.v1.core.bitwiseOr"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T> ExpressionWithColumnType<T>.bitwiseOr(t: Expression<T>): OrBitOp<T, T> = OrBitOp(this, t, columnType)
 
-    /**
-     * Performs a bitwise `or` on this expression and [t].
-     */
-    infix fun <T> ExpressionWithColumnType<T>.bitwiseXor(t: T): XorBitOp<T, T> = XorBitOp(this, wrap(t), columnType)
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this bitwiseXor t", "org.jetbrains.exposed.v1.core.bitwiseXor"),
+        level = DeprecationLevel.ERROR
+    )
+    infix fun <T> ExpressionWithColumnType<T>.bitwiseXor(t: T): XorBitOp<T, T> = XorBitOp(this, topLevelWrap(t), columnType)
 
-    /**
-     * Performs a bitwise `or` on this expression and expression [t].
-     */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this bitwiseXor t", "org.jetbrains.exposed.v1.core.bitwiseXor"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T> ExpressionWithColumnType<T>.bitwiseXor(t: Expression<T>): XorBitOp<T, T> = XorBitOp(this, t, columnType)
 
-    /**
-     * Performs a bitwise `and` on this expression and [t].
-     */
-    infix fun <T> ExpressionWithColumnType<T>.hasFlag(t: T): EqOp = EqOp(AndBitOp(this, wrap(t), columnType), wrap(t))
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this hasFlag t", "org.jetbrains.exposed.v1.core.hasFlag"),
+        level = DeprecationLevel.ERROR
+    )
+    infix fun <T> ExpressionWithColumnType<T>.hasFlag(t: T): EqOp = EqOp(AndBitOp(this, topLevelWrap(t), columnType), topLevelWrap(t))
 
-    /**
-     * Performs a bitwise `and` on this expression and expression [t].
-     */
-    infix fun <T> ExpressionWithColumnType<T>.hasFlag(t: Expression<T>): EqOp = EqOp(AndBitOp(this, t, columnType), wrap(t))
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this hasFlag t", "org.jetbrains.exposed.v1.core.hasFlag"),
+        level = DeprecationLevel.ERROR
+    )
+    infix fun <T> ExpressionWithColumnType<T>.hasFlag(t: Expression<T>): EqOp = EqOp(AndBitOp(this, t, columnType), topLevelWrap(t))
 
-    // String Functions
-
-    /** Concatenates the text representations of all the [expr]. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("concat(*expr)", "org.jetbrains.exposed.v1.core.concat"),
+        level = DeprecationLevel.ERROR
+    )
     fun concat(vararg expr: Expression<*>): Concat = Concat("", *expr)
 
-    /** Concatenates the text representations of all the [expr] using the specified [separator]. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("concat(separator, expr)", "org.jetbrains.exposed.v1.core.concat"),
+        level = DeprecationLevel.ERROR
+    )
     fun concat(separator: String = "", expr: List<Expression<*>>): Concat = Concat(separator, expr = expr.toTypedArray())
 
-    // Pattern Matching
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this like pattern", "org.jetbrains.exposed.v1.core.like"),
+        level = DeprecationLevel.ERROR
+    )
+    infix fun <T : String?> Expression<T>.like(pattern: String): LikeEscapeOp {
+        val likePattern = LikePattern(pattern)
+        return LikeEscapeOp(this, stringParam(likePattern.pattern), true, likePattern.escapeChar)
+    }
 
-    /** Checks if this expression matches the specified [pattern]. */
-    infix fun <T : String?> Expression<T>.like(pattern: String) = like(LikePattern(pattern))
-
-    /** Checks if this expression matches the specified [pattern]. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this like pattern", "org.jetbrains.exposed.v1.core.like"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : String?> Expression<T>.like(pattern: LikePattern): LikeEscapeOp =
         LikeEscapeOp(this, stringParam(pattern.pattern), true, pattern.escapeChar)
 
-    /** Checks if this expression matches the specified [pattern]. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this like pattern", "org.jetbrains.exposed.v1.core.like"),
+        level = DeprecationLevel.ERROR
+    )
     @JvmName("likeWithEntityID")
-    infix fun Expression<EntityID<String>>.like(pattern: String) = like(LikePattern(pattern))
+    infix fun Expression<EntityID<String>>.like(pattern: String): LikeEscapeOp {
+        val likePattern = LikePattern(pattern)
+        return LikeEscapeOp(this, stringParam(likePattern.pattern), true, likePattern.escapeChar)
+    }
 
-    /** Checks if this expression matches the specified [pattern]. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this like pattern", "org.jetbrains.exposed.v1.core.like"),
+        level = DeprecationLevel.ERROR
+    )
     @JvmName("likeWithEntityID")
     infix fun Expression<EntityID<String>>.like(pattern: LikePattern): LikeEscapeOp =
         LikeEscapeOp(this, stringParam(pattern.pattern), true, pattern.escapeChar)
 
-    /** Checks if this expression matches the specified [expression]. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this like expression", "org.jetbrains.exposed.v1.core.like"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : String?> Expression<T>.like(expression: ExpressionWithColumnType<String>): LikeEscapeOp =
         LikeEscapeOp(this, expression, true, null)
 
-    /** Checks if this expression matches the specified [expression]. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this like expression", "org.jetbrains.exposed.v1.core.like"),
+        level = DeprecationLevel.ERROR
+    )
     @JvmName("likeWithEntityIDAndExpression")
     infix fun Expression<EntityID<String>>.like(expression: ExpressionWithColumnType<String>): LikeEscapeOp =
         LikeEscapeOp(this, expression, true, null)
 
-    /** Checks if this expression matches the specified [pattern]. */
-    infix fun <T : String?> Expression<T>.match(pattern: String): Op<Boolean> = match(pattern, null)
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this match pattern", "org.jetbrains.exposed.v1.core.match"),
+        level = DeprecationLevel.ERROR
+    )
+    infix fun <T : String?> Expression<T>.match(pattern: String): Op<Boolean> = Op.TRUE
 
-    /** Checks if this expression matches the specified [pattern] using the specified match [mode]. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("match(pattern, mode)", "org.jetbrains.exposed.v1.core.match"),
+        level = DeprecationLevel.ERROR
+    )
     fun <T : String?> Expression<T>.match(
         pattern: String,
         mode: FunctionProvider.MatchMode?
     ): Op<Boolean> = with(currentDialect.functionProvider) { this@match.match(pattern, mode) }
 
-    /** Checks if this expression doesn't match the specified [pattern]. */
-    infix fun <T : String?> Expression<T>.notLike(pattern: String): LikeEscapeOp = notLike(LikePattern(pattern))
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this notLike pattern", "org.jetbrains.exposed.v1.core.notLike"),
+        level = DeprecationLevel.ERROR
+    )
+    infix fun <T : String?> Expression<T>.notLike(pattern: String): LikeEscapeOp {
+        val notLikePattern = LikePattern(pattern)
+        return LikeEscapeOp(this, stringParam(notLikePattern.pattern), false, notLikePattern.escapeChar)
+    }
 
-    /** Checks if this expression doesn't match the specified [pattern]. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this notLike pattern", "org.jetbrains.exposed.v1.core.notLike"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : String?> Expression<T>.notLike(pattern: LikePattern): LikeEscapeOp =
         LikeEscapeOp(this, stringParam(pattern.pattern), false, pattern.escapeChar)
 
-    /** Checks if this expression doesn't match the specified [pattern]. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this notLike pattern", "org.jetbrains.exposed.v1.core.notLike"),
+        level = DeprecationLevel.ERROR
+    )
     @JvmName("notLikeWithEntityID")
-    infix fun Expression<EntityID<String>>.notLike(pattern: String): LikeEscapeOp = notLike(LikePattern(pattern))
+    infix fun Expression<EntityID<String>>.notLike(pattern: String): LikeEscapeOp {
+        val notLikePattern = LikePattern(pattern)
+        return LikeEscapeOp(this, stringParam(notLikePattern.pattern), false, notLikePattern.escapeChar)
+    }
 
-    /** Checks if this expression doesn't match the specified [pattern]. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this notLike pattern", "org.jetbrains.exposed.v1.core.notLike"),
+        level = DeprecationLevel.ERROR
+    )
     @JvmName("notLikeWithEntityID")
     infix fun Expression<EntityID<String>>.notLike(pattern: LikePattern): LikeEscapeOp =
         LikeEscapeOp(this, stringParam(pattern.pattern), false, pattern.escapeChar)
 
-    /** Checks if this expression doesn't match the specified pattern. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this notLike expression", "org.jetbrains.exposed.v1.core.notLike"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : String?> Expression<T>.notLike(expression: ExpressionWithColumnType<String>): LikeEscapeOp =
         LikeEscapeOp(this, expression, false, null)
 
-    /** Checks if this expression doesn't match the specified [expression]. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this notLike expression", "org.jetbrains.exposed.v1.core.notLike"),
+        level = DeprecationLevel.ERROR
+    )
     @JvmName("notLikeWithEntityIDAndExpression")
     infix fun Expression<EntityID<String>>.notLike(expression: ExpressionWithColumnType<String>): LikeEscapeOp =
         LikeEscapeOp(this, expression, false, null)
 
-    /** Checks if this expression matches the [pattern]. Supports regular expressions. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this regexp pattern", "org.jetbrains.exposed.v1.core.regexp"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T : String?> Expression<T>.regexp(pattern: String): RegexpOp<T> = RegexpOp(this, stringParam(pattern), true)
 
-    /** Checks if this expression matches the [pattern]. Supports regular expressions. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("regexp(pattern, caseSensitive)", "org.jetbrains.exposed.v1.core.regexp"),
+        level = DeprecationLevel.ERROR
+    )
     fun <T : String?> Expression<T>.regexp(
         pattern: Expression<String>,
         caseSensitive: Boolean = true
     ): RegexpOp<T> = RegexpOp(this, pattern, caseSensitive)
 
-    // Window Functions
-
-    /** Returns the number of the current row within its partition, counting from 1. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("rowNumber()", "org.jetbrains.exposed.v1.core.rowNumber"),
+        level = DeprecationLevel.ERROR
+    )
     fun rowNumber(): RowNumber = RowNumber()
 
-    /** Returns the rank of the current row, with gaps; that is, the row_number of the first row in its peer group. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("rank()", "org.jetbrains.exposed.v1.core.rank"),
+        level = DeprecationLevel.ERROR
+    )
     fun rank(): Rank = Rank()
 
-    /** Returns the rank of the current row, without gaps; this function effectively counts peer groups. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("denseRank()", "org.jetbrains.exposed.v1.core.denseRank"),
+        level = DeprecationLevel.ERROR
+    )
     fun denseRank(): DenseRank = DenseRank()
 
-    /**
-     * Returns the relative rank of the current row, that is (rank - 1) / (total partition rows - 1).
-     * The value thus ranges from 0 to 1 inclusive.
-     */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("percentRank()", "org.jetbrains.exposed.v1.core.percentRank"),
+        level = DeprecationLevel.ERROR
+    )
     fun percentRank(): PercentRank = PercentRank()
 
-    /**
-     * Returns the cumulative distribution, that is (number of partition rows preceding or peers with current row) /
-     * (total partition rows). The value thus ranges from 1/N to 1.
-     */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("cumeDist()", "org.jetbrains.exposed.v1.core.cumeDist"),
+        level = DeprecationLevel.ERROR
+    )
     fun cumeDist(): CumeDist = CumeDist()
 
-    /** Returns an integer ranging from 1 to the [numBuckets], dividing the partition as equally as possible. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("ntile(numBuckets)", "org.jetbrains.exposed.v1.core.ntile"),
+        level = DeprecationLevel.ERROR
+    )
     fun ntile(numBuckets: ExpressionWithColumnType<Int>): Ntile = Ntile(numBuckets)
 
-    /**
-     * Returns value evaluated at the row that is [offset] rows before the current row within the partition;
-     * if there is no such row, instead returns [defaultValue].
-     * Both [offset] and [defaultValue] are evaluated with respect to the current row.
-     */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("lag(offset, defaultValue)", "org.jetbrains.exposed.v1.core.lag"),
+        level = DeprecationLevel.ERROR
+    )
     fun <T> ExpressionWithColumnType<T>.lag(
         offset: ExpressionWithColumnType<Int> = intLiteral(1),
         defaultValue: ExpressionWithColumnType<T>? = null
     ): Lag<T> = Lag(this, offset, defaultValue)
 
-    /**
-     * Returns value evaluated at the row that is [offset] rows after the current row within the partition;
-     * if there is no such row, instead returns [defaultValue].
-     * Both [offset] and [defaultValue] are evaluated with respect to the current row.
-     */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("lead(offset, defaultValue)", "org.jetbrains.exposed.v1.core.lead"),
+        level = DeprecationLevel.ERROR
+    )
     fun <T> ExpressionWithColumnType<T>.lead(
         offset: ExpressionWithColumnType<Int> = intLiteral(1),
         defaultValue: ExpressionWithColumnType<T>? = null
     ): Lead<T> = Lead(this, offset, defaultValue)
 
-    /**
-     * Returns value evaluated at the row that is the first row of the window frame.
-     */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("firstValue()", "org.jetbrains.exposed.v1.core.firstValue"),
+        level = DeprecationLevel.ERROR
+    )
     fun <T> ExpressionWithColumnType<T>.firstValue(): FirstValue<T> = FirstValue(this)
 
-    /**
-     * Returns value evaluated at the row that is the last row of the window frame.
-     */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("lastValue()", "org.jetbrains.exposed.v1.core.lastValue"),
+        level = DeprecationLevel.ERROR
+    )
     fun <T> ExpressionWithColumnType<T>.lastValue(): LastValue<T> = LastValue(this)
 
-    /**
-     * Returns value evaluated at the row that is the [n]'th row of the window frame
-     * (counting from 1); null if no such row.
-     */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("nthValue(n)", "org.jetbrains.exposed.v1.core.nthValue"),
+        level = DeprecationLevel.ERROR
+    )
     fun <T> ExpressionWithColumnType<T>.nthValue(n: ExpressionWithColumnType<Int>): NthValue<T> = NthValue(this, n)
 
-    // Conditional Expressions
-
-    /** Returns the first of its arguments that is not null. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("coalesce(expr, alternate, *others)", "org.jetbrains.exposed.v1.core.coalesce"),
+        level = DeprecationLevel.ERROR
+    )
     fun <T, S : T?> coalesce(
         expr: ExpressionWithColumnType<S>,
         alternate: Expression<out T>,
         vararg others: Expression<out T>
-    ): Coalesce<T, S> = Coalesce<T, S>(expr, alternate, others = others)
+    ): Coalesce<T, S> = Coalesce(expr, alternate, others = others)
 
-    /**
-     * Creates a conditional CASE expression builder where each WHEN clause contains
-     * an independent boolean condition that is evaluated separately.
-     *
-     * This function creates a CASE expression without a comparison value, meaning each
-     * WHEN clause will contain its own boolean condition. The conditions are evaluated
-     * in order until the first one that evaluates to `true` is found, and its
-     * corresponding result is returned.
-     *
-     * Example usage:
-     * ```kotlin
-     * case()
-     *   .When(Users.age greater 18, "adult")
-     *   .When(Users.age greater 13, "teenager")
-     *   .Else("child")
-     * ```
-     *
-     * @return A Case builder instance for creating conditional CASE expressions
-     * @sample org.jetbrains.exposed.v1.tests.shared.dml.ConditionsTests.nullOpInCaseTest
-     */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("case()", "org.jetbrains.exposed.v1.core.case"),
+        level = DeprecationLevel.ERROR
+    )
     fun case(): Case = Case()
 
-    /**
-     * Creates a value-based CASE expression builder that compares a specific value
-     * against different conditions in each WHEN clause.
-     *
-     * This function creates a CASE expression with a comparison value, where each WHEN
-     * clause specifies a value or expression to compare against the provided [value].
-     * The first matching condition determines the result that is returned.
-     *
-     * Example usage:
-     * ```kotlin
-     * case(Users.status)
-     *   .When("ACTIVE", stringParam("User is active"))
-     *   .When("INACTIVE", "User is inactive")
-     *   .Else("Unknown status")
-     * ```
-     *
-     * @param T The type of the value being compared
-     * @param value The expression whose value will be compared against WHEN conditions
-     * @return A ValueCase builder instance for creating value-based CASE expressions
-     * @sample org.jetbrains.exposed.v1.tests.shared.dml.ConditionsTests.nullOpInCaseTest
-     */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("case(value)", "org.jetbrains.exposed.v1.core.case"),
+        level = DeprecationLevel.ERROR
+    )
     fun <T> case(value: ExpressionWithColumnType<T>): ValueCase<T> = ValueCase(value)
 
-    // Subquery Expressions
-
-    /** Checks if this expression is equals to any row returned from [query]. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this inSubQuery query", "org.jetbrains.exposed.v1.core.inSubQuery"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T> Expression<T>.inSubQuery(query: AbstractQuery<*>): InSubQueryOp<T> = InSubQueryOp(this, query)
 
-    /** Checks if this expression is not equals to any row returned from [query]. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this notInSubQuery query", "org.jetbrains.exposed.v1.core.notInSubQuery"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T> Expression<T>.notInSubQuery(query: AbstractQuery<*>): NotInSubQueryOp<T> = NotInSubQueryOp(this, query)
 
-    /** Checks if this expression is equals to single value returned from [query]. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this eqSubQuery query", "org.jetbrains.exposed.v1.core.eqSubQuery"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T> Expression<T>.eqSubQuery(query: AbstractQuery<*>): EqSubQueryOp<T> = EqSubQueryOp(this, query)
 
-    /** Checks if this expression is not equals to single value returned from [query]. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this notEqSubQuery query", "org.jetbrains.exposed.v1.core.notEqSubQuery"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T> Expression<T>.notEqSubQuery(query: AbstractQuery<*>): NotEqSubQueryOp<T> = NotEqSubQueryOp(this, query)
 
-    /** Checks if this expression is less than the single value returned from [query]. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this lessSubQuery query", "org.jetbrains.exposed.v1.core.lessSubQuery"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T> Expression<T>.lessSubQuery(query: AbstractQuery<*>): LessSubQueryOp<T> = LessSubQueryOp(this, query)
 
-    /** Checks if this expression is less than or equal to the single value returned from [query]. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this lessEqSubQuery query", "org.jetbrains.exposed.v1.core.lessEqSubQuery"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T> Expression<T>.lessEqSubQuery(query: AbstractQuery<*>): LessEqSubQueryOp<T> = LessEqSubQueryOp(this, query)
 
-    /** Checks if this expression is greater than the single value returned from [query]. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this greaterSubQuery query", "org.jetbrains.exposed.v1.core.greaterSubQuery"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T> Expression<T>.greaterSubQuery(query: AbstractQuery<*>): GreaterSubQueryOp<T> = GreaterSubQueryOp(this, query)
 
-    /** Checks if this expression is greater than or equal to the single value returned from [query]. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this greaterEqSubQuery query", "org.jetbrains.exposed.v1.core.greaterEqSubQuery"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T> Expression<T>.greaterEqSubQuery(query: AbstractQuery<*>): GreaterEqSubQueryOp<T> = GreaterEqSubQueryOp(this, query)
 
-    // Array Comparisons
-
-    /**
-     * Checks if this expression is equal to any element from [list].
-     *
-     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testInListWithSingleExpression01
-     */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this inList list", "org.jetbrains.exposed.v1.core.inList"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T> ExpressionWithColumnType<T>.inList(list: Iterable<T>): InListOrNotInListBaseOp<T> = SingleValueInListOp(this, list, isInList = true)
 
-    /**
-     * Checks if expressions from this `Pair` are equal to elements from [list].
-     * This syntax is unsupported by SQL Server.
-     *
-     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testInListWithPairExpressions01
-     **/
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this inList list", "org.jetbrains.exposed.v1.core.inList"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T1, T2> Pair<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>>.inList(list: Iterable<Pair<T1, T2>>): InListOrNotInListBaseOp<Pair<T1, T2>> =
         PairInListOp(this, list, isInList = true)
 
-    /**
-     * Checks if expressions from this `Triple` are equal to elements from [list].
-     * This syntax is unsupported by SQL Server.
-     *
-     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testInListWithTripleExpressions
-     **/
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this inList list", "org.jetbrains.exposed.v1.core.inList"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T1, T2, T3> Triple<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>, ExpressionWithColumnType<T3>>.inList(
         list: Iterable<Triple<T1, T2, T3>>
     ): InListOrNotInListBaseOp<Triple<T1, T2, T3>> =
         TripleInListOp(this, list, isInList = true)
 
-    /**
-     * Checks if all columns in this `List` are equal to any of the lists of values from [list].
-     *
-     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testInListWithMultipleColumns
-     **/
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this inList list", "org.jetbrains.exposed.v1.core.inList"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun List<Column<*>>.inList(list: Iterable<List<*>>): InListOrNotInListBaseOp<List<*>> =
         MultipleInListOp(this, list, isInList = true)
 
-    /**
-     * Checks if all columns in this `List` are equal to any of the [CompositeID]s from [list].
-     *
-     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.testInListWithCompositeIdEntities
-     **/
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this inList list", "org.jetbrains.exposed.v1.core.inList"),
+        level = DeprecationLevel.ERROR
+    )
     @Suppress("UNCHECKED_CAST")
     @JvmName("inListCompositeIDs")
     @LowPriorityInOverloadResolution
@@ -1005,14 +1027,14 @@ interface ISqlExpressionBuilder {
                 component.takeIf { this[i].columnType is EntityIDColumnType<*> } ?: (component as EntityID<*>).value
             }
         }
-        return this inList componentList
+        return this topLevelInList componentList
     }
 
-    /**
-     * Checks if this [EntityID] column is equal to any element from [list].
-     *
-     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testInListWithEntityIDColumns
-     */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this inList list", "org.jetbrains.exposed.v1.core.inList"),
+        level = DeprecationLevel.ERROR
+    )
     @Suppress("UNCHECKED_CAST")
     @JvmName("inListIds")
     infix fun <T : Any, ID : EntityID<T>?> Column<ID>.inList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>?> {
@@ -1020,61 +1042,59 @@ interface ISqlExpressionBuilder {
         return SingleValueInListOp(this, list.map { EntityIDFunctionProvider.createEntityID(it, idTable) }, isInList = true)
     }
 
-    /**
-     * Checks if this [EntityID] column is equal to any element from [list].
-     *
-     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.testInListWithCompositeIdEntities
-     */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this inList list", "org.jetbrains.exposed.v1.core.inList"),
+        level = DeprecationLevel.ERROR
+    )
     @Suppress("UNCHECKED_CAST")
     @JvmName("inListCompositeEntityIds")
     infix fun <ID : EntityID<CompositeID>> Column<ID>.inList(list: Iterable<CompositeID>): InListOrNotInListBaseOp<List<*>> {
         val idTable = (columnType as EntityIDColumnType<CompositeID>).idColumn.table as CompositeIdTable
-        return idTable.idColumns.toList() inList list
+        return idTable.idColumns.toList() topLevelInList list
     }
 
-    /**
-     * Checks if this expression is not equal to any element from [list].
-     *
-     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testInListWithSingleExpression01
-     */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this notInList list", "org.jetbrains.exposed.v1.core.notInList"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T> ExpressionWithColumnType<T>.notInList(list: Iterable<T>): InListOrNotInListBaseOp<T> =
         SingleValueInListOp(this, list, isInList = false)
 
-    /**
-     * Checks if expressions from this `Pair` are not equal to elements from [list].
-     * This syntax is unsupported by SQL Server.
-     *
-     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testNotInListWithPairExpressionsAndEmptyList
-     **/
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this notInList list", "org.jetbrains.exposed.v1.core.notInList"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T1, T2> Pair<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>>.notInList(
         list: Iterable<Pair<T1, T2>>
     ): InListOrNotInListBaseOp<Pair<T1, T2>> =
         PairInListOp(this, list, isInList = false)
 
-    /**
-     * Checks if expressions from this `Triple` are not equal to elements from [list].
-     * This syntax is unsupported by SQL Server.
-     *
-     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testInListWithTripleExpressions
-     **/
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this notInList list", "org.jetbrains.exposed.v1.core.notInList"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T1, T2, T3> Triple<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>, ExpressionWithColumnType<T3>>.notInList(
         list: Iterable<Triple<T1, T2, T3>>
     ): InListOrNotInListBaseOp<Triple<T1, T2, T3>> =
         TripleInListOp(this, list, isInList = false)
 
-    /**
-     * Checks if all columns in this `List` are not equal to any of the lists of values from [list].
-     *
-     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testInListWithMultipleColumns
-     **/
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this notInList list", "org.jetbrains.exposed.v1.core.notInList"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun List<Column<*>>.notInList(list: Iterable<List<*>>): InListOrNotInListBaseOp<List<*>> =
         MultipleInListOp(this, list, isInList = false)
 
-    /**
-     * Checks if all columns in this `List` are not equal to any of the [CompositeID]s from [list].
-     *
-     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.testInListWithCompositeIdEntities
-     **/
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this notInList list", "org.jetbrains.exposed.v1.core.notInList"),
+        level = DeprecationLevel.ERROR
+    )
     @Suppress("UNCHECKED_CAST")
     @JvmName("notInListCompositeIDs")
     @LowPriorityInOverloadResolution
@@ -1085,14 +1105,14 @@ interface ISqlExpressionBuilder {
                 component.takeIf { this[i].columnType is EntityIDColumnType<*> } ?: (component as EntityID<*>).value
             }
         }
-        return this notInList componentList
+        return this topLevelNotInList componentList
     }
 
-    /**
-     * Checks if this [EntityID] column is not equal to any element from [list].
-     *
-     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testInListWithEntityIDColumns
-     */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this notInList list", "org.jetbrains.exposed.v1.core.notInList"),
+        level = DeprecationLevel.ERROR
+    )
     @Suppress("UNCHECKED_CAST")
     @JvmName("notInListIds")
     infix fun <T : Any, ID : EntityID<T>?> Column<ID>.notInList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>?> {
@@ -1100,42 +1120,46 @@ interface ISqlExpressionBuilder {
         return SingleValueInListOp(this, list.map { EntityIDFunctionProvider.createEntityID(it, idTable) }, isInList = false)
     }
 
-    /**
-     * Checks if this [EntityID] column is not equal to any element from [list].
-     *
-     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.testInListWithCompositeIdEntities
-     */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this notInList list", "org.jetbrains.exposed.v1.core.notInList"),
+        level = DeprecationLevel.ERROR
+    )
     @Suppress("UNCHECKED_CAST")
     @JvmName("notInListCompositeEntityIds")
     infix fun <ID : EntityID<CompositeID>> Column<ID>.notInList(list: Iterable<CompositeID>): InListOrNotInListBaseOp<List<*>> {
         val idTable = (columnType as EntityIDColumnType<CompositeID>).idColumn.table as CompositeIdTable
-        return idTable.idColumns.toList() notInList list
+        return idTable.idColumns.toList() topLevelNotInList list
     }
 
-    // "IN (TABLE ...)" comparisons
-
-    /**
-     * Checks if this expression is equal to any element from the column of [table] with only a single column.
-     *
-     * **Note** This function is only supported by MySQL, PostgreSQL, and H2 dialects.
-     */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this inTable table", "org.jetbrains.exposed.v1.core.inTable"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T> ExpressionWithColumnType<T>.inTable(table: Table): InTableOp = InTableOp(this, table, true)
 
-    /**
-     * Checks if this expression is **not** equal to any element from the column of [table] with only a single column.
-     *
-     * **Note** This function is only supported by MySQL, PostgreSQL, and H2 dialects.
-     */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("this notInTable table", "org.jetbrains.exposed.v1.core.notInTable"),
+        level = DeprecationLevel.ERROR
+    )
     infix fun <T> ExpressionWithColumnType<T>.notInTable(table: Table): InTableOp = InTableOp(this, table, false)
 
-    // Misc.
-
-    /** Returns the specified [value] as a query parameter of type [T]. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("wrap(value)", "org.jetbrains.exposed.v1.core.wrap"),
+        level = DeprecationLevel.ERROR
+    )
     @Suppress("UNCHECKED_CAST")
     fun <T, S : T?> ExpressionWithColumnType<in S>.wrap(value: T): QueryParameter<T> =
         QueryParameter(value, columnType as IColumnType<T & Any>)
 
-    /** Returns the specified [value] as a literal of type [T]. */
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("asLiteral(value)", "org.jetbrains.exposed.v1.core.asLiteral"),
+        level = DeprecationLevel.ERROR
+    )
     @Suppress("UNCHECKED_CAST", "ComplexMethod")
     fun <T, S : T?> ExpressionWithColumnType<S>.asLiteral(value: T): LiteralOp<T> = when {
         value is ByteArray && columnType is BasicBinaryColumnType -> stringLiteral(value.toString(Charsets.UTF_8))
@@ -1144,6 +1168,11 @@ interface ISqlExpressionBuilder {
         else -> LiteralOp(columnType as IColumnType<T & Any>, value)
     } as LiteralOp<T>
 
+    @Deprecated(
+        message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
+        replaceWith = ReplaceWith("intToDecimal()", "org.jetbrains.exposed.v1.core.intToDecimal"),
+        level = DeprecationLevel.ERROR
+    )
     fun ExpressionWithColumnType<Int>.intToDecimal(): NoOpConversion<Int, BigDecimal> =
         NoOpConversion(this, DecimalColumnType(precision = 15, scale = 0))
 
@@ -1154,12 +1183,17 @@ interface ISqlExpressionBuilder {
         } as IdTable<T>
 }
 
-/**
- * Builder object for creating SQL expressions.
- */
+@Suppress("ForbiddenComment")
 // TODO: Pick a single way to write "SQL" and use it across the board for 1.0
 // TODO check Kotlin style guide
 // TODO Decide what to do when it comes at the end : "PostgreSQLDialect" vs "PostgresqlDialect" or "PostgreSqlDialect"
-// TODO: make a function same as IStatementBuilder
-@Suppress("ForbiddenComment", "AnnotationSpacing")
+
+@Deprecated(
+    message = "This builder object will continue to be phased out following release 1.0.0. " +
+        "All expression builder methods previously restricted to this object have also been deprecated in favor of " +
+        "equivalent top-level functions, making this object useless as a receiver in any scope. " +
+        "It will no longer be necessary to import each individual method when used outside a scoped block, " +
+        "and on demand imports will now be possible via 'import org.jetbrains.exposed.v1.core.*', if required.",
+    level = DeprecationLevel.ERROR
+)
 object SqlExpressionBuilder : ISqlExpressionBuilder

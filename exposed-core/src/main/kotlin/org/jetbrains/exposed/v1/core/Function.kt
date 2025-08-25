@@ -7,6 +7,8 @@ import org.jetbrains.exposed.v1.core.vendors.h2Mode
 import java.math.BigDecimal
 import kotlin.collections.filterIsInstance
 
+// General Purpose Functions
+
 /**
  * Represents an SQL function.
  */

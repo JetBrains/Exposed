@@ -172,8 +172,8 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
      *
      * @sample org.jetbrains.exposed.v1.tests.shared.dml.GroupByTests.testGroupBy02
      */
-    fun having(op: SqlExpressionBuilder.() -> Op<Boolean>): T {
-        val oop = SqlExpressionBuilder.op()
+    fun having(op: () -> Op<Boolean>): T {
+        val oop = op()
         if (having != null) {
             error("HAVING clause is specified twice. Old value = '$having', new value = '$oop'")
         }

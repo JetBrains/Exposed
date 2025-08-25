@@ -1,12 +1,6 @@
 package org.jetbrains.exposed.v1.tests.shared.dml
 
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.case
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greater
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greaterEq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.less
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
@@ -103,13 +97,13 @@ class ConditionsTests : DatabaseTestsBase() {
             val longRef = reference("long_ref", longTable)
         }
 
-        fun selectIdWhere(condition: SqlExpressionBuilder.() -> Op<Boolean>): List<Long> {
-            val query = longTable.select(longTable.id).where(SqlExpressionBuilder.condition())
+        fun selectIdWhere(condition: () -> Op<Boolean>): List<Long> {
+            val query = longTable.select(longTable.id).where(condition())
             return query.map { it[longTable.id].value }
         }
 
-        fun selectIdFromJoinWhere(condition: SqlExpressionBuilder.() -> Op<Boolean>): List<Long> {
-            val query = (longTable innerJoin longTable2).select(longTable.id).where(SqlExpressionBuilder.condition())
+        fun selectIdFromJoinWhere(condition: () -> Op<Boolean>): List<Long> {
+            val query = (longTable innerJoin longTable2).select(longTable.id).where(condition())
             return query.map { it[longTable.id].value }
         }
 
@@ -280,7 +274,7 @@ class ConditionsTests : DatabaseTestsBase() {
     fun nullOpInCaseTest() {
         withCitiesAndUsers { cities, _, _ ->
             val caseCondition = Case()
-                .When(Op.build { cities.id eq 1 }, Op.nullOp<String>())
+                .When(cities.id eq 1, Op.nullOp<String>())
                 .Else(cities.name)
             var nullBranchWasExecuted = false
             cities.select(cities.id, cities.name, caseCondition).forEach {
@@ -301,7 +295,7 @@ class ConditionsTests : DatabaseTestsBase() {
         withCitiesAndUsers { cities, _, _ ->
             val original = "ORIGINAL"
             val copy = "COPY"
-            val condition = Op.build { cities.id eq 1 }
+            val condition = cities.id eq 1
 
             val caseCondition1 = Case()
                 .When(condition, stringLiteral(original))
@@ -336,12 +330,12 @@ class ConditionsTests : DatabaseTestsBase() {
     fun testChainedAndNestedCaseWhenElseSyntax() {
         withCitiesAndUsers { cities, _, _ ->
             val nestedCondition = Case()
-                .When(Op.build { cities.id eq 1 }, intLiteral(1))
+                .When(cities.id eq 1, intLiteral(1))
                 .Else(intLiteral(-1))
             val chainedCondition = Case()
-                .When(Op.build { cities.name like "M%" }, intLiteral(0))
-                .When(Op.build { cities.name like "St. %" }, nestedCondition)
-                .When(Op.build { cities.name like "P%" }, intLiteral(2))
+                .When(cities.name like "M%", intLiteral(0))
+                .When(cities.name like "St. %", nestedCondition)
+                .When(cities.name like "P%", intLiteral(2))
                 .Else(intLiteral(-1))
 
             val results = cities.select(cities.name, chainedCondition)

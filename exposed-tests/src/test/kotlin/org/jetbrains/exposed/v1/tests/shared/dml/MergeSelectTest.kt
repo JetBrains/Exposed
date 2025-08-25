@@ -1,13 +1,13 @@
 package org.jetbrains.exposed.v1.tests.shared.dml
 
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greater
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.plus
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.times
 import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.plus
 import org.jetbrains.exposed.v1.core.stringLiteral
+import org.jetbrains.exposed.v1.core.times
 import org.jetbrains.exposed.v1.jdbc.mergeFrom
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.tests.TestDB
@@ -20,7 +20,7 @@ class MergeSelectTest : MergeBaseTest() {
 
     private val sourceQuery = Source.selectAll().alias("sub")
 
-    private fun SqlExpressionBuilder.defaultOnCondition() = Dest.key eq sourceQuery[Source.key]
+    private fun defaultOnCondition() = Dest.key eq sourceQuery[Source.key]
 
     @Test
     fun testInsert() {

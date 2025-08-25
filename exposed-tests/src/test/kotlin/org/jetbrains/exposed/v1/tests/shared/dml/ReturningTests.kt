@@ -1,11 +1,14 @@
 package org.jetbrains.exposed.v1.tests.shared.dml
 
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.times
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.lowerCase
+import org.jetbrains.exposed.v1.core.times
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.jdbc.*
@@ -210,7 +213,7 @@ class ReturningTests : DatabaseTestsBase() {
 
             // return all columns by default
             val result1 = Items.updateReturning(where = { Items.price lessEq 99.0 }) {
-                it[price] = price.times(10.0)
+                it[price] = price * 10.0
             }.single()
             assertEquals(1, result1[Items.id].value)
             assertEquals("A", result1[Items.name])

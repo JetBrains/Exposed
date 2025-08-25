@@ -1,9 +1,10 @@
 package org.jetbrains.exposed.v1.tests.shared.functions
 
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.div
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.decimalLiteral
+import org.jetbrains.exposed.v1.core.div
 import org.jetbrains.exposed.v1.core.doubleLiteral
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.functions.math.*
 import org.jetbrains.exposed.v1.core.intLiteral
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId

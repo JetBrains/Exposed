@@ -5,7 +5,7 @@ package org.jetbrains.exposed.samples.spring.service
 import org.jetbrains.exposed.samples.spring.domain.User
 import org.jetbrains.exposed.samples.spring.domain.UserEntity
 import org.jetbrains.exposed.samples.spring.domain.UserId
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll

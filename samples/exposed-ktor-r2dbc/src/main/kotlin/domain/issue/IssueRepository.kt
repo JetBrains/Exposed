@@ -10,7 +10,6 @@ import org.jetbrains.exposed.samples.r2dbc.domain.comment.Comments
 import org.jetbrains.exposed.samples.r2dbc.domain.project.ProjectId
 import org.jetbrains.exposed.samples.r2dbc.domain.project.Projects
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.datetime.CurrentTimestamp
 import org.jetbrains.exposed.v1.r2dbc.deleteWhere
 import org.jetbrains.exposed.v1.r2dbc.insertReturning

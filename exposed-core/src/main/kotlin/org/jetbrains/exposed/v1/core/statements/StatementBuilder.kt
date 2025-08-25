@@ -16,9 +16,9 @@ interface StatementBuilder {
      */
     fun <T : Table> T.deleteWhere(
         limit: Int? = null,
-        op: T.(ISqlExpressionBuilder) -> Op<Boolean>
+        op: T.() -> Op<Boolean>
     ): DeleteStatement {
-        return DeleteStatement(this, op(SqlExpressionBuilder), false, limit, emptyList())
+        return DeleteStatement(this, op(), false, limit, emptyList())
     }
 
     /**
@@ -33,9 +33,9 @@ interface StatementBuilder {
      */
     fun <T : Table> T.deleteIgnoreWhere(
         limit: Int? = null,
-        op: T.(ISqlExpressionBuilder) -> Op<Boolean>
+        op: T.() -> Op<Boolean>
     ): DeleteStatement {
-        return DeleteStatement(this, op(SqlExpressionBuilder), true, limit, emptyList())
+        return DeleteStatement(this, op(), true, limit, emptyList())
     }
 
     /**
@@ -54,9 +54,9 @@ interface StatementBuilder {
      */
     fun <T : Table> T.deleteReturning(
         returning: List<Expression<*>> = columns,
-        where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
+        where: (() -> Op<Boolean>)? = null
     ): ReturningStatement {
-        val delete = DeleteStatement(this, where?.let { SqlExpressionBuilder.it() }, false, null)
+        val delete = DeleteStatement(this, where?.invoke(), false, null)
         return ReturningStatement(this, returning, delete)
     }
 
@@ -78,10 +78,10 @@ interface StatementBuilder {
         vararg targetTables: Table,
         ignore: Boolean = false,
         limit: Int? = null,
-        where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
+        where: (() -> Op<Boolean>)? = null
     ): DeleteStatement {
         val targets = listOf(targetTable) + targetTables
-        return DeleteStatement(this, where?.let { SqlExpressionBuilder.it() }, ignore, limit, targets)
+        return DeleteStatement(this, where?.invoke(), ignore, limit, targets)
     }
 
     /**
@@ -242,11 +242,11 @@ interface StatementBuilder {
      * @return An [UpdateStatement] that can be executed.
      */
     fun <T : Table> T.update(
-        where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+        where: (() -> Op<Boolean>)? = null,
         limit: Int? = null,
         body: T.(UpdateStatement) -> Unit
     ): UpdateStatement {
-        return UpdateStatement(this, limit, where?.let { SqlExpressionBuilder.it() }).apply { body(this) }
+        return UpdateStatement(this, limit, where?.invoke()).apply { body(this) }
     }
 
     /**
@@ -257,11 +257,11 @@ interface StatementBuilder {
      * @return An [UpdateStatement] that can be executed.
      */
     fun Join.update(
-        where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+        where: (() -> Op<Boolean>)? = null,
         limit: Int? = null,
         body: (UpdateStatement) -> Unit
     ): UpdateStatement {
-        return UpdateStatement(this, limit, where?.let { SqlExpressionBuilder.it() }).apply(body)
+        return UpdateStatement(this, limit, where?.invoke()).apply(body)
     }
 
     /**
@@ -273,10 +273,10 @@ interface StatementBuilder {
      */
     fun <T : Table> T.updateReturning(
         returning: List<Expression<*>> = columns,
-        where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+        where: (() -> Op<Boolean>)? = null,
         body: T.(UpdateStatement) -> Unit
     ): ReturningStatement {
-        val update = UpdateStatement(this, null, where?.let { SqlExpressionBuilder.it() })
+        val update = UpdateStatement(this, null, where?.invoke())
         body(update)
         return ReturningStatement(this, returning, update)
     }
@@ -301,14 +301,14 @@ interface StatementBuilder {
         vararg keys: Column<*>,
         onUpdate: (UpsertBuilder.(UpdateStatement) -> Unit)? = null,
         onUpdateExclude: List<Column<*>>? = null,
-        where: (UpsertSqlExpressionBuilder.() -> Op<Boolean>)? = null,
+        where: (() -> Op<Boolean>)? = null,
         body: T.(UpsertStatement<Long>) -> Unit
     ): UpsertStatement<Long> {
         return UpsertStatement<Long>(
             table = this,
             keys = keys,
             onUpdateExclude = onUpdateExclude,
-            where = where?.let { UpsertSqlExpressionBuilder.it() }
+            where = where?.invoke()
         ).apply {
             onUpdate?.let { storeUpdateValues(it) }
             body(this)
@@ -336,14 +336,14 @@ interface StatementBuilder {
         returning: List<Expression<*>> = columns,
         onUpdate: (UpsertBuilder.(UpdateStatement) -> Unit)? = null,
         onUpdateExclude: List<Column<*>>? = null,
-        where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+        where: (() -> Op<Boolean>)? = null,
         body: T.(UpsertStatement<Long>) -> Unit
     ): ReturningStatement {
         val upsert = UpsertStatement<Long>(
             table = this,
             keys = keys,
             onUpdateExclude = onUpdateExclude,
-            where = where?.let { SqlExpressionBuilder.it() }
+            where = where?.invoke()
         )
         onUpdate?.let { upsert.storeUpdateValues(it) }
         body(upsert)
@@ -371,7 +371,7 @@ interface StatementBuilder {
         onUpdateList: List<Pair<Column<*>, Any?>>? = null,
         onUpdate: (UpsertBuilder.(UpdateStatement) -> Unit)? = null,
         onUpdateExclude: List<Column<*>>? = null,
-        where: (UpsertSqlExpressionBuilder.() -> Op<Boolean>)? = null,
+        where: (() -> Op<Boolean>)? = null,
         shouldReturnGeneratedValues: Boolean = true,
         vararg keys: Column<*>,
         body: BatchUpsertStatement.(E) -> Unit
@@ -380,7 +380,7 @@ interface StatementBuilder {
             table = this,
             keys = keys,
             onUpdateExclude = onUpdateExclude,
-            where = where?.let { UpsertSqlExpressionBuilder.it() },
+            where = where?.invoke(),
             shouldReturnGeneratedValues = shouldReturnGeneratedValues
         ).apply {
             onUpdate?.let { storeUpdateValues(it) }
@@ -393,7 +393,7 @@ interface StatementBuilder {
      * a comparison with a source table.
      *
      * @param source An instance of the source table.
-     * @param on A lambda function with [SqlExpressionBuilder] as its receiver that should return an `Op<Boolean>` condition.
+     * @param on A lambda function that should return an `Op<Boolean>` condition.
      * This condition is used to match records between the source and target tables.
      * @param body A lambda where [MergeTableStatement] can be configured with specific actions to perform
      * when records are matched or not matched.
@@ -401,10 +401,10 @@ interface StatementBuilder {
      */
     fun <D : Table, S : Table> D.mergeFrom(
         source: S,
-        on: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+        on: (() -> Op<Boolean>)? = null,
         body: MergeTableStatement.() -> Unit
     ): MergeTableStatement {
-        return MergeTableStatement(this, source, on = on?.invoke(SqlExpressionBuilder)).apply(body)
+        return MergeTableStatement(this, source, on = on?.invoke()).apply(body)
     }
 
     /**
@@ -412,7 +412,7 @@ interface StatementBuilder {
      * a comparison with a select query source.
      *
      * @param selectQuery The aliased query for a complex subquery to be used as the source.
-     * @param on A lambda with a receiver of type [SqlExpressionBuilder] that returns an `Op<Boolean>` condition.
+     * @param on A lambda that returns an `Op<Boolean>` condition.
      * This condition is used to match records between the source query and the target table.
      * @param body A lambda where [MergeSelectStatement] can be configured with specific actions to perform
      * when records are matched or not matched.
@@ -420,10 +420,10 @@ interface StatementBuilder {
      */
     fun <T : Table> T.mergeFrom(
         selectQuery: QueryAlias,
-        on: SqlExpressionBuilder.() -> Op<Boolean>,
+        on: () -> Op<Boolean>,
         body: MergeSelectStatement.() -> Unit
     ): MergeSelectStatement {
-        return MergeSelectStatement(this, selectQuery, SqlExpressionBuilder.on()).apply(body)
+        return MergeSelectStatement(this, selectQuery, on()).apply(body)
     }
 
     private fun Column<*>.isValidIfAutoIncrement(): Boolean =

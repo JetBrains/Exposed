@@ -2,12 +2,12 @@ package org.jetbrains.exposed.v1.tests.shared.dml
 
 import junit.framework.TestCase.assertNull
 import org.jetbrains.exposed.v1.core.Join
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
 import org.jetbrains.exposed.v1.core.alias
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.innerJoin
 import org.jetbrains.exposed.v1.core.joinQuery
 import org.jetbrains.exposed.v1.core.lastQueryAlias
+import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
@@ -31,7 +31,7 @@ class DeleteTests : DatabaseTestsBase() {
             val userDataExists = userData.selectAll().any()
             assertEquals(false, userDataExists)
 
-            val smthId = users.select(users.id).where { users.name.like("%thing") }.single()[users.id]
+            val smthId = users.select(users.id).where { users.name like "%thing" }.single()[users.id]
             assertEquals("smth", smthId)
 
             users.deleteWhere { users.name like "%thing" }

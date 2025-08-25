@@ -2,19 +2,6 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.functions
 
 import kotlinx.coroutines.flow.map
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.cumeDist
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.denseRank
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.firstValue
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.lag
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.lastValue
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.lead
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.minus
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.nthValue
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.ntile
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.percentRank
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.plus
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.rank
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.rowNumber
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.r2dbc.select
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.DMLTestsData
