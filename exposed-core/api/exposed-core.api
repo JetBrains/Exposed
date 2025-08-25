@@ -1878,7 +1878,7 @@ public abstract class org/jetbrains/exposed/v1/core/SchemaUtilityApi {
 	protected final fun hasCycle (Ljava/util/List;)Z
 	protected final fun log (Ljava/util/Collection;Ljava/lang/String;Z)V
 	protected final fun logTimeSpent (Ljava/lang/String;ZLkotlin/jvm/functions/Function0;)Ljava/lang/Object;
-	protected final fun mapMissingColumnStatementsTo (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/Collection;Ljava/util/List;Lorg/jetbrains/exposed/v1/core/vendors/PrimaryKeyMetadata;Z)Ljava/util/Collection;
+	protected final fun mapMissingColumnStatementsTo (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/Collection;Ljava/util/List;Lorg/jetbrains/exposed/v1/core/vendors/PrimaryKeyMetadata;ZLkotlin/jvm/functions/Function2;)Ljava/util/Collection;
 	protected final fun mapMissingConstraintsTo (Ljava/util/Collection;Ljava/util/Map;[Lorg/jetbrains/exposed/v1/core/Table;)Ljava/util/Collection;
 	protected final fun sortByReferences (Ljava/lang/Iterable;)Ljava/util/List;
 	protected final fun tableDdlWithoutExistingSequence (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/Sequence;)Lkotlin/Pair;
@@ -3460,6 +3460,10 @@ public abstract class org/jetbrains/exposed/v1/core/statements/api/ExposedDataba
 	public abstract fun getIdentifierManager ()Lorg/jetbrains/exposed/v1/core/statements/api/IdentifierManagerApi;
 	public abstract fun resetCurrentScheme ()V
 	protected abstract fun resolveReferenceOption (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/ReferenceOption;
+}
+
+public final class org/jetbrains/exposed/v1/core/statements/api/ExposedDatabaseMetadataKt {
+	public static final fun areEquivalentColumnTypesInternal (Ljava/lang/String;ILjava/lang/String;)Z
 }
 
 public final class org/jetbrains/exposed/v1/core/statements/api/ExposedMetadataUtils {
