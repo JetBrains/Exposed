@@ -177,6 +177,7 @@ internal val currentDialectIfAvailable: DatabaseDialect?
         null
     }
 
+/** @suppress */
 @OptIn(InternalApi::class)
 @InternalApi
 fun String.inProperCase(): String =

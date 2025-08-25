@@ -12,7 +12,10 @@ import kotlin.internal.LowPriorityInOverloadResolution
  * Represents the underlying mapping of columns scheduled for change along with their new values.
  */
 abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) : Statement<T>(type, targets) {
-    /** The mapping of columns scheduled for change with their new values. */
+    /**
+     * The mapping of columns scheduled for change with their new values.
+     * @suppress
+     */
     @InternalApi
     val values: MutableMap<Column<*>, Any?> = LinkedHashMap()
 

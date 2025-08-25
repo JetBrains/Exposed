@@ -27,6 +27,7 @@ open class SQLServerBatchInsertStatement(
         }
     }
 
+    /** @suppress */
     @InternalApi
     val columnToReturnValue = table.autoIncColumn?.takeIf {
         shouldReturnGeneratedValues && it.autoIncColumnType?.nextValExpression == null

@@ -137,6 +137,7 @@ open class InsertStatement<Key : Any>(
     /**
      * Returns the list of columns with default values that can not be taken locally.
      * It is the columns defined with `defaultExpression()`, `databaseGenerated()`
+     * @suppress
      */
     @InternalApi
     fun columnsWithDatabaseDefaults() = targets

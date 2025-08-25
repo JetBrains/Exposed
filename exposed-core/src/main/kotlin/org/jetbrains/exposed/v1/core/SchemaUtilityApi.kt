@@ -7,15 +7,24 @@ import java.math.BigDecimal
  * Base class representing helper functions necessary for creating, altering, and dropping database schema objects.
  */
 abstract class SchemaUtilityApi {
-    /** Returns this list of tables sorted according to the targets of their foreign key constraints, if any exist. */
+    /**
+     * Returns this list of tables sorted according to the targets of their foreign key constraints, if any exist.
+     * @suppress
+     */
     @InternalApi
     protected fun Iterable<Table>.sortByReferences(): List<Table> = TableDepthGraph(this).sorted()
 
-    /** Whether any table from this list has a sequence of foreign key constraints that cycle back to them. */
+    /**
+     * Whether any table from this list has a sequence of foreign key constraints that cycle back to them.
+     * @suppress
+     */
     @InternalApi
     protected fun List<Table>.hasCycle(): Boolean = TableDepthGraph(this).hasCycle()
 
-    /** Returns DDL for [table] without a sequence as a Pair of CREATE (includes its indexes) and ALTER statements. */
+    /**
+     * Returns DDL for [table] without a sequence as a Pair of CREATE (includes its indexes) and ALTER statements.
+     * @suppress
+     */
     @InternalApi
     protected fun tableDdlWithoutExistingSequence(
         table: Table,
@@ -33,7 +42,10 @@ abstract class SchemaUtilityApi {
         return Pair(ddlWithoutExistingSequence.first + indicesDDL, ddlWithoutExistingSequence.second)
     }
 
-    /** Returns the SQL statements that create this [ForeignKeyConstraint]. */
+    /**
+     * Returns the SQL statements that create this [ForeignKeyConstraint].
+     * @suppress
+     */
     @InternalApi
     protected fun ForeignKeyConstraint.createDdl(): List<String> = with(this) {
         val allFromColumnsBelongsToTheSameTable = from.all { it.table == fromTable }
@@ -50,7 +62,10 @@ abstract class SchemaUtilityApi {
         return createStatement()
     }
 
-    /** Adds CREATE/ALTER statements for all table columns that don't exist in the database, to [destination]. */
+    /**
+     * Adds CREATE/ALTER statements for all table columns that don't exist in the database, to [destination].
+     * @suppress
+     */
     @InternalApi
     protected fun <C : MutableCollection<String>> Table.mapMissingColumnStatementsTo(
         destination: C,
@@ -83,7 +98,10 @@ abstract class SchemaUtilityApi {
         return destination
     }
 
-    /** Adds CREATE/ALTER/DROP statements for all foreign key constraints that don't exist in the database, to [destination]. */
+    /**
+     * Adds CREATE/ALTER/DROP statements for all foreign key constraints that don't exist in the database, to [destination].
+     * @suppress
+     */
     @InternalApi
     protected fun <C : MutableCollection<String>> mapMissingConstraintsTo(
         destination: C,
@@ -112,6 +130,7 @@ abstract class SchemaUtilityApi {
     /**
      * Filters all table indices and returns those that are defined on a table with more than one index.
      * If [withLogs] is `true`, DROP statements for these indices will also be logged.
+     * @suppress
      */
     @InternalApi
     protected fun Map<Table, List<Index>>.filterAndLogExcessIndices(withLogs: Boolean): List<Index> {
@@ -144,6 +163,7 @@ abstract class SchemaUtilityApi {
     /**
      * Filters all table foreign keys and returns those that are defined on a table with more than one of this constraint.
      * If [withLogs] is `true`, DROP statements for these constraints will also be logged.
+     * @suppress
      */
     @InternalApi
     protected fun Map<Pair<Table, LinkedHashSet<Column<*>>>, List<ForeignKeyConstraint>>.filterAndLogExcessConstraints(
@@ -181,6 +201,7 @@ abstract class SchemaUtilityApi {
      *
      * @return Pair of CREATE statements for missing indices and, if [withDropIndices] is `true`, DROP statements ofr
      * unmapped indices; if [withDropIndices] is `false`, the second value will be an empty list.
+     * @suppress
      */
     @InternalApi
     protected fun Map<Table, List<Index>>.filterAndLogMissingAndUnmappedIndices(
@@ -244,7 +265,10 @@ abstract class SchemaUtilityApi {
         return Pair(toCreate.toList(), toDrop.toList())
     }
 
-    /** If [withLogs] is `true`, this logs every item in this collection, prefixed by [mainMessage]. */
+    /**
+     * If [withLogs] is `true`, this logs every item in this collection, prefixed by [mainMessage].
+     * @suppress
+     */
     @InternalApi
     protected fun <T> Collection<T>.log(mainMessage: String, withLogs: Boolean) {
         if (withLogs && isNotEmpty()) {
@@ -521,6 +545,7 @@ abstract class SchemaUtilityApi {
  * Utility functions that assist with creating, altering, and dropping table objects.
  *
  * None of the functions rely directly on the underlying driver.
+ * @suppress
  */
 @InternalApi
 object TableUtils : SchemaUtilityApi() {

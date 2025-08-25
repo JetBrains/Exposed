@@ -6,6 +6,7 @@ interface CacheWithDefault<K, V> {
     fun get(key: K): V
 }
 
+/** @suppress */
 @InternalApi
 class CachableMapWithDefault<K, V>(
     private val map: MutableMap<K, V> = mutableMapOf(),

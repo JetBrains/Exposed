@@ -57,6 +57,7 @@ interface PreparedStatementApi {
      */
     fun setArray(index: Int, type: ArrayColumnType<*, *>, array: Array<*>)
 
+    /** @suppress */
     @Suppress("MagicNumber")
     @InternalApi
     fun getArrayColumnType(type: String): ArrayColumnType<*, *> {

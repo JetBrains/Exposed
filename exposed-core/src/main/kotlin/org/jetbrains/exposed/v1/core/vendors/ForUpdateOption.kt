@@ -9,6 +9,7 @@ import org.jetbrains.exposed.v1.core.Table
  * @sample org.jetbrains.exposed.v1.tests.postgresql.PostgresqlTests.testForUpdateOptionsSyntax
  */
 sealed class ForUpdateOption(open val querySuffix: String) {
+    /** @suppress */
     @InternalApi
     data object NoForUpdateOption : ForUpdateOption("") {
         override val querySuffix: String get() = error("querySuffix should not be called for NoForUpdateOption object")

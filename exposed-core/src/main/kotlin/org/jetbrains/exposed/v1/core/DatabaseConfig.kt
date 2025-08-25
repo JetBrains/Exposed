@@ -150,6 +150,7 @@ interface DatabaseConfig {
     }
 }
 
+/** @suppress */
 @InternalApi
 open class DatabaseConfigImpl(private val builder: DatabaseConfig.Builder) : DatabaseConfig {
     override val sqlLogger: SqlLogger

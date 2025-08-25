@@ -11,6 +11,7 @@ import kotlin.collections.set
 /**
  * Represents the object responsible for storing internal data related to each registered database
  * and its transaction manager.
+ * @suppress
  */
 @InternalApi
 object CoreTransactionManager {
