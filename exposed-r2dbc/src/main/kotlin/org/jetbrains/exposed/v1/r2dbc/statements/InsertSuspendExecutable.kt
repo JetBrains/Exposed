@@ -10,9 +10,9 @@ import org.jetbrains.exposed.v1.core.statements.InsertStatement
 import org.jetbrains.exposed.v1.core.statements.ReplaceStatement
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
-import org.jetbrains.exposed.v1.r2dbc.statements.api.R2DBCRow
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcResult
+import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcRow
 import org.jetbrains.exposed.v1.r2dbc.statements.api.metadata
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 
@@ -154,7 +154,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             if (segment is Result.RowSegment && !isSQLServerLastRowId(segment, isSqlServerBatchInsert, dialect)) {
                 isSqlServerBatchInsert = isSqlServerBatchInsert || isSQLServerBatchSegment(segment, dialect)
 
-                val row = R2DBCRow(segment.row(), typeMapping)
+                val row = R2dbcRow(segment.row(), typeMapping)
 
                 if (columnIndexesInResultSet == null) {
                     columnIndexesInResultSet = row.metadata.returnedColumns()

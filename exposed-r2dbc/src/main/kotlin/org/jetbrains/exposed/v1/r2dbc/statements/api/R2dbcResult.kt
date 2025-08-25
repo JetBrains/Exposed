@@ -36,7 +36,7 @@ class R2dbcResult internal constructor(
         return flow {
             resultPublisher.collect { result ->
                 result.map { row, rm ->
-                    Optional.ofNullable(block(R2DBCRow(row, typeMapping)))
+                    Optional.ofNullable(block(R2dbcRow(row, typeMapping)))
                 }.collect { emit(it.getOrNull()) }
             }
         }
@@ -87,7 +87,7 @@ class R2dbcResult internal constructor(
  * @param row The actual underlying wrapped [Row] that is being accessed.
  * @param typeMapping The type mapper logic being used to get values from a [Row].
  */
-class R2DBCRow(val row: Row, private val typeMapping: R2dbcTypeMapping) : RowApi {
+class R2dbcRow(val row: Row, private val typeMapping: R2dbcTypeMapping) : RowApi {
     override fun getObject(index: Int): Any? {
         return row.get(index - 1)
     }
@@ -116,7 +116,7 @@ class R2DBCRow(val row: Row, private val typeMapping: R2dbcTypeMapping) : RowApi
 suspend fun ResultApi.rowsCount(): Int = mapRows { }.count()
 
 /** Returns the actual underlying [Row] at the current position in this result [RowApi]. */
-val RowApi.origin: Row get() = (this as R2DBCRow).row
+val RowApi.origin: Row get() = (this as R2dbcRow).row
 
 /** Returns the actual [RowMetadata] for the current row in this result [RowApi]. */
-val RowApi.metadata: RowMetadata get() = (this as R2DBCRow).row.metadata
+val RowApi.metadata: RowMetadata get() = (this as R2dbcRow).row.metadata
