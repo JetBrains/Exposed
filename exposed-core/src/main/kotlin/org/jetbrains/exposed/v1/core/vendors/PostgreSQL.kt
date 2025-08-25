@@ -372,6 +372,10 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
 
     override val supportsWindowFrameGroupsMode: Boolean = true
 
+    @Deprecated(
+        "The parameter was moved to JdbcExposedDatabaseMetadata/R2dbcExposedDatabaseMetadata classes",
+        ReplaceWith("TransactionManager.current().connection.metadata { supportsSelectForUpdate }")
+    )
     override val supportsSelectForUpdate: Boolean = true
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true

@@ -436,6 +436,11 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
     override val supportsOrderByNullsFirstLast: Boolean = true
     override val supportsOnUpdate: Boolean = false
     override val supportsSetDefaultReferenceOption: Boolean = false
+
+    @Deprecated(
+        "The parameter was moved to JdbcExposedDatabaseMetadata/R2dbcExposedDatabaseMetadata classes",
+        ReplaceWith("TransactionManager.current().connection.metadata { supportsSelectForUpdate }")
+    )
     override val supportsSelectForUpdate: Boolean = true
 
     // Preventing the deletion of a parent row if a child row references it is the default behaviour in Oracle.

@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.v1.core.statements.api
 
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect.H2CompatibilityMode

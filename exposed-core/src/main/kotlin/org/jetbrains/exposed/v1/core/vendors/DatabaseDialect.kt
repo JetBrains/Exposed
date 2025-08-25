@@ -81,6 +81,10 @@ interface DatabaseDialect {
     val supportsColumnTypeChange: Boolean get() = false
 
     /** Returns `true` if the dialect supports `SELECT FOR UPDATE` statements, `false` otherwise. */
+    @Deprecated(
+        "The parameter was moved to JdbcExposedDatabaseMetadata/R2dbcExposedDatabaseMetadata classes",
+        ReplaceWith("TransactionManager.current().connection.metadata { supportsSelectForUpdate }")
+    )
     val supportsSelectForUpdate: Boolean get() = false
 
     /** Returns `true` if the specified [e] is allowed as a default column value in the dialect, `false` otherwise. */
