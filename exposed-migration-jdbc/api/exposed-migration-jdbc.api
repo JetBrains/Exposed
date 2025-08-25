@@ -1,0 +1,14 @@
+public final class org/jetbrains/exposed/v1/migration/jdbc/MigrationUtils : org/jetbrains/exposed/v1/migration/core/MigrationUtilityApi {
+	public static final field INSTANCE Lorg/jetbrains/exposed/v1/migration/jdbc/MigrationUtils;
+	public final fun dropUnmappedColumnsStatements ([Lorg/jetbrains/exposed/v1/core/Table;Z)Ljava/util/List;
+	public static synthetic fun dropUnmappedColumnsStatements$default (Lorg/jetbrains/exposed/v1/migration/jdbc/MigrationUtils;[Lorg/jetbrains/exposed/v1/core/Table;ZILjava/lang/Object;)Ljava/util/List;
+	public final fun dropUnmappedIndices ([Lorg/jetbrains/exposed/v1/core/Table;Z)Ljava/util/List;
+	public static synthetic fun dropUnmappedIndices$default (Lorg/jetbrains/exposed/v1/migration/jdbc/MigrationUtils;[Lorg/jetbrains/exposed/v1/core/Table;ZILjava/lang/Object;)Ljava/util/List;
+	public final fun dropUnmappedSequences ([Lorg/jetbrains/exposed/v1/core/Table;Z)Ljava/util/List;
+	public static synthetic fun dropUnmappedSequences$default (Lorg/jetbrains/exposed/v1/migration/jdbc/MigrationUtils;[Lorg/jetbrains/exposed/v1/core/Table;ZILjava/lang/Object;)Ljava/util/List;
+	public final fun generateMigrationScript ([Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;Ljava/lang/String;Z)Ljava/io/File;
+	public static synthetic fun generateMigrationScript$default (Lorg/jetbrains/exposed/v1/migration/jdbc/MigrationUtils;[Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Ljava/io/File;
+	public final fun statementsRequiredForDatabaseMigration ([Lorg/jetbrains/exposed/v1/core/Table;Z)Ljava/util/List;
+	public static synthetic fun statementsRequiredForDatabaseMigration$default (Lorg/jetbrains/exposed/v1/migration/jdbc/MigrationUtils;[Lorg/jetbrains/exposed/v1/core/Table;ZILjava/lang/Object;)Ljava/util/List;
+}
+

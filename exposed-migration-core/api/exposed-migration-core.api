@@ -1,0 +1,8 @@
+public abstract class org/jetbrains/exposed/v1/migration/core/MigrationUtilityApi : org/jetbrains/exposed/v1/core/SchemaUtilityApi {
+	public fun <init> ()V
+	protected final fun filterMissingSequences (Ljava/util/Set;[Lorg/jetbrains/exposed/v1/core/Table;)Ljava/util/List;
+	protected final fun filterUnmappedSequences (Ljava/util/Set;[Lorg/jetbrains/exposed/v1/core/Table;)Ljava/util/List;
+	protected final fun mapUnmappedColumnStatementsTo (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/Collection;Ljava/util/List;)Ljava/util/Collection;
+	protected final fun writeMigrationScriptTo (Ljava/util/List;Ljava/lang/String;)Ljava/io/File;
+}
+

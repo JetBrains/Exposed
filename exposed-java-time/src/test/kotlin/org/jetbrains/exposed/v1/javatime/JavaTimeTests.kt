@@ -10,13 +10,11 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.json.extract
 import org.jetbrains.exposed.v1.json.jsonb
-import org.jetbrains.exposed.v1.migration.MigrationUtils
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
@@ -584,17 +582,6 @@ class JavaTimeTests : DatabaseTestsBase() {
                     .where { tableWithTime.time eq localTimeLiteral }
                     .single()[tableWithTime.time]
             )
-        }
-    }
-
-    @Test
-    fun testCurrentDateAsDefaultExpression() {
-        val testTable = object : LongIdTable("test_table") {
-            val date: Column<LocalDate> = date("date").index().defaultExpression(CurrentDate)
-        }
-        withTables(testTable) {
-            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(testTable)
-            assertTrue(statements.isEmpty())
         }
     }
 
