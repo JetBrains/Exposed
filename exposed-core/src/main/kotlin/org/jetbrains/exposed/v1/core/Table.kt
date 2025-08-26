@@ -426,6 +426,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      *
      * If the table is quoted, a dot in the name is considered part of the table name and the whole string is taken to
      * be the table name as is. If it is not quoted, whatever is after the dot is considered to be the table name.
+     * @suppress
      */
     @InternalApi
     val tableNameWithoutScheme: String
@@ -438,6 +439,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * 1. Forming primary and foreign key names
      * 2. Comparing table names from database metadata (except MySQL and MariaDB)
      * @see org.jetbrains.exposed.v1.sql.vendors.VendorDialect.metadataMatchesTable
+     * @suppress
      */
     @InternalApi
     val tableNameWithoutSchemeSanitized: String

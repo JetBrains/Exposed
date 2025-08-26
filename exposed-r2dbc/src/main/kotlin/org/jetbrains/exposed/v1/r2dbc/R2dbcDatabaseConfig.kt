@@ -126,6 +126,7 @@ interface R2dbcDatabaseConfig : DatabaseConfig {
     }
 }
 
+/** @suppress */
 @InternalApi
 class R2dbcDatabaseConfigImpl(
     private val builder: R2dbcDatabaseConfig.Builder

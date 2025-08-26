@@ -7,6 +7,7 @@ interface CacheWithSuspendableDefault<K, V> {
     suspend fun get(key: K): V
 }
 
+/** @suppress */
 @InternalApi
 class CachableMapWithSuspendableDefault<K, V>(
     private val map: MutableMap<K, V> = ConcurrentHashMap<K, V>(),

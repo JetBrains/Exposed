@@ -1415,6 +1415,7 @@ interface JsonColumnMarker {
  * does not exist for type [T].
  *
  * @throws IllegalStateException If no column type mapping is found and a [defaultType] is not provided.
+ * @suppress
  */
 @InternalApi
 fun <T : Any> resolveColumnType(

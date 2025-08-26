@@ -22,6 +22,7 @@ open class BatchInsertStatement(
     ignore: Boolean = false,
     val shouldReturnGeneratedValues: Boolean = true
 ) : InsertStatement<List<ResultRow>>(table, ignore) {
+    /** @suppress */
     @InternalApi
     val data = ArrayList<MutableMap<Column<*>, Any?>>()
 
@@ -67,6 +68,7 @@ open class BatchInsertStatement(
         hasBatchedValues = data.size > 0
     }
 
+    /** @suppress */
     @InternalApi
     open fun validateLastBatch() {
         val tr = CoreTransactionManager.currentTransaction()

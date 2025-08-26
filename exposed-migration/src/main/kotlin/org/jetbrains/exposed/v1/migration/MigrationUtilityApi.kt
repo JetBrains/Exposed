@@ -10,7 +10,10 @@ import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import java.io.File
 
 abstract class MigrationUtilityApi : SchemaUtilityApi() {
-    /** Appends this list of SQL statements to a File at [filePath] and returns the File. */
+    /**
+     * Appends this list of SQL statements to a File at [filePath] and returns the File.
+     * @suppress
+     */
     @InternalApi
     protected fun List<String>.writeMigrationScriptTo(filePath: String): File {
         val migrationScript = File(filePath)
@@ -26,7 +29,10 @@ abstract class MigrationUtilityApi : SchemaUtilityApi() {
         return migrationScript
     }
 
-    /** Adds DROP statements for all columns that exist in the database, but not this table mapping, to [destination]. */
+    /**
+     * Adds DROP statements for all columns that exist in the database, but not this table mapping, to [destination].
+     * @suppress
+     */
     @InternalApi
     protected fun <C : MutableCollection<String>> Table.mapUnmappedColumnStatementsTo(
         destination: C,
@@ -49,7 +55,10 @@ abstract class MigrationUtilityApi : SchemaUtilityApi() {
         return destination
     }
 
-    /** Filters this set of sequence names and returns a [Sequence] for any missing from the database. */
+    /**
+     * Filters this set of sequence names and returns a [Sequence] for any missing from the database.
+     * @suppress
+     */
     @InternalApi
     protected fun Set<String>.filterMissingSequences(vararg tables: Table): List<Sequence> {
         val missingSequences = mutableSetOf<Sequence>()
@@ -61,6 +70,7 @@ abstract class MigrationUtilityApi : SchemaUtilityApi() {
     /**
      * Filters this set of sequence names and returns a [Sequence] for any present in the database,
      * but not defined on a table object.
+     * @suppress
      */
     @InternalApi
     protected fun Set<String>.filterUnmappedSequences(vararg tables: Table): List<Sequence> {

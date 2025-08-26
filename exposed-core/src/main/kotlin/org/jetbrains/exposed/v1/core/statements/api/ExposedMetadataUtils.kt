@@ -12,6 +12,7 @@ import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.core.vendors.h2Mode
 import java.sql.Types
 
+/** @suppress */
 @InternalApi
 object ExposedMetadataUtils {
     /** Extracts result data about a specific column as [ColumnMetadata]. */
