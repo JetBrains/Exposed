@@ -15,6 +15,7 @@ import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.r2dbc.statements.R2dbcConnectionImpl
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedConnection
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedDatabaseMetadata
+import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcLocalMetadataImpl
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.vendors.*
 import java.util.concurrent.ConcurrentHashMap
@@ -29,6 +30,11 @@ class R2dbcDatabase private constructor(
     config: R2dbcDatabaseConfig,
     val connector: () -> R2dbcExposedConnection<*>
 ) : DatabaseApi(resolvedVendor, config) {
+    /**
+     * Calls the specified function [body] with an [R2dbcExposedDatabaseMetadata] implementation as its receiver and
+     * returns the retrieved metadata from the database as a result. If called outside a transaction block, a
+     * temporary connection is instantiated to call [body] before being closed.
+     */
     internal suspend fun <T> metadata(body: suspend R2dbcExposedDatabaseMetadata.() -> T): T {
         val transaction = TransactionManager.currentOrNull()
         return if (transaction == null) {
@@ -39,24 +45,29 @@ class R2dbcDatabase private constructor(
                 connection.close()
             }
         } else {
-            transaction.connection.metadata(body)
+            transaction.connection().metadata(body)
         }
     }
 
-    internal fun <T> localMetadata(body: R2dbcExposedDatabaseMetadata.() -> T): T {
-        val transaction = TransactionManager.currentOrNull()
-        return if (transaction == null) {
-            val connection = connector()
-            try {
-                connection.localMetadata(body)
-            } finally {
-                runBlocking {
-                    connection.close()
-                }
-            }
-        } else {
-            transaction.connection.localMetadata(body)
-        }
+    /**
+     * Calls the specified function [body] with an [R2dbcExposedDatabaseMetadata] implementation as its receiver and
+     * returns the retrieved metadata as a result, with the metadata most likely originating from the connection instance
+     * itself. Metadata retrieval that requires sending a query to the database will not be accepted. If called outside
+     * a transaction block, a temporary connection is instantiated to call [body] before being closed.
+     */
+    internal fun <T> connectionMetadata(body: R2dbcExposedDatabaseMetadata.() -> T): T = runBlocking { metadata(body) }
+
+    /**
+     * Calls the specified function [body] with an [R2dbcLocalMetadataImpl] implementation as its receiver and
+     * returns the retrieved metadata from a local provider as a result.
+     *
+     * @throws IllegalStateException If metadata retrieval requires either a connection or sending a query to the database.
+     */
+    internal fun <T> localMetadata(body: R2dbcLocalMetadataImpl.() -> T): T = localMetadata.body()
+
+    private val localMetadata by lazy {
+        resolvedVendor?.let { R2dbcLocalMetadataImpl("", it) }
+            ?: error("The exact vendor dialect could not be resolved.")
     }
 
     private var connectionUrl: String = ""
@@ -65,7 +76,7 @@ class R2dbcDatabase private constructor(
         get() = connectionUrl
 
     override val vendor: String by lazy {
-        resolvedVendor ?: localMetadata { getDatabaseDialectName() }
+        resolvedVendor ?: connectionMetadata { getDatabaseDialectName() }
     }
 
     override val dialect: DatabaseDialect by lazy {
@@ -83,12 +94,22 @@ class R2dbcDatabase private constructor(
             ?: error("No dialect metadata registered for $name. URL=$url")
     }
 
-    // TODO usage in core H2Dialect
-    override val dialectMode: String? by lazy { runBlocking { metadata { getDatabaseDialectMode() } } }
+    private var connectionUrlMode: String? = null
 
-    override val version: Version by lazy { localMetadata { getVersion() } }
+    override val dialectMode: String? by lazy {
+        if (connectionUrlMode != H2_INVALID_MODE) {
+            connectionUrlMode
+        } else {
+            // dialectMode is used by property h2Mode in many places in exposed-core & cannot be made to suspend.
+            // this branch should only be reached if ConnectionFactoryOptions fails to return a database value,
+            // which should be highly unlikely given that the parsing happens when R2dbcDatabase.connect() is called.
+            runBlocking { metadata { getDatabaseDialectMode() } }
+        }
+    }
 
-    override val fullVersion: String by lazy { localMetadata { getDatabaseProductVersion() } }
+    override val version: Version by lazy { connectionMetadata { getVersion() } }
+
+    override val fullVersion: String by lazy { connectionMetadata { getDatabaseProductVersion() } }
 
     override val supportsAlterTableWithAddColumn: Boolean by lazy { localMetadata { supportsAlterTableWithAddColumn } }
 
@@ -96,7 +117,9 @@ class R2dbcDatabase private constructor(
 
     override val supportsMultipleResultSets: Boolean by lazy { localMetadata { supportsMultipleResultSets } }
 
-    override val identifierManager: IdentifierManagerApi by lazy { localMetadata { identifierManager } }
+    override val supportsSelectForUpdate: Boolean by lazy { localMetadata { supportsSelectForUpdate } }
+
+    override val identifierManager: IdentifierManagerApi by lazy { connectionMetadata { identifierManager } }
 
     companion object {
 
@@ -149,6 +172,7 @@ class R2dbcDatabase private constructor(
                 R2dbcConnectionImpl(factory.create(), explicitVendor, config.typeMapping)
             }.apply {
                 connectionUrl = options.urlString
+                connectionUrlMode = options.urlMode
                 CoreTransactionManager.registerDatabaseManager(this, manager(this))
                 // ABOVE should be replaced with BELOW when ThreadLocalTransactionManager is fully deprecated
                 // TransactionManager.registerManager(this, manager(this))

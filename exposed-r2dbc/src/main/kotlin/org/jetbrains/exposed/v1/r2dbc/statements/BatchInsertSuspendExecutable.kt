@@ -18,7 +18,7 @@ open class BatchInsertSuspendExecutable<S : BatchInsertStatement>(
 
     override suspend fun prepared(transaction: R2dbcTransaction, sql: String): R2dbcPreparedStatementApi {
         return if (!statement.shouldReturnGeneratedValues) {
-            transaction.connection.prepareStatement(sql, false)
+            transaction.connection().prepareStatement(sql, false)
         } else {
             super.prepared(transaction, sql)
         }

@@ -231,6 +231,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabase : org/jetbrains/
 	public fun getSupportsAlterTableWithAddColumn ()Z
 	public fun getSupportsAlterTableWithDropColumn ()Z
 	public fun getSupportsMultipleResultSets ()Z
+	public fun getSupportsSelectForUpdate ()Z
 	public fun getUrl ()Ljava/lang/String;
 	public fun getVendor ()Ljava/lang/String;
 	public fun getVersion ()Lorg/jetbrains/exposed/v1/core/Version;
@@ -315,6 +316,7 @@ public class org/jetbrains/exposed/v1/r2dbc/R2dbcTransaction : org/jetbrains/exp
 	public fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun closeExecutedStatements (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun commit (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun connection (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun exec (Ljava/lang/String;Ljava/lang/Iterable;Lorg/jetbrains/exposed/v1/core/statements/StatementType;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun exec (Ljava/lang/String;Ljava/lang/Iterable;Lorg/jetbrains/exposed/v1/core/statements/StatementType;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun exec (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -323,7 +325,6 @@ public class org/jetbrains/exposed/v1/r2dbc/R2dbcTransaction : org/jetbrains/exp
 	public static synthetic fun exec$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Ljava/lang/Iterable;Lorg/jetbrains/exposed/v1/core/statements/StatementType;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun execInBatch (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun execQuery (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable;Lkotlin/jvm/functions/Function3;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun getConnection ()Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposedConnection;
 	public final fun getCurrentStatement ()Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;
 	public synthetic fun getDb ()Lorg/jetbrains/exposed/v1/core/DatabaseApi;
 	public final fun getDb ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
@@ -712,7 +713,6 @@ public final class org/jetbrains/exposed/v1/r2dbc/statements/R2dbcConnectionImpl
 	public fun getSchema (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getTransactionIsolation (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun isClosed (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun localMetadata (Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
 	public fun metadata (Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun prepareStatement (Ljava/lang/String;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun prepareStatement (Ljava/lang/String;[Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -807,10 +807,9 @@ public class org/jetbrains/exposed/v1/r2dbc/statements/UpsertSuspendExecutable :
 	public fun prepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
-public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcDatabaseMetadataImpl : org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposedDatabaseMetadata {
+public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcDatabaseMetadataImpl : org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcLocalMetadataImpl {
 	public static final field Companion Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcDatabaseMetadataImpl$Companion;
 	public fun <init> (Ljava/lang/String;Lio/r2dbc/spi/Connection;Ljava/lang/String;)V
-	public fun areEquivalentColumnTypes (Ljava/lang/String;ILjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun cleanCache ()V
 	public fun columns ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun existingCheckConstraints ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -820,15 +819,10 @@ public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcDatabaseMe
 	public fun getDatabaseDialectMode (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getDatabaseDialectName ()Ljava/lang/String;
 	public fun getDatabaseProductVersion ()Ljava/lang/String;
-	public fun getDefaultIsolationLevel (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getDefaultIsolationLevel ()Lio/r2dbc/spi/IsolationLevel;
 	public fun getIdentifierManager ()Lorg/jetbrains/exposed/v1/core/statements/api/IdentifierManagerApi;
 	public fun getMajorVersion ()I
 	public fun getMinorVersion ()I
-	public fun getSupportsAlterTableWithAddColumn ()Z
-	public fun getSupportsAlterTableWithDropColumn ()Z
-	public fun getSupportsLimitWithUpdateOrDelete ()Z
-	public fun getSupportsMultipleResultSets ()Z
-	public fun getSupportsSelectForUpdate ()Z
 	public fun getVersion ()Lorg/jetbrains/exposed/v1/core/Version;
 	public fun resetCurrentScheme ()V
 	public fun schemaNames (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -852,7 +846,6 @@ public abstract interface class org/jetbrains/exposed/v1/r2dbc/statements/api/R2
 	public abstract fun getSchema (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getTransactionIsolation (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun isClosed (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun localMetadata (Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
 	public abstract fun metadata (Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun prepareStatement (Ljava/lang/String;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun prepareStatement (Ljava/lang/String;[Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -868,7 +861,6 @@ public abstract interface class org/jetbrains/exposed/v1/r2dbc/statements/api/R2
 
 public abstract class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposedDatabaseMetadata : org/jetbrains/exposed/v1/core/statements/api/ExposedDatabaseMetadata {
 	public fun <init> (Ljava/lang/String;)V
-	public abstract fun areEquivalentColumnTypes (Ljava/lang/String;ILjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun columns ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun existingCheckConstraints ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun existingIndices ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -877,7 +869,7 @@ public abstract class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposed
 	public abstract fun getDatabaseDialectMode (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getDatabaseDialectName ()Ljava/lang/String;
 	public abstract fun getDatabaseProductVersion ()Ljava/lang/String;
-	public abstract fun getDefaultIsolationLevel (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getDefaultIsolationLevel ()Lio/r2dbc/spi/IsolationLevel;
 	public abstract fun getMajorVersion ()I
 	public abstract fun getMinorVersion ()I
 	public abstract fun getSupportsAlterTableWithAddColumn ()Z
@@ -891,6 +883,42 @@ public abstract class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposed
 	public abstract fun tableConstraints (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun tableNames (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun tableNamesByCurrentSchema (Lorg/jetbrains/exposed/v1/core/utils/CacheWithSuspendableDefault;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcLocalMetadataImpl : org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposedDatabaseMetadata {
+	public static final field CONNECTION_REQUIRED_ERROR Ljava/lang/String;
+	public static final field Companion Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcLocalMetadataImpl$Companion;
+	public static final field SUSPEND_REQUIRED_ERROR Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public fun cleanCache ()V
+	public fun columns ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun existingCheckConstraints ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun existingIndices ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun existingPrimaryKeys ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun existingSequences ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getDatabaseDialectMode (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getDatabaseDialectName ()Ljava/lang/String;
+	public fun getDatabaseProductVersion ()Ljava/lang/String;
+	public fun getDefaultIsolationLevel ()Lio/r2dbc/spi/IsolationLevel;
+	public fun getIdentifierManager ()Lorg/jetbrains/exposed/v1/core/statements/api/IdentifierManagerApi;
+	public fun getMajorVersion ()I
+	public fun getMinorVersion ()I
+	public fun getSupportsAlterTableWithAddColumn ()Z
+	public fun getSupportsAlterTableWithDropColumn ()Z
+	public fun getSupportsLimitWithUpdateOrDelete ()Z
+	public fun getSupportsMultipleResultSets ()Z
+	public fun getSupportsSelectForUpdate ()Z
+	public fun getVersion ()Lorg/jetbrains/exposed/v1/core/Version;
+	public fun resetCurrentScheme ()V
+	protected fun resolveReferenceOption (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/ReferenceOption;
+	public fun schemaNames (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sequences (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun tableConstraints (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun tableNames (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun tableNamesByCurrentSchema (Lorg/jetbrains/exposed/v1/core/utils/CacheWithSuspendableDefault;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcLocalMetadataImpl$Companion {
 }
 
 public abstract interface class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi : org/jetbrains/exposed/v1/core/statements/api/PreparedStatementApi {
@@ -946,7 +974,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcSavepoint 
 public abstract interface class org/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionInterface : org/jetbrains/exposed/v1/core/transactions/TransactionInterface {
 	public abstract fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun commit (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun getConnection ()Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposedConnection;
+	public abstract fun connection (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getDb ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
 	public abstract fun getOuterTransaction ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
 	public abstract fun getTransactionIsolation ()Lio/r2dbc/spi/IsolationLevel;
@@ -1007,6 +1035,7 @@ public abstract class org/jetbrains/exposed/v1/r2dbc/vendors/DatabaseDialectMeta
 	public fun <init> ()V
 	public final fun allTablesNames (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun allTablesNamesInAllSchemas (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun areEquivalentColumnTypes (Ljava/lang/String;ILjava/lang/String;)Z
 	public final fun catalog (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun columnConstraints ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun existingCheckConstraints ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

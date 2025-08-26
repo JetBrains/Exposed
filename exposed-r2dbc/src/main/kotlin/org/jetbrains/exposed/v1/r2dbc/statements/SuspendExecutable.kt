@@ -28,7 +28,7 @@ internal object DefaultValueMarker {
  *     override suspend fun prepared(transaction: R2dbcTransaction, sql: String): R2dbcPreparedStatementApi {
  *         // We must return values from upsert because returned id could be different depending on insert or upsert happened
  *         if (!currentDialect.supportsOnlyIdentifiersInGeneratedKeys) {
- *             return transaction.connection.prepareStatement(sql, statement.shouldReturnGeneratedValues)
+ *             return transaction.connection().prepareStatement(sql, statement.shouldReturnGeneratedValues)
  *         }
  *
  *         return super.prepared(transaction, sql)
@@ -58,7 +58,7 @@ interface SuspendExecutable<out T, S : Statement<T>> {
     suspend fun prepared(
         transaction: R2dbcTransaction,
         sql: String
-    ): R2dbcPreparedStatementApi = transaction.connection.prepareStatement(sql, false)
+    ): R2dbcPreparedStatementApi = transaction.connection().prepareStatement(sql, false)
 
     /** Whether the SQL statement is meant to be performed as part of a batch execution. */
     val isAlwaysBatch: Boolean

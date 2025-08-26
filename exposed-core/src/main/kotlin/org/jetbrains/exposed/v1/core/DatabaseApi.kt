@@ -47,6 +47,9 @@ abstract class DatabaseApi protected constructor(
     /** Whether the database supports getting multiple result sets from a single execute. */
     abstract val supportsMultipleResultSets: Boolean
 
+    /** Whether the database supports SELECT FOR UPDATE statements. */
+    abstract val supportsSelectForUpdate: Boolean
+
     /** The database-specific class responsible for parsing and processing identifier tokens in SQL syntax. */
     abstract val identifierManager: IdentifierManagerApi
 

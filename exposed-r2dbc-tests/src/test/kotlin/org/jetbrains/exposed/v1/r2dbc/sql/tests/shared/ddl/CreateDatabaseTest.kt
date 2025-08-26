@@ -18,7 +18,7 @@ class CreateDatabaseTest : R2dbcDatabaseTestsBase() {
             // Connection.setAutoCommit() should first commit the transaction if already active
             // But this does not seem to happen with SQL Server, leading to multi-statement tx errors
             // so we commit here to force a new transaction in autoCommit mode
-            if (testDb == TestDB.SQLSERVER) connection.commit()
+            if (testDb == TestDB.SQLSERVER) connection().commit()
 
             val dbName = "jetbrains"
             try {
@@ -46,9 +46,9 @@ class CreateDatabaseTest : R2dbcDatabaseTestsBase() {
             // Connection.setAutoCommit() should first commit the transaction if already active
             // But this does not seem to happen with SQL Server, leading to multi-statement tx errors
             // so we commit here to force a new transaction in autoCommit mode
-            if (testDb == TestDB.SQLSERVER) connection.commit()
+            if (testDb == TestDB.SQLSERVER) connection().commit()
 
-            connection.setAutoCommit(true)
+            connection().setAutoCommit(true)
             val dbName = "jetbrains"
             val initial = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.listDatabases()
             if (dbName in initial) {
@@ -61,7 +61,7 @@ class CreateDatabaseTest : R2dbcDatabaseTestsBase() {
             org.jetbrains.exposed.v1.r2dbc.SchemaUtils.dropDatabase(dbName)
             val deleted = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.listDatabases()
             assertTrue(dbName !in deleted)
-            connection.setAutoCommit(false)
+            connection().setAutoCommit(false)
         }
     }
 
@@ -87,11 +87,11 @@ class CreateDatabaseTest : R2dbcDatabaseTestsBase() {
     fun testCreateAndDropDatabaseWithAutoCommit() {
         // PostgreSQL needs auto commit to be "ON" to allow create database statement
         withDb(TestDB.ALL_POSTGRES) { testDb ->
-            connection.setAutoCommit(true)
+            connection().setAutoCommit(true)
             val dbName = "jetbrains"
             org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createDatabase(dbName)
             org.jetbrains.exposed.v1.r2dbc.SchemaUtils.dropDatabase(dbName)
-            connection.setAutoCommit(false)
+            connection().setAutoCommit(false)
         }
     }
 }

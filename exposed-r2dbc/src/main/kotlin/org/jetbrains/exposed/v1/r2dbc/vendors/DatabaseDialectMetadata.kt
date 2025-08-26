@@ -22,14 +22,14 @@ abstract class DatabaseDialectMetadata {
 
     protected suspend fun getAllTableNamesCache(): CacheWithSuspendableDefault<String, List<String>> {
         if (_allTableNames == null) {
-            _allTableNames = TransactionManager.current().connection.metadata { tableNames() }
+            _allTableNames = TransactionManager.current().connection().metadata { tableNames() }
         }
         return _allTableNames!!
     }
 
     private suspend fun getAllSchemaNamesCache(): List<String> {
         if (_allSchemaNames == null) {
-            _allSchemaNames = TransactionManager.current().connection.metadata { schemaNames() }
+            _allSchemaNames = TransactionManager.current().connection().metadata { schemaNames() }
         }
         return _allSchemaNames!!
     }
@@ -38,14 +38,14 @@ abstract class DatabaseDialectMetadata {
     suspend fun getDatabase(): String = catalog(TransactionManager.current())
 
     /** Returns the catalog name of the connection of the specified [transaction]. */
-    suspend fun catalog(transaction: R2dbcTransaction): String = transaction.connection.getCatalog()
+    suspend fun catalog(transaction: R2dbcTransaction): String = transaction.connection().getCatalog()
 
     /**
      * Returns a list with the names of all the defined tables in the current database schema.
      * The names will be returned with schema prefixes if the database supports it.
      */
     suspend fun allTablesNames(): List<String> {
-        return TransactionManager.current().connection.metadata {
+        return TransactionManager.current().connection().metadata {
             tableNamesByCurrentSchema(null).tableNames
         }
     }
@@ -69,7 +69,7 @@ abstract class DatabaseDialectMetadata {
                 it == table.nameInDatabaseCase()
             }
         } ?: run {
-            val (schema, allTables) = TransactionManager.current().connection.metadata {
+            val (schema, allTables) = TransactionManager.current().connection().metadata {
                 tableNamesByCurrentSchema(getAllTableNamesCache())
             }
             allTables.any {
@@ -106,7 +106,7 @@ abstract class DatabaseDialectMetadata {
 
     /** Returns a map with the column metadata of all the defined columns in each of the specified [tables]. */
     suspend fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> {
-        return TransactionManager.current().connection.metadata { columns(*tables) }
+        return TransactionManager.current().connection().metadata { columns(*tables) }
     }
 
     protected val columnConstraintsCache: MutableMap<String, Collection<ForeignKeyConstraint>> = ConcurrentHashMap()
@@ -131,6 +131,17 @@ abstract class DatabaseDialectMetadata {
             }
         }
         return constraints
+    }
+
+    /** Returns whether a defined column is of the same type as the column to which it is mapped in the database. */
+    fun areEquivalentColumnTypes(
+        columnMetadataSqlType: String,
+        columnMetadataType: Int,
+        columnType: String
+    ): Boolean {
+        return TransactionManager.current().db.localMetadata {
+            areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataType, columnType)
+        }
     }
 
     /** Returns a map with all the defined indices in each of the specified [tables]. */

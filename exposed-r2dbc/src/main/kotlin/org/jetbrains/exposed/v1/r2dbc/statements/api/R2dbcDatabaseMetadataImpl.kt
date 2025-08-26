@@ -11,7 +11,6 @@ import kotlinx.coroutines.reactive.collect
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.api.ExposedMetadataUtils
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
-import org.jetbrains.exposed.v1.core.statements.api.areEquivalentColumnTypesInternal
 import org.jetbrains.exposed.v1.core.utils.CachableMapWithSuspendableDefault
 import org.jetbrains.exposed.v1.core.utils.CacheWithSuspendableDefault
 import org.jetbrains.exposed.v1.core.vendors.*
@@ -25,14 +24,14 @@ import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.MetadataProvider
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Base class responsible for retrieving and storing information about the R2DBC driver and underlying database.
+ * Class responsible for retrieving and storing information about the R2DBC driver and underlying database.
  */
 @Suppress("UnusedPrivateMember", "UnusedParameter")
 class R2dbcDatabaseMetadataImpl(
     database: String,
     private val connection: Connection,
     vendorDialect: String,
-) : R2dbcExposedDatabaseMetadata(database) {
+) : R2dbcLocalMetadataImpl(database, vendorDialect) {
     private val connectionData: ConnectionMetadata = connection.metadata
     private val metadataProvider: MetadataProvider = MetadataProvider.getProvider(vendorDialect)
 
@@ -73,27 +72,7 @@ class R2dbcDatabaseMetadataImpl(
 
     override fun getDatabaseProductVersion(): String = connectionData.databaseVersion
 
-    override suspend fun getDefaultIsolationLevel(): IsolationLevel = connection.transactionIsolationLevel
-
-    override val supportsAlterTableWithAddColumn: Boolean by lazy {
-        metadataProvider.propertyProvider.supportsAlterTableWithAddColumn
-    }
-
-    override val supportsAlterTableWithDropColumn: Boolean by lazy {
-        metadataProvider.propertyProvider.supportsAlterTableWithDropColumn
-    }
-
-    override val supportsMultipleResultSets: Boolean by lazy {
-        metadataProvider.propertyProvider.supportsMultipleResultSets
-    }
-
-    override val supportsSelectForUpdate: Boolean by lazy {
-        metadataProvider.propertyProvider.supportsSelectForUpdate
-    }
-
-    override val supportsLimitWithUpdateOrDelete: Boolean by lazy {
-        metadataProvider.propertyProvider.supportsLimitWithUpdateOrDelete
-    }
+    override fun getDefaultIsolationLevel(): IsolationLevel = connection.transactionIsolationLevel
 
     override val identifierManager: IdentifierManagerApi by lazy {
         // db URL as KEY causes issues with multi-tenancy!
@@ -369,10 +348,6 @@ class R2dbcDatabaseMetadataImpl(
         }
     }
 
-    @OptIn(InternalApi::class)
-    override suspend fun areEquivalentColumnTypes(columnMetadataSqlType: String, columnMetadataType: Int, columnType: String) =
-        areEquivalentColumnTypesInternal(columnMetadataSqlType, columnMetadataType, columnType)
-
     private fun Row.extractForeignKeys(
         allTables: Map<String, Table>,
         isMysqlDialect: Boolean
@@ -407,13 +382,6 @@ class R2dbcDatabaseMetadataImpl(
             onDelete = constraintDeleteRule,
             name = constraintName
         )
-    }
-
-    override fun resolveReferenceOption(refOption: String): ReferenceOption? {
-        val refOptionInt = refOption.toIntOrNull() ?: return null
-
-        val dialectMapping = metadataProvider.typeProvider.referenceOptions
-        return dialectMapping.keys.first { dialectMapping[it] == refOptionInt }
     }
 
     override fun cleanCache() {

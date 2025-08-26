@@ -5,7 +5,6 @@ import io.r2dbc.spi.R2dbcException
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.SqlLogger
 import org.jetbrains.exposed.v1.core.Transaction
@@ -183,56 +182,44 @@ class TransactionManager(
         override val outerTransaction: R2dbcTransaction?,
     ) : R2dbcTransactionInterface {
 
-        private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) {
-            outerTransaction?.connection ?: db.connector().apply {
+        private var connectionLazy: R2dbcExposedConnection<*>? = null
+
+        private suspend fun getConnection(): R2dbcExposedConnection<*> = outerTransaction?.connection()
+            ?.also {
+                if (useSavePoints) {
+                    savepoint = it.setSavepoint(savepointName)
+                }
+            }
+            ?: db.connector().apply {
                 @Suppress("TooGenericExceptionCaught")
                 try {
-                    // TODO assess need for property suspend setters vs Lazy usage
-                    setupTxConnection?.invoke(this, this@R2dbcThreadLocalTransaction)
-//                        ?: runBlocking {
-//                            setTransactionIsolation(this@R2dbcThreadLocalTransaction.transactionIsolation)
-//                            setReadOnly(this@R2dbcThreadLocalTransaction.readOnly)
-//                            // potentially redundant if R2dbcConnectionImpl calls beginTransaction(), which disables autoCommit
-//                            setAutoCommit(false)
-//                        }
+                    setupTxConnection?.invoke(this, this@R2dbcThreadLocalTransaction) ?: run {
+                        setTransactionIsolation(this@R2dbcThreadLocalTransaction.transactionIsolation)
+                        setReadOnly(this@R2dbcThreadLocalTransaction.readOnly)
+                        // potentially redundant if R2dbcConnectionImpl calls beginTransaction(), which disables autoCommit
+                        setAutoCommit(false)
+                    }
                 } catch (e: Exception) {
                     try {
-                        // suspend alternative for lazy?
-//                        close()
+                        close()
                     } catch (closeException: Exception) {
                         e.addSuppressed(closeException)
                     }
                     throw e
                 }
             }
-        }
 
-        override val connection: R2dbcExposedConnection<*>
-            get() = connectionLazy.value
+        override suspend fun connection(): R2dbcExposedConnection<*> = connectionLazy
+            ?: getConnection().also { connectionLazy = it }
 
         private val useSavePoints = outerTransaction != null && db.useNestedTransactions
 
-        // Todo replace runBlocking()
-        // TODO swap out lazy for fake connection in transaction manager +/- other lazy uses in connectionImpl
-        // property needs to (possibly) be initialized with return value of a suspend function;
-        // this suspend function must be called as soon as transaction is opened, so lazySuspend options not sufficient;
-        // need something like initSuspend { }
-        // Option 1: launch coroutine
-        // Option 2: suspend operator fun invoke() -> all invoking functions are not suspending though...
-        // Option 3: suspend factory method -> same reason as above...
-        // Option 4: re-assess whether connection.setSavepoint() must suspend???
-        // OG below:
-//        private var savepoint: ExposedSavepoint? = if (useSavePoints) connection.setSavepoint(savepointName) else null
-        private var savepoint: ExposedSavepoint? = if (useSavePoints) {
-            runBlocking { connection.setSavepoint(savepointName) }
-        } else {
-            null
-        }
+        private var savepoint: ExposedSavepoint? = null
 
         override suspend fun commit() {
             if (connectionLazy.isInitialized()) {
                 if (!useSavePoints) {
-                    connection.commit()
+                    connection().commit()
                 } else {
                     // do nothing in nested. close() will commit everything and release savepoint.
                 }
@@ -240,12 +227,12 @@ class TransactionManager(
         }
 
         override suspend fun rollback() {
-            if (connectionLazy.isInitialized() && !connection.isClosed()) {
+            if (connectionLazy.isInitialized() && !connection().isClosed()) {
                 if (useSavePoints && savepoint != null) {
-                    connection.rollback(savepoint!!)
-                    savepoint = connection.setSavepoint(savepointName)
+                    connection().rollback(savepoint!!)
+                    savepoint = connection().setSavepoint(savepointName)
                 } else {
-                    connection.rollback()
+                    connection().rollback()
                 }
             }
         }
@@ -253,10 +240,10 @@ class TransactionManager(
         override suspend fun close() {
             try {
                 if (!useSavePoints) {
-                    if (connectionLazy.isInitialized()) connection.close()
+                    if (connectionLazy.isInitialized()) connection().close()
                 } else {
                     savepoint?.let {
-                        connection.releaseSavepoint(it)
+                        connection().releaseSavepoint(it)
                         savepoint = null
                     }
                 }
@@ -265,6 +252,8 @@ class TransactionManager(
                 MappedTransactionContext.setTransaction(outerTransaction)
             }
         }
+
+        private fun R2dbcExposedConnection<*>?.isInitialized(): Boolean = this != null
 
         private val savepointName: String
             get() {
@@ -396,7 +385,7 @@ private suspend fun <T> withTransactionScope(
 }
 
 private suspend fun R2dbcTransaction.resetIfClosed(): R2dbcTransaction {
-    return if (connection.isClosed()) {
+    return if (connection().isClosed()) {
         // Repetition attempts will throw org.h2.jdbc.JdbcSQLException: The object is already closed
         // unless the transaction is reset before every attempt (after the 1st failed attempt)
         val currentManager = db.transactionManager

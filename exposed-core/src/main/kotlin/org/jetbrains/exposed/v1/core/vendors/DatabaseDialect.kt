@@ -83,7 +83,7 @@ interface DatabaseDialect {
     /** Returns `true` if the dialect supports `SELECT FOR UPDATE` statements, `false` otherwise. */
     @Deprecated(
         "The parameter was moved to JdbcExposedDatabaseMetadata/R2dbcExposedDatabaseMetadata classes",
-        ReplaceWith("TransactionManager.current().connection.metadata { supportsSelectForUpdate }")
+        ReplaceWith("TransactionManager.current().db.supportsSelectForUpdate")
     )
     val supportsSelectForUpdate: Boolean get() = false
 
@@ -141,7 +141,7 @@ interface DatabaseDialect {
      */
     @Deprecated(
         "This method was moved to ExposedDatabaseMetadata and should not be used anymore from here.",
-        ReplaceWith("TransactionManager.current().db.metadata { areEquivalentColumnTypes() }")
+        ReplaceWith("currentDialectMetadata.areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataJdbcType, columnType)")
     )
     fun areEquivalentColumnTypes(columnMetadataSqlType: String, columnMetadataJdbcType: Int, columnType: String): Boolean =
         columnMetadataSqlType.equals(columnType, ignoreCase = true)

@@ -10,10 +10,10 @@ public final class org/jetbrains/exposed/v1/jdbc/Database : org/jetbrains/expose
 	public fun getSupportsAlterTableWithAddColumn ()Z
 	public fun getSupportsAlterTableWithDropColumn ()Z
 	public fun getSupportsMultipleResultSets ()Z
+	public fun getSupportsSelectForUpdate ()Z
 	public fun getUrl ()Ljava/lang/String;
 	public fun getVendor ()Ljava/lang/String;
 	public fun getVersion ()Lorg/jetbrains/exposed/v1/core/Version;
-	public final fun metadata (Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/v1/jdbc/Database$Companion {
@@ -591,7 +591,6 @@ public abstract interface class org/jetbrains/exposed/v1/jdbc/statements/api/Exp
 
 public abstract class org/jetbrains/exposed/v1/jdbc/statements/api/JdbcExposedDatabaseMetadata : org/jetbrains/exposed/v1/core/statements/api/ExposedDatabaseMetadata {
 	public fun <init> (Ljava/lang/String;)V
-	public abstract fun areEquivalentColumnTypes (Ljava/lang/String;ILjava/lang/String;)Z
 	public abstract fun columns ([Lorg/jetbrains/exposed/v1/core/Table;)Ljava/util/Map;
 	public abstract fun existingCheckConstraints ([Lorg/jetbrains/exposed/v1/core/Table;)Ljava/util/Map;
 	public abstract fun existingIndices ([Lorg/jetbrains/exposed/v1/core/Table;)Ljava/util/Map;
@@ -670,7 +669,6 @@ public final class org/jetbrains/exposed/v1/jdbc/statements/jdbc/JdbcConnectionI
 public final class org/jetbrains/exposed/v1/jdbc/statements/jdbc/JdbcDatabaseMetadataImpl : org/jetbrains/exposed/v1/jdbc/statements/api/JdbcExposedDatabaseMetadata {
 	public static final field Companion Lorg/jetbrains/exposed/v1/jdbc/statements/jdbc/JdbcDatabaseMetadataImpl$Companion;
 	public fun <init> (Ljava/lang/String;Ljava/sql/DatabaseMetaData;)V
-	public fun areEquivalentColumnTypes (Ljava/lang/String;ILjava/lang/String;)Z
 	public fun cleanCache ()V
 	public fun columns ([Lorg/jetbrains/exposed/v1/core/Table;)Ljava/util/Map;
 	public fun existingCheckConstraints ([Lorg/jetbrains/exposed/v1/core/Table;)Ljava/util/Map;
@@ -849,6 +847,7 @@ public abstract class org/jetbrains/exposed/v1/jdbc/vendors/DatabaseDialectMetad
 	public fun <init> ()V
 	public final fun allTablesNames ()Ljava/util/List;
 	public final fun allTablesNamesInAllSchemas ()Ljava/util/List;
+	public final fun areEquivalentColumnTypes (Ljava/lang/String;ILjava/lang/String;)Z
 	public final fun catalog (Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;)Ljava/lang/String;
 	public final fun columnConstraints ([Lorg/jetbrains/exposed/v1/core/Table;)Ljava/util/Map;
 	public final fun existingCheckConstraints ([Lorg/jetbrains/exposed/v1/core/Table;)Ljava/util/Map;

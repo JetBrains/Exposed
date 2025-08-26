@@ -3,7 +3,6 @@ package org.jetbrains.exposed.v1.r2dbc
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
@@ -98,10 +97,11 @@ object SchemaUtils : SchemaUtilityApi() {
         val dbSupportsAlterTableWithAddColumn = TransactionManager.current().db.supportsAlterTableWithAddColumn
 
         val isIncorrectType = { columnMetadata: ColumnMetadata, column: Column<*> ->
-            // TODO remove run blocking with after introduction of synchronous metadata in r2dbc
-            runBlocking {
-                !TransactionManager.current().db.metadata { areEquivalentColumnTypes(columnMetadata.sqlType, columnMetadata.jdbcType, column.columnType.sqlType()) }
-            }
+            currentDialectMetadata.areEquivalentColumnTypes(
+                columnMetadata.sqlType,
+                columnMetadata.jdbcType,
+                column.columnType.sqlType()
+            ).not()
         }
 
         @OptIn(InternalApi::class)
@@ -151,8 +151,8 @@ object SchemaUtils : SchemaUtilityApi() {
      * @param databases the names of the databases
      * @param inBatch flag to perform database creation in a single batch
      *
-     * For PostgreSQL, calls to this function should be preceded by connection.autoCommit = true,
-     * and followed by connection.autoCommit = false.
+     * For PostgreSQL, calls to this function should be preceded by connection().setAutoCommit(true),
+     * and followed by connection().setAutoCommit(false).
      * @see org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.ddl.CreateDatabaseTest
      */
     suspend fun createDatabase(vararg databases: String, inBatch: Boolean = false) {
@@ -163,7 +163,7 @@ object SchemaUtils : SchemaUtilityApi() {
                 execStatements(inBatch, createStatements)
             }
         } catch (exception: ExposedR2dbcException) {
-            if (currentDialect.requiresAutoCommitOnCreateDrop && !transaction.connection.getAutoCommit()) {
+            if (currentDialect.requiresAutoCommitOnCreateDrop && !transaction.connection().getAutoCommit()) {
                 throw IllegalStateException(
                     "${currentDialect.name} requires autoCommit to be enabled for CREATE DATABASE",
                     exception
@@ -194,8 +194,8 @@ object SchemaUtils : SchemaUtilityApi() {
      * @param databases the names of the databases
      * @param inBatch flag to perform database creation in a single batch
      *
-     * For PostgreSQL, calls to this function should be preceded by connection.autoCommit = true,
-     * and followed by connection.autoCommit = false.
+     * For PostgreSQL, calls to this function should be preceded by connection().setAutoCommit(true),
+     * and followed by connection().setAutoCommit(false).
      * @see org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.ddl.CreateDatabaseTest
      */
     suspend fun dropDatabase(vararg databases: String, inBatch: Boolean = false) {
@@ -206,7 +206,7 @@ object SchemaUtils : SchemaUtilityApi() {
                 execStatements(inBatch, createStatements)
             }
         } catch (exception: ExposedR2dbcException) {
-            if (currentDialect.requiresAutoCommitOnCreateDrop && !transaction.connection.getAutoCommit()) {
+            if (currentDialect.requiresAutoCommitOnCreateDrop && !transaction.connection().getAutoCommit()) {
                 throw IllegalStateException(
                     "${currentDialect.name} requires autoCommit to be enabled for DROP DATABASE",
                     exception
@@ -402,7 +402,7 @@ object SchemaUtils : SchemaUtilityApi() {
                 body()
             } finally {
                 buzyTable.deleteAll()
-                connection.commit()
+                connection().commit()
             }
         }
     }
@@ -451,7 +451,7 @@ object SchemaUtils : SchemaUtilityApi() {
             execStatements(inBatch, setStatements)
 
             currentDialectMetadata.resetCaches()
-            connection.metadata { resetCurrentScheme() }
+            connection().metadata { resetCurrentScheme() }
         }
     }
 
