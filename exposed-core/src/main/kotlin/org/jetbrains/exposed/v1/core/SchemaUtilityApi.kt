@@ -527,7 +527,10 @@ abstract class SchemaUtilityApi {
         return currentDialect.addPrimaryKey(this, missingPKName, pkColumns = missingPK.columns)
     }
 
-    /** Runs the provided [block] and returns the result. If [withLogs] is `true`, logs the time taken in milliseconds. */
+    /**
+     * Runs the provided [block] and returns the result. If [withLogs] is `true`, logs the time taken in milliseconds.
+     * @suppress
+     */
     @InternalApi
     protected inline fun <R> logTimeSpent(message: String, withLogs: Boolean, block: () -> R): R {
         return if (withLogs) {

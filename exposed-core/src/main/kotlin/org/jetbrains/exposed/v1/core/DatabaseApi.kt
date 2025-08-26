@@ -55,7 +55,6 @@ abstract class DatabaseApi protected constructor(
         private set
 
     companion object {
-        // TODO Assess whether concurrent hash map is actually needed
         /** @suppress */
         @InternalApi
         val dialects = ConcurrentHashMap<String, () -> DatabaseDialect>()
