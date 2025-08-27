@@ -61,10 +61,39 @@ TransactionManager.current().connection.metadata { existingPrimaryKeys(TableA) }
 TransactionManager.current().connection().rollback()
 TransactionManager.current().connection().metadata { existingPrimaryKeys(TableA) }
 ```
+
 * `suspendTransaction()` overloads that accepts a `CoroutineContext?` parameter have been deprecated in favor of overloads
   whose parameters and behavior are more inline with JDBC `transaction()`. A manual context can be passed to the methods using `withContext()`,
   for example. Similarly, `suspendTransactionAsync()` that returned `Deferred` has also been deprecated in favor of calling
   `async()` directly with a standard `suspendTransaction()`.
+* The `R2dbcDatabase.connect()` overload that accepts a String `url` parameter has had the type of its `databaseConfig` parameter changed to accept
+  a `R2dbcDatabaseConfig.Builder` argument directly. This is instead of a function parameter with the builder as its receiver,
+  which brings it more inline with the corresponding JDBC `Database.connect()` variant:
+
+```kotlin
+// BEFORE
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
+
+R2dbcDatabase.connect(
+    "r2dbc:h2:mem:///test;DB_CLOSE_DELAY=-1;",
+    databaseConfig = {
+        defaultMaxAttempts = 1
+        defaultR2dbcIsolationLevel = IsolationLevel.READ_COMMITTED
+    }
+)
+
+// AFTER
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
+
+R2dbcDatabase.connect(
+    "r2dbc:h2:mem:///test;DB_CLOSE_DELAY=-1;",
+    databaseConfig = R2dbcDatabaseConfig {
+        defaultMaxAttempts = 1
+        defaultR2dbcIsolationLevel = IsolationLevel.READ_COMMITTED
+    }
+)
+```
 
 ## 1.0.0-beta-5
 

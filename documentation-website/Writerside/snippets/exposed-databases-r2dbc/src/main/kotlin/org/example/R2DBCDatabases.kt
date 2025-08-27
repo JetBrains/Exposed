@@ -2,6 +2,7 @@ package org.example
 
 import io.r2dbc.spi.IsolationLevel
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 
 class R2DBCDatabases {
     fun getH2DB(): R2dbcDatabase {
@@ -12,7 +13,7 @@ class R2DBCDatabases {
     fun getH2DBWithConfig(): R2dbcDatabase {
         val database = R2dbcDatabase.connect(
             "r2dbc:h2:mem:///test;DB_CLOSE_DELAY=-1;",
-            databaseConfig = {
+            databaseConfig = R2dbcDatabaseConfig {
                 defaultMaxAttempts = 1
                 defaultR2dbcIsolationLevel = IsolationLevel.READ_COMMITTED
             }
