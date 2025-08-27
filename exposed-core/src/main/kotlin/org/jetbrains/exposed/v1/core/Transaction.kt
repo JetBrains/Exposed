@@ -59,6 +59,15 @@ abstract class Transaction : UserDataHolder(), TransactionInterface {
     /** The unique ID for this transaction. */
     val txId by lazy { UUID.randomUUID().toString() }
 
+    /** The unique ID for this transaction. */
+    @Deprecated(
+        "The field Transaction.id was renamed to Transaction.txId to avoid collisions and shadowing with user's code.",
+        replaceWith = ReplaceWith("txId"),
+        level = DeprecationLevel.ERROR,
+    )
+    val id
+        get() = txId
+
     /**
      * A [StringBuilder] containing string representations of previously executed statements
      * prefixed by their execution time in milliseconds.
