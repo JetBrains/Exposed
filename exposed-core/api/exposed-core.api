@@ -2831,6 +2831,81 @@ public class org/jetbrains/exposed/v1/core/dao/id/UUIDTable : org/jetbrains/expo
 	public final fun getPrimaryKey ()Lorg/jetbrains/exposed/v1/core/Table$PrimaryKey;
 }
 
+public abstract class org/jetbrains/exposed/v1/core/datetime/DurationColumnType : org/jetbrains/exposed/v1/core/ColumnType {
+	public fun <init> ()V
+	public abstract fun fromDuration-LRDsOJo (J)Ljava/lang/Object;
+	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun sqlType ()Ljava/lang/String;
+	public abstract fun toDuration-5sfh64U (Ljava/lang/Object;)J
+	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract class org/jetbrains/exposed/v1/core/datetime/InstantColumnType : org/jetbrains/exposed/v1/core/ColumnType, org/jetbrains/exposed/v1/core/IDateColumnType {
+	public fun <init> ()V
+	public abstract fun fromInstant (Lkotlin/time/Instant;)Ljava/lang/Object;
+	public fun getHasTimePart ()Z
+	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
+	public fun sqlType ()Ljava/lang/String;
+	public abstract fun toInstant (Ljava/lang/Object;)Lkotlin/time/Instant;
+	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract class org/jetbrains/exposed/v1/core/datetime/LocalDateColumnType : org/jetbrains/exposed/v1/core/ColumnType, org/jetbrains/exposed/v1/core/IDateColumnType {
+	public fun <init> ()V
+	public abstract fun fromLocalDate (Lkotlinx/datetime/LocalDate;)Ljava/lang/Object;
+	public fun getHasTimePart ()Z
+	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
+	public fun sqlType ()Ljava/lang/String;
+	public abstract fun toLocalDate (Ljava/lang/Object;)Lkotlinx/datetime/LocalDate;
+	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract class org/jetbrains/exposed/v1/core/datetime/LocalDateTimeColumnType : org/jetbrains/exposed/v1/core/ColumnType, org/jetbrains/exposed/v1/core/IDateColumnType {
+	public fun <init> ()V
+	public abstract fun fromLocalDateTime (Lkotlinx/datetime/LocalDateTime;)Ljava/lang/Object;
+	public fun getHasTimePart ()Z
+	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
+	public fun sqlType ()Ljava/lang/String;
+	public abstract fun toLocalDateTime (Ljava/lang/Object;)Lkotlinx/datetime/LocalDateTime;
+	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract class org/jetbrains/exposed/v1/core/datetime/LocalTimeColumnType : org/jetbrains/exposed/v1/core/ColumnType, org/jetbrains/exposed/v1/core/IDateColumnType {
+	public fun <init> ()V
+	public abstract fun fromLocalTime (Lkotlinx/datetime/LocalTime;)Ljava/lang/Object;
+	public fun getHasTimePart ()Z
+	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
+	public fun sqlType ()Ljava/lang/String;
+	public abstract fun toLocalTime (Ljava/lang/Object;)Lkotlinx/datetime/LocalTime;
+	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract class org/jetbrains/exposed/v1/core/datetime/OffsetDateTimeColumnType : org/jetbrains/exposed/v1/core/ColumnType, org/jetbrains/exposed/v1/core/IDateColumnType {
+	public fun <init> ()V
+	public abstract fun fromOffsetDateTime (Ljava/time/OffsetDateTime;)Ljava/lang/Object;
+	public fun getHasTimePart ()Z
+	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
+	public fun sqlType ()Ljava/lang/String;
+	public abstract fun toOffsetDateTime (Ljava/lang/Object;)Ljava/time/OffsetDateTime;
+	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
 public final class org/jetbrains/exposed/v1/core/functions/array/ArrayGet : org/jetbrains/exposed/v1/core/Function {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Expression;ILorg/jetbrains/exposed/v1/core/IColumnType;)V
 	public final fun getExpression ()Lorg/jetbrains/exposed/v1/core/Expression;

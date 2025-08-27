@@ -19,6 +19,11 @@
 * Parameter `supportsSelectForUpdate` from `DatabaseDialect` was deprecated and should not be used. The parameter was moved to `JdbcExposedDatabaseMetadata`/
   `R2dbcExposedDatabaseMetadata` classes. It could be used with call `TransactionManager.current().connection.metadata { supportsSelectForUpdate }` now.
 * `R2DBCRow`, which is the R2DBC implementation of `RowApi` meant to wrap elements of a statement's result, has been renamed to `R2dbcRow`.
+* We refactored the datetime modules by extracting common logic to the core module, where each datetime column type now extends a base class (e.g.,
+  `JavaLocalDateColumnType` extends `LocalDateColumnType`, `JavaLocalDateTimeColumnType` extends `LocalDateTimeColumnType`, etc.), split the `DateColumnType` from
+  `exposed-jodatime` into `JodaLocalDateColumnType` (formerly `time: false`) and `JodaLocalDateTimeColumnType` (formerly `time: true`), and renamed
+  `LocalTimeColumnType` to `JodaLocalTimeColumnType`. These changes would affect only those who use these classes directly for custom functions or custom column
+  types. Creating columns via extension functions should not be affected.
 
 ## 1.0.0-beta-5
 

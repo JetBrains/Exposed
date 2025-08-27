@@ -105,7 +105,7 @@ class JodaTimeTests : R2dbcDatabaseTestsBase() {
 
             val year2023 = if (currentDialectTest is PostgreSQLDialect) {
                 // PostgreSQL requires explicit type cast to resolve function date_part
-                dateParam(mayTheFourth).castTo(DateColumnType(false)).year()
+                dateParam(mayTheFourth).castTo(JodaLocalDateColumnType()).year()
             } else {
                 dateParam(mayTheFourth).year()
             }
@@ -177,7 +177,7 @@ class JodaTimeTests : R2dbcDatabaseTestsBase() {
 
             // PostgreSQL requires explicit type cast to timestamp for in-DB comparison
             val dateModified = if (currentDialectTest is PostgreSQLDialect) {
-                tester.modified.extract<DateTime>("${prefix}timestamp").castTo(DateColumnType(true))
+                tester.modified.extract<DateTime>("${prefix}timestamp").castTo(JodaLocalDateTimeColumnType())
             } else {
                 tester.modified.extract<DateTime>("${prefix}timestamp")
             }
@@ -321,8 +321,8 @@ class JodaTimeTests : R2dbcDatabaseTestsBase() {
         val defaultDates = listOf(today)
         val defaultDateTimes = listOf(DateTime.now())
         val tester = object : Table("array_tester") {
-            val dates = array("dates", DateColumnType(false)).default(defaultDates)
-            val datetimes = array("datetimes", DateColumnType(true)).default(defaultDateTimes)
+            val dates = array("dates", JodaLocalDateColumnType()).default(defaultDates)
+            val datetimes = array("datetimes", JodaLocalDateTimeColumnType()).default(defaultDateTimes)
         }
 
         withTables(excludeSettings = TestDB.ALL - TestDB.POSTGRESQL - TestDB.H2_V2 - TestDB.H2_V2_PSQL, tester) {
