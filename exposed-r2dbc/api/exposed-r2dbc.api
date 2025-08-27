@@ -806,18 +806,6 @@ public class org/jetbrains/exposed/v1/r2dbc/statements/UpsertSuspendExecutable :
 	public fun prepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
-public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2DBCRow : org/jetbrains/exposed/v1/core/statements/api/RowApi {
-	public fun <init> (Lio/r2dbc/spi/Row;Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;)V
-	public fun getObject (I)Ljava/lang/Object;
-	public fun getObject (ILjava/lang/Class;)Ljava/lang/Object;
-	public fun getObject (ILjava/lang/Class;Lorg/jetbrains/exposed/v1/core/IColumnType;)Ljava/lang/Object;
-	public fun getObject (Ljava/lang/String;)Ljava/lang/Object;
-	public fun getObject (Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
-	public fun getObject (Ljava/lang/String;Ljava/lang/Class;Lorg/jetbrains/exposed/v1/core/IColumnType;)Ljava/lang/Object;
-	public final fun getRow ()Lio/r2dbc/spi/Row;
-	public fun getString (I)Ljava/lang/String;
-}
-
 public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcDatabaseMetadataImpl : org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposedDatabaseMetadata {
 	public static final field Companion Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcDatabaseMetadataImpl$Companion;
 	public fun <init> (Ljava/lang/String;Lio/r2dbc/spi/Connection;Ljava/lang/String;)V
@@ -935,6 +923,18 @@ public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcResultKt {
 	public static final fun getMetadata (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;)Lio/r2dbc/spi/RowMetadata;
 	public static final fun getOrigin (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;)Lio/r2dbc/spi/Row;
 	public static final fun rowsCount (Lorg/jetbrains/exposed/v1/core/statements/api/ResultApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcRow : org/jetbrains/exposed/v1/core/statements/api/RowApi {
+	public fun <init> (Lio/r2dbc/spi/Row;Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;)V
+	public fun getObject (I)Ljava/lang/Object;
+	public fun getObject (ILjava/lang/Class;)Ljava/lang/Object;
+	public fun getObject (ILjava/lang/Class;Lorg/jetbrains/exposed/v1/core/IColumnType;)Ljava/lang/Object;
+	public fun getObject (Ljava/lang/String;)Ljava/lang/Object;
+	public fun getObject (Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
+	public fun getObject (Ljava/lang/String;Ljava/lang/Class;Lorg/jetbrains/exposed/v1/core/IColumnType;)Ljava/lang/Object;
+	public final fun getRow ()Lio/r2dbc/spi/Row;
+	public fun getString (I)Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcSavepoint : org/jetbrains/exposed/v1/core/statements/api/ExposedSavepoint {

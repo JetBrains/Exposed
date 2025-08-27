@@ -196,7 +196,7 @@ class R2dbcDatabaseMetadataImpl(
                 val columns = connection.executeSQL(query) { row, _ ->
                     // Unlike JdbcResult, R2dbcResult is split apart for ResultApi vs RowApi, so a 2nd arg placeholder has to be used
                     with(ExposedMetadataUtils) {
-                        R2DBCRow(row, R2dbcRegistryTypeMappingImpl()).asColumnMetadata(prefetchedColumnTypes)
+                        R2dbcRow(row, R2dbcRegistryTypeMappingImpl()).asColumnMetadata(prefetchedColumnTypes)
                     }
                 }.orEmpty()
                 check(columns.isNotEmpty())

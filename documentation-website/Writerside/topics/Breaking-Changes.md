@@ -18,6 +18,7 @@
   and [higher-order functions](https://www.jetbrains.com/help/exposed/migration-guide-1-0-0.html#sql-expression-builder-lambda).
 * Parameter `supportsSelectForUpdate` from `DatabaseDialect` was deprecated and should not be used. The parameter was moved to `JdbcExposedDatabaseMetadata`/
   `R2dbcExposedDatabaseMetadata` classes. It could be used with call `TransactionManager.current().connection.metadata { supportsSelectForUpdate }` now.
+* `R2DBCRow`, which is the R2DBC implementation of `RowApi` meant to wrap elements of a statement's result, has been renamed to `R2dbcRow`.
 
 ## 1.0.0-beta-5
 
