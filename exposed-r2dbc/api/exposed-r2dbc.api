@@ -235,6 +235,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabase : org/jetbrains/
 	public fun getUrl ()Ljava/lang/String;
 	public fun getVendor ()Ljava/lang/String;
 	public fun getVersion ()Lorg/jetbrains/exposed/v1/core/Version;
+	public final fun metadata (Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabase$Companion {

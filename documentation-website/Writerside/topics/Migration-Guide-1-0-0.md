@@ -191,6 +191,60 @@ the import paths of these Exposed functions, using wildcard imports may lead to 
 if such custom functions are also being used. It is recommended to explicitly import these custom functions in the event
 that renaming is not a feasible option.
 
+## Migration dependencies
+
+Prior to version 1.0.0, `MigrationUtils` was available with a dependency on the `exposed-migration` artifact.
+In order to enable the use of its utility methods with both JDBC and R2DBC support, this artifact is now replaced by
+`exposed-migration-core` and driver-specific artifacts have been introduced (with suffixes such as `-jdbc` and `-r2dbc`):
+
+<compare first-title="0.61.0" second-title="1.0.0">
+
+```kotlin
+dependencies {
+    // ...
+    implementation("org.jetbrains.exposed:exposed-migration:0.61.0")
+}
+```
+
+```kotlin
+dependencies {
+    // ...
+    implementation("org.jetbrains.exposed:exposed-migration-core:1.0.0")
+    implementation("org.jetbrains.exposed:exposed-migration-jdbc:1.0.0")
+}
+```
+
+</compare>
+
+This means that the import path of `MigrationUtils` has also been updated to follow the pattern of the other [package changes](#updated-imports):
+
+<compare first-title="0.61.0" second-title="1.0.0">
+
+```kotlin
+import org.jetbrains.exposed.sql.transactions.transaction
+
+transaction {
+    MigrationUtils.statementsRequiredForDatabaseMigration(
+        TableA,
+        withLogs = false
+    )
+}
+```
+
+```kotlin
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
+
+transaction {
+    MigrationUtils.statementsRequiredForDatabaseMigration(
+        TableA,
+        withLogs = false
+    )
+}
+```
+
+</compare>
+
 ## Transactions
 
 The class `Transaction` remains in `exposed-core` but it is now abstract and all its driver-specific properties and methods

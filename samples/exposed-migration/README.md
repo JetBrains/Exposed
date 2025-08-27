@@ -14,15 +14,14 @@ raw SQL in the function `simulateExistingDatabase`. In `Tables.kt`, the table `U
 of the Users table, which was created in `simulateExistingDatabase` and does not have a primary key.
 
 The function `MigrationUtils.generateMigrationScript` generates a SQL migration script in the specified directory. The
-`exposed-migration` dependency is needed for this. In this sample project, it will be generated inside a directory
-called `migrations`.
+`exposed-migration-core` and `exposed-migration-jdbc` dependencies are needed for this.
+In this sample project, the migration script will be generated inside a directory called `migrations`.
 
 ```kotlin
 implementation("org.jetbrains.exposed:exposed-migration:$exposedVersion")
 ```
 
-The generated migration script can also be edited manually before applying a migration. In this sample project, it will
-be generated inside a directory called `migrations`.
+The generated migration script can also be edited manually before applying a migration.
 
 To generate the migration script for this project, execute the following command in the repository's root directory:
 
