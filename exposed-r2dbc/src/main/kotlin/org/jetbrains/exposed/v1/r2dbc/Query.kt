@@ -335,7 +335,7 @@ open class Query(
             val threshold = transaction.db.config.logTooMuchResultSetsThreshold
             if (threshold > 0 && threshold < transaction.openResultRowsCount) {
                 val message =
-                    "Current opened result sets size ${transaction.openResultRowsCount} exceeds $threshold threshold for transaction ${transaction.id} "
+                    "Current opened result sets size ${transaction.openResultRowsCount} exceeds $threshold threshold for transaction ${transaction.txId} "
                 val stackTrace = Exception(message).stackTraceToString()
                 exposedLogger.error(stackTrace)
             }
