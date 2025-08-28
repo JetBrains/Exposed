@@ -13,7 +13,6 @@ import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.exists
 import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.json.jsonb
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
@@ -190,7 +189,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                     val columnType = columns[index].columnType.sqlType()
                     val columnMetadataSqlType = columnMetadataItem.sqlType
 
-                    assertTrue(TransactionManager.current().db.metadata { areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataItem.jdbcType, columnType) })
+                    assertTrue(currentDialectMetadataTest.areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataItem.jdbcType, columnType))
                     assertTrue(currentDialectTest.areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataItem.jdbcType, columnType))
                 }
 
@@ -226,13 +225,12 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                     val oldColumnMetadataItem = columnsMetadata.single()
 
                     for (newColumn in columns) {
-                        if (TransactionManager.current().db.metadata {
-                                areEquivalentColumnTypes(
-                                    oldColumnMetadataItem.sqlType,
-                                    oldColumnMetadataItem.jdbcType,
-                                    newColumn.columnType.sqlType()
-                                )
-                            }
+                        if (
+                            currentDialectMetadataTest.areEquivalentColumnTypes(
+                                oldColumnMetadataItem.sqlType,
+                                oldColumnMetadataItem.jdbcType,
+                                newColumn.columnType.sqlType()
+                            )
                         ) {
                             continue
                         }
@@ -267,7 +265,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                 val columnType = columns[index].columnType.sqlType()
                 val columnMetadataSqlType = columnMetadataItem.sqlType
 
-                assertTrue(TransactionManager.current().db.metadata { areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataItem.jdbcType, columnType) })
+                assertTrue(currentDialectMetadataTest.areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataItem.jdbcType, columnType))
                 assertTrue(currentDialectTest.areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataItem.jdbcType, columnType))
             }
             val statements = MigrationUtils.statementsRequiredForDatabaseMigration(MigrationTestsData.ArraysTester, withLogs = false)
@@ -299,13 +297,12 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                     val oldColumnMetadataItem = columnsMetadata.single()
 
                     for (newColumn in columns) {
-                        if (TransactionManager.current().db.metadata {
-                                areEquivalentColumnTypes(
-                                    oldColumnMetadataItem.sqlType,
-                                    oldColumnMetadataItem.jdbcType,
-                                    newColumn.columnType.sqlType()
-                                )
-                            }
+                        if (
+                            currentDialectMetadataTest.areEquivalentColumnTypes(
+                                oldColumnMetadataItem.sqlType,
+                                oldColumnMetadataItem.jdbcType,
+                                newColumn.columnType.sqlType()
+                            )
                         ) {
                             continue
                         }

@@ -22,7 +22,6 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
-import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.junit.Test
 import kotlin.properties.Delegates
 import kotlin.test.assertNull
@@ -182,14 +181,14 @@ class DatabaseMigrationTests : R2dbcDatabaseTestsBase() {
                 SchemaUtils.create(MigrationTestsData.ColumnTypesTester)
 
                 val columns = MigrationTestsData.ColumnTypesTester.columns.sortedBy { it.name.uppercase() }
-                val columnsMetadata = connection.metadata {
+                val columnsMetadata = connection().metadata {
                     requireNotNull(columns(MigrationTestsData.ColumnTypesTester)[MigrationTestsData.ColumnTypesTester])
                 }.toSet().sortedBy { it.name.uppercase() }
                 columnsMetadata.forEachIndexed { index, columnMetadataItem ->
                     val columnType = columns[index].columnType.sqlType()
                     val columnMetadataSqlType = columnMetadataItem.sqlType
 
-                    assertTrue(TransactionManager.current().db.metadata { areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataItem.jdbcType, columnType) })
+                    assertTrue(currentDialectMetadataTest.areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataItem.jdbcType, columnType))
                     assertTrue(currentDialectTest.areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataItem.jdbcType, columnType))
                 }
 
@@ -218,19 +217,18 @@ class DatabaseMigrationTests : R2dbcDatabaseTestsBase() {
                 }
 
                 withTables(oldTable) {
-                    val columnsMetadata = connection.metadata {
+                    val columnsMetadata = connection().metadata {
                         requireNotNull(columns(oldTable)[oldTable])
                     }.toSet()
                     val oldColumnMetadataItem = columnsMetadata.single()
 
                     for (newColumn in columns) {
-                        if (TransactionManager.current().db.metadata {
-                                areEquivalentColumnTypes(
-                                    oldColumnMetadataItem.sqlType,
-                                    oldColumnMetadataItem.jdbcType,
-                                    newColumn.columnType.sqlType()
-                                )
-                            }
+                        if (
+                            currentDialectMetadataTest.areEquivalentColumnTypes(
+                                oldColumnMetadataItem.sqlType,
+                                oldColumnMetadataItem.jdbcType,
+                                newColumn.columnType.sqlType()
+                            )
                         ) {
                             continue
                         }
@@ -256,7 +254,7 @@ class DatabaseMigrationTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testNoColumnTypeChangeStatementsGeneratedForArrayColumnType() {
         withTables(TestDB.ALL - setOf(TestDB.H2_V2, TestDB.H2_V2_PSQL), MigrationTestsData.ArraysTester) {
-            val columnMetadata = connection.metadata {
+            val columnMetadata = connection().metadata {
                 requireNotNull(columns(MigrationTestsData.ArraysTester)[MigrationTestsData.ArraysTester])
             }.toSet().sortedBy { it.name.uppercase() }
             val columns = MigrationTestsData.ArraysTester.columns.sortedBy { it.name.uppercase() }
@@ -264,7 +262,7 @@ class DatabaseMigrationTests : R2dbcDatabaseTestsBase() {
                 val columnType = columns[index].columnType.sqlType()
                 val columnMetadataSqlType = columnMetadataItem.sqlType
 
-                assertTrue(TransactionManager.current().db.metadata { areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataItem.jdbcType, columnType) })
+                assertTrue(currentDialectMetadataTest.areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataItem.jdbcType, columnType))
                 assertTrue(currentDialectTest.areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataItem.jdbcType, columnType))
             }
             val statements = MigrationUtils.statementsRequiredForDatabaseMigration(MigrationTestsData.ArraysTester, withLogs = false)
@@ -289,19 +287,18 @@ class DatabaseMigrationTests : R2dbcDatabaseTestsBase() {
                 }
 
                 withTables(oldTable) {
-                    val columnsMetadata = connection.metadata {
+                    val columnsMetadata = connection().metadata {
                         requireNotNull(columns(oldTable)[oldTable])
                     }.toSet()
                     val oldColumnMetadataItem = columnsMetadata.single()
 
                     for (newColumn in columns) {
-                        if (TransactionManager.current().db.metadata {
-                                areEquivalentColumnTypes(
-                                    oldColumnMetadataItem.sqlType,
-                                    oldColumnMetadataItem.jdbcType,
-                                    newColumn.columnType.sqlType()
-                                )
-                            }
+                        if (
+                            currentDialectMetadataTest.areEquivalentColumnTypes(
+                                oldColumnMetadataItem.sqlType,
+                                oldColumnMetadataItem.jdbcType,
+                                newColumn.columnType.sqlType()
+                            )
                         ) {
                             continue
                         }
