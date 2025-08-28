@@ -35,6 +35,10 @@ TransactionManager.current().connection.metadata { existingPrimaryKeys(TableA) }
 TransactionManager.current().connection().rollback()
 TransactionManager.current().connection().metadata { existingPrimaryKeys(TableA) }
 ```
+* `suspendTransaction()` overloads that accepts a `CoroutineContext?` parameter have been deprecated in favor of overloads
+  whose parameters and behavior are more inline with JDBC `transaction()`. A manual context can be passed to the methods using `withContext()`,
+  for example. Similarly, `suspendTransactionAsync()` that returned `Deferred` has also been deprecated in favor of calling
+  `async()` directly with a standard `suspendTransaction()`.
 
 ## 1.0.0-beta-5
 

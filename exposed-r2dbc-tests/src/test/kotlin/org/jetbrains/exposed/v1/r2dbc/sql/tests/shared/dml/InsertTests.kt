@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
@@ -482,7 +482,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
     }
 
     @Test
-    fun testRollbackOnConstraintExceptionWithSuspendTransactions() = runTest {
+    fun testRollbackOnConstraintExceptionWithSuspendTransactions() {
         val testTable = object : IntIdTable("TestRollback") {
             val foo = integer("foo").check { it greater 0 }
         }
@@ -496,9 +496,11 @@ class InsertTests : R2dbcDatabaseTestsBase() {
                     withDb(db) {
                         SchemaUtils.create(testTable)
                     }
-                    suspendTransaction(db = db.db) {
-                        testTable.insert { it[foo] = 1 }
-                        testTable.insert { it[foo] = 0 }
+                    runBlocking {
+                        suspendTransaction(db = db.db) {
+                            testTable.insert { it[foo] = 1 }
+                            testTable.insert { it[foo] = 0 }
+                        }
                     }
                     fail("Should fail on constraint > 0")
                 } catch (_: R2dbcException) {

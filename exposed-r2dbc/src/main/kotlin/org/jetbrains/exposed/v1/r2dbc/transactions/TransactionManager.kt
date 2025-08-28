@@ -2,6 +2,8 @@ package org.jetbrains.exposed.v1.r2dbc.transactions
 
 import io.r2dbc.spi.IsolationLevel
 import io.r2dbc.spi.R2dbcException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.delay
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.SqlLogger
@@ -282,6 +284,27 @@ suspend fun <T> suspendTransaction(
     readOnly ?: db.transactionManager.defaultReadOnly,
     db,
     statement
+)
+
+@Deprecated(
+    message = "This method overload will be removed in release 1.0.0. It should be replaced with either overload" +
+        "that does not take a `CoroutineContext` as an argument, and that is wrapped with `async { }`.",
+    level = DeprecationLevel.ERROR
+)
+@Suppress("UnusedParameter")
+suspend fun <T> suspendTransactionAsync(
+    context: CoroutineContext? = null,
+    db: R2dbcDatabase? = null,
+    transactionIsolation: IsolationLevel? = null,
+    readOnly: Boolean? = null,
+    statement: suspend R2dbcTransaction.() -> T
+): Deferred<T> = CompletableDeferred(
+    suspendTransaction(
+        transactionIsolation ?: db.transactionManager.defaultIsolationLevel ?: error("Default transaction isolation not set"),
+        readOnly ?: db.transactionManager.defaultReadOnly,
+        db,
+        statement
+    )
 )
 
 /**
