@@ -75,7 +75,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             val name = varchar(keywords[1], 32)
         }
 
-        suspendTransaction(db = keywordFlagDB) {
+        suspendTransaction(keywordFlagDB) {
             assertFalse(db.config.preserveKeywordCasing)
 
             SchemaUtils.create(tester)

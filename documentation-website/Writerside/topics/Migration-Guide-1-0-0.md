@@ -281,8 +281,8 @@ is now passed as the default argument instead.
 The original top-level suspend transaction functions, namely `newSuspendedTransaction()`, `withSuspendTransaction()`, and
 `suspendedTransactionAsync()`, have been moved out of `exposed-core` and into `exposed-jdbc`. They have also been deprecated.
 
-To properly open a suspend transaction block, these functions should be replaced with `suspendTransaction()` and
-`suspendTransactionAsync()` from `exposed-r2dbc`.
+To properly open a suspend transaction block, these functions should be replaced with `suspendTransaction()` overloads
+from `exposed-r2dbc`, which resemble JDBC `transaction()` overloads.
 
 > If you believe these methods should remain available for blocking JDBC connections,
 > please leave a comment on [YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-74/Add-R2DBC-Support)

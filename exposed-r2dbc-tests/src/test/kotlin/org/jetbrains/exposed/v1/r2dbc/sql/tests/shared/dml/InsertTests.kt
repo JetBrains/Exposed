@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
@@ -26,6 +27,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
+import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.Assume
 import org.junit.Test
 import java.util.*
@@ -480,7 +482,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
     }
 
     @Test
-    fun testRollbackOnConstraintExceptionWithNormalTransactions() {
+    fun testRollbackOnConstraintExceptionWithSuspendTransactions() {
         val testTable = object : IntIdTable("TestRollback") {
             val foo = integer("foo").check { it greater 0 }
         }
@@ -490,26 +492,27 @@ class InsertTests : R2dbcDatabaseTestsBase() {
         Assume.assumeTrue(dbToTest.isNotEmpty())
         dbToTest.forEach { db ->
             try {
-                withDb(db) {
-                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(testTable)
-                }
                 try {
                     withDb(db) {
-                        // Todo Investigate whether calling commit in a tx is expected to enable auto-commit mode
-                        // and whether it is Exposed's responsibility to revert or the user's
-                        testTable.insert { it[foo] = 1 }
-                        testTable.insert { it[foo] = 0 }
+                        SchemaUtils.create(testTable)
                     }
-                    fail("Should fail on constraint > 0 with $db")
+                    runBlocking {
+                        suspendTransaction(db = db.db) {
+                            testTable.insert { it[foo] = 1 }
+                            testTable.insert { it[foo] = 0 }
+                        }
+                    }
+                    fail("Should fail on constraint > 0")
                 } catch (_: R2dbcException) {
                     // expected
                 }
+
                 withDb(db) {
                     assertTrue(testTable.selectAll().empty())
                 }
             } finally {
                 withDb(db) {
-                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(testTable)
+                    SchemaUtils.drop(testTable)
                 }
             }
         }

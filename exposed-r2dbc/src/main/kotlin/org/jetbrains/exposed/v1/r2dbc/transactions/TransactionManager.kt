@@ -2,8 +2,8 @@ package org.jetbrains.exposed.v1.r2dbc.transactions
 
 import io.r2dbc.spi.IsolationLevel
 import io.r2dbc.spi.R2dbcException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.SqlLogger
@@ -21,7 +21,6 @@ import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedConnection
 import org.jetbrains.exposed.v1.r2dbc.transactions.mtc.MappedTransactionContext
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.coroutineContext
 
 /**
  * [TransactionManager] implementation registered to the provided database value [db].
@@ -268,192 +267,231 @@ class TransactionManager(
     }
 }
 
-// TODO naming of new Api
-// push decision to public slack poll
-
-/**
- * Creates a new `TransactionScope` then calls the specified suspending [statement], suspends until it completes,
- * and returns the result.
- *
- * The `TransactionScope` is derived from a new `Transaction` and a given coroutine [context],
- * or the current [CoroutineContext] if no [context] is provided.
- */
+@Deprecated(
+    message = "This method overload will be removed in release 1.0.0. It should be replaced with either overload" +
+        "that does not take a `CoroutineContext` as an argument.",
+    level = DeprecationLevel.ERROR
+)
+@Suppress("UnusedParameter")
 suspend fun <T> suspendTransaction(
     context: CoroutineContext? = null,
     transactionIsolation: IsolationLevel? = null,
     readOnly: Boolean? = null,
     db: R2dbcDatabase? = null,
     statement: suspend R2dbcTransaction.() -> T
-): T =
-    withTransactionScope(context, null, db, transactionIsolation, readOnly) {
-        suspendedTransactionAsyncInternal(true, statement).await()
-    }
+): T = suspendTransaction(
+    transactionIsolation ?: db.transactionManager.defaultIsolationLevel ?: error("Default transaction isolation not set"),
+    readOnly ?: db.transactionManager.defaultReadOnly,
+    db,
+    statement
+)
 
-/**
- * Calls the specified suspending [statement], suspends until it completes, and returns the result.
- *
- * The resulting `TransactionScope` is derived from the current [CoroutineContext] if the latter already holds
- * [this] `Transaction`; otherwise, a new scope is created using [this] `Transaction` and a given coroutine [context].
- */
-suspend fun <T> R2dbcTransaction.suspendTransaction(
-    context: CoroutineContext? = null,
-    statement: suspend R2dbcTransaction.() -> T
-): T {
-    val innerShouldBeNested = this.db.useNestedTransactions == true
-    return withTransactionScope(context, this, db = null, transactionIsolation = null, readOnly = null) {
-        suspendedTransactionAsyncInternal(innerShouldBeNested, statement).await()
-    }
-}
-
-/**
- * Creates a new `TransactionScope` and returns its future result as an implementation of [Deferred].
- *
- * The `TransactionScope` is derived from a new `Transaction` and a given coroutine [context],
- * or the current [CoroutineContext] if no [context] is provided.
- */
+@Deprecated(
+    message = "This method overload will be removed in release 1.0.0. It should be replaced with either overload" +
+        "that does not take a `CoroutineContext` as an argument, and that is wrapped with `async { }`.",
+    level = DeprecationLevel.ERROR
+)
+@Suppress("UnusedParameter")
 suspend fun <T> suspendTransactionAsync(
     context: CoroutineContext? = null,
     db: R2dbcDatabase? = null,
     transactionIsolation: IsolationLevel? = null,
     readOnly: Boolean? = null,
     statement: suspend R2dbcTransaction.() -> T
-): Deferred<T> {
-    val currentTransaction = TransactionManager.currentOrNull()
-    return withTransactionScope(context, null, db, transactionIsolation, readOnly) {
-        suspendedTransactionAsyncInternal(!holdsSameTransaction(currentTransaction), statement)
-    }
+): Deferred<T> = CompletableDeferred(
+    suspendTransaction(
+        transactionIsolation ?: db.transactionManager.defaultIsolationLevel ?: error("Default transaction isolation not set"),
+        readOnly ?: db.transactionManager.defaultReadOnly,
+        db,
+        statement
+    )
+)
+
+/**
+ * Creates a transaction then calls the [statement] block with this transaction as its receiver and returns the result.
+ *
+ * **Note** If the database value [db] is not set, the value used will be either the last [R2dbcDatabase] instance created
+ * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
+ *
+ * @return The final result of the [statement] block.
+ */
+suspend fun <T> suspendTransaction(db: R2dbcDatabase? = null, statement: suspend R2dbcTransaction.() -> T): T {
+    val defaultIsolation = db.transactionManager.defaultIsolationLevel
+    require(defaultIsolation != null) { "A default isolation level for this transaction has not been set" }
+
+    return suspendTransaction(
+        defaultIsolation,
+        db.transactionManager.defaultReadOnly,
+        db,
+        statement
+    )
 }
 
-private suspend fun R2dbcTransaction.closeAsync() {
-    val currentTransaction = TransactionManager.currentOrNull()
-    try {
-        val temporaryManager = this.db.transactionManager
-        temporaryManager.bindTransactionToThread(this)
-        TransactionManager.resetCurrent(temporaryManager)
-    } finally {
-        closeStatementsAndConnection(this)
-        val transactionManager = currentTransaction?.db?.transactionManager
-        transactionManager?.bindTransactionToThread(currentTransaction)
-        TransactionManager.resetCurrent(transactionManager)
-    }
-}
-
-private suspend fun <T> withTransactionScope(
-    context: CoroutineContext?,
-    currentTransaction: R2dbcTransaction?,
+/**
+ * Creates a transaction with the specified [transactionIsolation] and [readOnly] settings, then calls
+ * the [statement] block with this transaction as its receiver and returns the result.
+ *
+ * **Note** If the database value [db] is not set, the value used will be either the last [R2dbcDatabase] instance created
+ * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
+ */
+suspend fun <T> suspendTransaction(
+    transactionIsolation: IsolationLevel,
+    readOnly: Boolean = false,
     db: R2dbcDatabase? = null,
-    transactionIsolation: IsolationLevel?,
-    readOnly: Boolean?,
-    body: suspend TransactionScope.() -> T
-): T {
-    val currentScope = coroutineContext[TransactionScope]
-
-    @OptIn(InternalApi::class)
-    suspend fun newScope(currentTransaction: R2dbcTransaction?): T {
-        val currentDatabase: R2dbcDatabase? = currentTransaction?.db
-            ?: db
-            ?: CoreTransactionManager.getDefaultDatabase() as? R2dbcDatabase
-        val manager = currentDatabase?.transactionManager ?: TransactionManager.manager
-
-        val tx = lazy(LazyThreadSafetyMode.NONE) {
-            manager.newTransaction(
-                isolation = transactionIsolation ?: manager.defaultIsolationLevel ?: error("Default transaction isolation not set"),
-                readOnly = readOnly ?: manager.defaultReadOnly,
-                outerTransaction = currentTransaction
-            )
-        }
-
-        val element = TransactionCoroutineElement(tx, manager)
-
-        val newContext = context ?: coroutineContext
-
-        return try {
-            TransactionScope(tx, newContext + element).body()
-        } finally {
-            // TODO Is it enough to clean the context? How to not forget to do that in new usages?
-            element.cleanCurrentTransaction()
-        }
-    }
-
-    val sameTransaction = currentScope?.holdsSameTransaction(currentTransaction) == true
-    val sameContext = context == coroutineContext
-    return when {
-        currentScope == null -> newScope(currentTransaction)
-        sameTransaction && sameContext -> currentScope.body()
-        else -> newScope(currentTransaction)
-    }
-}
-
-private suspend fun R2dbcTransaction.resetIfClosed(): R2dbcTransaction {
-    return if (connection().isClosed()) {
-        // Repetition attempts will throw org.h2.jdbc.JdbcSQLException: The object is already closed
-        // unless the transaction is reset before every attempt (after the 1st failed attempt)
-        val currentManager = db.transactionManager
-        currentManager.bindTransactionToThread(this)
-        TransactionManager.resetCurrent(currentManager)
-        currentManager.newTransaction(transactionIsolation, readOnly, outerTransaction)
-    } else {
-        this
-    }
-}
-
-@Suppress("CyclomaticComplexMethod")
-private fun <T> TransactionScope.suspendedTransactionAsyncInternal(
-    shouldCommit: Boolean,
     statement: suspend R2dbcTransaction.() -> T
-): Deferred<T> = async {
-    var attempts = 0
-    var intermediateDelay: Long = 0
-    var retryInterval: Long? = null
+): T = keepAndRestoreTransactionRefAfterRun(db) {
+    val outer = TransactionManager.currentOrNull()
 
-    var answer: T
-    while (true) {
-        val transaction = if (attempts == 0) tx.value else tx.value.resetIfClosed()
+    if (outer != null && (db == null || outer.db == db)) {
+        val outerManager = outer.db.transactionManager
 
+        val transaction = outerManager.newTransaction(transactionIsolation, readOnly, outer)
         @Suppress("TooGenericExceptionCaught")
         try {
-            transaction.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
-            answer = transaction.statement().apply {
-                if (shouldCommit) transaction.commit()
-            }
-            break
-        } catch (cause: R2dbcException) {
-            handleR2dbcException(cause, transaction, attempts)
-            attempts++
-            if (attempts >= transaction.maxAttempts) {
-                throw cause
-            }
-
-            if (retryInterval == null) {
-                retryInterval = transaction.getRetryInterval()
-                intermediateDelay = transaction.minRetryDelay
-            }
-            // set delay value with an exponential backoff time period
-            val retryDelay = when {
-                transaction.minRetryDelay < transaction.maxRetryDelay -> {
-                    intermediateDelay += retryInterval * attempts
-                    ThreadLocalRandom.current().nextLong(intermediateDelay, intermediateDelay + retryInterval)
+            transaction.statement().also {
+                if (outer.db.useNestedTransactions) {
+                    transaction.commit()
                 }
-                transaction.minRetryDelay == transaction.maxRetryDelay -> transaction.minRetryDelay
-                else -> 0
             }
-            exposedLogger.warn("Wait $retryDelay milliseconds before retrying")
-            try {
-                delay(retryDelay)
-            } catch (cause: InterruptedException) {
-                // Do nothing
-            }
-        } catch (cause: Throwable) {
+        } catch (cause: R2dbcException) {
             val currentStatement = transaction.currentStatement
             transaction.rollbackLoggingException {
-                exposedLogger.warn("Transaction rollback failed: ${it.message}. Statement: $currentStatement", it)
+                exposedLogger.warn(
+                    "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
+                    it
+                )
+            }
+            throw cause
+        } catch (cause: Throwable) {
+            if (outer.db.useNestedTransactions) {
+                val currentStatement = transaction.currentStatement
+                transaction.rollbackLoggingException {
+                    exposedLogger.warn(
+                        "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
+                        it
+                    )
+                }
             }
             throw cause
         } finally {
-            if (shouldCommit) transaction.closeAsync()
+            TransactionManager.resetCurrent(outerManager)
+        }
+    } else {
+        val existingForDb = db?.transactionManager
+        existingForDb?.currentOrNull()?.let { transaction ->
+            val currentManager = outer?.db.transactionManager
+            try {
+                TransactionManager.resetCurrent(existingForDb)
+                transaction.statement().also {
+                    if (db.useNestedTransactions) {
+                        transaction.commit()
+                    }
+                }
+            } finally {
+                TransactionManager.resetCurrent(currentManager)
+            }
+        } ?: inTopLevelSuspendTransaction(
+            transactionIsolation,
+            readOnly,
+            db,
+            null,
+            statement
+        )
+    }
+}
+
+/**
+ * Creates a transaction with the specified [transactionIsolation] and [readOnly] settings, then calls
+ * the [statement] block with this transaction as its receiver and returns the result.
+ *
+ * **Note** All changes in this transaction will be committed at the end of the [statement] block, even if
+ * it is nested and even if `R2dbcDatabaseConfig.useNestedTransactions` is set to `false`.
+ *
+ * **Note** If the database value [db] is not set, the value used will be either the last [R2dbcDatabase] instance created
+ * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
+ *
+ * @return The final result of the [statement] block.
+ */
+suspend fun <T> inTopLevelSuspendTransaction(
+    transactionIsolation: IsolationLevel,
+    readOnly: Boolean = false,
+    db: R2dbcDatabase? = null,
+    outerTransaction: R2dbcTransaction? = null,
+    statement: suspend R2dbcTransaction.() -> T
+): T {
+    suspend fun run(): T {
+        var attempts = 0
+        var intermediateDelay: Long = 0
+        var retryInterval: Long? = null
+
+        val outerManager = outerTransaction?.db.transactionManager.takeIf { it.currentOrNull() != null }
+
+        while (true) {
+            db?.let { db.transactionManager.let { m -> TransactionManager.resetCurrent(m) } }
+            val transaction = db.transactionManager.newTransaction(transactionIsolation, readOnly, outerTransaction)
+
+            @Suppress("TooGenericExceptionCaught")
+            try {
+                transaction.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
+                val answer = transaction.statement()
+                transaction.commit()
+                return answer
+            } catch (cause: R2dbcException) {
+                handleR2dbcException(cause, transaction, attempts)
+                attempts++
+                if (attempts >= transaction.maxAttempts) {
+                    throw cause
+                }
+
+                if (retryInterval == null) {
+                    retryInterval = transaction.getRetryInterval()
+                    intermediateDelay = transaction.minRetryDelay
+                }
+                // set delay value with an exponential backoff time period.
+                val retryDelay = when {
+                    transaction.minRetryDelay < transaction.maxRetryDelay -> {
+                        intermediateDelay += retryInterval * attempts
+                        ThreadLocalRandom.current().nextLong(intermediateDelay, intermediateDelay + retryInterval)
+                    }
+
+                    transaction.minRetryDelay == transaction.maxRetryDelay -> transaction.minRetryDelay
+                    else -> 0
+                }
+                exposedLogger.warn("Wait $retryDelay milliseconds before retrying")
+                try {
+                    delay(retryDelay)
+                } catch (cause: InterruptedException) {
+                    // Do nothing
+                }
+            } catch (cause: Throwable) {
+                val currentStatement = transaction.currentStatement
+                transaction.rollbackLoggingException {
+                    exposedLogger.warn(
+                        "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
+                        it
+                    )
+                }
+                throw cause
+            } finally {
+                TransactionManager.resetCurrent(outerManager)
+                closeStatementsAndConnection(transaction)
+            }
         }
     }
-    answer
+
+    return keepAndRestoreTransactionRefAfterRun(db) {
+        run()
+    }
+}
+
+private suspend fun <T> keepAndRestoreTransactionRefAfterRun(db: R2dbcDatabase? = null, block: suspend () -> T): T {
+    val manager = db.transactionManager
+    val currentTransaction = manager.currentOrNull()
+    return try {
+        block()
+    } finally {
+        manager.bindTransactionToThread(currentTransaction)
+    }
 }
 
 internal suspend fun handleR2dbcException(cause: R2dbcException, transaction: R2dbcTransaction, attempts: Int) {

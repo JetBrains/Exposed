@@ -6,6 +6,7 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.r2dbc.*
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.forEach
+import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.Assume
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -31,7 +32,7 @@ fun main() {
     R2dbcDatabase.connect("r2dbc:h2:mem:///test;USER=root;")
 
     runBlocking {
-        org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction {
+        suspendTransaction {
             addLogger(StdOutSqlLogger)
 
             SchemaUtils.create(Cities, Users)

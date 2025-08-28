@@ -25,7 +25,6 @@ class SuspendTransactionTests : DatabaseTestsBase() {
         val value = integer("value")
     }
 
-    // TODO Make similar test for R2DBC. The first attempt to do that is failed, probably R2DBC has similar issue.¬
     @Test
     fun testClosedSuspendTransaction() {
         withTables(

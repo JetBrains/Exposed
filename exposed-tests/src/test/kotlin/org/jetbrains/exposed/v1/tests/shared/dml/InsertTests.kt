@@ -510,7 +510,7 @@ class InsertTests : DatabaseTestsBase() {
             try {
                 try {
                     withDb(db) {
-                        org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(testTable)
+                        SchemaUtils.create(testTable)
                         testTable.insert { it[foo] = 1 }
                         testTable.insert { it[foo] = 0 }
                     }
@@ -523,7 +523,7 @@ class InsertTests : DatabaseTestsBase() {
                 }
             } finally {
                 withDb(db) {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testTable)
+                    SchemaUtils.drop(testTable)
                 }
             }
         }
@@ -543,7 +543,7 @@ class InsertTests : DatabaseTestsBase() {
             try {
                 try {
                     withDb(db) {
-                        org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(testTable)
+                        SchemaUtils.create(testTable)
                     }
                     runBlocking {
                         newSuspendedTransaction(db = db.db) {
@@ -561,7 +561,7 @@ class InsertTests : DatabaseTestsBase() {
                 }
             } finally {
                 withDb(db) {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testTable)
+                    SchemaUtils.drop(testTable)
                 }
             }
         }

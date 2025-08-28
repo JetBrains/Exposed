@@ -2,12 +2,6 @@
 
 ## 1.0.0-RC
 
-* `R2dbcPreparedStatementApi.executeUpdate()` no longer returns a value. It was previously defined as returning an integer of the affected row count,
-  as per the JDBC variant, but it always returned a value of zero due to the nature of R2DBC result processing. If you wish to still retrieve the affected
-  row count manually after calling `executeUpdate()` (and have no further need of the statement results after), this can be achieved by calling
-  `R2dbcPreparedStatementApi.getResultRow()?.rowsUpdated()?.singleOrNull()`.
-* Levels of deprecated API have been bumped. See [PR #2588](https://github.com/JetBrains/Exposed/pull/2588) and
-  [Migration Guide](https://www.jetbrains.com/help/exposed/migration-guide-1-0-0.html) for full details.
 * The interface `ISqlExpressionBuilder` (and all its methods) has been deprecated, along with its implementation objects,
   `SqlExpressionBuilder` and `UpsertSqlExpressionBuilder`. All methods previously restricted to this interface should now
   be replaced with their new equivalent top-level functions. This will require the addition of new import statements if
@@ -16,14 +10,20 @@
   builder methods in the function parameter blocks will now be unresolved unless the appropriate import is added.
   See the migration guide for full details on `SqlExpressionBuilder` [imports](https://www.jetbrains.com/help/exposed/migration-guide-1-0-0.html#sql-expression-builder-imports)
   and [higher-order functions](https://www.jetbrains.com/help/exposed/migration-guide-1-0-0.html#sql-expression-builder-lambda).
-* Parameter `supportsSelectForUpdate` from `DatabaseDialect` was deprecated and should not be used. The parameter was moved to `JdbcExposedDatabaseMetadata`/
-  `R2dbcExposedDatabaseMetadata` classes. It could be used with a call to `TransactionManager.current().db.supportsSelectForUpdate` now.
-* `R2DBCRow`, which is the R2DBC implementation of `RowApi` meant to wrap elements of a statement's result, has been renamed to `R2dbcRow`.
 * We refactored the datetime modules by extracting common logic to the core module, where each datetime column type now extends a base class (e.g.,
   `JavaLocalDateColumnType` extends `LocalDateColumnType`, `JavaLocalDateTimeColumnType` extends `LocalDateTimeColumnType`, etc.), split the `DateColumnType` from
   `exposed-jodatime` into `JodaLocalDateColumnType` (formerly `time: false`) and `JodaLocalDateTimeColumnType` (formerly `time: true`), and renamed
   `LocalTimeColumnType` to `JodaLocalTimeColumnType`. These changes would affect only those who use these classes directly for custom functions or custom column
   types. Creating columns via extension functions should not be affected.
+* Levels of deprecated API have been bumped. See [PR #2588](https://github.com/JetBrains/Exposed/pull/2588) and
+  [Migration Guide](https://www.jetbrains.com/help/exposed/migration-guide-1-0-0.html) for full details.
+* Parameter `supportsSelectForUpdate` from `DatabaseDialect` was deprecated and should not be used. The parameter was moved to `JdbcExposedDatabaseMetadata`/
+  `R2dbcExposedDatabaseMetadata` classes. It could be used with a call to `TransactionManager.current().db.supportsSelectForUpdate` now.
+* `R2dbcPreparedStatementApi.executeUpdate()` no longer returns a value. It was previously defined as returning an integer of the affected row count,
+  as per the JDBC variant, but it always returned a value of zero due to the nature of R2DBC result processing. If you wish to still retrieve the affected
+  row count manually after calling `executeUpdate()` (and have no further need of the statement results after), this can be achieved by calling
+  `R2dbcPreparedStatementApi.getResultRow()?.rowsUpdated()?.singleOrNull()`.
+* `R2DBCRow`, which is the R2DBC implementation of `RowApi` meant to wrap elements of a statement's result, has been renamed to `R2dbcRow`.
 * `R2dbcTransactionInterface.connection` property has been replaced with a suspend function of the same name:
 
 ```kotlin
@@ -35,6 +35,10 @@ TransactionManager.current().connection.metadata { existingPrimaryKeys(TableA) }
 TransactionManager.current().connection().rollback()
 TransactionManager.current().connection().metadata { existingPrimaryKeys(TableA) }
 ```
+* `suspendTransaction()` overloads that accepts a `CoroutineContext?` parameter have been deprecated in favor of overloads
+  whose parameters and behavior are more inline with JDBC `transaction()`. A manual context can be passed to the methods using `withContext()`,
+  for example. Similarly, `suspendTransactionAsync()` that returned `Deferred` has also been deprecated in favor of calling
+  `async()` directly with a standard `suspendTransaction()`.
 
 ## 1.0.0-beta-5
 

@@ -3,7 +3,6 @@
 package org.example
 
 import io.r2dbc.spi.IsolationLevel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
@@ -24,8 +23,7 @@ suspend fun openTransactionWithParams() {
 
     suspendTransaction(
         db = h2Db,
-        transactionIsolation = IsolationLevel.READ_COMMITTED,
-        context = Dispatchers.IO
+        transactionIsolation = IsolationLevel.READ_COMMITTED
     ) {
         maxAttempts = 5
         queryTimeout = 5
