@@ -100,6 +100,4 @@ abstract class JdbcExposedDatabaseMetadata(database: String) : ExposedDatabaseMe
      * with the table name used as the key.
      */
     abstract fun tableConstraints(tables: List<Table>): Map<String, List<ForeignKeyConstraint>>
-
-    abstract fun areEquivalentColumnTypes(columnMetadataSqlType: String, columnMetadataType: Int, columnType: String): Boolean
 }

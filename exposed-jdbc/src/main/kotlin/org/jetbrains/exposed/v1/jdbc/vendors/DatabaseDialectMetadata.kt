@@ -118,7 +118,6 @@ abstract class DatabaseDialectMetadata {
 
     protected val columnConstraintsCache: MutableMap<String, Collection<ForeignKeyConstraint>> = ConcurrentHashMap()
 
-    @OptIn(InternalApi::class)
     protected open fun fillConstraintCacheForTables(tables: List<Table>) {
         val tx = TransactionManager.current()
         columnConstraintsCache.putAll(tx.db.metadata { tableConstraints(tables) })
@@ -141,20 +140,24 @@ abstract class DatabaseDialectMetadata {
         return constraints
     }
 
+    /** Returns whether a defined column is of the same type as the column to which it is mapped in the database. */
+    fun areEquivalentColumnTypes(columnMetadataSqlType: String, columnMetadataType: Int, columnType: String): Boolean {
+        return TransactionManager.current().db.metadata {
+            areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataType, columnType)
+        }
+    }
+
     /** Returns a map with all the defined indices in each of the specified [tables]. */
-    @OptIn(InternalApi::class)
     open fun existingIndices(vararg tables: Table): Map<Table, List<Index>> {
         return TransactionManager.current().db.metadata { existingIndices(*tables) }
     }
 
     /** Returns a map with all the defined check constraints in each of the specified [tables]. */
-    @OptIn(InternalApi::class)
     fun existingCheckConstraints(vararg tables: Table): Map<Table, List<CheckConstraint>> {
         return TransactionManager.current().db.metadata { existingCheckConstraints(*tables) }
     }
 
     /** Returns a map with the primary key metadata in each of the specified [tables]. */
-    @OptIn(InternalApi::class)
     fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> {
         return TransactionManager.current().db.metadata { existingPrimaryKeys(*tables) }
     }
@@ -169,19 +172,16 @@ abstract class DatabaseDialectMetadata {
      * as it is not necessarily bound to any particular table. Sequences that are used in a table via triggers will also
      * not be returned.
      */
-    @OptIn(InternalApi::class)
     fun existingSequences(vararg tables: Table): Map<Table, List<Sequence>> {
         return TransactionManager.current().db.metadata { existingSequences(*tables) }
     }
 
     /** Returns a list of the names of all sequences in the database. */
-    @OptIn(InternalApi::class)
     fun sequences(): List<String> {
         return TransactionManager.current().db.metadata { sequences() }
     }
 
     /** Clears any cached values. */
-    @OptIn(InternalApi::class)
     fun resetCaches() {
         _allTableNames = null
         columnConstraintsCache.clear()

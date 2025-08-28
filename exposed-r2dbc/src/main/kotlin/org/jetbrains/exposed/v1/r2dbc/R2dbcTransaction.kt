@@ -193,7 +193,7 @@ open class R2dbcTransaction(
      * Select statements are not supported as it's impossible to return multiple results.
      */
     suspend fun execInBatch(stmts: List<String>) {
-        connection.executeInBatch(stmts)
+        connection().executeInBatch(stmts)
     }
 
     /**

@@ -34,9 +34,8 @@ open class Query(
     }
 
     override fun forUpdate(option: ForUpdateOption): Query {
-        val supportsSelectForUpdate = TransactionManager.current().connection.metadata { supportsSelectForUpdate }
         @OptIn(InternalApi::class)
-        this.forUpdate = if (option is ForUpdateOption.NoForUpdateOption || supportsSelectForUpdate) {
+        this.forUpdate = if (option is ForUpdateOption.NoForUpdateOption || transaction.db.supportsSelectForUpdate) {
             option
         } else {
             null

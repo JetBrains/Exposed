@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.single
-import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
@@ -40,11 +39,8 @@ open class Query(
     }
 
     override fun forUpdate(option: ForUpdateOption): Query {
-        // Should we make the whole method `forUpdate` suspend, or should we think about an option to get metadata synchronously?
-        // TODO remove runBlocking after introducing non-suspend metadata
-        val supportsSelectForUpdate = runBlocking { TransactionManager.current().connection.metadata { supportsSelectForUpdate } }
         @OptIn(InternalApi::class)
-        this.forUpdate = if (option is ForUpdateOption.NoForUpdateOption || supportsSelectForUpdate) {
+        this.forUpdate = if (option is ForUpdateOption.NoForUpdateOption || transaction.db.supportsSelectForUpdate) {
             option
         } else {
             null

@@ -69,7 +69,7 @@ interface R2dbcExposedConnection<OriginalConnection : Any> {
 
     /**
      * Calls the specified function [body] with an [R2dbcExposedDatabaseMetadata] implementation as its receiver and
-     * returns the retrieved metadata as a result.
+     * returns the retrieved metadata from the database as a result.
      */
     suspend fun <T> metadata(body: suspend R2dbcExposedDatabaseMetadata.() -> T): T
 

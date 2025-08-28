@@ -17,13 +17,24 @@
   See the migration guide for full details on `SqlExpressionBuilder` [imports](https://www.jetbrains.com/help/exposed/migration-guide-1-0-0.html#sql-expression-builder-imports)
   and [higher-order functions](https://www.jetbrains.com/help/exposed/migration-guide-1-0-0.html#sql-expression-builder-lambda).
 * Parameter `supportsSelectForUpdate` from `DatabaseDialect` was deprecated and should not be used. The parameter was moved to `JdbcExposedDatabaseMetadata`/
-  `R2dbcExposedDatabaseMetadata` classes. It could be used with call `TransactionManager.current().connection.metadata { supportsSelectForUpdate }` now.
+  `R2dbcExposedDatabaseMetadata` classes. It could be used with a call to `TransactionManager.current().db.supportsSelectForUpdate` now.
 * `R2DBCRow`, which is the R2DBC implementation of `RowApi` meant to wrap elements of a statement's result, has been renamed to `R2dbcRow`.
 * We refactored the datetime modules by extracting common logic to the core module, where each datetime column type now extends a base class (e.g.,
   `JavaLocalDateColumnType` extends `LocalDateColumnType`, `JavaLocalDateTimeColumnType` extends `LocalDateTimeColumnType`, etc.), split the `DateColumnType` from
   `exposed-jodatime` into `JodaLocalDateColumnType` (formerly `time: false`) and `JodaLocalDateTimeColumnType` (formerly `time: true`), and renamed
   `LocalTimeColumnType` to `JodaLocalTimeColumnType`. These changes would affect only those who use these classes directly for custom functions or custom column
   types. Creating columns via extension functions should not be affected.
+* `R2dbcTransactionInterface.connection` property has been replaced with a suspend function of the same name:
+
+```kotlin
+// BEFORE
+TransactionManager.current().connection.rollback()
+TransactionManager.current().connection.metadata { existingPrimaryKeys(TableA) }
+
+// AFTER
+TransactionManager.current().connection().rollback()
+TransactionManager.current().connection().metadata { existingPrimaryKeys(TableA) }
+```
 
 ## 1.0.0-beta-5
 

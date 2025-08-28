@@ -359,7 +359,7 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider.INSTA
 
     @Deprecated(
         "The parameter was moved to JdbcExposedDatabaseMetadata/R2dbcExposedDatabaseMetadata classes",
-        ReplaceWith("TransactionManager.current().connection.metadata { supportsSelectForUpdate }")
+        ReplaceWith("TransactionManager.current().db.supportsSelectForUpdate")
     )
     override val supportsSelectForUpdate: Boolean = true
 

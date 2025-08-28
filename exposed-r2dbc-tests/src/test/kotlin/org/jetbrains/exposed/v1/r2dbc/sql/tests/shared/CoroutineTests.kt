@@ -203,7 +203,7 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
             val mainJob = GlobalScope.async {
                 val job = launch(Dispatchers.IO) {
                     suspendTransaction(db = db) {
-                        connection.setTransactionIsolation(IsolationLevel.READ_COMMITTED)
+                        connection().setTransactionIsolation(IsolationLevel.READ_COMMITTED)
                         assertEquals(
                             null,
                             Testing.selectAll().where { Testing.id.eq(1) }.singleOrNull()?.getOrNull(Testing.id)

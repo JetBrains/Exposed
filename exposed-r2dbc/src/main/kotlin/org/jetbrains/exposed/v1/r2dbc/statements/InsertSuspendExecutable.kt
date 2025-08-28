@@ -63,7 +63,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
         // https://github.com/pgjdbc/pgjdbc/issues/1168
         // Column names always escaped/quoted in RETURNING clause
         columnsGeneratedOnDB().isNotEmpty() && currentDialect is PostgreSQLDialect ->
-            transaction.connection.prepareStatement(sql, true)
+            transaction.connection().prepareStatement(sql, true)
 
         autoIncColumns.isNotEmpty() -> {
             // [MariaDB] r2dbc returnGeneratedValues() does not support adding RETURNING clause to REPLACE statements
@@ -74,13 +74,13 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
 
             if (needsManualReturning) {
                 val replaceReturning = "$sql RETURNING ${generatedColumns.joinToString()}"
-                transaction.connection.prepareStatement(replaceReturning, false)
+                transaction.connection().prepareStatement(replaceReturning, false)
             } else {
-                transaction.connection.prepareStatement(sql, generatedColumns)
+                transaction.connection().prepareStatement(sql, generatedColumns)
             }
         }
 
-        else -> transaction.connection.prepareStatement(sql, false)
+        else -> transaction.connection().prepareStatement(sql, false)
     }
 
     protected val autoIncColumns: List<Column<*>>

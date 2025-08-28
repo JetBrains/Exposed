@@ -51,7 +51,7 @@ abstract class R2dbcExposedDatabaseMetadata(database: String) : ExposedDatabaseM
     abstract fun getDatabaseProductVersion(): String
 
     /** The default transaction isolation level for the database. */
-    abstract suspend fun getDefaultIsolationLevel(): IsolationLevel
+    abstract fun getDefaultIsolationLevel(): IsolationLevel
 
     /** A mapping of all schema names in the database to a list of all defined table names in each schema. */
     abstract suspend fun tableNames(): CacheWithSuspendableDefault<String, List<String>>
@@ -98,6 +98,4 @@ abstract class R2dbcExposedDatabaseMetadata(database: String) : ExposedDatabaseM
      * with the table name used as the key.
      */
     abstract suspend fun tableConstraints(tables: List<Table>): Map<String, List<ForeignKeyConstraint>>
-
-    abstract suspend fun areEquivalentColumnTypes(columnMetadataSqlType: String, columnMetadataType: Int, columnType: String): Boolean
 }

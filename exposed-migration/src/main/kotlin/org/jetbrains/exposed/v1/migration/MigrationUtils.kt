@@ -110,7 +110,6 @@ object MigrationUtils : MigrationUtilityApi() {
         } + alters
     }
 
-    @OptIn(InternalApi::class)
     private fun addMissingAndDropUnmappedColumns(vararg tables: Table, withLogs: Boolean = true): List<String> {
         if (tables.isEmpty()) return emptyList()
         val statements = ArrayList<String>()
@@ -129,7 +128,11 @@ object MigrationUtils : MigrationUtilityApi() {
         val dbSupportsAlterTableWithDropColumn = tr.db.supportsAlterTableWithDropColumn
 
         val isIncorrectType = { columnMetadata: ColumnMetadata, column: Column<*> ->
-            !TransactionManager.current().db.metadata { areEquivalentColumnTypes(columnMetadata.sqlType, columnMetadata.jdbcType, column.columnType.sqlType()) }
+            currentDialectMetadata.areEquivalentColumnTypes(
+                columnMetadata.sqlType,
+                columnMetadata.jdbcType,
+                column.columnType.sqlType()
+            ).not()
         }
 
         @OptIn(InternalApi::class)

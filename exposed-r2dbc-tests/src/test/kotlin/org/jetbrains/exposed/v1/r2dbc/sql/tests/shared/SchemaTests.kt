@@ -34,14 +34,14 @@ class SchemaTests : R2dbcDatabaseTestsBase() {
                 SchemaUtils.createSchema(schema)
                 SchemaUtils.setSchema(schema)
 
-                val catalogName = connection.getCatalog()
+                val catalogName = connection().getCatalog()
 
                 assertEquals(catalogName, schema.identifier)
 
                 // set schema directly through connection
                 SchemaUtils.createSchema(manualSchema)
-                connection.setCatalog(manualSchema.identifier)
-                assertEquals(manualSchema.identifier, connection.getCatalog())
+                connection().setCatalog(manualSchema.identifier)
+                assertEquals(manualSchema.identifier, connection().getCatalog())
             } finally {
                 SchemaUtils.dropSchema(schema, manualSchema)
             }
@@ -68,7 +68,7 @@ class SchemaTests : R2dbcDatabaseTestsBase() {
                     SchemaUtils.setSchema(schema)
                     assertEquals(
                         TransactionManager.current().db.identifierManager.inProperCase(schema.identifier),
-                        connection.getSchema()
+                        connection().getSchema()
                     )
                 } finally {
                     SchemaUtils.dropSchema(schema)
@@ -98,7 +98,7 @@ class SchemaTests : R2dbcDatabaseTestsBase() {
             try {
                 SchemaUtils.createSchema(schema)
 
-                val firstCatalogName = connection.getCatalog()
+                val firstCatalogName = connection().getCatalog()
 
                 exec("DROP TABLE IF EXISTS test")
                 exec("CREATE TABLE test(id INT PRIMARY KEY)")
@@ -106,7 +106,7 @@ class SchemaTests : R2dbcDatabaseTestsBase() {
                 exec("DROP TABLE IF EXISTS test")
                 exec("CREATE TABLE test(id INT REFERENCES $firstCatalogName.test(id))")
 
-                val catalogName = connection.getCatalog()
+                val catalogName = connection().getCatalog()
 
                 assertEquals(catalogName, schema.identifier)
             } finally {
@@ -161,7 +161,7 @@ class SchemaTests : R2dbcDatabaseTestsBase() {
         TestDB.H2_V2.connect()
 
         suspendTransaction {
-            connection.metadata {
+            connection().metadata {
                 assertEquals("PUBLIC", tableNamesByCurrentSchema(null).schemaName)
             }
         }
@@ -175,7 +175,7 @@ class SchemaTests : R2dbcDatabaseTestsBase() {
         }
 
         suspendTransaction(db = db) {
-            connection.metadata {
+            connection().metadata {
                 val currentScheme = db.identifierManager.cutIfNecessaryAndQuote(
                     tableNamesByCurrentSchema(null).schemaName
                 )
@@ -183,7 +183,7 @@ class SchemaTests : R2dbcDatabaseTestsBase() {
             }
             // Nested transaction
             suspendTransaction(db = db) {
-                connection.metadata {
+                connection().metadata {
                     val currentScheme = db.identifierManager.cutIfNecessaryAndQuote(
                         tableNamesByCurrentSchema(null).schemaName
                     )

@@ -323,7 +323,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     @Deprecated(
         "The parameter was moved to JdbcExposedDatabaseMetadata/R2dbcExposedDatabaseMetadata classes",
-        ReplaceWith("TransactionManager.current().connection.metadata { supportsSelectForUpdate }")
+        ReplaceWith("TransactionManager.current().db.supportsSelectForUpdate")
     )
     override val supportsSelectForUpdate: Boolean get() = true
 
@@ -366,7 +366,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     @Suppress("CyclomaticComplexMethod")
     @Deprecated(
         "This method was moved to ExposedDatabaseMetadata and should not be used anymore from here.",
-        ReplaceWith("TransactionManager.current().db.metadata { areEquivalentColumnTypes() }")
+        ReplaceWith("currentDialectMetadata.areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataJdbcType, columnType)")
     )
     override fun areEquivalentColumnTypes(columnMetadataSqlType: String, columnMetadataJdbcType: Int, columnType: String): Boolean {
         if (super.areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataJdbcType, columnType)) {

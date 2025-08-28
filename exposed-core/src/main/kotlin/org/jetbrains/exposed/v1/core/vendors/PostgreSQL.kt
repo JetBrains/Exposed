@@ -374,7 +374,7 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
 
     @Deprecated(
         "The parameter was moved to JdbcExposedDatabaseMetadata/R2dbcExposedDatabaseMetadata classes",
-        ReplaceWith("TransactionManager.current().connection.metadata { supportsSelectForUpdate }")
+        ReplaceWith("TransactionManager.current().db.supportsSelectForUpdate")
     )
     override val supportsSelectForUpdate: Boolean = true
 

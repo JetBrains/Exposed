@@ -35,7 +35,7 @@ class ConnectionTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testGettingColumnMetadata() {
         withTables(excludeSettings = TestDB.ALL - TestDB.ALL_H2_V2, People) {
-            val columnMetadata = connection.metadata {
+            val columnMetadata = connection().metadata {
                 requireNotNull(columns(People)[People])
             }.toSet()
 
@@ -89,7 +89,7 @@ class ConnectionTests : R2dbcDatabaseTestsBase() {
         }
 
         withTables(child, parent) { testDb ->
-            val constraints = connection.metadata {
+            val constraints = connection().metadata {
                 tableConstraints(listOf(child))
             }
             // tableConstraints() returns entries for all tables involved in the FK (parent + child)
