@@ -50,12 +50,12 @@ class TransactionManager(
     /** A unique key for storing coroutine context elements, as [TransactionContextHolder]. */
     private val contextKey = object : CoroutineContext.Key<TransactionContextHolder> {}
 
-    private var transactionLocal: R2dbcTransaction? = null
+    internal suspend fun getCurrentContextTransaction(): R2dbcTransaction? {
+        return currentCoroutineContext()[contextKey]?.transaction
+    }
 
-    internal suspend fun getContextFromTransaction(transaction: R2dbcTransaction?): CoroutineContext {
-        val currentTransaction = transaction
-            ?: currentCoroutineContext()[contextKey]?.transaction
-        transactionLocal = currentTransaction
+    internal suspend fun createTransactionContext(transaction: R2dbcTransaction?): CoroutineContext {
+        val currentTransaction = transaction ?: getCurrentContextTransaction()
         MappedTransactionContext.setTransaction(currentTransaction)
         return TransactionContextHolder(currentTransaction, contextKey)
     }
@@ -82,7 +82,6 @@ class TransactionManager(
                     readOnly = outerTransaction?.readOnly ?: readOnly,
                     transactionIsolation = outerTransaction?.transactionIsolation ?: isolation,
                     setupTxConnection = setupTxConnection,
-                    setTransactionLocal = { transactionLocal = it },
                     outerTransaction = outerTransaction,
                 ),
             )
@@ -91,15 +90,13 @@ class TransactionManager(
     }
 
     override fun currentOrNull(): R2dbcTransaction? {
-        return transactionLocal ?: MappedTransactionContext.getTransactionOrNull()
+        return MappedTransactionContext.getTransactionOrNull()
     }
 
     override fun bindTransactionToThread(transaction: Transaction?) {
         if (transaction != null) {
-            transactionLocal = transaction as R2dbcTransaction
-            MappedTransactionContext.setTransaction(transaction)
+            MappedTransactionContext.setTransaction(transaction as R2dbcTransaction)
         } else {
-            transactionLocal = null
             MappedTransactionContext.clean()
         }
     }
@@ -189,7 +186,6 @@ class TransactionManager(
         ((R2dbcExposedConnection<*>, R2dbcTransactionInterface) -> Unit)?,
         override val transactionIsolation: IsolationLevel,
         override val readOnly: Boolean,
-        private val setTransactionLocal: ((R2dbcTransaction?) -> Unit),
         override val outerTransaction: R2dbcTransaction?,
     ) : R2dbcTransactionInterface {
 
@@ -259,7 +255,6 @@ class TransactionManager(
                     }
                 }
             } finally {
-                setTransactionLocal(outerTransaction)
                 MappedTransactionContext.setTransaction(outerTransaction)
             }
         }
@@ -367,8 +362,7 @@ suspend fun <T> suspendTransaction(
         val outerManager = outer.db.transactionManager
 
         val transaction = outerManager.newTransaction(transactionIsolation, readOnly, outer)
-        val context = outerManager.getContextFromTransaction(transaction)
-        withContext(context) {
+        withTransactionContext(transaction) {
             @Suppress("TooGenericExceptionCaught")
             try {
                 transaction.statement().also {
@@ -401,29 +395,22 @@ suspend fun <T> suspendTransaction(
             }
         }
     } else {
-        val existingForDb = db?.transactionManager
-        existingForDb?.currentOrNull()?.let { transaction ->
-            val currentManager = outer?.db.transactionManager
-            val context = existingForDb.getContextFromTransaction(transaction)
-            withContext(context) {
-                try {
-                    TransactionManager.resetCurrent(existingForDb)
-                    transaction.statement().also {
-                        if (db.useNestedTransactions) {
-                            transaction.commit()
-                        }
+        db?.transactionManager?.getCurrentContextTransaction()?.let { transaction ->
+            withTransactionContext(transaction) {
+                transaction.statement().also {
+                    if (transaction.db.useNestedTransactions) {
+                        transaction.commit()
                     }
-                } finally {
-                    TransactionManager.resetCurrent(currentManager)
                 }
             }
-        } ?: inTopLevelSuspendTransaction(
-            transactionIsolation,
-            readOnly,
-            db,
-            null,
-            statement
-        )
+        }
+            ?: inTopLevelSuspendTransaction(
+                transactionIsolation,
+                readOnly,
+                db,
+                null,
+                statement
+            )
     }
 }
 
@@ -456,11 +443,11 @@ suspend fun <T> inTopLevelSuspendTransaction(
         while (true) {
             db?.let { db.transactionManager.let { m -> TransactionManager.resetCurrent(m) } }
             val transaction = db.transactionManager.newTransaction(transactionIsolation, readOnly, outerTransaction)
-            val context = db.transactionManager.getContextFromTransaction(transaction)
+            val context = db.transactionManager.createTransactionContext(transaction)
 
             @Suppress("TooGenericExceptionCaught")
             try {
-                var answer: T
+                val answer: T
                 withContext(context) {
                     transaction.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
                     answer = transaction.statement()
@@ -554,5 +541,32 @@ internal suspend fun closeStatementsAndConnection(transaction: R2dbcTransaction)
     }
     transaction.closeLoggingException {
         exposedLogger.warn("Transaction close failed: ${it.message}. Statement: $currentStatement", it)
+    }
+}
+
+/**
+ * The method creates context with provided transaction and runs code block within that context.
+ *
+ * This method expects that data in the coroutine context is the first, and thread local
+ * variables are set only for the period of usage coroutine context. That's why this method
+ * cleans transaction manager and transaction thread local variables after executing
+ * code block.
+ *
+ * @param transaction The transaction to be used in the context.
+ * @param body The code block to be executed in the context.
+ * @return The result of executing the code block.
+ */
+internal suspend fun <T> withTransactionContext(transaction: R2dbcTransaction, body: suspend () -> T): T {
+    val context = transaction.db.transactionManager.createTransactionContext(transaction)
+
+    return try {
+        TransactionManager.resetCurrent(transaction.db.transactionManager)
+        MappedTransactionContext.setTransaction(transaction)
+        withContext(context) {
+            body()
+        }
+    } finally {
+        MappedTransactionContext.clean()
+        TransactionManager.resetCurrent(null)
     }
 }
