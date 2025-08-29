@@ -52,15 +52,19 @@ import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
 * `R2DBCRow`, which is the R2DBC implementation of `RowApi` meant to wrap elements of a statement's result, has been renamed to `R2dbcRow`.
 * `R2dbcTransactionInterface.connection` property has been replaced with a suspend function of the same name:
 
+<compare title-before="1.0.0-beta-5" title-after="1.0.0-rc-1">
+
 ```kotlin
-// BEFORE
 TransactionManager.current().connection.rollback()
 TransactionManager.current().connection.metadata { existingPrimaryKeys(TableA) }
+```
 
-// AFTER
+```kotlin
 TransactionManager.current().connection().rollback()
 TransactionManager.current().connection().metadata { existingPrimaryKeys(TableA) }
 ```
+
+</compare>
 
 * `suspendTransaction()` overloads that accepts a `CoroutineContext?` parameter have been deprecated in favor of overloads
   whose parameters and behavior are more inline with JDBC `transaction()`. A manual context can be passed to the methods using `withContext()`,
@@ -70,8 +74,9 @@ TransactionManager.current().connection().metadata { existingPrimaryKeys(TableA)
   a `R2dbcDatabaseConfig.Builder` argument directly. This is instead of a function parameter with the builder as its receiver,
   which brings it more inline with the corresponding JDBC `Database.connect()` variant:
 
+<compare title-before="1.0.0-beta-5" title-after="1.0.0-rc-1">
+
 ```kotlin
-// BEFORE
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 
 R2dbcDatabase.connect(
@@ -81,8 +86,9 @@ R2dbcDatabase.connect(
         defaultR2dbcIsolationLevel = IsolationLevel.READ_COMMITTED
     }
 )
+```
 
-// AFTER
+```kotlin
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 
@@ -94,6 +100,8 @@ R2dbcDatabase.connect(
     }
 )
 ```
+
+</compare>
 
 ## 1.0.0-beta-5
 
