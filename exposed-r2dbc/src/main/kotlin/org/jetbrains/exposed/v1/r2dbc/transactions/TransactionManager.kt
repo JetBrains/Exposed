@@ -91,8 +91,7 @@ class TransactionManager(
     }
 
     override fun currentOrNull(): R2dbcTransaction? {
-        return transactionLocal
-            ?: MappedTransactionContext.getTransactionOrNull()?.takeIf { it.db == this.db }
+        return transactionLocal ?: MappedTransactionContext.getTransactionOrNull()
     }
 
     override fun bindTransactionToThread(transaction: Transaction?) {
