@@ -244,8 +244,12 @@ object SchemaUtils : SchemaUtilityApi() {
      */
     @Deprecated(
         "Execution of this function might lead to unpredictable state in the database if a failure occurs at any point. " +
-            "To prevent this, please use `MigrationUtils.statementsRequiredForDatabaseMigration` with a third-party migration tool (e.g., Flyway).",
-        ReplaceWith("MigrationUtils.statementsRequiredForDatabaseMigration"),
+            "To prevent this, please use `MigrationUtils.statementsRequiredForDatabaseMigration()` with a third-party migration tool (e.g., Flyway). " +
+            "`MigrationUtils` is accessible with a dependency on `exposed-migration-r2dbc`.",
+        ReplaceWith(
+            "MigrationUtils.statementsRequiredForDatabaseMigration(*tables, withLogs = withLogs)",
+            "org.jetbrains.exposed.v1.migration.r2dbc.MigrationUtils"
+        ),
         DeprecationLevel.WARNING
     )
     suspend fun createMissingTablesAndColumns(vararg tables: Table, inBatch: Boolean = false, withLogs: Boolean = true) {
@@ -300,8 +304,13 @@ object SchemaUtils : SchemaUtilityApi() {
      * This can be disabled by setting [withLogs] to `false`.
      */
     @Deprecated(
-        "This function will be removed in future releases.",
-        ReplaceWith("MigrationUtils.statementsRequiredForDatabaseMigration"),
+        "This function will be removed in future releases. " +
+            "Please use `MigrationUtils.statementsRequiredForDatabaseMigration()` instead. " +
+            "`MigrationUtils` is accessible with a dependency on `exposed-migration-r2dbc`.",
+        ReplaceWith(
+            "MigrationUtils.statementsRequiredForDatabaseMigration(*tables, withLogs = withLogs)",
+            "org.jetbrains.exposed.v1.migration.r2dbc.MigrationUtils"
+        ),
         DeprecationLevel.WARNING
     )
     suspend fun statementsRequiredToActualizeScheme(vararg tables: Table, withLogs: Boolean = true): List<String> {

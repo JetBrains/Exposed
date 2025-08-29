@@ -30,7 +30,6 @@ import java.math.RoundingMode
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
-import kotlin.collections.first
 import kotlin.test.assertEquals
 import kotlin.time.Clock
 import kotlin.time.Duration
@@ -558,7 +557,7 @@ class KotlinTimeTests : R2dbcDatabaseTestsBase() {
             val ts = text("ts")
         }
 
-        withTables(tester, configure = { sqlLogger = StdOutSqlLogger }) {
+        withTables(tester) {
             val now = Clock.System.now()
 
             tester.insert {

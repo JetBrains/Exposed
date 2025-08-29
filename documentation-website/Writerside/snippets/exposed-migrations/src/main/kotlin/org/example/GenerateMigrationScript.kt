@@ -6,7 +6,7 @@ import org.example.tables.UsersTable
 import org.jetbrains.exposed.v1.core.ExperimentalDatabaseMigrationApi
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.migration.MigrationUtils
+import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
 
 val h2db = Database.connect(
     url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1",

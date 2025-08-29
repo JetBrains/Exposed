@@ -4,8 +4,12 @@
 
 <tldr>
     <p>
-        <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-migration</code>
+        <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-migration-core</code> and
+        <code>org.jetbrains.exposed:exposed-migration-jdbc</code> (JDBC) or 
+        <code>org.jetbrains.exposed:exposed-migration-r2dbc</code> (R2DBC)
     </p>
+    <include from="lib.topic" element-id="jdbc-supported"/>
+    <include from="lib.topic" element-id="r2dbc-supported"/>
     <p>
         <b>Code example</b>: <a href="https://github.com/JetBrains/Exposed/tree/main/documentation-website/Writerside/snippets/exposed-migrations">exposed-migrations</a>
     </p>
@@ -15,17 +19,36 @@ Managing database schema changes is a critical part of application development. 
 evolve your database alongside your codebase.
 
 While Exposed provides basic migration support through `SchemaUtils`,
-the [`MigrationUtils`](https://jetbrains.github.io/Exposed/api/exposed-migration/org.jetbrains.exposed.v1.migration/-migration-utils/index.html) methods from the `exposed-migration` package
+the [`MigrationUtils`](https://jetbrains.github.io/Exposed/api/exposed-migration/org.jetbrains.exposed.v1.migration/-migration-utils/index.html) methods from either the `exposed-migration-jdbc` or `exposed-migration-r2dbc` packages
 provide a more structured and production-ready way to manage schema changes. They allow you to [inspect differences](#aligning-the-database-schema) between the current
 database state and your defined table schema and to generate or apply migration scripts accordingly.
 
 ## Adding dependencies
 
-To use the methods provided by `MigrationUtils`, include the `exposed-migration` artifact in your build script:
+To use the methods provided by `MigrationUtils`, include the following dependencies in your build script:
 
-```Kotlin
-implementation("org.jetbrains.exposed:exposed-migration:%exposed_version%")
-```
+* `exposed-migration-core`: contains core common functionality for database schema migrations
+* A dependency for migration support with either a JDBC or R2DBC driver
+
+<tabs group="connectivity">
+   <tab id="jdbc-dependencies" title="JDBC" group-key="jdbc">
+     <code-block lang="kotlin">
+         implementation("org.jetbrains.exposed:exposed-migration-core:%exposed_version%")
+         implementation("org.jetbrains.exposed:exposed-migration-jdbc:%exposed_version%")
+     </code-block>
+   </tab>
+   <tab id="r2dbc-dependencies" title="R2DBC" group-key="r2dbc">
+      <code-block lang="kotlin">
+         implementation("org.jetbrains.exposed:exposed-migration-core:%exposed_version%")
+         implementation("org.jetbrains.exposed:exposed-migration-r2dbc:%exposed_version%")
+      </code-block>
+    </tab>
+</tabs>
+
+<note>
+Prior to version 1.0.0, <code>MigrationUtils</code> with JDBC support was available through a single dependency on
+the artifact <code>exposed-migration</code>.
+</note>
 
 ## Aligning the database schema
 
