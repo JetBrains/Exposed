@@ -4,9 +4,9 @@
 
 <tldr>
     <p>
-        <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-migration-core</code> and (
-        <code>org.jetbrains.exposed:exposed-migration-jdbc</code> or 
-        <code>org.jetbrains.exposed:exposed-migration-r2dbc</code>)
+        <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-migration-core</code> and
+        <code>org.jetbrains.exposed:exposed-migration-jdbc</code> (JDBC) or 
+        <code>org.jetbrains.exposed:exposed-migration-r2dbc</code> (R2DBC)
     </p>
     <include from="lib.topic" element-id="jdbc-supported"/>
     <include from="lib.topic" element-id="r2dbc-supported"/>
@@ -30,13 +30,25 @@ To use the methods provided by `MigrationUtils`, include the following dependenc
 * `exposed-migration-core`: contains core common functionality for database schema migrations
 * A dependency for migration support with either a JDBC or R2DBC driver
 
-```Kotlin
-implementation("org.jetbrains.exposed:exposed-migration-core:%exposed_version%")
+<tabs group="connectivity">
+   <tab id="jdbc-dependencies" title="JDBC" group-key="jdbc">
+     <code-block lang="kotlin">
+         implementation("org.jetbrains.exposed:exposed-migration-core:%exposed_version%")
+         implementation("org.jetbrains.exposed:exposed-migration-jdbc:%exposed_version%")
+     </code-block>
+   </tab>
+   <tab id="r2dbc-dependencies" title="R2DBC" group-key="r2dbc">
+      <code-block lang="kotlin">
+         implementation("org.jetbrains.exposed:exposed-migration-core:%exposed_version%")
+         implementation("org.jetbrains.exposed:exposed-migration-r2dbc:%exposed_version%")
+      </code-block>
+    </tab>
+</tabs>
 
-implementation("org.jetbrains.exposed:exposed-migration-jdbc:%exposed_version%")
-// OR
-implementation("org.jetbrains.exposed:exposed-migration-r2dbc:%exposed_version%")
-```
+<note>
+Prior to version 1.0.0, <code>MigrationUtils</code> with JDBC support was available through a single dependency on
+the artifact <code>exposed-migration</code>.
+</note>
 
 ## Aligning the database schema
 
