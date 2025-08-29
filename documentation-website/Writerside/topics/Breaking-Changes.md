@@ -5,28 +5,38 @@
 * `exposed-migration` artifact has been replaced with `exposed-migration-core` to hold core common schema migration functionality across both available drivers.
   New driver-specific artifacts have been added to support both JDBC and R2DBC, resulting in a need to adjust your dependency block:
 
+<compare title-before="1.0.0-beta-5" title-after="1.0.0-rc-1">
+
 ```kotlin
-// BEFORE
 dependencies {
     implementation("org.jetbrains.exposed:exposed-migration:$exposedVersion")
 }
+```
 
-// AFTER
+```kotlin
 dependencies {
     implementation("org.jetbrains.exposed:exposed-migration-core:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-migration-jdbc:$exposedVersion")
 }
 ```
 
+</compare>
+
   This also means that the import path pattern of the dependencies have been updated accordingly:
 
-```kotlin
-// BEFORE
-import org.jetbrains.exposed.v1.migration.MigrationUtils
+<compare title-before="1.0.0-beta-5" title-after="1.0.0-rc-1">
 
-// AFTER
+```kotlin
+import org.jetbrains.exposed.v1.migration.MigrationUtils
+```
+
+```kotlin
 import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
 ```
+
+</compare>
+
+  See the migration guide for full details on [migration dependencies](https://www.jetbrains.com/help/exposed/migration-guide-1-0-0.html#migration-dependencies).
 
 * The interface `ISqlExpressionBuilder` (and all its methods) has been deprecated, along with its implementation objects,
   `SqlExpressionBuilder` and `UpsertSqlExpressionBuilder`. All methods previously restricted to this interface should now
