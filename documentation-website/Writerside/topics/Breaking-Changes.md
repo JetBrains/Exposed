@@ -5,28 +5,38 @@
 * `exposed-migration` artifact has been replaced with `exposed-migration-core` to hold core common schema migration functionality across both available drivers.
   New driver-specific artifacts have been added to support both JDBC and R2DBC, resulting in a need to adjust your dependency block:
 
+<compare title-before="1.0.0-beta-5" title-after="1.0.0-rc-1">
+
 ```kotlin
-// BEFORE
 dependencies {
     implementation("org.jetbrains.exposed:exposed-migration:$exposedVersion")
 }
+```
 
-// AFTER
+```kotlin
 dependencies {
     implementation("org.jetbrains.exposed:exposed-migration-core:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-migration-jdbc:$exposedVersion")
 }
 ```
 
+</compare>
+
   This also means that the import path pattern of the dependencies have been updated accordingly:
 
-```kotlin
-// BEFORE
-import org.jetbrains.exposed.v1.migration.MigrationUtils
+<compare title-before="1.0.0-beta-5" title-after="1.0.0-rc-1">
 
-// AFTER
+```kotlin
+import org.jetbrains.exposed.v1.migration.MigrationUtils
+```
+
+```kotlin
 import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
 ```
+
+</compare>
+
+  See the migration guide for full details on [migration dependencies](https://www.jetbrains.com/help/exposed/migration-guide-1-0-0.html#migration-dependencies).
 
 * The interface `ISqlExpressionBuilder` (and all its methods) has been deprecated, along with its implementation objects,
   `SqlExpressionBuilder` and `UpsertSqlExpressionBuilder`. All methods previously restricted to this interface should now
@@ -52,19 +62,56 @@ import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
 * `R2DBCRow`, which is the R2DBC implementation of `RowApi` meant to wrap elements of a statement's result, has been renamed to `R2dbcRow`.
 * `R2dbcTransactionInterface.connection` property has been replaced with a suspend function of the same name:
 
+<compare title-before="1.0.0-beta-5" title-after="1.0.0-rc-1">
+
 ```kotlin
-// BEFORE
 TransactionManager.current().connection.rollback()
 TransactionManager.current().connection.metadata { existingPrimaryKeys(TableA) }
+```
 
-// AFTER
+```kotlin
 TransactionManager.current().connection().rollback()
 TransactionManager.current().connection().metadata { existingPrimaryKeys(TableA) }
 ```
+
+</compare>
+
 * `suspendTransaction()` overloads that accepts a `CoroutineContext?` parameter have been deprecated in favor of overloads
   whose parameters and behavior are more inline with JDBC `transaction()`. A manual context can be passed to the methods using `withContext()`,
   for example. Similarly, `suspendTransactionAsync()` that returned `Deferred` has also been deprecated in favor of calling
   `async()` directly with a standard `suspendTransaction()`.
+* The `R2dbcDatabase.connect()` overload that accepts a String `url` parameter has had the type of its `databaseConfig` parameter changed to accept
+  a `R2dbcDatabaseConfig.Builder` argument directly. This is instead of a function parameter with the builder as its receiver,
+  which brings it more inline with the corresponding JDBC `Database.connect()` variant:
+
+<compare title-before="1.0.0-beta-5" title-after="1.0.0-rc-1">
+
+```kotlin
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
+
+R2dbcDatabase.connect(
+    "r2dbc:h2:mem:///test;DB_CLOSE_DELAY=-1;",
+    databaseConfig = {
+        defaultMaxAttempts = 1
+        defaultR2dbcIsolationLevel = IsolationLevel.READ_COMMITTED
+    }
+)
+```
+
+```kotlin
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
+
+R2dbcDatabase.connect(
+    "r2dbc:h2:mem:///test;DB_CLOSE_DELAY=-1;",
+    databaseConfig = R2dbcDatabaseConfig {
+        defaultMaxAttempts = 1
+        defaultR2dbcIsolationLevel = IsolationLevel.READ_COMMITTED
+    }
+)
+```
+
+</compare>
 
 ## 1.0.0-beta-5
 

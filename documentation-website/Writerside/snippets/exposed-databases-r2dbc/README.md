@@ -11,7 +11,7 @@ your setup. For example:
 ```Kotlin
 val postgresqldb = R2dbcDatabase.connect(
     url = "r2dbc:postgresql://db:5432/test",
-    databaseConfig = {
+    databaseConfig = R2dbcDatabaseConfig {
         connectionFactoryOptions {
             option(ConnectionFactoryOptions.USER, "user")
             option(ConnectionFactoryOptions.PASSWORD, "password")

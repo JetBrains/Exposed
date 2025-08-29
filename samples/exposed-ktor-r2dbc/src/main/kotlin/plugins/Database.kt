@@ -10,6 +10,7 @@ import org.jetbrains.exposed.samples.r2dbc.domain.issue.Issues
 import org.jetbrains.exposed.samples.r2dbc.domain.project.Projects
 import org.jetbrains.exposed.samples.r2dbc.domain.user.Users
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 
@@ -20,7 +21,7 @@ suspend fun Application.configureDatabase() {
 
     val database = R2dbcDatabase.connect(
         url = "r2dbc:postgresql://db:5432/$dbName",
-        databaseConfig = {
+        databaseConfig = R2dbcDatabaseConfig {
             defaultMaxAttempts = 1
             defaultR2dbcIsolationLevel = IsolationLevel.READ_COMMITTED
 

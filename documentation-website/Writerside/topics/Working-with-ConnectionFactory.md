@@ -41,10 +41,11 @@ import io.r2dbc.spi.ConnectionFactoryOptions
 import io.r2dbc.spi.IsolationLevel
 import io.r2dbc.spi.Option
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 
 val database = R2dbcDatabase.connect(
     url = "r2dbc:h2:mem:///test;",
-    databaseConfig = {
+    databaseConfig = R2dbcDatabaseConfig {
         defaultMaxAttempts = 1
         defaultR2dbcIsolationLevel = IsolationLevel.READ_COMMITTED
 
