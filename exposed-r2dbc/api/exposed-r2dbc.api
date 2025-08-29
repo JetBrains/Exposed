@@ -997,7 +997,6 @@ public final class org/jetbrains/exposed/v1/r2dbc/transactions/TransactionManage
 	public fun getDefaultMaxRetryDelay ()J
 	public fun getDefaultMinRetryDelay ()J
 	public fun getDefaultReadOnly ()Z
-	public final fun getThreadLocal ()Ljava/lang/ThreadLocal;
 	public final fun newTransaction (Lio/r2dbc/spi/IsolationLevel;ZLorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
 	public static synthetic fun newTransaction$default (Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager;Lio/r2dbc/spi/IsolationLevel;ZLorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
 	public final fun setDefaultIsolationLevel (Lio/r2dbc/spi/IsolationLevel;)V
