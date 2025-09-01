@@ -390,8 +390,6 @@ suspend fun <T> suspendTransaction(
                     }
                 }
                 throw cause
-            } finally {
-                TransactionManager.resetCurrent(outerManager)
             }
         }
     } else {
@@ -547,16 +545,13 @@ internal suspend fun closeStatementsAndConnection(transaction: R2dbcTransaction)
 /**
  * The method creates context with provided transaction and runs code block within that context.
  *
- * This method expects that data in the coroutine context is the first, and thread local
- * variables are set only for the period of usage coroutine context. That's why this method
- * cleans transaction manager and transaction thread local variables after executing
- * code block.
- *
  * @param transaction The transaction to be used in the context.
  * @param body The code block to be executed in the context.
  * @return The result of executing the code block.
  */
 internal suspend fun <T> withTransactionContext(transaction: R2dbcTransaction, body: suspend () -> T): T {
+    val outerTransaction = transaction.outerTransaction
+
     val context = transaction.db.transactionManager.createTransactionContext(transaction)
 
     return try {
@@ -566,7 +561,9 @@ internal suspend fun <T> withTransactionContext(transaction: R2dbcTransaction, b
             body()
         }
     } finally {
-        MappedTransactionContext.clean()
-        TransactionManager.resetCurrent(null)
+        outerTransaction?.let { MappedTransactionContext.setTransaction(it) }
+            ?: MappedTransactionContext.clean()
+
+        TransactionManager.resetCurrent(outerTransaction?.db.transactionManager)
     }
 }
