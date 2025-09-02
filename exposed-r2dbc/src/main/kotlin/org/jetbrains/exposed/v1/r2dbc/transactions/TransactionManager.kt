@@ -276,7 +276,7 @@ class TransactionManager(
 
 /**
  * Singleton coroutine context element storing its associated transaction
- * & the unique key for its [TransactionManager.transactionLocal].
+ * & the unique key for its [TransactionManager.contextKey].
  */
 private data class TransactionContextHolder(
     val transaction: R2dbcTransaction?,
@@ -396,7 +396,7 @@ suspend fun <T> suspendTransaction(
         db?.transactionManager?.getCurrentContextTransaction()?.let { transaction ->
             withTransactionContext(transaction) {
                 transaction.statement().also {
-                    if (transaction.db.useNestedTransactions) {
+                    if (db.useNestedTransactions) {
                         transaction.commit()
                     }
                 }
@@ -552,16 +552,18 @@ internal suspend fun closeStatementsAndConnection(transaction: R2dbcTransaction)
 internal suspend fun <T> withTransactionContext(transaction: R2dbcTransaction, body: suspend () -> T): T {
     val outerTransaction = transaction.outerTransaction
 
-    val context = transaction.db.transactionManager.createTransactionContext(transaction)
+    val manager = transaction.db.transactionManager
+    val context = manager.createTransactionContext(transaction)
 
     return try {
-        TransactionManager.resetCurrent(transaction.db.transactionManager)
+        TransactionManager.resetCurrent(manager)
         MappedTransactionContext.setTransaction(transaction)
         withContext(context) {
             body()
         }
     } finally {
-        outerTransaction?.let { MappedTransactionContext.setTransaction(it) }
+        outerTransaction
+            ?.let { MappedTransactionContext.setTransaction(it) }
             ?: MappedTransactionContext.clean()
 
         TransactionManager.resetCurrent(outerTransaction?.db.transactionManager)
