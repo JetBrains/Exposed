@@ -1,3 +1,47 @@
+# 1.0.0-rc-1
+
+## What's Changed
+
+Breaking changes:
+* chore!: Drop return value of R2dbcPreparedStatementApi.executeUpdate() by @bog-walk in https://github.com/JetBrains/Exposed/pull/2583
+* chore!: Move areEquivalentColumnTypes from DatabaseDialect to Exposed DatabaseMetadata by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2590
+* chore!: EXPOSED-844 supportsSelectForUpdate parameter from DatabaseDialect should be deprecated by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2576
+* fix!: Replace SqlExpressionBuilder methods with top-level functions  by @bog-walk in https://github.com/JetBrains/Exposed/pull/2600
+* chore!: Rename R2DBCRow to R2dbcRow by @bog-walk in https://github.com/JetBrains/Exposed/pull/2605
+* chore!: Refactoring of date time modules by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2595
+* fix!: Refactor use of runBlocking to be conditional for metadata properties by @bog-walk in https://github.com/JetBrains/Exposed/pull/2530
+* refactor!: Align suspendTransaction() with transaction() & drop context parameter by @bog-walk in https://github.com/JetBrains/Exposed/pull/2601
+* feat!: EXPOSED-841 Enable exposed-migration that works with R2DBC by @bog-walk in https://github.com/JetBrains/Exposed/pull/2604
+
+Deprecations:
+* deprecate: Raise deprecation levels of API elements by @bog-walk in https://github.com/JetBrains/Exposed/pull/2588
+
+Infrastructure:
+* springFramework 6.2.10
+* springBoot 3.5.5
+
+Bug fixes:
+* fix: [H2] R2dbcDatabase.name parsing error returns all url properties by @bog-walk in https://github.com/JetBrains/Exposed/pull/2578
+* fix: EXPOSED-801 NoClassDefFoundError when using exposed-json with pg-r2dbc dependency only by @bog-walk in https://github.com/JetBrains/Exposed/pull/2579
+* fix: EXPOSED-815 Fix resolving ExpressionAlias by @ntkoopman in https://github.com/JetBrains/Exposed/pull/2569
+* fix: Provide typed exec(query) to avoid casting results in lamdba block by @bog-walk in https://github.com/JetBrains/Exposed/pull/2584
+* fix: Unify database connect functions between r2dbc and jdbc by @e5l in https://github.com/JetBrains/Exposed/pull/2591
+
+Docs:
+* docs: Add section on DSL buildStatement() and prepareSQL() by @bog-walk in https://github.com/JetBrains/Exposed/pull/2563
+* docs: build: EXPOSED-852 Add GA4 script by @vnikolova in https://github.com/JetBrains/Exposed/pull/2587
+* docs: build: EXPOSED-850 Add configuration for feedback widget by @vnikolova in https://github.com/JetBrains/Exposed/pull/2592
+* docs: fix: EXPOSED-853 Wrong import shown in exposed-kotlin-datetime example by @vnikolova in https://github.com/JetBrains/Exposed/pull/2586
+* docs: fix: EXPOSED-820 fix examples and update r2dbc connect functions by @vnikolova in https://github.com/JetBrains/Exposed/pull/2596
+* docs: EXPOSED-865 Sample projects not compiling with beta versions by @bog-walk in https://github.com/JetBrains/Exposed/pull/2597
+* docs: Exclude @InternalApi elements from generated dokka files by @bog-walk in https://github.com/JetBrains/Exposed/pull/2606
+* docs: Update docs with change to R2dbcDatabase.connect() overload by @bog-walk in https://github.com/JetBrains/Exposed/pull/2607
+
+Build:
+* build: Include api(exposed-jdbc) dependency with exposed-migration by @bog-walk in https://github.com/JetBrains/Exposed/pull/2582
+* build: Include api(exposed-jdbc) dependency with spring-transaction by @bog-walk in https://github.com/JetBrains/Exposed/pull/2581
+
+
 # 1.0.0-beta-5
 
 ## What's Changed
@@ -42,7 +86,6 @@ Bug fixes:
 * @ntkoopman made their first contribution in https://github.com/JetBrains/Exposed/pull/2532
 * @sokomishalov made their first contribution in https://github.com/JetBrains/Exposed/pull/2567
 
-**Full Changelog**: https://github.com/JetBrains/Exposed/compare/1.0.0-beta-4...1.0.0-beta-5
 
 # 1.0.0-beta-4
 
