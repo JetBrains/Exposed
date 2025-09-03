@@ -41,7 +41,7 @@
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
-        <div class="library-version" id="library-version">1.0.0-beta-5
+        <div class="library-version" id="library-version">1.0.0-rc-1
         </div>
         <div class="navigation-controls">
         <div class="filter-section filter-section_loading" id="filter-section">
@@ -94,7 +94,7 @@
   <div class="breadcrumbs"><a href="../../index.html">exposed-r2dbc</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.v1.r2dbc.statements.api</a><span class="delimiter">/</span><span class="current">R2dbcExposedDatabaseMetadata</span></div>
   <div class="cover ">
     <h1 class="cover"><span>R2dbc</span><wbr><span>Exposed</span><wbr><span>Database</span><wbr><span><span>Metadata</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="index.html">R2dbcExposedDatabaseMetadata</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">database<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span> : <a href="../../../exposed-core/org.jetbrains.exposed.v1.core.statements.api/-exposed-database-metadata/index.html">ExposedDatabaseMetadata</a></div><p class="paragraph">Base class responsible for retrieving and storing information about the R2DBC driver and underlying database.</p><h4 class="">Inheritors</h4><div class="table"><div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-r2dbc-database-metadata-impl/index.html">R2dbcDatabaseMetadataImpl</a></div></span></div><div></div></div></div></div></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="index.html">R2dbcExposedDatabaseMetadata</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">database<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span> : <a href="../../../exposed-core/org.jetbrains.exposed.v1.core.statements.api/-exposed-database-metadata/index.html">ExposedDatabaseMetadata</a></div><p class="paragraph">Base class responsible for retrieving and storing information about the R2DBC driver and underlying database.</p><h4 class="">Inheritors</h4><div class="table"><div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-r2dbc-local-metadata-impl/index.html">R2dbcLocalMetadataImpl</a></div></span></div><div></div></div></div></div></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
@@ -124,13 +124,13 @@
           <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="index.html#-220353046%2FProperties%2F876859814"><span><span>database</span></span></a></div>
+                  <div><a href="../-r2dbc-local-metadata-impl/index.html#-220353046%2FProperties%2F876859814"><span><span>database</span></span></a></div>
 <span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-220353046%2FProperties%2F876859814"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="index.html#-220353046%2FProperties%2F876859814">database</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-r2dbc-local-metadata-impl/index.html#-220353046%2FProperties%2F876859814">database</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div></div></div>
                 </div>
               </div>
             </div>
@@ -229,7 +229,22 @@
       </div>
       <div data-togglable="FUNCTION">
         <h2 class="">Functions</h2>
-        <div class="table"><a data-name="-998358932%2FFunctions%2F876859814" anchor-label="cleanCache" id="-998358932%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+        <div class="table"><a data-name="-770646626%2FFunctions%2F876859814" anchor-label="areEquivalentColumnTypes" id="-770646626%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-r2dbc-local-metadata-impl/index.html#-770646626%2FFunctions%2F876859814"><span>are</span><wbr><span>Equivalent</span><wbr><span>Column</span><wbr><span><span>Types</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-770646626%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-r2dbc-local-metadata-impl/index.html#-770646626%2FFunctions%2F876859814"><span class="token function">areEquivalentColumnTypes</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">columnMetadataSqlType<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">columnMetadataType<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">columnType<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-998358932%2FFunctions%2F876859814" anchor-label="cleanCache" id="-998358932%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
           <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
@@ -374,7 +389,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="get-default-isolation-level.html"><span class="token function">getDefaultIsolationLevel</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="io.r2dbc.spi/IsolationLevel///PointingToDeclaration/">IsolationLevel</span></div><div class="brief "><p class="paragraph">The default transaction isolation level for the database.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="get-default-isolation-level.html"><span class="token function">getDefaultIsolationLevel</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="io.r2dbc.spi/IsolationLevel///PointingToDeclaration/">IsolationLevel</span></div><div class="brief "><p class="paragraph">The default transaction isolation level for the database.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -435,21 +450,6 @@
               <div>
                 <div class="title">
                   <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="index.html#-394193802%2FFunctions%2F876859814"><span class="token function">resetCurrentScheme</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
-                </div>
-              </div>
-            </div>
-          </div>
-<a data-name="19009843%2FFunctions%2F876859814" anchor-label="resolveReferenceOption" id="19009843%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
-            <div class="main-subrow keyValue ">
-              <div class=""><span class="inline-flex">
-                  <div><a href="index.html#19009843%2FFunctions%2F876859814"><span>resolve</span><wbr><span>Reference</span><wbr><span><span>Option</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="19009843%2FFunctions%2F876859814"></span>
-                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                  </span></span></div>
-              <div>
-                <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="index.html#19009843%2FFunctions%2F876859814"><span class="token function">resolveReferenceOption</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">refOption<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-reference-option/index.html">ReferenceOption</a><span class="token operator">?</span></div></div></div>
                 </div>
               </div>
             </div>

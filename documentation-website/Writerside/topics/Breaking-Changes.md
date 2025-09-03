@@ -1,6 +1,6 @@
 # Breaking Changes
 
-## 1.0.0-RC
+## 1.0.0-rc-1
 
 * `exposed-migration` artifact has been replaced with `exposed-migration-core` to hold core common schema migration functionality across both available drivers.
   New driver-specific artifacts have been added to support both JDBC and R2DBC, resulting in a need to adjust your dependency block:

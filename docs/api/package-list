@@ -4,6 +4,7 @@ $dokka.linkExtension:html
 module:exposed-core
 org.jetbrains.exposed.v1.core
 org.jetbrains.exposed.v1.core.dao.id
+org.jetbrains.exposed.v1.core.datetime
 org.jetbrains.exposed.v1.core.functions.array
 org.jetbrains.exposed.v1.core.functions.math
 org.jetbrains.exposed.v1.core.ops
@@ -34,8 +35,12 @@ module:exposed-json
 org.jetbrains.exposed.v1.json
 module:exposed-kotlin-datetime
 org.jetbrains.exposed.v1.datetime
-module:exposed-migration
-org.jetbrains.exposed.v1.migration
+module:exposed-migration-core
+org.jetbrains.exposed.v1.migration.core
+module:exposed-migration-jdbc
+org.jetbrains.exposed.v1.migration.jdbc
+module:exposed-migration-r2dbc
+org.jetbrains.exposed.v1.migration.r2dbc
 module:exposed-money
 org.jetbrains.exposed.v1.money
 module:exposed-r2dbc
