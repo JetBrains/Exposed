@@ -664,14 +664,19 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     /** Creates an [EntityID] column, with the specified [name], for storing the same objects as the specified [originalColumn]. */
     fun <ID : Any> entityId(name: String, originalColumn: Column<ID>): Column<EntityID<ID>> {
+        return createEntityIdColumn(name, originalColumn)
+            .also {
+                _columns.addColumn(it)
+            }
+    }
+
+    private fun <ID : Any> createEntityIdColumn(name: String, originalColumn: Column<ID>): Column<EntityID<ID>> {
         val columnTypeCopy = originalColumn.columnType.cloneAsBaseType()
-        val answer = Column<EntityID<ID>>(
+        return Column<EntityID<ID>>(
             this,
             name,
             EntityIDColumnType(Column<ID>(originalColumn.table, name, columnTypeCopy))
         )
-        _columns.addColumn(answer)
-        return answer
     }
 
     /** Creates an [EntityID] column, with the specified [name], for storing the identifier of the specified [table]. */
@@ -1137,19 +1142,15 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @sample org.jetbrains.exposed.v1.tests.shared.ddl.CreateMissingTablesAndColumnsTests.ExplicitTable
      */
     @JvmName("referencesById")
-    fun <T : Any, S : T, C : Column<S>> C.references(
+    fun <T : Any, C : Column<T>> C.references(
         ref: Column<EntityID<T>>,
         onDelete: ReferenceOption? = null,
         onUpdate: ReferenceOption? = null,
         fkName: String? = null
-    ): C = apply {
-        this.foreignKey = ForeignKeyConstraint(
-            target = ref,
-            from = this,
-            onUpdate = onUpdate,
-            onDelete = onDelete,
-            name = fkName
-        )
+    ): Column<EntityID<T>> {
+        val entityIdColumn = createEntityIdColumn(name, (ref.columnType as EntityIDColumnType<T>).idColumn)
+        replaceColumn(this, entityIdColumn)
+        return entityIdColumn.references(ref, onDelete, onUpdate, fkName)
     }
 
     /**

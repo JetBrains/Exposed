@@ -4,6 +4,8 @@ import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.core.Key
 import org.jetbrains.exposed.v1.core.Schema
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.statements.StatementContext
 import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
 import org.jetbrains.exposed.v1.core.transactions.nullableTransactionScope
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
@@ -207,4 +209,30 @@ abstract class DatabaseTestsBase {
         quota = "20M",
         on = "USERS"
     )
+
+    interface Counter {
+        var count: Int
+        fun inc()
+        fun reset()
+    }
+
+    protected fun JdbcTransaction.executionsCounter(): Counter {
+        val counter = object : Counter {
+            override var count = 0
+            override fun inc() {
+                count++
+            }
+
+            override fun reset() {
+                count = 0
+            }
+        }
+        registerInterceptor(object : StatementInterceptor {
+            override fun beforeExecution(transaction: Transaction, context: StatementContext) {
+                counter.inc()
+            }
+        })
+
+        return counter
+    }
 }

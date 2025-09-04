@@ -1,4 +1,5 @@
 package org.jetbrains.exposed.v1.tests.shared.entities
+
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.UIntIdTable
@@ -136,7 +137,7 @@ object UIntIdTables {
     }
 
     object Towns : UIntIdTable("towns") {
-        val cityId: Column<UInt> = uinteger("city_id").references(Cities.id)
+        val cityId: Column<EntityID<UInt>> = uinteger("city_id").references(Cities.id)
     }
 
     class Town(id: EntityID<UInt>) : UIntEntity(id) {
