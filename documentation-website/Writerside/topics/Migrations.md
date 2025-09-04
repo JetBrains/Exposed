@@ -19,7 +19,7 @@ Managing database schema changes is a critical part of application development. 
 evolve your database alongside your codebase.
 
 While Exposed provides basic migration support through `SchemaUtils`,
-the [`MigrationUtils`](https://jetbrains.github.io/Exposed/api/exposed-migration/org.jetbrains.exposed.v1.migration/-migration-utils/index.html) methods from either the `exposed-migration-jdbc` or `exposed-migration-r2dbc` packages
+the `MigrationUtils` methods from either the `exposed-migration-jdbc` or `exposed-migration-r2dbc` packages
 provide a more structured and production-ready way to manage schema changes. They allow you to [inspect differences](#aligning-the-database-schema) between the current
 database state and your defined table schema and to generate or apply migration scripts accordingly.
 
@@ -27,8 +27,8 @@ database state and your defined table schema and to generate or apply migration 
 
 To use the methods provided by `MigrationUtils`, include the following dependencies in your build script:
 
-* `exposed-migration-core`: contains core common functionality for database schema migrations
-* A dependency for migration support with either a JDBC or R2DBC driver
+* `exposed-migration-core`, containing core common functionality for database schema migrations.
+* A dependency for migration support with either a JDBC or R2DBC driver.
 
 <tabs group="connectivity">
    <tab id="jdbc-dependencies" title="JDBC" group-key="jdbc">
@@ -85,10 +85,19 @@ simultaneously adds any associated constraints such as primary keys, indexes, an
 
 ### Generate all required statements
 
+<tldr>
+    <p>API references:
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-migration-jdbc/org.jetbrains.exposed.v1.migration.jdbc/-migration-utils/statements-required-for-database-migration.html">
+            <code>statementsRequiredForDatabaseMigration</code> (JDBC)
+        </a>,
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-migration-r2dbc/org.jetbrains.exposed.v1.migration.r2dbc/-migration-utils/statements-required-for-database-migration.html">
+            <code>statementsRequiredForDatabaseMigration</code> (R2DBC)
+        </a>
+    </p>
+</tldr>
+
 To compare your live database schema against your current Exposed table definitions and generate all statements
-required to align the two, use the
-[`MigrationUtils.statementsRequiredForDatabaseMigration()`](https://jetbrains.github.io/Exposed/api/exposed-migration/org.jetbrains.exposed.v1.migration/-migration-utils/statements-required-for-database-migration.html)
-function:
+required to align the two, use the `MigrationUtils.statementsRequiredForDatabaseMigration()` function:
 
 ```Kotlin
 ```
@@ -101,9 +110,19 @@ or `DELETE`, so review them carefully before choosing to execute them.
 
 ### Generate a migration script
 
+<tldr>
+    <p>API references:
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-migration-jdbc/org.jetbrains.exposed.v1.migration.jdbc/-migration-utils/generate-migration-script.html">
+            <code>generateMigrationScript</code> (JDBC)
+        </a>,
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-migration-r2dbc/org.jetbrains.exposed.v1.migration.r2dbc/-migration-utils/generate-migration-script.html">
+            <code>generateMigrationScript</code> (R2DBC)
+        </a>
+    </p>
+</tldr>
+
 To generate a migration script based on schema differences between your database and the current Exposed model, use the
-[`MigrationUtils.generateMigrationScript()`](https://jetbrains.github.io/Exposed/api/exposed-migration/org.jetbrains.exposed.v1.migration/-migration-utils/generate-migration-script.html)
-function:
+`MigrationUtils.generateMigrationScript()` function:
 
 ```Kotlin
 ```
@@ -160,19 +179,44 @@ To retrieve metadata from the current dialect to compare with your defined Expos
 
 ## Legacy columns cleanup
 
-As your schema evolves, it's common to remove or rename columns in your table definitions. However, old columns may still exist in the database unless
-explicitly dropped.
+<tldr>
+    <p>API references:
+        <code>dropUnmappedColumnsStatements</code> (
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-migration-jdbc/org.jetbrains.exposed.v1.migration.jdbc/-migration-utils/drop-unmapped-columns-statements.html">
+             JDBC
+        </a>,
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-migration-r2dbc/org.jetbrains.exposed.v1.migration.r2dbc/-migration-utils/drop-unmapped-columns-statements.html">
+            R2DBC
+        </a>),
+        <code>dropUnmappedIndices</code> (
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-migration-jdbc/org.jetbrains.exposed.v1.migration.jdbc/-migration-utils/drop-unmapped-indices.html">
+             JDBC
+        </a>,
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-migration-r2dbc/org.jetbrains.exposed.v1.migration.r2dbc/-migration-utils/drop-unmapped-indices.html">
+            R2DBC
+        </a>),
+        <code>dropUnmappedSequences</code>(
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-migration-jdbc/org.jetbrains.exposed.v1.migration.jdbc/-migration-utils/drop-unmapped-sequences.html">
+             JDBC
+        </a>,
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-migration-r2dbc/org.jetbrains.exposed.v1.migration.r2dbc/-migration-utils/drop-unmapped-sequences.html">
+            R2DBC
+        </a>)
+    </p>
+</tldr>
 
-The [`MigrationUtils.dropUnmappedColumnsStatements()`](https://jetbrains.github.io/Exposed/api/exposed-migration/org.jetbrains.exposed.v1.migration/-migration-utils/drop-unmapped-columns-statements.html)
-function helps identify columns that are no longer present in your current table definitions and returns the SQL statements to remove them:
+As your schema evolves, it's common to remove or rename columns in your table definitions. However, old columns may still
+exist in the database unless explicitly dropped.
+
+The `MigrationUtils.dropUnmappedColumnsStatements()` function helps identify columns that are no longer present in your
+current table definitions and returns the SQL statements to remove them:
 
 ```Kotlin
 ```
 {src="exposed-migrations/src/main/kotlin/org/example/App.kt" include-symbol="dropStatements"}
 
-For indices and sequences, you can use the [`MigrationUtils.dropUnmappedIndices()`](https://jetbrains.github.io/Exposed/api/exposed-migration/org.jetbrains.exposed.v1.migration/-migration-utils/drop-unmapped-indices.html)
-and [`MigrationUtils.dropUnmappedSequences()`](https://jetbrains.github.io/Exposed/api/exposed-migration/org.jetbrains.exposed.v1.migration/-migration-utils/drop-unmapped-sequences.html)
-methods.
+For indices and sequences, you can use the `MigrationUtils.dropUnmappedIndices()` and
+`MigrationUtils.dropUnmappedSequences()` methods.
 
 ## Logging
 
