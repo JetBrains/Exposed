@@ -64,7 +64,9 @@ As well as the following extension modules:
 | `exposed-jodatime`            | Date-time extensions based on the [Joda-Time](https://www.joda.org/joda-time/) library                                                                                          |
 | `exposed-json`                | JSON and JSONB data type extensions                                                                                                                                             |
 | `exposed-kotlin-datetime`     | Date-time extensions based on the [`kotlinx-datetime`](https://kotlinlang.org/api/kotlinx-datetime/) library                                                                    |
-| `exposed-migration`           | Provides utilities to support database schema migrations                                                                                                                        |
+| `exposed-migration-core`      | Provides core common functionality for database schema migrations                                                                                                               |
+| `exposed-migration-jdbc`      | Provides utilities to support database schema migrations, with a reliance on a JDBC driver                                                                                      |
+| `exposed-migration-r2dbc`     | Provides utilities to support database schema migrations, with a reliance on a R2DBC driver                                                                                     |
 | `exposed-money`               | Extensions to support [`MonetaryAmount`](https://javamoney.github.io/apidocs/java.money/javax/money/MonetaryAmount.html) from the [JavaMoney API](https://javamoney.github.io/) |
 | `exposed-spring-boot-starter` | A starter for [Spring Boot](https://spring.io/projects/spring-boot) to utilize Exposed as the ORM instead of [Hibernate](https://hibernate.org/)                                |
 | `spring-transaction`          | Transaction manager that builds on top of Spring's standard transaction workflow                                                                                                |
