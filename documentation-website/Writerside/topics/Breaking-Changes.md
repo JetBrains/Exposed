@@ -1,5 +1,12 @@
 # Breaking Changes
 
+## 1.0.0-rc-2
+
+* The method `references()` with `EntityID` ref parameter changed the signature from
+  `fun <T : Any, S : T, C : Column<S>> C.references(ref: Column<EntityID<T>>, ...): C` to
+  `fun <T : Any, C : Column<T>> C.references(ref: Column<EntityID<T>>, ...): Column<EntityID<T>>`. It's done to align signature and behaviour of `references()` method
+  with `reference()` method. 
+
 ## 1.0.0-rc-1
 
 * `exposed-migration` artifact has been replaced with `exposed-migration-core` to hold core common schema migration functionality across both available drivers.
