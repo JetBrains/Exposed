@@ -31,7 +31,6 @@ dependencies {
     implementation(libs.exposed.json)
 
     implementation(libs.postgresql.r2dbc)
-    runtimeOnly(libs.postgresql)
 
     implementation(libs.logback.classic)
 }

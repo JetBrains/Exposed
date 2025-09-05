@@ -4,6 +4,7 @@ package org.jetbrains.exposed.samples.r2dbc.domain.project
 
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.between
 import org.jetbrains.exposed.v1.core.charLength
 
 object Projects : Table("projects") {
