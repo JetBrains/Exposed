@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <appender name="ASYNC_CONSOLE" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="CONSOLE"/>
+        <includeCallerData>true</includeCallerData>
+    </appender>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%yellow([%date{yyyy-MM-dd HH:mm:ss.SSS}]) %boldBlue([%thread]) %boldGreen(%file:%line) %highlight(%-5level){FATAL=red, ERROR=bright-red, WARN=yellow, INFO=green, DEBUG=cyan, TRACE=blue} %cyan(%logger{36}) : %magenta(%msg%n)</pattern>
+        </encoder>
+    </appender>
+
+    <root level="DEBUG">
+        <appender-ref ref="ASYNC_CONSOLE"/>
+    </root>
+
+</configuration>
