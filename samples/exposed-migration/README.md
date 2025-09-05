@@ -18,7 +18,8 @@ The function `MigrationUtils.generateMigrationScript` generates a SQL migration 
 In this sample project, the migration script will be generated inside a directory called `migrations`.
 
 ```kotlin
-implementation("org.jetbrains.exposed:exposed-migration:$exposedVersion")
+implementation("org.jetbrains.exposed:exposed-migration-core:$exposedVersion")
+implementation("org.jetbrains.exposed:exposed-migration-jdbc:$exposedVersion")
 ```
 
 The generated migration script can also be edited manually before applying a migration.
