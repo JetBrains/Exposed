@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.h2
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
@@ -31,7 +32,7 @@ class ConnectionPoolTests : LogDbInTestName() {
         }
 
         val exceedsPoolSize = (maximumPoolSize * 2 + 1).coerceAtMost(50)
-        repeat(exceedsPoolSize) { i ->
+        val jobs = (1..exceedsPoolSize).map { i ->
             launch {
                 suspendTransaction {
                     delay(100)
@@ -39,12 +40,11 @@ class ConnectionPoolTests : LogDbInTestName() {
                     TestTable.insert { it[TestTable.testValue] = "test$i" }
                 }
             }
-            // otherwise runTest skips delays
-            testScheduler.advanceUntilIdle()
         }
 
+        jobs.joinAll()
+
         suspendTransaction(h2PoolDB1) {
-//            assertEquals(exceedsPoolSize, TestEntity.all().toList().count())
             assertEquals(exceedsPoolSize, TestTable.selectAll().toList().count())
 
             SchemaUtils.drop(TestTable)
@@ -54,10 +54,4 @@ class ConnectionPoolTests : LogDbInTestName() {
     object TestTable : IntIdTable("POOL_TESTER") {
         val testValue = varchar("test_value", 32)
     }
-
-//    class TestEntity(id: EntityID<Int>) : IntEntity(id) {
-//        companion object : IntEntityClass<TestEntity>(org.jetbrains.exposed.v1.sql.tests.h2.ConnectionPoolTests.TestTable)
-//
-//        var testValue by org.jetbrains.exposed.v1.sql.tests.h2.ConnectionPoolTests.TestTable.testValue
-//    }
 }

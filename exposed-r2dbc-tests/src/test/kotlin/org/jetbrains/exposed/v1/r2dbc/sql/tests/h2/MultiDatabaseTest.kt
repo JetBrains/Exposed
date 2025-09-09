@@ -1,17 +1,11 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.h2
 
 import io.r2dbc.spi.IsolationLevel
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
-import kotlinx.coroutines.invoke
-import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.r2dbc.*
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
@@ -189,6 +183,8 @@ class MultiDatabaseTest {
         withContext(Dispatchers.IO) {
             suspendTransaction(db1) {
                 val trOuterId = this.id
+                SchemaUtils.drop(DMLTestsData.Cities)
+                assertFalse(DMLTestsData.Cities.exists())
                 SchemaUtils.create(DMLTestsData.Cities)
                 assertTrue(DMLTestsData.Cities.selectAll().empty())
                 DMLTestsData.Cities.insert {

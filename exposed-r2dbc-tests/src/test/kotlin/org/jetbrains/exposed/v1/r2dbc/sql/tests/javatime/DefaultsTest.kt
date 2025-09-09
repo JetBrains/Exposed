@@ -478,7 +478,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
         }
 
         withTables(tester) {
-            val statements = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.addMissingColumnsStatements(tester)
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
