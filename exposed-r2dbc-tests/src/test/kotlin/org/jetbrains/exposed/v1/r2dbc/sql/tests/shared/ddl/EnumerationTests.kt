@@ -84,7 +84,7 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
 
 //          val enumClass = object : IntEntityClass<EnumEntity>(EnumTable, EnumEntity::class.java) {}
 
-        supportsCustomEnumerationDB.forEach { db ->
+        TestDB.enabledDialects().forEach { db ->
             val initialDb = db.connect()
             try {
                 suspendTransaction(initialDb) {
@@ -189,7 +189,7 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
             }
         }
 
-        supportsCustomEnumerationDB.forEach { db ->
+        TestDB.enabledDialects().forEach { db ->
             val initialDb = db.connect()
             try {
                 suspendTransaction(initialDb) {

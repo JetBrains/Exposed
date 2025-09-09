@@ -14,6 +14,8 @@ import org.jetbrains.exposed.v1.core.statements.api.ResultApi
 import org.jetbrains.exposed.v1.core.statements.api.RowApi
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.r2dbc.mappers.R2dbcTypeMapping
+import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.r2dbc.transactions.withThreadLocalTransaction
 import org.reactivestreams.Publisher
 import java.util.*
 import kotlin.jvm.optionals.getOrNull
@@ -35,9 +37,16 @@ class R2dbcResult internal constructor(
 
         return flow {
             resultPublisher.collect { result ->
-                result.map { row, rm ->
-                    Optional.ofNullable(block(R2dbcRow(row, typeMapping)))
-                }.collect { emit(it.getOrNull()) }
+                val currentTransaction = TransactionManager.currentOrNull()
+                result
+                    .map { row, rm ->
+                        // The current block is run in another thread outside of coroutine,
+                        // so that thread should also get the correct transaction into the thread local variables
+                        withThreadLocalTransaction(currentTransaction) {
+                            Optional.ofNullable(block(R2dbcRow(row, typeMapping)))
+                        }
+                    }
+                    .collect { emit(it.getOrNull()) }
             }
         }
     }
@@ -48,9 +57,15 @@ class R2dbcResult internal constructor(
      */
     fun <T : Any> mapSegments(block: (Result.Segment) -> Flow<T>): Flow<T> = flow {
         resultPublisher.collect { result ->
+            val currentTransaction = TransactionManager.currentOrNull()
+
             result.flatMap<T> { segment ->
-                val rf = block(segment)
-                rf.asPublisher()
+                // The current block is run in another thread outside of coroutine,
+                // so that thread should also get the correct transaction into the thread local variables
+                withThreadLocalTransaction(currentTransaction) {
+                    val rf = block(segment)
+                    rf.asPublisher()
+                }
             }.collect { emit(it) }
         }
     }
