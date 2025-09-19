@@ -6,6 +6,7 @@ import org.jetbrains.exposed.v1.core.Schema
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
 import org.jetbrains.exposed.v1.core.transactions.nullableTransactionScope
+import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
@@ -58,10 +59,10 @@ abstract class DatabaseTestsBase {
     @Parameterized.Parameter(2)
     lateinit var testName: String
 
-    fun withDb(
+    fun withConnection(
         dbSettings: TestDB,
         configure: (DatabaseConfig.Builder.() -> Unit)? = null,
-        statement: JdbcTransaction.(TestDB) -> Unit
+        statement: (Database, TestDB) -> Unit
     ) {
         Assume.assumeTrue(dialect == dbSettings)
 
@@ -85,16 +86,27 @@ abstract class DatabaseTestsBase {
             dbSettings.db = dbSettings.connect(configure ?: {})
         }
         val database = dbSettings.db!!
-        transaction(database.transactionManager.defaultIsolationLevel, db = database) {
-            maxAttempts = 1
-            registerInterceptor(CurrentTestDBInterceptor)
-            currentTestDB = dbSettings
-            statement(dbSettings)
-        }
+
+        statement.invoke(database, dbSettings)
 
         // revert any new configuration to not be carried over to the next test in suite
         if (configure != null) {
             dbSettings.db = registeredDb
+        }
+    }
+
+    fun withDb(
+        dbSettings: TestDB,
+        configure: (DatabaseConfig.Builder.() -> Unit)? = null,
+        statement: JdbcTransaction.(TestDB) -> Unit
+    ) {
+        withConnection(dbSettings, configure) { database, testDb ->
+            transaction(database.transactionManager.defaultIsolationLevel, db = database) {
+                maxAttempts = 1
+                registerInterceptor(CurrentTestDBInterceptor)
+                currentTestDB = dbSettings
+                statement(dbSettings)
+            }
         }
     }
 

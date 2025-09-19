@@ -6,6 +6,7 @@ import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
+import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.exists
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
@@ -178,7 +179,7 @@ class CreateIndexTests : R2dbcDatabaseTestsBase() {
         }
 
         withDb(TestDB.ALL_POSTGRES + TestDB.SQLSERVER) {
-            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(tester)
+            SchemaUtils.createMissingTablesAndColumns(tester)
             assertTrue(tester.exists())
 
             val createdStatements = tester.indices.map { org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(it).first() }
