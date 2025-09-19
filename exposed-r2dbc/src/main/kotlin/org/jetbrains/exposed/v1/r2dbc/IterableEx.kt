@@ -2,7 +2,6 @@ package org.jetbrains.exposed.v1.r2dbc
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.Expression
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -102,7 +101,7 @@ class LazySizedCollection<out T>(_delegate: SizedIterable<T>) : SizedIterable<T>
     override fun offset(start: Long): SizedIterable<T> = LazySizedCollection(delegate.offset(start))
 
     override suspend fun collect(collector: FlowCollector<T>) {
-        flowOf(wrapper())
+        wrapper().forEach { collector.emit(it) }
     }
 
     override suspend fun count(): Long = _wrapper?.size?.toLong() ?: countInternal()
@@ -177,9 +176,9 @@ infix fun <T, R> SizedIterable<T>.mapLazy(f: (T) -> R): SizedIterable<R> {
 
         override suspend fun collect(collector: FlowCollector<R>) {
             if (loadedResult != null) {
-                flowOf(loadedResult)
+                loadedResult!!.forEach { collector.emit(it) }
             } else {
-                source
+                source.collect { collector.emit(f(it)) }
             }
         }
     }
