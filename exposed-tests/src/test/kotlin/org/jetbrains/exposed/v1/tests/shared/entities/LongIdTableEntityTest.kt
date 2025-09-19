@@ -1,4 +1,5 @@
 package org.jetbrains.exposed.v1.tests.shared.entities
+
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
@@ -36,7 +37,7 @@ object LongIdTables {
     }
 
     object Towns : LongIdTable("towns") {
-        val cityId: Column<Long> = long("city_id").references(Cities.id)
+        val cityId: Column<EntityID<Long>> = long("city_id").references(Cities.id)
     }
 
     class Town(id: EntityID<Long>) : LongEntity(id) {
