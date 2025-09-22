@@ -19,7 +19,11 @@ import org.jetbrains.exposed.v1.core.statements.StatementResult
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
 import org.jetbrains.exposed.v1.exceptions.LongQueryException
+import org.jetbrains.exposed.v1.r2dbc.statements.GlobalStatementInterceptorWrapper
+import org.jetbrains.exposed.v1.r2dbc.statements.GlobalSuspendStatementInterceptor
+import org.jetbrains.exposed.v1.r2dbc.statements.StatementInterceptorWrapper
 import org.jetbrains.exposed.v1.r2dbc.statements.SuspendExecutable
+import org.jetbrains.exposed.v1.r2dbc.statements.SuspendStatementInterceptor
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcResult
 import org.jetbrains.exposed.v1.r2dbc.statements.api.origin
@@ -67,7 +71,7 @@ open class R2dbcTransaction(
 
     internal var openResultRowsCount: Int = 0
 
-    internal val interceptors = arrayListOf<StatementInterceptor>()
+    internal val interceptors = arrayListOf<SuspendStatementInterceptor>()
 
     init {
         addLogger(db.config.sqlLogger)
@@ -101,10 +105,24 @@ open class R2dbcTransaction(
     }
 
     /** Adds the specified [StatementInterceptor] to act on this transaction. */
-    fun registerInterceptor(interceptor: StatementInterceptor): Boolean = interceptors.add(interceptor)
+    fun registerInterceptor(interceptor: StatementInterceptor): Boolean {
+        val suspendInterceptor = StatementInterceptorWrapper(interceptor)
+        return interceptors.add(suspendInterceptor)
+    }
+
+    /** Adds the specified [SuspendStatementInterceptor] to act on this transaction. */
+    fun registerInterceptor(interceptor: SuspendStatementInterceptor): Boolean = interceptors.add(interceptor)
 
     /** Removes the specified [StatementInterceptor] from acting on this transaction. */
-    fun unregisterInterceptor(interceptor: StatementInterceptor): Boolean = interceptors.remove(interceptor)
+    fun unregisterInterceptor(interceptor: StatementInterceptor): Boolean {
+        val foundInterceptor = interceptors.firstOrNull {
+            it is StatementInterceptorWrapper && it.originalInterceptor == interceptor
+        }
+        return foundInterceptor?.let { interceptors.remove(it) } ?: false
+    }
+
+    /** Removes the specified [SuspendStatementInterceptor] from acting on this transaction. */
+    fun unregisterInterceptor(interceptor: SuspendStatementInterceptor): Boolean = interceptors.remove(interceptor)
 
     @Suppress("MagicNumber")
     private fun describeStatement(delta: Long, stmt: String): String = "[${delta}ms] ${stmt.take(1024)}\n\n"
@@ -291,13 +309,22 @@ open class R2dbcTransaction(
     }
 
     companion object {
-        val globalInterceptors = arrayListOf<GlobalStatementInterceptor>()
+        val globalInterceptors = arrayListOf<GlobalSuspendStatementInterceptor>()
 
         init {
             ServiceLoader.load(
-                GlobalStatementInterceptor::class.java, GlobalStatementInterceptor::class.java.classLoader
+                GlobalSuspendStatementInterceptor::class.java,
+                GlobalSuspendStatementInterceptor::class.java.classLoader
             ).forEach {
                 globalInterceptors.add(it)
+            }
+
+            ServiceLoader.load(
+                GlobalStatementInterceptor::class.java,
+                GlobalStatementInterceptor::class.java.classLoader
+            ).forEach {
+                val suspendInterceptor = GlobalStatementInterceptorWrapper(it)
+                globalInterceptors.add(suspendInterceptor)
             }
         }
     }
