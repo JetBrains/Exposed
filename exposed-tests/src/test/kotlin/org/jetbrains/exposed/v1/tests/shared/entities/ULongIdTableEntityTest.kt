@@ -1,4 +1,5 @@
 package org.jetbrains.exposed.v1.tests.shared.entities
+
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.ULongIdTable
@@ -136,7 +137,7 @@ object ULongIdTables {
     }
 
     object Towns : ULongIdTable("towns") {
-        val cityId: Column<ULong> = ulong("city_id").references(Cities.id)
+        val cityId: Column<EntityID<ULong>> = ulong("city_id").references(Cities.id)
     }
 
     class Town(id: EntityID<ULong>) : ULongEntity(id) {
