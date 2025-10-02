@@ -104,8 +104,24 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
     override fun beforeRollback(transaction: Transaction) {
         val entityCache = transaction.entityCache
         entityCache.clearReferrersCache()
+
+        // Clear writeValues for all entities before clearing the cache
+        entityCache.data.values.forEach { entityMap ->
+            entityMap.values.forEach { entity ->
+                entity.writeValues.clear()
+                entity._readValues = null
+            }
+        }
+        entityCache.updates.values.forEach { entitySet ->
+            entitySet.forEach { entity ->
+                entity.writeValues.clear()
+                entity._readValues = null
+            }
+        }
+
         entityCache.data.clear()
         entityCache.inserts.clear()
+        entityCache.updates.clear()
     }
 
     private fun Transaction.flushEntities(query: AbstractQuery<*>) {

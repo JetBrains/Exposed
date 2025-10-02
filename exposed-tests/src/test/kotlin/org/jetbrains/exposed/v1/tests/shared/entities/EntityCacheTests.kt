@@ -1,15 +1,23 @@
 package org.jetbrains.exposed.v1.tests.shared.entities
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.exposedLogger
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.dao.entityCache
 import org.jetbrains.exposed.v1.dao.flushCache
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.deleteAll
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
@@ -18,6 +26,9 @@ import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.junit.Assume
 import org.junit.Test
+import java.sql.Connection.TRANSACTION_SERIALIZABLE
+import java.sql.SQLException
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
 
 class EntityCacheTests : DatabaseTestsBase() {
@@ -214,6 +225,115 @@ class EntityCacheTests : DatabaseTestsBase() {
 
             val entity = TableWithDefaultValueEntity.find { TableWithDefaultValue.value eq 1 }.first()
             assertEquals(10, entity.valueWithDefault)
+        }
+    }
+
+    /**
+     * EXPOSED-886 Changes made to DAO (entity) can be lost on serializable transaction retry (Postgres)
+     */
+    @Test
+    fun testConcurrentSerializableAccessWithTransactionsRetry() = runBlocking(Dispatchers.IO) {
+        val testSize = 10
+
+        // Only SQLite complains that the TestTable doesn't exists
+        if (dialect in listOf(TestDB.SQLITE)) {
+            Assume.assumeFalse(true)
+        }
+
+        val db1 = dialect.connect()
+        try {
+            transaction(transactionIsolation = TRANSACTION_SERIALIZABLE, db = db1) {
+                SchemaUtils.create(TestTable)
+                TestTable.deleteAll()
+
+                repeat(testSize) {
+                    TestTable.insert {
+                        it[value] = 0
+                    }
+                }
+            }
+
+            val entities = transaction(transactionIsolation = TRANSACTION_SERIALIZABLE, db = db1) {
+                TestEntity
+                    .find { TestTable.value eq 0 }
+                    .toList()
+            }
+            exposedLogger.info("total entities {}", entities.size)
+
+            List(entities.size) { index ->
+                async {
+                    val statementInvocationNumber = AtomicInteger(0)
+                    transaction(transactionIsolation = TRANSACTION_SERIALIZABLE, db = db1) {
+                        addLogger(StdOutSqlLogger)
+                        maxAttempts = 50
+
+                        val entity = entities[index]
+                        entity.value = 1
+
+                        exposedLogger.info(
+                            "Updating entity id={} invocation={}  writeValuesSize={}",
+                            entities[index].id,
+                            statementInvocationNumber.incrementAndGet(),
+                            entities[index].writeValues.size
+                        )
+                    }
+                }
+            }.awaitAll()
+
+            entities.forEach {
+                transaction(transactionIsolation = TRANSACTION_SERIALIZABLE, db = db1) {
+                    exposedLogger.info("DAO state after update: {} value={} writeValuesSize={}", it.id, it.value, it.writeValues.size)
+                }
+            }
+
+            val db2 = dialect.connect()
+
+            val notUpdated = transaction(transactionIsolation = TRANSACTION_SERIALIZABLE, db = db2) {
+                TestTable
+                    .selectAll()
+                    .where { TestTable.value eq 0 }
+                    .toList()
+            }
+
+            notUpdated.forEach {
+                exposedLogger.info("not updated: {} value={}", it[TestTable.id], it[TestTable.value])
+            }
+
+            if (notUpdated.isNotEmpty()) {
+                error("Now all entries updated, wrong value for ${notUpdated.size}")
+            }
+        } finally {
+            transaction(db1) {
+                SchemaUtils.drop(TestTable)
+            }
+        }
+    }
+
+    @Test
+    fun testEntityRestoresStateOnTransactionRestart() {
+        withConnection(dialect) { database, testDb ->
+            try {
+                val entity = transaction {
+                    SchemaUtils.create(TestTable)
+
+                    TestEntity.new { value = 1 }
+                }
+
+                transaction {
+                    maxAttempts = 5
+
+                    assertEquals(1, entity.value)
+                    entity.value += 1
+
+                    throw SQLException("force transaction rollback and restart")
+                }
+            } catch (_: SQLException) {
+                // do nothing
+            } finally {
+                transaction {
+                    SchemaUtils.drop(TestTable)
+                }
+            }
         }
     }
 }
