@@ -165,7 +165,11 @@ private suspend fun <T> withTransactionScope(
 
         val newContext = context ?: coroutineContext
 
-        return TransactionScope(tx, newContext + element).body()
+        return try {
+            TransactionScope(tx, newContext + element).body()
+        } finally {
+            manager.bindTransactionToThread(null) // remove the transaction from the ThreadLocal
+        }
     }
 
     val sameTransaction = currentScope?.holdsSameTransaction(currentTransaction) == true
