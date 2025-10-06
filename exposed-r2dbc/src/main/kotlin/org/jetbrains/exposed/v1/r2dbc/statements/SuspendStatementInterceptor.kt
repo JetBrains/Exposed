@@ -100,36 +100,7 @@ internal class StatementInterceptorWrapper(
  * so they can be processed together using a single `R2dbcTransaction.globalInterceptors` property.
  */
 internal class GlobalStatementInterceptorWrapper(
-    internal val originalInterceptor: GlobalStatementInterceptor
-) : GlobalSuspendStatementInterceptor {
-    override suspend fun beforeExecution(transaction: R2dbcTransaction, context: StatementContext) {
-        originalInterceptor.beforeExecution(transaction, context)
-    }
-
-    override suspend fun afterStatementPrepared(
-        transaction: R2dbcTransaction,
-        preparedStatement: R2dbcPreparedStatementApi
-    ) {
-        originalInterceptor.afterStatementPrepared(transaction, preparedStatement)
-    }
-
-    override suspend fun afterExecution(
-        transaction: R2dbcTransaction,
-        contexts: List<StatementContext>,
-        executedStatement: R2dbcPreparedStatementApi
-    ) {
-        originalInterceptor.afterExecution(transaction, contexts, executedStatement)
-    }
-
-    override suspend fun beforeCommit(transaction: R2dbcTransaction) { originalInterceptor.beforeCommit(transaction) }
-
-    override suspend fun afterCommit(transaction: R2dbcTransaction) { originalInterceptor.afterCommit(transaction) }
-
-    override suspend fun beforeRollback(transaction: R2dbcTransaction) { originalInterceptor.beforeRollback(transaction) }
-
-    override suspend fun afterRollback(transaction: R2dbcTransaction) { originalInterceptor.afterRollback(transaction) }
-
-    override fun keepUserDataInTransactionStoreOnCommit(userData: Map<Key<*>, Any?>): Map<Key<*>, Any?> {
-        return originalInterceptor.keepUserDataInTransactionStoreOnCommit(userData)
-    }
+    private val wrapper: StatementInterceptorWrapper,
+) : GlobalSuspendStatementInterceptor, SuspendStatementInterceptor by wrapper {
+    constructor(originalInterceptor: GlobalStatementInterceptor) : this(StatementInterceptorWrapper(originalInterceptor))
 }
