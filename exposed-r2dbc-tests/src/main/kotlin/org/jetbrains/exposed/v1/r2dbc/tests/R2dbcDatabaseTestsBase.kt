@@ -2,11 +2,13 @@ package org.jetbrains.exposed.v1.r2dbc.tests
 
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.DatabaseConfig
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Key
 import org.jetbrains.exposed.v1.core.Schema
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
 import org.jetbrains.exposed.v1.core.transactions.nullableTransactionScope
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
@@ -59,10 +61,11 @@ abstract class R2dbcDatabaseTestsBase {
     @Parameterized.Parameter(2)
     lateinit var testName: String
 
-    fun withDb(
+    @OptIn(InternalApi::class)
+    fun withConnection(
         dbSettings: TestDB,
         configure: (DatabaseConfig.Builder.() -> Unit)? = null,
-        statement: suspend R2dbcTransaction.(TestDB) -> Unit
+        statement: suspend (R2dbcDatabase, TestDB) -> Unit
     ) = runTest {
         Assume.assumeTrue(dialect == dbSettings)
 
@@ -86,16 +89,25 @@ abstract class R2dbcDatabaseTestsBase {
             dbSettings.db = dbSettings.connect(configure ?: {})
         }
         val database = dbSettings.db!!
+
+        statement(database, dbSettings)
+
+        // revert any new configuration to not be carried over to the next test in suite
+        if (configure != null) {
+            dbSettings.db = registeredDb
+        }
+    }
+
+    fun withDb(
+        dbSettings: TestDB,
+        configure: (DatabaseConfig.Builder.() -> Unit)? = null,
+        statement: suspend R2dbcTransaction.(TestDB) -> Unit
+    ) = withConnection(dbSettings, configure) { database, testDb ->
         suspendTransaction(database.transactionManager.defaultIsolationLevel!!, db = database) {
             maxAttempts = 1
             registerInterceptor(CurrentTestDBInterceptor)
             currentTestDB = dbSettings
             statement(dbSettings)
-        }
-
-        // revert any new configuration to not be carried over to the next test in suite
-        if (configure != null) {
-            dbSettings.db = registeredDb
         }
     }
 

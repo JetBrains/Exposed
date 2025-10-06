@@ -25,6 +25,8 @@ import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedDatabaseMetadat
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcSavepoint
 import org.jetbrains.exposed.v1.r2dbc.statements.api.getBoolean
 import org.jetbrains.exposed.v1.r2dbc.statements.api.getString
+import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.r2dbc.transactions.withThreadLocalTransaction
 import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.MetadataProvider
 import org.reactivestreams.Publisher
 import java.util.*
@@ -255,8 +257,14 @@ internal suspend fun <T> Connection.executeSQL(
         createStatement(sqlQuery)
             .execute()
             .collect { row ->
+                val currentTransaction = TransactionManager.currentOrNull()
+
                 row.map { row, metadata ->
-                    transform(row, metadata)
+                    // The current block is run in another thread outside of coroutine,
+                    // so that thread should also get the correct transaction into the thread local variables
+                    withThreadLocalTransaction(currentTransaction) {
+                        transform(row, metadata)
+                    }
                 }.collect { emit(it) }
             }
     }.toList()
