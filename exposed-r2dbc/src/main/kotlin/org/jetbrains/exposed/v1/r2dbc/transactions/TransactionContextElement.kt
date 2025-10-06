@@ -22,6 +22,12 @@ internal class TransactionContextElement(
     override fun restoreThreadContext(context: CoroutineContext, oldState: R2dbcTransaction?) {
         val poppedTransaction = ThreadLocalTransactionsStack.popTransaction()
         if (poppedTransaction.id != transaction.id) {
+            exposedLogger.warn(
+                "The current thread local stack of transactions had a transaction ${poppedTransaction.id} on the top. " +
+                    "But it differs from the transaction ${transaction.id} in the coroutine context. " +
+                    "Normally it should not happen because the coroutine adds its transaction into the thread " +
+                    "local stack on the start and removes it on the end of execution"
+            )
             exposedLogger.warn("Popped transaction ${poppedTransaction.id} doesn't match expected ${transaction.id}")
         }
 

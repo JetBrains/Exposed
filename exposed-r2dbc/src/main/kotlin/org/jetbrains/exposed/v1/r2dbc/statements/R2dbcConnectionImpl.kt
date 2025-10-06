@@ -254,10 +254,11 @@ internal suspend fun <T> Connection.executeSQL(
     if (sqlQuery.isEmpty()) return null
 
     return flow {
-        val currentTransaction = TransactionManager.currentOrNull()
         createStatement(sqlQuery)
             .execute()
             .collect { row ->
+                val currentTransaction = TransactionManager.currentOrNull()
+
                 row.map { row, metadata ->
                     // The current block is run in another thread outside of coroutine,
                     // so that thread should also get the correct transaction into the thread local variables

@@ -272,7 +272,6 @@ class ConnectionTests : R2dbcDatabaseTestsBase() {
                                     // Force some work within the transaction
                                     yield()
 
-                                    // Simulate an upsert operation like in the issue
                                     tester.selectAll().where { tester.name eq "test_$iteration" }.singleOrNull()
 
                                     // Force another yield within transaction

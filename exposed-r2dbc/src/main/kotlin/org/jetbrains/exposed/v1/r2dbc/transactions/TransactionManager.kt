@@ -322,14 +322,13 @@ suspend fun <T> suspendTransactionAsync(
  * @return The final result of the [statement] block.
  */
 suspend fun <T> suspendTransaction(db: R2dbcDatabase? = null, statement: suspend R2dbcTransaction.() -> T): T {
-    val currentDatabase = db ?: TransactionManager.defaultDatabase
-    val defaultIsolation = currentDatabase.transactionManager.defaultIsolationLevel
+    val defaultIsolation = db.transactionManager.defaultIsolationLevel
     require(defaultIsolation != null) { "A default isolation level for this transaction has not been set" }
 
     return suspendTransaction(
         defaultIsolation,
-        currentDatabase.transactionManager.defaultReadOnly,
-        currentDatabase,
+        db.transactionManager.defaultReadOnly,
+        db,
         statement
     )
 }
