@@ -18,3 +18,22 @@ In this situation, a new file should be created in the *resources* folder named:
 META-INF/services/org.jetbrains.exposed.v1.core.statements.GlobalStatementInterceptor
 ```
 The contents of this file should be the fully qualified class names of all custom implementations.
+
+## Suspend operations
+
+<tldr>
+    <p>
+        <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-r2dbc</code>
+    </p>
+    <include from="lib.topic" element-id="r2dbc-supported"/>
+</tldr>
+
+Exposed additionally provides both
+the [`SuspendStatementInterceptor`](https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc.statements/-suspend-statement-interceptor/index.html)
+and [`GlobalSuspendStatementInterceptor`](https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc.statements/-global-suspend-statement-interceptor/index.html)
+interfaces.
+
+As in the previous section, these interfaces allow you to implement your own logic at the same points in a statement's lifecycle,
+but their methods allow the use of suspending functions and database operation methods specific to R2DBC suspend transactions.
+
+These custom suspend interceptors can be enabled and disabled in the same way as the core statement interceptors.

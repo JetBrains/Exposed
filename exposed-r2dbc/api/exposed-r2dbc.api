@@ -336,12 +336,14 @@ public class org/jetbrains/exposed/v1/r2dbc/R2dbcTransaction : org/jetbrains/exp
 	public fun getReadOnly ()Z
 	public fun getTransactionIsolation ()Lio/r2dbc/spi/IsolationLevel;
 	public final fun registerInterceptor (Lorg/jetbrains/exposed/v1/core/statements/StatementInterceptor;)Z
+	public final fun registerInterceptor (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor;)Z
 	public fun rollback (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun setCurrentStatement (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;)V
 	public final fun setMaxAttempts (I)V
 	public final fun setMaxRetryDelay (J)V
 	public final fun setMinRetryDelay (J)V
 	public final fun unregisterInterceptor (Lorg/jetbrains/exposed/v1/core/statements/StatementInterceptor;)Z
+	public final fun unregisterInterceptor (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor;)Z
 }
 
 public final class org/jetbrains/exposed/v1/r2dbc/R2dbcTransaction$Companion {
@@ -668,6 +670,20 @@ public class org/jetbrains/exposed/v1/r2dbc/statements/DeleteSuspendExecutable :
 	public fun prepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
+public abstract interface class org/jetbrains/exposed/v1/r2dbc/statements/GlobalSuspendStatementInterceptor : org/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor {
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/statements/GlobalSuspendStatementInterceptor$DefaultImpls {
+	public static fun afterCommit (Lorg/jetbrains/exposed/v1/r2dbc/statements/GlobalSuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun afterExecution (Lorg/jetbrains/exposed/v1/r2dbc/statements/GlobalSuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/util/List;Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun afterRollback (Lorg/jetbrains/exposed/v1/r2dbc/statements/GlobalSuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun afterStatementPrepared (Lorg/jetbrains/exposed/v1/r2dbc/statements/GlobalSuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun beforeCommit (Lorg/jetbrains/exposed/v1/r2dbc/statements/GlobalSuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun beforeExecution (Lorg/jetbrains/exposed/v1/r2dbc/statements/GlobalSuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lorg/jetbrains/exposed/v1/core/statements/StatementContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun beforeRollback (Lorg/jetbrains/exposed/v1/r2dbc/statements/GlobalSuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun keepUserDataInTransactionStoreOnCommit (Lorg/jetbrains/exposed/v1/r2dbc/statements/GlobalSuspendStatementInterceptor;Ljava/util/Map;)Ljava/util/Map;
+}
+
 public class org/jetbrains/exposed/v1/r2dbc/statements/InsertSelectSuspendExecutable : org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/InsertSelectStatement;)V
 	public fun execute (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -787,6 +803,28 @@ public final class org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable$D
 
 public final class org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutableKt {
 	public static final fun toExecutable (Lorg/jetbrains/exposed/v1/core/statements/Statement;)Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable;
+}
+
+public abstract interface class org/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor {
+	public abstract fun afterCommit (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun afterExecution (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/util/List;Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun afterRollback (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun afterStatementPrepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun beforeCommit (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun beforeExecution (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lorg/jetbrains/exposed/v1/core/statements/StatementContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun beforeRollback (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun keepUserDataInTransactionStoreOnCommit (Ljava/util/Map;)Ljava/util/Map;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor$DefaultImpls {
+	public static fun afterCommit (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun afterExecution (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/util/List;Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun afterRollback (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun afterStatementPrepared (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun beforeCommit (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun beforeExecution (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lorg/jetbrains/exposed/v1/core/statements/StatementContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun beforeRollback (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun keepUserDataInTransactionStoreOnCommit (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor;Ljava/util/Map;)Ljava/util/Map;
 }
 
 public class org/jetbrains/exposed/v1/r2dbc/statements/UpdateSuspendExecutable : org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable {

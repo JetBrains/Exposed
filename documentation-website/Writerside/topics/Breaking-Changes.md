@@ -1,5 +1,11 @@
 # Breaking Changes
 
+## 1.0.0-rc-2
+
+* `R2dbcTransaction.globalInterceptors` property now stores a collection of `GlobalSuspendStatementInterceptor` instances.
+  Any loaded `GlobalStatementInterceptor` implementations are automatically wrapped to be compatible with the new interceptor
+  type, so no changes need to be made to how any existing custom interceptors are declared in the `resources` folder.
+
 ## 1.0.0-rc-1
 
 * `exposed-migration` artifact has been replaced with `exposed-migration-core` to hold core common schema migration functionality across both available drivers.
