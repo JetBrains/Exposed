@@ -28,7 +28,7 @@ class EntityCache(private val transaction: Transaction) {
     /** The mapping of [IdTable]s to associated [Entity] instances (as a mapping of entity id values to entities). */
     val data = LinkedHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>()
     internal val inserts = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
-    private val updates = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
+    internal val updates = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
     internal val referrers = HashMap<Column<*>, MutableMap<EntityID<*>, SizedIterable<*>>>()
 
     /**
