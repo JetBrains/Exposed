@@ -35,7 +35,7 @@ class SuspendTransactionTests : DatabaseTestsBase() {
                 defaultMaxAttempts = 20
             }
         ) {
-            inTopLevelTransaction(TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = TRANSACTION_SERIALIZABLE) {
                 TestConflictTable.insert {
                     it[id] = uuid
                     it[value] = 0

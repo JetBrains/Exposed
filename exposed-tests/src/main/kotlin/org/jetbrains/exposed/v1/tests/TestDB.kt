@@ -89,7 +89,7 @@ enum class TestDB(
             password = "Oracle18",
             driver = ORACLE.driver
         )
-        transaction(Connection.TRANSACTION_READ_COMMITTED, db = tmp) {
+        transaction(tmp, Connection.TRANSACTION_READ_COMMITTED) {
             maxAttempts = 1
 
             @Suppress("SwallowedException", "TooGenericExceptionCaught")

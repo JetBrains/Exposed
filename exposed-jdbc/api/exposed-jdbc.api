@@ -826,12 +826,10 @@ public final class org/jetbrains/exposed/v1/jdbc/transactions/TransactionManager
 }
 
 public final class org/jetbrains/exposed/v1/jdbc/transactions/TransactionManagerKt {
-	public static final fun inTopLevelTransaction (IZLorg/jetbrains/exposed/v1/jdbc/Database;Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
-	public static synthetic fun inTopLevelTransaction$default (IZLorg/jetbrains/exposed/v1/jdbc/Database;Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
-	public static final fun transaction (IZLorg/jetbrains/exposed/v1/jdbc/Database;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
-	public static final fun transaction (Lorg/jetbrains/exposed/v1/jdbc/Database;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
-	public static synthetic fun transaction$default (IZLorg/jetbrains/exposed/v1/jdbc/Database;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
-	public static synthetic fun transaction$default (Lorg/jetbrains/exposed/v1/jdbc/Database;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun inTopLevelTransaction (Lorg/jetbrains/exposed/v1/jdbc/Database;IZLorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public static synthetic fun inTopLevelTransaction$default (Lorg/jetbrains/exposed/v1/jdbc/Database;IZLorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun transaction (Lorg/jetbrains/exposed/v1/jdbc/Database;IZLkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public static synthetic fun transaction$default (Lorg/jetbrains/exposed/v1/jdbc/Database;IZLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/v1/jdbc/transactions/experimental/SuspendedKt {

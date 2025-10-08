@@ -6,7 +6,6 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.junit.Assume
@@ -20,7 +19,7 @@ class RollbackTransactionTest : DatabaseTestsBase() {
     @Test
     fun testRollbackWithoutSavepoints() {
         withTables(RollbackTable) {
-            inTopLevelTransaction(db.transactionManager.defaultIsolationLevel) {
+            inTopLevelTransaction {
                 maxAttempts = 1
                 RollbackTable.insert { it[value] = "before-dummy" }
                 transaction {
@@ -42,7 +41,7 @@ class RollbackTransactionTest : DatabaseTestsBase() {
     @Test
     fun testRollbackWithSavepoints() {
         withTables(RollbackTable, configure = { useNestedTransactions = true }) {
-            inTopLevelTransaction(db.transactionManager.defaultIsolationLevel) {
+            inTopLevelTransaction {
                 maxAttempts = 1
                 RollbackTable.insert { it[value] = "before-dummy" }
                 transaction {

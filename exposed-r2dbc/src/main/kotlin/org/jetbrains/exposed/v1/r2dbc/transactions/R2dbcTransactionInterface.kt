@@ -13,7 +13,7 @@ interface R2dbcTransactionInterface : TransactionInterface {
     override val outerTransaction: R2dbcTransaction?
 
     /** The transaction isolation level of the transaction, which may differ from the set database level. */
-    val transactionIsolation: IsolationLevel
+    val transactionIsolation: IsolationLevel?
 
     /** Retrieves the database connection used by the transaction. */
     suspend fun connection(): R2dbcExposedConnection<*>

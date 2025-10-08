@@ -541,16 +541,16 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 it[Towns.name] = "Town A"
             }
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 Town.new(id) {
                     population = 1000
                 }
             }
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 val town = Town[id]
                 town.population = 2000
             }
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 val town = Town[id]
                 assertEquals(2000, town.population)
             }
@@ -677,7 +677,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 // preload referencedOn - child to single parent
                 Author.find { Authors.id eq authorA.id }.first().load(Author::publisher)
@@ -686,7 +686,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 assertEquals(publisherA.id, Publisher.testCache(foundAuthor.readCompositeIDValues(Publishers))?.id)
             }
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 // preload optionalReferencedOn - child to single parent?
                 Office.all().with(Office::publisher)
@@ -734,7 +734,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 // preload backReferencedOn - parent to single child
                 val cache = TransactionManager.current().entityCache
@@ -743,7 +743,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 assertEqualLists(listOf(reviewA.id), result)
             }
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 // preload optionalBackReferencedOn - parent to single child?
                 val cache = TransactionManager.current().entityCache
@@ -785,7 +785,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 // preload referrersOn - parent to multiple children
                 val cache = TransactionManager.current().entityCache
@@ -794,7 +794,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 assertEqualLists(listOf(authorA.id, authorB.id), result)
             }
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 // preload optionalReferrersOn - parent to multiple children?
                 val cache = TransactionManager.current().entityCache
