@@ -23,8 +23,6 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.jetbrains.exposed.v1.r2dbc.transactions.transactionManager
-import org.junit.After
 import org.junit.Assume
 import org.junit.Before
 import org.junit.Test
@@ -54,14 +52,9 @@ class MultiDatabaseTest {
     @Before
     fun before() {
         Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
-        if (TransactionManager.isInitialized()) {
-            currentDB = TransactionManager.currentOrNull()?.db
+        TransactionManager.currentDatabase?.let {
+            currentDB = it
         }
-    }
-
-    @After
-    fun after() {
-        TransactionManager.resetCurrent(currentDB?.transactionManager)
     }
 
     @Test
@@ -239,7 +232,8 @@ class MultiDatabaseTest {
     fun `when default database is not explicitly set - should return the latest connection`() {
         db1
         db2
-        assertEquals(TransactionManager.defaultDatabase, db2)
+        assertEquals(TransactionManager.currentDatabase, db2)
+        assertEquals(TransactionManager.currentDatabase, db2)
     }
 
     @Test
@@ -257,7 +251,7 @@ class MultiDatabaseTest {
         db2
         TransactionManager.defaultDatabase = db1
         TransactionManager.closeAndUnregister(db1)
-        assertEquals(TransactionManager.defaultDatabase, db2)
+        assertEquals(TransactionManager.currentDatabase, db2)
         TransactionManager.defaultDatabase = null
     }
 

@@ -8,6 +8,8 @@ interface TransactionInterface {
     /** The database on which the transaction tasks are performed. */
     val db: DatabaseApi
 
+    val transactionManager: TransactionManagerApi
+
     /** Whether the transaction is in read-only mode. */
     val readOnly: Boolean
 

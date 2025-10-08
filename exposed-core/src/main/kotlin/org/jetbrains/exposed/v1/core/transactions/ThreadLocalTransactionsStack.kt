@@ -1,6 +1,8 @@
-package org.jetbrains.exposed.v1.r2dbc.transactions
+package org.jetbrains.exposed.v1.core.transactions
 
-import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
+import org.jetbrains.exposed.v1.core.DatabaseApi
+import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.Transaction
 import java.util.Stack
 import kotlin.concurrent.getOrSet
 
@@ -18,14 +20,15 @@ import kotlin.concurrent.getOrSet
  * - withTransactionContext(...)
  * - withThreadLocalTransaction(...)
  */
-internal object ThreadLocalTransactionsStack {
-    private val transactions = ThreadLocal<Stack<R2dbcTransaction>>()
+@InternalApi
+object ThreadLocalTransactionsStack {
+    private val transactions = ThreadLocal<Stack<Transaction>>()
 
     /**
      * Pushes the given transaction onto the current thread's stack.
      * If the stack does not exist yet for this thread, it is created.
      */
-    fun pushTransaction(transaction: R2dbcTransaction) {
+    fun pushTransaction(transaction: Transaction) {
         transactions.getOrSet { Stack() }.push(transaction)
     }
 
@@ -38,7 +41,7 @@ internal object ThreadLocalTransactionsStack {
      * Automatically clears the thread-local when the stack becomes empty,
      * helping the GC and preventing thread-local leaks.
      */
-    fun popTransaction(): R2dbcTransaction {
+    fun popTransaction(): Transaction {
         val stack = transactions.get()
         require(stack != null && stack.isNotEmpty()) { "No transaction to pop" }
         val result = stack.pop()
@@ -55,9 +58,29 @@ internal object ThreadLocalTransactionsStack {
      * Returns the current top transaction or null if none is present.
      * Does not modify the stack.
      */
-    fun getTransactionOrNull(): R2dbcTransaction? {
+    fun getTransactionOrNull(): Transaction? {
         val stack = transactions.get() ?: return null
         return if (stack.isEmpty()) null else stack.peek()
+    }
+
+    /**
+     * Returns the most recent transaction for the specified [db] from the stack,
+     * or null if none is found.
+     *
+     * This method performs a linear search through the transaction stack to find
+     * the most recent transaction associated with the given database. Does not modify the stack.
+     *
+     * **Performance Note**: The current implementation uses [List.findLast] which has O(n) time complexity.
+     * For scenarios with many concurrent database connections, this may become a bottleneck.
+     * Consider using a more efficient data structure (e.g., a Map of database to transaction stack)
+     * if performance profiling indicates this is a problem.
+     *
+     * @param db The database for which to find the transaction
+     * @return The most recent transaction for the specified database, or null if not found
+     */
+    // TODO make search in list is not optimal, another structure should be used
+    fun getTransactionOrNull(db: DatabaseApi): Transaction? {
+        return transactions.get()?.findLast { it.db == db }
     }
 
     /**

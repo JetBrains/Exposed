@@ -23,7 +23,7 @@ val currentDialectMetadataTest: DatabaseDialectMetadata
 
 val currentDialectIfAvailableTest: DatabaseDialect?
     get() =
-        if (TransactionManager.isInitialized() && TransactionManager.currentOrNull() != null) {
+        if (TransactionManager.currentOrNull() != null) {
             currentDialectTest
         } else {
             null

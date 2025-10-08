@@ -31,6 +31,7 @@ Exposed is organized into multiple modules:
 ### Testing Modules
 - **exposed-tests**: Tests for JDBC implementation
 - **exposed-r2dbc-tests**: Tests for R2DBC implementation
+- **exposed-jdbc-r2dbc-tests**: Tests for JDBC and R2DBC mixed in one module
 
 ## Supported Databases
 Exposed supports multiple database engines:

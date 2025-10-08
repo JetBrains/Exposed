@@ -29,6 +29,7 @@ import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcResult
 import org.jetbrains.exposed.v1.r2dbc.statements.api.origin
 import org.jetbrains.exposed.v1.r2dbc.statements.executeIn
 import org.jetbrains.exposed.v1.r2dbc.transactions.R2dbcTransactionInterface
+import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.transactionManager
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -38,6 +39,9 @@ open class R2dbcTransaction(
     private val transactionImpl: R2dbcTransactionInterface
 ) : Transaction(), R2dbcTransactionInterface by transactionImpl {
     final override val db: R2dbcDatabase = transactionImpl.db
+
+    override val transactionManager: TransactionManager
+        get() = db.transactionManager
 
     /**
      * The maximum amount of attempts that will be made to perform this `transaction` block.
@@ -144,6 +148,8 @@ open class R2dbcTransaction(
             throw ExposedR2dbcException(cause, stmt, this)
         }
     }
+
+    internal fun asContext() = transactionManager.createTransactionContext(this)
 
     /**
      * Executes the provided statement exactly, using the supplied [args] to set values to question mark

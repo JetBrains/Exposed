@@ -59,9 +59,10 @@ class SpringTransactionManagerTest {
 
         tm2.executeAssert(false) {
             tm.executeAssert(false)
+
             assertEquals(
-                TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),
-                TransactionManager.manager
+                TransactionManager.currentOrNull()?.db?.let { TransactionManager.getTransactionManager(it) },
+                TransactionManager.currentTransactionManager
             )
         }
     }
@@ -110,8 +111,8 @@ class SpringTransactionManagerTest {
         tm1.executeAssert {
             tm2.executeAssert()
             assertEquals(
-                TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),
-                TransactionManager.manager
+                TransactionManager.currentOrNull()?.db?.let { TransactionManager.getTransactionManager(it) },
+                TransactionManager.currentTransactionManager
             )
         }
 
@@ -132,8 +133,8 @@ class SpringTransactionManagerTest {
                     throw ex
                 }
                 assertEquals(
-                    TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),
-                    TransactionManager.manager
+                    TransactionManager.currentOrNull()?.db?.let { TransactionManager.getTransactionManager(it) },
+                    TransactionManager.currentTransactionManager
                 )
             }
         } catch (e: Exception) {
@@ -396,10 +397,13 @@ class SpringTransactionManagerTest {
         tt.propagationBehavior = propagationBehavior
         if (timeout != null) tt.timeout = timeout
         tt.executeWithoutResult {
-            assertEquals(
-                TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),
-                TransactionManager.manager
-            )
+            TransactionManager.currentOrNull()?.db?.let { db ->
+                assertEquals(
+                    TransactionManager.getTransactionManager(db),
+                    TransactionManager.currentTransactionManager
+                )
+            }
+
             if (initializeConnection) TransactionManager.current().connection
             body(it)
         }
