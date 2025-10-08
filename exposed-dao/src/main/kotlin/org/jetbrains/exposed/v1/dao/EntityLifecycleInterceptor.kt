@@ -105,7 +105,10 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
         val entityCache = transaction.entityCache
         entityCache.clearReferrersCache()
 
-        // Clear writeValues for all entities before clearing the cache
+        // Clear writeValues and readValues for all entities before clearing the cache to prevent
+        // stale data from being carried over into a new transaction. Ideally, at this stage,
+        // values from writeValues should not have been transferred to readValues yet, but we clear
+        // both for reliability to ensure complete cleanup.
         entityCache.data.values.forEach { entityMap ->
             entityMap.values.forEach { entity ->
                 entity.writeValues.clear()

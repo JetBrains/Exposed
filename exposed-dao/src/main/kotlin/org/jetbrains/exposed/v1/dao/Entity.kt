@@ -64,7 +64,13 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
     var db: Database by Delegates.notNull()
         internal set
 
-    /** The initial column-value mapping for this [Entity] instance before being flushed and inserted into the database. */
+    /**
+     * The initial column-value mapping for this [Entity] instance before being flushed and inserted into the database.
+     *
+     * These values are transferred to [readValues] before being sent to the database during a flush operation.
+     * In case of a transaction failure, both [writeValues] and [readValues] are cleared before rollback
+     * to ensure that no stale data is carried over into a new transaction.
+     */
     val writeValues = LinkedHashMap<Column<Any?>, Any?>()
 
     @Suppress("VariableNaming")
