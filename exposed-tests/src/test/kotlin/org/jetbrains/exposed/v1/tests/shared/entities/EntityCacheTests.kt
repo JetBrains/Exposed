@@ -300,7 +300,7 @@ class EntityCacheTests : DatabaseTestsBase() {
             }
 
             if (notUpdated.isNotEmpty()) {
-                error("Now all entries updated, wrong value for ${notUpdated.size}")
+                error("Not all entries updated, wrong value for ${notUpdated.size}")
             }
         } finally {
             transaction(db1) {
