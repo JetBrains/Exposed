@@ -1,3 +1,24 @@
+# 1.0.0-rc-2
+
+Infrastructure:
+* springFramework 6.2.11
+* springBoot 3.5.6
+* logcaptor 2.12.1
+* r2dbc-mssql 1.0.3.RELEASE
+* org.postgresql:postgresql 42.7.8
+
+Breaking changes:
+* feat!: EXPOSED-882 Add StatementInterceptor that allows suspend operations by @bog-walk in https://github.com/JetBrains/Exposed/pull/2621
+
+Bug fixes:
+* fix: EXPOSED-856 Add support for inserting UUID arrays in R2DBC by @Blad3Mak3r in https://github.com/JetBrains/Exposed/pull/2593
+* fix: Refactoring of switching between coroutines by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2619
+* fix: EXPOSED-886 Changes made to DAO (entity) can be lost on serializable transaction retry by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2627
+
+Docs:
+* docs: fix: EXPOSED-873 Update API links and extension modules table by @vnikolova in https://github.com/JetBrains/Exposed/pull/2612
+* docs: fix: EXPOSED-883 Broken API links in Statement-Interceptors.md by @vnikolova in https://github.com/JetBrains/Exposed/pull/2625
+
 # 1.0.0-rc-1
 
 ## What's Changed

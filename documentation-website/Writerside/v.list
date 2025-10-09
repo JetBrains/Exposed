@@ -2,7 +2,7 @@
 <!DOCTYPE vars SYSTEM "https://helpserver.labs.jb.gg/help/schemas/mvp/vars.dtd">
 <vars>
     <var name="product" value="Writerside"/>
-    <var name="exposed_version" value="1.0.0-rc-1"/>
+    <var name="exposed_version" value="1.0.0-rc-2"/>
     <var name="h2_db_version" value="2.2.224"/>
     <var name="h2_r2dbc_version" value="1.0.0.RELEASE"/>
     <var name="mariadb" value="3.3.1"/>
