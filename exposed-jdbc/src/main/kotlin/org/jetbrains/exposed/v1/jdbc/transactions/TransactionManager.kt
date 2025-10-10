@@ -294,6 +294,9 @@ class TransactionManager(
  * **Note** If the database value [db] is not set, the value used will be either the last [Database] instance created
  * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
  *
+ * @param db Database to use for the transaction. Defaults to `null`.
+ * @param transactionIsolation Transaction isolation level. Defaults to `db.transactionManager.defaultIsolationLevel`.
+ * @param readOnly Whether the transaction should be read-only. Defaults to `db.transactionManager.defaultReadOnly`.
  * @return The final result of the [statement] block.
  * @sample org.jetbrains.exposed.v1.tests.shared.ConnectionTimeoutTest.testTransactionRepetitionWithDefaults
  */
@@ -373,6 +376,10 @@ fun <T> transaction(
  * **Note** If the database value [db] is not set, the value used will be either the last [Database] instance created
  * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
  *
+ * @param db Database to use for the transaction. Defaults to `null`.
+ * @param transactionIsolation Transaction isolation level. Defaults to `db.transactionManager.defaultIsolationLevel`.
+ * @param readOnly Whether the transaction should be read-only. Defaults to `db.transactionManager.defaultReadOnly`.
+ * @param outerTransaction Outer transaction if this is a nested transaction. Defaults to `null`.
  * @return The final result of the [statement] block.
  * @sample org.jetbrains.exposed.v1.tests.shared.RollbackTransactionTest.testRollbackWithoutSavepoints
  */

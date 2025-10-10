@@ -320,6 +320,10 @@ suspend fun <T> suspendTransactionAsync(
  *
  * **Note** If the database value [db] is not set, the value used will be either the last [R2dbcDatabase] instance created
  * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
+ *
+ * @param db Database to use for the transaction. Defaults to `null`.
+ * @param transactionIsolation Transaction isolation level. Defaults to `db.transactionManager.defaultIsolationLevel`.
+ * @param readOnly Whether the transaction should be read-only. Defaults to `false`.
  */
 suspend fun <T> suspendTransaction(
     db: R2dbcDatabase? = null,
@@ -397,6 +401,10 @@ suspend fun <T> suspendTransaction(
  * **Note** If the database value [db] is not set, the value used will be either the last [R2dbcDatabase] instance created
  * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
  *
+ * @param db Database to use for the transaction. Defaults to `null`.
+ * @param transactionIsolation Transaction isolation level. Defaults to `db.transactionManager.defaultIsolationLevel`.
+ * @param readOnly Whether the transaction should be read-only. Defaults to `db.transactionManager.defaultReadOnly`.
+ * @param outerTransaction Outer transaction if this is a nested transaction. Defaults to `null`.
  * @return The final result of the [statement] block.
  */
 @Suppress("TooGenericExceptionCaught")
