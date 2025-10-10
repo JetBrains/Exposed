@@ -19,7 +19,6 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.jetbrains.exposed.v1.r2dbc.transactions.transactionManager
 import org.junit.Assume
 import org.junit.Test
 import kotlin.test.assertContains
@@ -89,7 +88,7 @@ class NestedTransactionsTest : R2dbcDatabaseTestsBase() {
             assertNotNull(TransactionManager.currentOrNull())
 
             try {
-                inTopLevelSuspendTransaction(this.transactionIsolation) {
+                inTopLevelSuspendTransaction(transactionIsolation = this.transactionIsolation) {
                     maxAttempts = 1
                     throw IllegalStateException("Should be rethrow")
                 }
@@ -118,7 +117,7 @@ class NestedTransactionsTest : R2dbcDatabaseTestsBase() {
             assertEquals(1, DMLTestsData.Cities.selectAll().count())
 
             try {
-                inTopLevelSuspendTransaction(db.transactionManager.defaultIsolationLevel!!, db = db) {
+                inTopLevelSuspendTransaction(db) {
                     val innerTxId = this.id
                     assertNotEquals(outerTxId, innerTxId)
 
@@ -177,7 +176,7 @@ class NestedTransactionsTest : R2dbcDatabaseTestsBase() {
             assertEquals(1, DMLTestsData.Cities.selectAll().count())
 
             try {
-                inTopLevelSuspendTransaction(db.transactionManager.defaultIsolationLevel!!, db = db) {
+                inTopLevelSuspendTransaction(db) {
                     val innerTxId = this.id
                     assertNotEquals(outerTxId, innerTxId)
 

@@ -195,7 +195,7 @@ class MultiDatabaseTest {
                     it[DMLTestsData.Cities.name] = "city1"
                 }
 
-                inTopLevelSuspendTransaction(db2.transactionManager.defaultIsolationLevel!!, db = db2) {
+                inTopLevelSuspendTransaction(db2) {
                     assertFalse(this.id == trOuterId)
                     assertFalse(DMLTestsData.Cities.exists())
                     SchemaUtils.create(DMLTestsData.Cities)

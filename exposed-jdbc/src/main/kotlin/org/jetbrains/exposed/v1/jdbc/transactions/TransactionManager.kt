@@ -288,36 +288,22 @@ class TransactionManager(
 }
 
 /**
- * Creates a transaction then calls the [statement] block with this transaction as its receiver and returns the result.
- *
- * **Note** If the database value [db] is not set, the value used will be either the last [Database] instance created
- * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
- *
- * @return The final result of the [statement] block.
- * @sample org.jetbrains.exposed.v1.tests.h2.MultiDatabaseTest.testTransactionWithDatabase
- */
-fun <T> transaction(db: Database? = null, statement: JdbcTransaction.() -> T): T =
-    transaction(
-        db.transactionManager.defaultIsolationLevel,
-        db.transactionManager.defaultReadOnly,
-        db,
-        statement
-    )
-
-/**
  * Creates a transaction with the specified [transactionIsolation] and [readOnly] settings, then calls
  * the [statement] block with this transaction as its receiver and returns the result.
  *
  * **Note** If the database value [db] is not set, the value used will be either the last [Database] instance created
  * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
  *
+ * @param db Database to use for the transaction. Defaults to `null`.
+ * @param transactionIsolation Transaction isolation level. Defaults to `db.transactionManager.defaultIsolationLevel`.
+ * @param readOnly Whether the transaction should be read-only. Defaults to `db.transactionManager.defaultReadOnly`.
  * @return The final result of the [statement] block.
  * @sample org.jetbrains.exposed.v1.tests.shared.ConnectionTimeoutTest.testTransactionRepetitionWithDefaults
  */
 fun <T> transaction(
-    transactionIsolation: Int,
-    readOnly: Boolean = false,
     db: Database? = null,
+    transactionIsolation: Int = db.transactionManager.defaultIsolationLevel,
+    readOnly: Boolean = db.transactionManager.defaultReadOnly,
     statement: JdbcTransaction.() -> T
 ): T = keepAndRestoreTransactionRefAfterRun(db) {
     val outer = TransactionManager.currentOrNull()
@@ -371,9 +357,9 @@ fun <T> transaction(
                 TransactionManager.resetCurrent(currentManager)
             }
         } ?: inTopLevelTransaction(
+            db,
             transactionIsolation,
             readOnly,
-            db,
             null,
             statement
         )
@@ -390,13 +376,17 @@ fun <T> transaction(
  * **Note** If the database value [db] is not set, the value used will be either the last [Database] instance created
  * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
  *
+ * @param db Database to use for the transaction. Defaults to `null`.
+ * @param transactionIsolation Transaction isolation level. Defaults to `db.transactionManager.defaultIsolationLevel`.
+ * @param readOnly Whether the transaction should be read-only. Defaults to `db.transactionManager.defaultReadOnly`.
+ * @param outerTransaction Outer transaction if this is a nested transaction. Defaults to `null`.
  * @return The final result of the [statement] block.
  * @sample org.jetbrains.exposed.v1.tests.shared.RollbackTransactionTest.testRollbackWithoutSavepoints
  */
 fun <T> inTopLevelTransaction(
-    transactionIsolation: Int,
-    readOnly: Boolean = false,
     db: Database? = null,
+    transactionIsolation: Int = db.transactionManager.defaultIsolationLevel,
+    readOnly: Boolean = db.transactionManager.defaultReadOnly,
     outerTransaction: JdbcTransaction? = null,
     statement: JdbcTransaction.() -> T
 ): T {

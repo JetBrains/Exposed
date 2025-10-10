@@ -13,7 +13,6 @@ import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.jetbrains.exposed.v1.r2dbc.transactions.transactionManager
 import org.junit.Assume
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -103,7 +102,7 @@ abstract class R2dbcDatabaseTestsBase {
         configure: (DatabaseConfig.Builder.() -> Unit)? = null,
         statement: suspend R2dbcTransaction.(TestDB) -> Unit
     ) = withConnection(dbSettings, configure) { database, testDb ->
-        suspendTransaction(database.transactionManager.defaultIsolationLevel!!, db = database) {
+        suspendTransaction(database) {
             maxAttempts = 1
             registerInterceptor(CurrentTestDBInterceptor)
             currentTestDB = dbSettings
@@ -159,7 +158,7 @@ abstract class R2dbcDatabaseTestsBase {
                     commit()
                 } catch (_: Exception) {
                     val database = dialect.db!!
-                    inTopLevelSuspendTransaction(database.transactionManager.defaultIsolationLevel!!, db = database) {
+                    inTopLevelSuspendTransaction(database) {
                         maxAttempts = 1
                         SchemaUtils.drop(*tables)
                     }

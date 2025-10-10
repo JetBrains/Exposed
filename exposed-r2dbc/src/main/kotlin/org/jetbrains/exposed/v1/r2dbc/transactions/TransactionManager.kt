@@ -73,7 +73,7 @@ class TransactionManager(
      * an existing transaction with the database not configured to `useNestedTransactions`.
      */
     fun newTransaction(
-        isolation: IsolationLevel = defaultIsolationLevel!!,
+        isolation: IsolationLevel? = defaultIsolationLevel,
         readOnly: Boolean = defaultReadOnly,
         outerTransaction: R2dbcTransaction? = null
     ): R2dbcTransaction {
@@ -178,13 +178,14 @@ class TransactionManager(
         override val db: R2dbcDatabase,
         private val setupTxConnection:
         ((R2dbcExposedConnection<*>, R2dbcTransactionInterface) -> Unit)?,
-        override val transactionIsolation: IsolationLevel,
+        override val transactionIsolation: IsolationLevel?,
         override val readOnly: Boolean,
         override val outerTransaction: R2dbcTransaction?,
     ) : R2dbcTransactionInterface {
 
         private var connectionLazy: R2dbcExposedConnection<*>? = null
 
+        @Suppress("NestedBlockDepth")
         private suspend fun getConnection(): R2dbcExposedConnection<*> = outerTransaction?.connection()
             ?.also {
                 if (useSavePoints) {
@@ -195,7 +196,7 @@ class TransactionManager(
                 @Suppress("TooGenericExceptionCaught")
                 try {
                     setupTxConnection?.invoke(this, this@R2dbcLocalTransaction) ?: run {
-                        setTransactionIsolation(this@R2dbcLocalTransaction.transactionIsolation)
+                        this@R2dbcLocalTransaction.transactionIsolation?.let { setTransactionIsolation(it) }
                         setReadOnly(this@R2dbcLocalTransaction.readOnly)
                         // potentially redundant if R2dbcConnectionImpl calls beginTransaction(), which disables autoCommit
                         setAutoCommit(false)
@@ -286,9 +287,9 @@ suspend fun <T> suspendTransaction(
     db: R2dbcDatabase? = null,
     statement: suspend R2dbcTransaction.() -> T
 ): T = suspendTransaction(
+    db,
     transactionIsolation ?: db.transactionManager.defaultIsolationLevel ?: error("Default transaction isolation not set"),
     readOnly ?: db.transactionManager.defaultReadOnly,
-    db,
     statement
 )
 
@@ -306,32 +307,12 @@ suspend fun <T> suspendTransactionAsync(
     statement: suspend R2dbcTransaction.() -> T
 ): Deferred<T> = CompletableDeferred(
     suspendTransaction(
+        db,
         transactionIsolation ?: db.transactionManager.defaultIsolationLevel ?: error("Default transaction isolation not set"),
         readOnly ?: db.transactionManager.defaultReadOnly,
-        db,
         statement
     )
 )
-
-/**
- * Creates a transaction then calls the [statement] block with this transaction as its receiver and returns the result.
- *
- * **Note** If the database value [db] is not set, the value used will be either the last [R2dbcDatabase] instance created
- * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
- *
- * @return The final result of the [statement] block.
- */
-suspend fun <T> suspendTransaction(db: R2dbcDatabase? = null, statement: suspend R2dbcTransaction.() -> T): T {
-    val defaultIsolation = db.transactionManager.defaultIsolationLevel
-    require(defaultIsolation != null) { "A default isolation level for this transaction has not been set" }
-
-    return suspendTransaction(
-        defaultIsolation,
-        db.transactionManager.defaultReadOnly,
-        db,
-        statement
-    )
-}
 
 /**
  * Creates a transaction with the specified [transactionIsolation] and [readOnly] settings, then calls
@@ -339,11 +320,15 @@ suspend fun <T> suspendTransaction(db: R2dbcDatabase? = null, statement: suspend
  *
  * **Note** If the database value [db] is not set, the value used will be either the last [R2dbcDatabase] instance created
  * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
+ *
+ * @param db Database to use for the transaction. Defaults to `null`.
+ * @param transactionIsolation Transaction isolation level. Defaults to `db.transactionManager.defaultIsolationLevel`.
+ * @param readOnly Whether the transaction should be read-only. Defaults to `false`.
  */
 suspend fun <T> suspendTransaction(
-    transactionIsolation: IsolationLevel,
-    readOnly: Boolean = false,
     db: R2dbcDatabase? = null,
+    transactionIsolation: IsolationLevel? = db.transactionManager.defaultIsolationLevel,
+    readOnly: Boolean = false,
     statement: suspend R2dbcTransaction.() -> T
 ): T {
     val outer = TransactionManager.currentOrNull()
@@ -396,9 +381,9 @@ suspend fun <T> suspendTransaction(
             }
         } else {
             inTopLevelSuspendTransaction(
+                db,
                 transactionIsolation,
                 readOnly,
-                db,
                 null,
                 statement
             )
@@ -416,13 +401,17 @@ suspend fun <T> suspendTransaction(
  * **Note** If the database value [db] is not set, the value used will be either the last [R2dbcDatabase] instance created
  * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
  *
+ * @param db Database to use for the transaction. Defaults to `null`.
+ * @param transactionIsolation Transaction isolation level. Defaults to `db.transactionManager.defaultIsolationLevel`.
+ * @param readOnly Whether the transaction should be read-only. Defaults to `db.transactionManager.defaultReadOnly`.
+ * @param outerTransaction Outer transaction if this is a nested transaction. Defaults to `null`.
  * @return The final result of the [statement] block.
  */
 @Suppress("TooGenericExceptionCaught")
 suspend fun <T> inTopLevelSuspendTransaction(
-    transactionIsolation: IsolationLevel,
-    readOnly: Boolean = false,
     db: R2dbcDatabase? = null,
+    transactionIsolation: IsolationLevel? = db.transactionManager.defaultIsolationLevel,
+    readOnly: Boolean = db.transactionManager.defaultReadOnly,
     outerTransaction: R2dbcTransaction? = null,
     statement: suspend R2dbcTransaction.() -> T
 ): T {

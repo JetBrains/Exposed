@@ -69,7 +69,7 @@ class ConnectionExceptions {
         val wrappingDataSource = WrappingDataSource(TestDB.H2_V2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
         try {
-            transaction(Connection.TRANSACTION_SERIALIZABLE, db = db) {
+            transaction(db = db, transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 5
                 this.exec("BROKEN_SQL_THAT_CAUSES_EXCEPTION()")
             }
@@ -105,7 +105,7 @@ class ConnectionExceptions {
         val wrappingDataSource = WrappingDataSource(TestDB.H2_V2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
         try {
-            transaction(Connection.TRANSACTION_SERIALIZABLE, db = db) {
+            transaction(db = db, transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 5
                 this.exec("SELECT 1;")
             }
@@ -131,7 +131,7 @@ class ConnectionExceptions {
         val wrappingDataSource = WrappingDataSource(TestDB.H2_V2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
         try {
-            transaction(Connection.TRANSACTION_SERIALIZABLE, db = db) {
+            transaction(db = db, transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 5
                 this.exec("SELECT 1;")
             }

@@ -196,7 +196,7 @@ class MultiDatabaseEntityTest {
                 b2Reread.y = null
             }
         }
-        inTopLevelTransaction(Connection.TRANSACTION_READ_COMMITTED, db = db1) {
+        inTopLevelTransaction(db1, Connection.TRANSACTION_READ_COMMITTED) {
             maxAttempts = 1
             assertNull(EntityTestsData.BEntity.testCache(db1b1.id))
             val b1Reread = EntityTestsData.BEntity[db1b1.id]

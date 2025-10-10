@@ -53,7 +53,7 @@ class ThreadLocalManagerTest : DatabaseTestsBase() {
     fun testReadOnly() {
         withTables(excludeSettings = READ_ONLY_EXCLUDED_VENDORS, RollbackTable) {
             assertFails {
-                inTopLevelTransaction(db.transactionManager.defaultIsolationLevel, true) {
+                inTopLevelTransaction(readOnly = true) {
                     maxAttempts = 1
                     RollbackTable.insert { it[value] = "random-something" }
                 }

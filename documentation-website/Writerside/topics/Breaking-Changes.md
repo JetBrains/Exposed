@@ -2,6 +2,9 @@
 
 ## 1.0.0-rc-2
 
+* The `transaction()`, `inTopLevelTransaction()`, `suspendTransaction()`, and `inTopLevelSuspendTransaction()` functions now have `db` as the first parameter instead
+  of `transactionIsolation`, and the `transactionIsolation` and `readOnly` parameters now have default values derived from the database's transaction manager
+  configuration.
 * `R2dbcTransaction.globalInterceptors` property now stores a collection of `GlobalSuspendStatementInterceptor` instances.
   Any loaded `GlobalStatementInterceptor` implementations are automatically wrapped to be compatible with the new interceptor
   type, so no changes need to be made to how any existing custom interceptors are declared in the `resources` folder.

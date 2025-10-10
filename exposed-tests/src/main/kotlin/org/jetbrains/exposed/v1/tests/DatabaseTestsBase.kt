@@ -11,7 +11,6 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.junit.Assume
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -101,7 +100,7 @@ abstract class DatabaseTestsBase {
         statement: JdbcTransaction.(TestDB) -> Unit
     ) {
         withConnection(dbSettings, configure) { database, testDb ->
-            transaction(database.transactionManager.defaultIsolationLevel, db = database) {
+            transaction(database) {
                 maxAttempts = 1
                 registerInterceptor(CurrentTestDBInterceptor)
                 currentTestDB = dbSettings
@@ -158,7 +157,7 @@ abstract class DatabaseTestsBase {
                     commit()
                 } catch (_: Exception) {
                     val database = dialect.db!!
-                    inTopLevelTransaction(database.transactionManager.defaultIsolationLevel, db = database) {
+                    inTopLevelTransaction(database) {
                         maxAttempts = 1
                         SchemaUtils.drop(*tables)
                     }

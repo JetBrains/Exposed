@@ -21,7 +21,7 @@ class TransactionIsolationTest : DatabaseTestsBase() {
     @Test
     fun testWhatTransactionIsolationWasApplied() {
         withDb {
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 assertEquals(Connection.TRANSACTION_SERIALIZABLE, this.connection.transactionIsolation)
             }
