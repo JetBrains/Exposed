@@ -171,7 +171,7 @@ val currentDialect: DatabaseDialect
 
 @OptIn(InternalApi::class)
 internal val currentDialectIfAvailable: DatabaseDialect?
-    get() = if (CoreTransactionManager.getDefaultDatabaseOrFirst() != null && CoreTransactionManager.currentTransactionOrNull() != null) {
+    get() = if (CoreTransactionManager.currentTransactionOrNull() != null) {
         currentDialect
     } else {
         null

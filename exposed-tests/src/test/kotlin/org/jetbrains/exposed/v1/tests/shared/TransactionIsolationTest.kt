@@ -36,7 +36,8 @@ class TransactionIsolationTest : DatabaseTestsBase() {
         val db = Database.connect(
             HikariDataSource(setupHikariConfig(dialect, "TRANSACTION_REPEATABLE_READ"))
         )
-        val manager = TransactionManager.managerFor(db)
+
+        val manager = TransactionManager.getTransactionManager(db)
 
         transaction(db) {
             // transaction manager should use database default since no level is provided other than hikari
@@ -74,27 +75,27 @@ class TransactionIsolationTest : DatabaseTestsBase() {
             HikariDataSource(setupHikariConfig(dialect, "TRANSACTION_REPEATABLE_READ")),
             databaseConfig = DatabaseConfig { defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED }
         )
-        val manager = TransactionManager.managerFor(db)
+        val manager = TransactionManager.getTransactionManager(db)
 
         transaction(db) {
             // transaction manager should default to use DatabaseConfig level
-            assertEquals(Connection.TRANSACTION_READ_COMMITTED, manager?.defaultIsolationLevel)
+            assertEquals(Connection.TRANSACTION_READ_COMMITTED, manager.defaultIsolationLevel)
 
             // database level should be set by DatabaseConfig
             assertTransactionIsolationLevel(dialect, Connection.TRANSACTION_READ_COMMITTED)
             // after first connection, transaction manager should retain DatabaseConfig level
-            assertEquals(Connection.TRANSACTION_READ_COMMITTED, manager?.defaultIsolationLevel)
+            assertEquals(Connection.TRANSACTION_READ_COMMITTED, manager.defaultIsolationLevel)
         }
 
         transaction(transactionIsolation = Connection.TRANSACTION_REPEATABLE_READ, db = db) {
-            assertEquals(Connection.TRANSACTION_READ_COMMITTED, manager?.defaultIsolationLevel)
+            assertEquals(Connection.TRANSACTION_READ_COMMITTED, manager.defaultIsolationLevel)
 
             // database level should be set by transaction-specific setting
             assertTransactionIsolationLevel(dialect, Connection.TRANSACTION_REPEATABLE_READ)
         }
 
         transaction(db) {
-            assertEquals(Connection.TRANSACTION_READ_COMMITTED, manager?.defaultIsolationLevel)
+            assertEquals(Connection.TRANSACTION_READ_COMMITTED, manager.defaultIsolationLevel)
 
             // database level should be set by DatabaseConfig
             assertTransactionIsolationLevel(dialect, Connection.TRANSACTION_READ_COMMITTED)
