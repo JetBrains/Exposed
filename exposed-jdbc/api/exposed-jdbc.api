@@ -795,7 +795,7 @@ public final class org/jetbrains/exposed/v1/jdbc/transactions/TransactionManager
 	public final fun current ()Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
 	public final fun currentOrNull ()Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
 	public final fun getCurrentDatabase ()Lorg/jetbrains/exposed/v1/jdbc/Database;
-	public final fun getCurrentTransactionManager ()Lorg/jetbrains/exposed/v1/core/transactions/TransactionManagerApi;
+	public final fun getCurrentManager ()Lorg/jetbrains/exposed/v1/core/transactions/TransactionManagerApi;
 	public final fun getDefaultDatabase ()Lorg/jetbrains/exposed/v1/jdbc/Database;
 	public final fun getTransactionManager (Lorg/jetbrains/exposed/v1/jdbc/Database;)Lorg/jetbrains/exposed/v1/jdbc/transactions/TransactionManager;
 	public final fun registerManager (Lorg/jetbrains/exposed/v1/jdbc/Database;Lorg/jetbrains/exposed/v1/core/transactions/TransactionManagerApi;)V

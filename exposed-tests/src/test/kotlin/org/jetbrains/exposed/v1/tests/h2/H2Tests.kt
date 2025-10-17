@@ -75,7 +75,7 @@ class H2Tests : DatabaseTestsBase() {
     @Test
     fun closeAndUnregister() {
         withDb(TestDB.H2_V2) { testDB ->
-            val originalManager = TransactionManager.currentTransactionManager ?: error("No transaction manager")
+            val originalManager = TransactionManager.currentManager ?: error("No transaction manager")
             val db = requireNotNull(testDB.db) { "testDB.db cannot be null" }
             try {
                 @OptIn(InternalApi::class)

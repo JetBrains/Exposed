@@ -1052,7 +1052,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/transactions/TransactionManage
 	public final fun current ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
 	public final fun currentOrNull ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
 	public final fun getCurrentDatabase ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
-	public final fun getCurrentTransactionManager ()Lorg/jetbrains/exposed/v1/core/transactions/TransactionManagerApi;
+	public final fun getCurrentManager ()Lorg/jetbrains/exposed/v1/core/transactions/TransactionManagerApi;
 	public final fun getDefaultDatabase ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
 	public final fun getTransactionManager (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;)Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager;
 	public final fun registerManager (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lorg/jetbrains/exposed/v1/core/transactions/TransactionManagerApi;)V

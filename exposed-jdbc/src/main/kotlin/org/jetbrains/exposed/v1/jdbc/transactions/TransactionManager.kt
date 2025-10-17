@@ -162,7 +162,7 @@ class TransactionManager(
          * The current transaction manager associated with the active transaction or database.
          * Returns `null` if no transaction is active and no database has been registered.
          */
-        val currentTransactionManager
+        val currentManager
             get() = transactionManagers.getCurrentTransactionManagerOrNull()
 
         /** Associates the provided [database] with a specific [manager]. */

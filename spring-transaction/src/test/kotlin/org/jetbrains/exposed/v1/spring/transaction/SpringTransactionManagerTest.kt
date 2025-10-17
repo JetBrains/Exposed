@@ -62,7 +62,7 @@ class SpringTransactionManagerTest {
 
             assertEquals(
                 TransactionManager.currentOrNull()?.db?.let { TransactionManager.getTransactionManager(it) },
-                TransactionManager.currentTransactionManager
+                TransactionManager.currentManager
             )
         }
     }
@@ -112,7 +112,7 @@ class SpringTransactionManagerTest {
             tm2.executeAssert()
             assertEquals(
                 TransactionManager.currentOrNull()?.db?.let { TransactionManager.getTransactionManager(it) },
-                TransactionManager.currentTransactionManager
+                TransactionManager.currentManager
             )
         }
 
@@ -134,7 +134,7 @@ class SpringTransactionManagerTest {
                 }
                 assertEquals(
                     TransactionManager.currentOrNull()?.db?.let { TransactionManager.getTransactionManager(it) },
-                    TransactionManager.currentTransactionManager
+                    TransactionManager.currentManager
                 )
             }
         } catch (e: Exception) {
@@ -400,7 +400,7 @@ class SpringTransactionManagerTest {
             TransactionManager.currentOrNull()?.db?.let { db ->
                 assertEquals(
                     TransactionManager.getTransactionManager(db),
-                    TransactionManager.currentTransactionManager
+                    TransactionManager.currentManager
                 )
             }
 
