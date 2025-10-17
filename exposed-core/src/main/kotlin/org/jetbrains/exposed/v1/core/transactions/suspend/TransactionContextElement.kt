@@ -15,6 +15,7 @@ import kotlin.coroutines.CoroutineContext
  * the transaction is properly restored to the thread-local stack.
  *
  * @property transaction The transaction to be managed in the coroutine context.
+ * @suppress
  */
 @InternalApi
 class TransactionContextElement(
@@ -31,7 +32,7 @@ class TransactionContextElement(
      * @return The previous transaction that was on top of the stack, or null if none existed.
      */
     override fun updateThreadContext(context: CoroutineContext): Transaction? {
-        val previousTransaction = ThreadLocalTransactionsStack.getTransactionOrNull() as? Transaction
+        val previousTransaction = ThreadLocalTransactionsStack.getTransactionOrNull()
         ThreadLocalTransactionsStack.pushTransaction(transaction)
         return previousTransaction
     }

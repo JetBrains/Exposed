@@ -32,7 +32,6 @@ class R2dbcResult internal constructor(
 ) : ResultApi {
     private var consumed = false
 
-    @OptIn(InternalApi::class)
     override fun <T> mapRows(block: (RowApi) -> T?): Flow<T?> {
         if (consumed) error("Result is already consumed")
         consumed = true
@@ -44,6 +43,7 @@ class R2dbcResult internal constructor(
                     .map { row, rm ->
                         // The current block is run in another thread outside of coroutine,
                         // so that thread should also get the correct transaction into the thread local variables
+                        @OptIn(InternalApi::class)
                         withThreadLocalTransaction(currentTransaction) {
                             Optional.ofNullable(block(R2dbcRow(row, typeMapping)))
                         }

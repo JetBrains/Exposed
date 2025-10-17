@@ -3,6 +3,7 @@ package org.jetbrains.exposed.v1.spring.transaction
 import junit.framework.TestCase.assertEquals
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.junit.Test
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy
 import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy
@@ -61,8 +62,8 @@ class SpringTransactionManagerTest {
             tm.executeAssert(false)
 
             assertEquals(
-                TransactionManager.currentOrNull()?.db?.let { TransactionManager.getTransactionManager(it) },
-                TransactionManager.currentManager
+                TransactionManager.currentOrNull()?.db?.let { TransactionManager.managerFor(it) },
+                TransactionManager.current().transactionManager
             )
         }
     }
@@ -111,8 +112,8 @@ class SpringTransactionManagerTest {
         tm1.executeAssert {
             tm2.executeAssert()
             assertEquals(
-                TransactionManager.currentOrNull()?.db?.let { TransactionManager.getTransactionManager(it) },
-                TransactionManager.currentManager
+                TransactionManager.currentOrNull()?.db?.let { TransactionManager.managerFor(it) },
+                TransactionManager.current().transactionManager
             )
         }
 
@@ -133,8 +134,8 @@ class SpringTransactionManagerTest {
                     throw ex
                 }
                 assertEquals(
-                    TransactionManager.currentOrNull()?.db?.let { TransactionManager.getTransactionManager(it) },
-                    TransactionManager.currentManager
+                    TransactionManager.currentOrNull()?.db?.let { TransactionManager.managerFor(it) },
+                    TransactionManager.current().transactionManager
                 )
             }
         } catch (e: Exception) {
@@ -399,8 +400,8 @@ class SpringTransactionManagerTest {
         tt.executeWithoutResult {
             TransactionManager.currentOrNull()?.db?.let { db ->
                 assertEquals(
-                    TransactionManager.getTransactionManager(db),
-                    TransactionManager.currentManager
+                    TransactionManager.managerFor(db),
+                    TransactionManager.current().transactionManager
                 )
             }
 

@@ -3774,16 +3774,6 @@ public final class org/jetbrains/exposed/v1/core/statements/api/RowApi$DefaultIm
 	public static fun getObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;Ljava/lang/String;Ljava/lang/Class;Lorg/jetbrains/exposed/v1/core/IColumnType;)Ljava/lang/Object;
 }
 
-public final class org/jetbrains/exposed/v1/core/transactions/CoreTransactionManager {
-	public static final field INSTANCE Lorg/jetbrains/exposed/v1/core/transactions/CoreTransactionManager;
-	public final fun currentTransaction ()Lorg/jetbrains/exposed/v1/core/Transaction;
-	public final fun currentTransactionOrNull ()Lorg/jetbrains/exposed/v1/core/Transaction;
-}
-
-public final class org/jetbrains/exposed/v1/core/transactions/CoreTransactionManagerKt {
-	public static final fun withThreadLocalTransaction (Lorg/jetbrains/exposed/v1/core/Transaction;Lkotlin/jvm/functions/Function0;)Ljava/lang/Object;
-}
-
 public abstract interface class org/jetbrains/exposed/v1/core/transactions/DatabasesManager {
 	public abstract fun addDatabase (Lorg/jetbrains/exposed/v1/core/DatabaseApi;)V
 	public abstract fun getCurrentDatabase ()Lorg/jetbrains/exposed/v1/core/DatabaseApi;
@@ -3803,6 +3793,7 @@ public abstract class org/jetbrains/exposed/v1/core/transactions/DatabasesManage
 
 public final class org/jetbrains/exposed/v1/core/transactions/ThreadLocalTransactionsStack {
 	public static final field INSTANCE Lorg/jetbrains/exposed/v1/core/transactions/ThreadLocalTransactionsStack;
+	public final fun getTransactionIsInstance (Ljava/lang/Class;)Lorg/jetbrains/exposed/v1/core/Transaction;
 	public final fun getTransactionOrNull ()Lorg/jetbrains/exposed/v1/core/Transaction;
 	public final fun getTransactionOrNull (Lorg/jetbrains/exposed/v1/core/DatabaseApi;)Lorg/jetbrains/exposed/v1/core/Transaction;
 	public final fun isEmpty ()Z
@@ -3818,7 +3809,6 @@ public abstract interface class org/jetbrains/exposed/v1/core/transactions/Trans
 }
 
 public abstract interface class org/jetbrains/exposed/v1/core/transactions/TransactionManagerApi {
-	public abstract fun createTransactionContext (Lorg/jetbrains/exposed/v1/core/Transaction;)Lkotlin/coroutines/CoroutineContext;
 	public abstract fun currentOrNull ()Lorg/jetbrains/exposed/v1/core/Transaction;
 	public abstract fun getDefaultMaxAttempts ()I
 	public abstract fun getDefaultMaxRetryDelay ()J
@@ -3828,14 +3818,6 @@ public abstract interface class org/jetbrains/exposed/v1/core/transactions/Trans
 	public abstract fun setDefaultMaxRetryDelay (J)V
 	public abstract fun setDefaultMinRetryDelay (J)V
 	public abstract fun setDefaultReadOnly (Z)V
-}
-
-public abstract interface class org/jetbrains/exposed/v1/core/transactions/TransactionManagersContainer {
-	public abstract fun closeAndUnregisterDatabase (Lorg/jetbrains/exposed/v1/core/DatabaseApi;)V
-	public abstract fun getCurrentTransactionManager ()Lorg/jetbrains/exposed/v1/core/transactions/TransactionManagerApi;
-	public abstract fun getCurrentTransactionManagerOrNull ()Lorg/jetbrains/exposed/v1/core/transactions/TransactionManagerApi;
-	public abstract fun getTransactionManager (Lorg/jetbrains/exposed/v1/core/DatabaseApi;)Lorg/jetbrains/exposed/v1/core/transactions/TransactionManagerApi;
-	public abstract fun registerDatabaseManager (Lorg/jetbrains/exposed/v1/core/DatabaseApi;Lorg/jetbrains/exposed/v1/core/transactions/TransactionManagerApi;)V
 }
 
 public abstract class org/jetbrains/exposed/v1/core/transactions/TransactionManagersContainerImpl : org/jetbrains/exposed/v1/core/transactions/TransactionManagersContainer {
@@ -3860,6 +3842,12 @@ public final class org/jetbrains/exposed/v1/core/transactions/TransactionStore :
 	public final fun getInit ()Lkotlin/jvm/functions/Function1;
 	public fun getValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;)Ljava/lang/Object;
 	public fun setValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;Ljava/lang/Object;)V
+}
+
+public final class org/jetbrains/exposed/v1/core/transactions/TransactionsKt {
+	public static final fun currentTransaction ()Lorg/jetbrains/exposed/v1/core/Transaction;
+	public static final fun currentTransactionOrNull ()Lorg/jetbrains/exposed/v1/core/Transaction;
+	public static final fun withThreadLocalTransaction (Lorg/jetbrains/exposed/v1/core/Transaction;Lkotlin/jvm/functions/Function0;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/v1/core/transactions/suspend/TransactionContextElement : kotlin/coroutines/AbstractCoroutineContextElement, kotlinx/coroutines/ThreadContextElement {

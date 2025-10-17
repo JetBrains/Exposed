@@ -4,10 +4,11 @@ import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.exposedLogger
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
+import org.jetbrains.exposed.v1.core.transactions.currentTransactionOrNull
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.TransactionSystemException
@@ -50,7 +51,7 @@ class SpringTransactionManager(
     @OptIn(InternalApi::class)
     override fun doGetTransaction(): Any {
         // Get the transaction for this specific database from the stack
-        val outer = ThreadLocalTransactionsStack.getTransactionOrNull(database) as JdbcTransaction?
+        val outer = TransactionManager.currentOrNull()
 
         return ExposedTransactionObject(
             database = database,
@@ -90,7 +91,7 @@ class SpringTransactionManager(
 
         // If the current transaction in the stack is null (because it was suspended),
         // or if it belongs to a different database, then we should not use it as outer transaction
-        val currentTransaction = CoreTransactionManager.currentTransactionOrNull() as JdbcTransaction?
+        val currentTransaction = currentTransactionOrNull() as JdbcTransaction?
         val outerTransactionToUse = if (currentTransaction?.db == database) {
             currentTransaction
         } else {

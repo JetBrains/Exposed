@@ -33,7 +33,7 @@ interface JdbcTransactionInterface : TransactionInterface {
  * @throws [RuntimeException] If a manager has not been registered for the database.
  */
 val Database.transactionManager: TransactionManager
-    get() = TransactionManager.getTransactionManager(this)
+    get() = TransactionManager.managerFor(this)
 
 @Suppress("TooGenericExceptionCaught")
 internal fun JdbcTransactionInterface.rollbackLoggingException(log: (Exception) -> Unit) {

@@ -2,7 +2,7 @@ package org.jetbrains.exposed.v1.core.vendors
 
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.StatementType
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.exceptions.throwUnsupportedException
 import java.sql.Types
 import java.util.*
@@ -31,7 +31,7 @@ internal object H2FunctionProvider : FunctionProvider() {
 
     override fun nextVal(seq: Sequence, builder: QueryBuilder) =
         @OptIn(InternalApi::class)
-        when ((CoreTransactionManager.currentTransaction().db.dialect as H2Dialect).majorVersion) {
+        when ((currentTransaction().db.dialect as H2Dialect).majorVersion) {
             H2Dialect.H2MajorVersion.Two -> builder {
                 append("NEXT VALUE FOR ${seq.identifier}")
             }
@@ -214,7 +214,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     @OptIn(InternalApi::class)
     internal val version by lazy {
-        exactH2Version(CoreTransactionManager.currentTransaction())
+        exactH2Version(currentTransaction())
     }
 
     /**
@@ -283,7 +283,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     /** The H2 database compatibility mode retrieved from metadata. */
     val h2Mode: H2CompatibilityMode? by lazy {
         @OptIn(InternalApi::class)
-        val modeValue = CoreTransactionManager.currentTransaction().db.dialectMode
+        val modeValue = currentTransaction().db.dialectMode
         when {
             modeValue == null -> null
             modeValue.equals("MySQL", ignoreCase = true) -> H2CompatibilityMode.MySQL

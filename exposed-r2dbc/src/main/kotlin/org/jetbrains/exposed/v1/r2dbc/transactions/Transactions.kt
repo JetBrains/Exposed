@@ -2,8 +2,6 @@ package org.jetbrains.exposed.v1.r2dbc.transactions
 
 import io.r2dbc.spi.IsolationLevel
 import io.r2dbc.spi.R2dbcException
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.InternalApi
@@ -15,7 +13,6 @@ import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import java.util.concurrent.ThreadLocalRandom
-import kotlin.coroutines.CoroutineContext
 
 /**
  * Executes the provided [block] within the context of the [transaction], handling commit and rollback operations.
@@ -28,7 +25,7 @@ import kotlin.coroutines.CoroutineContext
  * @param shouldCommit Whether the transaction should be committed after successful execution
  * @param block The suspend code block to execute within the transaction context
  * @return The result of executing the block
- * @throws R2dbcException If a database error occurs during execution
+ * @throws R2dbcException If a database error occurs and retry attempts are exhausted
  * @throws Throwable If any other error occurs during execution (after attempting rollback)
  */
 @Suppress("TooGenericExceptionCaught")
@@ -81,54 +78,13 @@ private suspend inline fun <T> executeR2dbcTransactionWithErrorHandling(
 @OptIn(InternalApi::class)
 private fun resolveR2dbcDatabaseOrThrow(db: R2dbcDatabase?): R2dbcDatabase {
     return db
-        ?: ThreadLocalTransactionsStack.getTransactionOrNull()?.db as? R2dbcDatabase
+        ?: ThreadLocalTransactionsStack.getTransactionIsInstance(R2dbcTransaction::class.java)?.db
         ?: TransactionManager.currentDatabase
         ?: throw IllegalStateException(
             "No R2DBC database specified and no default database found. " +
                 "Please call R2dbcDatabase.connect() first or specify a database explicitly in the transaction call."
         )
 }
-
-@Deprecated(
-    message = "This method overload will be removed in release 1.0.0. It should be replaced with either overload" +
-        "that does not take a `CoroutineContext` as an argument.",
-    level = DeprecationLevel.ERROR
-)
-@Suppress("UnusedParameter")
-suspend fun <T> suspendTransaction(
-    context: CoroutineContext? = null,
-    transactionIsolation: IsolationLevel? = null,
-    readOnly: Boolean? = null,
-    db: R2dbcDatabase? = null,
-    statement: suspend R2dbcTransaction.() -> T
-): T = suspendTransaction(
-    db,
-    transactionIsolation ?: db?.transactionManager?.defaultIsolationLevel
-        ?: error("Default transaction isolation not set"),
-    readOnly ?: db?.transactionManager?.defaultReadOnly ?: false,
-    statement
-)
-
-@Deprecated(
-    message = "This method overload will be removed in release 1.0.0. It should be replaced with either overload" +
-        "that does not take a `CoroutineContext` as an argument, and that is wrapped with `async { }`.",
-    level = DeprecationLevel.ERROR
-)
-@Suppress("UnusedParameter")
-suspend fun <T> suspendTransactionAsync(
-    context: CoroutineContext? = null,
-    db: R2dbcDatabase? = null,
-    transactionIsolation: IsolationLevel? = null,
-    readOnly: Boolean? = null,
-    statement: suspend R2dbcTransaction.() -> T
-): Deferred<T> = CompletableDeferred(
-    suspendTransaction(
-        db,
-        transactionIsolation ?: db?.transactionManager?.defaultIsolationLevel ?: error("Default transaction isolation not set"),
-        readOnly ?: db?.transactionManager?.defaultReadOnly ?: false,
-        statement
-    )
-)
 
 /**
  * Creates a transaction with the specified [transactionIsolation] and [readOnly] settings, then calls
@@ -145,7 +101,7 @@ suspend fun <T> suspendTransactionAsync(
  * @param readOnly Whether the transaction should be read-only. Defaults to `db.transactionManager.defaultReadOnly`.
  * @return The final result of the [statement] block.
  * @throws IllegalStateException If no database is available
- * @throws R2dbcException If a database error occurs
+ * @throws R2dbcException If a database error occurs and retry attempts are exhausted
  */
 @OptIn(InternalApi::class)
 suspend fun <T> suspendTransaction(

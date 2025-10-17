@@ -233,7 +233,6 @@ class MultiDatabaseTest {
         db1
         db2
         assertEquals(TransactionManager.currentDatabase, db2)
-        assertEquals(TransactionManager.currentDatabase, db2)
     }
 
     @Test

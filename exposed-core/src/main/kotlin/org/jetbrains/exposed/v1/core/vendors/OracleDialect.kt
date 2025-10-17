@@ -6,7 +6,7 @@ import org.jetbrains.exposed.v1.core.statements.MergeStatement.ClauseAction.DELE
 import org.jetbrains.exposed.v1.core.statements.MergeStatement.ClauseAction.INSERT
 import org.jetbrains.exposed.v1.core.statements.MergeStatement.ClauseAction.UPDATE
 import org.jetbrains.exposed.v1.core.statements.StatementType
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.exceptions.throwUnsupportedException
 import java.util.*
 
@@ -132,7 +132,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ): Unit = queryBuilder {
         @OptIn(InternalApi::class)
-        val tr = CoreTransactionManager.currentTransaction()
+        val tr = currentTransaction()
         if (expr.distinct) tr.throwUnsupportedException("Oracle doesn't support DISTINCT in LISTAGG")
         if (expr.orderBy.size > 1) {
             tr.throwUnsupportedException("Oracle supports only single column in ORDER BY clause in LISTAGG")
@@ -209,7 +209,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
     ) {
         @OptIn(InternalApi::class)
         if (path.size > 1) {
-            CoreTransactionManager.currentTransaction().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
+            currentTransaction().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
         }
         queryBuilder {
             append(if (toScalar) "JSON_VALUE" else "JSON_QUERY")
@@ -228,7 +228,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
     ) {
         @OptIn(InternalApi::class)
         if (path.size > 1) {
-            CoreTransactionManager.currentTransaction().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
+            currentTransaction().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
         }
         queryBuilder {
             append("JSON_EXISTS(", expression, ", ")
@@ -272,7 +272,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         columnsToSelect.values.appendTo { +it }
         +" FROM "
         @OptIn(InternalApi::class)
-        targets.describe(CoreTransactionManager.currentTransaction(), this)
+        targets.describe(currentTransaction(), this)
         where?.let {
             +" WHERE "
             +it
@@ -359,7 +359,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
             +"DELETE (SELECT "
             tableToDelete.columns.appendTo { +it }
             +" FROM "
-            targets.describe(CoreTransactionManager.currentTransaction(), this)
+            targets.describe(currentTransaction(), this)
             where?.let {
                 +" WHERE "
                 +it

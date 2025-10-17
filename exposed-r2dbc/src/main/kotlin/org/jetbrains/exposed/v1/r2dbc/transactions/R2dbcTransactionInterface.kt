@@ -35,7 +35,7 @@ interface R2dbcTransactionInterface : TransactionInterface {
  */
 @Suppress("TooGenericExceptionThrown")
 val R2dbcDatabase.transactionManager: TransactionManager
-    get() = TransactionManager.getTransactionManager(this)
+    get() = TransactionManager.managerFor(this)
 
 @Suppress("TooGenericExceptionCaught")
 internal suspend fun R2dbcTransactionInterface.rollbackLoggingException(log: (Exception) -> Unit) {

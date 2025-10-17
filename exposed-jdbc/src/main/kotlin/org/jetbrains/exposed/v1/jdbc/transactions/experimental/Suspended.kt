@@ -15,10 +15,8 @@ import kotlin.coroutines.CoroutineContext
     message = """"
         This function will be removed in future releases.
 
-        Replace with `suspendTransaction()` from exposed-r2dbc instead to use a suspending transaction.
-
-        Please leave a comment on [YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-74/Add-R2DBC-Support)
-        with a use case if you believe this method should remain available for JDBC connections.
+        Replace with `suspendTransaction()` call. `suspendTransaction()` doesn't allow to pass
+        context as a parameter, use `withContext()` if you need to use transaction with custom context.
     """,
     level = DeprecationLevel.WARNING
 )
@@ -38,10 +36,8 @@ suspend fun <T> newSuspendedTransaction(
     message = """"
         This function will be removed in future releases.
 
-        Replace with nested `suspendTransaction()` from exposed-r2dbc instead to use a suspending transaction.
-
-        Please leave a comment on [YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-74/Add-R2DBC-Support)
-        with a use case if you believe this method should remain available for JDBC connections.
+        Replace with `suspendTransaction()` call. `suspendTransaction()` doesn't allow to pass
+        context as a parameter, use `withContext()` if you need to use transaction with custom context.
     """,
     level = DeprecationLevel.WARNING
 )
@@ -59,10 +55,10 @@ suspend fun <T> JdbcTransaction.withSuspendTransaction(
     message = """"
         This function will be removed in future releases.
 
-        Replace with `suspendTransactionAsync()` from exposed-r2dbc instead to use a suspending transaction.
+        Replace with `suspendTransaction()` call. `suspendTransaction()` doesn't allow to pass
+        context as a parameter, use `withContext()` if you need to use transaction with custom context.
 
-        Please leave a comment on [YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-74/Add-R2DBC-Support)
-        with a use case if you believe this method should remain available for JDBC connections.
+        To get result asynchronously, use `async` or `launch` from kotlinx.coroutines package.
     """,
     level = DeprecationLevel.WARNING
 )

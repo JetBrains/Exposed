@@ -4,27 +4,23 @@ import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Transaction
 
 /**
- * Represents the object responsible for storing internal data related to each registered database
- * and its transaction manager.
+ * Returns the current [Transaction] from the current transaction manager instance,
+ * or `null` if none exists.
  * @suppress
  */
 @InternalApi
-object CoreTransactionManager {
-    /**
-     * Returns the current [Transaction] from the current transaction manager instance,
-     * or `null` if none exists.
-     */
-    fun currentTransactionOrNull(): Transaction? {
-        return ThreadLocalTransactionsStack.getTransactionOrNull()
-    }
-
-    /**
-     * Returns the current [Transaction] from the current transaction manager instance.
-     *
-     * @throws IllegalStateException If a transaction is not currently open.
-     */
-    fun currentTransaction(): Transaction = currentTransactionOrNull() ?: error("No transaction in context.")
+fun currentTransactionOrNull(): Transaction? {
+    return ThreadLocalTransactionsStack.getTransactionOrNull()
 }
+
+/**
+ * Returns the current [Transaction] from the current transaction manager instance.
+ *
+ * @throws IllegalStateException If a transaction is not currently open.
+ * @suppress
+ */
+@InternalApi
+fun currentTransaction(): Transaction = currentTransactionOrNull() ?: error("No transaction in context.")
 
 /**
  * The method runs code block within the context of provided transaction.
@@ -36,6 +32,7 @@ object CoreTransactionManager {
  * @param transaction The transaction to be used in the context.
  * @param block The code block to be executed in the context.
  * @return The result of executing the code block.
+ * @suppress
  */
 @InternalApi
 fun <T> withThreadLocalTransaction(transaction: Transaction?, block: () -> T): T {

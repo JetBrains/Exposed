@@ -19,6 +19,7 @@ import kotlin.concurrent.getOrSet
  * To avoid misuse and potential memory leaks, prefer using the utilities:
  * - withTransactionContext(...)
  * - withThreadLocalTransaction(...)
+ * @suppress
  */
 @InternalApi
 object ThreadLocalTransactionsStack {
@@ -81,6 +82,10 @@ object ThreadLocalTransactionsStack {
     // TODO make search in list is not optimal, another structure should be used
     fun getTransactionOrNull(db: DatabaseApi): Transaction? {
         return transactions.get()?.findLast { it.db == db }
+    }
+
+    fun <T : Transaction> getTransactionIsInstance(klass: Class<T>): T? {
+        return transactions.get()?.filterIsInstance(klass)?.lastOrNull()
     }
 
     /**

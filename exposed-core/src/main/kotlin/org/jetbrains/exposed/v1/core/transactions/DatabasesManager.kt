@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Manager interface for database instances of type [DB].
+ * @suppress
  */
 @InternalApi
 interface DatabasesManager<DB : DatabaseApi> {
@@ -26,6 +27,9 @@ interface DatabasesManager<DB : DatabaseApi> {
     fun removeDatabase(db: DB)
 }
 
+/**
+ * @suppress
+ */
 @InternalApi
 abstract class DatabasesManagerImpl<DB : DatabaseApi> : DatabasesManager<DB> {
     private val databases = ConcurrentLinkedDeque<DB>()

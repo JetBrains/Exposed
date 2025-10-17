@@ -2,13 +2,13 @@ package org.jetbrains.exposed.v1.core.transactions
 
 import org.jetbrains.exposed.v1.core.DatabaseApi
 import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.Transaction
 import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Container interface for managing transaction managers associated with database instances.
  */
-@InternalApi
-interface TransactionManagersContainer<DB : DatabaseApi> {
+internal interface TransactionManagersContainer<DB : DatabaseApi> {
     /** Returns the transaction manager for the specified [db], or null if not registered. */
     fun getTransactionManager(db: DB): TransactionManagerApi?
 
@@ -29,6 +29,7 @@ interface TransactionManagersContainer<DB : DatabaseApi> {
  * Base implementation of [TransactionManagersContainer] that manages transaction managers for database instances.
  *
  * @property databases The database manager used to track registered databases.
+ * @suppress
  */
 @InternalApi
 abstract class TransactionManagersContainerImpl<DB : DatabaseApi>(
@@ -67,11 +68,9 @@ abstract class TransactionManagersContainerImpl<DB : DatabaseApi>(
      *
      * @return The current transaction manager, or null if none is available
      */
-    // TODO at the current moment there is no check that returned transaction manager will belong to the same module
-    //  where it was colled. For example, if this method called from jdbc module, it could return r2dbc transaction
-    //  manager if the latest created transaction is r2dbc transaction
+    @OptIn(InternalApi::class)
     override fun getCurrentTransactionManagerOrNull(): TransactionManagerApi? {
-        return ThreadLocalTransactionsStack.getTransactionOrNull()?.transactionManager
+        return ThreadLocalTransactionsStack.getTransactionIsInstance(Transaction::class.java)?.transactionManager
             ?: databases.getCurrentDatabase()?.let { getTransactionManager(it) }
     }
 

@@ -24,7 +24,7 @@ import java.util.concurrent.ThreadLocalRandom
  * @param shouldCommit Whether the transaction should be committed after successful execution
  * @param block The code block to execute within the transaction context
  * @return The result of executing the block
- * @throws SQLException If a database error occurs during execution
+ * @throws SQLException If a database error occurs and retry attempts are exhausted
  * @throws Throwable If any other error occurs during execution (after attempting rollback)
  */
 @Suppress("TooGenericExceptionCaught")
@@ -77,7 +77,7 @@ private inline fun <T> executeTransactionWithErrorHandling(
 @OptIn(InternalApi::class)
 private fun resolveDatabaseOrThrow(db: Database?): Database {
     return db
-        ?: ThreadLocalTransactionsStack.getTransactionOrNull()?.db as? Database
+        ?: ThreadLocalTransactionsStack.getTransactionIsInstance(JdbcTransaction::class.java)?.db
         ?: TransactionManager.currentDatabase
         ?: throw IllegalStateException(
             "No database specified and no default database found. " +
@@ -100,7 +100,7 @@ private fun resolveDatabaseOrThrow(db: Database?): Database {
  * @param readOnly Whether the transaction should be read-only. Defaults to `db.transactionManager.defaultReadOnly`.
  * @return The final result of the [statement] block.
  * @throws IllegalStateException If no database is available
- * @throws SQLException If a database error occurs
+ * @throws SQLException If a database error occurs and retry attempts are exhausted
  * @sample org.jetbrains.exposed.v1.tests.shared.ConnectionTimeoutTest.testTransactionRepetitionWithDefaults
  */
 @OptIn(InternalApi::class)
@@ -237,7 +237,7 @@ fun <T> inTopLevelTransaction(
  * @param readOnly Whether the transaction should be read-only. Defaults to `db.transactionManager.defaultReadOnly`.
  * @return The final result of the [statement] block.
  * @throws IllegalStateException If no database is available
- * @throws SQLException If a database error occurs
+ * @throws SQLException If a database error occurs and retry attempts are exhausted
  */
 @OptIn(InternalApi::class)
 suspend fun <T> suspendTransaction(

@@ -37,7 +37,7 @@ class TransactionIsolationTest : DatabaseTestsBase() {
             HikariDataSource(setupHikariConfig(dialect, "TRANSACTION_REPEATABLE_READ"))
         )
 
-        val manager = TransactionManager.getTransactionManager(db)
+        val manager = TransactionManager.managerFor(db)
 
         transaction(db) {
             // transaction manager should use database default since no level is provided other than hikari
@@ -75,7 +75,7 @@ class TransactionIsolationTest : DatabaseTestsBase() {
             HikariDataSource(setupHikariConfig(dialect, "TRANSACTION_REPEATABLE_READ")),
             databaseConfig = DatabaseConfig { defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED }
         )
-        val manager = TransactionManager.getTransactionManager(db)
+        val manager = TransactionManager.managerFor(db)
 
         transaction(db) {
             // transaction manager should default to use DatabaseConfig level

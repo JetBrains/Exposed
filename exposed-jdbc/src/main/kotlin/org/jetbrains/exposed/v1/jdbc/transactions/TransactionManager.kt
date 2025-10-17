@@ -100,10 +100,11 @@ class TransactionManager(
         ThreadLocalTransactionsStack.getTransactionOrNull(db) as JdbcTransaction?
 
     /** A unique key for storing coroutine context elements, as [TransactionContextHolder]. */
+    @OptIn(InternalApi::class)
     private val contextKey = object : CoroutineContext.Key<TransactionContextHolder> {}
 
     @OptIn(InternalApi::class)
-    override fun createTransactionContext(transaction: Transaction): CoroutineContext {
+    internal fun createTransactionContext(transaction: Transaction): CoroutineContext {
         if (transaction.transactionManager != this) {
             error(
                 "TransactionManager must create transaction context only for own transactions. " +
@@ -123,6 +124,7 @@ class TransactionManager(
      * @return The current [JdbcTransaction] from the coroutine context, or null if no transaction exists
      * @throws [IllegalStateException] If the transaction in the context is not a [JdbcTransaction]
      */
+    @OptIn(InternalApi::class)
     internal suspend fun getCurrentContextTransaction(): JdbcTransaction? {
         val transaction = currentCoroutineContext()[contextKey]?.transaction
         return when {
@@ -158,15 +160,7 @@ class TransactionManager(
             get() = databases.getDefaultDatabase()
             set(value) = databases.setDefaultDatabase(value)
 
-        /**
-         * The current transaction manager associated with the active transaction or database.
-         * Returns `null` if no transaction is active and no database has been registered.
-         */
-        val currentManager
-            get() = transactionManagers.getCurrentTransactionManagerOrNull()
-
         /** Associates the provided [database] with a specific [manager]. */
-
         @Synchronized
         fun registerManager(database: Database, manager: TransactionManagerApi) {
             @OptIn(InternalApi::class)
@@ -186,7 +180,7 @@ class TransactionManager(
         /** Returns the current [JdbcTransaction], or `null` if none exists. */
         @OptIn(InternalApi::class)
         fun currentOrNull(): JdbcTransaction? =
-            ThreadLocalTransactionsStack.getTransactionOrNull() as JdbcTransaction?
+            ThreadLocalTransactionsStack.getTransactionIsInstance(JdbcTransaction::class.java)
 
         /**
          * Returns the current [JdbcTransaction].
@@ -202,7 +196,7 @@ class TransactionManager(
          * @param db Database instance for which to retrieve the transaction manager.
          * @return The [TransactionManager] associated with the database.
          */
-        fun getTransactionManager(db: Database): TransactionManager =
+        fun managerFor(db: Database): TransactionManager =
             transactionManagers.getTransactionManager(db) as TransactionManager
     }
 

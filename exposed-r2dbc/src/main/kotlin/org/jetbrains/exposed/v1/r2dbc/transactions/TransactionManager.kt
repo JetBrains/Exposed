@@ -42,10 +42,17 @@ class TransactionManager(
     override var defaultReadOnly: Boolean = db.config.defaultReadOnly
 
     /** A unique key for storing coroutine context elements, as [TransactionContextHolder]. */
+    @OptIn(InternalApi::class)
     private val contextKey = object : CoroutineContext.Key<TransactionContextHolder> {}
 
     @OptIn(InternalApi::class)
-    override fun createTransactionContext(transaction: Transaction): CoroutineContext {
+    internal fun createTransactionContext(transaction: Transaction): CoroutineContext {
+        if (transaction.transactionManager != this) {
+            error(
+                "TransactionManager must create transaction context only for own transactions. " +
+                    "Transaction manager of ${db.url} tried to create transaction context for ${transaction.db.url}"
+            )
+        }
         return TransactionContextHolderImpl(transaction, contextKey) + TransactionContextElement(transaction)
     }
 
@@ -59,6 +66,7 @@ class TransactionManager(
      * @return The current [R2dbcTransaction] from the coroutine context, or null if no transaction exists
      * @throws IllegalStateException If the transaction in the context is not an [R2dbcTransaction]
      */
+    @OptIn(InternalApi::class)
     internal suspend fun getCurrentContextTransaction(): R2dbcTransaction? {
         val transaction = currentCoroutineContext()[contextKey]?.transaction
         return when {
@@ -128,13 +136,6 @@ class TransactionManager(
             get() = databases.getDefaultDatabase()
             set(value) = databases.setDefaultDatabase(value)
 
-        /**
-         * The current transaction manager associated with the active transaction or database.
-         * Returns `null` if no transaction is active and no database has been registered.
-         */
-        val currentManager
-            get() = transactionManagers.getCurrentTransactionManagerOrNull()
-
         /** Associates the provided [database] with a specific [manager]. */
         @Synchronized
         fun registerManager(database: R2dbcDatabase, manager: TransactionManagerApi) {
@@ -154,7 +155,7 @@ class TransactionManager(
 
         /** Returns the current [R2dbcTransaction], or `null` if none exists. */
         @OptIn(InternalApi::class)
-        fun currentOrNull(): R2dbcTransaction? = ThreadLocalTransactionsStack.getTransactionOrNull() as R2dbcTransaction?
+        fun currentOrNull(): R2dbcTransaction? = ThreadLocalTransactionsStack.getTransactionIsInstance(R2dbcTransaction::class.java)
 
         /**
          * Returns the current [R2dbcTransaction].
@@ -169,7 +170,7 @@ class TransactionManager(
          * @param db Database instance for which to retrieve the transaction manager.
          * @return The [TransactionManager] associated with the database.
          */
-        fun getTransactionManager(db: R2dbcDatabase): TransactionManager =
+        fun managerFor(db: R2dbcDatabase): TransactionManager =
             transactionManagers.getTransactionManager(db) as TransactionManager
     }
 
