@@ -76,6 +76,6 @@ suspend fun <T> suspendedTransactionAsync(
     val scope = CoroutineScope(context ?: currentCoroutineContext())
 
     return scope.async {
-        suspendTransaction(db, transactionIsolation, readOnly, statement)
+        inTopLevelSuspendTransaction(db, transactionIsolation, readOnly, null, statement)
     }
 }
