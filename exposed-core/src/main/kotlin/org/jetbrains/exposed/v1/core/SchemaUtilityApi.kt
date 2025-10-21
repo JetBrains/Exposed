@@ -553,7 +553,7 @@ abstract class SchemaUtilityApi {
 @InternalApi
 object TableUtils : SchemaUtilityApi() {
     /** Checks whether any of the [tables] have a sequence of foreign key constraints that cycle back to them. */
-    internal fun checkCycle(vararg tables: Table) = tables.toList().hasCycle()
+    internal fun checkCycle(vararg tables: Table) = tables.asList().hasCycle()
 
     /** Returns a list of [tables] sorted according to the targets of their foreign key constraints, if any exist. */
     fun sortTablesByReferences(tables: Iterable<Table>): List<Table> = tables.sortByReferences()

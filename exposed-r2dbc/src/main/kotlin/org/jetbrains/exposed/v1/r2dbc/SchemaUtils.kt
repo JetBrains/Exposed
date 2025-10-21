@@ -21,14 +21,14 @@ object SchemaUtils : SchemaUtilityApi() {
     /** Checks whether any of the [tables] have a sequence of foreign key constraints that cycle back to them. */
     fun checkCycle(vararg tables: Table): Boolean {
         @OptIn(InternalApi::class)
-        return tables.toList().hasCycle()
+        return tables.asList().hasCycle()
     }
 
     /** Returns the SQL statements that create all [tables] that do not already exist. */
     suspend fun createStatements(vararg tables: Table): List<String> {
         if (tables.isEmpty()) return emptyList()
 
-        val toCreate = sortTablesByReferences(tables.toList()).filterNot { it.exists() }
+        val toCreate = sortTablesByReferences(tables.asList()).filterNot { it.exists() }
         val alters = arrayListOf<String>()
 
         @OptIn(InternalApi::class)
@@ -437,7 +437,7 @@ object SchemaUtils : SchemaUtilityApi() {
     suspend fun drop(vararg tables: Table, inBatch: Boolean = false) {
         if (tables.isEmpty()) return
         with(TransactionManager.current()) {
-            var tablesForDeletion = sortTablesByReferences(tables.toList()).reversed().filter { it in tables }
+            var tablesForDeletion = sortTablesByReferences(tables.asList()).reversed().filter { it in tables }
             if (!currentDialect.supportsIfNotExists) {
                 tablesForDeletion = tablesForDeletion.filter { it.exists() }
             }

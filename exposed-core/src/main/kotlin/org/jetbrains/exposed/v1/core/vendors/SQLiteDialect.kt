@@ -34,9 +34,9 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
 
     override fun concat(separator: String, queryBuilder: QueryBuilder, vararg expr: Expression<*>) = queryBuilder {
         if (separator == "") {
-            expr.toList().appendTo(this, separator = " || ") { +it }
+            expr.asList().appendTo(this, separator = " || ") { +it }
         } else {
-            expr.toList().appendTo(this, separator = " || '$separator' || ") { +it }
+            expr.asList().appendTo(this, separator = " || '$separator' || ") { +it }
         }
     }
 
