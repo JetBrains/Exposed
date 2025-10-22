@@ -1,12 +1,11 @@
 <div align="center">
 
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./docs/logo-dark.png" width="315">
-    <img alt="Exposed logo" src="./docs/logo-light.png" width="315">
+    <img alt="Exposed logo" src="./documentation-website/Writerside/images/exposed-mascot.png" width="215">
   </picture>
 
 </div>
-<br><br>
+<br>
 
 <div align="center">
 
