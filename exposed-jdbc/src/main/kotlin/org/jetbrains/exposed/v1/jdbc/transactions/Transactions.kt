@@ -182,13 +182,17 @@ fun <T> inTopLevelTransaction(
 
         try {
             return withThreadLocalTransaction(transaction) {
-                executeTransactionWithErrorHandling(transaction, shouldCommit = true) {
-                    transaction.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
-                    transaction.statement()
+                try {
+                    executeTransactionWithErrorHandling(transaction, shouldCommit = true) {
+                        transaction.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
+                        transaction.statement()
+                    }
+                } catch (cause: SQLException) {
+                    handleSQLException(cause, transaction, attempts)
+                    throw cause
                 }
             }
         } catch (cause: SQLException) {
-            handleSQLException(cause, transaction, attempts)
             attempts++
 
             if (retryInterval == null) {
@@ -316,13 +320,17 @@ suspend fun <T> inTopLevelSuspendTransaction(
 
         try {
             return withContext(transaction.asContext()) {
-                executeTransactionWithErrorHandling(transaction, shouldCommit = true) {
-                    transaction.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
-                    transaction.statement()
+                try {
+                    executeTransactionWithErrorHandling(transaction, shouldCommit = true) {
+                        transaction.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
+                        transaction.statement()
+                    }
+                } catch (cause: SQLException) {
+                    handleSQLException(cause, transaction, attempts)
+                    throw cause
                 }
             }
         } catch (cause: SQLException) {
-            handleSQLException(cause, transaction, attempts)
             attempts++
 
             if (retryInterval == null) {

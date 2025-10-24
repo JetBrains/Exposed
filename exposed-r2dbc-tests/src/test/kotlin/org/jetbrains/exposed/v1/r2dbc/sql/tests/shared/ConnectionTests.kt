@@ -9,15 +9,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.singleOrNull
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
+import org.jetbrains.exposed.v1.core.StdOutSqlLogger
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.r2dbc.ExposedR2dbcException
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
@@ -32,6 +36,7 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.Assume
 import org.junit.Test
 import java.sql.Types
+import kotlin.test.assertContains
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -282,6 +287,25 @@ class ConnectionTests : R2dbcDatabaseTestsBase() {
                     }
                 }
             }
+        }
+    }
+
+    @Test
+    fun testAddingLoggerDoesNotCauseNoTransactionInContext() = runTest {
+        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        TestDB.H2_V2.connect()
+
+        val tester = object : Table("tester") {
+            val amount = integer("amount")
+        }
+
+        try {
+            suspendTransaction {
+                addLogger(StdOutSqlLogger)
+                tester.selectAll().toList()
+            }
+        } catch (cause: ExposedR2dbcException) {
+            assertContains(cause.message, "Table \"TESTER\" not found")
         }
     }
 }

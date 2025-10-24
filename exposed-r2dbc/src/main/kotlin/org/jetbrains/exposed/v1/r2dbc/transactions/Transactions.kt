@@ -174,13 +174,17 @@ suspend fun <T> inTopLevelSuspendTransaction(
 
         try {
             return withContext(transaction.asContext()) {
-                executeR2dbcTransactionWithErrorHandling(transaction, shouldCommit = true) {
-                    transaction.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
-                    transaction.statement()
+                try {
+                    executeR2dbcTransactionWithErrorHandling(transaction, shouldCommit = true) {
+                        transaction.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
+                        transaction.statement()
+                    }
+                } catch (cause: R2dbcException) {
+                    handleR2dbcException(cause, transaction, attempts)
+                    throw cause
                 }
             }
         } catch (cause: R2dbcException) {
-            handleR2dbcException(cause, transaction, attempts)
             attempts++
 
             if (retryInterval == null) {

@@ -46,6 +46,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/ExposedR2dbcException : io/r2d
 	public fun <init> (Ljava/lang/Throwable;Ljava/util/List;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;)V
 	public final fun causedByQueries ()Ljava/util/List;
 	public final fun getContexts ()Ljava/util/List;
+	public fun getMessage ()Ljava/lang/String;
 	public final fun getSQLState ()Ljava/lang/String;
 	public final fun getSpecificErrorCode ()I
 	public fun toString ()Ljava/lang/String;
