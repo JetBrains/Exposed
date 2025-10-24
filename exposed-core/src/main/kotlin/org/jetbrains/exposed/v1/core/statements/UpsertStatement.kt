@@ -106,7 +106,7 @@ sealed interface UpsertBuilder {
 internal fun UpsertBuilder.getKeyColumns(vararg keys: Column<*>): List<Column<*>> {
     this as InsertStatement<*>
     return keys.asList().ifEmpty {
-        // TODO If it's needed to avoid changes from the underlying `columns`, revert to `toList`.
+        // If the underlying `columns` array can be mutated after this call, use `toList()` to avoid reflecting future changes.
         table.primaryKey?.columns?.asList() ?: table.indices.firstOrNull { it.unique }?.columns
     } ?: emptyList()
 }
