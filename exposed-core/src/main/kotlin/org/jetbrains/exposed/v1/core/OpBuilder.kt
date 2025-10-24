@@ -658,7 +658,7 @@ fun <T> anyFrom(subQuery: AbstractQuery<*>): Op<T> = AllAnyFromSubQueryOp(true, 
  * **Note** If [delegateType] is left `null`, the base column type associated with storing elements of type [T] will be
  * resolved according to the internal mapping of the element's type in [resolveColumnType].
  *
- * @param array Wrapped in the resulting [Op] to improve performance. Do not mutate after passing to this function, otherwise pass the list converted using [Array.toList].
+ * @param array Converted to a list view backed by the original array to improve performance. Do not mutate the array after passing to this function; if mutation is needed, convert using [Array.toList] instead.
  *
  * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
  */
