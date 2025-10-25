@@ -1520,7 +1520,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     ) {
         _indices.add(
             Index(
-                columns.toList(),
+                columns.asList(),
                 isUnique,
                 customIndexName,
                 indexType,

@@ -65,7 +65,7 @@ class EmptySizedIterable<out T> : SizedIterable<T> {
 
 /** Represents a [SizedIterable] that defers to the specified [delegate] collection. */
 class SizedCollection<out T>(val delegate: Collection<T>) : SizedIterable<T> {
-    constructor(vararg values: T) : this(values.toList())
+    constructor(vararg values: T) : this(values.asList())
 
     override fun limit(count: Int): SizedIterable<T> = SizedCollection(delegate.take(count))
     override fun offset(start: Long): SizedIterable<T> = if (start >= Int.MAX_VALUE) {

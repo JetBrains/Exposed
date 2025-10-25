@@ -21,11 +21,11 @@ fun <T> assertEqualCollections(actual: Collection<T>, expected: Collection<T>) {
 }
 
 fun <T> assertEqualCollections(actual: Collection<T>, vararg expected: T) {
-    assertEqualCollectionsImpl(actual, expected.toList())
+    assertEqualCollectionsImpl(actual, expected.asList())
 }
 
 fun <T> assertEqualCollections(actual: Iterable<T>, vararg expected: T) {
-    assertEqualCollectionsImpl(actual.toList(), expected.toList())
+    assertEqualCollectionsImpl(actual.toList(), expected.asList())
 }
 
 fun <T> assertEqualCollections(actual: Iterable<T>, expected: Collection<T>) {
@@ -43,7 +43,7 @@ fun <T> assertEqualLists(actual: List<T>, expected: List<T>) {
 }
 
 fun <T> assertEqualLists(actual: List<T>, vararg expected: T) {
-    assertEqualLists(actual, expected.toList())
+    assertEqualLists(actual, expected.asList())
 }
 
 private val JdbcTransaction.failedOn: String get() = currentTestDB?.name ?: currentDialectTest.name

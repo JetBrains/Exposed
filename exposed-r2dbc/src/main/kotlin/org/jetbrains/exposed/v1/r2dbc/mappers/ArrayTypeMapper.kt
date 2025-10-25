@@ -80,11 +80,10 @@ class ArrayTypeMapper : TypeMapper {
         columnType: ArrayColumnType<*, *>,
         value: Array<*>
     ): Any {
-        val list = value.toList()
         val itemType = columnType.delegate
 
         // Map each element using the typeMapping
-        val mappedList = list.map { element ->
+        val mappedList = value.map { element ->
             if (element == null) return@map null
 
             // Create a temporary statement to map the element
