@@ -1,7 +1,8 @@
 <div align="center">
 
   <picture>
-    <img alt="Exposed logo" src="./documentation-website/Writerside/images/exposed-mascot.png" width="215">
+    <source media="(prefers-color-scheme: dark)" srcset="./documentation-website/Writerside/images/exposed-text-light.png">
+    <img alt="Exposed logo" src="./documentation-website/Writerside/images/exposed-text-dark.png" width="215">
   </picture>
 
 </div>
