@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.v1.core
 
 import org.jetbrains.exposed.v1.core.statements.DefaultValueMarker
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 
 /**
  * An object to which SQL expressions and values can be appended.
@@ -72,7 +72,7 @@ class QueryBuilder(
             is Expression<*> -> append(argument)
             DefaultValueMarker -> append(
                 @OptIn(InternalApi::class)
-                CoreTransactionManager.currentTransaction()
+                currentTransaction()
                     .db.dialect.dataTypeProvider
                     .processForDefaultValue(column.dbDefaultValue!!)
             )

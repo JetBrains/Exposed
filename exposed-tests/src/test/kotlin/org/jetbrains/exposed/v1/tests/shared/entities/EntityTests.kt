@@ -680,7 +680,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     private fun <T> newTransaction(statement: JdbcTransaction.() -> T) =
-        inTopLevelTransaction(null, TransactionManager.manager.defaultIsolationLevel, false, null, statement)
+        inTopLevelTransaction(null, statement = statement)
 
     @Test
     fun sharingEntityBetweenTransactions() {

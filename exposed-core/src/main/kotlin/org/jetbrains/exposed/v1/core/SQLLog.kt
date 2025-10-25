@@ -4,7 +4,7 @@ import org.jetbrains.exposed.v1.core.statements.StatementContext
 import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
 import org.jetbrains.exposed.v1.core.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.v1.core.statements.expandArgs
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.slf4j.LoggerFactory
 
 /** Base class representing a provider of log messages. */
@@ -34,7 +34,7 @@ object Slf4jSqlDebugLogger : SqlLogger {
     override fun log(context: StatementContext, transaction: Transaction) {
         @OptIn(InternalApi::class)
         if (exposedLogger.isDebugEnabled) {
-            exposedLogger.debug(context.expandArgs(CoreTransactionManager.currentTransaction()))
+            exposedLogger.debug(context.expandArgs(currentTransaction()))
         }
     }
 }

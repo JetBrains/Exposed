@@ -57,7 +57,7 @@ class SuspendTransactionTests : DatabaseTestsBase() {
     }
 
     private suspend fun runExposedTransaction() {
-        newSuspendedTransaction(Dispatchers.IO, transactionIsolation = TRANSACTION_SERIALIZABLE) {
+        newSuspendedTransaction(null, transactionIsolation = TRANSACTION_SERIALIZABLE) {
             val current = TestConflictTable
                 .selectAll()
                 .where({ TestConflictTable.id eq uuid })

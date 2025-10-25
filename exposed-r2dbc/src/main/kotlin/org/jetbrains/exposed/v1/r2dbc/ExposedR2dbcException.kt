@@ -49,7 +49,10 @@ class ExposedR2dbcException(
 
     fun getSpecificErrorCode(): Int = originalR2dbcException?.errorCode ?: 0
 
-    override fun toString() = "${super.toString()}\nSQL: ${causedByQueries()}"
+    override val message: String
+        get() = "${originalR2dbcException?.message}\nSQL: ${causedByQueries()}"
+
+    override fun toString() = message
 }
 
 // identical logic to SuspendExecutable.executeInternal()

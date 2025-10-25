@@ -11,14 +11,12 @@ import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.withSuspendTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.dml.DMLTestsData
-import org.junit.After
 import org.junit.Assume
 import org.junit.Before
 import org.junit.Test
@@ -49,14 +47,9 @@ class MultiDatabaseTest {
     @Before
     fun before() {
         Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
-        if (TransactionManager.isInitialized()) {
-            currentDB = TransactionManager.currentOrNull()?.db
+        TransactionManager.currentDatabase?.let {
+            currentDB = it
         }
-    }
-
-    @After
-    fun after() {
-        TransactionManager.resetCurrent(currentDB?.transactionManager)
     }
 
     @Test
@@ -227,7 +220,7 @@ class MultiDatabaseTest {
     fun `when default database is not explicitly set - should return the latest connection`() {
         db1
         db2
-        assertEquals(TransactionManager.defaultDatabase, db2)
+        assertEquals(TransactionManager.currentDatabase, db2)
     }
 
     @Test
@@ -235,7 +228,7 @@ class MultiDatabaseTest {
         db1
         db2
         TransactionManager.defaultDatabase = db1
-        assertEquals(TransactionManager.defaultDatabase, db1)
+        assertEquals(TransactionManager.currentDatabase, db1)
         TransactionManager.defaultDatabase = null
     }
 
@@ -245,7 +238,7 @@ class MultiDatabaseTest {
         db2
         TransactionManager.defaultDatabase = db1
         TransactionManager.closeAndUnregister(db1)
-        assertEquals(TransactionManager.defaultDatabase, db2)
+        assertEquals(TransactionManager.currentDatabase, db2)
         TransactionManager.defaultDatabase = null
     }
 

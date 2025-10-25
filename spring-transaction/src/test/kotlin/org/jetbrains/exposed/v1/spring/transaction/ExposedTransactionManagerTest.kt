@@ -76,7 +76,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
             }
             assertEquals(rnd, T1.selectAll().single()[T1.c1])
 
-            transactionManager.execute {
+            this@ExposedTransactionManagerTest.transactionManager.execute {
                 T1.insertRandom()
                 assertEquals(2, T1.selectAll().count())
             }

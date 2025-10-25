@@ -2,7 +2,7 @@ package org.jetbrains.exposed.v1.core.statements
 
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.UpsertBuilder.Companion.getFunctionProvider
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.core.vendors.*
 
 /**
@@ -149,7 +149,7 @@ internal class InsertValue<T>(
 ) : ExpressionWithColumnType<T>() {
     @OptIn(InternalApi::class)
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
-        val transaction = CoreTransactionManager.currentTransaction()
+        val transaction = currentTransaction()
         val functionProvider = getFunctionProvider(transaction.db.dialect)
         functionProvider.insertValue(transaction.identity(column), queryBuilder)
     }

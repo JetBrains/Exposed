@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.v1.core
 
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.exceptions.throwUnsupportedException
 
@@ -45,7 +45,7 @@ class Column<T>(
     /** Appends the SQL representation of this column to the specified [queryBuilder]. */
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         @OptIn(InternalApi::class)
-        CoreTransactionManager.currentTransaction().fullIdentity(this@Column, queryBuilder)
+        currentTransaction().fullIdentity(this@Column, queryBuilder)
     }
 
     /** Returns the column name in proper case. */
@@ -73,7 +73,7 @@ class Column<T>(
 
     override fun createStatement(): List<String> {
         @OptIn(InternalApi::class)
-        val alterTablePrefix = "ALTER TABLE ${CoreTransactionManager.currentTransaction().identity(table)} ADD"
+        val alterTablePrefix = "ALTER TABLE ${currentTransaction().identity(table)} ADD"
         val isH2withCustomPKConstraint = currentDialect is H2Dialect && isLastColumnInPK
         val isOracle = currentDialect is OracleDialect
         val columnDefinition = when {
@@ -99,7 +99,7 @@ class Column<T>(
 
     override fun dropStatement(): List<String> {
         @OptIn(InternalApi::class)
-        val tr = CoreTransactionManager.currentTransaction()
+        val tr = currentTransaction()
         return listOf("ALTER TABLE ${tr.identity(table)} DROP COLUMN ${tr.identity(this)}")
     }
 
@@ -109,7 +109,7 @@ class Column<T>(
     @Suppress("ComplexMethod")
     fun descriptionDdl(modify: Boolean = false): String = buildString {
         @OptIn(InternalApi::class)
-        val tr = CoreTransactionManager.currentTransaction()
+        val tr = currentTransaction()
         val column = this@Column
         append(tr.identity(column))
         append(" ")

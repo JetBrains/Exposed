@@ -4,7 +4,8 @@ import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.statements.api.RowApi
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
+import org.jetbrains.exposed.v1.core.transactions.currentTransactionOrNull
 import org.jetbrains.exposed.v1.core.vendors.withDialect
 
 /** A row of data representing a single record retrieved from a database result set. */
@@ -14,7 +15,7 @@ class ResultRow(
     private val data: Array<Any?> = arrayOfNulls<Any?>(fieldIndex.size)
 ) {
     @OptIn(InternalApi::class)
-    private val database: DatabaseApi? = CoreTransactionManager.currentTransactionOrNull()?.db
+    private val database: DatabaseApi? = currentTransactionOrNull()?.db
 
     private val lookUpCache = ResultRowCache()
 
@@ -76,7 +77,7 @@ class ResultRow(
         if (checkNullability) {
             if (rawValue == null && expression is Column<*> && expression.dbDefaultValue != null && !expression.columnType.nullable) {
                 exposedLogger.warn(
-                    "Column ${CoreTransactionManager.currentTransaction().fullIdentity(expression)} is marked as not null, " +
+                    "Column ${currentTransaction().fullIdentity(expression)} is marked as not null, " +
                         "has default db value, but returns null. Possible have to re-read it from DB."
                 )
             }

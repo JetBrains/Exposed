@@ -19,6 +19,7 @@ include("exposed-migration-jdbc")
 include("exposed-migration-r2dbc")
 include("exposed-r2dbc")
 include("exposed-r2dbc-tests")
+include("exposed-jdbc-r2dbc-tests")
 
 pluginManagement {
     repositories {
