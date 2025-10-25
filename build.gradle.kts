@@ -4,7 +4,6 @@ import org.jetbrains.exposed.gradle.configureMavenCentralMetadata
 import org.jetbrains.exposed.gradle.testDb
 
 plugins {
-    kotlin("jvm") apply true
     id(libs.plugins.detekt.get().pluginId) apply true
     alias(libs.plugins.binary.compatibility.validator)
     id(libs.plugins.docker.compose.get().pluginId)
@@ -72,6 +71,7 @@ subprojects {
 subprojects {
     if (name == "exposed-bom") return@subprojects
 
+    if (name == "exposed-core") return@subprojects
     apply(plugin = rootProject.libs.plugins.jvm.get().pluginId)
 
     testDb("h2_v2") {
