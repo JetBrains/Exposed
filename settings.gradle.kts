@@ -20,6 +20,7 @@ include("exposed-migration-r2dbc")
 include("exposed-r2dbc")
 include("exposed-r2dbc-tests")
 include("exposed-jdbc-r2dbc-tests")
+include("spring-reactive-transaction")
 
 pluginManagement {
     repositories {
@@ -49,3 +50,5 @@ toolchainManagement {
         }
     }
 }
+
+include("spring-reactive-transaction")

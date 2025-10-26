@@ -120,6 +120,20 @@ class TransactionManager(
         return ThreadLocalTransactionsStack.getTransactionOrNull(db) as R2dbcTransaction?
     }
 
+    @InternalApi
+    fun push(transaction: R2dbcTransaction) {
+        ThreadLocalTransactionsStack.pushTransaction(transaction)
+    }
+
+    @InternalApi
+    fun pop(): R2dbcTransaction? {
+        return try {
+            ThreadLocalTransactionsStack.popTransaction()
+        } catch (_: IllegalArgumentException) {
+            null
+        }
+    }
+
     companion object {
         @OptIn(InternalApi::class)
         private val databases = object : DatabasesManagerImpl<R2dbcDatabase>() {}
