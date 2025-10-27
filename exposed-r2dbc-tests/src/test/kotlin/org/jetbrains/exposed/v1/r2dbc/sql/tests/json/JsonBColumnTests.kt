@@ -277,7 +277,7 @@ class JsonBColumnTests : R2dbcDatabaseTestsBase() {
             val user = jsonb<User>("user", Json.Default).nullable()
         }
 
-        withTables(excludeSettings = binaryJsonNotSupportedDB, tester) {
+        withTables(excludeSettings = binaryJsonNotSupportedDB, tester) { testDb ->
             val nullId = tester.insertAndGetId {
                 it[user] = null
             }
@@ -290,6 +290,20 @@ class JsonBColumnTests : R2dbcDatabaseTestsBase() {
 
             val result2 = tester.select(tester.user).where { tester.id eq nonNullId }.single()
             assertNotNull(result2[tester.user])
+
+            val batchData = listOf(null, User("B", "Team B"))
+            val batchSql = mutableListOf<String>()
+            tester.batchInsert(batchData) { user ->
+                this[tester.user] = user
+
+                batchSql += this.prepareSQL(this@withTables, prepared = true)
+            }
+            assertEquals(batchData.size, batchSql.size)
+            val expectedMarker = when (testDb) {
+                in TestDB.ALL_POSTGRES -> "?::jsonb"
+                else -> "?"
+            }
+            assertTrue(batchSql.all { it.contains(expectedMarker, ignoreCase = true) })
         }
     }
 
