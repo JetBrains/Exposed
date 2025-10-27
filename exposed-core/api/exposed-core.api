@@ -3828,6 +3828,7 @@ public abstract class org/jetbrains/exposed/v1/core/transactions/TransactionMana
 	public final fun getDatabases ()Lorg/jetbrains/exposed/v1/core/transactions/DatabasesManager;
 	public fun getTransactionManager (Lorg/jetbrains/exposed/v1/core/DatabaseApi;)Lorg/jetbrains/exposed/v1/core/transactions/TransactionManagerApi;
 	public fun registerDatabaseManager (Lorg/jetbrains/exposed/v1/core/DatabaseApi;Lorg/jetbrains/exposed/v1/core/transactions/TransactionManagerApi;)V
+	protected abstract fun transactionClass ()Ljava/lang/Class;
 }
 
 public final class org/jetbrains/exposed/v1/core/transactions/TransactionScopeKt {

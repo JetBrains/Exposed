@@ -102,6 +102,7 @@ private fun resolveR2dbcDatabaseOrThrow(db: R2dbcDatabase?): R2dbcDatabase {
  * @return The final result of the [statement] block.
  * @throws IllegalStateException If no database is available
  * @throws R2dbcException If a database error occurs and retry attempts are exhausted
+ * @throws Throwable If any other error occurs during execution
  */
 @OptIn(InternalApi::class)
 suspend fun <T> suspendTransaction(
@@ -155,6 +156,7 @@ suspend fun <T> suspendTransaction(
  * @return The final result of the [statement] block.
  * @throws IllegalStateException If no database is available
  * @throws R2dbcException If a database error occurs and retry attempts are exhausted
+ * @throws Throwable If any other error occurs during execution
  */
 suspend fun <T> inTopLevelSuspendTransaction(
     db: R2dbcDatabase? = null,

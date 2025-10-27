@@ -9,8 +9,9 @@ plugins {
 }
 
 kotlin {
-    // REQUIRED for exposed-crypt tests, but makes Oracle tests fail...
-//    jvmToolchain(17)
+    // TODO REQUIRED for exposed-crypt tests, but makes Oracle tests fail...
+    //  https://youtrack.jetbrains.com/issue/EXPOSED-905/Bump-com.oracle.database.jdbc-to-ojdbc11
+    // jvmToolchain(17)
     jvmToolchain(11)
 
     compilerOptions {

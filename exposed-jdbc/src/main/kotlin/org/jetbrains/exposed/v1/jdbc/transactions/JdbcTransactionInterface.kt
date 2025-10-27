@@ -30,7 +30,7 @@ interface JdbcTransactionInterface : TransactionInterface {
 /**
  * The [TransactionManager] instance that is associated with this [Database].
  *
- * @throws [RuntimeException] If a manager has not been registered for the database.
+ * @throws IllegalStateException if no transaction manager is registered for the given database.
  */
 val Database.transactionManager: TransactionManager
     get() = TransactionManager.managerFor(this)

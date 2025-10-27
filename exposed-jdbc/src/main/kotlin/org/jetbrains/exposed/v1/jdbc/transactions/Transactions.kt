@@ -101,6 +101,7 @@ private fun resolveDatabaseOrThrow(db: Database?): Database {
  * @return The final result of the [statement] block.
  * @throws IllegalStateException If no database is available
  * @throws SQLException If a database error occurs and retry attempts are exhausted
+ * @throws Throwable If any other error occurs during execution
  * @sample org.jetbrains.exposed.v1.tests.shared.ConnectionTimeoutTest.testTransactionRepetitionWithDefaults
  */
 @OptIn(InternalApi::class)
@@ -159,6 +160,7 @@ fun <T> transaction(
  * @return The final result of the [statement] block.
  * @throws IllegalStateException If no database is available
  * @throws SQLException If a database error occurs and retry attempts are exhausted
+ * @throws Throwable If any other error occurs during execution
  * @sample org.jetbrains.exposed.v1.tests.shared.RollbackTransactionTest.testRollbackWithoutSavepoints
  */
 @OptIn(InternalApi::class)
@@ -242,6 +244,7 @@ fun <T> inTopLevelTransaction(
  * @return The final result of the [statement] block.
  * @throws IllegalStateException If no database is available
  * @throws SQLException If a database error occurs and retry attempts are exhausted
+ * @throws Throwable If any other error occurs during execution
  */
 @OptIn(InternalApi::class)
 suspend fun <T> suspendTransaction(
@@ -299,6 +302,7 @@ suspend fun <T> suspendTransaction(
  * @return The final result of the [statement] block.
  * @throws IllegalStateException If no database is available
  * @throws SQLException If a database error occurs and retry attempts are exhausted
+ * @throws Throwable If any other error occurs during execution
  */
 suspend fun <T> inTopLevelSuspendTransaction(
     db: Database? = null,

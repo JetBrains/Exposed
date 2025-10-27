@@ -31,7 +31,7 @@ interface R2dbcTransactionInterface : TransactionInterface {
 /**
  * The [TransactionManager] instance that is associated with this [R2dbcDatabase].
  *
- * @throws [RuntimeException] If a manager has not been registered for the database.
+ * @throws IllegalStateException if no transaction manager is registered for the given database.
  */
 @Suppress("TooGenericExceptionThrown")
 val R2dbcDatabase.transactionManager: TransactionManager

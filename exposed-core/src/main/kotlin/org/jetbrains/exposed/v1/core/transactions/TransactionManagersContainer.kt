@@ -54,6 +54,13 @@ abstract class TransactionManagersContainerImpl<DB : DatabaseApi>(
     }
 
     /**
+     * This method should return the class of the transaction that this manager supports.
+     *
+     * This guarantees that the correct transaction manager will be used for the current transaction.
+     */
+    protected abstract fun transactionClass(): Class<out Transaction>
+
+    /**
      * Returns the current transaction manager if available, or null otherwise.
      *
      * Resolution order:
@@ -61,16 +68,11 @@ abstract class TransactionManagersContainerImpl<DB : DatabaseApi>(
      * 2. If there's a current database, returns its registered transaction manager
      * 3. Otherwise returns null
      *
-     * **Type Safety Note**: This method does not verify that the returned transaction manager
-     * matches the module (JDBC vs R2DBC) from which it was called. For example, if called from
-     * the JDBC module, it may return an R2DBC transaction manager if the most recent transaction
-     * is an R2DBC transaction. Callers should perform type checking if necessary.
-     *
      * @return The current transaction manager, or null if none is available
      */
     @OptIn(InternalApi::class)
     override fun getCurrentTransactionManagerOrNull(): TransactionManagerApi? {
-        return ThreadLocalTransactionsStack.getTransactionIsInstance(Transaction::class.java)?.transactionManager
+        return ThreadLocalTransactionsStack.getTransactionIsInstance(transactionClass())?.transactionManager
             ?: databases.getCurrentDatabase()?.let { getTransactionManager(it) }
     }
 

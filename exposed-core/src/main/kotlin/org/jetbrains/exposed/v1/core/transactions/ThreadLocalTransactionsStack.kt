@@ -80,6 +80,7 @@ object ThreadLocalTransactionsStack {
      * @return The most recent transaction for the specified database, or null if not found
      */
     // TODO make search in list is not optimal, another structure should be used
+    //  Related issue: https://youtrack.jetbrains.com/issue/EXPOSED-915/ThreadLocalTransactionsStack-makes-inefficient-operations
     fun getTransactionOrNull(db: DatabaseApi): Transaction? {
         return transactions.get()?.findLast { it.db == db }
     }

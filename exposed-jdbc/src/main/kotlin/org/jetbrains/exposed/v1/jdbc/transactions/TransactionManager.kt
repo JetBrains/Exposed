@@ -103,6 +103,13 @@ class TransactionManager(
     @OptIn(InternalApi::class)
     private val contextKey = object : CoroutineContext.Key<TransactionContextHolder> {}
 
+    /**
+     * Creates a coroutine context for the given transaction.
+     *
+     * @param transaction The transaction for which to create the coroutine context.
+     * @return A [CoroutineContext] containing the transaction holder and context element.
+     * @throws IllegalStateException if the transaction's manager doesn't match this manager.
+     */
     @OptIn(InternalApi::class)
     internal fun createTransactionContext(transaction: Transaction): CoroutineContext {
         if (transaction.transactionManager != this) {
@@ -142,7 +149,9 @@ class TransactionManager(
         private val databases = object : DatabasesManagerImpl<Database>() {}
 
         @OptIn(InternalApi::class)
-        private val transactionManagers = object : TransactionManagersContainerImpl<Database>(databases) {}
+        private val transactionManagers = object : TransactionManagersContainerImpl<Database>(databases) {
+            override fun transactionClass(): Class<out Transaction> = JdbcTransaction::class.java
+        }
 
         /**
          * The currently active database, which is either the default database or the last instance created.
@@ -154,7 +163,8 @@ class TransactionManager(
         /**
          * The database to use by default in all transactions.
          *
-         * **Note** If this value is not set, the last [Database] instance created will be used.
+         * **Note:** The default database could be null until it is set explicitly.
+         * Use `currentDatabase` to get the default database if it is set, or the last registered database otherwise.
          */
         var defaultDatabase: Database?
             get() = databases.getDefaultDatabase()
@@ -195,9 +205,10 @@ class TransactionManager(
          *
          * @param db Database instance for which to retrieve the transaction manager.
          * @return The [TransactionManager] associated with the database.
+         * @throws IllegalStateException if no transaction manager is registered for the given database.
          */
         fun managerFor(db: Database): TransactionManager =
-            transactionManagers.getTransactionManager(db) as TransactionManager
+            transactionManagers.getTransactionManager(db)?.let { it as TransactionManager } ?: error("No transaction manager for db $db")
     }
 
     private class ThreadLocalTransaction(
