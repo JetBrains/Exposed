@@ -295,6 +295,45 @@ fun JdbcTransaction.getVersionString(): String {
 
 </compare>
 
+### `transaction()` signature changed
+
+The order of declared parameters for the functions `transaction()` and `inTopLevelTransaction()` has changed, with the
+`db` parameter of type `Database` now being the first parameter.
+
+The `transactionIsolation` parameter has additionally been
+provided a default argument based on the value set by the database's transaction manager, which defaults to the value
+configured on `Database.connect()`.
+
+The default argument for the `readOnly` parameter is no longer `false`, but instead
+also defaults to the value derived from the database's transaction manager configuration.
+
+<compare first-title="0.61.0" second-title="1.0.0">
+
+```kotlin
+import org.jetbrains.exposed.sql.transactions.*
+
+inTopLevelTransaction(
+    Connection.TRANSACTION_SERIALIZABLE
+) { }
+
+transaction(
+    db.transactionManager.defaultIsolationLevel,
+    db = db
+) { }
+```
+
+```kotlin
+import org.jetbrains.exposed.v1.jdbc.transactions.*
+
+inTopLevelTransaction(
+    transactionIsolation = Connection.TRANSACTION_SERIALIZABLE
+) { }
+
+transaction(db) { }
+```
+
+</compare>
+
 ### Transaction managers
 
 The `TransactionManager` interface has undergone a similar redesign, except that the interface remaining in `exposed-core`
@@ -330,17 +369,48 @@ for a connection `manager` is no longer `ThreadLocalTransactionManager`, which h
 [`TransactionManager`](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc.transactions/-transaction-manager/index.html)
 is now passed as the default argument instead.
 
+As part of the redesign, the underlying database transaction management logic and switching of active transactions has
+been changed to no longer rely on `ThreadLocal`. This means that the property `TransactionManager.threadLocal`, as well as
+the methods `TransactionManagerApi.bindTransactionToThread()` and `TransactionManager.resetCurrent()` have all been removed.
+
+The association between a `Database` instance and its `TransactionManager` has also been streamlined to ensure a stricter,
+more reliable relationship. For this reason, the following changes have been made:
+* The signature of `TransactionManager.managerFor()` has changed to accept only a non-nullable `database` argument
+  and its return type is a non-nullable `TransactionManager`.
+* The top-level property `transactionManager` no longer accepts a nullable `Database` as its receiver.
+* `TransactionManager.isInitialized()` has also been removed.
+
+Prior to version 1.0.0, `TransactionManager.defaultDatabase` was used to retrieve the `Database` instance that had been
+set as the default to use for all transactions or, if a default was not set, the last instance created. With 1.0.0,
+this functionality has been split for simplicity:
+* `TransactionManager.defaultDatabase`: To get and set the default database to use when opening a transaction.
+  This value will remain null unless explicitly set at some point.
+* `TransactionManager.currentDatabase`: To get the database that will be used when opening the next transaction.
+  This value will either be retrieved from `defaultDatabase` or the last `Database` instance registered, if any.
+
+The property `TransactionManager.manager` has also been removed to avoid any implicit ambiguity around which current manager
+to retrieve. If this property is being retrieved from within a transaction block, the most appropriate replacement would
+be a direct call to `TransactionManager.currentOrNull()?.transactionManager`. If it is being retrieved outside a
+transaction block, then it most likely should be replaced with `TransactionManager.currentDatabase?.transactionManager`.
+For other cases in between, a manager instance can be retrieved either directly from any transaction instance, the database
+associated with any transaction instance, or by directly providing the database to `TransactionManager.managerFor()`.
+
+`TransactionManager.currentOrNew()` has been removed.
+
 ### JDBC `suspend` functions deprecated
 
 The original top-level suspend transaction functions, namely `newSuspendedTransaction()`, `withSuspendTransaction()`, and
-`suspendedTransactionAsync()`, have been moved out of `exposed-core` and into `exposed-jdbc`. They have also been deprecated.
+`suspendedTransactionAsync()`, have been moved out of `exposed-core` and into `exposed-jdbc`. They have also been deprecated
+in favor of either switching to R2DBC operations or using newly introduced JDBC functions, `suspendTransaction()` and `inTopLevelSuspendTransaction()`.
 
-To properly open a suspend transaction block, these functions should be replaced with `suspendTransaction()` overloads
-from `exposed-r2dbc`, which resemble JDBC `transaction()` overloads.
+These new functions should be used if you want to continue using a blocking JDBC driver, but with the ability to call suspend functions
+alongside your database transaction operations. The behavior of these functions aligns fully with the behavior of the standard
+`transaction()` functions, for example where it pertains to nesting logic and exception handling. Unlike the original suspend
+transaction functions, `suspendTransaction()` does not accept a `CoroutineContext` argument. Instead, a coroutine builder
+function, like `withContext()` or `async()` should be used to wrap the `suspendTransaction()` block.
 
-> If you believe these methods should remain available for blocking JDBC connections,
-> please leave a comment on [YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-74/Add-R2DBC-Support)
-> with your use case.
+> To properly run asynchronous transactions using reactive drivers,
+> `suspendTransaction()` overloads are now available from the `exposed-r2dbc` dependency.
 >
 {style="tip"}
 
