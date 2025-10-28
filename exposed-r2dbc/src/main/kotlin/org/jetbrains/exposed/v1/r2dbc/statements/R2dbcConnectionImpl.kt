@@ -8,10 +8,12 @@ import io.r2dbc.spi.Statement
 import io.r2dbc.spi.ValidationDepth
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitFirstOrNull
+import kotlinx.coroutines.reactive.awaitLast
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactive.collect
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
@@ -210,16 +212,18 @@ class R2dbcConnectionImpl(
         metadataImpl!!.body()
     }
 
+    private val localConnectionLock = Mutex()
     private var localConnection: Connection? = null
 
     private suspend fun <T> withConnection(body: suspend Connection.() -> T): T {
-        if (localConnection == null) {
-            localConnection = connection.awaitFirst().also {
+        val acquiredConnection = localConnectionLock.withLock {
+            localConnection ?: connection.awaitLast().also {
                 // this starts an explicit transaction with autoCommit mode off
                 it.beginTransaction().awaitFirstOrNull()
+                localConnection = it
             }
         }
-        return localConnection!!.body()
+        return acquiredConnection.body()
     }
 }
 
