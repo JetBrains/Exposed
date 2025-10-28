@@ -5,12 +5,16 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.r2dbc.Query
+import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
+import org.jetbrains.exposed.v1.r2dbc.asContext
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.vendors.DatabaseDialectMetadata
@@ -99,3 +103,10 @@ internal suspend fun <T : Comparable<T>> Flow<T>.sorted(): List<T> {
 }
 
 internal suspend fun <T> Flow<T>.distinct(): List<T> = this.distinctUntilChanged().toList()
+
+@OptIn(InternalApi::class)
+suspend fun <T> withTransactionContext(tx: R2dbcTransaction, block: suspend () -> T): T {
+    return withContext(tx.asContext()) {
+        block()
+    }
+}

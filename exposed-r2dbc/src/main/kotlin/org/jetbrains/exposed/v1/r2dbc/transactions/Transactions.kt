@@ -12,6 +12,7 @@ import org.jetbrains.exposed.v1.r2dbc.ExposedR2dbcException
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
+import org.jetbrains.exposed.v1.r2dbc.asContext
 import java.util.concurrent.ThreadLocalRandom
 
 /**
@@ -175,6 +176,7 @@ suspend fun <T> inTopLevelSuspendTransaction(
         val transaction = database.transactionManager.newTransaction(transactionIsolation, readOnly, outerTransaction)
 
         try {
+            @OptIn(InternalApi::class)
             return withContext(transaction.asContext()) {
                 try {
                     executeR2dbcTransactionWithErrorHandling(transaction, shouldCommit = true) {

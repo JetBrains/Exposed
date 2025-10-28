@@ -95,6 +95,10 @@ class TransactionManager(
         return transaction
     }
 
+    /** Returns the current [JdbcTransaction], or creates a new transaction with the provided [isolation] level. */
+    fun currentOrNew(isolation: Int = manager.defaultIsolationLevel): JdbcTransaction = Companion.currentOrNull()
+        ?: manager.newTransaction(isolation)
+
     @OptIn(InternalApi::class)
     override fun currentOrNull(): JdbcTransaction? =
         ThreadLocalTransactionsStack.getTransactionOrNull(db) as JdbcTransaction?
@@ -209,6 +213,21 @@ class TransactionManager(
          */
         fun managerFor(db: Database): TransactionManager =
             transactionManagers.getTransactionManager(db)?.let { it as TransactionManager } ?: error("No transaction manager for db $db")
+
+        /**
+         * Returns the [TransactionManager] for the current context.
+         *
+         * This property attempts to resolve the transaction manager in the following order:
+         * 1. From the current transaction, if one exists
+         * 2. From the current database, if one is set
+         *
+         * @throws IllegalStateException if no transaction manager can be found in either the current
+         *         transaction or the current database.
+         */
+        val manager: TransactionManager
+            get() = currentOrNull()?.transactionManager
+                ?: currentDatabase?.transactionManager
+                ?: error("No transaction manager found")
     }
 
     private class ThreadLocalTransaction(

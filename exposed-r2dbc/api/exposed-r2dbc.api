@@ -353,6 +353,10 @@ public final class org/jetbrains/exposed/v1/r2dbc/R2dbcTransaction$Companion {
 	public final fun getGlobalInterceptors ()Ljava/util/ArrayList;
 }
 
+public final class org/jetbrains/exposed/v1/r2dbc/R2dbcTransactionKt {
+	public static final fun asContext (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;)Lkotlin/coroutines/CoroutineContext;
+}
+
 public final class org/jetbrains/exposed/v1/r2dbc/SchemaUtils : org/jetbrains/exposed/v1/core/SchemaUtilityApi {
 	public static final field INSTANCE Lorg/jetbrains/exposed/v1/r2dbc/SchemaUtils;
 	public final fun addMissingColumnsStatements ([Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -1030,6 +1034,8 @@ public final class org/jetbrains/exposed/v1/r2dbc/transactions/TransactionManage
 	public static final field Companion Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager$Companion;
 	public fun <init> (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lkotlin/jvm/functions/Function2;)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun currentOrNew (Lio/r2dbc/spi/IsolationLevel;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
+	public static synthetic fun currentOrNew$default (Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager;Lio/r2dbc/spi/IsolationLevel;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
 	public synthetic fun currentOrNull ()Lorg/jetbrains/exposed/v1/core/Transaction;
 	public fun currentOrNull ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
 	public final fun getDefaultIsolationLevel ()Lio/r2dbc/spi/IsolationLevel;
@@ -1053,6 +1059,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/transactions/TransactionManage
 	public final fun currentOrNull ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
 	public final fun getCurrentDatabase ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
 	public final fun getDefaultDatabase ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
+	public final fun getManager ()Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager;
 	public final fun managerFor (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;)Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager;
 	public final fun registerManager (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lorg/jetbrains/exposed/v1/core/transactions/TransactionManagerApi;)V
 	public final fun setDefaultDatabase (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;)V

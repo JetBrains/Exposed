@@ -52,7 +52,6 @@ class TransactionManager(
      * @return A [CoroutineContext] containing the transaction holder and context element.
      * @throws IllegalStateException if the transaction's manager doesn't match this manager.
      */
-    @OptIn(InternalApi::class)
     internal fun createTransactionContext(transaction: Transaction): CoroutineContext {
         if (transaction.transactionManager != this) {
             error(
@@ -60,6 +59,7 @@ class TransactionManager(
                     "Transaction manager of ${db.url} tried to create transaction context for ${transaction.db.url}"
             )
         }
+        @OptIn(InternalApi::class)
         return TransactionContextHolderImpl(transaction, contextKey) + TransactionContextElement(transaction)
     }
 
@@ -114,6 +114,10 @@ class TransactionManager(
 
         return transaction
     }
+
+    /** Returns the current [R2dbcTransaction], or creates a new transaction with the provided [isolation] level. */
+    fun currentOrNew(isolation: IsolationLevel? = null): R2dbcTransaction = currentOrNull()
+        ?: manager.newTransaction(isolation)
 
     @OptIn(InternalApi::class)
     override fun currentOrNull(): R2dbcTransaction? {
@@ -183,6 +187,21 @@ class TransactionManager(
          */
         fun managerFor(db: R2dbcDatabase): TransactionManager =
             transactionManagers.getTransactionManager(db)?.let { it as TransactionManager } ?: error("No transaction manager for db $db")
+
+        /**
+         * Returns the [TransactionManager] for the current context.
+         *
+         * This property attempts to resolve the transaction manager in the following order:
+         * 1. From the current transaction, if one exists
+         * 2. From the current database, if one is set
+         *
+         * @throws IllegalStateException if no transaction manager can be found in either the current
+         *         transaction or the current database.
+         */
+        val manager: TransactionManager
+            get() = currentOrNull()?.transactionManager
+                ?: currentDatabase?.transactionManager
+                ?: error("No transaction manager found")
     }
 
     private class R2dbcLocalTransaction(

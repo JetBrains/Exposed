@@ -139,6 +139,10 @@ public final class org/jetbrains/exposed/v1/jdbc/JdbcTransaction$Companion {
 	public final fun getGlobalInterceptors ()Ljava/util/ArrayList;
 }
 
+public final class org/jetbrains/exposed/v1/jdbc/JdbcTransactionKt {
+	public static final fun asContext (Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;)Lkotlin/coroutines/CoroutineContext;
+}
+
 public final class org/jetbrains/exposed/v1/jdbc/LazySizedCollection : org/jetbrains/exposed/v1/jdbc/SizedIterable {
 	public fun <init> (Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;)V
 	public fun copy ()Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
@@ -772,6 +776,8 @@ public final class org/jetbrains/exposed/v1/jdbc/transactions/TransactionManager
 	public static final field Companion Lorg/jetbrains/exposed/v1/jdbc/transactions/TransactionManager$Companion;
 	public fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Lkotlin/jvm/functions/Function2;)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Lkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun currentOrNew (I)Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
+	public static synthetic fun currentOrNew$default (Lorg/jetbrains/exposed/v1/jdbc/transactions/TransactionManager;IILjava/lang/Object;)Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
 	public synthetic fun currentOrNull ()Lorg/jetbrains/exposed/v1/core/Transaction;
 	public fun currentOrNull ()Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
 	public final fun getDefaultIsolationLevel ()I
@@ -795,6 +801,7 @@ public final class org/jetbrains/exposed/v1/jdbc/transactions/TransactionManager
 	public final fun currentOrNull ()Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
 	public final fun getCurrentDatabase ()Lorg/jetbrains/exposed/v1/jdbc/Database;
 	public final fun getDefaultDatabase ()Lorg/jetbrains/exposed/v1/jdbc/Database;
+	public final fun getManager ()Lorg/jetbrains/exposed/v1/jdbc/transactions/TransactionManager;
 	public final fun managerFor (Lorg/jetbrains/exposed/v1/jdbc/Database;)Lorg/jetbrains/exposed/v1/jdbc/transactions/TransactionManager;
 	public final fun registerManager (Lorg/jetbrains/exposed/v1/jdbc/Database;Lorg/jetbrains/exposed/v1/core/transactions/TransactionManagerApi;)V
 	public final fun setDefaultDatabase (Lorg/jetbrains/exposed/v1/jdbc/Database;)V

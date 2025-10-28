@@ -5,9 +5,11 @@ import io.r2dbc.spi.Row
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.withContext
 import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.v1.core.CompositeSqlLogger
 import org.jetbrains.exposed.v1.core.IColumnType
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Key
 import org.jetbrains.exposed.v1.core.SqlLogger
 import org.jetbrains.exposed.v1.core.Transaction
@@ -83,29 +85,35 @@ open class R2dbcTransaction(
     }
 
     override suspend fun commit() {
-        val dataToStore = HashMap<Key<*>, Any?>()
-        globalInterceptors.forEach {
-            dataToStore.putAll(it.keepUserDataInTransactionStoreOnCommit(userdata))
-            it.beforeCommit(this)
+        @OptIn(InternalApi::class)
+        withContext(asContext()) {
+            val dataToStore = HashMap<Key<*>, Any?>()
+            globalInterceptors.forEach {
+                dataToStore.putAll(it.keepUserDataInTransactionStoreOnCommit(userdata))
+                it.beforeCommit(this@R2dbcTransaction)
+            }
+            interceptors.forEach {
+                dataToStore.putAll(it.keepUserDataInTransactionStoreOnCommit(userdata))
+                it.beforeCommit(this@R2dbcTransaction)
+            }
+            transactionImpl.commit()
+            userdata.clear()
+            globalInterceptors.forEach { it.afterCommit(this@R2dbcTransaction) }
+            interceptors.forEach { it.afterCommit(this@R2dbcTransaction) }
+            userdata.putAll(dataToStore)
         }
-        interceptors.forEach {
-            dataToStore.putAll(it.keepUserDataInTransactionStoreOnCommit(userdata))
-            it.beforeCommit(this)
-        }
-        transactionImpl.commit()
-        userdata.clear()
-        globalInterceptors.forEach { it.afterCommit(this) }
-        interceptors.forEach { it.afterCommit(this) }
-        userdata.putAll(dataToStore)
     }
 
     override suspend fun rollback() {
-        globalInterceptors.forEach { it.beforeRollback(this) }
-        interceptors.forEach { it.beforeRollback(this) }
-        transactionImpl.rollback()
-        globalInterceptors.forEach { it.afterRollback(this) }
-        interceptors.forEach { it.afterRollback(this) }
-        userdata.clear()
+        @OptIn(InternalApi::class)
+        withContext(asContext()) {
+            globalInterceptors.forEach { it.beforeRollback(this@R2dbcTransaction) }
+            interceptors.forEach { it.beforeRollback(this@R2dbcTransaction) }
+            transactionImpl.rollback()
+            globalInterceptors.forEach { it.afterRollback(this@R2dbcTransaction) }
+            interceptors.forEach { it.afterRollback(this@R2dbcTransaction) }
+            userdata.clear()
+        }
     }
 
     /** Adds the specified [StatementInterceptor] to act on this transaction. */
@@ -148,8 +156,6 @@ open class R2dbcTransaction(
             throw ExposedR2dbcException(cause, stmt, this)
         }
     }
-
-    internal fun asContext() = transactionManager.createTransactionContext(this)
 
     /**
      * Executes the provided statement exactly, using the supplied [args] to set values to question mark
@@ -230,30 +236,33 @@ open class R2dbcTransaction(
      * are stored for each call in [statementStats].
      */
     suspend fun <T, R> exec(stmt: SuspendExecutable<T, *>, body: suspend Statement<T>.(T) -> R): R? {
-        statementCount++
+        @OptIn(InternalApi::class)
+        return withContext(asContext()) {
+            statementCount++
 
-        val start = System.nanoTime()
-        val answer = stmt.executeIn(this)
-        val delta = (System.nanoTime() - start).let { TimeUnit.NANOSECONDS.toMillis(it) }
+            val start = System.nanoTime()
+            val answer = stmt.executeIn(this@R2dbcTransaction)
+            val delta = (System.nanoTime() - start).let { TimeUnit.NANOSECONDS.toMillis(it) }
 
-        val lazySQL = lazy(LazyThreadSafetyMode.NONE) {
-            answer.second.map { it.sql(this) }.distinct().joinToString()
-        }
-
-        duration += delta
-
-        if (debug) {
-            statements.append(describeStatement(delta, lazySQL.value))
-            statementStats.getOrPut(lazySQL.value) { 0 to 0L }.let { (count, time) ->
-                statementStats[lazySQL.value] = (count + 1) to (time + delta)
+            val lazySQL = lazy(LazyThreadSafetyMode.NONE) {
+                answer.second.map { it.sql(this@R2dbcTransaction) }.distinct().joinToString()
             }
-        }
 
-        if (delta > (warnLongQueriesDuration ?: Long.MAX_VALUE)) {
-            exposedLogger.warn("Long query: ${describeStatement(delta, lazySQL.value)}", LongQueryException())
-        }
+            duration += delta
 
-        return answer.first?.let { stmt.statement.body(it) }
+            if (debug) {
+                statements.append(describeStatement(delta, lazySQL.value))
+                statementStats.getOrPut(lazySQL.value) { 0 to 0L }.let { (count, time) ->
+                    statementStats[lazySQL.value] = (count + 1) to (time + delta)
+                }
+            }
+
+            if (delta > (warnLongQueriesDuration ?: Long.MAX_VALUE)) {
+                exposedLogger.warn("Long query: ${describeStatement(delta, lazySQL.value)}", LongQueryException())
+            }
+
+            answer.first?.let { stmt.statement.body(it) }
+        }
     }
 
     /**
@@ -335,3 +344,9 @@ open class R2dbcTransaction(
         }
     }
 }
+
+/**
+ * @suppress
+ */
+@InternalApi
+fun R2dbcTransaction.asContext() = transactionManager.createTransactionContext(this)

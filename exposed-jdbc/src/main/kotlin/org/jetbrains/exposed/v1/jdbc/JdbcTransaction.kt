@@ -3,6 +3,7 @@ package org.jetbrains.exposed.v1.jdbc
 import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.v1.core.CompositeSqlLogger
 import org.jetbrains.exposed.v1.core.IColumnType
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Key
 import org.jetbrains.exposed.v1.core.SqlLogger
 import org.jetbrains.exposed.v1.core.Transaction
@@ -13,6 +14,7 @@ import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
 import org.jetbrains.exposed.v1.core.statements.StatementResult
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
+import org.jetbrains.exposed.v1.core.transactions.withThreadLocalTransaction
 import org.jetbrains.exposed.v1.exceptions.LongQueryException
 import org.jetbrains.exposed.v1.jdbc.statements.BlockingExecutable
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
@@ -74,29 +76,35 @@ open class JdbcTransaction(
     }
 
     override fun commit() {
-        val dataToStore = HashMap<Key<*>, Any?>()
-        globalInterceptors.forEach {
-            dataToStore.putAll(it.keepUserDataInTransactionStoreOnCommit(userdata))
-            it.beforeCommit(this)
+        @OptIn(InternalApi::class)
+        withThreadLocalTransaction(this) {
+            val dataToStore = HashMap<Key<*>, Any?>()
+            globalInterceptors.forEach {
+                dataToStore.putAll(it.keepUserDataInTransactionStoreOnCommit(userdata))
+                it.beforeCommit(this)
+            }
+            interceptors.forEach {
+                dataToStore.putAll(it.keepUserDataInTransactionStoreOnCommit(userdata))
+                it.beforeCommit(this)
+            }
+            transactionImpl.commit()
+            userdata.clear()
+            globalInterceptors.forEach { it.afterCommit(this) }
+            interceptors.forEach { it.afterCommit(this) }
+            userdata.putAll(dataToStore)
         }
-        interceptors.forEach {
-            dataToStore.putAll(it.keepUserDataInTransactionStoreOnCommit(userdata))
-            it.beforeCommit(this)
-        }
-        transactionImpl.commit()
-        userdata.clear()
-        globalInterceptors.forEach { it.afterCommit(this) }
-        interceptors.forEach { it.afterCommit(this) }
-        userdata.putAll(dataToStore)
     }
 
     override fun rollback() {
-        globalInterceptors.forEach { it.beforeRollback(this) }
-        interceptors.forEach { it.beforeRollback(this) }
-        transactionImpl.rollback()
-        globalInterceptors.forEach { it.afterRollback(this) }
-        interceptors.forEach { it.afterRollback(this) }
-        userdata.clear()
+        @OptIn(InternalApi::class)
+        withThreadLocalTransaction(this) {
+            globalInterceptors.forEach { it.beforeRollback(this) }
+            interceptors.forEach { it.beforeRollback(this) }
+            transactionImpl.rollback()
+            globalInterceptors.forEach { it.afterRollback(this) }
+            interceptors.forEach { it.afterRollback(this) }
+            userdata.clear()
+        }
     }
 
     /** Adds the specified [StatementInterceptor] to act on this transaction. */
@@ -196,7 +204,10 @@ open class JdbcTransaction(
      * Select statements are not supported as it's impossible to return multiple results.
      */
     fun execInBatch(stmts: List<String>) {
-        connection.executeInBatch(stmts)
+        @OptIn(InternalApi::class)
+        withThreadLocalTransaction(this) {
+            connection.executeInBatch(stmts)
+        }
     }
 
     /**
@@ -209,30 +220,33 @@ open class JdbcTransaction(
      * are stored for each call in [Transaction.statementStats].
      */
     fun <T, R> exec(stmt: BlockingExecutable<T, *>, body: Statement<T>.(T) -> R): R? {
-        statementCount++
+        @OptIn(InternalApi::class)
+        return withThreadLocalTransaction(this) {
+            statementCount++
 
-        val start = System.nanoTime()
-        val answer = stmt.executeIn(this)
-        val delta = (System.nanoTime() - start).let { TimeUnit.NANOSECONDS.toMillis(it) }
+            val start = System.nanoTime()
+            val answer = stmt.executeIn(this)
+            val delta = (System.nanoTime() - start).let { TimeUnit.NANOSECONDS.toMillis(it) }
 
-        val lazySQL = lazy(LazyThreadSafetyMode.NONE) {
-            answer.second.map { it.sql(this) }.distinct().joinToString()
-        }
-
-        duration += delta
-
-        if (debug) {
-            statements.append(describeStatement(delta, lazySQL.value))
-            statementStats.getOrPut(lazySQL.value) { 0 to 0L }.let { (count, time) ->
-                statementStats[lazySQL.value] = (count + 1) to (time + delta)
+            val lazySQL = lazy(LazyThreadSafetyMode.NONE) {
+                answer.second.map { it.sql(this) }.distinct().joinToString()
             }
-        }
 
-        if (delta > (warnLongQueriesDuration ?: Long.MAX_VALUE)) {
-            exposedLogger.warn("Long query: ${describeStatement(delta, lazySQL.value)}", LongQueryException())
-        }
+            duration += delta
 
-        return answer.first?.let { stmt.statement.body(it) }
+            if (debug) {
+                statements.append(describeStatement(delta, lazySQL.value))
+                statementStats.getOrPut(lazySQL.value) { 0 to 0L }.let { (count, time) ->
+                    statementStats[lazySQL.value] = (count + 1) to (time + delta)
+                }
+            }
+
+            if (delta > (warnLongQueriesDuration ?: Long.MAX_VALUE)) {
+                exposedLogger.warn("Long query: ${describeStatement(delta, lazySQL.value)}", LongQueryException())
+            }
+
+            answer.first?.let { stmt.statement.body(it) }
+        }
     }
 
     /**
@@ -282,8 +296,11 @@ open class JdbcTransaction(
     }
 
     final override fun addLogger(vararg logger: SqlLogger): CompositeSqlLogger {
-        return super.addLogger(*logger).apply {
-            registerInterceptor(this)
+        @OptIn(InternalApi::class)
+        return withThreadLocalTransaction(this) {
+            super.addLogger(*logger).apply {
+                registerInterceptor(this)
+            }
         }
     }
 
@@ -292,8 +309,6 @@ open class JdbcTransaction(
     } else {
         0
     }
-
-    internal fun asContext() = transactionManager.createTransactionContext(this)
 
     companion object {
         val globalInterceptors = arrayListOf<GlobalStatementInterceptor>()
@@ -308,3 +323,9 @@ open class JdbcTransaction(
         }
     }
 }
+
+/**
+ * @suppress
+ */
+@InternalApi
+fun JdbcTransaction.asContext() = transactionManager.createTransactionContext(this)

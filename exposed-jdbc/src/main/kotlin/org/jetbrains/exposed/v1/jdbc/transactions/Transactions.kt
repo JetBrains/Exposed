@@ -10,6 +10,7 @@ import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.asContext
 import java.sql.SQLException
 import java.util.concurrent.ThreadLocalRandom
 
@@ -323,6 +324,7 @@ suspend fun <T> inTopLevelSuspendTransaction(
         )
 
         try {
+            @OptIn(InternalApi::class)
             return withContext(transaction.asContext()) {
                 try {
                     executeTransactionWithErrorHandling(transaction, shouldCommit = true) {
