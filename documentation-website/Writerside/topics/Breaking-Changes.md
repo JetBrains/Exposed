@@ -24,13 +24,6 @@
     - **`TransactionManager.defaultDatabase`**: Can now be `null`; use `TransactionManager.currentDatabase` for default-or-last-created behavior
     - **Transaction context management**: Internal architecture changed from thread-local to stack-based with coroutine context elements
 
-- Migration Actions
-    1. Replace `CoreTransactionManager.currentTransaction()` → `currentTransaction()`
-    2. Replace `CoreTransactionManager.currentTransactionOrNull()` → `currentTransactionOrNull()`
-    3. Handle non-nullable database receivers when accessing `.transactionManager`
-    4. Remove `TransactionManager.resetCurrent()` calls - no longer needed
-    5. Update experimental suspend transaction calls to use new API without `CoroutineContext` parameter
-
 ## 1.0.0-rc-2
 
 * The `transaction()`, `inTopLevelTransaction()`, `suspendTransaction()`, and `inTopLevelSuspendTransaction()` functions now have `db` as the first parameter instead
