@@ -136,7 +136,7 @@ subprojects {
         port = 3003
         dialects("ORACLE")
         dependencies {
-            dependency(rootProject.libs.oracle19)
+            dependency(rootProject.libs.oracle)
         }
     }
 
