@@ -12,7 +12,7 @@ repositories {
 }
 
 kotlin {
-    jvmToolchain(11)
+    jvmToolchain(17)
 }
 
 dependencies {
@@ -24,10 +24,4 @@ dependencies {
     implementation(libs.slf4j)
 
     compileOnly(libs.r2dbc.postgresql)
-}
-
-tasks.withType<KotlinCompile>().configureEach {
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_11)
-    }
 }

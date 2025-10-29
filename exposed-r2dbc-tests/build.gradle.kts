@@ -1,5 +1,6 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.gradle.kotlin.dsl.withType
 
 plugins {
     kotlin("jvm") apply true
@@ -9,9 +10,7 @@ plugins {
 }
 
 kotlin {
-    // REQUIRED for exposed-crypt tests, but makes Oracle tests fail...
-//    jvmToolchain(17)
-    jvmToolchain(11)
+    jvmToolchain(17)
 
     compilerOptions {
         optIn.add("kotlin.time.ExperimentalTime")
@@ -43,7 +42,7 @@ dependencies {
     // non-exposed-tests module dependencies
     // --- start ---
     testImplementation(project(":exposed-money"))
-//    testImplementation(project(":exposed-crypt"))
+    testImplementation(project(":exposed-crypt"))
     testImplementation(project(":exposed-json"))
     testImplementation(project(":exposed-java-time"))
     testImplementation(project(":exposed-jodatime"))
