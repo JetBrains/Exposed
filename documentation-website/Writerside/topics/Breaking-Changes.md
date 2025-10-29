@@ -1,5 +1,36 @@
 # Breaking Changes
 
+## 1.0.0-rc-3
+
+- Removed APIs
+    - **`TransactionManagerApi.bindTransactionToThread()`** - removed from interface and all implementations
+    - **`ThreadLocalTransactionManager`** class - fully removed (was already deprecated with error level)
+    - **`CoreTransactionManager`** object - replaced with top-level functions `currentTransaction()`, `currentTransactionOrNull()`
+    - **`TransactionManager.resetCurrent(manager)`** - removed from companion object
+    - **`TransactionManager.isInitialized()`** - removed from companion object
+    - Experimental suspended transaction functions with `CoroutineContext` parameter - removed from JDBC module
+
+- Changed Method Signatures
+    - `transaction()`, `inTopLevelTransaction()`, `suspendTransaction()`, `inTopLevelSuspendTransaction()` - isolation and readOnly parameters now nullable (`Int?`,
+      `Boolean?`)
+    - `Database.transactionManager` - changed from `Database?.transactionManager` to `Database.transactionManager` (non-nullable receiver)
+    - `R2dbcDatabase.transactionManager` - changed from `R2dbcDatabase?.transactionManager` to `R2dbcDatabase.transactionManager` (non-nullable receiver)
+    - `TransactionManager.newTransaction()` - readOnly parameter changed from `Boolean` to `Boolean?`
+
+- Changed Behavior
+    - **Transaction manager resolution**: Now resolves from current transaction → current database instead of thread-local; throws `IllegalStateException` if
+      unavailable
+    - **`TransactionManager.manager`**: Now throws if no transaction manager found (previously returned `NotInitializedTransactionManager`)
+    - **`TransactionManager.defaultDatabase`**: Can now be `null`; use `TransactionManager.currentDatabase` for default-or-last-created behavior
+    - **Transaction context management**: Internal architecture changed from thread-local to stack-based with coroutine context elements
+
+- Migration Actions
+    1. Replace `CoreTransactionManager.currentTransaction()` → `currentTransaction()`
+    2. Replace `CoreTransactionManager.currentTransactionOrNull()` → `currentTransactionOrNull()`
+    3. Handle non-nullable database receivers when accessing `.transactionManager`
+    4. Remove `TransactionManager.resetCurrent()` calls - no longer needed
+    5. Update experimental suspend transaction calls to use new API without `CoroutineContext` parameter
+
 ## 1.0.0-rc-2
 
 * The `transaction()`, `inTopLevelTransaction()`, `suspendTransaction()`, and `inTopLevelSuspendTransaction()` functions now have `db` as the first parameter instead

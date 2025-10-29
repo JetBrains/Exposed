@@ -115,10 +115,6 @@ class TransactionManager(
         return transaction
     }
 
-    /** Returns the current [R2dbcTransaction], or creates a new transaction with the provided [isolation] level. */
-    fun currentOrNew(isolation: IsolationLevel? = null): R2dbcTransaction = currentOrNull()
-        ?: manager.newTransaction(isolation)
-
     @OptIn(InternalApi::class)
     override fun currentOrNull(): R2dbcTransaction? {
         return ThreadLocalTransactionsStack.getTransactionOrNull(db) as R2dbcTransaction?
@@ -202,6 +198,10 @@ class TransactionManager(
             get() = currentOrNull()?.transactionManager
                 ?: currentDatabase?.transactionManager
                 ?: error("No transaction manager found")
+
+        /** Returns the current [R2dbcTransaction], or creates a new transaction with the provided [isolation] level. */
+        fun currentOrNew(isolation: IsolationLevel? = null): R2dbcTransaction = currentOrNull()
+            ?: manager.newTransaction(isolation)
     }
 
     private class R2dbcLocalTransaction(

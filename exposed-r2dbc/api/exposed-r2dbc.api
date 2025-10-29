@@ -1034,8 +1034,6 @@ public final class org/jetbrains/exposed/v1/r2dbc/transactions/TransactionManage
 	public static final field Companion Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager$Companion;
 	public fun <init> (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lkotlin/jvm/functions/Function2;)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun currentOrNew (Lio/r2dbc/spi/IsolationLevel;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
-	public static synthetic fun currentOrNew$default (Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager;Lio/r2dbc/spi/IsolationLevel;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
 	public synthetic fun currentOrNull ()Lorg/jetbrains/exposed/v1/core/Transaction;
 	public fun currentOrNull ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
 	public final fun getDefaultIsolationLevel ()Lio/r2dbc/spi/IsolationLevel;
@@ -1056,6 +1054,8 @@ public final class org/jetbrains/exposed/v1/r2dbc/transactions/TransactionManage
 public final class org/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager$Companion {
 	public final fun closeAndUnregister (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;)V
 	public final fun current ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
+	public final fun currentOrNew (Lio/r2dbc/spi/IsolationLevel;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
+	public static synthetic fun currentOrNew$default (Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager$Companion;Lio/r2dbc/spi/IsolationLevel;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
 	public final fun currentOrNull ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
 	public final fun getCurrentDatabase ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
 	public final fun getDefaultDatabase ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;

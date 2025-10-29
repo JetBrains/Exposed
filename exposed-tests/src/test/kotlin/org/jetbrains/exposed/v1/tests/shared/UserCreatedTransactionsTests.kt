@@ -38,7 +38,7 @@ class UserCreatedTransactionsTests : DatabaseTestsBase() {
     @Test
     fun testSelectWithExec() {
         withConnection(dialect) { db, testDb ->
-            val tx = TransactionManager.manager.currentOrNew()
+            val tx = TransactionManager.currentOrNew()
 
             withThreadLocalTransaction(tx) {
                 SchemaUtils.drop(TestTable)
@@ -58,7 +58,7 @@ class UserCreatedTransactionsTests : DatabaseTestsBase() {
     @Test
     fun testAddLogger() {
         withConnection(dialect) { db, testDb ->
-            val tx = TransactionManager.Companion.manager.currentOrNew()
+            val tx = TransactionManager.currentOrNew()
             // Test that the next line does not throw errors
             tx.addLogger(StdOutSqlLogger)
 
@@ -70,7 +70,7 @@ class UserCreatedTransactionsTests : DatabaseTestsBase() {
     @Test
     fun testCommit() {
         withConnection(dialect) { db, testDb ->
-            val tx = TransactionManager.Companion.manager.currentOrNew()
+            val tx = TransactionManager.currentOrNew()
 
             withThreadLocalTransaction(tx) {
                 SchemaUtils.drop(TestTable)
@@ -93,7 +93,7 @@ class UserCreatedTransactionsTests : DatabaseTestsBase() {
     @Test
     fun testRollback() {
         withConnection(dialect) { db, testDb ->
-            val tx = TransactionManager.Companion.manager.currentOrNew()
+            val tx = TransactionManager.currentOrNew()
 
             withThreadLocalTransaction(tx) {
                 SchemaUtils.drop(TestTable)
@@ -115,7 +115,7 @@ class UserCreatedTransactionsTests : DatabaseTestsBase() {
     @Test
     fun testCloseExecutedStatements() {
         withConnection(dialect) { db, testDb ->
-            val tx = TransactionManager.Companion.manager.currentOrNew()
+            val tx = TransactionManager.currentOrNew()
 
             withThreadLocalTransaction(tx) {
                 SchemaUtils.drop(TestTable)
@@ -138,7 +138,7 @@ class UserCreatedTransactionsTests : DatabaseTestsBase() {
     @Test
     fun testExecInBatch() {
         withConnection(dialect) { db, testDb ->
-            val tx = TransactionManager.Companion.manager.currentOrNew()
+            val tx = TransactionManager.currentOrNew()
 
             withThreadLocalTransaction(tx) {
                 SchemaUtils.drop(TestTable)
@@ -165,7 +165,7 @@ class UserCreatedTransactionsTests : DatabaseTestsBase() {
     @Test
     fun testExecQuery() {
         withConnection(dialect) { db, testDb ->
-            val tx = TransactionManager.manager.currentOrNew()
+            val tx = TransactionManager.currentOrNew()
 
             withThreadLocalTransaction(tx) {
                 SchemaUtils.drop(TestTable)

@@ -95,10 +95,6 @@ class TransactionManager(
         return transaction
     }
 
-    /** Returns the current [JdbcTransaction], or creates a new transaction with the provided [isolation] level. */
-    fun currentOrNew(isolation: Int = manager.defaultIsolationLevel): JdbcTransaction = Companion.currentOrNull()
-        ?: manager.newTransaction(isolation)
-
     @OptIn(InternalApi::class)
     override fun currentOrNull(): JdbcTransaction? =
         ThreadLocalTransactionsStack.getTransactionOrNull(db) as JdbcTransaction?
@@ -228,6 +224,10 @@ class TransactionManager(
             get() = currentOrNull()?.transactionManager
                 ?: currentDatabase?.transactionManager
                 ?: error("No transaction manager found")
+
+        /** Returns the current [JdbcTransaction], or creates a new transaction with the provided [isolation] level. */
+        fun currentOrNew(isolation: Int = manager.defaultIsolationLevel): JdbcTransaction = currentOrNull()
+            ?: manager.newTransaction(isolation)
     }
 
     private class ThreadLocalTransaction(

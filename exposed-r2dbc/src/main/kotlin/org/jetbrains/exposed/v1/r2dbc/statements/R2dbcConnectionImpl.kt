@@ -181,7 +181,7 @@ class R2dbcConnectionImpl(
         withConnection {
             val batch = createBatch()
             sqls.forEach { sql -> batch.add(sql) }
-            batch.execute().awaitFirstOrNull()
+            batch.execute().collect { }
         }
     }
 

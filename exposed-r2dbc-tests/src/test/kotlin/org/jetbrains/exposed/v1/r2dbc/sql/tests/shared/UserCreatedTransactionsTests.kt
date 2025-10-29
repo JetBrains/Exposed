@@ -14,7 +14,6 @@ import org.jetbrains.exposed.v1.r2dbc.tests.withTransactionContext
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.junit.Assume
 import org.junit.Before
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -39,7 +38,7 @@ class UserCreatedTransactionsTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testSelectWithExec() {
         withConnection(dialect) { db, testDb ->
-            val tx = TransactionManager.manager.currentOrNew()
+            val tx = TransactionManager.currentOrNew()
 
             withTransactionContext(tx) {
                 SchemaUtils.drop(TestTable)
@@ -61,7 +60,7 @@ class UserCreatedTransactionsTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testAddLogger() {
         withConnection(dialect) { db, testDb ->
-            val tx = TransactionManager.manager.currentOrNew()
+            val tx = TransactionManager.currentOrNew()
             // Test that the next line does not throw errors
             tx.addLogger(StdOutSqlLogger)
 
@@ -73,7 +72,7 @@ class UserCreatedTransactionsTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testCommit() {
         withConnection(dialect) { db, testDb ->
-            val tx = TransactionManager.manager.currentOrNew()
+            val tx = TransactionManager.currentOrNew()
 
             withTransactionContext(tx) {
                 SchemaUtils.drop(TestTable)
@@ -95,15 +94,22 @@ class UserCreatedTransactionsTests : R2dbcDatabaseTestsBase() {
     }
 
     @OptIn(InternalApi::class)
-    @Ignore("Rollback actually does not work. The inserted value could be read after rollback.")
     @Test
     fun testRollback() {
         withConnection(dialect) { db, testDb ->
-            val tx = TransactionManager.manager.currentOrNew()
+            var tx = TransactionManager.currentOrNew()
 
             withTransactionContext(tx) {
                 SchemaUtils.drop(TestTable)
                 SchemaUtils.create(TestTable)
+            }
+
+            tx.commit()
+            tx.close()
+
+            tx = TransactionManager.currentOrNew()
+
+            withTransactionContext(tx) {
                 TestTable.insert { it[param] = 100 }
             }
 
@@ -123,7 +129,7 @@ class UserCreatedTransactionsTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testCloseExecutedStatements() {
         withConnection(dialect) { db, testDb ->
-            val tx = TransactionManager.Companion.manager.currentOrNew()
+            val tx = TransactionManager.currentOrNew()
 
             withTransactionContext(tx) {
                 SchemaUtils.drop(TestTable)
@@ -146,10 +152,9 @@ class UserCreatedTransactionsTests : R2dbcDatabaseTestsBase() {
 
     @OptIn(InternalApi::class)
     @Test
-    @Ignore("By unknown reason only one insert from the batch is applied to the database.")
     fun testExecInBatch() {
         withConnection(dialect) { db, testDb ->
-            val tx = TransactionManager.Companion.manager.currentOrNew()
+            val tx = TransactionManager.currentOrNew()
 
             withTransactionContext(tx) {
                 SchemaUtils.drop(TestTable)
@@ -178,7 +183,7 @@ class UserCreatedTransactionsTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testExecQuery() {
         withConnection(dialect) { db, testDb ->
-            val tx = TransactionManager.manager.currentOrNew()
+            val tx = TransactionManager.currentOrNew()
 
             withTransactionContext(tx) {
                 SchemaUtils.drop(TestTable)
