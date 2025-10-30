@@ -25,6 +25,7 @@ import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.expectException
 import org.junit.Test
 import java.time.*
+import java.time.temporal.ChronoUnit
 import kotlin.random.Random.Default.nextInt
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -542,7 +543,7 @@ class DefaultsTest : DatabaseTestsBase() {
 
     @Test
     fun testTimeDefaultDoesNotTriggerAlterStatement() {
-        val time = LocalDateTime.now(ZoneId.of("Japan")).toLocalTime()
+        val time = LocalDateTime.now(ZoneId.of("Japan")).toLocalTime().truncatedTo(ChronoUnit.MILLIS)
 
         val tester = object : Table("tester") {
             val timeWithDefault = time("timeWithDefault").default(time)

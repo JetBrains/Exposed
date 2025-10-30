@@ -27,6 +27,7 @@ import org.junit.Test
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.*
+import java.time.temporal.ChronoUnit
 import java.time.temporal.Temporal
 import kotlin.test.assertEquals
 
@@ -123,7 +124,7 @@ class JavaTimeTests : DatabaseTestsBase() {
             val tsn = timestamp("tsn").nullable()
         }
 
-        val now = Instant.now()
+        val now = Instant.now().truncatedTo(ChronoUnit.MILLIS)
 
         withTables(testTable) {
             testTable.insert {
@@ -530,7 +531,7 @@ class JavaTimeTests : DatabaseTestsBase() {
     @Test
     fun testDateTimeAsArray() {
         val defaultDates = listOf(today)
-        val defaultDateTimes = listOf(LocalDateTime.now())
+        val defaultDateTimes = listOf(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
         val tester = object : Table("array_tester") {
             val dates = array("dates", JavaLocalDateColumnType()).default(defaultDates)
             val datetimes = array("datetimes", JavaLocalDateTimeColumnType()).default(defaultDateTimes)
@@ -597,7 +598,7 @@ class JavaTimeTests : DatabaseTestsBase() {
             // Cairo time zone
             assertEquals("Africa/Cairo", ZoneId.systemDefault().id)
 
-            val instant = Instant.now()
+            val instant = Instant.now().truncatedTo(ChronoUnit.MILLIS)
 
             tester.insert {
                 it[timestamp_col] = instant
@@ -623,7 +624,7 @@ class JavaTimeTests : DatabaseTestsBase() {
         }
 
         withTables(tester) {
-            val now = Instant.now()
+            val now = Instant.now().truncatedTo(ChronoUnit.MILLIS)
 
             tester.insert {
                 it[tester.ts] = now
