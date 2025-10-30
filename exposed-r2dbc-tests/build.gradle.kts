@@ -1,6 +1,8 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") apply true
@@ -62,6 +64,20 @@ dependencies {
 
     // exposed-money dependencies
     testImplementation(libs.moneta)
+}
+
+tasks.withType<KotlinCompile>().configureEach {
+    compilerOptions {
+        if (name == "compileTestKotlin") {
+            jvmTarget.set(JvmTarget.JVM_17)
+        } else {
+            jvmTarget.set(JvmTarget.JVM_11)
+        }
+    }
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    targetCompatibility = if (name == "compileTestJava") "17" else "11"
 }
 
 tasks.withType<Test>().configureEach {

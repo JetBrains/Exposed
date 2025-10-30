@@ -25,3 +25,13 @@ dependencies {
 
     compileOnly(libs.r2dbc.postgresql)
 }
+
+tasks.withType<KotlinCompile>().configureEach {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_11)
+    }
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    targetCompatibility = "11"
+}
