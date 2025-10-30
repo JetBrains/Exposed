@@ -25,6 +25,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.temporal.ChronoUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
@@ -53,7 +54,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val date = today
         val time = LocalTime.now()
         val dateTime = LocalDateTime.now()
-        val timestamp = Instant.now()
+        val timestamp = Instant.now().truncatedTo(ChronoUnit.MILLIS)
         val duration = Duration.ofMinutes(1)
 
         withTables(tbl) {
@@ -90,7 +91,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val date = today
         val time = LocalTime.now()
         val dateTime = LocalDateTime.now()
-        val timestamp = Instant.now()
+        val timestamp = Instant.now().truncatedTo(ChronoUnit.MILLIS)
         val duration = Duration.ofMinutes(1)
 
         withTables(tbl) {
@@ -139,7 +140,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val date = today
         val time = LocalTime.now()
         val dateTime = LocalDateTime.now()
-        val timestamp = Instant.now()
+        val timestamp = Instant.now().truncatedTo(ChronoUnit.MILLIS)
         val duration = Duration.ofMinutes(1)
 
         withTables(tbl) {
@@ -191,7 +192,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val date = today
         val time = LocalTime.now()
         val dateTime = LocalDateTime.now()
-        val timestamp = Instant.now()
+        val timestamp = Instant.now().truncatedTo(ChronoUnit.MILLIS)
         val duration = Duration.ofMinutes(1)
 
         withTables(tbl) {
@@ -227,7 +228,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val date = today
         val time = LocalTime.now()
         val dateTime = LocalDateTime.now()
-        val timestamp = Instant.now()
+        val timestamp = Instant.now().truncatedTo(ChronoUnit.MILLIS)
         val duration = Duration.ofMinutes(1)
 
         withTables(tbl) {
@@ -268,7 +269,7 @@ class MiscTableTest : DatabaseTestsBase() {
             val date = today
             val time = LocalTime.now()
             val dateTime = LocalDateTime.now()
-            val timestamp = Instant.now()
+            val timestamp = Instant.now().truncatedTo(ChronoUnit.MILLIS)
             val duration = Duration.ofMinutes(1)
             val sTest = "test"
             val dec = BigDecimal("239.42")
@@ -709,7 +710,7 @@ class MiscTableTest : DatabaseTestsBase() {
             val date = today
             val time = LocalTime.now()
             val dateTime = LocalDateTime.now()
-            val timestamp = Instant.now()
+            val timestamp = Instant.now().truncatedTo(ChronoUnit.MILLIS)
             val duration = Duration.ofMinutes(1)
             val sTest = "test"
             val eOne = MiscTable.E.ONE
@@ -1076,7 +1077,7 @@ class MiscTableTest : DatabaseTestsBase() {
             val eOne = MiscTable.E.ONE
             val sTest = "test"
             val dec = BigDecimal("239.42")
-            val timestamp = Instant.now()
+            val timestamp = Instant.now().truncatedTo(ChronoUnit.MILLIS)
             val duration = Duration.ofMinutes(1)
             tbl.insert {
                 it[by] = 13
@@ -1165,7 +1166,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val date = today
         val time = LocalTime.now()
         val dateTime = LocalDateTime.now()
-        val timestamp = Instant.now()
+        val timestamp = Instant.now().truncatedTo(ChronoUnit.MILLIS)
         val duration = Duration.ofMinutes(1)
         val eOne = MiscTable.E.ONE
         val dec = BigDecimal("239.42")
