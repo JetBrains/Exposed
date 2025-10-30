@@ -388,14 +388,10 @@ this functionality has been split for simplicity:
 * `TransactionManager.currentDatabase`: To get the database that will be used when opening the next transaction.
   This value will either be retrieved from `defaultDatabase` or the last `Database` instance registered, if any.
 
-The property `TransactionManager.manager` has also been removed to avoid any implicit ambiguity around which current manager
-to retrieve. If this property is being retrieved from within a transaction block, the most appropriate replacement would
-be a direct call to `TransactionManager.currentOrNull()?.transactionManager`. If it is being retrieved outside a
-transaction block, then it most likely should be replaced with `TransactionManager.currentDatabase?.transactionManager`.
-For other cases in between, a manager instance can be retrieved either directly from any transaction instance, the database
-associated with any transaction instance, or by directly providing the database to `TransactionManager.managerFor()`.
-
-`TransactionManager.currentOrNew()` has been removed.
+Prior to version 1.0.0, the property `TransactionManager.manager` resolved its value from thread local and returned an
+uninitialized stand-in manager if none was found. With 1.0.0, the manager instance retrieved is resolved based on the
+current active transaction, if any; otherwise it gets the manager of the default set database or the last registered
+database instance. If no manager can be resolved, this property now throws an exception.
 
 ### JDBC `suspend` functions deprecated
 
