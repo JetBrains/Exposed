@@ -131,7 +131,7 @@ class KotlinTimeTests : DatabaseTestsBase() {
             val tsn = timestamp("tsn").nullable()
         }
 
-        val now = Clock.System.now()
+        val now = Clock.System.now().asJdk8()
 
         withTables(testTable) {
             testTable.insert {
@@ -649,7 +649,7 @@ class KotlinTimeTests : DatabaseTestsBase() {
             // Cairo time zone
             assertEquals("Africa/Cairo", ZoneId.systemDefault().id)
 
-            val instant = Clock.System.now()
+            val instant = Clock.System.now().asJdk8()
 
             tester.insert {
                 it[x_timestamp_col] = instant.toDeprecatedInstant()
@@ -674,7 +674,7 @@ class KotlinTimeTests : DatabaseTestsBase() {
             // Cairo time zone
             assertEquals("Africa/Cairo", ZoneId.systemDefault().id)
 
-            val instant = Clock.System.now().truncatedToMillis()
+            val instant = Clock.System.now().asJdk8()
 
             tester.insert {
                 it[timestamp_col] = instant
@@ -700,7 +700,7 @@ class KotlinTimeTests : DatabaseTestsBase() {
         }
 
         withTables(tester) {
-            val now = Clock.System.now().truncatedToMillis()
+            val now = Clock.System.now().asJdk8()
 
             tester.insert {
                 it[tester.ts] = now
@@ -829,13 +829,16 @@ data class ModifierData(val userId: Int, val timestamp: LocalDateTime)
 // The following were introduced for jdk17 compatibility:
 // EXPOSED-920: https://youtrack.jetbrains.com/issue/EXPOSED-920/Refactor-java-time-and-kotlin-datetime-tests-for-JDK-compatibility
 
-internal fun LocalTime.truncatedToMillis(): LocalTime =
+/** Forces [LocalTime] precision to be reduced to millisecond-level, for JDK8 test compatibility. */
+internal fun LocalTime.asJdk8(): LocalTime =
     LocalTime.fromNanosecondOfDay(toNanosecondOfDay().let { it - it % DateTimeUnit.MILLISECOND.nanoseconds })
 
-internal fun LocalDateTime.truncatedToMillis(): LocalDateTime = LocalDateTime(date, time.truncatedToMillis())
+/** Forces [LocalDateTime] precision to be reduced to millisecond-level, for JDK8 test compatibility. */
+internal fun LocalDateTime.asJdk8(): LocalDateTime = LocalDateTime(date, time.asJdk8())
 
-internal fun Instant.truncatedToMillis(): Instant {
+/** Forces [Instant] precision to be reduced to millisecond-level, for JDK8 test compatibility. */
+internal fun Instant.asJdk8(): Instant {
     val original = toLocalDateTime(TimeZone.currentSystemDefault())
-    val converted = LocalDateTime(original.date, original.time.truncatedToMillis())
+    val converted = LocalDateTime(original.date, original.time.asJdk8())
     return converted.toInstant(TimeZone.currentSystemDefault())
 }

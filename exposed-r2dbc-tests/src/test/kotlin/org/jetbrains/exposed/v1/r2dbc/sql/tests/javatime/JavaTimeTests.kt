@@ -484,7 +484,7 @@ class JavaTimeTests : R2dbcDatabaseTestsBase() {
         }
 
         withTables(tester) {
-            val now = Instant.now()
+            val now = Instant.now().asJdk8()
 
             tester.insert {
                 it[tester.ts] = now
