@@ -35,7 +35,7 @@ import kotlin.time.DurationUnit
 import kotlin.time.Instant
 import kotlin.time.toDuration
 
-fun now() = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).truncatedToMillis()
+fun now() = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).asJdk8()
 
 private val dbTimestampNow: CustomFunction<OffsetDateTime>
     get() = object : CustomFunction<OffsetDateTime>("now", KotlinOffsetDateTimeColumnType()) {}
@@ -538,7 +538,7 @@ class DefaultsTest : DatabaseTestsBase() {
 
     @Test
     fun testTimeDefaultDoesNotTriggerAlterStatement() {
-        val time = Clock.System.now().toLocalDateTime(TimeZone.of("Japan")).time.truncatedToMillis()
+        val time = Clock.System.now().toLocalDateTime(TimeZone.of("Japan")).time.asJdk8()
 
         val tester = object : Table("tester") {
             val timeWithDefault = time("timeWithDefault").default(time)

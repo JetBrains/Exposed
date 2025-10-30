@@ -558,7 +558,7 @@ class KotlinTimeTests : R2dbcDatabaseTestsBase() {
         }
 
         withTables(tester) {
-            val now = Clock.System.now()
+            val now = Clock.System.nowAsJdk8()
 
             tester.insert {
                 it[tester.ts] = now
