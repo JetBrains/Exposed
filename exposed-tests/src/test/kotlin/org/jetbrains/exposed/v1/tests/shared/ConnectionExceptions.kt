@@ -1,10 +1,8 @@
 package org.jetbrains.exposed.v1.tests.shared
 
 import org.jetbrains.exposed.v1.jdbc.Database
-import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.TestDB
-import org.junit.After
 import org.junit.Assume
 import org.junit.Test
 import java.sql.Connection
@@ -179,10 +177,5 @@ class ConnectionExceptions {
     @Test
     fun `transaction throws exception if all commits and close throws exception`() {
         `_transaction throws exception if all commits throws exception`(::ExceptionOnCommitCloseConnection)
-    }
-
-    @After
-    fun teardown() {
-        TransactionManager.resetCurrent(null)
     }
 }

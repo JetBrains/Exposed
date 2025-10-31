@@ -12,8 +12,10 @@ import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactive.collect
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
+import org.jetbrains.exposed.v1.core.transactions.withThreadLocalTransaction
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.OracleDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
@@ -26,7 +28,6 @@ import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcSavepoint
 import org.jetbrains.exposed.v1.r2dbc.statements.api.getBoolean
 import org.jetbrains.exposed.v1.r2dbc.statements.api.getString
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
-import org.jetbrains.exposed.v1.r2dbc.transactions.withThreadLocalTransaction
 import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.MetadataProvider
 import org.reactivestreams.Publisher
 import java.util.*
@@ -180,7 +181,7 @@ class R2dbcConnectionImpl(
         withConnection {
             val batch = createBatch()
             sqls.forEach { sql -> batch.add(sql) }
-            batch.execute().awaitFirstOrNull()
+            batch.execute().collect { }
         }
     }
 
@@ -247,6 +248,7 @@ internal suspend fun Connection.executeSQL(sqlQuery: String) {
     createStatement(sqlQuery).execute().awaitFirstOrNull()
 }
 
+@OptIn(InternalApi::class)
 internal suspend fun <T> Connection.executeSQL(
     sqlQuery: String,
     transform: (Row, RowMetadata) -> T

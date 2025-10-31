@@ -6,7 +6,7 @@ import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.isAutoInc
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 
 /** An exception thrown when the provided data cannot be validated or processed to prepare a batch statement. */
 class BatchDataInconsistentException(message: String) : Exception(message)
@@ -31,7 +31,7 @@ open class BatchInsertStatement(
     override operator fun <S> set(column: Column<S>, value: S) {
         @OptIn(InternalApi::class)
         if (data.size > 1 && column !in data[data.size - 2] && !column.isDefaultable()) {
-            val fullIdentity = CoreTransactionManager.currentTransaction().fullIdentity(column)
+            val fullIdentity = currentTransaction().fullIdentity(column)
             throw BatchDataInconsistentException("Can't set $value for $fullIdentity because previous insertion can't be defaulted for that column.")
         }
         super.set(column, value)
@@ -71,7 +71,7 @@ open class BatchInsertStatement(
     /** @suppress */
     @InternalApi
     open fun validateLastBatch() {
-        val tr = CoreTransactionManager.currentTransaction()
+        val tr = currentTransaction()
         val cantBeDefaulted = (allColumnsInDataSet - values.keys).filterNot { it.isDefaultable() }
         if (cantBeDefaulted.isNotEmpty()) {
             val columnList = cantBeDefaulted.joinToString { tr.fullIdentity(it) }

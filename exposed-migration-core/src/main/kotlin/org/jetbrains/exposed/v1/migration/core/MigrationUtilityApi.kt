@@ -4,7 +4,7 @@ import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.SchemaUtilityApi
 import org.jetbrains.exposed.v1.core.Sequence
 import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import java.io.File
@@ -48,7 +48,7 @@ abstract class MigrationUtilityApi : SchemaUtilityApi() {
             if (mappedCol != null) columnMetadata else null
         }
         val unmappedColumns = existingColumns.filter { it !in mappedColumns }
-        val tr = CoreTransactionManager.currentTransaction()
+        val tr = currentTransaction()
         unmappedColumns.forEach {
             destination.add(
                 "ALTER TABLE ${tr.identity(this)} DROP COLUMN " +

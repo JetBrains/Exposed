@@ -6,8 +6,16 @@ import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.statements.api.ExposedBlob
 import org.jetbrains.exposed.v1.core.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.v1.core.statements.api.RowApi
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
-import org.jetbrains.exposed.v1.core.vendors.*
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.OracleDialect
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLNGDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
+import org.jetbrains.exposed.v1.core.vendors.h2Mode
 import java.io.InputStream
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -1063,7 +1071,7 @@ class UUIDColumnType : ColumnType<UUID>() {
     @Suppress("MagicNumber")
     override fun readObject(rs: RowApi, index: Int): Any? {
         @OptIn(InternalApi::class)
-        val db = CoreTransactionManager.currentTransaction().db
+        val db = currentTransaction().db
         if (currentDialect is MariaDBDialect && !db.version.covers(10)) {
             return rs.getObject(index, java.sql.Array::class.java)
         }
