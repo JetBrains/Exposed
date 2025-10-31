@@ -39,7 +39,7 @@ junit = "4.13.2"
 kotlinx-datetime = "0.7.1-0.6.x-compat"
 javax-money = "1.1"
 moneta = "1.4.5"
-hikariCP = "4.0.3"
+hikariCP = "7.0.2"
 logcaptor = "2.12.1"
 maven-publish = "0.34.0"
 
