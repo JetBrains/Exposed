@@ -175,14 +175,14 @@ class TransactionManager(
         fun current(): R2dbcTransaction = currentOrNull() ?: error("No transaction in context.")
 
         /**
-         * Returns the [TransactionManager] instance associated with the provided [db].
+         * Returns the [TransactionManager] instance associated with the provided [database].
          *
-         * @param db Database instance for which to retrieve the transaction manager.
+         * @param database Database instance for which to retrieve the transaction manager.
          * @return The [TransactionManager] associated with the database.
          * @throws IllegalStateException if no transaction manager is registered for the given database.
          */
-        fun managerFor(db: R2dbcDatabase): TransactionManager =
-            transactionManagers.getTransactionManager(db)?.let { it as TransactionManager } ?: error("No transaction manager for db $db")
+        fun managerFor(database: R2dbcDatabase): TransactionManager =
+            transactionManagers.getTransactionManager(database)?.let { it as TransactionManager } ?: error("No transaction manager for db $database")
 
         /**
          * Returns the [TransactionManager] for the current context.
