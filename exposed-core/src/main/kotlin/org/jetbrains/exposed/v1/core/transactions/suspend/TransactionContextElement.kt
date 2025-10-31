@@ -45,6 +45,26 @@ class TransactionContextElement(
      * @param oldState The previous transaction state that was returned by [updateThreadContext].
      */
     override fun restoreThreadContext(context: CoroutineContext, oldState: Transaction?) {
+        // Check if stack is empty - this can happen if withThreadLocalTransaction already popped it
+        val currentTransaction = ThreadLocalTransactionsStack.getTransactionOrNull()
+        if (currentTransaction == null) {
+            exposedLogger.warn(
+                "restoreThreadContext called for transaction ${transaction.id} but stack is already empty. " +
+                    "This is likely because withThreadLocalTransaction already popped the transaction. Skipping restore."
+            )
+            return
+        }
+
+        // Check if the top of the stack is actually our transaction before popping
+        if (currentTransaction.id != transaction.id) {
+            exposedLogger.warn(
+                "restoreThreadContext called for transaction ${transaction.id} but top of stack is ${currentTransaction.id}. " +
+                    "Skipping restore to avoid corrupting the stack."
+            )
+            return
+        }
+
+        // Safe to pop
         val poppedTransaction = ThreadLocalTransactionsStack.popTransaction()
         if (poppedTransaction.id != transaction.id) {
             exposedLogger.warn(

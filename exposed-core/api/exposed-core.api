@@ -3799,6 +3799,7 @@ public final class org/jetbrains/exposed/v1/core/transactions/ThreadLocalTransac
 	public final fun isEmpty ()Z
 	public final fun popTransaction ()Lorg/jetbrains/exposed/v1/core/Transaction;
 	public final fun pushTransaction (Lorg/jetbrains/exposed/v1/core/Transaction;)V
+	public final fun threadTransactions ()Ljava/util/Stack;
 }
 
 public abstract interface class org/jetbrains/exposed/v1/core/transactions/TransactionInterface {

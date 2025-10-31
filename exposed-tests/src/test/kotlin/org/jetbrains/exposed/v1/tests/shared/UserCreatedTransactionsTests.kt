@@ -70,22 +70,25 @@ class UserCreatedTransactionsTests : DatabaseTestsBase() {
     @Test
     fun testCommit() {
         withConnection(dialect) { db, testDb ->
-            val tx = TransactionManager.currentOrNew()
+            val tx1 = TransactionManager.currentOrNew()
 
-            withThreadLocalTransaction(tx) {
+            withThreadLocalTransaction(tx1) {
                 SchemaUtils.drop(TestTable)
                 SchemaUtils.create(TestTable)
                 TestTable.insert { it[param] = 100 }
             }
 
-            tx.commit()
+            tx1.commit()
 
-            tx.exec("select param from txtest") {
+            val tx2 = TransactionManager.manager.newTransaction()
+
+            tx2.exec("select param from txtest") {
                 it.next()
                 assertEquals(100, it.getInt(1))
             }
 
-            tx.close()
+            tx1.close()
+            tx2.close()
         }
     }
 

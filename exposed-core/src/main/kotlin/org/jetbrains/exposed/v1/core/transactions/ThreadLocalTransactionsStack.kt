@@ -97,4 +97,13 @@ object ThreadLocalTransactionsStack {
         val stack = transactions.get() ?: return true
         return stack.isEmpty()
     }
+
+    /**
+     * Returns transactions that belong to the current thread.
+     *
+     * Made for testing purposes. It's better to avoid manipulating the stack directly.
+     */
+    fun threadTransactions(): Stack<Transaction>? {
+        return transactions.get()
+    }
 }
