@@ -77,7 +77,7 @@ class H2Tests : R2dbcDatabaseTestsBase() {
     @Test
     fun closeAndUnregister() {
         withDb(TestDB.H2_V2) { testDB ->
-            val originalManager = TransactionManager.current().db.transactionManager
+            val originalManager = TransactionManager.manager
             val db = requireNotNull(testDB.db) { "testDB.db cannot be null" }
             try {
                 @OptIn(InternalApi::class)
