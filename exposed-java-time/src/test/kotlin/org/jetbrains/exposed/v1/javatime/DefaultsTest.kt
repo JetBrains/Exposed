@@ -25,10 +25,23 @@ import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.expectException
 import org.junit.Test
 import java.time.*
+import java.time.temporal.ChronoUnit
 import kotlin.random.Random.Default.nextInt
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+
+// The following were introduced for jdk17 compatibility:
+// EXPOSED-920: https://youtrack.jetbrains.com/issue/EXPOSED-920/Refactor-java-time-and-kotlin-datetime-tests-for-JDK-compatibility
+
+/** Forces [LocalDateTime] precision to be reduced to millisecond-level, for JDK8 test compatibility. */
+internal fun LocalDateTime.asJdk8(): LocalDateTime = truncatedTo(ChronoUnit.MILLIS)
+
+/** Forces [LocalTime] precision to be reduced to millisecond-level, for JDK8 test compatibility. */
+internal fun LocalTime.asJdk8(): LocalTime = truncatedTo(ChronoUnit.MILLIS)
+
+/** Forces [Instant] precision to be reduced to millisecond-level, for JDK8 test compatibility. */
+internal fun Instant.asJdk8(): Instant = truncatedTo(ChronoUnit.MILLIS)
 
 private val dbTimestampNow: CustomFunction<OffsetDateTime>
     get() = object : CustomFunction<OffsetDateTime>("now", JavaOffsetDateTimeColumnType()) {}
@@ -542,7 +555,7 @@ class DefaultsTest : DatabaseTestsBase() {
 
     @Test
     fun testTimeDefaultDoesNotTriggerAlterStatement() {
-        val time = LocalDateTime.now(ZoneId.of("Japan")).toLocalTime()
+        val time = LocalDateTime.now(ZoneId.of("Japan")).toLocalTime().asJdk8()
 
         val tester = object : Table("tester") {
             val timeWithDefault = time("timeWithDefault").default(time)
