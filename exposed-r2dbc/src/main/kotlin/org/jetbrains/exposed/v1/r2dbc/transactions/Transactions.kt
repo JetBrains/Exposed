@@ -70,7 +70,7 @@ private suspend inline fun <T> executeR2dbcTransactionWithErrorHandling(
  * Resolution order:
  * 1. The explicitly provided [db] parameter
  * 2. The database from the current transaction (if within an existing transaction)
- * 3. The current default database from [TransactionManager.currentDatabase]
+ * 3. The current default database from [TransactionManager.primaryDatabase]
  *
  * @param db Optional database explicitly specified by the caller
  * @return The resolved database instance
@@ -80,7 +80,7 @@ private suspend inline fun <T> executeR2dbcTransactionWithErrorHandling(
 private fun resolveR2dbcDatabaseOrThrow(db: R2dbcDatabase?): R2dbcDatabase {
     return db
         ?: ThreadLocalTransactionsStack.getTransactionIsInstance(R2dbcTransaction::class.java)?.db
-        ?: TransactionManager.currentDatabase
+        ?: TransactionManager.primaryDatabase
         ?: throw IllegalStateException(
             "No R2DBC database specified and no default database found. " +
                 "Please call R2dbcDatabase.connect() first or specify a database explicitly in the transaction call."

@@ -1057,9 +1057,9 @@ public final class org/jetbrains/exposed/v1/r2dbc/transactions/TransactionManage
 	public final fun currentOrNew (Lio/r2dbc/spi/IsolationLevel;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
 	public static synthetic fun currentOrNew$default (Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager$Companion;Lio/r2dbc/spi/IsolationLevel;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
 	public final fun currentOrNull ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
-	public final fun getCurrentDatabase ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
 	public final fun getDefaultDatabase ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
 	public final fun getManager ()Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager;
+	public final fun getPrimaryDatabase ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
 	public final fun managerFor (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;)Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager;
 	public final fun registerManager (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lorg/jetbrains/exposed/v1/core/transactions/TransactionManagerApi;)V
 	public final fun setDefaultDatabase (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;)V

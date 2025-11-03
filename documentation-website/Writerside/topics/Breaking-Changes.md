@@ -21,7 +21,7 @@
     - **Transaction manager resolution**: Now resolves from current transaction → current database instead of thread-local; throws `IllegalStateException` if
       unavailable
     - **`TransactionManager.manager`**: Now throws if no transaction manager found (previously returned `NotInitializedTransactionManager`)
-    - **`TransactionManager.defaultDatabase`**: Can now be `null`; use `TransactionManager.currentDatabase` for default-or-last-created behavior
+    - **`TransactionManager.defaultDatabase`**: Can now be `null`; use `TransactionManager.primaryDatabase` for default-or-last-created behavior
     - **Transaction context management**: Internal architecture changed from thread-local to stack-based with coroutine context elements
 
 ## 1.0.0-rc-2

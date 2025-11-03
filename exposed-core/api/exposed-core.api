@@ -3776,8 +3776,8 @@ public final class org/jetbrains/exposed/v1/core/statements/api/RowApi$DefaultIm
 
 public abstract interface class org/jetbrains/exposed/v1/core/transactions/DatabasesManager {
 	public abstract fun addDatabase (Lorg/jetbrains/exposed/v1/core/DatabaseApi;)V
-	public abstract fun getCurrentDatabase ()Lorg/jetbrains/exposed/v1/core/DatabaseApi;
 	public abstract fun getDefaultDatabase ()Lorg/jetbrains/exposed/v1/core/DatabaseApi;
+	public abstract fun getPrimaryDatabase ()Lorg/jetbrains/exposed/v1/core/DatabaseApi;
 	public abstract fun removeDatabase (Lorg/jetbrains/exposed/v1/core/DatabaseApi;)V
 	public abstract fun setDefaultDatabase (Lorg/jetbrains/exposed/v1/core/DatabaseApi;)V
 }
@@ -3785,8 +3785,8 @@ public abstract interface class org/jetbrains/exposed/v1/core/transactions/Datab
 public abstract class org/jetbrains/exposed/v1/core/transactions/DatabasesManagerImpl : org/jetbrains/exposed/v1/core/transactions/DatabasesManager {
 	public fun <init> ()V
 	public fun addDatabase (Lorg/jetbrains/exposed/v1/core/DatabaseApi;)V
-	public fun getCurrentDatabase ()Lorg/jetbrains/exposed/v1/core/DatabaseApi;
 	public fun getDefaultDatabase ()Lorg/jetbrains/exposed/v1/core/DatabaseApi;
+	public fun getPrimaryDatabase ()Lorg/jetbrains/exposed/v1/core/DatabaseApi;
 	public fun removeDatabase (Lorg/jetbrains/exposed/v1/core/DatabaseApi;)V
 	public fun setDefaultDatabase (Lorg/jetbrains/exposed/v1/core/DatabaseApi;)V
 }

@@ -69,7 +69,7 @@ private inline fun <T> executeTransactionWithErrorHandling(
  * Resolution order:
  * 1. The explicitly provided [db] parameter
  * 2. The database from the current transaction (if within an existing transaction)
- * 3. The current default database from [TransactionManager.currentDatabase]
+ * 3. The current default database from [TransactionManager.primaryDatabase]
  *
  * @param db Optional database explicitly specified by the caller
  * @return The resolved database instance
@@ -79,7 +79,7 @@ private inline fun <T> executeTransactionWithErrorHandling(
 private fun resolveDatabaseOrThrow(db: Database?): Database {
     return db
         ?: ThreadLocalTransactionsStack.getTransactionIsInstance(JdbcTransaction::class.java)?.db
-        ?: TransactionManager.currentDatabase
+        ?: TransactionManager.primaryDatabase
         ?: throw IllegalStateException(
             "No database specified and no default database found. " +
                 "Please call Database.connect() first or specify a database explicitly in the transaction call."

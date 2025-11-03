@@ -47,7 +47,7 @@ class MultiDatabaseTest {
     @Before
     fun before() {
         Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
-        TransactionManager.currentDatabase?.let {
+        TransactionManager.primaryDatabase?.let {
             currentDB = it
         }
     }
@@ -220,7 +220,7 @@ class MultiDatabaseTest {
     fun `when default database is not explicitly set - should return the latest connection`() {
         db1
         db2
-        assertEquals(TransactionManager.currentDatabase, db2)
+        assertEquals(TransactionManager.primaryDatabase, db2)
     }
 
     @Test
@@ -228,7 +228,7 @@ class MultiDatabaseTest {
         db1
         db2
         TransactionManager.defaultDatabase = db1
-        assertEquals(TransactionManager.currentDatabase, db1)
+        assertEquals(TransactionManager.primaryDatabase, db1)
         TransactionManager.defaultDatabase = null
     }
 
@@ -238,7 +238,7 @@ class MultiDatabaseTest {
         db2
         TransactionManager.defaultDatabase = db1
         TransactionManager.closeAndUnregister(db1)
-        assertEquals(TransactionManager.currentDatabase, db2)
+        assertEquals(TransactionManager.primaryDatabase, db2)
         TransactionManager.defaultDatabase = null
     }
 

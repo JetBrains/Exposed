@@ -18,7 +18,7 @@ interface DatabasesManager<DB : DatabaseApi> {
     fun setDefaultDatabase(db: DB?)
 
     /** Returns the current database, which is either the default database or the last instance created. */
-    fun getCurrentDatabase(): DB?
+    fun getPrimaryDatabase(): DB?
 
     /** Adds the provided [db] to the list of registered databases. */
     fun addDatabase(db: DB)
@@ -48,7 +48,7 @@ abstract class DatabasesManagerImpl<DB : DatabaseApi> : DatabasesManager<DB> {
      * Returns the database that has been set as the default for all transactions, or, if none was set,
      * the last instance created.
      */
-    override fun getCurrentDatabase(): DB? = getDefaultDatabase() ?: databases.firstOrNull()
+    override fun getPrimaryDatabase(): DB? = getDefaultDatabase() ?: databases.firstOrNull()
 
     /** Adds the provided [db] to the list of registered databases if it is not already present. */
     override fun addDatabase(db: DB) {

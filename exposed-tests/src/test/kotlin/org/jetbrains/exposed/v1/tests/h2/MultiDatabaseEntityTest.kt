@@ -55,7 +55,7 @@ class MultiDatabaseEntityTest {
         }
 
         TransactionManager.currentOrNull()?.transactionManager
-        TransactionManager.currentDatabase?.transactionManager
+        TransactionManager.primaryDatabase?.transactionManager
     }
 
     @After

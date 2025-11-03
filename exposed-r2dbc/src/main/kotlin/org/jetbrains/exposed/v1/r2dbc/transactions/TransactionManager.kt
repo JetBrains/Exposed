@@ -133,14 +133,14 @@ class TransactionManager(
          * The currently active database, which is either the default database or the last instance created.
          * Returns `null` if no database has been registered.
          */
-        val currentDatabase: R2dbcDatabase?
-            get() = databases.getCurrentDatabase()
+        val primaryDatabase: R2dbcDatabase?
+            get() = databases.getPrimaryDatabase()
 
         /**
          * The database to use by default in all transactions.
          *
          * **Note:** The default database could be null until it is set explicitly.
-         * Use `currentDatabase` to get the default database if it is set, or the last registered database otherwise.
+         * Use `primaryDatabase` to get the default database if it is set, or the last registered database otherwise.
          */
         var defaultDatabase: R2dbcDatabase?
             get() = databases.getDefaultDatabase()
@@ -196,7 +196,7 @@ class TransactionManager(
          */
         val manager: TransactionManager
             get() = currentOrNull()?.transactionManager
-                ?: currentDatabase?.transactionManager
+                ?: primaryDatabase?.transactionManager
                 ?: error("No transaction manager found")
 
         /** Returns the current [R2dbcTransaction], or creates a new transaction with the provided [isolation] level. */
