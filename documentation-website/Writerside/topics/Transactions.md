@@ -126,8 +126,8 @@ TransactionManager.defaultDatabase = db
 Retrieving this `defaultDatabase` property will return the set value, or `null` if no value was provided.
 
 A transaction block without parameters uses the default database or the latest _connected_ database.
-To retrieve the `Database` instance that would be used by a transaction block in this case, get the
-`TransactionManager.currentDatabase` property.
+To retrieve and check the `Database` instance that would be used by a transaction block in this case, get the
+`TransactionManager.primaryDatabase` property.
 
 ## Using nested transactions
 

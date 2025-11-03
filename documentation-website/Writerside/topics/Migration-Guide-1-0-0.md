@@ -385,7 +385,7 @@ set as the default to use for all transactions or, if a default was not set, the
 this functionality has been split for simplicity:
 * `TransactionManager.defaultDatabase`: To get and set the default database to use when opening a transaction.
   This value will remain null unless explicitly set at some point.
-* `TransactionManager.currentDatabase`: To get the database that will be used when opening the next transaction.
+* `TransactionManager.primaryDatabase`: To get the database that will be used when opening the next transaction.
   This value will either be retrieved from `defaultDatabase` or the last `Database` instance registered, if any.
 
 Prior to version 1.0.0, the property `TransactionManager.manager` resolved its value from thread local and returned an
