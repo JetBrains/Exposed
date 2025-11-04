@@ -42,7 +42,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val date = today
         val dateTime = now()
         val time = dateTime.time
-        val timestamp = Clock.System.now()
+        val timestamp = Clock.System.now().asJdk8()
         val duration = 1.minutes
 
         withTables(tbl) {
@@ -80,7 +80,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val date = today
         val dateTime = now()
         val time = dateTime.time
-        val timestamp = Clock.System.now()
+        val timestamp = Clock.System.now().asJdk8()
         val duration = 1.minutes
 
         withTables(tbl) {
@@ -130,7 +130,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val date = today
         val dateTime = now()
         val time = dateTime.time
-        val timestamp = Clock.System.now()
+        val timestamp = Clock.System.now().asJdk8()
         val duration = 1.minutes
 
         withTables(tbl) {
@@ -184,7 +184,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val date = today
         val dateTime = now()
         val time = dateTime.time
-        val timestamp = Clock.System.now()
+        val timestamp = Clock.System.now().asJdk8()
         val duration = 1.minutes
 
         withTables(tbl) {
@@ -221,7 +221,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val date = today
         val dateTime = now()
         val time = dateTime.time
-        val timestamp = Clock.System.now()
+        val timestamp = Clock.System.now().asJdk8()
         val duration = 1.minutes
 
         withTables(tbl) {
@@ -263,7 +263,7 @@ class MiscTableTest : DatabaseTestsBase() {
             val date = today
             val dateTime = now()
             val time = dateTime.time
-            val timestamp = Clock.System.now()
+            val timestamp = Clock.System.now().asJdk8()
             val duration = 1.minutes
             val sTest = "test"
             val dec = BigDecimal("239.42")
@@ -705,7 +705,7 @@ class MiscTableTest : DatabaseTestsBase() {
             val date = today
             val dateTime = now()
             val time = dateTime.time
-            val timestamp = Clock.System.now()
+            val timestamp = Clock.System.now().asJdk8()
             val duration = 1.minutes
             val sTest = "test"
             val eOne = MiscTable.E.ONE
@@ -1074,7 +1074,7 @@ class MiscTableTest : DatabaseTestsBase() {
             val eOne = MiscTable.E.ONE
             val sTest = "test"
             val dec = BigDecimal("239.42")
-            val timestamp = Clock.System.now()
+            val timestamp = Clock.System.now().asJdk8()
             val duration = 1.minutes
             tbl.insert {
                 it[by] = 13
@@ -1165,7 +1165,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val date = today
         val dateTime = now()
         val time = dateTime.time
-        val timestamp = Clock.System.now()
+        val timestamp = Clock.System.now().asJdk8()
         val duration = 1.minutes
         val eOne = MiscTable.E.ONE
         val dec = BigDecimal("239.42")

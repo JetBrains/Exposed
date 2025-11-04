@@ -1,11 +1,14 @@
 import org.gradle.api.tasks.testing.logging.*
+import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") apply true
 }
 
 kotlin {
-    jvmToolchain(8)
+    jvmToolchain(17)
 
     compilerOptions {
         optIn.add("kotlin.time.ExperimentalTime")
@@ -42,6 +45,16 @@ dependencies {
     testCompileOnly(libs.sqlite.jdbc)
     testImplementation(libs.logcaptor)
     testImplementation(libs.kotlinx.coroutines.test)
+}
+
+tasks.withType<KotlinCompile>().configureEach {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_1_8)
+    }
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    targetCompatibility = "8"
 }
 
 tasks.withType<Test>().configureEach {
