@@ -3,7 +3,7 @@ package org.jetbrains.exposed.v1.core
 import org.jetbrains.exposed.v1.core.statements.Statement
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 
@@ -233,7 +233,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
             @OptIn(InternalApi::class)
             if (set.source != Table.Dual || currentDialect.supportsDualTableConcept) {
                 append(" FROM ")
-                set.source.describe(CoreTransactionManager.currentTransaction(), this)
+                set.source.describe(currentTransaction(), this)
             }
 
             where?.let {

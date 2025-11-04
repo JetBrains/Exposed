@@ -1,7 +1,8 @@
 package org.jetbrains.exposed.v1.core.vendors
 
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
+import org.jetbrains.exposed.v1.core.transactions.currentTransactionOrNull
 
 /**
  * Common interface for all database dialects.
@@ -166,12 +167,12 @@ internal fun <T> withDialect(dialect: DatabaseDialect, body: () -> T): T {
 val currentDialect: DatabaseDialect
     get() {
         @OptIn(InternalApi::class)
-        return explicitDialect.get() ?: CoreTransactionManager.currentTransaction().db.dialect
+        return explicitDialect.get() ?: currentTransaction().db.dialect
     }
 
 @OptIn(InternalApi::class)
 internal val currentDialectIfAvailable: DatabaseDialect?
-    get() = if (CoreTransactionManager.getDefaultDatabaseOrFirst() != null && CoreTransactionManager.currentTransactionOrNull() != null) {
+    get() = if (currentTransactionOrNull() != null) {
         currentDialect
     } else {
         null
@@ -181,4 +182,4 @@ internal val currentDialectIfAvailable: DatabaseDialect?
 @OptIn(InternalApi::class)
 @InternalApi
 fun String.inProperCase(): String =
-    CoreTransactionManager.currentTransactionOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this
+    currentTransactionOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this

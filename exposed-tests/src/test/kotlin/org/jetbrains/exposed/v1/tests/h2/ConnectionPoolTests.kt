@@ -11,7 +11,7 @@ import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
-import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.LogDbInTestName
 import org.jetbrains.exposed.v1.tests.TestDB
@@ -44,7 +44,7 @@ class ConnectionPoolTests : LogDbInTestName() {
         runBlocking {
             repeat(exceedsPoolSize) {
                 launch {
-                    newSuspendedTransaction {
+                    suspendTransaction {
                         delay(100)
                         TestEntity.new { testValue = "test$it" }
                     }

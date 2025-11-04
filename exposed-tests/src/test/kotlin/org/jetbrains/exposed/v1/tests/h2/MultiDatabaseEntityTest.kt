@@ -44,8 +44,8 @@ class MultiDatabaseEntityTest {
     @Before
     fun before() {
         Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
-        if (TransactionManager.isInitialized()) {
-            currentDB = TransactionManager.currentOrNull()?.db
+        TransactionManager.currentOrNull()?.let {
+            currentDB = it.db
         }
         transaction(db1) {
             SchemaUtils.create(EntityTestsData.XTable, EntityTestsData.YTable)
@@ -53,12 +53,14 @@ class MultiDatabaseEntityTest {
         transaction(db2) {
             SchemaUtils.create(EntityTestsData.XTable, EntityTestsData.YTable)
         }
+
+        TransactionManager.currentOrNull()?.transactionManager
+        TransactionManager.primaryDatabase?.transactionManager
     }
 
     @After
     fun after() {
         if (TestDB.H2_V2 in TestDB.enabledDialects()) {
-            TransactionManager.resetCurrent(currentDB?.transactionManager)
             transaction(db1) {
                 SchemaUtils.drop(EntityTestsData.XTable, EntityTestsData.YTable)
             }

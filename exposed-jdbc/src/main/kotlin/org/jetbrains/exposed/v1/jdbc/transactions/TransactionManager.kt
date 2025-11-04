@@ -1,19 +1,20 @@
 package org.jetbrains.exposed.v1.jdbc.transactions
 
+import kotlinx.coroutines.currentCoroutineContext
 import org.jetbrains.exposed.v1.core.InternalApi
-import org.jetbrains.exposed.v1.core.SqlLogger
 import org.jetbrains.exposed.v1.core.Transaction
-import org.jetbrains.exposed.v1.core.exposedLogger
 import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.DatabasesManagerImpl
+import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
-import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
+import org.jetbrains.exposed.v1.core.transactions.TransactionManagersContainerImpl
+import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextElement
+import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolder
+import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolderImpl
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
-import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.statements.api.ExposedConnection
-import java.sql.SQLException
-import java.util.concurrent.ThreadLocalRandom
+import kotlin.coroutines.CoroutineContext
 
 /**
  * [TransactionManager] implementation registered to the provided database value [db].
@@ -64,9 +65,6 @@ class TransactionManager(
     @Volatile
     override var defaultReadOnly: Boolean = db.config.defaultReadOnly
 
-    /** A thread local variable storing the current transaction. */
-    val threadLocal = ThreadLocal<JdbcTransaction>()
-
     override fun toString(): String {
         return "JdbcTransactionManager[${hashCode()}](db=$db)"
     }
@@ -89,47 +87,94 @@ class TransactionManager(
                     readOnly = outerTransaction?.readOnly ?: readOnly,
                     transactionIsolation = outerTransaction?.transactionIsolation ?: isolation,
                     setupTxConnection = setupTxConnection,
-                    threadLocal = threadLocal,
                     outerTransaction = outerTransaction,
                     loadDataSourceIsolationLevel = loadDataSourceIsolationLevel,
                 ),
             )
 
-        return transaction.apply { bindTransactionToThread(this) }
+        return transaction
     }
 
-    override fun currentOrNull(): JdbcTransaction? = threadLocal.get()
+    @OptIn(InternalApi::class)
+    override fun currentOrNull(): JdbcTransaction? =
+        ThreadLocalTransactionsStack.getTransactionOrNull(db) as JdbcTransaction?
 
-    override fun bindTransactionToThread(transaction: Transaction?) {
-        if (transaction != null) {
-            threadLocal.set(transaction as JdbcTransaction)
-        } else {
-            threadLocal.remove()
+    /** A unique key for storing coroutine context elements, as [TransactionContextHolder]. */
+    @OptIn(InternalApi::class)
+    private val contextKey = object : CoroutineContext.Key<TransactionContextHolder> {}
+
+    /**
+     * Creates a coroutine context for the given transaction.
+     *
+     * @param transaction The transaction for which to create the coroutine context.
+     * @return A [CoroutineContext] containing the transaction holder and context element.
+     * @throws IllegalStateException if the transaction's manager doesn't match this manager.
+     */
+    @OptIn(InternalApi::class)
+    internal fun createTransactionContext(transaction: Transaction): CoroutineContext {
+        if (transaction.transactionManager != this) {
+            error(
+                "TransactionManager must create transaction context only for own transactions. " +
+                    "Transaction manager of ${db.url} tried to create transaction context for ${transaction.db.url}"
+            )
+        }
+        return TransactionContextHolderImpl(transaction, contextKey) + TransactionContextElement(transaction)
+    }
+
+    /**
+     * Returns the current JDBC transaction from the coroutine context, or null if none exists.
+     *
+     * This method performs type checking to ensure the transaction in the context is actually
+     * a [JdbcTransaction]. If a non-JDBC transaction is found in the context, an error is thrown
+     * to prevent type confusion between JDBC and R2DBC transactions.
+     *
+     * @return The current [JdbcTransaction] from the coroutine context, or null if no transaction exists
+     * @throws [IllegalStateException] If the transaction in the context is not a [JdbcTransaction]
+     */
+    @OptIn(InternalApi::class)
+    internal suspend fun getCurrentContextTransaction(): JdbcTransaction? {
+        val transaction = currentCoroutineContext()[contextKey]?.transaction
+        return when {
+            transaction == null -> null
+            transaction is JdbcTransaction -> transaction
+            else -> error(
+                "Expected JdbcTransaction in coroutine context but found ${transaction::class.simpleName}. " +
+                    "This may indicate mixing JDBC and R2DBC transactions incorrectly."
+            )
         }
     }
 
     companion object {
+        @OptIn(InternalApi::class)
+        private val databases = object : DatabasesManagerImpl<Database>() {}
+
+        @OptIn(InternalApi::class)
+        private val transactionManagers = object : TransactionManagersContainerImpl<Database>(databases) {
+            override fun transactionClass(): Class<out Transaction> = JdbcTransaction::class.java
+        }
+
+        /**
+         * The currently active database, which is either the default database or the last instance created.
+         * Returns `null` if no database has been registered.
+         */
+        val primaryDatabase: Database?
+            get() = databases.getPrimaryDatabase()
+
         /**
          * The database to use by default in all transactions.
          *
-         * **Note** If this value is not set, the last [Database] instance created will be used.
+         * **Note:** The default database could be null until it is set explicitly.
+         * Use `primaryDatabase` to get the default database if it is set, or the last registered database otherwise.
          */
         var defaultDatabase: Database?
-            @Synchronized
-            @OptIn(InternalApi::class)
-            get() = CoreTransactionManager.getDefaultDatabaseOrFirst() as? Database
-
-            @Synchronized
-            @OptIn(InternalApi::class)
-            set(value) {
-                CoreTransactionManager.setDefaultDatabase(value)
-            }
+            get() = databases.getDefaultDatabase()
+            set(value) = databases.setDefaultDatabase(value)
 
         /** Associates the provided [database] with a specific [manager]. */
         @Synchronized
         fun registerManager(database: Database, manager: TransactionManagerApi) {
             @OptIn(InternalApi::class)
-            CoreTransactionManager.registerDatabaseManager(database, manager)
+            transactionManagers.registerDatabaseManager(database, manager)
         }
 
         /**
@@ -139,52 +184,50 @@ class TransactionManager(
         @Synchronized
         fun closeAndUnregister(database: Database) {
             @OptIn(InternalApi::class)
-            CoreTransactionManager.closeAndUnregisterDatabase(database)
+            transactionManagers.closeAndUnregisterDatabase(database)
         }
-
-        /**
-         * Returns the [TransactionManager] instance that is associated with the provided [database],
-         * or `null` if  a manager has not been registered for the [database].
-         *
-         * **Note** If the provided [database] is `null`, this will return the current thread's [TransactionManager]
-         * instance, which may not be initialized if `Database.connect()` was not called at some point previously.
-         */
-        fun managerFor(database: Database?): TransactionManager? = if (database != null) {
-            @OptIn(InternalApi::class)
-            CoreTransactionManager.getDatabaseManager(database) as? TransactionManager
-        } else {
-            manager
-        }
-
-        /** The current thread's [TransactionManager] instance. */
-        val manager: TransactionManager
-            @OptIn(InternalApi::class)
-            get() = CoreTransactionManager.getCurrentThreadManager() as TransactionManager
-
-        /** Sets the current thread's copy of the [TransactionManager] instance to the specified [manager]. */
-        fun resetCurrent(manager: TransactionManager?) {
-            @OptIn(InternalApi::class)
-            CoreTransactionManager.resetCurrentThreadManager(manager)
-        }
-
-        /** Returns the current [JdbcTransaction], or creates a new transaction with the provided [isolation] level. */
-        fun currentOrNew(isolation: Int): JdbcTransaction = currentOrNull() ?: manager.newTransaction(isolation)
 
         /** Returns the current [JdbcTransaction], or `null` if none exists. */
-        fun currentOrNull(): JdbcTransaction? = manager.currentOrNull()
+        @OptIn(InternalApi::class)
+        fun currentOrNull(): JdbcTransaction? =
+            ThreadLocalTransactionsStack.getTransactionIsInstance(JdbcTransaction::class.java)
 
         /**
          * Returns the current [JdbcTransaction].
          *
-         * @throws [IllegalStateException] If no transaction exists.
+         * @throws IllegalStateException If no transaction exists.
          */
-        fun current(): JdbcTransaction = currentOrNull() ?: error("No transaction in context.")
+        fun current(): JdbcTransaction = currentOrNull()
+            ?: error("No transaction in context.")
 
-        /** Whether any [TransactionManager] instance has been initialized by a database. */
-        fun isInitialized(): Boolean {
-            @OptIn(InternalApi::class)
-            return CoreTransactionManager.getDefaultDatabaseOrFirst() != null
-        }
+        /**
+         * Returns the [TransactionManager] instance associated with the provided [database].
+         *
+         * @param database Database instance for which to retrieve the transaction manager.
+         * @return The [TransactionManager] associated with the database.
+         * @throws IllegalStateException if no transaction manager is registered for the given database.
+         */
+        fun managerFor(database: Database): TransactionManager =
+            transactionManagers.getTransactionManager(database)?.let { it as TransactionManager } ?: error("No transaction manager for db $database")
+
+        /**
+         * Returns the [TransactionManager] for the current context.
+         *
+         * This property attempts to resolve the transaction manager in the following order:
+         * 1. From the current transaction, if one exists
+         * 2. From the current database, if one is set
+         *
+         * @throws IllegalStateException if no transaction manager can be found in either the current
+         *         transaction or the current database.
+         */
+        val manager: TransactionManager
+            get() = currentOrNull()?.transactionManager
+                ?: primaryDatabase?.transactionManager
+                ?: error("No transaction manager found")
+
+        /** Returns the current [JdbcTransaction], or creates a new transaction with the provided [isolation] level. */
+        fun currentOrNew(isolation: Int = manager.defaultIsolationLevel): JdbcTransaction = currentOrNull()
+            ?: manager.newTransaction(isolation)
     }
 
     private class ThreadLocalTransaction(
@@ -192,7 +235,6 @@ class TransactionManager(
         private val setupTxConnection: ((ExposedConnection<*>, JdbcTransactionInterface) -> Unit)?,
         override val transactionIsolation: Int,
         override val readOnly: Boolean,
-        val threadLocal: ThreadLocal<JdbcTransaction>,
         override val outerTransaction: JdbcTransaction?,
         private val loadDataSourceIsolationLevel: Boolean
     ) : JdbcTransactionInterface {
@@ -260,17 +302,13 @@ class TransactionManager(
         }
 
         override fun close() {
-            try {
-                if (!useSavePoints) {
-                    if (connectionLazy.isInitialized()) connection.close()
-                } else {
-                    savepoint?.let {
-                        connection.releaseSavepoint(it)
-                        savepoint = null
-                    }
+            if (!useSavePoints) {
+                if (connectionLazy.isInitialized()) connection.close()
+            } else {
+                savepoint?.let {
+                    connection.releaseSavepoint(it)
+                    savepoint = null
                 }
-            } finally {
-                threadLocal.set(outerTransaction)
             }
         }
 
@@ -284,216 +322,7 @@ class TransactionManager(
                 }
                 return "Exposed_savepoint_$nestedLevel"
             }
-    }
-}
-
-/**
- * Creates a transaction with the specified [transactionIsolation] and [readOnly] settings, then calls
- * the [statement] block with this transaction as its receiver and returns the result.
- *
- * **Note** If the database value [db] is not set, the value used will be either the last [Database] instance created
- * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
- *
- * @param db Database to use for the transaction. Defaults to `null`.
- * @param transactionIsolation Transaction isolation level. Defaults to `db.transactionManager.defaultIsolationLevel`.
- * @param readOnly Whether the transaction should be read-only. Defaults to `db.transactionManager.defaultReadOnly`.
- * @return The final result of the [statement] block.
- * @sample org.jetbrains.exposed.v1.tests.shared.ConnectionTimeoutTest.testTransactionRepetitionWithDefaults
- */
-fun <T> transaction(
-    db: Database? = null,
-    transactionIsolation: Int = db.transactionManager.defaultIsolationLevel,
-    readOnly: Boolean = db.transactionManager.defaultReadOnly,
-    statement: JdbcTransaction.() -> T
-): T = keepAndRestoreTransactionRefAfterRun(db) {
-    val outer = TransactionManager.currentOrNull()
-
-    if (outer != null && (db == null || outer.db == db)) {
-        val outerManager = outer.db.transactionManager
-
-        val transaction = outerManager.newTransaction(transactionIsolation, readOnly, outer)
-        @Suppress("TooGenericExceptionCaught")
-        try {
-            transaction.statement().also {
-                if (outer.db.useNestedTransactions) {
-                    transaction.commit()
-                }
-            }
-        } catch (cause: SQLException) {
-            val currentStatement = transaction.currentStatement
-            transaction.rollbackLoggingException {
-                exposedLogger.warn(
-                    "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
-                    it
-                )
-            }
-            throw cause
-        } catch (cause: Throwable) {
-            if (outer.db.useNestedTransactions) {
-                val currentStatement = transaction.currentStatement
-                transaction.rollbackLoggingException {
-                    exposedLogger.warn(
-                        "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
-                        it
-                    )
-                }
-            }
-            throw cause
-        } finally {
-            TransactionManager.resetCurrent(outerManager)
-        }
-    } else {
-        val existingForDb = db?.transactionManager
-        existingForDb?.currentOrNull()?.let { transaction ->
-            val currentManager = outer?.db.transactionManager
-            try {
-                TransactionManager.resetCurrent(existingForDb)
-                transaction.statement().also {
-                    if (db.useNestedTransactions) {
-                        transaction.commit()
-                    }
-                }
-            } finally {
-                TransactionManager.resetCurrent(currentManager)
-            }
-        } ?: inTopLevelTransaction(
-            db,
-            transactionIsolation,
-            readOnly,
-            null,
-            statement
-        )
-    }
-}
-
-/**
- * Creates a transaction with the specified [transactionIsolation] and [readOnly] settings, then calls
- * the [statement] block with this transaction as its receiver and returns the result.
- *
- * **Note** All changes in this transaction will be committed at the end of the [statement] block, even if
- * it is nested and even if `DatabaseConfig.useNestedTransactions` is set to `false`.
- *
- * **Note** If the database value [db] is not set, the value used will be either the last [Database] instance created
- * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
- *
- * @param db Database to use for the transaction. Defaults to `null`.
- * @param transactionIsolation Transaction isolation level. Defaults to `db.transactionManager.defaultIsolationLevel`.
- * @param readOnly Whether the transaction should be read-only. Defaults to `db.transactionManager.defaultReadOnly`.
- * @param outerTransaction Outer transaction if this is a nested transaction. Defaults to `null`.
- * @return The final result of the [statement] block.
- * @sample org.jetbrains.exposed.v1.tests.shared.RollbackTransactionTest.testRollbackWithoutSavepoints
- */
-fun <T> inTopLevelTransaction(
-    db: Database? = null,
-    transactionIsolation: Int = db.transactionManager.defaultIsolationLevel,
-    readOnly: Boolean = db.transactionManager.defaultReadOnly,
-    outerTransaction: JdbcTransaction? = null,
-    statement: JdbcTransaction.() -> T
-): T {
-    fun run(): T {
-        var attempts = 0
-
-        val outerManager = outerTransaction?.db.transactionManager.takeIf { it.currentOrNull() != null }
-
-        var intermediateDelay: Long = 0
-        var retryInterval: Long? = null
-
-        while (true) {
-            db?.let { db.transactionManager.let { m -> TransactionManager.resetCurrent(m) } }
-            val transaction = db.transactionManager.newTransaction(transactionIsolation, readOnly, outerTransaction)
-
-            @Suppress("TooGenericExceptionCaught")
-            try {
-                transaction.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
-                val answer = transaction.statement()
-                transaction.commit()
-                return answer
-            } catch (cause: SQLException) {
-                handleSQLException(cause, transaction, attempts)
-                attempts++
-                if (attempts >= transaction.maxAttempts) {
-                    throw cause
-                }
-
-                if (retryInterval == null) {
-                    retryInterval = transaction.getRetryInterval()
-                    intermediateDelay = transaction.minRetryDelay
-                }
-                // set delay value with an exponential backoff time period.
-                val delay = when {
-                    transaction.minRetryDelay < transaction.maxRetryDelay -> {
-                        intermediateDelay += retryInterval * attempts
-                        ThreadLocalRandom.current().nextLong(intermediateDelay, intermediateDelay + retryInterval)
-                    }
-
-                    transaction.minRetryDelay == transaction.maxRetryDelay -> transaction.minRetryDelay
-                    else -> 0
-                }
-                exposedLogger.warn("Wait $delay milliseconds before retrying")
-                try {
-                    Thread.sleep(delay)
-                } catch (cause: InterruptedException) {
-                    // Do nothing
-                }
-            } catch (cause: Throwable) {
-                val currentStatement = transaction.currentStatement
-                transaction.rollbackLoggingException {
-                    exposedLogger.warn(
-                        "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
-                        it
-                    )
-                }
-                throw cause
-            } finally {
-                TransactionManager.resetCurrent(outerManager)
-                closeStatementsAndConnection(transaction)
-            }
-        }
-    }
-
-    return keepAndRestoreTransactionRefAfterRun(db) {
-        run()
-    }
-}
-
-private fun <T> keepAndRestoreTransactionRefAfterRun(db: Database? = null, block: () -> T): T {
-    val manager = db.transactionManager
-    val currentTransaction = manager.currentOrNull()
-    return try {
-        block()
-    } finally {
-        manager.bindTransactionToThread(currentTransaction)
-    }
-}
-
-internal fun handleSQLException(cause: SQLException, transaction: JdbcTransaction, attempts: Int) {
-    val exposedSQLException = cause as? ExposedSQLException
-    val queriesToLog = exposedSQLException?.causedByQueries()?.joinToString(";\n") ?: "${transaction.currentStatement}"
-    val message = "Transaction attempt #$attempts failed: ${cause.message}. Statement(s): $queriesToLog"
-    exposedSQLException?.contexts?.forEach {
-        transaction.interceptors.filterIsInstance<SqlLogger>().forEach { logger ->
-            logger.log(it, transaction)
-        }
-    }
-    exposedLogger.warn(message, cause)
-    transaction.rollbackLoggingException {
-        exposedLogger.warn("Transaction rollback failed: ${it.message}. See previous log line for statement", it)
-    }
-}
-
-internal fun closeStatementsAndConnection(transaction: JdbcTransaction) {
-    val currentStatement = transaction.currentStatement
-    @Suppress("TooGenericExceptionCaught")
-    try {
-        currentStatement?.let {
-            it.closeIfPossible()
-            transaction.currentStatement = null
-        }
-        transaction.closeExecutedStatements()
-    } catch (cause: Exception) {
-        exposedLogger.warn("Statements close failed", cause)
-    }
-    transaction.closeLoggingException {
-        exposedLogger.warn("Transaction close failed: ${it.message}. Statement: $currentStatement", it)
+        override val transactionManager: TransactionManagerApi
+            get() = db.transactionManager
     }
 }
