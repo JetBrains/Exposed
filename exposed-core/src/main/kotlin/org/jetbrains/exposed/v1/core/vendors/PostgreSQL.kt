@@ -436,13 +436,17 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
         return list
     }
 
-    @OptIn(InternalApi::class)
-    override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
+    override fun createDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "CREATE DATABASE ${name.inProperCase()}"
+    }
 
     override fun listDatabases(): String = "SELECT datname FROM pg_database"
 
-    @OptIn(InternalApi::class)
-    override fun dropDatabase(name: String): String = "DROP DATABASE ${name.inProperCase()}"
+    override fun dropDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "DROP DATABASE ${name.inProperCase()}"
+    }
 
     override fun setSchema(schema: Schema): String = "SET search_path TO ${schema.identifier}"
 

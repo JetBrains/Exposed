@@ -95,9 +95,10 @@ class TransactionManager(
         return transaction
     }
 
-    @OptIn(InternalApi::class)
-    override fun currentOrNull(): JdbcTransaction? =
-        ThreadLocalTransactionsStack.getTransactionOrNull(db) as JdbcTransaction?
+    override fun currentOrNull(): JdbcTransaction? {
+        @OptIn(InternalApi::class)
+        return ThreadLocalTransactionsStack.getTransactionOrNull(db) as JdbcTransaction?
+    }
 
     /** A unique key for storing coroutine context elements, as [TransactionContextHolder]. */
     @OptIn(InternalApi::class)
@@ -188,9 +189,10 @@ class TransactionManager(
         }
 
         /** Returns the current [JdbcTransaction], or `null` if none exists. */
-        @OptIn(InternalApi::class)
-        fun currentOrNull(): JdbcTransaction? =
-            ThreadLocalTransactionsStack.getTransactionIsInstance(JdbcTransaction::class.java)
+        fun currentOrNull(): JdbcTransaction? {
+            @OptIn(InternalApi::class)
+            return ThreadLocalTransactionsStack.getTransactionIsInstance(JdbcTransaction::class.java)
+        }
 
         /**
          * Returns the current [JdbcTransaction].

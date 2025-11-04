@@ -105,7 +105,6 @@ private fun resolveR2dbcDatabaseOrThrow(db: R2dbcDatabase?): R2dbcDatabase {
  * @throws R2dbcException If a database error occurs and retry attempts are exhausted
  * @throws Throwable If any other error occurs during execution
  */
-@OptIn(InternalApi::class)
 suspend fun <T> suspendTransaction(
     db: R2dbcDatabase? = null,
     transactionIsolation: IsolationLevel? = db?.transactionManager?.defaultIsolationLevel,
@@ -118,6 +117,7 @@ suspend fun <T> suspendTransaction(
     return if (outer != null) {
         val transaction = outer.transactionManager.newTransaction(transactionIsolation, readOnly, outer)
 
+        @OptIn(InternalApi::class)
         withContext(transaction.asContext()) {
             executeR2dbcTransactionWithErrorHandling(
                 transaction,

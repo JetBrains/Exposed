@@ -47,18 +47,17 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
         }
     }
 
-    @OptIn(InternalApi::class)
     override suspend fun R2dbcPreparedStatementApi.executeInternal(transaction: R2dbcTransaction): Int {
         val (inserted, rs) = execInsertFunction()
 
         val (processedCount, processedResults) = processResults(rs)
+        @OptIn(InternalApi::class)
         statement.resultedValues = processedResults
         val affectedRowCount = inserted ?: processedCount
         statement.insertedCount = affectedRowCount
         return affectedRowCount
     }
 
-    @OptIn(InternalApi::class)
     override suspend fun prepared(transaction: R2dbcTransaction, sql: String): R2dbcPreparedStatementApi = when {
         // https://github.com/pgjdbc/pgjdbc/issues/1168
         // Column names always escaped/quoted in RETURNING clause
@@ -70,6 +69,8 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             // see: org.mariadb.r2dbc.util.ClientParser.parameterPartsCheckReturning() switch case 82 -> 114
             val needsManualReturning = (statement is ReplaceStatement<*> || statement is BatchReplaceStatement) &&
                 currentDialect is MariaDBDialect
+
+            @OptIn(InternalApi::class)
             val generatedColumns = autoIncColumns.map { it.name.inProperCase() }.toTypedArray()
 
             if (needsManualReturning) {

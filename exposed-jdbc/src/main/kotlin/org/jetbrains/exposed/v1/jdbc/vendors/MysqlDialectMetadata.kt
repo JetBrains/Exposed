@@ -8,8 +8,8 @@ import org.jetbrains.exposed.v1.core.vendors.inProperCase
  * Mysql dialect metadata implementation.
  */
 open class MysqlDialectMetadata : DatabaseDialectMetadata() {
-    @OptIn(InternalApi::class)
     override fun String.metadataMatchesTable(schema: String, table: Table): Boolean {
+        @OptIn(InternalApi::class)
         return when {
             schema.isEmpty() -> this == table.nameInDatabaseCaseUnquoted()
             else -> {

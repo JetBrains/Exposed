@@ -427,13 +427,17 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
         return statements
     }
 
-    @OptIn(InternalApi::class)
-    override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
+    override fun createDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "CREATE DATABASE ${name.inProperCase()}"
+    }
 
     override fun listDatabases(): String = "SELECT name FROM sys.databases"
 
-    @OptIn(InternalApi::class)
-    override fun dropDatabase(name: String) = "DROP DATABASE ${name.inProperCase()}"
+    override fun dropDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "DROP DATABASE ${name.inProperCase()}"
+    }
 
     override fun setSchema(schema: Schema): String = "ALTER USER ${schema.authorization} WITH DEFAULT_SCHEMA = ${schema.identifier}"
 

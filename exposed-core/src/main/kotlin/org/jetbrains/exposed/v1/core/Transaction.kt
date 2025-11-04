@@ -76,10 +76,12 @@ abstract class Transaction : UserDataHolder(), TransactionInterface {
     val statementStats by lazy { hashMapOf<String, Pair<Int, Long>>() }
 
     /** Returns the string identifier of a [table], based on its [Table.tableName] and [Table.alias], if applicable. */
-    @OptIn(InternalApi::class)
-    fun identity(table: Table): String =
-        (table as? Alias<*>)?.let { "${identity(it.delegate)} ${db.identifierManager.quoteIfNecessary(it.alias)}" }
-            ?: db.identifierManager.quoteIfNecessary(table.tableName.inProperCase())
+    fun identity(table: Table): String = (table as? Alias<*>)
+        ?.let { "${identity(it.delegate)} ${db.identifierManager.quoteIfNecessary(it.alias)}" }
+        ?: db.identifierManager.quoteIfNecessary(
+            @OptIn(InternalApi::class)
+            table.tableName.inProperCase()
+        )
 
     /** Returns the complete string identifier of a [column], based on its [Table.tableName] and [Column.name]. */
     fun fullIdentity(column: Column<*>): String = QueryBuilder(false).also {

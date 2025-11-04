@@ -529,8 +529,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * Returns the table name in proper case.
      * Should be called within transaction or default [tableName] will be returned.
      */
-    @OptIn(InternalApi::class)
-    fun nameInDatabaseCase(): String = tableName.inProperCase()
+    fun nameInDatabaseCase(): String {
+        @OptIn(InternalApi::class)
+        return tableName.inProperCase()
+    }
 
     /**
      * Returns the table name, without schema and in proper case, with wrapping single- and double-quotation characters removed.

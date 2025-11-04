@@ -352,16 +352,20 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
         return super.createIndex(index)
     }
 
-    @OptIn(InternalApi::class)
-    override fun createDatabase(name: String) = "CREATE SCHEMA IF NOT EXISTS ${name.inProperCase()}"
+    override fun createDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "CREATE SCHEMA IF NOT EXISTS ${name.inProperCase()}"
+    }
 
     override fun listDatabases(): String = "SHOW SCHEMAS"
 
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> =
         super.modifyColumn(column, columnDiff).map { it.replace("MODIFY COLUMN", "ALTER COLUMN") }
 
-    @OptIn(InternalApi::class)
-    override fun dropDatabase(name: String) = "DROP SCHEMA IF EXISTS ${name.inProperCase()}"
+    override fun dropDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "DROP SCHEMA IF EXISTS ${name.inProperCase()}"
+    }
 
     @Suppress("CyclomaticComplexMethod")
     @Deprecated(

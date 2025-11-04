@@ -61,7 +61,7 @@ class UserCreatedTransactionsTests : R2dbcDatabaseTestsBase() {
     fun testAddLogger() {
         withConnection(dialect) { db, testDb ->
             val tx = TransactionManager.currentOrNew()
-            // Test that the next line does not throw errors
+            // the logger is left in to test that the next line does not throw errors
             tx.addLogger(StdOutSqlLogger)
 
             tx.close()

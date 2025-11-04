@@ -115,8 +115,8 @@ class TransactionManager(
         return transaction
     }
 
-    @OptIn(InternalApi::class)
     override fun currentOrNull(): R2dbcTransaction? {
+        @OptIn(InternalApi::class)
         return ThreadLocalTransactionsStack.getTransactionOrNull(db) as R2dbcTransaction?
     }
 
@@ -164,8 +164,10 @@ class TransactionManager(
         }
 
         /** Returns the current [R2dbcTransaction], or `null` if none exists. */
-        @OptIn(InternalApi::class)
-        fun currentOrNull(): R2dbcTransaction? = ThreadLocalTransactionsStack.getTransactionIsInstance(R2dbcTransaction::class.java)
+        fun currentOrNull(): R2dbcTransaction? {
+            @OptIn(InternalApi::class)
+            return ThreadLocalTransactionsStack.getTransactionIsInstance(R2dbcTransaction::class.java)
+        }
 
         /**
          * Returns the current [R2dbcTransaction].

@@ -48,7 +48,6 @@ class SpringTransactionManager(
      */
     override fun useSavepointForNestedTransaction() = false
 
-    @OptIn(InternalApi::class)
     override fun doGetTransaction(): Any {
         // Get the transaction for this specific database from the stack
         val outer = TransactionManager.currentOrNull()
@@ -59,10 +58,10 @@ class SpringTransactionManager(
         )
     }
 
-    @OptIn(InternalApi::class)
     override fun doSuspend(transaction: Any): Any {
         val trxObject = transaction as ExposedTransactionObject
 
+        @OptIn(InternalApi::class)
         return SuspendedObject(
             transaction = trxObject.getCurrentTransaction() ?: error("No transaction to suspend")
         ).apply {
@@ -70,9 +69,10 @@ class SpringTransactionManager(
         }
     }
 
-    @OptIn(InternalApi::class)
     override fun doResume(transaction: Any?, suspendedResources: Any) {
         val suspendedObject = suspendedResources as SuspendedObject
+
+        @OptIn(InternalApi::class)
         ThreadLocalTransactionsStack.pushTransaction(suspendedObject.transaction)
     }
 
@@ -85,12 +85,12 @@ class SpringTransactionManager(
         return trxObject.getCurrentTransaction() != null
     }
 
-    @OptIn(InternalApi::class)
     override fun doBegin(transaction: Any, definition: TransactionDefinition) {
         val trxObject = transaction as ExposedTransactionObject
 
         // If the current transaction in the stack is null (because it was suspended),
         // or if it belongs to a different database, then we should not use it as outer transaction
+        @OptIn(InternalApi::class)
         val currentTransaction = currentTransactionOrNull() as JdbcTransaction?
         val outerTransactionToUse = if (currentTransaction?.db == database) {
             currentTransaction
@@ -112,6 +112,7 @@ class SpringTransactionManager(
             }
         }
 
+        @OptIn(InternalApi::class)
         ThreadLocalTransactionsStack.pushTransaction(newTransaction)
     }
 
@@ -125,7 +126,6 @@ class SpringTransactionManager(
         trxObject.rollback()
     }
 
-    @OptIn(InternalApi::class)
     override fun doCleanupAfterCompletion(transaction: Any) {
         val trxObject = transaction as ExposedTransactionObject
 
@@ -133,6 +133,7 @@ class SpringTransactionManager(
             closeStatementsAndConnections(it)
         }
 
+        @OptIn(InternalApi::class)
         ThreadLocalTransactionsStack.popTransaction()
     }
 
