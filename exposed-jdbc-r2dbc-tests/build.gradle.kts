@@ -9,10 +9,7 @@ plugins {
 }
 
 kotlin {
-    // TODO REQUIRED for exposed-crypt tests, but makes Oracle tests fail...
-    //  https://youtrack.jetbrains.com/issue/EXPOSED-905/Bump-com.oracle.database.jdbc-to-ojdbc11
-    // jvmToolchain(17)
-    jvmToolchain(11)
+    jvmToolchain(17)
 
     compilerOptions {
         optIn.add("kotlin.time.ExperimentalTime")
