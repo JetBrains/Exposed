@@ -326,13 +326,17 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
         return "DROP INDEX IF EXISTS ${identifierManager.cutIfNecessaryAndQuote(indexName)}"
     }
 
-    @OptIn(InternalApi::class)
-    override fun createDatabase(name: String) = "ATTACH DATABASE '${name.lowercase()}.db' AS ${name.inProperCase()}"
+    override fun createDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "ATTACH DATABASE '${name.lowercase()}.db' AS ${name.inProperCase()}"
+    }
 
     override fun listDatabases(): String = "SELECT name FROM pragma_database_list"
 
-    @OptIn(InternalApi::class)
-    override fun dropDatabase(name: String) = "DETACH DATABASE ${name.inProperCase()}"
+    override fun dropDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "DETACH DATABASE ${name.inProperCase()}"
+    }
 
     companion object : DialectNameProvider("SQLite")
 }

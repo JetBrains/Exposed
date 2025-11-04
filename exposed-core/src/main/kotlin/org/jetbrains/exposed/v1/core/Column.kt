@@ -49,8 +49,10 @@ class Column<T>(
     }
 
     /** Returns the column name in proper case. */
-    @OptIn(InternalApi::class)
-    fun nameInDatabaseCase(): String = name.inProperCase()
+    fun nameInDatabaseCase(): String {
+        @OptIn(InternalApi::class)
+        return name.inProperCase()
+    }
 
     /**
      * Returns the column name with wrapping double-quotation characters removed.

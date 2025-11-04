@@ -120,21 +120,20 @@ class ConnectionTests : DatabaseTestsBase() {
 
     @Test
     fun testAddingLoggerDoesNotCauseNoTransactionInContext() {
+        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        TestDB.H2_V2.connect()
+
         val tester = object : Table("tester") {
             val amount = integer("amount")
         }
 
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
-        TestDB.H2_V2.connect()
-
         try {
             transaction {
+                // the logger is left in to test that it does not throw 'no transaction in context'
                 addLogger(StdOutSqlLogger)
                 tester.selectAll().toList()
             }
         } catch (cause: Exception) {
-            println(cause.message)
-            println(cause.stackTrace)
             assertTrue(cause.message != null)
             assertContains(cause.message!!, "Table \"TESTER\" not found")
         }

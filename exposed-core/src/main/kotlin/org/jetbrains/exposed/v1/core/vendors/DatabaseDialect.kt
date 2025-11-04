@@ -106,15 +106,19 @@ interface DatabaseDialect {
     fun addPrimaryKey(table: Table, pkName: String?, vararg pkColumns: Column<*>): String
 
     /** Returns the SQL statement that creates a database with the specified [name]. */
-    @OptIn(InternalApi::class)
-    fun createDatabase(name: String) = "CREATE DATABASE IF NOT EXISTS ${name.inProperCase()}"
+    fun createDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "CREATE DATABASE IF NOT EXISTS ${name.inProperCase()}"
+    }
 
     /** Returns the SQL query that retrieves a set of existing databases. */
     fun listDatabases(): String = "SHOW DATABASES"
 
     /** Returns the SQL statement that drops the database with the specified [name]. */
-    @OptIn(InternalApi::class)
-    fun dropDatabase(name: String) = "DROP DATABASE IF EXISTS ${name.inProperCase()}"
+    fun dropDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "DROP DATABASE IF EXISTS ${name.inProperCase()}"
+    }
 
     /** Returns the SQL statement that sets the current schema to the specified [schema]. */
     fun setSchema(schema: Schema): String = "SET SCHEMA ${schema.identifier}"

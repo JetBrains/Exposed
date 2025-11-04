@@ -105,7 +105,6 @@ private fun resolveDatabaseOrThrow(db: Database?): Database {
  * @throws Throwable If any other error occurs during execution
  * @sample org.jetbrains.exposed.v1.tests.shared.ConnectionTimeoutTest.testTransactionRepetitionWithDefaults
  */
-@OptIn(InternalApi::class)
 fun <T> transaction(
     db: Database? = null,
     transactionIsolation: Int? = db?.transactionManager?.defaultIsolationLevel,
@@ -113,6 +112,8 @@ fun <T> transaction(
     statement: JdbcTransaction.() -> T
 ): T {
     val database = resolveDatabaseOrThrow(db)
+
+    @OptIn(InternalApi::class)
     val outer = ThreadLocalTransactionsStack.getTransactionOrNull(database) as? JdbcTransaction
 
     return if (outer != null) {
@@ -122,6 +123,7 @@ fun <T> transaction(
             outer
         )
 
+        @OptIn(InternalApi::class)
         withThreadLocalTransaction(transaction) {
             executeTransactionWithErrorHandling(
                 transaction,
@@ -164,7 +166,6 @@ fun <T> transaction(
  * @throws Throwable If any other error occurs during execution
  * @sample org.jetbrains.exposed.v1.tests.shared.RollbackTransactionTest.testRollbackWithoutSavepoints
  */
-@OptIn(InternalApi::class)
 fun <T> inTopLevelTransaction(
     db: Database? = null,
     transactionIsolation: Int? = db?.transactionManager?.defaultIsolationLevel,
@@ -184,6 +185,7 @@ fun <T> inTopLevelTransaction(
         )
 
         try {
+            @OptIn(InternalApi::class)
             return withThreadLocalTransaction(transaction) {
                 try {
                     executeTransactionWithErrorHandling(transaction, shouldCommit = true) {
@@ -247,7 +249,6 @@ fun <T> inTopLevelTransaction(
  * @throws SQLException If a database error occurs and retry attempts are exhausted
  * @throws Throwable If any other error occurs during execution
  */
-@OptIn(InternalApi::class)
 suspend fun <T> suspendTransaction(
     db: Database? = null,
     transactionIsolation: Int? = db?.transactionManager?.defaultIsolationLevel,
@@ -264,6 +265,7 @@ suspend fun <T> suspendTransaction(
             outer
         )
 
+        @OptIn(InternalApi::class)
         withContext(transaction.asContext()) {
             executeTransactionWithErrorHandling(
                 transaction,

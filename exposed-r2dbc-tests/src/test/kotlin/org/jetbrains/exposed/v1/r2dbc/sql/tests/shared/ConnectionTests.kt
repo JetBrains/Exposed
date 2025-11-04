@@ -301,6 +301,7 @@ class ConnectionTests : R2dbcDatabaseTestsBase() {
 
         try {
             suspendTransaction {
+                // the logger is left in to test that it does not throw 'no transaction in context'
                 addLogger(StdOutSqlLogger)
                 tester.selectAll().toList()
             }

@@ -78,7 +78,6 @@ class H2Tests : DatabaseTestsBase() {
             val originalManager = TransactionManager.manager
             val db = requireNotNull(testDB.db) { "testDB.db cannot be null" }
             try {
-                @OptIn(InternalApi::class)
                 TransactionManager.registerManager(db, WrappedTransactionManager(db.transactionManager))
                 Executors.newSingleThreadExecutor().apply {
                     submit { TransactionManager.closeAndUnregister(db) }

@@ -259,8 +259,8 @@ data class Index(
     val table: Table
 
     /** Name of the index. */
-    @OptIn(InternalApi::class)
     val indexName: String
+        @OptIn(InternalApi::class)
         get() = customName ?: buildString {
             append(table.nameInDatabaseCaseUnquoted())
             append('_')

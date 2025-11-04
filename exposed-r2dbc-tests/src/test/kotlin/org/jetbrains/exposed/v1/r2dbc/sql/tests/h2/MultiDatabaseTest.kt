@@ -28,6 +28,7 @@ import org.junit.Before
 import org.junit.Test
 import java.util.concurrent.Executors
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class MultiDatabaseTest {
 
@@ -52,7 +53,7 @@ class MultiDatabaseTest {
     @Before
     fun before() {
         Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
-        TransactionManager.primaryDatabase?.let {
+        TransactionManager.currentOrNull()?.db?.let {
             currentDB = it
         }
     }
@@ -232,6 +233,7 @@ class MultiDatabaseTest {
     fun `when default database is not explicitly set - should return the latest connection`() {
         db1
         db2
+        assertNull(TransactionManager.defaultDatabase)
         assertEquals(TransactionManager.primaryDatabase, db2)
     }
 
@@ -241,6 +243,7 @@ class MultiDatabaseTest {
         db2
         TransactionManager.defaultDatabase = db1
         assertEquals(TransactionManager.defaultDatabase, db1)
+        assertEquals(TransactionManager.primaryDatabase, db1)
         TransactionManager.defaultDatabase = null
     }
 
@@ -250,6 +253,8 @@ class MultiDatabaseTest {
         db2
         TransactionManager.defaultDatabase = db1
         TransactionManager.closeAndUnregister(db1)
+        // closeAndUnregister() also removes the db from any internal storage, like default if set
+        assertNull(TransactionManager.defaultDatabase)
         assertEquals(TransactionManager.primaryDatabase, db2)
         TransactionManager.defaultDatabase = null
     }
