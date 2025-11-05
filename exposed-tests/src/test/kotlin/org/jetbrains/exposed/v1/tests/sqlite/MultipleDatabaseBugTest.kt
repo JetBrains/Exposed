@@ -40,10 +40,11 @@ class MultipleDatabaseBugTest {
         val filename = folder.newFile("foo.db").absolutePath
         val ds = SQLiteDataSource()
         ds.url = "jdbc:sqlite:$filename"
-        db = Database.connect(ds)
+        val database = Database.connect(ds)
+        db = database
 
         // SQLite supports only TRANSACTION_SERIALIZABLE and TRANSACTION_READ_UNCOMMITTED
-        db.transactionManager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
+        database.transactionManager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
     }
 
     @Test

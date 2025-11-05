@@ -54,7 +54,7 @@ open class BatchUpsertStatement(
     override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
         val dialect = transaction.db.dialect
         val functionProvider = UpsertBuilder.getFunctionProvider(dialect)
-        val keyColumns = if (functionProvider is MysqlFunctionProvider) keys.toList() else getKeyColumns(keys = keys)
+        val keyColumns = if (functionProvider is MysqlFunctionProvider) keys.asList() else getKeyColumns(keys = keys)
         val insertValues = arguments!!.first()
         val insertValuesSql = insertValues.toSqlString(prepared)
         val updateExcludeColumns = (onUpdateExclude ?: emptyList()) + if (dialect is OracleDialect) keyColumns else emptyList()

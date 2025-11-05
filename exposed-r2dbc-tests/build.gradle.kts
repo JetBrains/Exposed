@@ -1,5 +1,8 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") apply true
@@ -9,9 +12,7 @@ plugins {
 }
 
 kotlin {
-    // REQUIRED for exposed-crypt tests, but makes Oracle tests fail...
-//    jvmToolchain(17)
-    jvmToolchain(11)
+    jvmToolchain(17)
 
     compilerOptions {
         optIn.add("kotlin.time.ExperimentalTime")
@@ -43,7 +44,7 @@ dependencies {
     // non-exposed-tests module dependencies
     // --- start ---
     testImplementation(project(":exposed-money"))
-//    testImplementation(project(":exposed-crypt"))
+    testImplementation(project(":exposed-crypt"))
     testImplementation(project(":exposed-json"))
     testImplementation(project(":exposed-java-time"))
     testImplementation(project(":exposed-jodatime"))
@@ -63,6 +64,20 @@ dependencies {
 
     // exposed-money dependencies
     testImplementation(libs.moneta)
+}
+
+tasks.withType<KotlinCompile>().configureEach {
+    compilerOptions {
+        if (name == "compileTestKotlin") {
+            jvmTarget.set(JvmTarget.JVM_17)
+        } else {
+            jvmTarget.set(JvmTarget.JVM_11)
+        }
+    }
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    targetCompatibility = if (name == "compileTestJava") "17" else "11"
 }
 
 tasks.withType<Test>().configureEach {

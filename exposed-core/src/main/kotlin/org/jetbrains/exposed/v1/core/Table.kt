@@ -7,7 +7,7 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.statements.api.ExposedBlob
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.exceptions.DuplicateColumnException
 import java.math.BigDecimal
@@ -529,8 +529,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * Returns the table name in proper case.
      * Should be called within transaction or default [tableName] will be returned.
      */
-    @OptIn(InternalApi::class)
-    fun nameInDatabaseCase(): String = tableName.inProperCase()
+    fun nameInDatabaseCase(): String {
+        @OptIn(InternalApi::class)
+        return tableName.inProperCase()
+    }
 
     /**
      * Returns the table name, without schema and in proper case, with wrapping single- and double-quotation characters removed.
@@ -1520,7 +1522,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     ) {
         _indices.add(
             Index(
-                columns.toList(),
+                columns.asList(),
                 isUnique,
                 customIndexName,
                 indexType,
@@ -1696,7 +1698,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     @OptIn(InternalApi::class)
     internal fun primaryKeyConstraint(): String? {
         return primaryKey?.let { primaryKey ->
-            val tr = CoreTransactionManager.currentTransaction()
+            val tr = currentTransaction()
             val constraint = tr.db.identifierManager.cutIfNecessaryAndQuote(primaryKey.name)
             return primaryKey.columns
                 .joinToString(prefix = "CONSTRAINT $constraint PRIMARY KEY (", postfix = ")", transform = tr::identity)
@@ -1715,7 +1717,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             if (currentDialect.supportsIfNotExists) {
                 append("IF NOT EXISTS ")
             }
-            append(CoreTransactionManager.currentTransaction().identity(this@Table))
+            append(currentTransaction().identity(this@Table))
 
             if (columns.isNotEmpty()) {
                 columns.joinTo(this, prefix = " (") { column ->
@@ -1761,7 +1763,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             if (currentDialect.supportsIfNotExists) {
                 append("IF EXISTS ")
             }
-            append(CoreTransactionManager.currentTransaction().identity(this@Table))
+            append(currentTransaction().identity(this@Table))
             if (currentDialectIfAvailable is OracleDialect) {
                 append(" CASCADE CONSTRAINTS")
             } else if (currentDialectIfAvailable is PostgreSQLDialect && TableUtils.checkCycle(this@Table)) {

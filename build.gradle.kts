@@ -43,7 +43,11 @@ repositories {
 }
 
 allprojects {
-    if (this.name != "exposed-tests" && this.name != "exposed-r2dbc-tests" && this != rootProject) {
+    if (this.name != "exposed-tests" &&
+        this.name != "exposed-r2dbc-tests" &&
+        this.name != "exposed-jdbc-r2dbc-tests" &&
+        this != rootProject
+    ) {
         apply(plugin = "com.vanniktech.maven.publish")
         apply(plugin = "signing")
         this@allprojects.mavenPublishing {
@@ -58,7 +62,7 @@ allprojects {
 }
 
 apiValidation {
-    ignoredProjects.addAll(listOf("exposed-tests", "exposed-bom", "exposed-r2dbc-tests"))
+    ignoredProjects.addAll(listOf("exposed-tests", "exposed-bom", "exposed-r2dbc-tests", "exposed-jdbc-r2dbc-tests"))
 }
 
 subprojects {
@@ -132,7 +136,7 @@ subprojects {
         port = 3003
         dialects("ORACLE")
         dependencies {
-            dependency(rootProject.libs.oracle19)
+            dependency(rootProject.libs.oracle)
         }
     }
 

@@ -2,7 +2,7 @@ package org.jetbrains.exposed.v1.core.vendors
 
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.StatementType
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.exceptions.throwUnsupportedException
 import java.util.*
 
@@ -56,7 +56,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
 
     override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) {
         @OptIn(InternalApi::class)
-        val tr = CoreTransactionManager.currentTransaction()
+        val tr = currentTransaction()
         return when (expr.separator) {
             null -> tr.throwUnsupportedException("PostgreSQL requires explicit separator in STRING_AGG function.")
             else -> queryBuilder {
@@ -177,7 +177,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
     ) {
         @OptIn(InternalApi::class)
         path?.let {
-            CoreTransactionManager.currentTransaction().throwUnsupportedException("PostgreSQL does not support a JSON path argument")
+            currentTransaction().throwUnsupportedException("PostgreSQL does not support a JSON path argument")
         }
         val isNotJsonB = !(jsonType as JsonColumnMarker).usesBinaryFormat
         queryBuilder {
@@ -197,7 +197,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
     ) {
         @OptIn(InternalApi::class)
         if (path.size > 1) {
-            CoreTransactionManager.currentTransaction().throwUnsupportedException("PostgreSQL does not support multiple JSON path arguments")
+            currentTransaction().throwUnsupportedException("PostgreSQL does not support multiple JSON path arguments")
         }
         val isNotJsonB = !(jsonType as JsonColumnMarker).usesBinaryFormat
         queryBuilder {
@@ -384,7 +384,7 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
         @OptIn(InternalApi::class)
         val list = mutableListOf(
             buildString {
-                val tr = CoreTransactionManager.currentTransaction()
+                val tr = currentTransaction()
                 append("ALTER TABLE ${tr.identity(column.table)} ")
                 val colName = tr.identity(column)
 
@@ -436,13 +436,17 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
         return list
     }
 
-    @OptIn(InternalApi::class)
-    override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
+    override fun createDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "CREATE DATABASE ${name.inProperCase()}"
+    }
 
     override fun listDatabases(): String = "SELECT datname FROM pg_database"
 
-    @OptIn(InternalApi::class)
-    override fun dropDatabase(name: String): String = "DROP DATABASE ${name.inProperCase()}"
+    override fun dropDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "DROP DATABASE ${name.inProperCase()}"
+    }
 
     override fun setSchema(schema: Schema): String = "SET search_path TO ${schema.identifier}"
 

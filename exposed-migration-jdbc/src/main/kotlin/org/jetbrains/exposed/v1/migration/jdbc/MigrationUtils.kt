@@ -189,19 +189,19 @@ object MigrationUtils : MigrationUtilityApi() {
      * @param withLogs Whether to log intermediate steps and execution time. Defaults to `true`
      * @return A list of SQL DROP INDEX statements for unmapped indices
      */
-    @OptIn(InternalApi::class)
     fun dropUnmappedIndices(vararg tables: Table, withLogs: Boolean = true): List<String> {
         if (tables.isEmpty()) return emptyList()
 
         val foreignKeyConstraints = currentDialectMetadata.columnConstraints(*tables).keys
         val existingIndices = currentDialectMetadata.existingIndices(*tables)
 
-        val (_, toDrop) = existingIndices.filterAndLogMissingAndUnmappedIndices(
+        @OptIn(InternalApi::class)
+        val toDrop = existingIndices.filterAndLogMissingAndUnmappedIndices(
             foreignKeyConstraints,
             withDropIndices = true,
             withLogs = withLogs,
             tables = tables
-        )
+        ).second
 
         return toDrop.flatMap {
             it.dropStatement()

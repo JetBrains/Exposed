@@ -529,9 +529,9 @@ class ValueCaseWhen<T, R>(
      * @param resultType Optional column type for the result value
      * @return This ValueCaseWhen instance for method chaining
      */
-    @OptIn(InternalApi::class)
     @Suppress("UNCHECKED_CAST")
     fun When(cond: Expression<T>, result: R, resultType: IColumnType<R & Any>? = null): ValueCaseWhen<T, R> {
+        @OptIn(InternalApi::class)
         val resultColumnType = resultType
             ?: result?.let { resolveColumnType(it::class) as IColumnType<R & Any> }
             ?: columnType

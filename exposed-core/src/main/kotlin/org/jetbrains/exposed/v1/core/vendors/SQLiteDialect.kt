@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.v1.core.vendors
 
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.exceptions.throwUnsupportedException
 
 internal object SQLiteDataTypeProvider : DataTypeProvider() {
@@ -34,16 +34,16 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
 
     override fun concat(separator: String, queryBuilder: QueryBuilder, vararg expr: Expression<*>) = queryBuilder {
         if (separator == "") {
-            expr.toList().appendTo(this, separator = " || ") { +it }
+            expr.asList().appendTo(this, separator = " || ") { +it }
         } else {
-            expr.toList().appendTo(this, separator = " || '$separator' || ") { +it }
+            expr.asList().appendTo(this, separator = " || '$separator' || ") { +it }
         }
     }
 
     override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) {
         @OptIn(InternalApi::class)
         if (expr.distinct) {
-            CoreTransactionManager.currentTransaction().throwUnsupportedException("SQLite doesn't support DISTINCT in GROUP_CONCAT function")
+            currentTransaction().throwUnsupportedException("SQLite doesn't support DISTINCT in GROUP_CONCAT function")
         }
         queryBuilder {
             +"GROUP_CONCAT("
@@ -79,7 +79,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ) {
         @OptIn(InternalApi::class)
-        CoreTransactionManager.currentTransaction().throwUnsupportedException("SQLite doesn't provide built in REGEXP expression, use LIKE instead.")
+        currentTransaction().throwUnsupportedException("SQLite doesn't provide built in REGEXP expression, use LIKE instead.")
     }
 
     override fun <T> time(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
@@ -141,7 +141,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ) {
         @OptIn(InternalApi::class)
-        CoreTransactionManager.currentTransaction().throwUnsupportedException("$UNSUPPORTED_AGGREGATE STDDEV_POP")
+        currentTransaction().throwUnsupportedException("$UNSUPPORTED_AGGREGATE STDDEV_POP")
     }
 
     override fun <T> stdDevSamp(
@@ -149,7 +149,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ) {
         @OptIn(InternalApi::class)
-        CoreTransactionManager.currentTransaction().throwUnsupportedException("$UNSUPPORTED_AGGREGATE STDDEV_SAMP")
+        currentTransaction().throwUnsupportedException("$UNSUPPORTED_AGGREGATE STDDEV_SAMP")
     }
 
     override fun <T> varPop(
@@ -157,7 +157,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ) {
         @OptIn(InternalApi::class)
-        CoreTransactionManager.currentTransaction().throwUnsupportedException("$UNSUPPORTED_AGGREGATE VAR_POP")
+        currentTransaction().throwUnsupportedException("$UNSUPPORTED_AGGREGATE VAR_POP")
     }
 
     override fun <T> varSamp(
@@ -165,7 +165,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ) {
         @OptIn(InternalApi::class)
-        CoreTransactionManager.currentTransaction().throwUnsupportedException("$UNSUPPORTED_AGGREGATE VAR_SAMP")
+        currentTransaction().throwUnsupportedException("$UNSUPPORTED_AGGREGATE VAR_SAMP")
     }
 
     override fun <T> jsonExtract(
@@ -188,7 +188,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ) {
         @OptIn(InternalApi::class)
-        val transaction = CoreTransactionManager.currentTransaction()
+        val transaction = currentTransaction()
         if (path.size > 1) {
             transaction.throwUnsupportedException("SQLite does not support multiple JSON path arguments")
         }
@@ -262,7 +262,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
     override fun queryLimitAndOffset(size: Int?, offset: Long, alreadyOrdered: Boolean): String {
         @OptIn(InternalApi::class)
         if (size == null && offset > 0) {
-            CoreTransactionManager.currentTransaction().throwUnsupportedException("SQLite doesn't support OFFSET clause without LIMIT")
+            currentTransaction().throwUnsupportedException("SQLite doesn't support OFFSET clause without LIMIT")
         }
         return super.queryLimitAndOffset(size, offset, alreadyOrdered)
     }
@@ -326,13 +326,17 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
         return "DROP INDEX IF EXISTS ${identifierManager.cutIfNecessaryAndQuote(indexName)}"
     }
 
-    @OptIn(InternalApi::class)
-    override fun createDatabase(name: String) = "ATTACH DATABASE '${name.lowercase()}.db' AS ${name.inProperCase()}"
+    override fun createDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "ATTACH DATABASE '${name.lowercase()}.db' AS ${name.inProperCase()}"
+    }
 
     override fun listDatabases(): String = "SELECT name FROM pragma_database_list"
 
-    @OptIn(InternalApi::class)
-    override fun dropDatabase(name: String) = "DETACH DATABASE ${name.inProperCase()}"
+    override fun dropDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "DETACH DATABASE ${name.inProperCase()}"
+    }
 
     companion object : DialectNameProvider("SQLite")
 }

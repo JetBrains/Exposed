@@ -2,7 +2,7 @@ package org.jetbrains.exposed.v1.core.statements
 
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.UpsertBuilder.Companion.getFunctionProvider
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.core.vendors.*
 
 /**
@@ -46,7 +46,7 @@ open class UpsertStatement<Key : Any>(
     override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
         val dialect = transaction.db.dialect
         val functionProvider = UpsertBuilder.getFunctionProvider(dialect)
-        val keyColumns = if (functionProvider is MysqlFunctionProvider) keys.toList() else getKeyColumns(keys = keys)
+        val keyColumns = if (functionProvider is MysqlFunctionProvider) keys.asList() else getKeyColumns(keys = keys)
         val insertValues = arguments!!.first()
         val insertValuesSql = insertValues.toSqlString(prepared)
         val updateExcludeColumns = (onUpdateExclude ?: emptyList()) + if (dialect is OracleDialect) keyColumns else emptyList()
@@ -105,8 +105,9 @@ sealed interface UpsertBuilder {
 /** Returns the columns to be used in the conflict condition of an upsert statement. */
 internal fun UpsertBuilder.getKeyColumns(vararg keys: Column<*>): List<Column<*>> {
     this as InsertStatement<*>
-    return keys.toList().ifEmpty {
-        table.primaryKey?.columns?.toList() ?: table.indices.firstOrNull { it.unique }?.columns
+    return keys.asList().ifEmpty {
+        // If the underlying `columns` array can be mutated after this call, use `toList()` to avoid reflecting future changes.
+        table.primaryKey?.columns?.asList() ?: table.indices.firstOrNull { it.unique }?.columns
     } ?: emptyList()
 }
 
@@ -149,7 +150,7 @@ internal class InsertValue<T>(
 ) : ExpressionWithColumnType<T>() {
     @OptIn(InternalApi::class)
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
-        val transaction = CoreTransactionManager.currentTransaction()
+        val transaction = currentTransaction()
         val functionProvider = getFunctionProvider(transaction.db.dialect)
         functionProvider.insertValue(transaction.identity(column), queryBuilder)
     }

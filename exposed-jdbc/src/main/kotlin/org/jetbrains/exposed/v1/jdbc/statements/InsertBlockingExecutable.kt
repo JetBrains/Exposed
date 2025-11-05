@@ -40,16 +40,17 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
         }
     }
 
-    @OptIn(InternalApi::class)
     override fun prepared(transaction: JdbcTransaction, sql: String): JdbcPreparedStatementApi = when {
         // https://github.com/pgjdbc/pgjdbc/issues/1168
         // Column names always escaped/quoted in RETURNING clause
         columnsGeneratedOnDB().isNotEmpty() && currentDialect is PostgreSQLDialect ->
             transaction.connection.prepareStatement(sql, true)
 
-        autoIncColumns.isNotEmpty() ->
+        autoIncColumns.isNotEmpty() -> {
             // http://viralpatel.net/blogs/oracle-java-jdbc-get-primary-key-insert-sql/
+            @OptIn(InternalApi::class)
             transaction.connection.prepareStatement(sql, autoIncColumns.map { it.name.inProperCase() }.toTypedArray())
+        }
 
         else -> transaction.connection.prepareStatement(sql, false)
     }

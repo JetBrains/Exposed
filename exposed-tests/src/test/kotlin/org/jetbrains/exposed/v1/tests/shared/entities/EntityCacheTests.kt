@@ -5,7 +5,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.Column
-import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
@@ -264,7 +263,6 @@ class EntityCacheTests : DatabaseTestsBase() {
                 async {
                     val statementInvocationNumber = AtomicInteger(0)
                     transaction(transactionIsolation = TRANSACTION_SERIALIZABLE, db = db1) {
-                        addLogger(StdOutSqlLogger)
                         maxAttempts = 50
 
                         val entity = entities[index]

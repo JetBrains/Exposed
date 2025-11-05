@@ -3,6 +3,7 @@ package org.jetbrains.exposed.v1.spring.transaction
 import junit.framework.TestCase.assertEquals
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.junit.Test
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy
 import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy
@@ -59,9 +60,10 @@ class SpringTransactionManagerTest {
 
         tm2.executeAssert(false) {
             tm.executeAssert(false)
+
             assertEquals(
-                TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),
-                TransactionManager.manager
+                TransactionManager.currentOrNull()?.db?.let { TransactionManager.managerFor(it) },
+                TransactionManager.current().transactionManager
             )
         }
     }
@@ -110,8 +112,8 @@ class SpringTransactionManagerTest {
         tm1.executeAssert {
             tm2.executeAssert()
             assertEquals(
-                TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),
-                TransactionManager.manager
+                TransactionManager.currentOrNull()?.db?.let { TransactionManager.managerFor(it) },
+                TransactionManager.current().transactionManager
             )
         }
 
@@ -132,8 +134,8 @@ class SpringTransactionManagerTest {
                     throw ex
                 }
                 assertEquals(
-                    TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),
-                    TransactionManager.manager
+                    TransactionManager.currentOrNull()?.db?.let { TransactionManager.managerFor(it) },
+                    TransactionManager.current().transactionManager
                 )
             }
         } catch (e: Exception) {
@@ -396,10 +398,13 @@ class SpringTransactionManagerTest {
         tt.propagationBehavior = propagationBehavior
         if (timeout != null) tt.timeout = timeout
         tt.executeWithoutResult {
-            assertEquals(
-                TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),
-                TransactionManager.manager
-            )
+            TransactionManager.currentOrNull()?.db?.let { db ->
+                assertEquals(
+                    TransactionManager.managerFor(db),
+                    TransactionManager.current().transactionManager
+                )
+            }
+
             if (initializeConnection) TransactionManager.current().connection
             body(it)
         }

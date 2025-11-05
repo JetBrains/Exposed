@@ -23,13 +23,12 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.jetbrains.exposed.v1.r2dbc.transactions.transactionManager
-import org.junit.After
 import org.junit.Assume
 import org.junit.Before
 import org.junit.Test
 import java.util.concurrent.Executors
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class MultiDatabaseTest {
 
@@ -54,14 +53,9 @@ class MultiDatabaseTest {
     @Before
     fun before() {
         Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
-        if (TransactionManager.isInitialized()) {
-            currentDB = TransactionManager.currentOrNull()?.db
+        TransactionManager.currentOrNull()?.db?.let {
+            currentDB = it
         }
-    }
-
-    @After
-    fun after() {
-        TransactionManager.resetCurrent(currentDB?.transactionManager)
     }
 
     @Test
@@ -239,7 +233,8 @@ class MultiDatabaseTest {
     fun `when default database is not explicitly set - should return the latest connection`() {
         db1
         db2
-        assertEquals(TransactionManager.defaultDatabase, db2)
+        assertNull(TransactionManager.defaultDatabase)
+        assertEquals(TransactionManager.primaryDatabase, db2)
     }
 
     @Test
@@ -248,6 +243,7 @@ class MultiDatabaseTest {
         db2
         TransactionManager.defaultDatabase = db1
         assertEquals(TransactionManager.defaultDatabase, db1)
+        assertEquals(TransactionManager.primaryDatabase, db1)
         TransactionManager.defaultDatabase = null
     }
 
@@ -257,7 +253,9 @@ class MultiDatabaseTest {
         db2
         TransactionManager.defaultDatabase = db1
         TransactionManager.closeAndUnregister(db1)
-        assertEquals(TransactionManager.defaultDatabase, db2)
+        // closeAndUnregister() also removes the db from any internal storage, like default if set
+        assertNull(TransactionManager.defaultDatabase)
+        assertEquals(TransactionManager.primaryDatabase, db2)
         TransactionManager.defaultDatabase = null
     }
 

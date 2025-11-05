@@ -1,7 +1,8 @@
 package org.jetbrains.exposed.v1.core.vendors
 
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
+import org.jetbrains.exposed.v1.core.transactions.currentTransactionOrNull
 
 /**
  * Common interface for all database dialects.
@@ -105,15 +106,19 @@ interface DatabaseDialect {
     fun addPrimaryKey(table: Table, pkName: String?, vararg pkColumns: Column<*>): String
 
     /** Returns the SQL statement that creates a database with the specified [name]. */
-    @OptIn(InternalApi::class)
-    fun createDatabase(name: String) = "CREATE DATABASE IF NOT EXISTS ${name.inProperCase()}"
+    fun createDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "CREATE DATABASE IF NOT EXISTS ${name.inProperCase()}"
+    }
 
     /** Returns the SQL query that retrieves a set of existing databases. */
     fun listDatabases(): String = "SHOW DATABASES"
 
     /** Returns the SQL statement that drops the database with the specified [name]. */
-    @OptIn(InternalApi::class)
-    fun dropDatabase(name: String) = "DROP DATABASE IF EXISTS ${name.inProperCase()}"
+    fun dropDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "DROP DATABASE IF EXISTS ${name.inProperCase()}"
+    }
 
     /** Returns the SQL statement that sets the current schema to the specified [schema]. */
     fun setSchema(schema: Schema): String = "SET SCHEMA ${schema.identifier}"
@@ -166,12 +171,12 @@ internal fun <T> withDialect(dialect: DatabaseDialect, body: () -> T): T {
 val currentDialect: DatabaseDialect
     get() {
         @OptIn(InternalApi::class)
-        return explicitDialect.get() ?: CoreTransactionManager.currentTransaction().db.dialect
+        return explicitDialect.get() ?: currentTransaction().db.dialect
     }
 
 @OptIn(InternalApi::class)
 internal val currentDialectIfAvailable: DatabaseDialect?
-    get() = if (CoreTransactionManager.getDefaultDatabaseOrFirst() != null && CoreTransactionManager.currentTransactionOrNull() != null) {
+    get() = if (currentTransactionOrNull() != null) {
         currentDialect
     } else {
         null
@@ -181,4 +186,4 @@ internal val currentDialectIfAvailable: DatabaseDialect?
 @OptIn(InternalApi::class)
 @InternalApi
 fun String.inProperCase(): String =
-    CoreTransactionManager.currentTransactionOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this
+    currentTransactionOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this

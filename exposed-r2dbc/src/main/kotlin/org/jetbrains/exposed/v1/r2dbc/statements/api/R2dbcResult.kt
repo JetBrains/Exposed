@@ -10,12 +10,13 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.reactive.asPublisher
 import kotlinx.coroutines.reactive.collect
 import org.jetbrains.exposed.v1.core.IColumnType
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
 import org.jetbrains.exposed.v1.core.statements.api.RowApi
+import org.jetbrains.exposed.v1.core.transactions.withThreadLocalTransaction
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.r2dbc.mappers.R2dbcTypeMapping
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
-import org.jetbrains.exposed.v1.r2dbc.transactions.withThreadLocalTransaction
 import org.reactivestreams.Publisher
 import java.util.*
 import kotlin.jvm.optionals.getOrNull
@@ -42,6 +43,7 @@ class R2dbcResult internal constructor(
                     .map { row, rm ->
                         // The current block is run in another thread outside of coroutine,
                         // so that thread should also get the correct transaction into the thread local variables
+                        @OptIn(InternalApi::class)
                         withThreadLocalTransaction(currentTransaction) {
                             Optional.ofNullable(block(R2dbcRow(row, typeMapping)))
                         }
@@ -59,6 +61,7 @@ class R2dbcResult internal constructor(
         resultPublisher.collect { result ->
             val currentTransaction = TransactionManager.currentOrNull()
 
+            @OptIn(InternalApi::class)
             result.flatMap<T> { segment ->
                 // The current block is run in another thread outside of coroutine,
                 // so that thread should also get the correct transaction into the thread local variables

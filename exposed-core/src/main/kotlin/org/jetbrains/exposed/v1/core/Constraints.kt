@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.v1.core
 
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
@@ -67,7 +67,7 @@ data class ForeignKeyConstraint(
 
     @OptIn(InternalApi::class)
     private val tx: Transaction
-        get() = CoreTransactionManager.currentTransaction()
+        get() = currentTransaction()
 
     /** The columns of the referenced parent table. */
     val target: LinkedHashSet<Column<*>> = LinkedHashSet(references.values)
@@ -224,7 +224,7 @@ data class CheckConstraint(
         fun from(table: Table, name: String, op: Op<Boolean>): CheckConstraint {
             require(name.isNotBlank()) { "Check constraint name cannot be blank" }
             @OptIn(InternalApi::class)
-            val tr = CoreTransactionManager.currentTransaction()
+            val tr = currentTransaction()
             val identifierManager = tr.db.identifierManager
             val tableName = tr.identity(table)
             val checkOpSQL = op.toString().replace("$tableName.", "")
@@ -259,8 +259,8 @@ data class Index(
     val table: Table
 
     /** Name of the index. */
-    @OptIn(InternalApi::class)
     val indexName: String
+        @OptIn(InternalApi::class)
         get() = customName ?: buildString {
             append(table.nameInDatabaseCaseUnquoted())
             append('_')

@@ -9,7 +9,6 @@ import org.jetbrains.exposed.v1.core.DatabaseApi
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Version
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.r2dbc.statements.R2dbcConnectionImpl
@@ -173,7 +172,7 @@ class R2dbcDatabase private constructor(
             }.apply {
                 connectionUrl = options.urlString
                 connectionUrlMode = options.urlMode
-                CoreTransactionManager.registerDatabaseManager(this, manager(this))
+                TransactionManager.registerManager(this, manager(this))
                 // ABOVE should be replaced with BELOW when ThreadLocalTransactionManager is fully deprecated
                 // TransactionManager.registerManager(this, manager(this))
             }
