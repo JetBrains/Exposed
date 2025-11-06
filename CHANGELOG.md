@@ -43,6 +43,9 @@ Docs:
 * docs: fix: EXPOSED-873 Update API links and extension modules table by @vnikolova in https://github.com/JetBrains/Exposed/pull/2612
 * docs: fix: EXPOSED-883 Broken API links in Statement-Interceptors.md by @vnikolova in https://github.com/JetBrains/Exposed/pull/2625
 
+Build:
+* build(deps): [EXPOSED-921] Bump jvmToolchain and set compile jvmTarget by @bog-walk in https://github.com/JetBrains/Exposed/pull/2643
+
 # 1.0.0-rc-1
 
 ## What's Changed
