@@ -1,22 +1,22 @@
 <!doctype html>
-<html class="no-js">
+<html class="no-js" lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
     <title>DataTypeProvider</title>
-<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">    <script>var pathToRoot = "../../../";</script>
-    <script>document.documentElement.classList.replace("no-js","js");</script>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
     <script>const storage = localStorage.getItem("dokka-dark-mode")
-    if (storage == null) {
+      if (storage == null) {
         const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
         if (osDarkSchemePreferred === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    } else {
+      } else {
         const savedDarkMode = JSON.parse(storage)
-        if(savedDarkMode === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    }
+      }
     </script>
 <script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
 <script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
@@ -24,33 +24,31 @@
 <link href="../../../styles/main.css" rel="Stylesheet">
 <link href="../../../styles/prism.css" rel="Stylesheet">
 <link href="../../../styles/logo-styles.css" rel="Stylesheet">
-<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
 <link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
-<script type="text/javascript" src="../../../scripts/clipboard.js" async></script>
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
 <script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
 <script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
 <script type="text/javascript" src="../../../scripts/main.js" defer></script>
 <script type="text/javascript" src="../../../scripts/prism.js" async></script>
-<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script>
-<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer></script></head>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script></head>
 <body>
-    <div class="root">
-    <nav class="navigation theme-dark" id="navigation-wrapper">
-<a class="library-name--link" href="../../../index.html">
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
                     exposed
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
-        <div class="library-version" id="library-version">1.0.0-rc-2
+        <div class="library-version" id="library-version">1.0.0-rc-3
         </div>
         <div class="navigation-controls">
-        <div class="filter-section filter-section_loading" id="filter-section">
-                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":exposed-core/main">jvm</button>
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":exposed-core/main">jvm</button>
             <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
                 <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
-                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
-                    <div class="dropdown--header"><span>Platform filter</span>
-                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
                             <i class="ui-kit-icon ui-kit-icon_cross"></i>
                         </button>
                     </div>
@@ -64,32 +62,34 @@
                 </ul>
                 <div class="dropdown--overlay"></div>
             </div>
-        </div>
+        </ul>
             <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
             </button>
             <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
                 API
             </div>
         </div>
-    </nav>
-        <div id="container">
-            <div class="sidebar" id="leftColumn">
-                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
-                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox">
-                        <div class="dropdown--header">
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
                             <span>
                                     exposed
                             </span>
-                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
-                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
-                            </button>
-                        </div>
-                        <div class="sidebar--inner" id="sideMenu"></div>
-                    </ul>
-                    <div class="dropdown--overlay"></div>
-                </div>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
             </div>
-            <div id="main">
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
 <div class="main-content" data-page-type="classlike" id="content" pageids="exposed-core::org.jetbrains.exposed.v1.core.vendors/DataTypeProvider///PointingToDeclaration//-1435837140">
   <div class="breadcrumbs"><a href="../../index.html">exposed-core</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.v1.core.vendors</a><span class="delimiter">/</span><span class="current">DataTypeProvider</span></div>
   <div class="cover ">
@@ -100,9 +100,9 @@
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
     <div class="tabs-section-body">
       <div data-togglable="CONSTRUCTOR">
-        <h2 class="">Constructors</h2>
+        <h2 class="tableheader">Constructors</h2>
         <div class="table"><a data-name="39739806%2FConstructors%2F-1435837140" anchor-label="DataTypeProvider" id="39739806%2FConstructors%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-data-type-provider.html"><span>Data</span><wbr><span>Type</span><wbr><span><span>Provider</span></span></a></div>
@@ -119,9 +119,9 @@
         </div>
       </div>
       <div data-togglable="FUNCTION">
-        <h2 class="">Functions</h2>
+        <h2 class="tableheader">Functions</h2>
         <div class="table"><a data-name="-990250622%2FFunctions%2F-1435837140" anchor-label="binaryType" id="-990250622%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="binary-type.html"><span>binary</span><wbr><span><span>Type</span></span></a></div>
@@ -136,7 +136,7 @@
             </div>
           </div>
 <a data-name="1856995740%2FFunctions%2F-1435837140" anchor-label="blobType" id="1856995740%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="blob-type.html"><span>blob</span><wbr><span><span>Type</span></span></a></div>
@@ -151,7 +151,7 @@
             </div>
           </div>
 <a data-name="-190589573%2FFunctions%2F-1435837140" anchor-label="booleanFromStringToBoolean" id="-190589573%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="boolean-from-string-to-boolean.html"><span>boolean</span><wbr><span>From</span><wbr><span>String</span><wbr><span>To</span><wbr><span><span>Boolean</span></span></a></div>
@@ -166,7 +166,7 @@
             </div>
           </div>
 <a data-name="1399699067%2FFunctions%2F-1435837140" anchor-label="booleanToStatementString" id="1399699067%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="boolean-to-statement-string.html"><span>boolean</span><wbr><span>To</span><wbr><span>Statement</span><wbr><span><span>String</span></span></a></div>
@@ -181,7 +181,7 @@
             </div>
           </div>
 <a data-name="204418117%2FFunctions%2F-1435837140" anchor-label="booleanType" id="204418117%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="boolean-type.html"><span>boolean</span><wbr><span><span>Type</span></span></a></div>
@@ -196,7 +196,7 @@
             </div>
           </div>
 <a data-name="-1011569647%2FFunctions%2F-1435837140" anchor-label="byteType" id="-1011569647%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="byte-type.html"><span>byte</span><wbr><span><span>Type</span></span></a></div>
@@ -211,7 +211,7 @@
             </div>
           </div>
 <a data-name="-1318256802%2FFunctions%2F-1435837140" anchor-label="dateTimeType" id="-1318256802%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="date-time-type.html"><span>date</span><wbr><span>Time</span><wbr><span><span>Type</span></span></a></div>
@@ -226,7 +226,7 @@
             </div>
           </div>
 <a data-name="-86104277%2FFunctions%2F-1435837140" anchor-label="dateType" id="-86104277%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="date-type.html"><span>date</span><wbr><span><span>Type</span></span></a></div>
@@ -241,7 +241,7 @@
             </div>
           </div>
 <a data-name="309382248%2FFunctions%2F-1435837140" anchor-label="doubleType" id="309382248%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="double-type.html"><span>double</span><wbr><span><span>Type</span></span></a></div>
@@ -256,7 +256,7 @@
             </div>
           </div>
 <a data-name="-1792148207%2FFunctions%2F-1435837140" anchor-label="floatType" id="-1792148207%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="float-type.html"><span>float</span><wbr><span><span>Type</span></span></a></div>
@@ -271,7 +271,7 @@
             </div>
           </div>
 <a data-name="-520604431%2FFunctions%2F-1435837140" anchor-label="hexToDb" id="-520604431%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="hex-to-db.html"><span>hex</span><wbr><span>To</span><wbr><span><span>Db</span></span></a></div>
@@ -286,7 +286,7 @@
             </div>
           </div>
 <a data-name="1952326024%2FFunctions%2F-1435837140" anchor-label="integerAutoincType" id="1952326024%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="integer-autoinc-type.html"><span>integer</span><wbr><span>Autoinc</span><wbr><span><span>Type</span></span></a></div>
@@ -301,7 +301,7 @@
             </div>
           </div>
 <a data-name="-92277009%2FFunctions%2F-1435837140" anchor-label="integerType" id="-92277009%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="integer-type.html"><span>integer</span><wbr><span><span>Type</span></span></a></div>
@@ -316,7 +316,7 @@
             </div>
           </div>
 <a data-name="-391391277%2FFunctions%2F-1435837140" anchor-label="jsonBType" id="-391391277%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="json-b-type.html"><span>json</span><wbr><span><span>BType</span></span></a></div>
@@ -331,7 +331,7 @@
             </div>
           </div>
 <a data-name="517418033%2FFunctions%2F-1435837140" anchor-label="jsonType" id="517418033%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="json-type.html"><span>json</span><wbr><span><span>Type</span></span></a></div>
@@ -346,7 +346,7 @@
             </div>
           </div>
 <a data-name="-1031775515%2FFunctions%2F-1435837140" anchor-label="largeTextType" id="-1031775515%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="large-text-type.html"><span>large</span><wbr><span>Text</span><wbr><span><span>Type</span></span></a></div>
@@ -361,7 +361,7 @@
             </div>
           </div>
 <a data-name="365788570%2FFunctions%2F-1435837140" anchor-label="longAutoincType" id="365788570%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="long-autoinc-type.html"><span>long</span><wbr><span>Autoinc</span><wbr><span><span>Type</span></span></a></div>
@@ -376,7 +376,7 @@
             </div>
           </div>
 <a data-name="-534500579%2FFunctions%2F-1435837140" anchor-label="longType" id="-534500579%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="long-type.html"><span>long</span><wbr><span><span>Type</span></span></a></div>
@@ -391,7 +391,7 @@
             </div>
           </div>
 <a data-name="1105156247%2FFunctions%2F-1435837140" anchor-label="mediumTextType" id="1105156247%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="medium-text-type.html"><span>medium</span><wbr><span>Text</span><wbr><span><span>Type</span></span></a></div>
@@ -406,7 +406,7 @@
             </div>
           </div>
 <a data-name="11200093%2FFunctions%2F-1435837140" anchor-label="precessOrderByClause" id="11200093%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="precess-order-by-clause.html"><span>precess</span><wbr><span>Order</span><wbr><span>By</span><wbr><span><span>Clause</span></span></a></div>
@@ -421,7 +421,7 @@
             </div>
           </div>
 <a data-name="-512337105%2FFunctions%2F-1435837140" anchor-label="processForDefaultValue" id="-512337105%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="process-for-default-value.html"><span>process</span><wbr><span>For</span><wbr><span>Default</span><wbr><span><span>Value</span></span></a></div>
@@ -436,7 +436,7 @@
             </div>
           </div>
 <a data-name="467750641%2FFunctions%2F-1435837140" anchor-label="shortType" id="467750641%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="short-type.html"><span>short</span><wbr><span><span>Type</span></span></a></div>
@@ -451,7 +451,7 @@
             </div>
           </div>
 <a data-name="1457264140%2FFunctions%2F-1435837140" anchor-label="textType" id="1457264140%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="text-type.html"><span>text</span><wbr><span><span>Type</span></span></a></div>
@@ -466,7 +466,7 @@
             </div>
           </div>
 <a data-name="1621504919%2FFunctions%2F-1435837140" anchor-label="timestampType" id="1621504919%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="timestamp-type.html"><span>timestamp</span><wbr><span><span>Type</span></span></a></div>
@@ -481,7 +481,7 @@
             </div>
           </div>
 <a data-name="650907352%2FFunctions%2F-1435837140" anchor-label="timestampWithTimeZoneType" id="650907352%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="timestamp-with-time-zone-type.html"><span>timestamp</span><wbr><span>With</span><wbr><span>Time</span><wbr><span>Zone</span><wbr><span><span>Type</span></span></a></div>
@@ -496,7 +496,7 @@
             </div>
           </div>
 <a data-name="-2021757844%2FFunctions%2F-1435837140" anchor-label="timeType" id="-2021757844%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="time-type.html"><span>time</span><wbr><span><span>Type</span></span></a></div>
@@ -511,7 +511,7 @@
             </div>
           </div>
 <a data-name="346583056%2FFunctions%2F-1435837140" anchor-label="ubyteType" id="346583056%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="ubyte-type.html"><span>ubyte</span><wbr><span><span>Type</span></span></a></div>
@@ -526,7 +526,7 @@
             </div>
           </div>
 <a data-name="-175623481%2FFunctions%2F-1435837140" anchor-label="uintegerAutoincType" id="-175623481%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="uinteger-autoinc-type.html"><span>uinteger</span><wbr><span>Autoinc</span><wbr><span><span>Type</span></span></a></div>
@@ -541,7 +541,7 @@
             </div>
           </div>
 <a data-name="2042969744%2FFunctions%2F-1435837140" anchor-label="uintegerType" id="2042969744%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="uinteger-type.html"><span>uinteger</span><wbr><span><span>Type</span></span></a></div>
@@ -556,7 +556,7 @@
             </div>
           </div>
 <a data-name="1542720699%2FFunctions%2F-1435837140" anchor-label="ulongAutoincType" id="1542720699%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="ulong-autoinc-type.html"><span>ulong</span><wbr><span>Autoinc</span><wbr><span><span>Type</span></span></a></div>
@@ -571,7 +571,7 @@
             </div>
           </div>
 <a data-name="823652124%2FFunctions%2F-1435837140" anchor-label="ulongType" id="823652124%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="ulong-type.html"><span>ulong</span><wbr><span><span>Type</span></span></a></div>
@@ -586,7 +586,7 @@
             </div>
           </div>
 <a data-name="-379188526%2FFunctions%2F-1435837140" anchor-label="ushortType" id="-379188526%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="ushort-type.html"><span>ushort</span><wbr><span><span>Type</span></span></a></div>
@@ -601,7 +601,7 @@
             </div>
           </div>
 <a data-name="-226711068%2FFunctions%2F-1435837140" anchor-label="uuidToDB" id="-226711068%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="uuid-to-d-b.html"><span>uuid</span><wbr><span>To</span><wbr><span><span>DB</span></span></a></div>
@@ -610,13 +610,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="uuid-to-d-b.html"><span class="token function">uuidToDB</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://docs.oracle.com/javase/8/docs/api/java/util/UUID.html">UUID</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a></div><div class="brief "><p class="paragraph">Returns a database-compatible object from the specified UUID <a href="uuid-to-d-b.html">value</a>.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="uuid-to-d-b.html"><span class="token function">uuidToDB</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/UUID.html">UUID</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a></div><div class="brief "><p class="paragraph">Returns a database-compatible object from the specified UUID <a href="uuid-to-d-b.html">value</a>.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="323574334%2FFunctions%2F-1435837140" anchor-label="uuidType" id="323574334%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="uuid-type.html"><span>uuid</span><wbr><span><span>Type</span></span></a></div>
@@ -625,13 +625,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="uuid-type.html"><span class="token function">uuidType</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Binary type for storing <a href="https://docs.oracle.com/javase/8/docs/api/java/util/UUID.html">UUID</a>.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="uuid-type.html"><span class="token function">uuidType</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Binary type for storing <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/UUID.html">UUID</a>.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="-1046578386%2FFunctions%2F-1435837140" anchor-label="varcharType" id="-1046578386%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="varchar-type.html"><span>varchar</span><wbr><span><span>Type</span></span></a></div>
@@ -651,17 +651,21 @@
   </div>
 </div>
     <div class="footer">
-        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
-        <span>© 2025 Copyright</span>
-        <span class="pull-right">
-            <span>Generated by </span>
-            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
-                <span>dokka</span>
-            </a>
-        </span>
-    </div>
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2025 Copyright</div>
+                </div>
             </div>
         </div>
     </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

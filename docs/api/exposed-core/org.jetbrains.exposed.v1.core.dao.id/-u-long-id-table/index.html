@@ -1,22 +1,22 @@
 <!doctype html>
-<html class="no-js">
+<html class="no-js" lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
     <title>ULongIdTable</title>
-<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">    <script>var pathToRoot = "../../../";</script>
-    <script>document.documentElement.classList.replace("no-js","js");</script>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
     <script>const storage = localStorage.getItem("dokka-dark-mode")
-    if (storage == null) {
+      if (storage == null) {
         const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
         if (osDarkSchemePreferred === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    } else {
+      } else {
         const savedDarkMode = JSON.parse(storage)
-        if(savedDarkMode === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    }
+      }
     </script>
 <script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
 <script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
@@ -24,33 +24,31 @@
 <link href="../../../styles/main.css" rel="Stylesheet">
 <link href="../../../styles/prism.css" rel="Stylesheet">
 <link href="../../../styles/logo-styles.css" rel="Stylesheet">
-<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
 <link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
-<script type="text/javascript" src="../../../scripts/clipboard.js" async></script>
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
 <script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
 <script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
 <script type="text/javascript" src="../../../scripts/main.js" defer></script>
 <script type="text/javascript" src="../../../scripts/prism.js" async></script>
-<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script>
-<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer></script></head>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script></head>
 <body>
-    <div class="root">
-    <nav class="navigation theme-dark" id="navigation-wrapper">
-<a class="library-name--link" href="../../../index.html">
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
                     exposed
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
-        <div class="library-version" id="library-version">1.0.0-rc-2
+        <div class="library-version" id="library-version">1.0.0-rc-3
         </div>
         <div class="navigation-controls">
-        <div class="filter-section filter-section_loading" id="filter-section">
-                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":exposed-core/main">jvm</button>
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":exposed-core/main">jvm</button>
             <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
                 <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
-                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
-                    <div class="dropdown--header"><span>Platform filter</span>
-                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
                             <i class="ui-kit-icon ui-kit-icon_cross"></i>
                         </button>
                     </div>
@@ -64,45 +62,47 @@
                 </ul>
                 <div class="dropdown--overlay"></div>
             </div>
-        </div>
+        </ul>
             <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
             </button>
             <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
                 API
             </div>
         </div>
-    </nav>
-        <div id="container">
-            <div class="sidebar" id="leftColumn">
-                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
-                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox">
-                        <div class="dropdown--header">
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
                             <span>
                                     exposed
                             </span>
-                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
-                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
-                            </button>
-                        </div>
-                        <div class="sidebar--inner" id="sideMenu"></div>
-                    </ul>
-                    <div class="dropdown--overlay"></div>
-                </div>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
             </div>
-            <div id="main">
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
 <div class="main-content" data-page-type="classlike" id="content" pageids="exposed-core::org.jetbrains.exposed.v1.core.dao.id/ULongIdTable///PointingToDeclaration//-1435837140">
   <div class="breadcrumbs"><a href="../../index.html">exposed-core</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.v1.core.dao.id</a><span class="delimiter">/</span><span class="current">ULongIdTable</span></div>
   <div class="cover ">
     <h1 class="cover"><span>ULong</span><wbr><span>Id</span><wbr><span><span>Table</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="index.html">ULongIdTable</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">name<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator"> = </span><span class="token string">""</span><span class="token punctuation">, </span></span><span class="parameter ">columnName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator"> = </span><span class="token string">"id"</span></span></span><span class="token punctuation">)</span> : <a href="../-id-table/index.html">IdTable</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-u-long/index.html">ULong</a><span class="token operator">&gt; </span></div><p class="paragraph">Identity table with a primary key consisting of an auto-incrementing <code class="lang-kotlin">ULong</code> value.</p><h4 class="">Parameters</h4><div class="table"><div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>name</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Table name. By default, this will be resolved from any class name with a "Table" suffix removed (if present).</p></div></div></div></div><div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>column</span><wbr><span><span>Name</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Name for the primary key column. By default, "id" is used.</p></div></div></div></div></div></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="index.html">ULongIdTable</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">name<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator"> = </span><span class="token string">""</span><span class="token punctuation">, </span></span><span class="parameter ">columnName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator"> = </span><span class="token string">"id"</span></span></span><span class="token punctuation">)</span> : <a href="../-id-table/index.html">IdTable</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-u-long/index.html">ULong</a><span class="token operator">&gt; </span></div><p class="paragraph">Identity table with a primary key consisting of an auto-incrementing <code class="lang-kotlin">ULong</code> value.</p><h4 class="tableheader">Parameters</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>name</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Table name. By default, this will be resolved from any class name with a "Table" suffix removed (if present).</p></div></div></div></div><div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>column</span><wbr><span><span>Name</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Name for the primary key column. By default, "id" is used.</p></div></div></div></div></div></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button><button class="section-tab" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION,EXTENSION_PROPERTY,EXTENSION_FUNCTION">Members &amp; Extensions</button></div>
     <div class="tabs-section-body">
       <div data-togglable="CONSTRUCTOR">
-        <h2 class="">Constructors</h2>
+        <h2 class="tableheader">Constructors</h2>
         <div class="table"><a data-name="-1088506929%2FConstructors%2F-1435837140" anchor-label="ULongIdTable" id="-1088506929%2FConstructors%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-u-long-id-table.html"><span>ULong</span><wbr><span>Id</span><wbr><span><span>Table</span></span></a></div>
@@ -119,9 +119,9 @@
         </div>
       </div>
       <div data-togglable="PROPERTY">
-        <h2 class="">Properties</h2>
+        <h2 class="tableheader">Properties</h2>
         <div class="table"><a data-name="-1497835034%2FProperties%2F-1435837140" anchor-label="autoIncColumn" id="-1497835034%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/auto-inc-column.html"><span>auto</span><wbr><span>Inc</span><wbr><span><span>Column</span></span></a></div>
@@ -136,7 +136,7 @@
             </div>
           </div>
 <a data-name="-753122450%2FProperties%2F-1435837140" anchor-label="columns" id="-753122450%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/columns.html"><span><span>columns</span></span></a></div>
@@ -151,7 +151,7 @@
             </div>
           </div>
 <a data-name="290241537%2FProperties%2F-1435837140" anchor-label="ddl" id="290241537%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-ddl-aware/ddl.html"><span><span>ddl</span></span></a></div>
@@ -166,7 +166,7 @@
             </div>
           </div>
 <a data-name="1200324692%2FProperties%2F-1435837140" anchor-label="fields" id="1200324692%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-column-set/fields.html"><span><span>fields</span></span></a></div>
@@ -181,7 +181,7 @@
             </div>
           </div>
 <a data-name="-1681470013%2FProperties%2F-1435837140" anchor-label="foreignKeys" id="-1681470013%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/foreign-keys.html"><span>foreign</span><wbr><span><span>Keys</span></span></a></div>
@@ -196,7 +196,7 @@
             </div>
           </div>
 <a data-name="-2096338847%2FProperties%2F-1435837140" anchor-label="id" id="-2096338847%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="id.html"><span><span>id</span></span></a></div>
@@ -211,7 +211,7 @@
             </div>
           </div>
 <a data-name="-973317853%2FProperties%2F-1435837140" anchor-label="idColumns" id="-973317853%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-id-table/id-columns.html"><span>id</span><wbr><span><span>Columns</span></span></a></div>
@@ -226,7 +226,7 @@
             </div>
           </div>
 <a data-name="-1909651740%2FProperties%2F-1435837140" anchor-label="indices" id="-1909651740%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/indices.html"><span><span>indices</span></span></a></div>
@@ -241,7 +241,7 @@
             </div>
           </div>
 <a data-name="-77781057%2FProperties%2F-1435837140" anchor-label="primaryKey" id="-77781057%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="primary-key.html"><span>primary</span><wbr><span><span>Key</span></span></a></div>
@@ -256,7 +256,7 @@
             </div>
           </div>
 <a data-name="955231532%2FProperties%2F-1435837140" anchor-label="realFields" id="955231532%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-field-set/real-fields.html"><span>real</span><wbr><span><span>Fields</span></span></a></div>
@@ -271,7 +271,7 @@
             </div>
           </div>
 <a data-name="-126094909%2FProperties%2F-1435837140" anchor-label="schemaName" id="-126094909%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/schema-name.html"><span>schema</span><wbr><span><span>Name</span></span></a></div>
@@ -286,7 +286,7 @@
             </div>
           </div>
 <a data-name="-2078710631%2FProperties%2F-1435837140" anchor-label="sequences" id="-2078710631%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/sequences.html"><span><span>sequences</span></span></a></div>
@@ -301,7 +301,7 @@
             </div>
           </div>
 <a data-name="1109035314%2FProperties%2F-1435837140" anchor-label="source" id="1109035314%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-column-set/source.html"><span><span>source</span></span></a></div>
@@ -316,7 +316,7 @@
             </div>
           </div>
 <a data-name="-1210135598%2FProperties%2F-1435837140" anchor-label="tableName" id="-1210135598%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/table-name.html"><span>table</span><wbr><span><span>Name</span></span></a></div>
@@ -333,9 +333,9 @@
         </div>
       </div>
       <div data-togglable="FUNCTION">
-        <h2 class="">Functions</h2>
+        <h2 class="tableheader">Functions</h2>
         <div class="table"><a data-name="-828749972%2FFunctions%2F-1435837140" anchor-label="array" id="-828749972%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/array.html"><span><span>array</span></span></a></div>
@@ -350,7 +350,7 @@
             </div>
           </div>
 <a data-name="-1206099455%2FFunctions%2F-1435837140" anchor-label="array" id="-1206099455%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/array.html"><span><span>array</span></span></a></div>
@@ -365,7 +365,7 @@
             </div>
           </div>
 <a data-name="-1592337452%2FFunctions%2F-1435837140" anchor-label="autoGenerate" id="-1592337452%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/auto-generate.html"><span>auto</span><wbr><span><span>Generate</span></span></a></div>
@@ -374,13 +374,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/javase/8/docs/api/java/util/UUID.html">UUID</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../../org.jetbrains.exposed.v1.core/-table/auto-generate.html"><span class="token function">autoGenerate</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/javase/8/docs/api/java/util/UUID.html">UUID</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">UUID column will auto generate its value on a client side just before an insert.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/UUID.html">UUID</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../../org.jetbrains.exposed.v1.core/-table/auto-generate.html"><span class="token function">autoGenerate</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/UUID.html">UUID</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">UUID column will auto generate its value on a client side just before an insert.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="483591101%2FFunctions%2F-1435837140" anchor-label="autoinc" id="483591101%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/autoinc.html"><span><span>autoinc</span></span></a></div>
@@ -395,7 +395,7 @@
             </div>
           </div>
 <a data-name="-1228407138%2FFunctions%2F-1435837140" anchor-label="autoIncrement" id="-1228407138%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/auto-increment.html"><span>auto</span><wbr><span><span>Increment</span></span></a></div>
@@ -410,7 +410,7 @@
             </div>
           </div>
 <a data-name="-1818454703%2FFunctions%2F-1435837140" anchor-label="binary" id="-1818454703%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/binary.html"><span><span>binary</span></span></a></div>
@@ -425,7 +425,7 @@
             </div>
           </div>
 <a data-name="1205910418%2FFunctions%2F-1435837140" anchor-label="blob" id="1205910418%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/blob.html"><span><span>blob</span></span></a></div>
@@ -440,7 +440,7 @@
             </div>
           </div>
 <a data-name="-1637308609%2FFunctions%2F-1435837140" anchor-label="bool" id="-1637308609%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/bool.html"><span><span>bool</span></span></a></div>
@@ -455,7 +455,7 @@
             </div>
           </div>
 <a data-name="1520326177%2FFunctions%2F-1435837140" anchor-label="byte" id="1520326177%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/byte.html"><span><span>byte</span></span></a></div>
@@ -470,7 +470,7 @@
             </div>
           </div>
 <a data-name="850612139%2FFunctions%2F-1435837140" anchor-label="char" id="850612139%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/char.html"><span><span>char</span></span></a></div>
@@ -485,7 +485,7 @@
             </div>
           </div>
 <a data-name="-822308627%2FFunctions%2F-1435837140" anchor-label="check" id="-822308627%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/check.html"><span><span>check</span></span></a></div>
@@ -500,7 +500,7 @@
             </div>
           </div>
 <a data-name="-359050687%2FFunctions%2F-1435837140" anchor-label="checkConstraints" id="-359050687%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/check-constraints.html"><span>check</span><wbr><span><span>Constraints</span></span></a></div>
@@ -515,7 +515,7 @@
             </div>
           </div>
 <a data-name="-1427113120%2FFunctions%2F-1435837140" anchor-label="clientDefault" id="-1427113120%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/client-default.html"><span>client</span><wbr><span><span>Default</span></span></a></div>
@@ -530,7 +530,7 @@
             </div>
           </div>
 <a data-name="-694924744%2FFunctions%2F-1435837140" anchor-label="createStatement" id="-694924744%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/create-statement.html"><span>create</span><wbr><span><span>Statement</span></span></a></div>
@@ -545,7 +545,7 @@
             </div>
           </div>
 <a data-name="1859849505%2FFunctions%2F-1435837140" anchor-label="crossJoin" id="1859849505%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/cross-join.html"><span>cross</span><wbr><span><span>Join</span></span></a></div>
@@ -554,13 +554,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">infix override </span><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/cross-join.html"><span class="token function">crossJoin</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">otherTable<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column-set/index.html">ColumnSet</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-join/index.html">Join</a></div><div class="brief "><p class="paragraph">Creates a cross join relation with <a href="../../org.jetbrains.exposed.v1.core/-table/cross-join.html">otherTable</a>.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">infix override </span><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/cross-join.html"><span class="token function">crossJoin</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">otherTable<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column-set/index.html">ColumnSet</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-join/index.html">Join</a></div><div class="brief "><p class="paragraph">Creates a cross join relation with <a href="../../org.jetbrains.exposed.v1.core/-column-set/cross-join.html">otherTable</a>.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="1743016277%2FFunctions%2F-1435837140" anchor-label="customEnumeration" id="1743016277%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/custom-enumeration.html"><span>custom</span><wbr><span><span>Enumeration</span></span></a></div>
@@ -575,7 +575,7 @@
             </div>
           </div>
 <a data-name="-702812105%2FFunctions%2F-1435837140" anchor-label="databaseGenerated" id="-702812105%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/database-generated.html"><span>database</span><wbr><span><span>Generated</span></span></a></div>
@@ -590,7 +590,7 @@
             </div>
           </div>
 <a data-name="1175418154%2FFunctions%2F-1435837140" anchor-label="decimal" id="1175418154%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/decimal.html"><span><span>decimal</span></span></a></div>
@@ -599,13 +599,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/decimal.html"><span class="token function">decimal</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">name<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">precision<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">scale<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/javase/8/docs/api/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Creates a numeric column, with the specified <a href="../../org.jetbrains.exposed.v1.core/-table/decimal.html">name</a>, for storing numbers with the specified <a href="../../org.jetbrains.exposed.v1.core/-table/decimal.html">precision</a> and <a href="../../org.jetbrains.exposed.v1.core/-table/decimal.html">scale</a>.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/decimal.html"><span class="token function">decimal</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">name<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">precision<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">scale<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Creates a numeric column, with the specified <a href="../../org.jetbrains.exposed.v1.core/-table/decimal.html">name</a>, for storing numbers with the specified <a href="../../org.jetbrains.exposed.v1.core/-table/decimal.html">precision</a> and <a href="../../org.jetbrains.exposed.v1.core/-table/decimal.html">scale</a>.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="211270435%2FFunctions%2F-1435837140" anchor-label="default" id="211270435%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/default.html"><span><span>default</span></span></a></div>
@@ -620,7 +620,7 @@
             </div>
           </div>
 <a data-name="-1719952938%2FFunctions%2F-1435837140" anchor-label="defaultExpression" id="-1719952938%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/default-expression.html"><span>default</span><wbr><span><span>Expression</span></span></a></div>
@@ -635,7 +635,7 @@
             </div>
           </div>
 <a data-name="-918198252%2FFunctions%2F-1435837140" anchor-label="describe" id="-918198252%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/describe.html"><span><span>describe</span></span></a></div>
@@ -644,13 +644,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/describe.html"><span class="token function">describe</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">s<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-transaction/index.html">Transaction</a><span class="token punctuation">, </span></span><span class="parameter ">queryBuilder<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-query-builder/index.html">QueryBuilder</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Appends the SQL representation of this column set to the specified <a href="../../org.jetbrains.exposed.v1.core/-table/describe.html">queryBuilder</a>.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/describe.html"><span class="token function">describe</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">s<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-transaction/index.html">Transaction</a><span class="token punctuation">, </span></span><span class="parameter ">queryBuilder<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-query-builder/index.html">QueryBuilder</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Appends the SQL representation of this column set to the specified <a href="../../org.jetbrains.exposed.v1.core/-column-set/describe.html">queryBuilder</a>.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="-1929519258%2FFunctions%2F-1435837140" anchor-label="double" id="-1929519258%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/double.html"><span><span>double</span></span></a></div>
@@ -665,7 +665,7 @@
             </div>
           </div>
 <a data-name="1371111147%2FFunctions%2F-1435837140" anchor-label="dropStatement" id="1371111147%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/drop-statement.html"><span>drop</span><wbr><span><span>Statement</span></span></a></div>
@@ -680,7 +680,7 @@
             </div>
           </div>
 <a data-name="1420121192%2FFunctions%2F-1435837140" anchor-label="entityId" id="1420121192%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/entity-id.html"><span>entity</span><wbr><span><span>Id</span></span></a></div>
@@ -695,7 +695,7 @@
             </div>
           </div>
 <a data-name="522232438%2FFunctions%2F-1435837140" anchor-label="enumeration" id="522232438%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/enumeration.html"><span><span>enumeration</span></span></a></div>
@@ -710,7 +710,7 @@
             </div>
           </div>
 <a data-name="2020662912%2FFunctions%2F-1435837140" anchor-label="enumerationByName" id="2020662912%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/enumeration-by-name.html"><span>enumeration</span><wbr><span>By</span><wbr><span><span>Name</span></span></a></div>
@@ -725,7 +725,7 @@
             </div>
           </div>
 <a data-name="-809275438%2FFunctions%2F-1435837140" anchor-label="equals" id="-809275438%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/equals.html"><span><span>equals</span></span></a></div>
@@ -740,7 +740,7 @@
             </div>
           </div>
 <a data-name="-255176683%2FFunctions%2F-1435837140" anchor-label="float" id="-255176683%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/float.html"><span><span>float</span></span></a></div>
@@ -754,12 +754,12 @@
               </div>
             </div>
           </div>
-<a data-name="1347943933%2FFunctions%2F-1435837140" anchor-label="foreignKey" id="1347943933%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+<a data-name="26141133%2FFunctions%2F-1435837140" anchor-label="foreignKey" id="26141133%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/foreign-key.html"><span>foreign</span><wbr><span><span>Key</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1347943933%2FFunctions%2F-1435837140"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="26141133%2FFunctions%2F-1435837140"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
@@ -770,7 +770,7 @@
             </div>
           </div>
 <a data-name="1756766220%2FFunctions%2F-1435837140" anchor-label="fullJoin" id="1756766220%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/full-join.html"><span>full</span><wbr><span><span>Join</span></span></a></div>
@@ -779,13 +779,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">infix override </span><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/full-join.html"><span class="token function">fullJoin</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">otherTable<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column-set/index.html">ColumnSet</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-join/index.html">Join</a></div><div class="brief "><p class="paragraph">Creates a full outer join relation with <a href="../../org.jetbrains.exposed.v1.core/-table/full-join.html">otherTable</a>.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">infix override </span><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/full-join.html"><span class="token function">fullJoin</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">otherTable<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column-set/index.html">ColumnSet</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-join/index.html">Join</a></div><div class="brief "><p class="paragraph">Creates a full outer join relation with <a href="../../org.jetbrains.exposed.v1.core/-column-set/full-join.html">otherTable</a>.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="772162772%2FFunctions%2F-1435837140" anchor-label="hashCode" id="772162772%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/hash-code.html"><span>hash</span><wbr><span><span>Code</span></span></a></div>
@@ -799,23 +799,23 @@
               </div>
             </div>
           </div>
-<a data-name="-50026303%2FFunctions%2F-1435837140" anchor-label="index" id="-50026303%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+<a data-name="1782223489%2FFunctions%2F-1435837140" anchor-label="index" id="1782223489%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/--index--.html"><span><span>index</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-50026303%2FFunctions%2F-1435837140"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1782223489%2FFunctions%2F-1435837140"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/--index--.html"><span class="token function">index</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">isUnique<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">vararg </span>columns<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/--index--.html"><span class="token function">index</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">customIndexName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">isUnique<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">vararg </span>columns<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">functions<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">indexType<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">filterCondition<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-filter-condition/index.html">FilterCondition</a><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Creates an index.</p></div><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../../org.jetbrains.exposed.v1.core/-table/--index--.html">T</a><span class="token operator">&gt; </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="../../org.jetbrains.exposed.v1.core/-table/--index--.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../../org.jetbrains.exposed.v1.core/-table/--index--.html"><span class="token function">index</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">customIndexName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">isUnique<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="../../org.jetbrains.exposed.v1.core/-table/--index--.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Creates an index composed by this column only.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/--index--.html"><span class="token function">index</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">isUnique<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">vararg </span>columns<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/--index--.html"><span class="token function">index</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">customIndexName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">isUnique<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">vararg </span>columns<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">functions<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">indexType<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">filterCondition<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-filter-condition/index.html">FilterCondition</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Creates an index.</p></div><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../../org.jetbrains.exposed.v1.core/-table/--index--.html">T</a><span class="token operator">&gt; </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="../../org.jetbrains.exposed.v1.core/-table/--index--.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../../org.jetbrains.exposed.v1.core/-table/--index--.html"><span class="token function">index</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">customIndexName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">isUnique<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="../../org.jetbrains.exposed.v1.core/-table/--index--.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Creates an index composed by this column only.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="523573303%2FFunctions%2F-1435837140" anchor-label="innerJoin" id="523573303%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/inner-join.html"><span>inner</span><wbr><span><span>Join</span></span></a></div>
@@ -824,13 +824,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">infix override </span><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/inner-join.html"><span class="token function">innerJoin</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">otherTable<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column-set/index.html">ColumnSet</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-join/index.html">Join</a></div><div class="brief "><p class="paragraph">Creates an inner join relation with <a href="../../org.jetbrains.exposed.v1.core/-table/inner-join.html">otherTable</a>.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">infix override </span><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/inner-join.html"><span class="token function">innerJoin</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">otherTable<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column-set/index.html">ColumnSet</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-join/index.html">Join</a></div><div class="brief "><p class="paragraph">Creates an inner join relation with <a href="../../org.jetbrains.exposed.v1.core/-column-set/inner-join.html">otherTable</a>.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="1362476231%2FFunctions%2F-1435837140" anchor-label="integer" id="1362476231%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/integer.html"><span><span>integer</span></span></a></div>
@@ -845,7 +845,7 @@
             </div>
           </div>
 <a data-name="383784495%2FFunctions%2F-1435837140" anchor-label="join" id="383784495%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/join.html"><span><span>join</span></span></a></div>
@@ -854,13 +854,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/join.html"><span class="token function">join</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">otherTable<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column-set/index.html">ColumnSet</a><span class="token punctuation">, </span></span><span class="parameter ">joinType<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-join-type/index.html">JoinType</a><span class="token punctuation">, </span></span><span class="parameter ">onColumn<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-expression/index.html">Expression</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">otherColumn<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-expression/index.html">Expression</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">lateral<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter ">additionalConstraint<span class="token operator">: </span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="../../org.jetbrains.exposed.v1.core/-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-join/index.html">Join</a></div><div class="brief "><p class="paragraph">Creates a join relation with <a href="../../org.jetbrains.exposed.v1.core/-table/join.html">otherTable</a>. When all joining options are absent Exposed will try to resolve referencing columns by itself.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/join.html"><span class="token function">join</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">otherTable<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column-set/index.html">ColumnSet</a><span class="token punctuation">, </span></span><span class="parameter ">joinType<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-join-type/index.html">JoinType</a><span class="token punctuation">, </span></span><span class="parameter ">onColumn<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-expression/index.html">Expression</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">otherColumn<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-expression/index.html">Expression</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">lateral<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter ">additionalConstraint<span class="token operator">: </span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="../../org.jetbrains.exposed.v1.core/-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-join/index.html">Join</a></div><div class="brief "><p class="paragraph">Creates a join relation with <a href="../../org.jetbrains.exposed.v1.core/-column-set/join.html">otherTable</a>. When all joining options are absent Exposed will try to resolve referencing columns by itself.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="174968403%2FFunctions%2F-1435837140" anchor-label="joinQuery" id="174968403%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/join-query.html"><span>join</span><wbr><span><span>Query</span></span></a></div>
@@ -869,13 +869,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">.</span><a href="../../org.jetbrains.exposed.v1.core/join-query.html"><span class="token function">joinQuery</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">on<span class="token operator">: </span><span class="token punctuation">(</span><a href="../../org.jetbrains.exposed.v1.core/-query-alias/index.html">QueryAlias</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="../../org.jetbrains.exposed.v1.core/-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">joinType<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-join-type/index.html">JoinType</a><span class="token operator"> = </span>JoinType.INNER<span class="token punctuation">, </span></span><span class="parameter ">lateral<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter ">joinPart<span class="token operator">: </span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="../../org.jetbrains.exposed.v1.core/-abstract-query/index.html">AbstractQuery</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-join/index.html">Join</a></div><div class="brief "><p class="paragraph">Creates a join relation between <a href="../../../exposed-core/org.jetbrains.exposed.v1.core/index.html">this</a> table and a query.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">.</span><a href="../../org.jetbrains.exposed.v1.core/join-query.html"><span class="token function">joinQuery</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">on<span class="token operator">: </span><span class="token punctuation">(</span><a href="../../org.jetbrains.exposed.v1.core/-query-alias/index.html">QueryAlias</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="../../org.jetbrains.exposed.v1.core/-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">joinType<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-join-type/index.html">JoinType</a><span class="token operator"> = </span>JoinType.INNER<span class="token punctuation">, </span></span><span class="parameter ">lateral<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter ">joinPart<span class="token operator">: </span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="../../org.jetbrains.exposed.v1.core/-abstract-query/index.html">AbstractQuery</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-join/index.html">Join</a></div><div class="brief "><p class="paragraph">Creates a join relation between <a href="../../org.jetbrains.exposed.v1.core/-table/index.html">this</a> table and a query.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="-31187929%2FFunctions%2F-1435837140" anchor-label="largeText" id="-31187929%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/large-text.html"><span>large</span><wbr><span><span>Text</span></span></a></div>
@@ -890,7 +890,7 @@
             </div>
           </div>
 <a data-name="2030395780%2FFunctions%2F-1435837140" anchor-label="leftJoin" id="2030395780%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/left-join.html"><span>left</span><wbr><span><span>Join</span></span></a></div>
@@ -899,13 +899,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">infix override </span><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/left-join.html"><span class="token function">leftJoin</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">otherTable<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column-set/index.html">ColumnSet</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-join/index.html">Join</a></div><div class="brief "><p class="paragraph">Creates a left outer join relation with <a href="../../org.jetbrains.exposed.v1.core/-table/left-join.html">otherTable</a>.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">infix override </span><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/left-join.html"><span class="token function">leftJoin</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">otherTable<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column-set/index.html">ColumnSet</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-join/index.html">Join</a></div><div class="brief "><p class="paragraph">Creates a left outer join relation with <a href="../../org.jetbrains.exposed.v1.core/-column-set/left-join.html">otherTable</a>.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="42234157%2FFunctions%2F-1435837140" anchor-label="long" id="42234157%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/long.html"><span><span>long</span></span></a></div>
@@ -920,7 +920,7 @@
             </div>
           </div>
 <a data-name="-1291922179%2FFunctions%2F-1435837140" anchor-label="mediumText" id="-1291922179%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/medium-text.html"><span>medium</span><wbr><span><span>Text</span></span></a></div>
@@ -935,7 +935,7 @@
             </div>
           </div>
 <a data-name="-870141322%2FFunctions%2F-1435837140" anchor-label="modifyStatement" id="-870141322%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/modify-statement.html"><span>modify</span><wbr><span><span>Statement</span></span></a></div>
@@ -950,7 +950,7 @@
             </div>
           </div>
 <a data-name="1522248180%2FFunctions%2F-1435837140" anchor-label="nameInDatabaseCase" id="1522248180%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/name-in-database-case.html"><span>name</span><wbr><span>In</span><wbr><span>Database</span><wbr><span><span>Case</span></span></a></div>
@@ -965,7 +965,7 @@
             </div>
           </div>
 <a data-name="-515066701%2FFunctions%2F-1435837140" anchor-label="nameInDatabaseCaseUnquoted" id="-515066701%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/name-in-database-case-unquoted.html"><span>name</span><wbr><span>In</span><wbr><span>Database</span><wbr><span>Case</span><wbr><span><span>Unquoted</span></span></a></div>
@@ -980,7 +980,7 @@
             </div>
           </div>
 <a data-name="-436556423%2FFunctions%2F-1435837140" anchor-label="nullable" id="-436556423%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/nullable.html"><span><span>nullable</span></span></a></div>
@@ -995,7 +995,7 @@
             </div>
           </div>
 <a data-name="-1208066359%2FFunctions%2F-1435837140" anchor-label="nullTransform" id="-1208066359%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/null-transform.html"><span>null</span><wbr><span><span>Transform</span></span></a></div>
@@ -1010,7 +1010,7 @@
             </div>
           </div>
 <a data-name="896386702%2FFunctions%2F-1435837140" anchor-label="optReference" id="896386702%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/opt-reference.html"><span>opt</span><wbr><span><span>Reference</span></span></a></div>
@@ -1025,7 +1025,7 @@
             </div>
           </div>
 <a data-name="1362768205%2FFunctions%2F-1435837140" anchor-label="reference" id="1362768205%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/reference.html"><span><span>reference</span></span></a></div>
@@ -1040,7 +1040,7 @@
             </div>
           </div>
 <a data-name="1786874658%2FFunctions%2F-1435837140" anchor-label="references" id="1786874658%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/references.html"><span><span>references</span></span></a></div>
@@ -1055,7 +1055,7 @@
             </div>
           </div>
 <a data-name="-1711528246%2FFunctions%2F-1435837140" anchor-label="registerColumn" id="-1711528246%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/register-column.html"><span>register</span><wbr><span><span>Column</span></span></a></div>
@@ -1070,7 +1070,7 @@
             </div>
           </div>
 <a data-name="-1797904518%2FFunctions%2F-1435837140" anchor-label="registerCompositeColumn" id="-1797904518%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/register-composite-column.html"><span>register</span><wbr><span>Composite</span><wbr><span><span>Column</span></span></a></div>
@@ -1085,7 +1085,7 @@
             </div>
           </div>
 <a data-name="-466564632%2FFunctions%2F-1435837140" anchor-label="replaceColumn" id="-466564632%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/replace-column.html"><span>replace</span><wbr><span><span>Column</span></span></a></div>
@@ -1100,7 +1100,7 @@
             </div>
           </div>
 <a data-name="-365098755%2FFunctions%2F-1435837140" anchor-label="rightJoin" id="-365098755%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/right-join.html"><span>right</span><wbr><span><span>Join</span></span></a></div>
@@ -1109,13 +1109,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">infix override </span><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/right-join.html"><span class="token function">rightJoin</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">otherTable<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column-set/index.html">ColumnSet</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-join/index.html">Join</a></div><div class="brief "><p class="paragraph">Creates a right outer join relation with <a href="../../org.jetbrains.exposed.v1.core/-table/right-join.html">otherTable</a>.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">infix override </span><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/right-join.html"><span class="token function">rightJoin</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">otherTable<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column-set/index.html">ColumnSet</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-join/index.html">Join</a></div><div class="brief "><p class="paragraph">Creates a right outer join relation with <a href="../../org.jetbrains.exposed.v1.core/-column-set/right-join.html">otherTable</a>.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="1341548489%2FFunctions%2F-1435837140" anchor-label="short" id="1341548489%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/short.html"><span><span>short</span></span></a></div>
@@ -1130,7 +1130,7 @@
             </div>
           </div>
 <a data-name="852966999%2FFunctions%2F-1435837140" anchor-label="targetTables" id="852966999%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/target-tables.html"><span>target</span><wbr><span><span>Tables</span></span></a></div>
@@ -1145,7 +1145,7 @@
             </div>
           </div>
 <a data-name="-1133201176%2FFunctions%2F-1435837140" anchor-label="text" id="-1133201176%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/text.html"><span><span>text</span></span></a></div>
@@ -1160,7 +1160,7 @@
             </div>
           </div>
 <a data-name="344050160%2FFunctions%2F-1435837140" anchor-label="transform" id="344050160%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/transform.html"><span><span>transform</span></span></a></div>
@@ -1175,7 +1175,7 @@
             </div>
           </div>
 <a data-name="1602477032%2FFunctions%2F-1435837140" anchor-label="ubyte" id="1602477032%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/ubyte.html"><span><span>ubyte</span></span></a></div>
@@ -1190,7 +1190,7 @@
             </div>
           </div>
 <a data-name="587238816%2FFunctions%2F-1435837140" anchor-label="uinteger" id="587238816%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/uinteger.html"><span><span>uinteger</span></span></a></div>
@@ -1205,7 +1205,7 @@
             </div>
           </div>
 <a data-name="-1760003478%2FFunctions%2F-1435837140" anchor-label="ulong" id="-1760003478%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/ulong.html"><span><span>ulong</span></span></a></div>
@@ -1219,23 +1219,23 @@
               </div>
             </div>
           </div>
-<a data-name="-2022416103%2FFunctions%2F-1435837140" anchor-label="uniqueIndex" id="-2022416103%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+<a data-name="1943672123%2FFunctions%2F-1435837140" anchor-label="uniqueIndex" id="1943672123%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/unique-index.html"><span>unique</span><wbr><span><span>Index</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2022416103%2FFunctions%2F-1435837140"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1943672123%2FFunctions%2F-1435837140"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../../org.jetbrains.exposed.v1.core/-table/unique-index.html">T</a><span class="token operator">&gt; </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="../../org.jetbrains.exposed.v1.core/-table/unique-index.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../../org.jetbrains.exposed.v1.core/-table/unique-index.html"><span class="token function">uniqueIndex</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">customIndexName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="../../org.jetbrains.exposed.v1.core/-table/unique-index.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Creates a unique index composed by this column only.</p></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/unique-index.html"><span class="token function">uniqueIndex</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>columns<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">filterCondition<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-filter-condition/index.html">FilterCondition</a><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/unique-index.html"><span class="token function">uniqueIndex</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">customIndexName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">vararg </span>columns<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">functions<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">filterCondition<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-filter-condition/index.html">FilterCondition</a><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Creates a unique index.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../../org.jetbrains.exposed.v1.core/-table/unique-index.html">T</a><span class="token operator">&gt; </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="../../org.jetbrains.exposed.v1.core/-table/unique-index.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../../org.jetbrains.exposed.v1.core/-table/unique-index.html"><span class="token function">uniqueIndex</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">customIndexName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="../../org.jetbrains.exposed.v1.core/-table/unique-index.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Creates a unique index composed by this column only.</p></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/unique-index.html"><span class="token function">uniqueIndex</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>columns<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">filterCondition<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-filter-condition/index.html">FilterCondition</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/unique-index.html"><span class="token function">uniqueIndex</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">customIndexName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">vararg </span>columns<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">functions<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">filterCondition<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-filter-condition/index.html">FilterCondition</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Creates a unique index.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="-406742302%2FFunctions%2F-1435837140" anchor-label="ushort" id="-406742302%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/ushort.html"><span><span>ushort</span></span></a></div>
@@ -1250,7 +1250,7 @@
             </div>
           </div>
 <a data-name="603011920%2FFunctions%2F-1435837140" anchor-label="uuid" id="603011920%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/uuid.html"><span><span>uuid</span></span></a></div>
@@ -1259,13 +1259,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/uuid.html"><span class="token function">uuid</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">name<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/javase/8/docs/api/java/util/UUID.html">UUID</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Creates a binary column, with the specified <a href="../../org.jetbrains.exposed.v1.core/-table/uuid.html">name</a>, for storing UUIDs.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.core/-table/uuid.html"><span class="token function">uuid</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">name<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/UUID.html">UUID</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Creates a binary column, with the specified <a href="../../org.jetbrains.exposed.v1.core/-table/uuid.html">name</a>, for storing UUIDs.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="1473378199%2FFunctions%2F-1435837140" anchor-label="varchar" id="1473378199%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/varchar.html"><span><span>varchar</span></span></a></div>
@@ -1279,12 +1279,12 @@
               </div>
             </div>
           </div>
-<a data-name="-580406295%2FFunctions%2F-1435837140" anchor-label="withDefinition" id="-580406295%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+<a data-name="-731271815%2FFunctions%2F-1435837140" anchor-label="withDefinition" id="-731271815%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.core/-table/with-definition.html"><span>with</span><wbr><span><span>Definition</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-580406295%2FFunctions%2F-1435837140"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-731271815%2FFunctions%2F-1435837140"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
@@ -1300,17 +1300,21 @@
   </div>
 </div>
     <div class="footer">
-        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
-        <span>© 2025 Copyright</span>
-        <span class="pull-right">
-            <span>Generated by </span>
-            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
-                <span>dokka</span>
-            </a>
-        </span>
-    </div>
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2025 Copyright</div>
+                </div>
             </div>
         </div>
     </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

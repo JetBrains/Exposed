@@ -1,22 +1,22 @@
 <!doctype html>
-<html class="no-js">
+<html class="no-js" lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
     <title>DatabaseDialect</title>
-<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">    <script>var pathToRoot = "../../../";</script>
-    <script>document.documentElement.classList.replace("no-js","js");</script>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
     <script>const storage = localStorage.getItem("dokka-dark-mode")
-    if (storage == null) {
+      if (storage == null) {
         const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
         if (osDarkSchemePreferred === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    } else {
+      } else {
         const savedDarkMode = JSON.parse(storage)
-        if(savedDarkMode === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    }
+      }
     </script>
 <script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
 <script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
@@ -24,33 +24,31 @@
 <link href="../../../styles/main.css" rel="Stylesheet">
 <link href="../../../styles/prism.css" rel="Stylesheet">
 <link href="../../../styles/logo-styles.css" rel="Stylesheet">
-<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
 <link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
-<script type="text/javascript" src="../../../scripts/clipboard.js" async></script>
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
 <script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
 <script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
 <script type="text/javascript" src="../../../scripts/main.js" defer></script>
 <script type="text/javascript" src="../../../scripts/prism.js" async></script>
-<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script>
-<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer></script></head>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script></head>
 <body>
-    <div class="root">
-    <nav class="navigation theme-dark" id="navigation-wrapper">
-<a class="library-name--link" href="../../../index.html">
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
                     exposed
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
-        <div class="library-version" id="library-version">1.0.0-rc-2
+        <div class="library-version" id="library-version">1.0.0-rc-3
         </div>
         <div class="navigation-controls">
-        <div class="filter-section filter-section_loading" id="filter-section">
-                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":exposed-core/main">jvm</button>
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":exposed-core/main">jvm</button>
             <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
                 <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
-                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
-                    <div class="dropdown--header"><span>Platform filter</span>
-                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
                             <i class="ui-kit-icon ui-kit-icon_cross"></i>
                         </button>
                     </div>
@@ -64,45 +62,47 @@
                 </ul>
                 <div class="dropdown--overlay"></div>
             </div>
-        </div>
+        </ul>
             <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
             </button>
             <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
                 API
             </div>
         </div>
-    </nav>
-        <div id="container">
-            <div class="sidebar" id="leftColumn">
-                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
-                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox">
-                        <div class="dropdown--header">
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
                             <span>
                                     exposed
                             </span>
-                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
-                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
-                            </button>
-                        </div>
-                        <div class="sidebar--inner" id="sideMenu"></div>
-                    </ul>
-                    <div class="dropdown--overlay"></div>
-                </div>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
             </div>
-            <div id="main">
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
 <div class="main-content" data-page-type="classlike" id="content" pageids="exposed-core::org.jetbrains.exposed.v1.core.vendors/DatabaseDialect///PointingToDeclaration//-1435837140">
   <div class="breadcrumbs"><a href="../../index.html">exposed-core</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.v1.core.vendors</a><span class="delimiter">/</span><span class="current">DatabaseDialect</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Database</span><wbr><span><span>Dialect</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">interface </span><a href="index.html">DatabaseDialect</a></div><p class="paragraph">Common interface for all database dialects.</p><h4 class="">Inheritors</h4><div class="table"><div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-vendor-dialect/index.html">VendorDialect</a></div></span></div><div></div></div></div></div></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">interface </span><a href="index.html">DatabaseDialect</a></div><p class="paragraph">Common interface for all database dialects.</p><h4 class="tableheader">Inheritors</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-vendor-dialect/index.html">VendorDialect</a></div></span></div><div></div></div></div></div></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button><button class="section-tab" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION,EXTENSION_PROPERTY,EXTENSION_FUNCTION">Members &amp; Extensions</button></div>
     <div class="tabs-section-body">
       <div data-togglable="TYPE">
-        <h2 class="">Types</h2>
+        <h2 class="tableheader">Types</h2>
         <div class="table"><a data-name="-312669352%2FClasslikes%2F-1435837140" anchor-label="Companion" id="-312669352%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-companion/index.html"><span><span>Companion</span></span></a></div>
@@ -119,9 +119,9 @@
         </div>
       </div>
       <div data-togglable="PROPERTY">
-        <h2 class="">Properties</h2>
+        <h2 class="tableheader">Properties</h2>
         <div class="table"><a data-name="-1618074508%2FProperties%2F-1435837140" anchor-label="dataTypeProvider" id="-1618074508%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="data-type-provider.html"><span>data</span><wbr><span>Type</span><wbr><span><span>Provider</span></span></a></div>
@@ -136,7 +136,7 @@
             </div>
           </div>
 <a data-name="1663279018%2FProperties%2F-1435837140" anchor-label="defaultReferenceOption" id="1663279018%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="default-reference-option.html"><span>default</span><wbr><span>Reference</span><wbr><span><span>Option</span></span></a></div>
@@ -151,7 +151,7 @@
             </div>
           </div>
 <a data-name="-2079274720%2FProperties%2F-1435837140" anchor-label="functionProvider" id="-2079274720%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="function-provider.html"><span>function</span><wbr><span><span>Provider</span></span></a></div>
@@ -166,7 +166,7 @@
             </div>
           </div>
 <a data-name="-134534969%2FProperties%2F-1435837140" anchor-label="h2Mode" id="-134534969%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_PROPERTY" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_PROPERTY" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../h2-mode.html"><span><span>h2Mode</span></span></a></div>
@@ -181,7 +181,7 @@
             </div>
           </div>
 <a data-name="845103220%2FProperties%2F-1435837140" anchor-label="likePatternSpecialChars" id="845103220%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="like-pattern-special-chars.html"><span>like</span><wbr><span>Pattern</span><wbr><span>Special</span><wbr><span><span>Chars</span></span></a></div>
@@ -196,7 +196,7 @@
             </div>
           </div>
 <a data-name="-238989122%2FProperties%2F-1435837140" anchor-label="name" id="-238989122%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="name.html"><span><span>name</span></span></a></div>
@@ -211,7 +211,7 @@
             </div>
           </div>
 <a data-name="-1966343525%2FProperties%2F-1435837140" anchor-label="needsQuotesWhenSymbolsInNames" id="-1966343525%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="needs-quotes-when-symbols-in-names.html"><span>needs</span><wbr><span>Quotes</span><wbr><span>When</span><wbr><span>Symbols</span><wbr><span>In</span><wbr><span><span>Names</span></span></a></div>
@@ -226,7 +226,7 @@
             </div>
           </div>
 <a data-name="-187206189%2FProperties%2F-1435837140" anchor-label="needsSequenceToAutoInc" id="-187206189%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="needs-sequence-to-auto-inc.html"><span>needs</span><wbr><span>Sequence</span><wbr><span>To</span><wbr><span>Auto</span><wbr><span><span>Inc</span></span></a></div>
@@ -241,7 +241,7 @@
             </div>
           </div>
 <a data-name="-1805025749%2FProperties%2F-1435837140" anchor-label="requiresAutoCommitOnCreateDrop" id="-1805025749%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="requires-auto-commit-on-create-drop.html"><span>requires</span><wbr><span>Auto</span><wbr><span>Commit</span><wbr><span>On</span><wbr><span>Create</span><wbr><span><span>Drop</span></span></a></div>
@@ -256,7 +256,7 @@
             </div>
           </div>
 <a data-name="1781839195%2FProperties%2F-1435837140" anchor-label="sequenceMaxValue" id="1781839195%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="sequence-max-value.html"><span>sequence</span><wbr><span>Max</span><wbr><span><span>Value</span></span></a></div>
@@ -271,7 +271,7 @@
             </div>
           </div>
 <a data-name="2024971589%2FProperties%2F-1435837140" anchor-label="supportsColumnTypeChange" id="2024971589%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="supports-column-type-change.html"><span>supports</span><wbr><span>Column</span><wbr><span>Type</span><wbr><span><span>Change</span></span></a></div>
@@ -286,7 +286,7 @@
             </div>
           </div>
 <a data-name="1139970472%2FProperties%2F-1435837140" anchor-label="supportsCreateSchema" id="1139970472%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="supports-create-schema.html"><span>supports</span><wbr><span>Create</span><wbr><span><span>Schema</span></span></a></div>
@@ -301,7 +301,7 @@
             </div>
           </div>
 <a data-name="-713127800%2FProperties%2F-1435837140" anchor-label="supportsCreateSequence" id="-713127800%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="supports-create-sequence.html"><span>supports</span><wbr><span>Create</span><wbr><span><span>Sequence</span></span></a></div>
@@ -316,7 +316,7 @@
             </div>
           </div>
 <a data-name="-873124817%2FProperties%2F-1435837140" anchor-label="supportsDualTableConcept" id="-873124817%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="supports-dual-table-concept.html"><span>supports</span><wbr><span>Dual</span><wbr><span>Table</span><wbr><span><span>Concept</span></span></a></div>
@@ -331,7 +331,7 @@
             </div>
           </div>
 <a data-name="1300692355%2FProperties%2F-1435837140" anchor-label="supportsIfNotExists" id="1300692355%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="supports-if-not-exists.html"><span>supports</span><wbr><span>If</span><wbr><span>Not</span><wbr><span><span>Exists</span></span></a></div>
@@ -346,7 +346,7 @@
             </div>
           </div>
 <a data-name="1532022562%2FProperties%2F-1435837140" anchor-label="supportsMultipleGeneratedKeys" id="1532022562%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="supports-multiple-generated-keys.html"><span>supports</span><wbr><span>Multiple</span><wbr><span>Generated</span><wbr><span><span>Keys</span></span></a></div>
@@ -361,7 +361,7 @@
             </div>
           </div>
 <a data-name="-433354427%2FProperties%2F-1435837140" anchor-label="supportsOnlyIdentifiersInGeneratedKeys" id="-433354427%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="supports-only-identifiers-in-generated-keys.html"><span>supports</span><wbr><span>Only</span><wbr><span>Identifiers</span><wbr><span>In</span><wbr><span>Generated</span><wbr><span><span>Keys</span></span></a></div>
@@ -376,7 +376,7 @@
             </div>
           </div>
 <a data-name="-207722947%2FProperties%2F-1435837140" anchor-label="supportsOnUpdate" id="-207722947%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="supports-on-update.html"><span>supports</span><wbr><span>On</span><wbr><span><span>Update</span></span></a></div>
@@ -391,7 +391,7 @@
             </div>
           </div>
 <a data-name="764545526%2FProperties%2F-1435837140" anchor-label="supportsOrderByNullsFirstLast" id="764545526%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="supports-order-by-nulls-first-last.html"><span>supports</span><wbr><span>Order</span><wbr><span>By</span><wbr><span>Nulls</span><wbr><span>First</span><wbr><span><span>Last</span></span></a></div>
@@ -406,7 +406,7 @@
             </div>
           </div>
 <a data-name="-2074418959%2FProperties%2F-1435837140" anchor-label="supportsRestrictReferenceOption" id="-2074418959%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="supports-restrict-reference-option.html"><span>supports</span><wbr><span>Restrict</span><wbr><span>Reference</span><wbr><span><span>Option</span></span></a></div>
@@ -421,7 +421,7 @@
             </div>
           </div>
 <a data-name="1079095583%2FProperties%2F-1435837140" anchor-label="supportsSelectForUpdate" id="1079095583%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="supports-select-for-update.html"><span>supports</span><wbr><span>Select</span><wbr><span>For</span><wbr><span><span>Update</span></span></a></div>
@@ -436,7 +436,7 @@
             </div>
           </div>
 <a data-name="1957901477%2FProperties%2F-1435837140" anchor-label="supportsSequenceAsGeneratedKeys" id="1957901477%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="supports-sequence-as-generated-keys.html"><span>supports</span><wbr><span>Sequence</span><wbr><span>As</span><wbr><span>Generated</span><wbr><span><span>Keys</span></span></a></div>
@@ -451,7 +451,7 @@
             </div>
           </div>
 <a data-name="1470081204%2FProperties%2F-1435837140" anchor-label="supportsSetDefaultReferenceOption" id="1470081204%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="supports-set-default-reference-option.html"><span>supports</span><wbr><span>Set</span><wbr><span>Default</span><wbr><span>Reference</span><wbr><span><span>Option</span></span></a></div>
@@ -466,7 +466,7 @@
             </div>
           </div>
 <a data-name="-1300257767%2FProperties%2F-1435837140" anchor-label="supportsSubqueryUnions" id="-1300257767%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="supports-subquery-unions.html"><span>supports</span><wbr><span>Subquery</span><wbr><span><span>Unions</span></span></a></div>
@@ -481,7 +481,7 @@
             </div>
           </div>
 <a data-name="1668717432%2FProperties%2F-1435837140" anchor-label="supportsTernaryAffectedRowValues" id="1668717432%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="supports-ternary-affected-row-values.html"><span>supports</span><wbr><span>Ternary</span><wbr><span>Affected</span><wbr><span>Row</span><wbr><span><span>Values</span></span></a></div>
@@ -496,7 +496,7 @@
             </div>
           </div>
 <a data-name="2062532961%2FProperties%2F-1435837140" anchor-label="supportsWindowFrameGroupsMode" id="2062532961%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="supports-window-frame-groups-mode.html"><span>supports</span><wbr><span>Window</span><wbr><span>Frame</span><wbr><span>Groups</span><wbr><span><span>Mode</span></span></a></div>
@@ -513,13 +513,13 @@
         </div>
       </div>
       <div data-togglable="FUNCTION">
-        <h2 class="">Functions</h2>
-        <div class="table"><a data-name="1998152532%2FFunctions%2F-1435837140" anchor-label="addPrimaryKey" id="1998152532%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="1771553512%2FFunctions%2F-1435837140" anchor-label="addPrimaryKey" id="1771553512%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="add-primary-key.html"><span>add</span><wbr><span>Primary</span><wbr><span><span>Key</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1998152532%2FFunctions%2F-1435837140"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1771553512%2FFunctions%2F-1435837140"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
@@ -530,7 +530,7 @@
             </div>
           </div>
 <a data-name="1434373762%2FFunctions%2F-1435837140" anchor-label="areEquivalentColumnTypes" id="1434373762%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="are-equivalent-column-types.html"><span>are</span><wbr><span>Equivalent</span><wbr><span>Column</span><wbr><span><span>Types</span></span></a></div>
@@ -545,7 +545,7 @@
             </div>
           </div>
 <a data-name="-526449902%2FFunctions%2F-1435837140" anchor-label="createDatabase" id="-526449902%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="create-database.html"><span>create</span><wbr><span><span>Database</span></span></a></div>
@@ -560,7 +560,7 @@
             </div>
           </div>
 <a data-name="1053489345%2FFunctions%2F-1435837140" anchor-label="createIndex" id="1053489345%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="create-index.html"><span>create</span><wbr><span><span>Index</span></span></a></div>
@@ -575,7 +575,7 @@
             </div>
           </div>
 <a data-name="1211488383%2FFunctions%2F-1435837140" anchor-label="createSchema" id="1211488383%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="create-schema.html"><span>create</span><wbr><span><span>Schema</span></span></a></div>
@@ -590,7 +590,7 @@
             </div>
           </div>
 <a data-name="1414423749%2FFunctions%2F-1435837140" anchor-label="dropDatabase" id="1414423749%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="drop-database.html"><span>drop</span><wbr><span><span>Database</span></span></a></div>
@@ -605,7 +605,7 @@
             </div>
           </div>
 <a data-name="1346027547%2FFunctions%2F-1435837140" anchor-label="dropIndex" id="1346027547%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="drop-index.html"><span>drop</span><wbr><span><span>Index</span></span></a></div>
@@ -620,7 +620,7 @@
             </div>
           </div>
 <a data-name="1623495000%2FFunctions%2F-1435837140" anchor-label="dropSchema" id="1623495000%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="drop-schema.html"><span>drop</span><wbr><span><span>Schema</span></span></a></div>
@@ -635,7 +635,7 @@
             </div>
           </div>
 <a data-name="978060042%2FFunctions%2F-1435837140" anchor-label="isAllowedAsColumnDefault" id="978060042%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="is-allowed-as-column-default.html"><span>is</span><wbr><span>Allowed</span><wbr><span>As</span><wbr><span>Column</span><wbr><span><span>Default</span></span></a></div>
@@ -650,7 +650,7 @@
             </div>
           </div>
 <a data-name="-290280969%2FFunctions%2F-1435837140" anchor-label="listDatabases" id="-290280969%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="list-databases.html"><span>list</span><wbr><span><span>Databases</span></span></a></div>
@@ -665,7 +665,7 @@
             </div>
           </div>
 <a data-name="-2029623109%2FFunctions%2F-1435837140" anchor-label="modifyColumn" id="-2029623109%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="modify-column.html"><span>modify</span><wbr><span><span>Column</span></span></a></div>
@@ -680,7 +680,7 @@
             </div>
           </div>
 <a data-name="1386460289%2FFunctions%2F-1435837140" anchor-label="setSchema" id="1386460289%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="set-schema.html"><span>set</span><wbr><span><span>Schema</span></span></a></div>
@@ -700,17 +700,21 @@
   </div>
 </div>
     <div class="footer">
-        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
-        <span>© 2025 Copyright</span>
-        <span class="pull-right">
-            <span>Generated by </span>
-            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
-                <span>dokka</span>
-            </a>
-        </span>
-    </div>
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2025 Copyright</div>
+                </div>
             </div>
         </div>
     </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
