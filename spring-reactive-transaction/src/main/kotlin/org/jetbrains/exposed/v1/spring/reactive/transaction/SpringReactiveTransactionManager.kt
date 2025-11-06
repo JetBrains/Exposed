@@ -5,6 +5,8 @@ import kotlinx.coroutines.reactor.mono
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.exposedLogger
+import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
+import org.jetbrains.exposed.v1.core.transactions.currentTransactionOrNull
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
@@ -16,7 +18,6 @@ import org.springframework.transaction.TransactionSystemException
 import org.springframework.transaction.reactive.AbstractReactiveTransactionManager
 import org.springframework.transaction.reactive.GenericReactiveTransaction
 import org.springframework.transaction.reactive.TransactionSynchronizationManager
-import org.springframework.transaction.support.SmartTransactionObject
 import reactor.core.publisher.Mono
 
 /**
@@ -38,13 +39,13 @@ class SpringReactiveTransactionManager(
         databaseConfig = databaseConfig
     )
 
-    private val contextKeyTransactionManager: TransactionManager
-        get() = database.transactionManager
-
     override fun doGetTransaction(
         synchronizationManager: TransactionSynchronizationManager
     ): Any {
         val outer = TransactionManager.currentOrNull()
+        require(outer == synchronizationManager.getResource(database)) {
+            "Exposed synchronization has deviated from Spring's synchronization manager"
+        }
 
         return ExposedTransactionObject(
             database = database,
@@ -58,13 +59,14 @@ class SpringReactiveTransactionManager(
     ): Mono<in Any> {
         return mono {
             val trxObject = transaction as ExposedTransactionObject
-            val currentManager = trxObject.database.transactionManager
 
             SuspendedObject(
                 transaction = trxObject.getCurrentTransaction() ?: error("No transaction to suspend"),
             ).apply {
+                synchronizationManager.unbindResource(database)
+
                 @OptIn(InternalApi::class)
-                currentManager.pop()
+                ThreadLocalTransactionsStack.popTransaction()
             }
         }
     }
@@ -77,8 +79,10 @@ class SpringReactiveTransactionManager(
         return mono {
             val suspendedObject = suspendedResources as SuspendedObject
 
+            synchronizationManager.bindResource(database, suspendedObject.transaction)
+
             @OptIn(InternalApi::class)
-            contextKeyTransactionManager.push(suspendedObject.transaction)
+            ThreadLocalTransactionsStack.pushTransaction(suspendedObject.transaction)
 
             null
         }
@@ -96,14 +100,17 @@ class SpringReactiveTransactionManager(
     ): Mono<Void?> {
         return mono {
             val trxObject = transaction as ExposedTransactionObject
-            val currentTransactionManager = trxObject.database.transactionManager
-            val outerTransactionToUse = TransactionManager.currentOrNull()?.takeIf {
-                it.db == database
+
+            @OptIn(InternalApi::class)
+            val currentTransaction = currentTransactionOrNull() as R2dbcTransaction?
+            val outerTransactionToUse = if (currentTransaction?.db == database) {
+                currentTransaction
+            } else {
+                null
             }
 
             @OptIn(InternalApi::class)
-            currentTransactionManager.newTransaction(
-                // is it correct to do this?
+            val newTransaction = trxObject.database.transactionManager.newTransaction(
                 isolation = definition.isolationLevel.asIsolationLevel(),
                 readOnly = definition.isReadOnly,
                 outerTransaction = outerTransactionToUse
@@ -115,9 +122,14 @@ class SpringReactiveTransactionManager(
                 if (showSql) {
                     addLogger(StdOutSqlLogger)
                 }
-
-                currentTransactionManager.push(this)
             }
+
+            if (outerTransactionToUse == null) {
+                synchronizationManager.bindResource(database, newTransaction)
+            }
+
+            @OptIn(InternalApi::class)
+            ThreadLocalTransactionsStack.pushTransaction(newTransaction)
 
             null
         }
@@ -153,12 +165,14 @@ class SpringReactiveTransactionManager(
     ): Mono<Void?> {
         return mono {
             val trxObject = transaction as ExposedTransactionObject
+
             trxObject.cleanUpTransactionIfIsPossible {
                 closeStatementsAndConnections(it)
+                synchronizationManager.unbindResource(database)
             }
 
             @OptIn(InternalApi::class)
-            trxObject.database.transactionManager.pop()
+            ThreadLocalTransactionsStack.popTransaction()
 
             null
         }
@@ -204,7 +218,7 @@ class SpringReactiveTransactionManager(
     private data class ExposedTransactionObject(
         val database: R2dbcDatabase,
         private val outerTransaction: R2dbcTransaction?
-    ) : SmartTransactionObject {
+    ) {
 
         private var isRollback: Boolean = false
 
@@ -233,18 +247,13 @@ class SpringReactiveTransactionManager(
             }
         }
 
+        @OptIn(InternalApi::class)
         fun getCurrentTransaction(): R2dbcTransaction? {
-            return database.transactionManager.currentOrNull()
+            return ThreadLocalTransactionsStack.getTransactionOrNull(database) as R2dbcTransaction?
         }
 
         fun setRollbackOnly() {
             isRollback = true
-        }
-
-        override fun isRollbackOnly(): Boolean = isRollback
-
-        override fun flush() {
-            // Do nothing
         }
     }
 }

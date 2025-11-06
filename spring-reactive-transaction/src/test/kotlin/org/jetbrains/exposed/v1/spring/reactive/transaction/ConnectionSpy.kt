@@ -6,14 +6,10 @@ import org.reactivestreams.Publisher
 import reactor.core.publisher.Mono
 
 internal class ConnectionSpy(private val connection: Connection) : Connection by connection {
-    // do we need readOnly given that there are no overrides?
-
     var commitCallCount: Int = 0
     var rollbackCallCount: Int = 0
     var closeCallCount: Int = 0
     var releaseSavepointCallCount: Int = 0
-    var mockReadOnly: Boolean = false
-    var mockIsClosed: Boolean = false
     var mockAutoCommit: Boolean = false
     var mockTransactionIsolation: IsolationLevel = IsolationLevel.READ_COMMITTED
     var mockCommit: () -> Unit = {}
@@ -31,8 +27,6 @@ internal class ConnectionSpy(private val connection: Connection) : Connection by
         closeCallCount = 0
         releaseSavepointCallCount = 0
         mockAutoCommit = false
-        mockReadOnly = false
-        mockIsClosed = false
         mockTransactionIsolation = IsolationLevel.READ_COMMITTED
         mockCommit = {}
         mockRollback = {}
