@@ -1,22 +1,22 @@
 <!doctype html>
-<html class="no-js">
+<html class="no-js" lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
     <title>AndOp</title>
-<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">    <script>var pathToRoot = "../../../";</script>
-    <script>document.documentElement.classList.replace("no-js","js");</script>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
     <script>const storage = localStorage.getItem("dokka-dark-mode")
-    if (storage == null) {
+      if (storage == null) {
         const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
         if (osDarkSchemePreferred === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    } else {
+      } else {
         const savedDarkMode = JSON.parse(storage)
-        if(savedDarkMode === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    }
+      }
     </script>
 <script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
 <script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
@@ -24,33 +24,31 @@
 <link href="../../../styles/main.css" rel="Stylesheet">
 <link href="../../../styles/prism.css" rel="Stylesheet">
 <link href="../../../styles/logo-styles.css" rel="Stylesheet">
-<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
 <link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
-<script type="text/javascript" src="../../../scripts/clipboard.js" async></script>
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
 <script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
 <script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
 <script type="text/javascript" src="../../../scripts/main.js" defer></script>
 <script type="text/javascript" src="../../../scripts/prism.js" async></script>
-<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script>
-<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer></script></head>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script></head>
 <body>
-    <div class="root">
-    <nav class="navigation theme-dark" id="navigation-wrapper">
-<a class="library-name--link" href="../../../index.html">
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
                     exposed
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
-        <div class="library-version" id="library-version">1.0.0-rc-2
+        <div class="library-version" id="library-version">1.0.0-rc-3
         </div>
         <div class="navigation-controls">
-        <div class="filter-section filter-section_loading" id="filter-section">
-                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":exposed-core/main">jvm</button>
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":exposed-core/main">jvm</button>
             <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
                 <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
-                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
-                    <div class="dropdown--header"><span>Platform filter</span>
-                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
                             <i class="ui-kit-icon ui-kit-icon_cross"></i>
                         </button>
                     </div>
@@ -64,45 +62,47 @@
                 </ul>
                 <div class="dropdown--overlay"></div>
             </div>
-        </div>
+        </ul>
             <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
             </button>
             <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
                 API
             </div>
         </div>
-    </nav>
-        <div id="container">
-            <div class="sidebar" id="leftColumn">
-                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
-                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox">
-                        <div class="dropdown--header">
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
                             <span>
                                     exposed
                             </span>
-                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
-                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
-                            </button>
-                        </div>
-                        <div class="sidebar--inner" id="sideMenu"></div>
-                    </ul>
-                    <div class="dropdown--overlay"></div>
-                </div>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
             </div>
-            <div id="main">
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
 <div class="main-content" data-page-type="classlike" id="content" pageids="exposed-core::org.jetbrains.exposed.v1.core/AndOp///PointingToDeclaration//-1435837140">
   <div class="breadcrumbs"><a href="../../index.html">exposed-core</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.v1.core</a><span class="delimiter">/</span><span class="current">AndOp</span></div>
   <div class="cover ">
     <h1 class="cover"><span>And</span><wbr><span><span>Op</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">AndOp</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expressions<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../-compound-boolean-op/index.html">CompoundBooleanOp</a></div><p class="paragraph">Represents a logical operator that performs an <code class="lang-kotlin">and</code> operation between all the specified <a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-and-op/expressions.html">expressions</a>.</p></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">AndOp</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expressions<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../-compound-boolean-op/index.html">CompoundBooleanOp</a></div><p class="paragraph">Represents a logical operator that performs an <code class="lang-kotlin">and</code> operation between all the specified <a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-and-op/--root--.html">expressions</a>.</p></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button><button class="section-tab" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION,EXTENSION_PROPERTY,EXTENSION_FUNCTION">Members &amp; Extensions</button></div>
     <div class="tabs-section-body">
       <div data-togglable="CONSTRUCTOR">
-        <h2 class="">Constructors</h2>
+        <h2 class="tableheader">Constructors</h2>
         <div class="table"><a data-name="80612766%2FConstructors%2F-1435837140" anchor-label="AndOp" id="80612766%2FConstructors%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-and-op.html"><span>And</span><wbr><span><span>Op</span></span></a></div>
@@ -119,9 +119,9 @@
         </div>
       </div>
       <div data-togglable="FUNCTION">
-        <h2 class="">Functions</h2>
+        <h2 class="tableheader">Functions</h2>
         <div class="table"><a data-name="-1094707865%2FFunctions%2F-1435837140" anchor-label="alias" id="-1094707865%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../alias.html"><span><span>alias</span></span></a></div>
@@ -130,13 +130,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../alias.html">T</a><span class="token operator">&gt; </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="../alias.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../alias.html"><span class="token function">alias</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">alias<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-expression-alias/index.html">ExpressionAlias</a><span class="token operator">&lt;</span><a href="../alias.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Creates a temporary identifier, <a href="../alias.html">alias</a>, for <a href="../../../exposed-core/org.jetbrains.exposed.v1.core/index.html">this</a> expression.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../alias.html">T</a><span class="token operator">&gt; </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="../alias.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../alias.html"><span class="token function">alias</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">alias<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-expression-alias/index.html">ExpressionAlias</a><span class="token operator">&lt;</span><a href="../alias.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Creates a temporary identifier, <a href="../alias.html">alias</a>, for <a href="../-expression/index.html">this</a> expression.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="-1459904806%2FFunctions%2F-1435837140" anchor-label="and" id="-1459904806%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../and.html"><span><span>and</span></span></a></div>
@@ -151,7 +151,7 @@
             </div>
           </div>
 <a data-name="-1453666854%2FFunctions%2F-1435837140" anchor-label="andIfNotNull" id="-1453666854%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../and-if-not-null.html"><span>and</span><wbr><span>If</span><wbr><span>Not</span><wbr><span><span>Null</span></span></a></div>
@@ -166,7 +166,7 @@
             </div>
           </div>
 <a data-name="982889841%2FFunctions%2F-1435837140" anchor-label="andNot" id="982889841%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../and-not.html"><span>and</span><wbr><span><span>Not</span></span></a></div>
@@ -181,7 +181,7 @@
             </div>
           </div>
 <a data-name="-793810594%2FFunctions%2F-1435837140" anchor-label="castTo" id="-793810594%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../cast-to.html"><span>cast</span><wbr><span><span>To</span></span></a></div>
@@ -196,7 +196,7 @@
             </div>
           </div>
 <a data-name="330610768%2FFunctions%2F-1435837140" anchor-label="charLength" id="330610768%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../char-length.html"><span>char</span><wbr><span><span>Length</span></span></a></div>
@@ -211,7 +211,7 @@
             </div>
           </div>
 <a data-name="-210267758%2FFunctions%2F-1435837140" anchor-label="eq" id="-210267758%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../eq.html"><span><span>eq</span></span></a></div>
@@ -226,7 +226,7 @@
             </div>
           </div>
 <a data-name="1995483954%2FFunctions%2F-1435837140" anchor-label="eqSubQuery" id="1995483954%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../eq-sub-query.html"><span>eq</span><wbr><span>Sub</span><wbr><span><span>Query</span></span></a></div>
@@ -241,7 +241,7 @@
             </div>
           </div>
 <a data-name="-906227250%2FFunctions%2F-1435837140" anchor-label="equals" id="-906227250%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-expression/equals.html"><span><span>equals</span></span></a></div>
@@ -256,7 +256,7 @@
             </div>
           </div>
 <a data-name="-1712983430%2FFunctions%2F-1435837140" anchor-label="greater" id="-1712983430%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../greater.html"><span><span>greater</span></span></a></div>
@@ -271,7 +271,7 @@
             </div>
           </div>
 <a data-name="1570425442%2FFunctions%2F-1435837140" anchor-label="greaterEq" id="1570425442%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../greater-eq.html"><span>greater</span><wbr><span><span>Eq</span></span></a></div>
@@ -286,7 +286,7 @@
             </div>
           </div>
 <a data-name="-1535444208%2FFunctions%2F-1435837140" anchor-label="greaterEqSubQuery" id="-1535444208%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../greater-eq-sub-query.html"><span>greater</span><wbr><span>Eq</span><wbr><span>Sub</span><wbr><span><span>Query</span></span></a></div>
@@ -301,7 +301,7 @@
             </div>
           </div>
 <a data-name="-1859229232%2FFunctions%2F-1435837140" anchor-label="greaterSubQuery" id="-1859229232%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../greater-sub-query.html"><span>greater</span><wbr><span>Sub</span><wbr><span><span>Query</span></span></a></div>
@@ -316,7 +316,7 @@
             </div>
           </div>
 <a data-name="-1125881412%2FFunctions%2F-1435837140" anchor-label="groupConcat" id="-1125881412%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../group-concat.html"><span>group</span><wbr><span><span>Concat</span></span></a></div>
@@ -325,13 +325,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../group-concat.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator">&gt; </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="../group-concat.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../group-concat.html"><span class="token function">groupConcat</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">separator<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">distinct<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter ">orderBy<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-array/index.html">Array</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-pair/index.html">Pair</a><span class="token operator">&lt;</span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../-sort-order/index.html">SortOrder</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token operator"> = </span>emptyArray()</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-group-concat/index.html">GroupConcat</a><span class="token operator">&lt;</span><a href="../group-concat.html">T</a><span class="token operator">&gt;</span></div><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../group-concat.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator">&gt; </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="../group-concat.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../group-concat.html"><span class="token function">groupConcat</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">separator<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">distinct<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter ">orderBy<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-pair/index.html">Pair</a><span class="token operator">&lt;</span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../-sort-order/index.html">SortOrder</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-group-concat/index.html">GroupConcat</a><span class="token operator">&lt;</span><a href="../group-concat.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Concatenates all non-null input values of each group from <a href="../../../exposed-core/org.jetbrains.exposed.v1.core/index.html">this</a> string expression, separated by <a href="../group-concat.html">separator</a>.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../group-concat.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator">&gt; </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="../group-concat.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../group-concat.html"><span class="token function">groupConcat</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">separator<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">distinct<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter ">orderBy<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-array/index.html">Array</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-pair/index.html">Pair</a><span class="token operator">&lt;</span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../-sort-order/index.html">SortOrder</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token operator"> = </span>emptyArray()</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-group-concat/index.html">GroupConcat</a><span class="token operator">&lt;</span><a href="../group-concat.html">T</a><span class="token operator">&gt;</span></div><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../group-concat.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator">&gt; </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="../group-concat.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../group-concat.html"><span class="token function">groupConcat</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">separator<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">distinct<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter ">orderBy<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-pair/index.html">Pair</a><span class="token operator">&lt;</span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../-sort-order/index.html">SortOrder</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-group-concat/index.html">GroupConcat</a><span class="token operator">&lt;</span><a href="../group-concat.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Concatenates all non-null input values of each group from <a href="../-expression/index.html">this</a> string expression, separated by <a href="../group-concat.html">separator</a>.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="-2109982888%2FFunctions%2F-1435837140" anchor-label="hashCode" id="-2109982888%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-expression/hash-code.html"><span>hash</span><wbr><span><span>Code</span></span></a></div>
@@ -346,7 +346,7 @@
             </div>
           </div>
 <a data-name="586116132%2FFunctions%2F-1435837140" anchor-label="inSubQuery" id="586116132%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../in-sub-query.html"><span>in</span><wbr><span>Sub</span><wbr><span><span>Query</span></span></a></div>
@@ -361,7 +361,7 @@
             </div>
           </div>
 <a data-name="1513512612%2FFunctions%2F-1435837140" anchor-label="isDistinctFrom" id="1513512612%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../is-distinct-from.html"><span>is</span><wbr><span>Distinct</span><wbr><span><span>From</span></span></a></div>
@@ -376,7 +376,7 @@
             </div>
           </div>
 <a data-name="699929746%2FFunctions%2F-1435837140" anchor-label="isNotDistinctFrom" id="699929746%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../is-not-distinct-from.html"><span>is</span><wbr><span>Not</span><wbr><span>Distinct</span><wbr><span><span>From</span></span></a></div>
@@ -391,7 +391,7 @@
             </div>
           </div>
 <a data-name="910979728%2FFunctions%2F-1435837140" anchor-label="isNotNull" id="910979728%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../is-not-null.html"><span>is</span><wbr><span>Not</span><wbr><span><span>Null</span></span></a></div>
@@ -406,7 +406,7 @@
             </div>
           </div>
 <a data-name="1989684628%2FFunctions%2F-1435837140" anchor-label="isNull" id="1989684628%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../is-null.html"><span>is</span><wbr><span><span>Null</span></span></a></div>
@@ -421,7 +421,7 @@
             </div>
           </div>
 <a data-name="1637176702%2FFunctions%2F-1435837140" anchor-label="isNullOrEmpty" id="1637176702%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../is-null-or-empty.html"><span>is</span><wbr><span>Null</span><wbr><span>Or</span><wbr><span><span>Empty</span></span></a></div>
@@ -436,7 +436,7 @@
             </div>
           </div>
 <a data-name="1394093634%2FFunctions%2F-1435837140" anchor-label="less" id="1394093634%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../less.html"><span><span>less</span></span></a></div>
@@ -451,7 +451,7 @@
             </div>
           </div>
 <a data-name="-1128817022%2FFunctions%2F-1435837140" anchor-label="lessEq" id="-1128817022%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../less-eq.html"><span>less</span><wbr><span><span>Eq</span></span></a></div>
@@ -466,7 +466,7 @@
             </div>
           </div>
 <a data-name="-2093628636%2FFunctions%2F-1435837140" anchor-label="lessEqSubQuery" id="-2093628636%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../less-eq-sub-query.html"><span>less</span><wbr><span>Eq</span><wbr><span>Sub</span><wbr><span><span>Query</span></span></a></div>
@@ -481,7 +481,7 @@
             </div>
           </div>
 <a data-name="1126140044%2FFunctions%2F-1435837140" anchor-label="lessSubQuery" id="1126140044%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../less-sub-query.html"><span>less</span><wbr><span>Sub</span><wbr><span><span>Query</span></span></a></div>
@@ -496,7 +496,7 @@
             </div>
           </div>
 <a data-name="1738441172%2FFunctions%2F-1435837140" anchor-label="like" id="1738441172%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../like.html"><span><span>like</span></span></a></div>
@@ -511,7 +511,7 @@
             </div>
           </div>
 <a data-name="-11645014%2FFunctions%2F-1435837140" anchor-label="locate" id="-11645014%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../locate.html"><span><span>locate</span></span></a></div>
@@ -526,7 +526,7 @@
             </div>
           </div>
 <a data-name="-2010673921%2FFunctions%2F-1435837140" anchor-label="lowerCase" id="-2010673921%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../lower-case.html"><span>lower</span><wbr><span><span>Case</span></span></a></div>
@@ -541,7 +541,7 @@
             </div>
           </div>
 <a data-name="-1759899002%2FFunctions%2F-1435837140" anchor-label="match" id="-1759899002%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../match.html"><span><span>match</span></span></a></div>
@@ -556,7 +556,7 @@
             </div>
           </div>
 <a data-name="-730300944%2FFunctions%2F-1435837140" anchor-label="mod" id="-730300944%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../mod.html"><span><span>mod</span></span></a></div>
@@ -565,13 +565,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-name/index.html"><span class="token annotation builtin">JvmName</span></a><span class="token punctuation">(</span><span>name<span class="token operator"> = </span><span class="breakable-word"><span class="token string">"modWithEntityId2"</span></span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">infix </span><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../mod.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a>, <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-comparable/index.html">Comparable</a><span class="token operator">&lt;</span><a href="../mod.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../mod.html">S</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token punctuation">, </span><a href="../mod.html">ID</a><span class="token operator"> : </span><a href="../../org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="../mod.html">T</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator">&gt; </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="../mod.html">S</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../mod.html"><span class="token function">mod</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">other<span class="token operator">: </span><a href="../-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="../mod.html">ID</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="../mod.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Calculates the remainder of dividing <a href="../../../exposed-core/org.jetbrains.exposed.v1.core/index.html">this</a> number expression by <a href="../mod.html">other</a> numeric PK</p></div><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-name/index.html"><span class="token annotation builtin">JvmName</span></a><span class="token punctuation">(</span><span>name<span class="token operator"> = </span><span class="breakable-word"><span class="token string">"modWithEntityId2"</span></span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">open </span><span class="token keyword">infix </span><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../-i-sql-expression-builder/mod.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a>, <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-comparable/index.html">Comparable</a><span class="token operator">&lt;</span><a href="../-i-sql-expression-builder/mod.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../-i-sql-expression-builder/mod.html">S</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token punctuation">, </span><a href="../-i-sql-expression-builder/mod.html">ID</a><span class="token operator"> : </span><a href="../../org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="../-i-sql-expression-builder/mod.html">T</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator">&gt; </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="../-i-sql-expression-builder/mod.html">S</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../-i-sql-expression-builder/mod.html"><span class="token function"><strike>mod</strike></span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">other<span class="token operator">: </span><a href="../-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="../-i-sql-expression-builder/mod.html">ID</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="../-i-sql-expression-builder/mod.html">T</a><span class="token operator">&gt;</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-name/index.html"><span class="token annotation builtin">JvmName</span></a><span class="token punctuation">(</span><span>name<span class="token operator"> = </span><span class="breakable-word"><span class="token string">"modWithEntityId2"</span></span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">infix </span><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../mod.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a>, <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-comparable/index.html">Comparable</a><span class="token operator">&lt;</span><a href="../mod.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../mod.html">S</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token punctuation">, </span><a href="../mod.html">ID</a><span class="token operator"> : </span><a href="../../org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="../mod.html">T</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator">&gt; </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="../mod.html">S</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../mod.html"><span class="token function">mod</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">other<span class="token operator">: </span><a href="../-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="../mod.html">ID</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="../mod.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Calculates the remainder of dividing <a href="../-expression/index.html">this</a> number expression by <a href="../mod.html">other</a> numeric PK</p></div><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-name/index.html"><span class="token annotation builtin">JvmName</span></a><span class="token punctuation">(</span><span>name<span class="token operator"> = </span><span class="breakable-word"><span class="token string">"modWithEntityId2"</span></span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">open </span><span class="token keyword">infix </span><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../-i-sql-expression-builder/mod.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a>, <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-comparable/index.html">Comparable</a><span class="token operator">&lt;</span><a href="../-i-sql-expression-builder/mod.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../-i-sql-expression-builder/mod.html">S</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token punctuation">, </span><a href="../-i-sql-expression-builder/mod.html">ID</a><span class="token operator"> : </span><a href="../../org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="../-i-sql-expression-builder/mod.html">T</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator">&gt; </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="../-i-sql-expression-builder/mod.html">S</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../-i-sql-expression-builder/mod.html"><span class="token function"><strike>mod</strike></span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">other<span class="token operator">: </span><a href="../-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="../-i-sql-expression-builder/mod.html">ID</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="../-i-sql-expression-builder/mod.html">T</a><span class="token operator">&gt;</span></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="963849058%2FFunctions%2F-1435837140" anchor-label="neq" id="963849058%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../neq.html"><span><span>neq</span></span></a></div>
@@ -586,7 +586,7 @@
             </div>
           </div>
 <a data-name="-2012246288%2FFunctions%2F-1435837140" anchor-label="notEqSubQuery" id="-2012246288%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../not-eq-sub-query.html"><span>not</span><wbr><span>Eq</span><wbr><span>Sub</span><wbr><span><span>Query</span></span></a></div>
@@ -601,7 +601,7 @@
             </div>
           </div>
 <a data-name="-1369204144%2FFunctions%2F-1435837140" anchor-label="notInSubQuery" id="-1369204144%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../not-in-sub-query.html"><span>not</span><wbr><span>In</span><wbr><span>Sub</span><wbr><span><span>Query</span></span></a></div>
@@ -616,7 +616,7 @@
             </div>
           </div>
 <a data-name="-1012658970%2FFunctions%2F-1435837140" anchor-label="notLike" id="-1012658970%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../not-like.html"><span>not</span><wbr><span><span>Like</span></span></a></div>
@@ -631,7 +631,7 @@
             </div>
           </div>
 <a data-name="486977878%2FFunctions%2F-1435837140" anchor-label="or" id="486977878%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../or.html"><span><span>or</span></span></a></div>
@@ -646,7 +646,7 @@
             </div>
           </div>
 <a data-name="545134896%2FFunctions%2F-1435837140" anchor-label="orIfNotNull" id="545134896%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../or-if-not-null.html"><span>or</span><wbr><span>If</span><wbr><span>Not</span><wbr><span><span>Null</span></span></a></div>
@@ -661,7 +661,7 @@
             </div>
           </div>
 <a data-name="1348455169%2FFunctions%2F-1435837140" anchor-label="orNot" id="1348455169%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../or-not.html"><span>or</span><wbr><span><span>Not</span></span></a></div>
@@ -676,7 +676,7 @@
             </div>
           </div>
 <a data-name="487615690%2FFunctions%2F-1435837140" anchor-label="plus" id="487615690%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../plus.html"><span><span>plus</span></span></a></div>
@@ -691,7 +691,7 @@
             </div>
           </div>
 <a data-name="-480066998%2FFunctions%2F-1435837140" anchor-label="regexp" id="-480066998%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../regexp.html"><span><span>regexp</span></span></a></div>
@@ -706,7 +706,7 @@
             </div>
           </div>
 <a data-name="-1559912208%2FFunctions%2F-1435837140" anchor-label="rem" id="-1559912208%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../rem.html"><span><span>rem</span></span></a></div>
@@ -715,13 +715,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-name/index.html"><span class="token annotation builtin">JvmName</span></a><span class="token punctuation">(</span><span>name<span class="token operator"> = </span><span class="breakable-word"><span class="token string">"remWithEntityId2"</span></span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">infix operator </span><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../rem.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a>, <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-comparable/index.html">Comparable</a><span class="token operator">&lt;</span><a href="../rem.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../rem.html">S</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token punctuation">, </span><a href="../rem.html">ID</a><span class="token operator"> : </span><a href="../../org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="../rem.html">T</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator">&gt; </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="../rem.html">S</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../rem.html"><span class="token function">rem</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">other<span class="token operator">: </span><a href="../-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="../rem.html">ID</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="../rem.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Calculates the remainder of dividing <a href="../../../exposed-core/org.jetbrains.exposed.v1.core/index.html">this</a> number expression by <a href="../rem.html">other</a> numeric PK</p></div><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-name/index.html"><span class="token annotation builtin">JvmName</span></a><span class="token punctuation">(</span><span>name<span class="token operator"> = </span><span class="breakable-word"><span class="token string">"remWithEntityId2"</span></span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">open </span><span class="token keyword">infix operator </span><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../-i-sql-expression-builder/rem.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a>, <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-comparable/index.html">Comparable</a><span class="token operator">&lt;</span><a href="../-i-sql-expression-builder/rem.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../-i-sql-expression-builder/rem.html">S</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token punctuation">, </span><a href="../-i-sql-expression-builder/rem.html">ID</a><span class="token operator"> : </span><a href="../../org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="../-i-sql-expression-builder/rem.html">T</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator">&gt; </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="../-i-sql-expression-builder/rem.html">S</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../-i-sql-expression-builder/rem.html"><span class="token function"><strike>rem</strike></span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">other<span class="token operator">: </span><a href="../-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="../-i-sql-expression-builder/rem.html">ID</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="../-i-sql-expression-builder/rem.html">T</a><span class="token operator">&gt;</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-name/index.html"><span class="token annotation builtin">JvmName</span></a><span class="token punctuation">(</span><span>name<span class="token operator"> = </span><span class="breakable-word"><span class="token string">"remWithEntityId2"</span></span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">infix operator </span><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../rem.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a>, <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-comparable/index.html">Comparable</a><span class="token operator">&lt;</span><a href="../rem.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../rem.html">S</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token punctuation">, </span><a href="../rem.html">ID</a><span class="token operator"> : </span><a href="../../org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="../rem.html">T</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator">&gt; </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="../rem.html">S</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../rem.html"><span class="token function">rem</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">other<span class="token operator">: </span><a href="../-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="../rem.html">ID</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="../rem.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Calculates the remainder of dividing <a href="../-expression/index.html">this</a> number expression by <a href="../rem.html">other</a> numeric PK</p></div><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-name/index.html"><span class="token annotation builtin">JvmName</span></a><span class="token punctuation">(</span><span>name<span class="token operator"> = </span><span class="breakable-word"><span class="token string">"remWithEntityId2"</span></span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">open </span><span class="token keyword">infix operator </span><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../-i-sql-expression-builder/rem.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a>, <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-comparable/index.html">Comparable</a><span class="token operator">&lt;</span><a href="../-i-sql-expression-builder/rem.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../-i-sql-expression-builder/rem.html">S</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token punctuation">, </span><a href="../-i-sql-expression-builder/rem.html">ID</a><span class="token operator"> : </span><a href="../../org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="../-i-sql-expression-builder/rem.html">T</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator">&gt; </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="../-i-sql-expression-builder/rem.html">S</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../-i-sql-expression-builder/rem.html"><span class="token function"><strike>rem</strike></span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">other<span class="token operator">: </span><a href="../-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="../-i-sql-expression-builder/rem.html">ID</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="../-i-sql-expression-builder/rem.html">T</a><span class="token operator">&gt;</span></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="-1421211168%2FFunctions%2F-1435837140" anchor-label="substring" id="-1421211168%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../substring.html"><span><span>substring</span></span></a></div>
@@ -736,7 +736,7 @@
             </div>
           </div>
 <a data-name="-765827502%2FFunctions%2F-1435837140" anchor-label="toQueryBuilder" id="-765827502%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-compound-boolean-op/to-query-builder.html"><span>to</span><wbr><span>Query</span><wbr><span><span>Builder</span></span></a></div>
@@ -745,13 +745,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-compound-boolean-op/to-query-builder.html"><span class="token function">toQueryBuilder</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">queryBuilder<span class="token operator">: </span><a href="../-query-builder/index.html">QueryBuilder</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Appends the SQL representation of this expression to the specified <a href="../-compound-boolean-op/to-query-builder.html">queryBuilder</a>.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-compound-boolean-op/to-query-builder.html"><span class="token function">toQueryBuilder</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">queryBuilder<span class="token operator">: </span><a href="../-query-builder/index.html">QueryBuilder</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Appends the SQL representation of this expression to the specified <a href="../-expression/to-query-builder.html">queryBuilder</a>.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="2006818343%2FFunctions%2F-1435837140" anchor-label="toString" id="2006818343%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-expression/to-string.html"><span>to</span><wbr><span><span>String</span></span></a></div>
@@ -766,7 +766,7 @@
             </div>
           </div>
 <a data-name="827295818%2FFunctions%2F-1435837140" anchor-label="trim" id="827295818%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../trim.html"><span><span>trim</span></span></a></div>
@@ -781,7 +781,7 @@
             </div>
           </div>
 <a data-name="1227485310%2FFunctions%2F-1435837140" anchor-label="upperCase" id="1227485310%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../upper-case.html"><span>upper</span><wbr><span><span>Case</span></span></a></div>
@@ -801,17 +801,21 @@
   </div>
 </div>
     <div class="footer">
-        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
-        <span>© 2025 Copyright</span>
-        <span class="pull-right">
-            <span>Generated by </span>
-            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
-                <span>dokka</span>
-            </a>
-        </span>
-    </div>
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2025 Copyright</div>
+                </div>
             </div>
         </div>
     </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

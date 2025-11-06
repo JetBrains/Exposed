@@ -1,3 +1,27 @@
+# 1.0.0-rc-3
+
+Breaking changes:
+* chore!: EXPOSED-893 Read-only transaction initiation convenience by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2628
+* chore!: Refactoring of JDBC transaction management by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2632
+
+Infrastructure:
+* springFramework 6.2.12
+* springBoot 3.5.7
+* r2dbc-postgresql 1.1.1.RELEASE
+* dokka 2.1.0
+* ojdbc11 23.26.0.0.0
+
+Bug fixes:
+* fix: EXPOSED-880 [PostgreSQL] Fix casting nullable JSON columns by @nicktelford in https://github.com/JetBrains/Exposed/pull/2616
+* fix: Fix R2DBC connection retrieval by @IlyaPechuro in https://github.com/JetBrains/Exposed/pull/2641
+
+Refactoring:
+* refactor: Replace invocations of `Array.toList` with `Array.asList` to slightly reduce some copy overhead by @ShreckYe in https://github.com/JetBrains/Exposed/pull/2637
+
+Docs:
+* docs: EXPOSED-911 Update Exposed logo in docs and README.md by @vnikolova in https://github.com/JetBrains/Exposed/pull/2640
+* docs: Update migration guide & docs with JDBC transaction management changes by @bog-walk in https://github.com/JetBrains/Exposed/pull/2642
+
 # 1.0.0-rc-2
 
 Infrastructure:
@@ -18,6 +42,9 @@ Bug fixes:
 Docs:
 * docs: fix: EXPOSED-873 Update API links and extension modules table by @vnikolova in https://github.com/JetBrains/Exposed/pull/2612
 * docs: fix: EXPOSED-883 Broken API links in Statement-Interceptors.md by @vnikolova in https://github.com/JetBrains/Exposed/pull/2625
+
+Build:
+* build(deps): [EXPOSED-921] Bump jvmToolchain and set compile jvmTarget by @bog-walk in https://github.com/JetBrains/Exposed/pull/2643
 
 # 1.0.0-rc-1
 
