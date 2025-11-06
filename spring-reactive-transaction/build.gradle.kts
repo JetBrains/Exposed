@@ -29,6 +29,7 @@ dependencies {
     testImplementation(project(":exposed-r2dbc-tests"))
     testImplementation(kotlin("test-junit"))
     testImplementation(libs.kotlinx.coroutines.debug)
+    testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.spring.test)
     testImplementation(libs.slf4j)
     testImplementation(libs.log4j.slf4j.impl)
