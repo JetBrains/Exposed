@@ -514,9 +514,8 @@ class DefaultsTest : DatabaseTestsBase() {
             )
         }
 
-        // SQLite does not support ALTER TABLE on a column that has a default value
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
-            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(tester)
+        withTables(tester) {
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -529,9 +528,8 @@ class DefaultsTest : DatabaseTestsBase() {
             val dateWithDefault = date("dateWithDefault").default(date)
         }
 
-        // SQLite does not support ALTER TABLE on a column that has a default value
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
-            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(tester)
+        withTables(tester) {
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -544,9 +542,8 @@ class DefaultsTest : DatabaseTestsBase() {
             val timeWithDefault = time("timeWithDefault").default(time)
         }
 
-        // SQLite does not support ALTER TABLE on a column that has a default value
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
-            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(tester)
+        withTables(tester) {
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -562,9 +559,8 @@ class DefaultsTest : DatabaseTestsBase() {
             val timestampWithDefaultExpression = timestamp("timestampWithDefaultExpression").defaultExpression(CurrentTimestamp)
         }
 
-        // SQLite does not support ALTER TABLE on a column that has a default value
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
-            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(tester)
+        withTables(tester) {
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -577,11 +573,10 @@ class DefaultsTest : DatabaseTestsBase() {
             val timestampWithTimeZoneWithDefault = timestampWithTimeZone("timestampWithTimeZoneWithDefault").default(offsetDateTime)
         }
 
-        // SQLite does not support ALTER TABLE on a column that has a default value
         // MariaDB does not support TIMESTAMP WITH TIME ZONE column type
-        val unsupportedDatabases = TestDB.ALL_MARIADB + TestDB.SQLITE + TestDB.MYSQL_V5
+        val unsupportedDatabases = TestDB.ALL_MARIADB + TestDB.MYSQL_V5
         withTables(excludeSettings = unsupportedDatabases, tester) {
-            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(tester)
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }

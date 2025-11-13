@@ -8,6 +8,7 @@ import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.OracleDialect
 import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
+import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
@@ -18,6 +19,7 @@ import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertFailAndRollback
+import org.jetbrains.exposed.v1.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.expectException
 import org.junit.Test
@@ -154,16 +156,21 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             if (db.supportsAlterTableWithAddColumn) {
                 SchemaUtils.createMissingTablesAndColumns(t1)
 
-                val missingStatements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(t2)
+                val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
 
                 val alterColumnWord = when (currentDialectTest) {
                     is MysqlDialect -> "MODIFY COLUMN"
                     is OracleDialect -> "MODIFY"
+                    is SQLiteDialect -> "RENAME COLUMN"
                     else -> "ALTER COLUMN"
+                }
+                val modification = when (currentDialectTest) {
+                    is SQLiteDialect -> "${t1.id.nameInDatabaseCase()} TO ${t2.id.nameInDatabaseCase()}"
+                    else -> "${t2.id.nameInDatabaseCase()} INT"
                 }
 
                 val expected = if (t1.id.nameInDatabaseCase() != t2.id.nameInDatabaseCase()) {
-                    "ALTER TABLE ${t2.nameInDatabaseCase()} $alterColumnWord ${t2.id.nameInDatabaseCase()} INT"
+                    "ALTER TABLE ${t2.nameInDatabaseCase()} $alterColumnWord $modification"
                 } else {
                     null
                 }
@@ -275,19 +282,23 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(bar)
         }
 
-        withDb(excludeSettings = listOf(TestDB.SQLITE)) {
+        withDb {
             SchemaUtils.createMissingTablesAndColumns(noPKTable)
             var primaryKey: PrimaryKeyMetadata? = currentDialectMetadataTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
             assertNull(primaryKey)
 
-            val expected = "ALTER TABLE ${tableName.inProperCase()} ADD PRIMARY KEY (${noPKTable.bar.nameInDatabaseCase()})"
             val statements = SchemaUtils.statementsRequiredToActualizeScheme(singlePKTable)
-            assertEquals(expected, statements.single())
+            if (currentDialectTest is SQLiteDialect) {
+                assertTrue(statements.isEmpty())
+            } else {
+                val expected = "ALTER TABLE ${tableName.inProperCase()} ADD PRIMARY KEY (${noPKTable.bar.nameInDatabaseCase()})"
+                assertEquals(expected, statements.single())
 
-            SchemaUtils.createMissingTablesAndColumns(singlePKTable)
-            primaryKey = currentDialectMetadataTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
-            assertNotNull(primaryKey)
-            assertEquals("bar".inProperCase(), primaryKey.columnNames.single())
+                SchemaUtils.createMissingTablesAndColumns(singlePKTable)
+                primaryKey = currentDialectMetadataTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
+                assertNotNull(primaryKey)
+                assertEquals("bar".inProperCase(), primaryKey.columnNames.single())
+            }
 
             SchemaUtils.drop(noPKTable)
         }
@@ -338,8 +349,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
         val tableEmptyStringDefaultText = StringFieldTable("text_whitespace_test", true, "")
 
-        // SQLite doesn't support alter table with add column, so it doesn't generate the statements, hence excluded
-        withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
+        withDb { testDb ->
             // MySQL doesn't support default values on text columns, hence excluded
             val supportsTextDefault = testDb !in TestDB.ALL_MYSQL
             val tablesToTest = listOfNotNull(
@@ -348,7 +358,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             )
             tablesToTest.forEach { (whiteSpaceTable, emptyTable) ->
                 try {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(whiteSpaceTable)
+                    SchemaUtils.create(whiteSpaceTable)
 
                     val whiteSpaceId = whiteSpaceTable.insertAndGetId { }
 
@@ -360,16 +370,21 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
                     )
 
                     val actual = SchemaUtils.statementsRequiredToActualizeScheme(emptyTable)
-                    val expected = if (testDb == TestDB.SQLSERVER) 2 else 1
+                    val expected = when (testDb) {
+                        TestDB.SQLSERVER -> 2
+                        TestDB.SQLITE -> 0
+                        else -> 1
+                    }
                     assertEquals(expected, actual.size)
 
                     // Oracle treat '' as NULL column and can't alter from NULL to NULL
-                    if (testDb != TestDB.ORACLE) {
+                    // SQLite cannot modify columns using alter table
+                    if (testDb !in listOf(TestDB.ORACLE, TestDB.SQLITE)) {
                         // Apply changes
                         actual.forEach { exec(it) }
                     } else {
                         SchemaUtils.drop(whiteSpaceTable)
-                        org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(emptyTable)
+                        SchemaUtils.create(emptyTable)
                     }
 
                     val emptyId = emptyTable.insertAndGetId { }
@@ -783,9 +798,13 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             testerWithDefaults to testerWithoutDefaults,
             testerWithoutDefaults to testerWithDefaults,
         ).forEach { (existingTable, definedTable) ->
-            withTables(excludeSettings = listOf(TestDB.SQLITE), existingTable) {
+            withTables(existingTable) {
                 SchemaUtils.statementsRequiredToActualizeScheme(definedTable).also {
-                    assertTrue(it.isNotEmpty())
+                    if (currentDialectTest is SQLiteDialect) {
+                        assertFalse(it.isNotEmpty())
+                    } else {
+                        assertTrue(it.isNotEmpty())
+                    }
                 }
             }
         }
@@ -794,7 +813,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             testerWithDefaults to testerWithDefaults,
             testerWithoutDefaults to testerWithoutDefaults
         ).forEach { (existingTable, definedTable) ->
-            withTables(excludeSettings = listOf(TestDB.SQLITE), existingTable) {
+            withTables(existingTable) {
                 SchemaUtils.statementsRequiredToActualizeScheme(definedTable).also {
                     assertTrue(it.isEmpty())
                 }
