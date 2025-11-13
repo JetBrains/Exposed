@@ -9,6 +9,7 @@ import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.dao.id.UIntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.ULongIdTable
 import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
+import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.exists
@@ -80,7 +81,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             val id = integer("id")
         }
 
-        withTables(excludeSettings = listOf(TestDB.SQLITE, TestDB.ORACLE), t1) {
+        withTables(excludeSettings = listOf(TestDB.ORACLE), t1) {
             assertEqualCollections(MigrationUtils.statementsRequiredForDatabaseMigration(t1, withLogs = false), emptyList())
 
             val statements = MigrationUtils.statementsRequiredForDatabaseMigration(t2, withLogs = false)
@@ -102,13 +103,17 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(bar)
         }
 
-        withTables(excludeSettings = listOf(TestDB.SQLITE), noPKTable) {
+        withTables(noPKTable) {
             val primaryKey: PrimaryKeyMetadata? = currentDialectMetadataTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
             assertNull(primaryKey)
 
-            val expected = "ALTER TABLE ${tableName.inProperCase()} ADD PRIMARY KEY (${noPKTable.bar.nameInDatabaseCase()})"
             val statements = MigrationUtils.statementsRequiredForDatabaseMigration(singlePKTable, withLogs = false)
-            assertEquals(expected, statements.single())
+            if (currentDialectTest is SQLiteDialect) {
+                assertTrue(statements.isEmpty())
+            } else {
+                val expected = "ALTER TABLE ${tableName.inProperCase()} ADD PRIMARY KEY (${noPKTable.bar.nameInDatabaseCase()})"
+                assertEquals(expected, statements.single())
+            }
         }
     }
 
