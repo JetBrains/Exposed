@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.migration.r2dbc
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import nl.altindag.log.LogCaptor
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
@@ -412,5 +413,29 @@ class DatabaseMigrationTests : R2dbcDatabaseTestsBase() {
             val statements = MigrationUtils.statementsRequiredForDatabaseMigration(testTable)
             assertTrue(statements.isEmpty())
         }
+    }
+
+    @Test
+    fun testMetadataRetrievalLogsAreSilent() {
+        val logCaptor = LogCaptor.forName(exposedLogger.name)
+        logCaptor.setLogLevelToDebug()
+
+        withDb {
+            // All R2DBC rely on SQL string + connection execution
+            currentDialectMetadataTest.existingPrimaryKeys(MigrationTestsData.ColumnTypesTester)
+            currentDialectMetadataTest.existingIndices(MigrationTestsData.ColumnTypesTester)
+            currentDialectMetadataTest.allTablesNames()
+            currentDialectMetadataTest.columnConstraints()
+            connection().metadata { getDatabaseDialectMode() }
+            currentDialectMetadataTest.existingCheckConstraints(MigrationTestsData.ColumnTypesTester)
+            currentDialectMetadataTest.sequences()
+            currentDialectMetadataTest.existingSequences(MigrationTestsData.ColumnTypesTester)
+
+            assertTrue(logCaptor.debugLogs.isEmpty())
+        }
+
+        logCaptor.resetLogLevel()
+        logCaptor.clearLogs()
+        logCaptor.close()
     }
 }
