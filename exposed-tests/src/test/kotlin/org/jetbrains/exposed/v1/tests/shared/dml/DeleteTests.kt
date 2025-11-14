@@ -8,7 +8,6 @@ import org.jetbrains.exposed.v1.core.innerJoin
 import org.jetbrains.exposed.v1.core.joinQuery
 import org.jetbrains.exposed.v1.core.lastQueryAlias
 import org.jetbrains.exposed.v1.core.like
-import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
@@ -83,8 +82,7 @@ class DeleteTests : DatabaseTestsBase() {
                 userData.deleteWhere(limit = 1) { userData.value eq 20 }
                 userData.select(userData.user_id, userData.value).where { userData.value eq 20 }.let {
                     assertEquals(1L, it.count())
-                    val expected = if (currentDialectTest is H2Dialect) "smth" else "eugene"
-                    assertEquals(expected, it.single()[userData.user_id])
+                    assertEquals("eugene", it.single()[userData.user_id])
                 }
             }
         }

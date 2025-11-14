@@ -14,7 +14,18 @@ internal object H2DataTypeProvider : DataTypeProvider() {
 
     override fun uuidToDB(value: UUID): Any = value
 
-    override fun dateTimeType(): String = "DATETIME(9)"
+    @Suppress("MagicNumber")
+    override fun dateTimeType(): String {
+        @OptIn(InternalApi::class)
+        val breakingVersion = Version(2, 4, 240)
+
+        @OptIn(InternalApi::class)
+        val currentVersion = Version.from(
+            currentTransaction().db.fullVersion.substringBefore('(').trim()
+        )
+
+        return if (currentVersion.covers(breakingVersion)) timestampType() else "DATETIME(9)"
+    }
 
     override fun timestampType(): String = "TIMESTAMP(9)"
 
