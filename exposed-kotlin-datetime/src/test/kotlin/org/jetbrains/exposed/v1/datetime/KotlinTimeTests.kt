@@ -354,7 +354,7 @@ class KotlinTimeTests : DatabaseTestsBase() {
             val modified = jsonb<ModifierData>("modified", Json.Default)
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2_V2 + TestDB.SQLITE + TestDB.SQLSERVER + TestDB.ORACLE, tester) {
+        withTables(excludeSettings = TestDB.ALL_H2_V2 + TestDB.SQLSERVER + TestDB.ORACLE, tester) {
             val dateTimeNow = now()
             tester.insert {
                 it[created] = dateTimeNow.date.minus(1, DateTimeUnit.YEAR).atTime(0, 0, 0)
@@ -371,10 +371,13 @@ class KotlinTimeTests : DatabaseTestsBase() {
             val modifiedAsString = tester.modified.extract<String>("${prefix}timestamp")
             val allModifiedAsString = tester.select(modifiedAsString)
             assertTrue(allModifiedAsString.all { it[modifiedAsString] == dateTimeNow.toString() })
+            // TODO - dequoted strings returned by json_extract
             // value extracted as json, with implicit LocalDateTime serializer() performing conversions
-            val modifiedAsJson = tester.modified.extract<LocalDateTime>("${prefix}timestamp", toScalar = false)
-            val allModifiedAsJson = tester.select(modifiedAsJson)
-            assertTrue(allModifiedAsJson.all { it[modifiedAsJson] == dateTimeNow })
+            if (currentDialectTest !is SQLiteDialect) {
+                val modifiedAsJson = tester.modified.extract<LocalDateTime>("${prefix}timestamp", toScalar = false)
+                val allModifiedAsJson = tester.select(modifiedAsJson)
+                assertTrue(allModifiedAsJson.all { it[modifiedAsJson] == dateTimeNow })
+            }
 
             // PostgreSQL requires explicit type cast to timestamp for in-DB comparison
             val dateModified = if (currentDialectTest is PostgreSQLDialect) {

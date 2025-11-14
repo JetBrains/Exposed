@@ -15,6 +15,18 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
     override fun dateType(): String = "TEXT"
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
     override fun jsonType(): String = "TEXT"
+
+    override fun jsonBType(): String {
+        @Suppress("MagicNumber")
+        @OptIn(InternalApi::class)
+        val supportedVersion = Version(3, 45, 0)
+
+        @OptIn(InternalApi::class)
+        val currentVersion = Version.from(currentTransaction().db.fullVersion.trim())
+
+        return if (currentVersion.covers(supportedVersion)) blobType() else super.jsonBType()
+    }
+
     override fun hexToDb(hexString: String): String = "X'$hexString'"
 }
 
