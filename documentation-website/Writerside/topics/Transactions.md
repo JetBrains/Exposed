@@ -271,19 +271,19 @@ for R2DBC connections in `io.r2dbc.spi.IsolationLevel`.
 : Allows uncommitted changes from one transaction to affect
 a read in another transaction (a "dirty read").
 
-`TRANSACTION_READ_COMMITTED`
+`TRANSACTION_READ_COMMITTED` (default, except for MySql and SQLite)
 : This setting prevents dirty reads from occurring, but still allows non-repeatable
 reads to occur. A _non-repeatable read_ is when a transaction ("Transaction A") reads a row from the database, another
 transaction ("Transaction B") changes the row, and Transaction A reads the row again, resulting in an inconsistency.
 
-`TRANSACTION_REPEATABLE_READ` (default)
+`TRANSACTION_REPEATABLE_READ` (default for MySql)
 : Prevents both dirty and non-repeatable
 reads, but still allows for phantom reads. A _phantom read_ is when a transaction ("Transaction A") selects a list of
 rows through a `WHERE` clause, another transaction ("Transaction B") performs an `INSERT` or `DELETE` with a row that
 satisfies Transaction A's `WHERE` clause, and Transaction A selects using the same WHERE clause again, resulting in an
 inconsistency.
 
-`TRANSACTION_SERIALIZABLE`
+`TRANSACTION_SERIALIZABLE` (default for SQLite)
 : Prevents dirty reads, non-repeatable reads, and phantom reads.
 
 {type="wide"}
@@ -295,12 +295,12 @@ inconsistency.
 : Allows uncommitted changes from one transaction to affect
 a read in another transaction (a "dirty read").
 
-`READ_COMMITTED`
+`READ_COMMITTED` (default, except for MySql)
 : This setting prevents dirty reads from occurring, but still allows non-repeatable
 reads to occur. A _non-repeatable read_ is when a transaction ("Transaction A") reads a row from the database, another
 transaction ("Transaction B") changes the row, and Transaction A reads the row again, resulting in an inconsistency.
 
-`REPEATABLE_READ` (default)
+`REPEATABLE_READ` (default for MySql)
 : Prevents both dirty and non-repeatable
 reads, but still allows for phantom reads. A _phantom read_ is when a transaction ("Transaction A") selects a list of
 rows through a `WHERE` clause, another transaction ("Transaction B") performs an `INSERT` or `DELETE` with a row that
