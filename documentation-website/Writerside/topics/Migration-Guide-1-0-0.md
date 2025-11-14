@@ -1001,6 +1001,15 @@ Moving forward, new features will no longer be tested on H2 version 1.x.x, so su
 Depending on the built-in support from these older H2 versions, Exposed API may still mostly be compatible,
 but may now throw syntax or unsupported exceptions when generating certain SQL clauses.
 
+### H2 DATETIME data type
+
+Starting from [H2 version 2.4.240](https://github.com/h2database/h2database/releases/tag/version-2.4.240), `DATETIME(9)` data type is
+[no longer accepted](https://github.com/h2database/h2database/issues/4285) unless using certain compatibility modes. This was
+the data type that `datetime()` columns were mapped to for the following H2 modes: Regular, MySQL, and MariaDB.
+
+Moving forward, `datetime()` columns for these modes will instead map to `TIMESTAMP(9)` for any `Database` instance using version 2.4.240+.
+Older versions of H2 will show no change in the data type mapping.
+
 ### Custom dialects
 
 In the same way as how there are database-specific implementations for further extensibility in `exposed-core`, like `H2Dialect`,
