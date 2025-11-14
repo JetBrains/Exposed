@@ -4,6 +4,7 @@ dokka = "2.1.0"
 detekt = "1.23.8" # When upgrading, also upgrade in detekt.yml and add corresponding detekt-formatting jar file.
 binary-compatibility-validator = "0.18.1"
 docker-compose = "0.17.5"
+kover = "0.9.3"
 kotlinCoroutines = "1.10.2"
 kotlinxSerialization = "1.9.0"
 
@@ -108,4 +109,5 @@ detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binary-compatibility-validator" }
 docker-compose = { id = "com.avast.gradle.docker-compose", version.ref = "docker-compose" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 maven-publish = { id = "com.vanniktech.maven.publish" }
