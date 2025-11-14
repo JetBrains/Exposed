@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.migration.jdbc
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import nl.altindag.log.LogCaptor
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
@@ -421,5 +422,38 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             val statements = MigrationUtils.statementsRequiredForDatabaseMigration(testTable)
             assertTrue(statements.isEmpty())
         }
+    }
+
+    @Test
+    fun testMetadataRetrievalLogsAreSilent() {
+        val logCaptor = LogCaptor.forName(exposedLogger.name)
+        logCaptor.setLogLevelToDebug()
+
+        withDb {
+            // rely directly on DatabaseMetaData methods
+            currentDialectMetadataTest.existingPrimaryKeys(MigrationTestsData.ColumnTypesTester)
+            currentDialectMetadataTest.existingIndices(MigrationTestsData.ColumnTypesTester)
+            currentDialectMetadataTest.allTablesNames()
+
+            assertTrue(logCaptor.debugLogs.isEmpty())
+
+            // rely directly on DatabaseMetaData methods - UNLESS MySQL
+            currentDialectMetadataTest.columnConstraints()
+
+            assertTrue(logCaptor.debugLogs.isEmpty())
+
+            // rely on SQL string + connection execution
+            connection.metadata { databaseDialectMode }
+            connection.metadata { supportsLimitWithUpdateOrDelete() }
+            currentDialectMetadataTest.existingCheckConstraints(MigrationTestsData.ColumnTypesTester)
+            currentDialectMetadataTest.sequences()
+            currentDialectMetadataTest.existingSequences(MigrationTestsData.ColumnTypesTester)
+
+            assertTrue(logCaptor.debugLogs.isEmpty())
+        }
+
+        logCaptor.resetLogLevel()
+        logCaptor.clearLogs()
+        logCaptor.close()
     }
 }

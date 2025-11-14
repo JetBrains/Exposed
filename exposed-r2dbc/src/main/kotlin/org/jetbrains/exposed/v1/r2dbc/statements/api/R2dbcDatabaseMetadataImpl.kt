@@ -4,7 +4,6 @@ import io.r2dbc.spi.Connection
 import io.r2dbc.spi.ConnectionMetadata
 import io.r2dbc.spi.IsolationLevel
 import io.r2dbc.spi.Row
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.collect
@@ -194,7 +193,7 @@ class R2dbcDatabaseMetadataImpl(
     private suspend fun fetchAllColumnTypes(tableName: String): Map<String, String> {
         if (currentDialect !is H2Dialect) return emptyMap()
 
-        return TransactionManager.current().exec("SHOW COLUMNS FROM $tableName") { row ->
+        return connection.executeSQL("SHOW COLUMNS FROM $tableName") { row, _ ->
             val field = row.getString("FIELD")
             val type = row.getString("TYPE")?.uppercase() ?: ""
             field?.let { it to type }
