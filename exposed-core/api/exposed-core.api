@@ -4017,6 +4017,7 @@ public abstract interface class org/jetbrains/exposed/v1/core/vendors/DatabaseDi
 	public abstract fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/v1/core/Expression;)Z
 	public abstract fun listDatabases ()Ljava/lang/String;
 	public abstract fun modifyColumn (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnDiff;)Ljava/util/List;
+	public abstract fun modifyColumn (Lorg/jetbrains/exposed/v1/core/vendors/ColumnMetadata;Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnDiff;)Ljava/util/List;
 	public abstract fun setSchema (Lorg/jetbrains/exposed/v1/core/Schema;)Ljava/lang/String;
 }
 
@@ -4052,6 +4053,7 @@ public final class org/jetbrains/exposed/v1/core/vendors/DatabaseDialect$Default
 	public static fun getSupportsWindowFrameGroupsMode (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/core/Expression;)Z
 	public static fun listDatabases (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Ljava/lang/String;
+	public static fun modifyColumn (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/core/vendors/ColumnMetadata;Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnDiff;)Ljava/util/List;
 	public static fun setSchema (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/core/Schema;)Ljava/lang/String;
 }
 
@@ -4466,6 +4468,7 @@ public final class org/jetbrains/exposed/v1/core/vendors/SQLServerDialect$Compan
 public class org/jetbrains/exposed/v1/core/vendors/SQLiteDialect : org/jetbrains/exposed/v1/core/vendors/VendorDialect {
 	public static final field Companion Lorg/jetbrains/exposed/v1/core/vendors/SQLiteDialect$Companion;
 	public fun <init> ()V
+	public fun addPrimaryKey (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;[Lorg/jetbrains/exposed/v1/core/Column;)Ljava/lang/String;
 	public fun createDatabase (Ljava/lang/String;)Ljava/lang/String;
 	public fun createIndex (Lorg/jetbrains/exposed/v1/core/Index;)Ljava/lang/String;
 	public fun dropDatabase (Ljava/lang/String;)Ljava/lang/String;
@@ -4476,6 +4479,8 @@ public class org/jetbrains/exposed/v1/core/vendors/SQLiteDialect : org/jetbrains
 	public fun getSupportsWindowFrameGroupsMode ()Z
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/v1/core/Expression;)Z
 	public fun listDatabases ()Ljava/lang/String;
+	public fun modifyColumn (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnDiff;)Ljava/util/List;
+	public fun modifyColumn (Lorg/jetbrains/exposed/v1/core/vendors/ColumnMetadata;Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnDiff;)Ljava/util/List;
 }
 
 public final class org/jetbrains/exposed/v1/core/vendors/SQLiteDialect$Companion : org/jetbrains/exposed/v1/core/vendors/VendorDialect$DialectNameProvider {
@@ -4535,6 +4540,7 @@ public abstract class org/jetbrains/exposed/v1/core/vendors/VendorDialect : org/
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/v1/core/Expression;)Z
 	public fun listDatabases ()Ljava/lang/String;
 	public fun modifyColumn (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnDiff;)Ljava/util/List;
+	public fun modifyColumn (Lorg/jetbrains/exposed/v1/core/vendors/ColumnMetadata;Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnDiff;)Ljava/util/List;
 	public fun setSchema (Lorg/jetbrains/exposed/v1/core/Schema;)Ljava/lang/String;
 }
 

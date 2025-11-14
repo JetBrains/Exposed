@@ -326,6 +326,27 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
         return "DROP INDEX IF EXISTS ${identifierManager.cutIfNecessaryAndQuote(indexName)}"
     }
 
+    override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> {
+        exposedLogger.warn("Modifying an existing column definition with ALTER TABLE is not supported in SQLite")
+        return emptyList()
+    }
+
+    override fun modifyColumn(originalColumnData: ColumnMetadata, column: Column<*>, columnDiff: ColumnDiff): List<String> {
+        if (columnDiff.hasDifferences() && !columnDiff.caseSensitiveName) {
+            exposedLogger.warn("ALTER TABLE only supports modifying the column name in SQLite")
+            return emptyList()
+        }
+
+        @OptIn(InternalApi::class)
+        val tr = currentTransaction()
+        return listOf("ALTER TABLE ${tr.identity(column.table)} RENAME COLUMN ${originalColumnData.name} TO ${tr.identity(column)}")
+    }
+
+    override fun addPrimaryKey(table: Table, pkName: String?, vararg pkColumns: Column<*>): String {
+        exposedLogger.warn("ALTER TABLE does not support adding a primary key to an existing table in SQLite")
+        return ""
+    }
+
     override fun createDatabase(name: String): String {
         @OptIn(InternalApi::class)
         return "ATTACH DATABASE '${name.lowercase()}.db' AS ${name.inProperCase()}"

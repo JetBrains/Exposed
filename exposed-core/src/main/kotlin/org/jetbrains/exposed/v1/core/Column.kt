@@ -97,6 +97,12 @@ class Column<T>(
     /** Returns the SQL statements that modify this column according to differences in the provided [ColumnDiff]. */
     fun modifyStatements(columnDiff: ColumnDiff): List<String> = currentDialect.modifyColumn(this, columnDiff)
 
+    internal fun modifyStatements(originalColumnData: ColumnMetadata?, columnDiff: ColumnDiff): List<String> {
+        return originalColumnData
+            ?.let { currentDialect.modifyColumn(it, this, columnDiff) }
+            ?: modifyStatements(columnDiff)
+    }
+
     override fun modifyStatement(): List<String> = currentDialect.modifyColumn(this, ColumnDiff.AllChanged)
 
     override fun dropStatement(): List<String> {

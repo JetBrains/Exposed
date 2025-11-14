@@ -4,8 +4,10 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils.withDataBaseLock
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.vendors.currentDialectMetadata
 
@@ -115,8 +117,10 @@ object SchemaUtils : SchemaUtilityApi() {
             )
         }
 
+        // While SQLite does allow some ALTER TABLE syntax, ADD/DROP CONSTRAINT is still not supported.
+        // ForeignKeyConstraint statement builders would return empty list at lowest level, but this avoids metadata check entirely.
         @OptIn(InternalApi::class)
-        if (dbSupportsAlterTableWithAddColumn) {
+        if (dbSupportsAlterTableWithAddColumn && currentDialect !is SQLiteDialect) {
             val existingColumnConstraints = logTimeSpent(CONSTRAINTS_LOG_MESSAGE, withLogs) {
                 currentDialectMetadata.columnConstraints(*tables)
             }

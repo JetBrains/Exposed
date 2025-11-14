@@ -69,6 +69,9 @@ data class ForeignKeyConstraint(
     private val tx: Transaction
         get() = currentTransaction()
 
+    private val DatabaseDialect.cannotAlterForeignKeyConstraint: Boolean
+        get() = this is SQLiteDialect
+
     /** The columns of the referenced parent table. */
     val target: LinkedHashSet<Column<*>> = LinkedHashSet(references.values)
 
@@ -161,16 +164,28 @@ data class ForeignKeyConstraint(
             }
         }
 
-    override fun createStatement(): List<String> = listOf("ALTER TABLE $fromTableName ADD $foreignKeyPart")
+    override fun createStatement(): List<String> {
+        return if (currentDialect.cannotAlterForeignKeyConstraint) {
+            exposedLogger.warn("ALTER TABLE ADD CONSTRAINT is not supported by ${currentDialect.name}")
+            listOf()
+        } else {
+            listOf("ALTER TABLE $fromTableName ADD $foreignKeyPart")
+        }
+    }
 
     override fun modifyStatement(): List<String> = dropStatement() + createStatement()
 
     override fun dropStatement(): List<String> {
-        val constraintType = when (currentDialect) {
-            is MysqlDialect -> "FOREIGN KEY"
-            else -> "CONSTRAINT"
+        return if (currentDialect.cannotAlterForeignKeyConstraint) {
+            exposedLogger.warn("ALTER TABLE DROP CONSTRAINT is not supported by ${currentDialect.name}")
+            listOf()
+        } else {
+            val constraintType = when (currentDialect) {
+                is MysqlDialect -> "FOREIGN KEY"
+                else -> "CONSTRAINT"
+            }
+            listOf("ALTER TABLE $fromTableName DROP $constraintType $fkName")
         }
-        return listOf("ALTER TABLE $fromTableName DROP $constraintType $fkName")
     }
 
     /** Returns the parent table column that is referenced by the [from] column in the child table. */
