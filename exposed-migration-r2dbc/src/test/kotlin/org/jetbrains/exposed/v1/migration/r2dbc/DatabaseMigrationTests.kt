@@ -416,20 +416,28 @@ class DatabaseMigrationTests : R2dbcDatabaseTestsBase() {
     }
 
     @Test
-    fun testMetadataRetrievalLogsAreSilent() {
-        val logCaptor = LogCaptor.forName(exposedLogger.name)
-        logCaptor.setLogLevelToDebug()
+    fun testMetadataRetrievalQueriesAreNotLogged() {
+        val tester = object : IntIdTable("tester") {
+            val amount = integer("amount")
+        }
 
-        withDb {
+        val logCaptor = LogCaptor.forName(exposedLogger.name)
+
+        withTables(tester) {
+            logCaptor.setLogLevelToDebug()
+
             // All R2DBC rely on SQL string + connection execution
-            currentDialectMetadataTest.existingPrimaryKeys(MigrationTestsData.ColumnTypesTester)
-            currentDialectMetadataTest.existingIndices(MigrationTestsData.ColumnTypesTester)
+            currentDialectMetadataTest.existingPrimaryKeys(tester)
+            currentDialectMetadataTest.existingIndices(tester)
+            currentDialectMetadataTest.tableColumns(tester)
             currentDialectMetadataTest.allTablesNames()
-            currentDialectMetadataTest.columnConstraints()
+            currentDialectMetadataTest.columnConstraints(tester)
             connection().metadata { getDatabaseDialectMode() }
-            currentDialectMetadataTest.existingCheckConstraints(MigrationTestsData.ColumnTypesTester)
+            if (currentDialectTest.supportsColumnTypeChange) {
+                currentDialectMetadataTest.existingCheckConstraints(tester)
+            }
             currentDialectMetadataTest.sequences()
-            currentDialectMetadataTest.existingSequences(MigrationTestsData.ColumnTypesTester)
+            currentDialectMetadataTest.existingSequences(tester)
 
             assertTrue(logCaptor.debugLogs.isEmpty())
         }

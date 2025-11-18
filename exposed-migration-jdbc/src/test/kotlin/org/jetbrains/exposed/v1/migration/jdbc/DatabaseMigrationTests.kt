@@ -425,29 +425,37 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testMetadataRetrievalLogsAreSilent() {
-        val logCaptor = LogCaptor.forName(exposedLogger.name)
-        logCaptor.setLogLevelToDebug()
+    fun testMetadataRetrievalQueriesAreNotLogged() {
+        val tester = object : IntIdTable("tester") {
+            val amount = integer("amount")
+        }
 
-        withDb {
+        val logCaptor = LogCaptor.forName(exposedLogger.name)
+
+        withTables(tester) {
+            logCaptor.setLogLevelToDebug()
+
             // rely directly on DatabaseMetaData methods
-            currentDialectMetadataTest.existingPrimaryKeys(MigrationTestsData.ColumnTypesTester)
-            currentDialectMetadataTest.existingIndices(MigrationTestsData.ColumnTypesTester)
+            currentDialectMetadataTest.existingPrimaryKeys(tester)
+            currentDialectMetadataTest.existingIndices(tester)
+            currentDialectMetadataTest.tableColumns(tester)
             currentDialectMetadataTest.allTablesNames()
 
             assertTrue(logCaptor.debugLogs.isEmpty())
 
-            // rely directly on DatabaseMetaData methods - UNLESS MySQL
-            currentDialectMetadataTest.columnConstraints()
+            // rely directly on DatabaseMetaData methods - except MySQL that uses SQL string
+            currentDialectMetadataTest.columnConstraints(tester)
 
             assertTrue(logCaptor.debugLogs.isEmpty())
 
             // rely on SQL string + connection execution
             connection.metadata { databaseDialectMode }
             connection.metadata { supportsLimitWithUpdateOrDelete() }
-            currentDialectMetadataTest.existingCheckConstraints(MigrationTestsData.ColumnTypesTester)
+            if (currentDialectTest.supportsColumnTypeChange) {
+                currentDialectMetadataTest.existingCheckConstraints(tester)
+            }
             currentDialectMetadataTest.sequences()
-            currentDialectMetadataTest.existingSequences(MigrationTestsData.ColumnTypesTester)
+            currentDialectMetadataTest.existingSequences(tester)
 
             assertTrue(logCaptor.debugLogs.isEmpty())
         }

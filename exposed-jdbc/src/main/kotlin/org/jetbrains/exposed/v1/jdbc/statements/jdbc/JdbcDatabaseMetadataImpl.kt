@@ -60,7 +60,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
     override val databaseDialectMode: String? by lazy {
         val dialect = currentDialect
-        if (dialect !is H2Dialect) null
+        if (dialect !is H2Dialect) return@lazy null
 
         val (settingNameField, settingValueField) = when ((dialect as H2Dialect).majorVersion) {
             H2Dialect.H2MajorVersion.Two -> "SETTING_NAME" to "SETTING_VALUE"
