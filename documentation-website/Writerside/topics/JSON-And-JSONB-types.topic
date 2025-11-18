@@ -76,15 +76,54 @@
                         <code>jsonb()</code>
                     </a>
                 </title>
-                <p>Maps to database <code>JSONB</code>. Used for storing JSON data in binary format (supported by
-                    PostgreSQL).</p>
+                <p>Maps to database <code>JSONB</code>. Used for storing JSON data in binary format.</p>
                 <p>Database-specific mappings:</p>
                 <list>
                     <li>MySQL and H2: Maps to <code>JSON</code></li>
-                    <li>SQLite and Oracle: Not supported</li>
+                    <li>SQLite: Maps to <code>BLOB</code> from version 3.45.0.0+; otherwise, not supported</li>
+                    <li>Oracle: Not supported</li>
                 </list>
             </def>
         </deflist>
+        <chapter title="SQLite and JSONB" id="sqlite">
+            <p>
+                Storing JSON strings as JSONB binary format is supported in SQLite starting from version 3.45.0.0. To
+                facilitate this, any string value set to a <code>.jsonb()</code> column will be automatically wrapped by
+                the SQL function <code>JSONB()</code>. This applies to values set in DDL default clauses:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="30-31,152,161-165"
+            />
+            <code-block lang="sql"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="156-159"
+            />
+            <p>
+                And to values set in DML operations:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="136-138"
+            />
+            <code-block lang="sql"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="132-133"
+            />
+            <p>
+                This means that attempting to read the value directly as it is stored in the column will throw a
+                decode exception due to the non-readable JSONB binary format. SQLite provides the SQL function <code>JSON()</code>
+                when it is required to read the stored value in a text format:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="147-149"
+            />
+            <code-block lang="sql"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="144"
+            />
+        </chapter>
     </chapter>
     <chapter title="JSON functions" id="json-functions">
 

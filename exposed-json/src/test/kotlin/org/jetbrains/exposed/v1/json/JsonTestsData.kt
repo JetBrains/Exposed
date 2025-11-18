@@ -2,15 +2,21 @@ package org.jetbrains.exposed.v1.json
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.jetbrains.exposed.v1.core.CustomFunction
+import org.jetbrains.exposed.v1.core.ExpressionWithColumnType
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.SizedIterable
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
+import org.jetbrains.exposed.v1.tests.currentDialectTest
 
 object JsonTestsData {
     object JsonTable : IntIdTable("j_table") {
@@ -28,9 +34,22 @@ object JsonTestsData {
     }
 
     class JsonBEntity(id: EntityID<Int>) : IntEntity(id) {
-        companion object : IntEntityClass<JsonBEntity>(JsonBTable)
+        companion object : IntEntityClass<JsonBEntity>(JsonBTable) {
+            override fun all(): SizedIterable<JsonBEntity> {
+                return if (currentDialectTest is SQLiteDialect) {
+                    wrapRows(
+                        JsonBTable.select(JsonBTable.id, JsonBTable.jsonBColumn.asJson())
+                            .notForUpdate()
+                    )
+                } else {
+                    super.all()
+                }
+            }
+        }
 
-        var jsonBColumn by JsonBTable.jsonBColumn
+        var jsonBColumn: DataHolder
+            get() = readValues.getOrNull(JsonBTable.jsonBColumn.asJson()) ?: readValues[JsonBTable.jsonBColumn]
+            set(value) { JsonBTable.jsonBColumn.setValue(this, this::jsonBColumn, value) }
     }
 
     object JsonArrays : IntIdTable("j_arrays") {
@@ -139,3 +158,6 @@ data class User(val name: String, val team: String?)
 
 @Serializable
 data class UserGroup(val users: List<User>)
+
+/** SQLite function that converts non-readable JSONB binary format to text format. */
+fun <T> ExpressionWithColumnType<T>.asJson(): CustomFunction<T> = CustomFunction("JSON", columnType, this)

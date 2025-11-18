@@ -29,8 +29,7 @@ public final class org/jetbrains/exposed/v1/json/JsonBColumnType : org/jetbrains
 	public fun <init> (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
 	public fun getUsesBinaryFormat ()Z
 	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun setParameter (Lorg/jetbrains/exposed/v1/core/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
+	public fun parameterMarker (Ljava/lang/Object;)Ljava/lang/String;
 	public fun sqlType ()Ljava/lang/String;
 }
 

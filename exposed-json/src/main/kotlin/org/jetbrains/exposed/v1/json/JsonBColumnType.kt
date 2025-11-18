@@ -5,11 +5,9 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.core.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
-import java.io.InputStream
 
 /**
  * Column for storing JSON data in binary format.
@@ -29,30 +27,16 @@ class JsonBColumnType<T : Any>(
         else -> currentDialect.dataTypeProvider.jsonBType()
     }
 
-    override fun nonNullValueToString(value: T): String {
-        return when (currentDialect) {
-            is SQLiteDialect -> "JSONB('${super.notNullValueToDB(value)}')"
-            else -> super.nonNullValueToString(value)
-        }
+    override fun parameterMarker(value: T?): String = if (currentDialect is SQLiteDialect) {
+        "JSONB(?)"
+    } else {
+        super.parameterMarker(value)
     }
 
     override fun nonNullValueAsDefaultString(value: T): String {
         return when (currentDialect) {
-            is SQLiteDialect -> "(${nonNullValueToString(value)})"
+            is SQLiteDialect -> "(JSONB(${nonNullValueToString(value)}))"
             else -> super.nonNullValueAsDefaultString(value)
-        }
-    }
-
-    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
-        when (currentDialect) {
-            is SQLiteDialect -> {
-                when (val toSetValue = (value as? String)?.encodeToByteArray()?.inputStream() ?: value) {
-                    is InputStream -> stmt.setInputStream(index, toSetValue, false)
-                    null -> stmt.setNull(index, this)
-                    else -> super.setParameter(stmt, index, toSetValue)
-                }
-            }
-            else -> super.setParameter(stmt, index, value)
         }
     }
 }
