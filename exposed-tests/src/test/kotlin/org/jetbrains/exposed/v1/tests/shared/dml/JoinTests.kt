@@ -223,5 +223,8 @@ class JoinTests : DatabaseTestsBase() {
             assertTrue(logCaptor.warnLogs.isEmpty())
             assertTrue(logCaptor.errorLogs.isEmpty())
         }
+
+        logCaptor.clearLogs()
+        logCaptor.close()
     }
 }

@@ -1,13 +1,7 @@
 package org.jetbrains.exposed.v1.jdbc
 
 import org.intellij.lang.annotations.Language
-import org.jetbrains.exposed.v1.core.CompositeSqlLogger
-import org.jetbrains.exposed.v1.core.IColumnType
-import org.jetbrains.exposed.v1.core.InternalApi
-import org.jetbrains.exposed.v1.core.Key
-import org.jetbrains.exposed.v1.core.SqlLogger
-import org.jetbrains.exposed.v1.core.Transaction
-import org.jetbrains.exposed.v1.core.exposedLogger
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.GlobalStatementInterceptor
 import org.jetbrains.exposed.v1.core.statements.Statement
 import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
@@ -35,6 +29,16 @@ open class JdbcTransaction(
 
     override val transactionManager: TransactionManager
         get() = db.transactionManager
+
+    /**
+     * A [CompositeSqlLogger] containing any [SqlLogger] instances that are implicitly added to a new transaction.
+     *
+     * By default, this property will store the value passed to `DatabaseConfig.sqlLogger` when `Database.connect()`
+     * is invoked, wrapped as a [CompositeSqlLogger].
+     * If no value is configured, the default setting is a wrapped `Slf4jSqlDebugLogger`, which only logs SQL strings
+     * if DEBUG level is enabled.
+     */
+    val defaultLogger: CompositeSqlLogger
 
     /**
      * The maximum amount of attempts that will be made to perform this `transaction` block.
@@ -71,7 +75,7 @@ open class JdbcTransaction(
     internal val interceptors = arrayListOf<StatementInterceptor>()
 
     init {
-        addLogger(db.config.sqlLogger)
+        defaultLogger = addLogger(db.config.sqlLogger)
         globalInterceptors // init interceptors
     }
 
