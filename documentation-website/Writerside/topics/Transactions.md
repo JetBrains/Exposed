@@ -26,7 +26,7 @@ If you need to execute a transaction asynchronously or within a coroutine, use a
 
 ## Suspend-based transaction
 
-Use [`suspendTansaction()`](https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc.transactions/suspend-transaction.html)
+Use [`suspendTransaction()`](https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc.transactions/suspend-transaction.html)
 from `exposed-r2dbc` to perform non-blocking operations in coroutine-based applications:
 
 ```kotlin
@@ -37,11 +37,11 @@ suspendTransaction {
 }
 ```
 
-For compatibility with JDBC drivers, a [`suspendTansaction()`](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc.transactions/suspend-transaction.html)
+For compatibility with JDBC drivers, a [`suspendTransaction()`](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc.transactions/suspend-transaction.html)
 is also available to call suspend functions alongside blocking database operations.
 
 The behavior of both these functions match that of `transaction()`, but with their `statement` parameter accepting suspend functions.
-To pass additional context to either `suspendTansaction()`, wrap it in a coroutine builder function, like
+To pass additional context to either `suspendTransaction()`, wrap it in a coroutine builder function, like
 [`withContext()`](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-context.html)
 or [`async()`](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/async.html).
 
