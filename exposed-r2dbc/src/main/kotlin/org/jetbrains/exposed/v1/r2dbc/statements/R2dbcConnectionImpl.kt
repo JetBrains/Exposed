@@ -6,13 +6,11 @@ import io.r2dbc.spi.Row
 import io.r2dbc.spi.RowMetadata
 import io.r2dbc.spi.Statement
 import io.r2dbc.spi.ValidationDepth
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.collect
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
