@@ -43,6 +43,8 @@ sealed class CurrentTimestampBase<T>(columnType: IColumnType<T & Any>) : Functio
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
             (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
+            // SYSDATETIME has more precision, as measured by fractional seconds precision, than CURRENT_TIMESTAMP
+            currentDialect is SQLServerDialect -> "SYSDATETIME()"
             else -> "CURRENT_TIMESTAMP"
         }
     }
