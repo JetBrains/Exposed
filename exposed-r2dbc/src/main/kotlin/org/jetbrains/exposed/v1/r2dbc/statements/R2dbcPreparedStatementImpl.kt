@@ -3,7 +3,6 @@ package org.jetbrains.exposed.v1.r2dbc.statements
 import io.r2dbc.spi.Connection
 import io.r2dbc.spi.Statement
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.jetbrains.exposed.v1.core.ArrayColumnType
 import org.jetbrains.exposed.v1.core.BinaryColumnType
 import org.jetbrains.exposed.v1.core.BlobColumnType
@@ -49,7 +48,7 @@ class R2dbcPreparedStatementImpl(
 
     override suspend fun setTimeout(value: Int?) {
         value?.let {
-            connection.setStatementTimeout(Duration.ofSeconds(value.toLong())).awaitFirstOrNull()
+            awaitFirstOrNull(connection.setStatementTimeout(Duration.ofSeconds(value.toLong())))
         }
     }
 

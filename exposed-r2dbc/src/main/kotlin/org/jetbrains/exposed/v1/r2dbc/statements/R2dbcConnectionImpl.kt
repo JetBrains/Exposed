@@ -6,14 +6,13 @@ import io.r2dbc.spi.Row
 import io.r2dbc.spi.RowMetadata
 import io.r2dbc.spi.Statement
 import io.r2dbc.spi.ValidationDepth
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.awaitFirstOrNull
-import kotlinx.coroutines.reactive.awaitLast
-import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactive.collect
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
@@ -64,7 +63,9 @@ class R2dbcConnectionImpl(
     override suspend fun getAutoCommit(): Boolean = withConnection { isAutoCommit }
 
     override suspend fun setAutoCommit(value: Boolean) {
-        withConnection { setAutoCommit(value).awaitFirstOrNull() }
+        withConnection {
+            awaitFirstOrNull(setAutoCommit(value))
+        }
     }
 
     override suspend fun getReadOnly(): Boolean = withConnection {
@@ -80,27 +81,33 @@ class R2dbcConnectionImpl(
     override suspend fun getTransactionIsolation(): IsolationLevel = withConnection { transactionIsolationLevel }
 
     override suspend fun setTransactionIsolation(value: IsolationLevel) {
-        withConnection { setTransactionIsolationLevel(value).awaitFirstOrNull() }
+        withConnection {
+            awaitFirstOrNull(setTransactionIsolationLevel(value))
+        }
     }
 
     override suspend fun commit() {
         withConnection {
             // this has side effect of enabling auto-commit ON, which may cause unexpected rollback behavior
-            commitTransaction().awaitFirstOrNull()
+            awaitFirstOrNull(commitTransaction())
             // but attempting to revert or clean active tx state using beginTransaction() leads to another commit/abort
         }
     }
 
     override suspend fun rollback() {
-        withConnection { rollbackTransaction().awaitFirstOrNull() }
+        withConnection {
+            awaitFirstOrNull(rollbackTransaction())
+        }
     }
 
     override suspend fun isClosed(): Boolean = withConnection {
-        !validate(ValidationDepth.LOCAL).awaitSingle() || !validate(ValidationDepth.REMOTE).awaitSingle()
+        !awaitSingle(validate(ValidationDepth.LOCAL)) || !awaitSingle(validate(ValidationDepth.REMOTE))
     }
 
     override suspend fun close() {
-        withConnection { close().awaitFirstOrNull() }
+        withConnection {
+            awaitFirstOrNull(close())
+        }
         localConnection = null
     }
 
@@ -188,19 +195,19 @@ class R2dbcConnectionImpl(
     }
 
     override suspend fun setSavepoint(name: String): ExposedSavepoint = withConnection {
-        createSavepoint(name).awaitFirstOrNull()
+        awaitFirstOrNull(createSavepoint(name))
         R2dbcSavepoint(name)
     }
 
     override suspend fun releaseSavepoint(savepoint: ExposedSavepoint) {
         withConnection {
-            releaseSavepoint(savepoint.name).awaitFirstOrNull()
+            awaitFirstOrNull(releaseSavepoint(savepoint.name))
         }
     }
 
     override suspend fun rollback(savepoint: ExposedSavepoint) {
         withConnection {
-            rollbackTransactionToSavepoint(savepoint.name).awaitFirstOrNull()
+            awaitFirstOrNull(rollbackTransactionToSavepoint(savepoint.name))
         }
     }
 
@@ -218,9 +225,9 @@ class R2dbcConnectionImpl(
 
     private suspend fun <T> withConnection(body: suspend Connection.() -> T): T {
         val acquiredConnection = localConnectionLock.withLock {
-            localConnection ?: connection.awaitLast().also {
+            localConnection ?: awaitLast(connection).also {
                 // this starts an explicit transaction with autoCommit mode off
-                it.beginTransaction().awaitFirstOrNull()
+                awaitFirstOrNull(it.beginTransaction())
                 localConnection = it
             }
         }
@@ -249,7 +256,7 @@ internal fun Int.asIsolationLevel(): IsolationLevel = isolationLevelMapping.entr
 internal suspend fun Connection.executeSQL(sqlQuery: String) {
     if (sqlQuery.isEmpty()) return
 
-    createStatement(sqlQuery).execute().awaitFirstOrNull()
+    awaitFirstOrNull(createStatement(sqlQuery).execute())
 }
 
 @OptIn(InternalApi::class)

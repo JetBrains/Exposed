@@ -36,9 +36,10 @@ class R2dbcResult internal constructor(
         if (consumed) error("Result is already consumed")
         consumed = true
 
+        val currentTransaction = TransactionManager.currentOrNull()
+
         return flow {
             resultPublisher.collect { result ->
-                val currentTransaction = TransactionManager.currentOrNull()
                 result
                     .map { row, rm ->
                         // The current block is run in another thread outside of coroutine,
