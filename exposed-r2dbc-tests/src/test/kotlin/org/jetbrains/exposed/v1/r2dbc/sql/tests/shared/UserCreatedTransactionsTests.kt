@@ -10,8 +10,8 @@ import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.getInt
-import org.jetbrains.exposed.v1.r2dbc.tests.withTransactionContext
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.r2dbc.withTransactionContext
 import org.junit.Assume
 import org.junit.Before
 import kotlin.test.Test

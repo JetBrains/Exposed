@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.v1.jdbc.transactions
 
-import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.SqlLogger
 import org.jetbrains.exposed.v1.core.exposedLogger
@@ -10,7 +9,7 @@ import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
-import org.jetbrains.exposed.v1.jdbc.asContext
+import org.jetbrains.exposed.v1.jdbc.withTransactionContext
 import java.sql.SQLException
 import java.util.concurrent.ThreadLocalRandom
 
@@ -226,7 +225,10 @@ fun <T> inTopLevelTransaction(
                 throw cause
             }
         } finally {
-            closeStatementsAndConnection(transaction)
+            @OptIn(InternalApi::class)
+            withThreadLocalTransaction(transaction) {
+                closeStatementsAndConnection(transaction)
+            }
         }
     }
 }
@@ -266,7 +268,7 @@ suspend fun <T> suspendTransaction(
         )
 
         @OptIn(InternalApi::class)
-        withContext(transaction.asContext()) {
+        withTransactionContext(transaction) {
             executeTransactionWithErrorHandling(
                 transaction,
                 shouldCommit = outer.db.useNestedTransactions
@@ -327,7 +329,7 @@ suspend fun <T> inTopLevelSuspendTransaction(
 
         try {
             @OptIn(InternalApi::class)
-            return withContext(transaction.asContext()) {
+            return withTransactionContext(transaction) {
                 try {
                     executeTransactionWithErrorHandling(transaction, shouldCommit = true) {
                         transaction.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
@@ -367,7 +369,10 @@ suspend fun <T> inTopLevelSuspendTransaction(
                 throw cause
             }
         } finally {
-            closeStatementsAndConnection(transaction)
+            @OptIn(InternalApi::class)
+            withTransactionContext(transaction) {
+                closeStatementsAndConnection(transaction)
+            }
         }
     }
 }

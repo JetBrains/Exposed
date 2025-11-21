@@ -354,7 +354,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/R2dbcTransaction$Companion {
 }
 
 public final class org/jetbrains/exposed/v1/r2dbc/R2dbcTransactionKt {
-	public static final fun asContext (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;)Lkotlin/coroutines/CoroutineContext;
+	public static final fun withTransactionContext (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/v1/r2dbc/SchemaUtils : org/jetbrains/exposed/v1/core/SchemaUtilityApi {
