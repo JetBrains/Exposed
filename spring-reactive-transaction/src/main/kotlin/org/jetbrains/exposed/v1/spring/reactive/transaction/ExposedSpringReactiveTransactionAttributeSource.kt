@@ -14,7 +14,7 @@ import java.lang.reflect.Method
  * @property delegate The delegate [TransactionAttributeSource] to use. Defaults to [AnnotationTransactionAttributeSource].
  * If you use a custom [TransactionAttributeSource], you can pass it here.
  */
-class ExposedSpringTransactionAttributeSource(
+class ExposedSpringReactiveTransactionAttributeSource(
     private val delegate: TransactionAttributeSource = AnnotationTransactionAttributeSource(),
     private val rollbackExceptions: List<Class<out Throwable>> = listOf(R2dbcException::class.java)
 ) : TransactionAttributeSource {

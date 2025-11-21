@@ -136,10 +136,6 @@ class R2dbcPreparedStatementImpl(
         throw IllegalArgumentException("Unsupported array type: ${type::class.qualifiedName}")
     }
 
-    override suspend fun closeIfPossible() {
-        // do nothing
-    }
-
     override suspend fun executeBatch(): List<Int> {
         val result = statement.execute()
         val r2dbcResult = R2dbcResult(result, typeMapping)
@@ -151,9 +147,5 @@ class R2dbcPreparedStatementImpl(
             resultRow = null
             r2dbcResult.rowsUpdated().toList()
         }
-    }
-
-    override suspend fun cancel() {
-        // do nothing
     }
 }

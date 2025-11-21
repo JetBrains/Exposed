@@ -5,7 +5,7 @@ import io.r2dbc.spi.IsolationLevel
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Mono
 
-internal class ConnectionSpy(private val connection: Connection) : Connection by connection {
+class ConnectionSpy(private val connection: Connection) : Connection by connection {
     var commitCallCount: Int = 0
     var rollbackCallCount: Int = 0
     var closeCallCount: Int = 0
@@ -33,51 +33,51 @@ internal class ConnectionSpy(private val connection: Connection) : Connection by
         callOrder.clear()
     }
 
-    override fun close(): Publisher<Void?> {
+    override fun close(): Publisher<Void?> = Mono.defer {
         callOrder.add("close")
         closeCallCount++
 
-        return Mono.empty()
+        Mono.empty()
     }
 
-    override fun setAutoCommit(p0: Boolean): Publisher<Void?> {
+    override fun setAutoCommit(p0: Boolean): Publisher<Void?> = Mono.defer {
         callOrder.add("setAutoCommit")
         mockAutoCommit = p0
 
-        return Mono.empty()
+        Mono.empty()
     }
 
     override fun isAutoCommit(): Boolean = mockAutoCommit
 
-    override fun commitTransaction(): Publisher<Void?> {
+    override fun commitTransaction(): Publisher<Void?> = Mono.defer {
         callOrder.add("commit")
         commitCallCount++
         mockCommit()
 
-        return Mono.empty()
+        Mono.empty()
     }
 
-    override fun rollbackTransaction(): Publisher<Void?> {
+    override fun rollbackTransaction(): Publisher<Void?> = Mono.defer {
         callOrder.add("rollback")
         rollbackCallCount++
         mockRollback()
 
-        return Mono.empty()
+        Mono.empty()
     }
 
-    override fun rollbackTransactionToSavepoint(p0: String): Publisher<Void?> {
+    override fun rollbackTransactionToSavepoint(p0: String): Publisher<Void?> = Mono.defer {
         callOrder.add("rollback")
         rollbackCallCount++
         mockRollback()
 
-        return Mono.empty()
+        Mono.empty()
     }
 
-    override fun releaseSavepoint(p0: String): Publisher<Void?> {
+    override fun releaseSavepoint(p0: String): Publisher<Void?> = Mono.defer {
         callOrder.add("releaseSavepoint")
         releaseSavepointCallCount++
 
-        return Mono.empty()
+        Mono.empty()
     }
 
     override fun getTransactionIsolationLevel(): IsolationLevel = mockTransactionIsolation

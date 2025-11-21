@@ -270,7 +270,7 @@ internal suspend fun closeStatementsAndConnection(transaction: R2dbcTransaction)
     @Suppress("TooGenericExceptionCaught")
     try {
         currentStatement?.let {
-            it.closeIfPossible()
+            // no Statement.close() in R2DBC
             transaction.currentStatement = null
         }
         transaction.closeExecutedStatements()
