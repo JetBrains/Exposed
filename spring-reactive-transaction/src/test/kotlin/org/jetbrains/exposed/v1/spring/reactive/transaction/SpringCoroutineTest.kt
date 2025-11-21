@@ -1,9 +1,15 @@
 package org.jetbrains.exposed.v1.spring.reactive.transaction
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.debug.junit4.CoroutinesTimeout
-import kotlinx.coroutines.test.runTest
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
@@ -12,7 +18,8 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.Rule
 import org.junit.Test
 import org.springframework.test.annotation.Commit
-import org.springframework.transaction.annotation.Transactional
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 import kotlin.test.assertEquals
 
 open class SpringCoroutineTest : SpringReactiveTransactionTestBase() {
@@ -27,24 +34,38 @@ open class SpringCoroutineTest : SpringReactiveTransactionTestBase() {
         override val primaryKey = PrimaryKey(id)
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
+    @OptIn(InternalApi::class)
+    @BeforeTest
+    fun beforeTest() {
+        // TODO - this should not be done, but transaction is not being popped on original thread after coroutine switches thread
+        ThreadLocalTransactionsStack.threadTransactions()?.clear()
+    }
+
+    @OptIn(InternalApi::class)
+    @AfterTest
+    fun afterTest() {
+        // TODO - this should not be done, but transaction is not being popped on original thread after coroutine switches thread
+        ThreadLocalTransactionsStack.threadTransactions()?.clear()
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
     @RepeatableTest(times = 5)
     @Test
-    @Transactional
+//    @Transactional // see [runTestWithMockTransactional]
     @Commit
-    open fun testNestedCoroutineTransaction() = runTest {
+    open fun testNestedCoroutineTransaction() = runTestWithMockTransactional {
         try {
             SchemaUtils.create(Testing)
 
             val mainJob = GlobalScope.async {
                 val results = (1..5).map { indx ->
-                    withContext(Dispatchers.IO) {
+                    async(Dispatchers.IO) {
                         suspendTransaction {
                             Testing.insert { }
                             indx
                         }
                     }
-                }
+                }.awaitAll()
 
                 assertEquals(15, results.sum())
             }

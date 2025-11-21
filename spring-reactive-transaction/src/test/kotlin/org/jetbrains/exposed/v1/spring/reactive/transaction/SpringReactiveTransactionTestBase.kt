@@ -2,6 +2,9 @@ package org.jetbrains.exposed.v1.spring.reactive.transaction
 
 import io.r2dbc.spi.ConnectionFactories
 import io.r2dbc.spi.ConnectionFactory
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runTest
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.junit.FixMethodOrder
@@ -31,9 +34,12 @@ open class TestConfig : TransactionManagementConfigurer {
     open fun cxFactory(): ConnectionFactory = ConnectionFactories.get(TestDB.H2_V2.connection.invoke())
 
     @Bean
-    override fun annotationDrivenTransactionManager(): ReactiveTransactionManager = SpringReactiveTransactionManager(
+    override fun annotationDrivenTransactionManager(): SpringReactiveTransactionManager = SpringReactiveTransactionManager(
         cxFactory(),
-        R2dbcDatabaseConfig { useNestedTransactions = true }
+        R2dbcDatabaseConfig {
+            useNestedTransactions = true
+            explicitDialect = H2Dialect()
+        }
     )
 }
 
@@ -48,6 +54,32 @@ abstract class SpringReactiveTransactionTestBase {
 
     @Autowired
     lateinit var transactionManager: ReactiveTransactionManager
+
+    /**
+     * Invokes [runTest] with the [testBody] executed by a [TransactionalOperator] that is set up to follow the same
+     * rollback rules as `@Transactional`.
+     *
+     * Currently, `@Transactional` in Spring's `TestContext` is only configured to find a `PlatformTransactionManager`,
+     * so it is completely unusable for Spring-R2dbc unit tests.
+     *
+     * [Open Issue](https://github.com/spring-projects/spring-framework/issues/24226)
+     */
+    fun runTestWithMockTransactional(
+        propagationBehavior: Int = TransactionDefinition.PROPAGATION_REQUIRED,
+        testBody: suspend TestScope.(ReactiveTransaction) -> Unit
+    ) {
+        if (transactionManager !is SpringReactiveTransactionManager) error("Wrong txManager instance: ${this.javaClass.name}")
+
+        val trxDef = DefaultTransactionDefinition(propagationBehavior)
+
+        runTest {
+            val trxOp = TransactionalOperator.create(transactionManager, trxDef)
+            trxOp.executeAndAwait {
+                testBody(it)
+                it.setRollbackOnly()
+            }
+        }
+    }
 }
 
 suspend fun ReactiveTransactionManager.execute(
@@ -58,13 +90,13 @@ suspend fun ReactiveTransactionManager.execute(
     block: suspend (ReactiveTransaction) -> Unit
 ) {
     if (this !is SpringReactiveTransactionManager) error("Wrong txManager instance: ${this.javaClass.name}")
-    val td = DefaultTransactionDefinition(propagationBehavior).apply {
+    val trxDef = DefaultTransactionDefinition(propagationBehavior).apply {
         this.isolationLevel = isolationLevel
         if (readOnly) this.isReadOnly = true
         if (timeout != null) this.timeout = timeout
     }
-    val to = TransactionalOperator.create(this, td)
-    to.executeAndAwait {
+    val trxOp = TransactionalOperator.create(this, trxDef)
+    trxOp.executeAndAwait {
         block(it)
     }
 }

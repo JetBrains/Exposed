@@ -3,8 +3,12 @@ package org.jetbrains.exposed.v1.spring.reactive.transaction
 import io.r2dbc.spi.ConnectionFactories
 import io.r2dbc.spi.ConnectionFactory
 import kotlinx.coroutines.test.runTest
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.r2dbc.ExposedR2dbcException
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.deleteAll
 import org.jetbrains.exposed.v1.r2dbc.insert
@@ -25,10 +29,21 @@ class SpringReactiveTransactionRollbackTest {
 
     val container = AnnotationConfigApplicationContext(TransactionManagerAttributeSourceTestConfig::class.java)
 
+    @OptIn(InternalApi::class)
     @BeforeTest
     fun beforeTest() = runTest {
         val testRollback = container.getBean(TestRollback::class.java)
         testRollback.init()
+        // TODO - this should not be done, but transaction is not being popped on original thread after coroutine switches thread
+        ThreadLocalTransactionsStack.threadTransactions()?.clear()
+    }
+
+    @OptIn(InternalApi::class)
+    @AfterTest
+    fun afterTest() {
+        container.close()
+        // TODO - this should not be done, but transaction is not being popped on original thread after coroutine switches thread
+        ThreadLocalTransactionsStack.threadTransactions()?.clear()
     }
 
     @Test
@@ -71,11 +86,6 @@ class SpringReactiveTransactionRollbackTest {
 
         assertEquals(1, testRollback.entireTableSize())
     }
-
-    @AfterTest
-    fun afterTest() {
-        container.close()
-    }
 }
 
 @Configuration
@@ -86,10 +96,13 @@ open class TransactionManagerAttributeSourceTestConfig {
     open fun cxFactory(): ConnectionFactory = ConnectionFactories.get(TestDB.H2_V2.connection.invoke())
 
     @Bean
-    open fun transactionManager(connectionFactory: ConnectionFactory) = SpringReactiveTransactionManager(connectionFactory)
+    open fun transactionManager(connectionFactory: ConnectionFactory) = SpringReactiveTransactionManager(
+        connectionFactory,
+        R2dbcDatabaseConfig { explicitDialect = H2Dialect() }
+    )
 
     @Bean
-    open fun transactionAttributeSource() = ExposedSpringTransactionAttributeSource()
+    open fun transactionAttributeSource() = ExposedSpringReactiveTransactionAttributeSource()
 
     @Bean
     open fun testRollback() = TestRollback()

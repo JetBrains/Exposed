@@ -6,6 +6,7 @@ include("exposed-dao")
 include("exposed-jodatime")
 include("exposed-java-time")
 include("spring-transaction")
+include("spring-reactive-transaction")
 include("exposed-spring-boot-starter")
 include("exposed-jdbc")
 include("exposed-tests")
@@ -20,7 +21,6 @@ include("exposed-migration-r2dbc")
 include("exposed-r2dbc")
 include("exposed-r2dbc-tests")
 include("exposed-jdbc-r2dbc-tests")
-include("spring-reactive-transaction")
 
 pluginManagement {
     repositories {
@@ -50,5 +50,3 @@ toolchainManagement {
         }
     }
 }
-
-include("spring-reactive-transaction")

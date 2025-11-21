@@ -44,6 +44,7 @@ dependencies {
     kover(project(":exposed-jodatime"))
     kover(project(":exposed-java-time"))
     kover(project(":spring-transaction"))
+    kover(project(":spring-reactive-transaction"))
     kover(project(":exposed-spring-boot-starter"))
     kover(project(":exposed-jdbc"))
     kover(project(":exposed-money"))
