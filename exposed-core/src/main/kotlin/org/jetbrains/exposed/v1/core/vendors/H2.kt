@@ -14,8 +14,8 @@ internal object H2DataTypeProvider : DataTypeProvider() {
 
     override fun uuidToDB(value: UUID): Any = value
 
-    @Suppress("MagicNumber")
     override fun dateTimeType(): String {
+        @Suppress("MagicNumber")
         @OptIn(InternalApi::class)
         val breakingVersion = Version(2, 4, 240)
 
