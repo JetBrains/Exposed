@@ -229,5 +229,8 @@ class JoinTests : R2dbcDatabaseTestsBase() {
             assertTrue(logCaptor.warnLogs.isEmpty())
             assertTrue(logCaptor.errorLogs.isEmpty())
         }
+
+        logCaptor.clearLogs()
+        logCaptor.close()
     }
 }

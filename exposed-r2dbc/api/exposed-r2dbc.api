@@ -329,6 +329,7 @@ public class org/jetbrains/exposed/v1/r2dbc/R2dbcTransaction : org/jetbrains/exp
 	public final fun getCurrentStatement ()Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;
 	public synthetic fun getDb ()Lorg/jetbrains/exposed/v1/core/DatabaseApi;
 	public final fun getDb ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
+	public final fun getDefaultLogger ()Lorg/jetbrains/exposed/v1/core/CompositeSqlLogger;
 	public final fun getMaxAttempts ()I
 	public final fun getMaxRetryDelay ()J
 	public final fun getMinRetryDelay ()J

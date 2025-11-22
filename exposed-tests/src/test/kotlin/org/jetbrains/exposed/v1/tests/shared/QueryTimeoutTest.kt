@@ -122,5 +122,6 @@ class QueryTimeoutTest : DatabaseTestsBase() {
         }
 
         logCaptor.clearLogs()
+        logCaptor.close()
     }
 }

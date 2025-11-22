@@ -117,6 +117,7 @@ public class org/jetbrains/exposed/v1/jdbc/JdbcTransaction : org/jetbrains/expos
 	public final fun getCurrentStatement ()Lorg/jetbrains/exposed/v1/jdbc/statements/api/JdbcPreparedStatementApi;
 	public synthetic fun getDb ()Lorg/jetbrains/exposed/v1/core/DatabaseApi;
 	public final fun getDb ()Lorg/jetbrains/exposed/v1/jdbc/Database;
+	public final fun getDefaultLogger ()Lorg/jetbrains/exposed/v1/core/CompositeSqlLogger;
 	public final fun getMaxAttempts ()I
 	public final fun getMaxRetryDelay ()J
 	public final fun getMinRetryDelay ()J

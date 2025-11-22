@@ -46,6 +46,16 @@ open class R2dbcTransaction(
         get() = db.transactionManager
 
     /**
+     * A [CompositeSqlLogger] containing any [SqlLogger] instances that are implicitly added to a new transaction.
+     *
+     * By default, this property will store the value passed to `DatabaseConfig.sqlLogger` when `R2dbcDatabase.connect()`
+     * is invoked, wrapped as a [CompositeSqlLogger].
+     * If no value is configured, the default setting is a wrapped `Slf4jSqlDebugLogger`, which only logs SQL strings
+     * if DEBUG level is enabled.
+     */
+    val defaultLogger: CompositeSqlLogger
+
+    /**
      * The maximum amount of attempts that will be made to perform this `transaction` block.
      *
      * If this value is set to 1 and an R2dbcException happens, the exception will be thrown without performing a retry.
@@ -80,7 +90,7 @@ open class R2dbcTransaction(
     internal val interceptors = arrayListOf<SuspendStatementInterceptor>()
 
     init {
-        addLogger(db.config.sqlLogger)
+        defaultLogger = addLogger(db.config.sqlLogger)
         globalInterceptors // init interceptors
     }
 
