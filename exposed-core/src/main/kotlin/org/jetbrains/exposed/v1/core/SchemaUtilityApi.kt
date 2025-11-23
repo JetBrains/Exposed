@@ -74,6 +74,7 @@ abstract class SchemaUtilityApi {
         alterTableAddColumnSupported: Boolean,
         isIncorrectType: (columnMetadata: ColumnMetadata, column: Column<*>) -> Boolean
     ): C {
+        val isSqlite = currentDialect is SQLiteDialect
         // create columns
         val existingTableColumns = columns.mapNotNull { column ->
             val existingColumn = existingColumns.find { column.nameUnquoted().equals(it.name, true) }
@@ -90,10 +91,18 @@ abstract class SchemaUtilityApi {
             existingTableColumns
                 .mapColumnDiffs(isIncorrectType)
                 .flatMapTo(destination) { (col, changedState) ->
-                    col.modifyStatements(changedState)
+                    if (isSqlite && changedState.caseSensitiveName) {
+                        col.modifyStatements(existingTableColumns[col], changedState)
+                    } else {
+                        col.modifyStatements(changedState)
+                    }
                 }
-            // add missing primary key
-            primaryKeyDdl(missingTableColumns, existingPrimaryKey)?.let { destination.add(it) }
+            // While SQLite does allow some ALTER TABLE syntax, ADD PRIMARY KEY is still not supported.
+            // PrimaryKey statement builder would return empty string at lowest level (not null), so this avoids it being added.
+            if (!isSqlite) {
+                // add missing primary key
+                primaryKeyDdl(missingTableColumns, existingPrimaryKey)?.let { destination.add(it) }
+            }
         }
         return destination
     }
@@ -314,7 +323,12 @@ abstract class SchemaUtilityApi {
             } else {
                 false
             }
-            val incorrectNullability = existingCol.nullable != colNullable
+            // SQLite INTEGER PRIMARY KEY AUTOINCREMENT columns are technically still nullable on db-side
+            val incorrectNullability = existingCol.nullable != colNullable &&
+                (
+                    dialect !is SQLiteDialect ||
+                        columnType.sqlType() != dialect.dataTypeProvider.integerAutoincType()
+                    )
             val incorrectAutoInc = isIncorrectAutoInc(existingCol, col)
             // 'isDatabaseGenerated' property means that the column has generation of the value on the database side,
             // and it could be default value, trigger or something else,
@@ -506,7 +520,15 @@ abstract class SchemaUtilityApi {
         if (columnMeta.size == null) return false
         val dialect = currentDialect
         return when (columnType) {
-            is DecimalColumnType -> columnType.precision != columnMeta.size || columnType.scale != columnMeta.scale
+            is DecimalColumnType -> {
+                // SQLite-JDBC driver returns COLUMN_SIZE that is sum of precision and scale
+                val adjustedColumnSize = if (dialect is SQLiteDialect && columnMeta.scale != null) {
+                    columnMeta.size - columnMeta.scale
+                } else {
+                    columnMeta.size
+                }
+                columnType.precision != adjustedColumnSize || columnType.scale != columnMeta.scale
+            }
             is CharColumnType -> columnType.colLength != columnMeta.size
             is VarCharColumnType -> columnType.colLength != columnMeta.size
             is BinaryColumnType -> if (dialect is PostgreSQLDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.PostgreSQL) {

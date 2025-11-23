@@ -324,6 +324,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     }
 
     override fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> {
+        val isSqlite = currentDialect is SQLiteDialect
         return tables.associateWith { table ->
             val (catalog, tableSchema) = tableCatalogAndSchema(table)
             metadata.getPrimaryKeys(catalog, tableSchema, table.nameInDatabaseCaseUnquoted()).let { rs ->
@@ -334,7 +335,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                     columnNames += rs.getString("COLUMN_NAME")
                 }
                 rs.close()
-                if (pkName.isEmpty()) null else PrimaryKeyMetadata(pkName, columnNames)
+                // SQLite is the only supported database that does not assign a name to an unnamed primary key constraint.
+                // So it is possible for the result set to have rows with primary key columns etc., but empty PK_NAME field
+                if (pkName.isEmpty() && (!isSqlite || columnNames.isEmpty())) null else PrimaryKeyMetadata(pkName, columnNames)
             }
         }
     }

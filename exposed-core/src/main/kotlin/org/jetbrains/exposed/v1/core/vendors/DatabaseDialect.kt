@@ -102,6 +102,11 @@ interface DatabaseDialect {
     /** Returns the SQL statement that modifies the specified [column]. */
     fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String>
 
+    /** Returns the SQL statement that modifies the specified [column], using the current [originalColumnData] state. */
+    fun modifyColumn(originalColumnData: ColumnMetadata, column: Column<*>, columnDiff: ColumnDiff): List<String> {
+        return modifyColumn(column, columnDiff)
+    }
+
     /** Returns the SQL statement that adds a primary key specified [pkName] to an existing [table]. */
     fun addPrimaryKey(table: Table, pkName: String?, vararg pkColumns: Column<*>): String
 
