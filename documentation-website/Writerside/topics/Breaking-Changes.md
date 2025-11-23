@@ -1,28 +1,36 @@
 # Breaking Changes
 
+## 1.0.0-rc-4
+
+* If H2 version 2.4.240+ is detected, `datetime()` column type will now map to type `TIMESTAMP(9)` in the following modes:
+  Regular, MySQL, and MariaDB. For earlier versions, `datetime()` continues to map to the original `DATETIME(9)` type.
+  This has been done to avoid thrown exceptions following stricter type changes enforced by this database version and
+  should pose no issue with Exposed built-in schema migration methods, as these H2 modes were treating the `DATETIME`
+  type as a `TIMESTAMP` type.
+
 ## 1.0.0-rc-3
 
-- Removed APIs
-    - **`TransactionManagerApi.bindTransactionToThread()`** - removed from interface and all implementations
-    - **`ThreadLocalTransactionManager`** class - fully removed (was already deprecated with error level)
-    - **`CoreTransactionManager`** object - replaced with top-level functions `currentTransaction()`, `currentTransactionOrNull()`
-    - **`TransactionManager.resetCurrent(manager)`** - removed from companion object
-    - **`TransactionManager.isInitialized()`** - removed from companion object
-    - Experimental suspended transaction functions with `CoroutineContext` parameter - removed from JDBC module
+* Removed APIs
+    * **`TransactionManagerApi.bindTransactionToThread()`** - removed from interface and all implementations
+    * **`ThreadLocalTransactionManager`** class - fully removed (was already deprecated with error level)
+    * **`CoreTransactionManager`** object - replaced with top-level functions `currentTransaction()`, `currentTransactionOrNull()`
+    * **`TransactionManager.resetCurrent(manager)`** - removed from companion object
+    * **`TransactionManager.isInitialized()`** - removed from companion object
+    * Experimental suspended transaction functions with `CoroutineContext` parameter - removed from JDBC module
 
-- Changed Method Signatures
-    - `transaction()`, `inTopLevelTransaction()`, `suspendTransaction()`, `inTopLevelSuspendTransaction()` - isolation and readOnly parameters now nullable (`Int?`,
+* Changed Method Signatures
+    * `transaction()`, `inTopLevelTransaction()`, `suspendTransaction()`, `inTopLevelSuspendTransaction()` - isolation and readOnly parameters now nullable (`Int?`,
       `Boolean?`)
-    - `Database.transactionManager` - changed from `Database?.transactionManager` to `Database.transactionManager` (non-nullable receiver)
-    - `R2dbcDatabase.transactionManager` - changed from `R2dbcDatabase?.transactionManager` to `R2dbcDatabase.transactionManager` (non-nullable receiver)
-    - `TransactionManager.newTransaction()` - readOnly parameter changed from `Boolean` to `Boolean?`
+    * `Database.transactionManager` - changed from `Database?.transactionManager` to `Database.transactionManager` (non-nullable receiver)
+    * `R2dbcDatabase.transactionManager` - changed from `R2dbcDatabase?.transactionManager` to `R2dbcDatabase.transactionManager` (non-nullable receiver)
+    * `TransactionManager.newTransaction()` - readOnly parameter changed from `Boolean` to `Boolean?`
 
-- Changed Behavior
-    - **Transaction manager resolution**: Now resolves from current transaction → current database instead of thread-local; throws `IllegalStateException` if
+* Changed Behavior
+    * **Transaction manager resolution**: Now resolves from current transaction → current database instead of thread-local; throws `IllegalStateException` if
       unavailable
-    - **`TransactionManager.manager`**: Now throws if no transaction manager found (previously returned `NotInitializedTransactionManager`)
-    - **`TransactionManager.defaultDatabase`**: Can now be `null`; use `TransactionManager.primaryDatabase` for default-or-last-created behavior
-    - **Transaction context management**: Internal architecture changed from thread-local to stack-based with coroutine context elements
+    * **`TransactionManager.manager`**: Now throws if no transaction manager found (previously returned `NotInitializedTransactionManager`)
+    * **`TransactionManager.defaultDatabase`**: Can now be `null`; use `TransactionManager.primaryDatabase` for default-or-last-created behavior
+    * **Transaction context management**: Internal architecture changed from thread-local to stack-based with coroutine context elements
 
 ## 1.0.0-rc-2
 
