@@ -142,9 +142,8 @@ class R2dbcConnectionImpl(
 
             var i = -1
             while (++i < sql.length) {
-                val char = sql[i]
-                when {
-                    char == '?' && quoteStack.isEmpty() -> {
+                when (val char = sql[i]) {
+                    '?' if quoteStack.isEmpty() -> {
                         if (sql.getOrNull(i + 1) == '?') {
                             i++
                             append(sql.substring(lastPos, i))
@@ -154,7 +153,7 @@ class R2dbcConnectionImpl(
                         append("${sql.substring(lastPos, i)}${parameterMarker}${++paramCount}")
                         lastPos = i + 1
                     }
-                    char == '\'' || char == '\"' -> {
+                    '\'', '\"' -> {
                         when {
                             quoteStack.isEmpty() -> quoteStack.push(char)
                             quoteStack.peek() == char -> quoteStack.pop()

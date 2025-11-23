@@ -30,10 +30,10 @@ class ValueTypeMapper : TypeMapper {
             return false
         }
 
-        val convertedValue = when {
-            value is Time -> value.toLocalTime()
-            value is Date -> value.toLocalDate()
-            value is Timestamp -> value.toLocalDateTime()
+        val convertedValue = when (value) {
+            is Time -> value.toLocalTime()
+            is Date -> value.toLocalDate()
+            is Timestamp -> value.toLocalDateTime()
             else -> value
         }
 

@@ -398,9 +398,9 @@ abstract class SchemaUtilityApi {
                             is TextColumnType -> "'$value'::text"
                             else -> dataTypeProvider.processForDefaultValue(exp)
                         }
-                        this is OracleDialect || h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> when {
-                            column.columnType is VarCharColumnType && value == "" -> "NULL"
-                            column.columnType is TextColumnType && value == "" -> "NULL"
+                        this is OracleDialect || h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> when (column.columnType) {
+                            is VarCharColumnType if value == "" -> "NULL"
+                            is TextColumnType if value == "" -> "NULL"
                             else -> value
                         }
                         else -> value
@@ -428,26 +428,26 @@ abstract class SchemaUtilityApi {
                         this is PostgreSQLDialect && value < 0 -> "'${dataTypeProvider.processForDefaultValue(exp)}'::integer"
                         else -> dataTypeProvider.processForDefaultValue(exp)
                     }
-                    is Long -> when {
-                        this is SQLServerDialect && (value < 0 || value > Int.MAX_VALUE.toLong()) ->
+                    is Long -> when (this) {
+                        is SQLServerDialect if (value < 0 || value > Int.MAX_VALUE.toLong()) ->
                             "${dataTypeProvider.processForDefaultValue(exp)}."
-                        this is PostgreSQLDialect && (value < 0 || value > Int.MAX_VALUE.toLong()) ->
+                        is PostgreSQLDialect if (value < 0 || value > Int.MAX_VALUE.toLong()) ->
                             "'${dataTypeProvider.processForDefaultValue(exp)}'::bigint"
                         else -> dataTypeProvider.processForDefaultValue(exp)
                     }
-                    is UInt -> when {
-                        this is SQLServerDialect && value > Int.MAX_VALUE.toUInt() -> "${dataTypeProvider.processForDefaultValue(exp)}."
-                        this is PostgreSQLDialect && value > Int.MAX_VALUE.toUInt() -> "'${dataTypeProvider.processForDefaultValue(exp)}'::bigint"
+                    is UInt -> when (this) {
+                        is SQLServerDialect if value > Int.MAX_VALUE.toUInt() -> "${dataTypeProvider.processForDefaultValue(exp)}."
+                        is PostgreSQLDialect if value > Int.MAX_VALUE.toUInt() -> "'${dataTypeProvider.processForDefaultValue(exp)}'::bigint"
                         else -> dataTypeProvider.processForDefaultValue(exp)
                     }
-                    is ULong -> when {
-                        this is SQLServerDialect && value > Int.MAX_VALUE.toULong() -> "${dataTypeProvider.processForDefaultValue(exp)}."
-                        this is PostgreSQLDialect && value > Int.MAX_VALUE.toULong() -> "'${dataTypeProvider.processForDefaultValue(exp)}'::bigint"
+                    is ULong -> when (this) {
+                        is SQLServerDialect if value > Int.MAX_VALUE.toULong() -> "${dataTypeProvider.processForDefaultValue(exp)}."
+                        is PostgreSQLDialect if value > Int.MAX_VALUE.toULong() -> "'${dataTypeProvider.processForDefaultValue(exp)}'::bigint"
                         else -> dataTypeProvider.processForDefaultValue(exp)
                     }
                     else -> {
-                        when {
-                            column.columnType is JsonColumnMarker -> {
+                        when (column.columnType) {
+                            is JsonColumnMarker -> {
                                 val processed = dataTypeProvider.processForDefaultValue(exp)
                                 when (this) {
                                     is PostgreSQLDialect -> {
@@ -465,7 +465,7 @@ abstract class SchemaUtilityApi {
                                     }
                                 }
                             }
-                            column.columnType is ArrayColumnType<*, *> && this is PostgreSQLDialect -> {
+                            is ArrayColumnType<*, *> if this is PostgreSQLDialect -> {
                                 (value as List<*>)
                                     .takeIf { it.isNotEmpty() }
                                     ?.run {
@@ -481,7 +481,7 @@ abstract class SchemaUtilityApi {
                                         "ARRAY$processed"
                                     } ?: dataTypeProvider.processForDefaultValue(exp)
                             }
-                            column.columnType is IDateColumnType -> {
+                            is IDateColumnType -> {
                                 val processed = dataTypeProvider.processForDefaultValue(exp)
                                 if (processed.startsWith('\'') && processed.endsWith('\'')) {
                                     processed.trim('\'')

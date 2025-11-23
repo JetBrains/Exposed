@@ -130,18 +130,22 @@ data class ForeignKeyConstraint(
             append("FOREIGN KEY ($fromColumns) REFERENCES $targetTableName($targetColumns)")
 
             if (deleteRule != ReferenceOption.NO_ACTION) {
-                if (deleteRule == ReferenceOption.RESTRICT && !currentDialect.supportsRestrictReferenceOption) {
-                    exposedLogger.warn(
-                        "${currentDialect.name} doesn't support FOREIGN KEY with RESTRICT reference option with ON DELETE clause. " +
-                            "Please check your $fromTableName table."
-                    )
-                } else if (deleteRule == ReferenceOption.SET_DEFAULT && !currentDialect.supportsSetDefaultReferenceOption) {
-                    exposedLogger.warn(
-                        "${currentDialect.name} doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
-                            "Please check your $fromTableName table."
-                    )
-                } else {
-                    append(" ON DELETE $deleteRule")
+                when (deleteRule) {
+                    ReferenceOption.RESTRICT if !currentDialect.supportsRestrictReferenceOption -> {
+                        exposedLogger.warn(
+                            "${currentDialect.name} doesn't support FOREIGN KEY with RESTRICT reference option with ON DELETE clause. " +
+                                "Please check your $fromTableName table."
+                        )
+                    }
+                    ReferenceOption.SET_DEFAULT if !currentDialect.supportsSetDefaultReferenceOption -> {
+                        exposedLogger.warn(
+                            "${currentDialect.name} doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
+                                "Please check your $fromTableName table."
+                        )
+                    }
+                    else -> {
+                        append(" ON DELETE $deleteRule")
+                    }
                 }
             }
 

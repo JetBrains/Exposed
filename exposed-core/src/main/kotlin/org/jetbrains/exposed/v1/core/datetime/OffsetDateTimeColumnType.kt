@@ -134,15 +134,12 @@ abstract class OffsetDateTimeColumnType<T> : ColumnType<T>(), IDateColumnType {
 
     override fun nonNullValueAsDefaultString(value: T & Any): String {
         val offsetDateTime = toOffsetDateTime(value)
-        val dialect = currentDialect
-
-        return when {
-            dialect is PostgreSQLDialect ->
-                "'${offsetDateTime.format(POSTGRESQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER)}+00'::timestamp with time zone"
-            dialect is H2Dialect && dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
+        return when (val dialect = currentDialect) {
+            is PostgreSQLDialect -> "'${offsetDateTime.format(POSTGRESQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER)}+00'::timestamp with time zone"
+            is H2Dialect if dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
                 "'${offsetDateTime.format(POSTGRESQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER)}'"
-            dialect is MysqlDialect -> "'${offsetDateTime.format(MYSQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER)}'"
-            dialect is OracleDialect -> oracleDateTimeWithTimezoneLiteral(offsetDateTime)
+            is MysqlDialect -> "'${offsetDateTime.format(MYSQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER)}'"
+            is OracleDialect -> oracleDateTimeWithTimezoneLiteral(offsetDateTime)
             else -> super.nonNullValueAsDefaultString(value)
         }
     }

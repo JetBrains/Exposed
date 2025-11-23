@@ -175,12 +175,12 @@ class AutoIncColumnType<T>(
             if (delegate is IntegerColumnType) sequence?.nextIntVal() else sequence?.nextLongVal()
         }
 
-    private fun resolveAutoIncType(columnType: IColumnType<*>): String = when {
-        columnType is EntityIDColumnType<*> -> resolveAutoIncType(columnType.idColumn.columnType)
-        columnType is IntegerColumnType && autoincSeq != null -> currentDialect.dataTypeProvider.integerType()
-        columnType is IntegerColumnType -> currentDialect.dataTypeProvider.integerAutoincType()
-        columnType is LongColumnType && autoincSeq != null -> currentDialect.dataTypeProvider.longType()
-        columnType is LongColumnType -> currentDialect.dataTypeProvider.longAutoincType()
+    private fun resolveAutoIncType(columnType: IColumnType<*>): String = when (columnType) {
+        is EntityIDColumnType<*> -> resolveAutoIncType(columnType.idColumn.columnType)
+        is IntegerColumnType if autoincSeq != null -> currentDialect.dataTypeProvider.integerType()
+        is IntegerColumnType -> currentDialect.dataTypeProvider.integerAutoincType()
+        is LongColumnType if autoincSeq != null -> currentDialect.dataTypeProvider.longType()
+        is LongColumnType -> currentDialect.dataTypeProvider.longAutoincType()
         else -> guessAutoIncTypeBy(columnType.sqlType())
     } ?: error("Unsupported type $delegate for auto-increment")
 
@@ -226,9 +226,9 @@ val Column<*>.autoIncColumnType: AutoIncColumnType<*>?
     get() = (columnType as? AutoIncColumnType)
         ?: (columnType as? EntityIDColumnType<*>)?.idColumn?.columnType as? AutoIncColumnType
 
-internal fun IColumnType<*>.rawSqlType(): IColumnType<*> = when {
-    this is AutoIncColumnType -> delegate
-    this is EntityIDColumnType<*> && idColumn.columnType is AutoIncColumnType -> idColumn.columnType.delegate
+internal fun IColumnType<*>.rawSqlType(): IColumnType<*> = when (this) {
+    is AutoIncColumnType -> delegate
+    is EntityIDColumnType<*> if idColumn.columnType is AutoIncColumnType -> idColumn.columnType.delegate
     else -> this
 }
 
@@ -617,18 +617,15 @@ class ULongColumnType : ColumnType<ULong>() {
     }
 
     override fun notNullValueToDB(value: ULong): Any {
-        val dialect = currentDialect
-        return when {
+        return when (currentDialect) {
             // PostgreSQLNG does not throw `out of range` error, so it's handled here to prevent storing invalid values
-            dialect is PostgreSQLNGDialect -> {
+            is PostgreSQLNGDialect -> {
                 value.takeIf { it >= 0uL && it <= Long.MAX_VALUE.toULong() }?.toLong()
                     ?: error("Value out of range: $value")
             }
-
-            dialect is PostgreSQLDialect -> BigInteger(value.toString())
+            is PostgreSQLDialect -> BigInteger(value.toString())
             // Long is also an accepted mapping, but this would require handling as above for Oor errors
-            dialect is H2Dialect -> BigDecimal(value.toString())
-
+            is H2Dialect -> BigDecimal(value.toString())
             else -> value.toString()
         }
     }
@@ -1052,12 +1049,12 @@ class BlobColumnType(
 class UUIDColumnType : ColumnType<UUID>() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.uuidType()
 
-    override fun valueFromDB(value: Any): UUID = when {
-        value is UUID -> value
-        value is ByteArray -> ByteBuffer.wrap(value).let { b -> UUID(b.long, b.long) }
-        value is String && value.matches(uuidRegexp) -> UUID.fromString(value)
-        value is String -> ByteBuffer.wrap(value.toByteArray()).let { b -> UUID(b.long, b.long) }
-        value is ByteBuffer -> value.let { b -> UUID(b.long, b.long) }
+    override fun valueFromDB(value: Any): UUID = when (value) {
+        is UUID -> value
+        is ByteArray -> ByteBuffer.wrap(value).let { b -> UUID(b.long, b.long) }
+        is String if value.matches(uuidRegexp) -> UUID.fromString(value)
+        is String -> ByteBuffer.wrap(value.toByteArray()).let { b -> UUID(b.long, b.long) }
+        is ByteBuffer -> value.let { b -> UUID(b.long, b.long) }
         else -> error("Unexpected value of type UUID: $value of ${value::class.qualifiedName}")
     }
 
@@ -1334,11 +1331,10 @@ class ArrayColumnType<T, R : List<Any?>>(
     override fun readObject(rs: RowApi, index: Int): Any? = rs.getObject(index)
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
-        when {
-            value is Array<*> && isArrayOfByteArrays(value) ->
+        when (value) {
+            is Array<*> if isArrayOfByteArrays(value) ->
                 stmt.setArray(index, this, Array(value.size) { value[it] as ByteArray })
-
-            value is Array<*> -> stmt.setArray(index, this, value)
+            is Array<*> -> stmt.setArray(index, this, value)
             else -> super.setParameter(stmt, index, value)
         }
     }

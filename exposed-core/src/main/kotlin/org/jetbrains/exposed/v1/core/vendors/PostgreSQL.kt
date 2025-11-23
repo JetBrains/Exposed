@@ -25,15 +25,17 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     override fun dateTimeType(): String = "TIMESTAMP"
     override fun jsonBType(): String = "JSONB"
 
-    override fun processForDefaultValue(e: Expression<*>): String = when {
-        e is LiteralOp<*> && e.columnType is JsonColumnMarker && (currentDialect as? H2Dialect) == null -> {
+    override fun processForDefaultValue(e: Expression<*>): String = when (e) {
+        is LiteralOp<*> if (e.columnType is JsonColumnMarker && (currentDialect as? H2Dialect) == null) -> {
             val cast = if (e.columnType.usesBinaryFormat) "::jsonb" else "::json"
             "${super.processForDefaultValue(e)}$cast"
         }
-        e is LiteralOp<*> && e.columnType is BlobColumnType && e.columnType.useObjectIdentifier && (currentDialect as? H2Dialect) == null -> {
+        is LiteralOp<*> if (
+            e.columnType is BlobColumnType && e.columnType.useObjectIdentifier && (currentDialect as? H2Dialect) == null
+            ) -> {
             "lo_from_bytea(0, ${super.processForDefaultValue(e)} :: bytea)"
         }
-        e is LiteralOp<*> && e.columnType is ArrayColumnType<*, *> -> {
+        is LiteralOp<*> if e.columnType is ArrayColumnType<*, *> -> {
             val processed = super.processForDefaultValue(e)
             processed
                 .takeUnless { it == "ARRAY[]" }

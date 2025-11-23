@@ -47,7 +47,9 @@ class Version @InternalApi constructor(val major: Int, val minor: Int, val patch
             val matchResult = versionRegex.find(version)
                 ?: throw IllegalArgumentException("Invalid version format: $version")
 
-            val parts = (1..3).map { matchResult.groupValues[it].takeIf { it.isNotEmpty() }?.toInt() ?: 0 }
+            val parts = (1..3).map { part ->
+                matchResult.groupValues[part].takeIf { it.isNotEmpty() }?.toInt() ?: 0
+            }
 
             @OptIn(InternalApi::class)
             return Version(parts[0], parts[1], parts[2])

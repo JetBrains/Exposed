@@ -96,16 +96,16 @@ abstract class InstantColumnType<T> : ColumnType<T>(), IDateColumnType {
     }
 
     override fun notNullValueToDB(value: T & Any): Any {
-        val dialect = currentDialect
-
         val localDateTime = toInstant(value).toLocalDateTime(TimeZone.currentSystemDefault())
 
         @OptIn(InternalApi::class)
         @Suppress("MagicNumber")
-        return when {
-            dialect is SQLiteDialect -> ORACLE_SQLITE_TIMESTAMP_FORMAT.format(localDateTime)
-            dialect is MysqlDialect && dialect !is MariaDBDialect &&
-                !currentTransaction().db.version.covers(8, 0) -> {
+        return when (val dialect = currentDialect) {
+            is SQLiteDialect -> ORACLE_SQLITE_TIMESTAMP_FORMAT.format(localDateTime)
+            is MysqlDialect if (
+                dialect !is MariaDBDialect &&
+                    !currentTransaction().db.version.covers(8, 0)
+                ) -> {
                 if (dialect.isFractionDateTimeSupported()) {
                     MYSQL_TIMESTAMP_FRACTION_FORMAT.format(localDateTime)
                 } else {
