@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.migration.jdbc
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import nl.altindag.log.LogCaptor
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
@@ -421,5 +422,46 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             val statements = MigrationUtils.statementsRequiredForDatabaseMigration(testTable)
             assertTrue(statements.isEmpty())
         }
+    }
+
+    @Test
+    fun testMetadataRetrievalQueriesAreNotLogged() {
+        val tester = object : IntIdTable("tester") {
+            val amount = integer("amount")
+        }
+
+        val logCaptor = LogCaptor.forName(exposedLogger.name)
+
+        withTables(tester) {
+            logCaptor.setLogLevelToDebug()
+
+            // rely directly on DatabaseMetaData methods
+            currentDialectMetadataTest.existingPrimaryKeys(tester)
+            currentDialectMetadataTest.existingIndices(tester)
+            currentDialectMetadataTest.tableColumns(tester)
+            currentDialectMetadataTest.allTablesNames()
+
+            assertTrue(logCaptor.debugLogs.isEmpty())
+
+            // rely directly on DatabaseMetaData methods - except MySQL that uses SQL string
+            currentDialectMetadataTest.columnConstraints(tester)
+
+            assertTrue(logCaptor.debugLogs.isEmpty())
+
+            // rely on SQL string + connection execution
+            connection.metadata { databaseDialectMode }
+            connection.metadata { supportsLimitWithUpdateOrDelete() }
+            if (currentDialectTest.supportsColumnTypeChange) {
+                currentDialectMetadataTest.existingCheckConstraints(tester)
+            }
+            currentDialectMetadataTest.sequences()
+            currentDialectMetadataTest.existingSequences(tester)
+
+            assertTrue(logCaptor.debugLogs.isEmpty())
+        }
+
+        logCaptor.resetLogLevel()
+        logCaptor.clearLogs()
+        logCaptor.close()
     }
 }
