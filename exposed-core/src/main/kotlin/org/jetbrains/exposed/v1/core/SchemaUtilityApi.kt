@@ -327,7 +327,7 @@ abstract class SchemaUtilityApi {
             val incorrectNullability = existingCol.nullable != colNullable &&
                 (
                     dialect !is SQLiteDialect ||
-                        columnType.sqlType() != SQLiteDialect().dataTypeProvider.integerAutoincType()
+                        columnType.sqlType() != dialect.dataTypeProvider.integerAutoincType()
                     )
             val incorrectAutoInc = isIncorrectAutoInc(existingCol, col)
             // 'isDatabaseGenerated' property means that the column has generation of the value on the database side,
