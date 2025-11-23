@@ -285,109 +285,48 @@ Generated SQL:
     SQL: DROP TABLE IF EXISTS CITIES
 ```
 
-### DAO
+## Getting Started Example
 
+### Gradle dependency
 ```kotlin
-import org.jetbrains.exposed.v1.core.StdOutSqlLogger
-import org.jetbrains.exposed.v1.core.dao.id.*
-import org.jetbrains.exposed.v1.dao.*
-import org.jetbrains.exposed.v1.jdbc.*
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+dependencies {
+    implementation("org.jetbrains.exposed:exposed-core:0.41.1")
+    implementation("org.jetbrains.exposed:exposed-dao:0.41.1")
+    implementation("org.jetbrains.exposed:exposed-jdbc:0.41.1")
+    implementation("org.postgresql:postgresql:42.5.1")
+}
 
-object Cities: IntIdTable() {
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.transaction
+
+object Users : Table() {
+    val id = integer("id").autoIncrement()
     val name = varchar("name", 50)
-}
-
-object Users : IntIdTable() {
-    val name = varchar("name", length = 50).index()
-    val city = reference("city", Cities)
-    val age = integer("age")
-}
-
-class City(id: EntityID<Int>) : IntEntity(id) {
-    companion object : IntEntityClass<City>(Cities)
-
-    var name by Cities.name
-    val users by User referrersOn Users.city
-}
-
-class User(id: EntityID<Int>) : IntEntity(id) {
-    companion object : IntEntityClass<User>(Users)
-
-    var name by Users.name
-    var city by City referencedOn Users.city
-    var age by Users.age
+    override val primaryKey = PrimaryKey(id)
 }
 
 fun main() {
-    Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver", user = "root", password = "")
+    Database.connect("jdbc:postgresql://localhost:5432/testdb", driver = "org.postgresql.Driver",
+        user = "user", password = "password")
 
     transaction {
-        addLogger(StdOutSqlLogger)
-
-        val saintPetersburg = City.new {
-            name = "St. Petersburg"
+        SchemaUtils.create(Users)
+        Users.insert {
+            it[name] = "Alice"
         }
-
-        val munich = City.new {
-            name = "Munich"
-        }
-
-        User.new {
-            name = "Andrey"
-            city = saintPetersburg
-            age = 5
-        }
-
-        User.new {
-            name = "Sergey"
-            city = saintPetersburg
-            age = 27
-        }
-
-        User.new {
-            name = "Eugene"
-            city = munich
-            age = 42
-        }
-
-        val alex = User.new {
-            name = "alex"
-            city = munich
-            age = 11
-        }
-
-        alex.name = "Alexey"
-
-        println("Cities: ${City.all().joinToString { it.name }}")
-
-        println("Users in ${saintPetersburg.name}: ${saintPetersburg.users.joinToString { it.name }}")
-
-        println("Adults: ${User.find { Users.age greaterEq 18 }.joinToString { it.name }}")
-
-        SchemaUtils.drop(Users, Cities)
+        println(Users.selectAll().map { it[Users.name] })
     }
 }
-```
 
-Generated SQL:
+#expected outputs:
+Cities:
+St. Petersburg
+Munich
 
-```sql
-    SQL: CREATE TABLE IF NOT EXISTS CITIES (ID INT AUTO_INCREMENT PRIMARY KEY, "name" VARCHAR(50) NOT NULL)
-    SQL: CREATE TABLE IF NOT EXISTS USERS (ID INT AUTO_INCREMENT PRIMARY KEY, "name" VARCHAR(50) NOT NULL, CITY INT NOT NULL, AGE INT NOT NULL, CONSTRAINT FK_USERS_CITY__ID FOREIGN KEY (CITY) REFERENCES CITIES(ID) ON DELETE RESTRICT ON UPDATE RESTRICT)
-    SQL: CREATE INDEX USERS_NAME ON USERS ("name")
-    SQL: INSERT INTO CITIES ("name") VALUES ('St. Petersburg')
-    SQL: INSERT INTO CITIES ("name") VALUES ('Munich')
-    SQL: SELECT CITIES.ID, CITIES."name" FROM CITIES
-    Cities: St. Petersburg, Munich
-    SQL: INSERT INTO USERS ("name", CITY, AGE) VALUES ('Andrey', 1, 5)
-    SQL: INSERT INTO USERS ("name", CITY, AGE) VALUES ('Sergey', 1, 27)
-    SQL: INSERT INTO USERS ("name", CITY, AGE) VALUES ('Eugene', 2, 42)
-    SQL: INSERT INTO USERS ("name", CITY, AGE) VALUES ('Alexey', 2, 11)
-    SQL: SELECT USERS.ID, USERS."name", USERS.CITY, USERS.AGE FROM USERS WHERE USERS.CITY = 1
-    Users in St. Petersburg: Andrey, Sergey
-    SQL: SELECT USERS.ID, USERS."name", USERS.CITY, USERS.AGE FROM USERS WHERE USERS.AGE >= 18
-    Adults: Sergey, Eugene
-    SQL: DROP TABLE IF EXISTS USERS
-    SQL: DROP TABLE IF EXISTS CITIES
-```
+Users in St. Petersburg:
+Andrey
+Sergey
+
+Adults:
+Sergey
+Eugene
