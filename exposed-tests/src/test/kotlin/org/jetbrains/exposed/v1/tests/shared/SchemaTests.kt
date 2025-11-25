@@ -16,8 +16,8 @@ import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 
 class SchemaTests : DatabaseTestsBase() {
     @Test
@@ -148,7 +148,7 @@ class SchemaTests : DatabaseTestsBase() {
 
     @Test
     fun `test default schema`() {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         val schema = Schema("schema")
         TestDB.H2_V2.connect()
 

@@ -15,7 +15,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.forEachIndexed
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
 

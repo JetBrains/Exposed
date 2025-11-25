@@ -33,8 +33,8 @@ import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import java.sql.Types
 import kotlin.test.assertContains
 import kotlin.test.assertNotNull
@@ -182,42 +182,42 @@ class ConnectionTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testConnectWithUrlStringParameter() = runTest {
-        Assume.assumeTrue(TestDB.H2_V2_MYSQL in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2_MYSQL in TestDB.enabledDialects())
 
         testConnectMethod(dbSingleParam)
     }
 
     @Test
     fun testConnectWithUrlStringAndOtherParameters() = runTest {
-        Assume.assumeTrue(TestDB.H2_V2_MYSQL in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2_MYSQL in TestDB.enabledDialects())
 
         testConnectMethod(dbMultipleParam)
     }
 
     @Test
     fun testConnectWithUrlStringConfiguration() = runTest {
-        Assume.assumeTrue(TestDB.H2_V2_MYSQL in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2_MYSQL in TestDB.enabledDialects())
 
         testConnectMethod(dbSetUrl)
     }
 
     @Test
     fun testConnectWithUrlStringAndOptionsConfiguration() = runTest {
-        Assume.assumeTrue(TestDB.H2_V2_MYSQL in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2_MYSQL in TestDB.enabledDialects())
 
         testConnectMethod(dbSetUrlWithOptions)
     }
 
     @Test
     fun testConnectWithOptionsConfiguration() = runTest {
-        Assume.assumeTrue(TestDB.H2_V2_MYSQL in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2_MYSQL in TestDB.enabledDialects())
 
         testConnectMethod(dbOnlyOptions)
     }
 
     @Test
     fun testConnectWithConnectionFactory() = runTest {
-        Assume.assumeTrue(TestDB.H2_V2_MYSQL in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2_MYSQL in TestDB.enabledDialects())
 
         testConnectMethod(dbConnectionFactory)
     }
@@ -292,7 +292,7 @@ class ConnectionTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testAddingLoggerDoesNotCauseNoTransactionInContext() = runTest {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         TestDB.H2_V2.connect()
 
         val tester = object : Table("tester") {

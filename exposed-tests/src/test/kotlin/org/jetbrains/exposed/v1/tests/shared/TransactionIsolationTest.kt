@@ -10,8 +10,8 @@ import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import java.sql.Connection
 import kotlin.test.assertNotNull
 
@@ -30,7 +30,7 @@ class TransactionIsolationTest : DatabaseTestsBase() {
 
     @Test
     fun testTransactionIsolationWithHikariDataSource() {
-        Assume.assumeTrue(transactionIsolationSupportDb.containsAll(TestDB.enabledDialects()))
+        Assumptions.assumeTrue(transactionIsolationSupportDb.containsAll(TestDB.enabledDialects()))
         val dialect = TestDB.enabledDialects().first()
 
         val db = Database.connect(
@@ -68,7 +68,7 @@ class TransactionIsolationTest : DatabaseTestsBase() {
 
     @Test
     fun testTransactionIsolationWithHikariAndDatabaseConfig() {
-        Assume.assumeTrue(transactionIsolationSupportDb.containsAll(TestDB.enabledDialects()))
+        Assumptions.assumeTrue(transactionIsolationSupportDb.containsAll(TestDB.enabledDialects()))
         val dialect = TestDB.enabledDialects().first()
 
         val db = Database.connect(

@@ -1,4 +1,5 @@
 package org.jetbrains.exposed.v1.tests.shared.functions
+
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
@@ -16,7 +17,7 @@ import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.v1.tests.shared.dml.withCitiesAndUsers
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 

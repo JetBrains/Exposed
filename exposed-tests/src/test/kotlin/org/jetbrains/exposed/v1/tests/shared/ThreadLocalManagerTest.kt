@@ -15,8 +15,8 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.dml.DMLTestsData
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import kotlin.concurrent.thread
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
@@ -26,7 +26,7 @@ import kotlin.test.fail
 class ThreadLocalManagerTest : DatabaseTestsBase() {
     @Test
     fun testReconnection() {
-        Assume.assumeTrue(TestDB.MYSQL_V5 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.MYSQL_V5 in TestDB.enabledDialects())
 
         var secondThreadTm: TransactionManager? = null
         val db1 = TestDB.MYSQL_V5.connect()
@@ -63,7 +63,7 @@ class ThreadLocalManagerTest : DatabaseTestsBase() {
 
     @Test
     fun testSuspendedReadOnly() = runTest {
-        Assume.assumeFalse(dialect in READ_ONLY_EXCLUDED_VENDORS)
+        Assumptions.assumeFalse(dialect in READ_ONLY_EXCLUDED_VENDORS)
 
         val database = dialect.connect()
         newSuspendedTransaction(db = database, readOnly = true) {

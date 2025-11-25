@@ -23,8 +23,8 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.update
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 
 class ConnectionPoolTests : LogDbInTestName() {
     private val maximumPoolSize = 10
@@ -57,7 +57,7 @@ class ConnectionPoolTests : LogDbInTestName() {
     // NOTE: DIFFERENT NAME
     @Test
     fun testSchemaAndConnectionsWithPoolAndPostgresql() = runTest {
-        Assume.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
 
         // setting default schema directly in connection options should not throw exception when Exposed creates
         // a new transaction and checks if connection parameters need to be reset
@@ -73,7 +73,7 @@ class ConnectionPoolTests : LogDbInTestName() {
 
     @Test
     fun testSuspendTransactionsExceedingPoolSize() = runTest {
-        Assume.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
 
         val singleId = 99
 

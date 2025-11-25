@@ -8,8 +8,8 @@ import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import java.sql.SQLException
 import kotlin.test.assertContains
 import kotlin.test.fail
@@ -63,7 +63,7 @@ class RollbackTransactionTest : DatabaseTestsBase() {
 
     @Test
     fun testRollbackWithoutSavepointsTriggeredByExceptions() {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         TestDB.H2_V2.connect()
 
         transaction {

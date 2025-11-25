@@ -24,12 +24,14 @@ dependencies {
     api(libs.spring.boot.starter.jdbc)
     api(libs.spring.boot.autoconfigure)
     compileOnly(libs.spring.boot.configuration.processor)
+
     testImplementation(libs.spring.boot.starter.test)
     // put in testImplementation so no hard dependency for those using the starter
     testImplementation(libs.spring.boot.starter.webflux)
     testImplementation(libs.h2)
     testImplementation(project(":exposed-jdbc"))
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation(libs.junit6.jupiter.api)
 }
 
 tasks.withType<KotlinCompile>().configureEach {

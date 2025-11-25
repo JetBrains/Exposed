@@ -17,11 +17,12 @@ kotlin {
 dependencies {
     api(project(":exposed-core"))
     api(libs.spring.security.crypto)
+
     testImplementation(project(":exposed-dao"))
     testImplementation(project(":exposed-tests"))
     testImplementation(project(":exposed-jdbc"))
-    testImplementation(libs.junit)
-    testImplementation(kotlin("test-junit"))
+    testImplementation(libs.junit6.jupiter.api)
+    testImplementation(kotlin("test"))
     testImplementation(libs.logcaptor)
 }
 
@@ -29,4 +30,8 @@ tasks.withType<KotlinCompile>().configureEach {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
     }
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }

@@ -25,14 +25,14 @@ dependencies {
 
     testImplementation(project(":exposed-dao"))
     testImplementation(project(":exposed-tests"))
-    testImplementation(kotlin("test-junit"))
+    testImplementation(kotlin("test"))
+    testImplementation(libs.junit6.jupiter.api)
     testImplementation(libs.kotlinx.coroutines.debug)
     testImplementation(libs.spring.test)
     testImplementation(libs.slf4j)
     testImplementation(libs.log4j.slf4j.impl)
     testImplementation(libs.log4j.api)
     testImplementation(libs.log4j.core)
-    testImplementation(libs.junit)
     testImplementation(libs.h2)
 }
 
@@ -51,4 +51,6 @@ tasks.withType<Test>().configureEach {
         showStandardStreams = true
         exceptionFormat = TestExceptionFormat.FULL
     }
+
+    useJUnitPlatform()
 }

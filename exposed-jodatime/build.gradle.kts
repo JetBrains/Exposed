@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -19,13 +21,14 @@ kotlin {
 
 dependencies {
     api(project(":exposed-core"))
-    testCompileOnly(project(":exposed-jdbc"))
     api(libs.joda.time)
+
+    testCompileOnly(project(":exposed-jdbc"))
     testImplementation(project(":exposed-dao"))
     testImplementation(project(":exposed-tests"))
     testImplementation(project(":exposed-json"))
-    testImplementation(libs.junit)
-    testImplementation(kotlin("test-junit"))
+    testImplementation(libs.junit5.jupiter.api)
+    testImplementation(kotlin("test-junit5"))
 }
 
 tasks.withType<KotlinCompile>().configureEach {
@@ -36,4 +39,8 @@ tasks.withType<KotlinCompile>().configureEach {
 
 tasks.withType<JavaCompile>().configureEach {
     targetCompatibility = "8"
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }

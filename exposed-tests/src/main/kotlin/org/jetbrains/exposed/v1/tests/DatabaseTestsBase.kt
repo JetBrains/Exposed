@@ -11,10 +11,10 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.junit.Assume
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
-import org.junit.runners.Parameterized.Parameters
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.params.Parameter
+import org.junit.jupiter.params.ParameterizedClass
+import org.junit.jupiter.params.provider.MethodSource
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -27,7 +27,8 @@ private val registeredOnShutdown = HashSet<TestDB>()
 
 internal var currentTestDB by nullableTransactionScope<TestDB>()
 
-@RunWith(Parameterized::class)
+@ParameterizedClass(name = "name: {2}, container: {0}, dialect: {1}")
+@MethodSource("data")
 abstract class DatabaseTestsBase {
     init {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
@@ -40,7 +41,6 @@ abstract class DatabaseTestsBase {
     }
 
     companion object {
-        @Parameters(name = "name: {2}, container: {0}, dialect: {1}")
         @JvmStatic
         fun data(): Collection<Array<Any>> {
             val name = System.getProperty("exposed.test.name")
@@ -49,13 +49,13 @@ abstract class DatabaseTestsBase {
         }
     }
 
-    @Parameterized.Parameter(0)
+    @Parameter(0)
     lateinit var container: String
 
-    @Parameterized.Parameter(1)
+    @Parameter(1)
     lateinit var dialect: TestDB
 
-    @Parameterized.Parameter(2)
+    @Parameter(2)
     lateinit var testName: String
 
     fun withConnection(
@@ -63,7 +63,7 @@ abstract class DatabaseTestsBase {
         configure: (DatabaseConfig.Builder.() -> Unit)? = null,
         statement: (Database, TestDB) -> Unit
     ) {
-        Assume.assumeTrue(dialect == dbSettings)
+        Assumptions.assumeTrue(dialect == dbSettings)
 
         val unregistered = dbSettings !in registeredOnShutdown
         val newConfiguration = configure != null && !unregistered
@@ -116,17 +116,17 @@ abstract class DatabaseTestsBase {
         statement: JdbcTransaction.(TestDB) -> Unit
     ) {
         if (db != null && dialect !in db) {
-            Assume.assumeFalse(true)
+            Assumptions.assumeFalse(true)
             return
         }
 
         if (dialect in excludeSettings) {
-            Assume.assumeFalse(true)
+            Assumptions.assumeFalse(true)
             return
         }
 
         if (dialect !in TestDB.enabledDialects()) {
-            Assume.assumeFalse(true)
+            Assumptions.assumeFalse(true)
             return
         }
 
@@ -139,7 +139,7 @@ abstract class DatabaseTestsBase {
         configure: (DatabaseConfig.Builder.() -> Unit)? = null,
         statement: JdbcTransaction.(TestDB) -> Unit
     ) {
-        Assume.assumeFalse(dialect in excludeSettings)
+        Assumptions.assumeFalse(dialect in excludeSettings)
 
         withDb(dialect, configure = configure) {
             try {
@@ -173,12 +173,12 @@ abstract class DatabaseTestsBase {
         statement: JdbcTransaction.() -> Unit
     ) {
         if (dialect !in TestDB.enabledDialects()) {
-            Assume.assumeFalse(true)
+            Assumptions.assumeFalse(true)
             return
         }
 
         if (dialect in excludeSettings) {
-            Assume.assumeFalse(true)
+            Assumptions.assumeFalse(true)
             return
         }
 

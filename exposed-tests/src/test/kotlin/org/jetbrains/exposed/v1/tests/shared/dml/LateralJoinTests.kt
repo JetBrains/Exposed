@@ -14,7 +14,7 @@ import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class LateralJoinTests : DatabaseTestsBase() {
     // lateral join is also supported by MySql8 database, but at the current moment there is no related configuration

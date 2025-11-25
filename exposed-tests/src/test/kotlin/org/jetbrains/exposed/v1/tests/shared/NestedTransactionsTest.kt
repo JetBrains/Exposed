@@ -12,8 +12,8 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.dml.DMLTestsData
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import java.sql.SQLException
 import kotlin.test.assertContains
 import kotlin.test.assertNotEquals
@@ -87,7 +87,7 @@ class NestedTransactionsTest : DatabaseTestsBase() {
 
     @Test
     fun testNestedTransactionNotCommittedAfterDatabaseFailure() {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
 
         val fakeSQLString = "BROKEN_SQL_THAT_CAUSES_EXCEPTION"
 
@@ -146,7 +146,7 @@ class NestedTransactionsTest : DatabaseTestsBase() {
 
     @Test
     fun testNestedTransactionNotCommittedAfterException() {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
 
         val exceptionMessage = "Failure!"
 

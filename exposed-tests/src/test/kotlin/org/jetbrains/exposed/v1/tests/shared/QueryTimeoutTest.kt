@@ -8,8 +8,8 @@ import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
-import org.junit.Assert.fail
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 import org.postgresql.util.PSQLException
 import java.sql.SQLException
 import java.sql.SQLSyntaxErrorException
@@ -43,7 +43,7 @@ class QueryTimeoutTest : DatabaseTestsBase() {
                 TransactionManager.current().exec(
                     generateTimeoutStatements(testDB, 5)
                 )
-                fail("Should have thrown a timeout or cancelled statement exception")
+                Assertions.fail("Should have thrown a timeout or cancelled statement exception")
             } catch (cause: ExposedSQLException) {
                 when (testDB) {
                     // PostgreSQL throws a regular PgSQLException with a cancelled statement message
@@ -84,7 +84,7 @@ class QueryTimeoutTest : DatabaseTestsBase() {
                 TransactionManager.current().exec(
                     generateTimeoutStatements(testDB, 1)
                 )
-                fail("Should have thrown a timeout or cancelled statement exception")
+                Assertions.fail("Should have thrown a timeout or cancelled statement exception")
             } catch (cause: ExposedSQLException) {
                 when (testDB) {
                     // PostgreSQL throws a regular PSQLException with a minus timeout value

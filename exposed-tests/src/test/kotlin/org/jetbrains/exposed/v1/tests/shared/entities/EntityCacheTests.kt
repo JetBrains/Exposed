@@ -23,8 +23,8 @@ import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import java.sql.Connection.TRANSACTION_SERIALIZABLE
 import java.sql.SQLException
 import java.util.concurrent.atomic.AtomicInteger
@@ -44,7 +44,7 @@ class EntityCacheTests : DatabaseTestsBase() {
 
     @Test
     fun testGlobalEntityCacheLimit() {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         val entitiesCount = 25
         val cacheSize = 10
         val db = TestDB.H2_V2.connect {
@@ -74,7 +74,7 @@ class EntityCacheTests : DatabaseTestsBase() {
 
     @Test
     fun testGlobalEntityCacheLimitZero() {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         val entitiesCount = 25
         val db = TestDB.H2_V2.connect()
         val dbNoCache = TestDB.H2_V2.connect {
@@ -236,7 +236,7 @@ class EntityCacheTests : DatabaseTestsBase() {
 
         // Only SQLite complains that the TestTable doesn't exists
         if (dialect in listOf(TestDB.SQLITE)) {
-            Assume.assumeFalse(true)
+            Assumptions.assumeFalse(true)
         }
 
         val db1 = dialect.connect()

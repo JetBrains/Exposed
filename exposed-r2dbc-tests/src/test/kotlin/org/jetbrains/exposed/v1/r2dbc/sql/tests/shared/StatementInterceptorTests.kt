@@ -25,8 +25,8 @@ import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 
 private class DeleteWarningInterceptor : StatementInterceptor {
     override fun beforeExecution(transaction: Transaction, context: StatementContext) {
@@ -237,7 +237,7 @@ class StatementInterceptorTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testConfiguredDefaultLogger() = runTest {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         val logCaptor = LogCaptor.forName(exposedLogger.name)
 
         val tester = object : Table("tester") {

@@ -3,7 +3,7 @@ package org.jetbrains.exposed.v1.test.mixed
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class MixedDatabasesConnectionTests : MixedDatabaseTestsBase() {
 

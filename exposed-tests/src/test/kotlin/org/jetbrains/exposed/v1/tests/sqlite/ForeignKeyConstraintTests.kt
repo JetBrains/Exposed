@@ -1,4 +1,5 @@
 package org.jetbrains.exposed.v1.tests.sqlite
+
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
@@ -16,8 +17,8 @@ import org.jetbrains.exposed.v1.tests.shared.Item
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 
 class ForeignKeyConstraintTests : DatabaseTestsBase() {
 
@@ -30,7 +31,7 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
 
     @Test
     fun `test ON DELETE SET DEFAULT for SQLite`() {
-        Assume.assumeTrue(TestDB.SQLITE in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.SQLITE in TestDB.enabledDialects())
 
         transaction(
             Database.connect(
@@ -88,7 +89,7 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
 
     @Test
     fun `test ON DELETE RESTRICT for SQLite`() {
-        Assume.assumeTrue(TestDB.SQLITE in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.SQLITE in TestDB.enabledDialects())
 
         transaction(
             Database.connect(
@@ -110,7 +111,7 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
 
     @Test
     fun `test ON UPDATE RESTRICT for SQLite`() {
-        Assume.assumeTrue(TestDB.SQLITE in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.SQLITE in TestDB.enabledDialects())
 
         transaction(
             Database.connect(

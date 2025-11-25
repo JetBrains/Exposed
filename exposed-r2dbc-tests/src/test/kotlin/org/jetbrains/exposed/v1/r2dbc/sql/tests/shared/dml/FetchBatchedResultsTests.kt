@@ -17,7 +17,8 @@ import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 import java.util.*
 
 // not possible to avoid emitting an empty flow, so tests needed to be altered to remove empty flow results
@@ -116,15 +117,23 @@ class FetchBatchedResultsTests : R2dbcDatabaseTestsBase() {
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    @Test(expected = java.lang.UnsupportedOperationException::class)
-    fun `when the table doesn't have an autoinc column, fetchBatchedResults should throw an exception`() = runTest {
-        DMLTestsData.UserData.selectAll().fetchBatchedResults().flattenConcat().toList()
+    @Test
+    fun `when the table doesn't have an autoinc column, fetchBatchedResults should throw an exception`() {
+        Assertions.assertThrows(java.lang.UnsupportedOperationException::class.java) {
+            runTest {
+                DMLTestsData.UserData.selectAll().fetchBatchedResults().flattenConcat().toList()
+            }
+        }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    @Test(expected = IllegalArgumentException::class)
-    fun `when batch size is 0 or less, should throw an exception`() = runTest {
-        DMLTestsData.Cities.selectAll().fetchBatchedResults(batchSize = -1).flattenConcat().toList()
+    @Test
+    fun `when batch size is 0 or less, should throw an exception`() {
+        Assertions.assertThrows(IllegalArgumentException::class.java) {
+            runTest {
+                DMLTestsData.Cities.selectAll().fetchBatchedResults(batchSize = -1).flattenConcat().toList()
+            }
+        }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)

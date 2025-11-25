@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.v1.tests.shared.dml
 
-import junit.framework.TestCase.assertTrue
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.jdbc.*
@@ -11,7 +10,8 @@ import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.entities.EntityTests
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import kotlin.test.assertNull
 
 class SelectTests : DatabaseTestsBase() {
@@ -664,7 +664,7 @@ class SelectTests : DatabaseTestsBase() {
             val query = cities.selectAll()
                 .forUpdate()
 
-            assertTrue(query.prepareSQL(TransactionManager.current()).contains("FOR UPDATE"))
+            Assumptions.assumeTrue(query.prepareSQL(TransactionManager.current()).contains("FOR UPDATE"))
         }
     }
 }

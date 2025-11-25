@@ -24,7 +24,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.transactionManager
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit

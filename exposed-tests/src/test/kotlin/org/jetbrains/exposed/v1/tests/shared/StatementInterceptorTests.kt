@@ -20,8 +20,8 @@ import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.v1.tests.shared.dml.withCitiesAndUsers
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 
 private class DeleteWarningInterceptor : StatementInterceptor {
     override fun beforeExecution(transaction: Transaction, context: StatementContext) {
@@ -234,7 +234,7 @@ class StatementInterceptorTests : DatabaseTestsBase() {
 
     @Test
     fun testConfiguredDefaultLogger() {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         val logCaptor = LogCaptor.forName(exposedLogger.name)
 
         val tester = object : Table("tester") {

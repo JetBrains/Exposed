@@ -6,8 +6,8 @@ import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 import org.springframework.test.annotation.Commit
 import org.springframework.transaction.annotation.Transactional
 import kotlin.test.fail
@@ -32,7 +32,7 @@ open class EntityUpdateTest : SpringTransactionTestBase() {
         T1.insert {
             it[c1] = "new"
         }
-        Assert.assertEquals("new", DAO.findById(1)?.c1)
+        Assertions.assertEquals("new", DAO.findById(1)?.c1)
     }
 
     @Test
@@ -41,7 +41,7 @@ open class EntityUpdateTest : SpringTransactionTestBase() {
     open fun test2() {
         val entity = DAO.findById(1) ?: fail()
         entity.c1 = "updated"
-        Assert.assertEquals("updated", DAO.findById(1)?.c1)
+        Assertions.assertEquals("updated", DAO.findById(1)?.c1)
     }
 
     @Test
@@ -49,7 +49,7 @@ open class EntityUpdateTest : SpringTransactionTestBase() {
     @Commit
     open fun test3() {
         val entity = DAO.findById(1) ?: fail()
-        Assert.assertEquals("updated", entity.c1)
+        Assertions.assertEquals("updated", entity.c1)
         SchemaUtils.drop(T1)
     }
 }

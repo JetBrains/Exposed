@@ -15,8 +15,8 @@ import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -44,7 +44,7 @@ class ParameterizationTests : DatabaseTestsBase() {
     @OptIn(InternalApi::class)
     @Test
     fun testSingleParametersWithMultipleStatements() {
-        Assume.assumeTrue(supportMultipleStatements.containsAll(TestDB.enabledDialects()))
+        Assumptions.assumeTrue(supportMultipleStatements.containsAll(TestDB.enabledDialects()))
 
         val dialect = TestDB.enabledDialects().first()
         val db = Database.connect(
@@ -95,7 +95,7 @@ class ParameterizationTests : DatabaseTestsBase() {
     @OptIn(InternalApi::class)
     @Test
     fun testMultipleParametersWithMultipleStatements() {
-        Assume.assumeTrue(supportMultipleStatements.containsAll(TestDB.enabledDialects()))
+        Assumptions.assumeTrue(supportMultipleStatements.containsAll(TestDB.enabledDialects()))
 
         val tester = object : Table("tester") {
             val name = varchar("foo", 50)

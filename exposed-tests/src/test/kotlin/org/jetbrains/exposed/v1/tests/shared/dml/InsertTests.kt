@@ -25,8 +25,8 @@ import org.jetbrains.exposed.v1.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.entities.EntityTests
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import java.sql.SQLException
 import java.util.*
 import kotlin.test.assertEquals
@@ -505,7 +505,7 @@ class InsertTests : DatabaseTestsBase() {
             TestDB.SQLITE,
             TestDB.MYSQL_V5.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
         )
-        Assume.assumeTrue(dbToTest.isNotEmpty())
+        Assumptions.assumeTrue(dbToTest.isNotEmpty())
         dbToTest.forEach { db ->
             try {
                 try {
@@ -538,7 +538,7 @@ class InsertTests : DatabaseTestsBase() {
             TestDB.SQLITE,
             TestDB.MYSQL_V5.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
         )
-        Assume.assumeTrue(dbToTest.isNotEmpty())
+        Assumptions.assumeTrue(dbToTest.isNotEmpty())
         dbToTest.forEach { db ->
             try {
                 try {

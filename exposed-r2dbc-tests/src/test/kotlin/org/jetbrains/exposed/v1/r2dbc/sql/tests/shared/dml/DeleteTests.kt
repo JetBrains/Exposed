@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml
 
-import junit.framework.TestCase.assertNull
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.v1.core.Join
@@ -26,7 +25,8 @@ import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Test
 import kotlin.test.assertTrue
 import kotlin.test.expect
 

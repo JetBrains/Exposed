@@ -18,11 +18,11 @@ import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 class SequenceAutoIncrementTests : DatabaseTestsBase() {
-    @Before
+    @BeforeEach
     fun dropAllSequences() {
         withDb {
             if (currentDialectTest.supportsCreateSequence) {

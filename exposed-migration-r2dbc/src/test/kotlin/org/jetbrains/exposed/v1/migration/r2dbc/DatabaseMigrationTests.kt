@@ -23,7 +23,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.properties.Delegates
 import kotlin.test.assertNull
 import org.jetbrains.exposed.v1.datetime.date as kotlinDatetimeDate

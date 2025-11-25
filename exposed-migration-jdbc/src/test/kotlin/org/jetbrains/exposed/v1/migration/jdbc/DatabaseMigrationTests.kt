@@ -24,7 +24,7 @@ import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.properties.Delegates
 import kotlin.test.assertNull
 import org.jetbrains.exposed.v1.datetime.date as kotlinDatetimeDate
