@@ -4043,7 +4043,7 @@ public abstract interface class org/jetbrains/exposed/v1/core/vendors/DatabaseDi
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/v1/core/Expression;)Z
 	public fun listDatabases ()Ljava/lang/String;
 	public abstract fun modifyColumn (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnDiff;)Ljava/util/List;
-	public abstract fun modifyColumn (Lorg/jetbrains/exposed/v1/core/vendors/ColumnMetadata;Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnDiff;)Ljava/util/List;
+	public fun modifyColumn (Lorg/jetbrains/exposed/v1/core/vendors/ColumnMetadata;Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnDiff;)Ljava/util/List;
 	public fun setSchema (Lorg/jetbrains/exposed/v1/core/Schema;)Ljava/lang/String;
 }
 
