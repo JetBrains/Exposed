@@ -28,7 +28,6 @@ dependencies {
     testImplementation(project(":exposed-money"))
     testCompileOnly(libs.postgre)
 
-    testImplementation(kotlin("test-junit"))
     testImplementation(libs.logcaptor)
     testImplementation(libs.junit5.jupiter.api)
     testImplementation(kotlin("test-junit5"))
