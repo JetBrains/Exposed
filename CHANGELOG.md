@@ -89,7 +89,6 @@ Build:
 * build: Include api(exposed-jdbc) dependency with exposed-migration by @bog-walk in https://github.com/JetBrains/Exposed/pull/2582
 * build: Include api(exposed-jdbc) dependency with spring-transaction by @bog-walk in https://github.com/JetBrains/Exposed/pull/2581
 
-
 # 1.0.0-beta-5
 
 ## What's Changed
@@ -103,6 +102,7 @@ Breaking changes:
 * Phase out support for H2 version 1.x  by @bog-walk in https://github.com/JetBrains/Exposed/pull/2573
 
 Infrastructure:
+* Kotlin 2.1.0
 * Bump org.jetbrains.kotlinx.binary-compatibility-validator from 0.18.0 to 0.18.1 by @dependabot[bot] in https://github.com/JetBrains/Exposed/pull/2554
 * Bump springFramework from 6.2.8 to 6.2.9 by @dependabot[bot] in https://github.com/JetBrains/Exposed/pull/2560
 * Bump springBoot from 3.5.3 to 3.5.4 by @dependabot[bot] in https://github.com/JetBrains/Exposed/pull/2571
@@ -133,7 +133,6 @@ Bug fixes:
 * @med01-flutter-uki made their first contribution in https://github.com/JetBrains/Exposed/pull/2463
 * @ntkoopman made their first contribution in https://github.com/JetBrains/Exposed/pull/2532
 * @sokomishalov made their first contribution in https://github.com/JetBrains/Exposed/pull/2567
-
 
 # 1.0.0-beta-4
 
