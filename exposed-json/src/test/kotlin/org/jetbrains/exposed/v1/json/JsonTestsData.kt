@@ -4,16 +4,13 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.CustomFunction
 import org.jetbrains.exposed.v1.core.ExpressionWithColumnType
+import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
-import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
-import org.jetbrains.exposed.v1.jdbc.SizedIterable
-import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.insertAndGetId
-import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
@@ -34,22 +31,33 @@ object JsonTestsData {
     }
 
     class JsonBEntity(id: EntityID<Int>) : IntEntity(id) {
+        private var jsonBOriginal by JsonBTable.jsonBColumn
+
+        var jsonBColumn: DataHolder
+            get() = (currentDialectTest as? SQLiteDialect)
+                ?.let { readValues.getOrNull(JsonBTable.jsonBColumn.asJson()) }
+                ?: jsonBOriginal
+            set(value) { jsonBOriginal = value }
+
         companion object : IntEntityClass<JsonBEntity>(JsonBTable) {
             override fun all(): SizedIterable<JsonBEntity> {
                 return if (currentDialectTest is SQLiteDialect) {
-                    wrapRows(
-                        JsonBTable.select(JsonBTable.id, JsonBTable.jsonBColumn.asJson())
-                            .notForUpdate()
-                    )
+                    wrapRows(JsonBTable.selectAll().notForUpdate().adjustSelectedProject())
                 } else {
                     super.all()
                 }
             }
+            override fun searchQuery(op: Op<Boolean>): Query {
+                return if (currentDialectTest is SQLiteDialect) {
+                    super.searchQuery(op).adjustSelectedProject()
+                } else {
+                    super.searchQuery(op)
+                }
+            }
+            private fun Query.adjustSelectedProject(): Query = adjustSelect { originalFields ->
+                select(originalFields.fields - JsonBTable.jsonBColumn + JsonBTable.jsonBColumn.asJson())
+            }
         }
-
-        var jsonBColumn: DataHolder
-            get() = readValues.getOrNull(JsonBTable.jsonBColumn.asJson()) ?: readValues[JsonBTable.jsonBColumn]
-            set(value) { JsonBTable.jsonBColumn.setValue(this, this::jsonBColumn, value) }
     }
 
     object JsonArrays : IntIdTable("j_arrays") {
