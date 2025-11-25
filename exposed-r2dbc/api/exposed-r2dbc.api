@@ -257,7 +257,6 @@ public abstract interface class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConf
 	public static final field Companion Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Companion;
 	public abstract fun getConnectionFactoryOptions ()Lio/r2dbc/spi/ConnectionFactoryOptions;
 	public abstract fun getDefaultR2dbcIsolationLevel ()Lio/r2dbc/spi/IsolationLevel;
-	public abstract fun getDispatcher ()Lkotlinx/coroutines/CoroutineDispatcher;
 	public abstract fun getTypeMapping ()Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;
 }
 
@@ -268,12 +267,10 @@ public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Builder : 
 	public final fun getConnectionFactoryOptions ()Lio/r2dbc/spi/ConnectionFactoryOptions;
 	public fun getDefaultIsolationLevel ()I
 	public final fun getDefaultR2dbcIsolationLevel ()Lio/r2dbc/spi/IsolationLevel;
-	public final fun getDispatcher ()Lkotlinx/coroutines/CoroutineDispatcher;
 	public final fun getTypeMapping ()Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;
 	public final fun setConnectionFactoryOptions (Lio/r2dbc/spi/ConnectionFactoryOptions;)V
 	public fun setDefaultIsolationLevel (I)V
 	public final fun setDefaultR2dbcIsolationLevel (Lio/r2dbc/spi/IsolationLevel;)V
-	public final fun setDispatcher (Lkotlinx/coroutines/CoroutineDispatcher;)V
 	public final fun setTypeMapping (Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;)V
 	public final fun setUrl (Ljava/lang/String;)V
 }

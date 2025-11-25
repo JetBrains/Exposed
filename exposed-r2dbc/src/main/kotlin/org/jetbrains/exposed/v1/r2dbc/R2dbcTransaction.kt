@@ -4,7 +4,6 @@ import io.r2dbc.spi.R2dbcException
 import io.r2dbc.spi.Row
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
@@ -362,7 +361,7 @@ suspend fun <T> withTransactionContext(transaction: R2dbcTransaction, block: sus
     val context = if (dispatcher != null) {
         transaction.asContext()
     } else {
-        transaction.asContext() + Dispatchers.IO
+        transaction.asContext() + transaction.db.config.dispatcher
     }
 
     return withContext(context, block)

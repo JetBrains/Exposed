@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared
 
-import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
@@ -13,6 +12,7 @@ import kotlin.coroutines.Continuation
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.startCoroutine
 import kotlin.test.Test
+import kotlin.test.assertNull
 
 class TransactionCoroutineContextTests : R2dbcDatabaseTestsBase() {
     object UsersTable : Table("users") {
@@ -29,14 +29,8 @@ class TransactionCoroutineContextTests : R2dbcDatabaseTestsBase() {
         suspend {
             val db = TestDB.POSTGRESQL.connect()
 
-            try {
-                suspendTransaction(db) {
-                    addLogger(StdOutSqlLogger)
-                    SchemaUtils.create(UsersTable)
-                }
-            } catch (e: Exception) {
-                println(e)
-                throw e
+            suspendTransaction(db) {
+                SchemaUtils.create(UsersTable)
             }
         }
             /**
@@ -59,8 +53,6 @@ class TransactionCoroutineContextTests : R2dbcDatabaseTestsBase() {
             throw AssertionError("Test did not complete within 10 seconds")
         }
 
-        if (exception != null) {
-            throw exception
-        }
+        assertNull(exception)
     }
 }

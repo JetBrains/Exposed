@@ -596,6 +596,7 @@ public abstract interface class org/jetbrains/exposed/v1/core/DatabaseConfig {
 	public abstract fun getDefaultMinRetryDelay ()J
 	public abstract fun getDefaultReadOnly ()Z
 	public abstract fun getDefaultSchema ()Lorg/jetbrains/exposed/v1/core/Schema;
+	public abstract fun getDispatcher ()Lkotlinx/coroutines/CoroutineDispatcher;
 	public abstract fun getExplicitDialect ()Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;
 	public abstract fun getKeepLoadedReferencesOutOfTransaction ()Z
 	public abstract fun getLogTooMuchResultSetsThreshold ()I
@@ -615,6 +616,7 @@ public class org/jetbrains/exposed/v1/core/DatabaseConfig$Builder {
 	public final fun getDefaultMinRetryDelay ()J
 	public final fun getDefaultReadOnly ()Z
 	public final fun getDefaultSchema ()Lorg/jetbrains/exposed/v1/core/Schema;
+	public final fun getDispatcher ()Lkotlinx/coroutines/CoroutineDispatcher;
 	public final fun getExplicitDialect ()Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;
 	public final fun getKeepLoadedReferencesOutOfTransaction ()Z
 	public final fun getLogTooMuchResultSetsThreshold ()I
@@ -630,6 +632,7 @@ public class org/jetbrains/exposed/v1/core/DatabaseConfig$Builder {
 	public final fun setDefaultMinRetryDelay (J)V
 	public final fun setDefaultReadOnly (Z)V
 	public final fun setDefaultSchema (Lorg/jetbrains/exposed/v1/core/Schema;)V
+	public final fun setDispatcher (Lkotlinx/coroutines/CoroutineDispatcher;)V
 	public final fun setExplicitDialect (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)V
 	public final fun setKeepLoadedReferencesOutOfTransaction (Z)V
 	public final fun setLogTooMuchResultSetsThreshold (I)V
@@ -654,6 +657,7 @@ public class org/jetbrains/exposed/v1/core/DatabaseConfigImpl : org/jetbrains/ex
 	public fun getDefaultMinRetryDelay ()J
 	public fun getDefaultReadOnly ()Z
 	public fun getDefaultSchema ()Lorg/jetbrains/exposed/v1/core/Schema;
+	public fun getDispatcher ()Lkotlinx/coroutines/CoroutineDispatcher;
 	public fun getExplicitDialect ()Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;
 	public fun getKeepLoadedReferencesOutOfTransaction ()Z
 	public fun getLogTooMuchResultSetsThreshold ()I

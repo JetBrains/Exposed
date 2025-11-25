@@ -2,17 +2,10 @@ package org.jetbrains.exposed.v1.jdbc
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.withContext
 import org.intellij.lang.annotations.Language
-import org.jetbrains.exposed.v1.core.CompositeSqlLogger
-import org.jetbrains.exposed.v1.core.IColumnType
-import org.jetbrains.exposed.v1.core.InternalApi
-import org.jetbrains.exposed.v1.core.Key
-import org.jetbrains.exposed.v1.core.SqlLogger
-import org.jetbrains.exposed.v1.core.Transaction
-import org.jetbrains.exposed.v1.core.exposedLogger
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.GlobalStatementInterceptor
 import org.jetbrains.exposed.v1.core.statements.Statement
 import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
@@ -342,7 +335,7 @@ suspend fun <T> withTransactionContext(transaction: JdbcTransaction, block: susp
     val context = if (dispatcher != null) {
         transaction.asContext()
     } else {
-        transaction.asContext() + Dispatchers.IO
+        transaction.asContext() + transaction.db.config.dispatcher
     }
 
     return withContext(context, block)
