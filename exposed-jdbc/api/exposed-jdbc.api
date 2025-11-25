@@ -404,9 +404,10 @@ public abstract interface class org/jetbrains/exposed/v1/jdbc/SizedIterable : ja
 	public abstract fun copy ()Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
 	public abstract fun count ()J
 	public abstract fun empty ()Z
-	public abstract fun forUpdate (Lorg/jetbrains/exposed/v1/core/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
+	public fun forUpdate (Lorg/jetbrains/exposed/v1/core/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
+	public static synthetic fun forUpdate$default (Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;Lorg/jetbrains/exposed/v1/core/vendors/ForUpdateOption;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
 	public abstract fun limit (I)Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
-	public abstract fun notForUpdate ()Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
+	public fun notForUpdate ()Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
 	public abstract fun offset (J)Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
 	public abstract fun orderBy ([Lkotlin/Pair;)Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
 }
@@ -461,11 +462,11 @@ public class org/jetbrains/exposed/v1/jdbc/statements/BatchUpsertBlockingExecuta
 }
 
 public abstract interface class org/jetbrains/exposed/v1/jdbc/statements/BlockingExecutable {
-	public abstract fun execute (Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;)Ljava/lang/Object;
+	public fun execute (Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;)Ljava/lang/Object;
 	public abstract fun executeInternal (Lorg/jetbrains/exposed/v1/jdbc/statements/api/JdbcPreparedStatementApi;Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;)Ljava/lang/Object;
 	public abstract fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
-	public abstract fun isAlwaysBatch ()Z
-	public abstract fun prepared (Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/jdbc/statements/api/JdbcPreparedStatementApi;
+	public fun isAlwaysBatch ()Z
+	public fun prepared (Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/jdbc/statements/api/JdbcPreparedStatementApi;
 }
 
 public final class org/jetbrains/exposed/v1/jdbc/statements/BlockingExecutable$DefaultImpls {
