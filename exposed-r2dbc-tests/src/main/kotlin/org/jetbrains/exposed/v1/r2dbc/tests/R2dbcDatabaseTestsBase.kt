@@ -29,7 +29,7 @@ private val registeredOnShutdown = HashSet<TestDB>()
 
 internal var currentTestDB by nullableTransactionScope<TestDB>()
 
-@ParameterizedClass(name = "name: {2}, container: {0}, dialect: {1}")
+@ParameterizedClass(name = "name: {2}, container: {0}, dialect: {1}", allowZeroInvocations = true)
 @MethodSource("data")
 abstract class R2dbcDatabaseTestsBase {
     init {

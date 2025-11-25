@@ -4,7 +4,7 @@ import org.junit.jupiter.params.Parameter
 import org.junit.jupiter.params.ParameterizedClass
 import org.junit.jupiter.params.provider.MethodSource
 
-@ParameterizedClass(name = "{0}")
+@ParameterizedClass(name = "{0}", allowZeroInvocations = true)
 @MethodSource("data")
 abstract class LogDbInTestName {
     @Parameter(0)
