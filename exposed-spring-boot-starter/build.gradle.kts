@@ -30,8 +30,8 @@ dependencies {
     testImplementation(libs.spring.boot.starter.webflux)
     testImplementation(libs.h2)
     testImplementation(project(":exposed-jdbc"))
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testImplementation(libs.junit6.jupiter.api)
+    testRuntimeOnly(libs.junit.platform.launcher)
+    testImplementation(libs.junit6)
 }
 
 tasks.withType<KotlinCompile>().configureEach {

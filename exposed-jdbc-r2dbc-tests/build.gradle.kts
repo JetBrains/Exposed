@@ -27,8 +27,8 @@ dependencies {
     implementation(libs.r2dbc.spi)
 
     implementation(kotlin("test-junit5"))
-    implementation(libs.junit5.jupiter.api)
-    implementation(libs.junit5.jupiter.params)
+    implementation(libs.junit5)
+    testRuntimeOnly(libs.junit.platform.launcher)
 
     implementation(project(":exposed-core"))
     implementation(project(":exposed-jdbc"))

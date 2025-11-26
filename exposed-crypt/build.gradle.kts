@@ -21,7 +21,8 @@ dependencies {
     testImplementation(project(":exposed-dao"))
     testImplementation(project(":exposed-tests"))
     testImplementation(project(":exposed-jdbc"))
-    testImplementation(libs.junit6.jupiter.api)
+    testImplementation(libs.junit6)
+    testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(kotlin("test"))
     testImplementation(libs.logcaptor)
 }

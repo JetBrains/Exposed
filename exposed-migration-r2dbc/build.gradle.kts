@@ -35,7 +35,8 @@ dependencies {
     testRuntimeOnly(libs.r2dbc.sqlserver)
 
     testImplementation(libs.logcaptor)
-    testImplementation(libs.junit5.jupiter.api)
+    testImplementation(libs.junit5)
+    testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(kotlin("test-junit5"))
 }
 

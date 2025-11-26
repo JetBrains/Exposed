@@ -19,7 +19,7 @@ open class SpringCoroutineTest : SpringTransactionTestBase() {
     }
 
     @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
-    @RepeatedTest(1)
+    @RepeatedTest(5)
     @Transactional
     @Commit
     // Is this test flaky?
