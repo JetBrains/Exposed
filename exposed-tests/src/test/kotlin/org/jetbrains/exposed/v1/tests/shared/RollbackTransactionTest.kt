@@ -73,14 +73,14 @@ class RollbackTransactionTest : DatabaseTestsBase() {
         // database exception triggers rollback from inner to outer tx
         transaction {
             val fakeSQLString = "BROKEN_SQL_THAT_CAUSES_EXCEPTION"
-            val outerTxId = this.id
+            val outerTxId = this.transactionId
 
             RollbackTable.insert { it[value] = "City A" }
             assertEquals(1, RollbackTable.selectAll().count())
 
             try {
                 transaction {
-                    val innerTxId = this.id
+                    val innerTxId = this.transactionId
                     assertEquals(outerTxId, innerTxId)
 
                     RollbackTable.insert { it[value] = "City B" }
@@ -97,14 +97,14 @@ class RollbackTransactionTest : DatabaseTestsBase() {
         // non-db exception propagates from inner to outer without rollback and is handled, if caught.
         // if not caught & exception propagates all the way to outer tx, full rollback occurs (as always).
         transaction {
-            val outerTxId = this.id
+            val outerTxId = this.transactionId
 
             RollbackTable.insert { it[value] = "City A" }
             assertEquals(1, RollbackTable.selectAll().count())
 
             try {
                 transaction(db) {
-                    val innerTxId = this.id
+                    val innerTxId = this.transactionId
                     assertEquals(outerTxId, innerTxId)
 
                     RollbackTable.insert { it[value] = "City B" }

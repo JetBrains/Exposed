@@ -2476,6 +2476,7 @@ public abstract class org/jetbrains/exposed/v1/core/Transaction : org/jetbrains/
 	public final fun getStatementCount ()I
 	public final fun getStatementStats ()Ljava/util/HashMap;
 	public final fun getStatements ()Ljava/lang/StringBuilder;
+	public final fun getTransactionId ()Ljava/lang/String;
 	public final fun getWarnLongQueriesDuration ()Ljava/lang/Long;
 	public final fun identity (Lorg/jetbrains/exposed/v1/core/Column;)Ljava/lang/String;
 	public final fun identity (Lorg/jetbrains/exposed/v1/core/Table;)Ljava/lang/String;

@@ -182,7 +182,7 @@ class MultiDatabaseTest {
     fun testCoroutinesWithMultiDb() = runTest {
         withContext(Dispatchers.IO) {
             suspendTransaction(db1) {
-                val trOuterId = this.id
+                val trOuterId = this.transactionId
                 SchemaUtils.create(DMLTestsData.Cities)
                 assertTrue(DMLTestsData.Cities.selectAll().empty())
                 DMLTestsData.Cities.insert {
@@ -190,7 +190,7 @@ class MultiDatabaseTest {
                 }
 
                 inTopLevelSuspendTransaction(db2) {
-                    assertFalse(this.id == trOuterId)
+                    assertFalse(this.transactionId == trOuterId)
                     assertFalse(DMLTestsData.Cities.exists())
                     SchemaUtils.create(DMLTestsData.Cities)
                     DMLTestsData.Cities.insert {
@@ -203,7 +203,7 @@ class MultiDatabaseTest {
                     assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
 
                     suspendTransaction(db1) {
-                        assertTrue(this.id == trOuterId)
+                        assertTrue(this.transactionId == trOuterId)
                         assertEquals(1L, DMLTestsData.Cities.selectAll().count())
                         DMLTestsData.Cities.insert {
                             it[DMLTestsData.Cities.name] = "city4"

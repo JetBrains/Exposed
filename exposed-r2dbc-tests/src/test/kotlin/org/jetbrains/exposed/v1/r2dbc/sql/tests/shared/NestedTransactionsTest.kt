@@ -111,14 +111,14 @@ class NestedTransactionsTest : R2dbcDatabaseTestsBase() {
         }
 
         suspendTransaction(db) {
-            val outerTxId = this.id
+            val outerTxId = this.transactionId
 
             DMLTestsData.Cities.insert { it[name] = "City A" }
             assertEquals(1, DMLTestsData.Cities.selectAll().count())
 
             try {
                 inTopLevelSuspendTransaction(db) {
-                    val innerTxId = this.id
+                    val innerTxId = this.transactionId
                     assertNotEquals(outerTxId, innerTxId)
 
                     DMLTestsData.Cities.insert { it[name] = "City B" }
@@ -133,14 +133,14 @@ class NestedTransactionsTest : R2dbcDatabaseTestsBase() {
         assertSingleRecordInNewTransactionAndReset()
 
         suspendTransaction(db) {
-            val outerTxId = this.id
+            val outerTxId = this.transactionId
 
             DMLTestsData.Cities.insert { it[name] = "City A" }
             assertEquals(1, DMLTestsData.Cities.selectAll().count())
 
             try {
                 suspendTransaction(db) {
-                    val innerTxId = this.id
+                    val innerTxId = this.transactionId
                     assertNotEquals(outerTxId, innerTxId)
 
                     DMLTestsData.Cities.insert { it[name] = "City B" }
@@ -170,14 +170,14 @@ class NestedTransactionsTest : R2dbcDatabaseTestsBase() {
         }
 
         suspendTransaction(db) {
-            val outerTxId = this.id
+            val outerTxId = this.transactionId
 
             DMLTestsData.Cities.insert { it[name] = "City A" }
             assertEquals(1, DMLTestsData.Cities.selectAll().count())
 
             try {
                 inTopLevelSuspendTransaction(db) {
-                    val innerTxId = this.id
+                    val innerTxId = this.transactionId
                     assertNotEquals(outerTxId, innerTxId)
 
                     DMLTestsData.Cities.insert { it[name] = "City B" }
@@ -191,14 +191,14 @@ class NestedTransactionsTest : R2dbcDatabaseTestsBase() {
         assertSingleRecordInNewTransactionAndReset()
 
         suspendTransaction(db) {
-            val outerTxId = this.id
+            val outerTxId = this.transactionId
 
             DMLTestsData.Cities.insert { it[name] = "City A" }
             assertEquals(1, DMLTestsData.Cities.selectAll().count())
 
             try {
                 suspendTransaction(db) {
-                    val innerTxId = this.id
+                    val innerTxId = this.transactionId
                     assertNotEquals(outerTxId, innerTxId)
 
                     DMLTestsData.Cities.insert { it[name] = "City B" }

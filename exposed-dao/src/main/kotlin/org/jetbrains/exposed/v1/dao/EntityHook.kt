@@ -82,7 +82,7 @@ fun Transaction.registerChange(
     entityId: EntityID<*>,
     changeType: EntityChangeType
 ) {
-    EntityChange(entityClass, entityId, changeType, id).let {
+    EntityChange(entityClass, entityId, changeType, transactionId).let {
         if (unprocessedEvents.peekLast() != it) {
             unprocessedEvents.addLast(it)
             entityEvents.addLast(it)

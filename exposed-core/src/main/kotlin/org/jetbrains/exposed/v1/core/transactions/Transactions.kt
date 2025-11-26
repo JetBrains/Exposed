@@ -42,7 +42,7 @@ fun <T> withThreadLocalTransaction(transaction: Transaction?, block: () -> T): T
 
     // Check if this transaction is already on the stack to avoid duplicate push/pop
     val currentTransaction = ThreadLocalTransactionsStack.getTransactionOrNull()
-    if (currentTransaction?.id == transaction.id) {
+    if (currentTransaction?.transactionId == transaction.transactionId) {
         // Transaction is already on the stack - just execute without pushing
         return block()
     }

@@ -15,6 +15,7 @@
   statements that are needed to align the database table with the Exposed table object, such as `ALTER TABLE ADD COLUMN`,
   `ALTER TABLE DROP COLUMN`, and `ALTER TABLE RENAME COLUMN`. Please consider checking the generated SQL list in this case
   before running.
+* The field `Transaction.id` was renamed to `Transaction.transactionId` to avoid collisions and shadowing with user's code.
 
 ## 1.0.0-rc-3
 

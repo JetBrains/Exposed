@@ -57,7 +57,12 @@ abstract class Transaction : UserDataHolder(), TransactionInterface {
     var queryTimeout: Int? = null
 
     /** The unique ID for this transaction. */
-    val id by lazy { UUID.randomUUID().toString() }
+    val transactionId by lazy { UUID.randomUUID().toString() }
+
+    /** The unique ID for this transaction. */
+    @Deprecated("Use transactionId instead", ReplaceWith("transactionId"))
+    val id: String
+        get() = transactionId
 
     /**
      * A [StringBuilder] containing string representations of previously executed statements
