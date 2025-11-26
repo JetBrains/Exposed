@@ -100,6 +100,9 @@ import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
   `exposed-jodatime` into `JodaLocalDateColumnType` (formerly `time: false`) and `JodaLocalDateTimeColumnType` (formerly `time: true`), and renamed
   `LocalTimeColumnType` to `JodaLocalTimeColumnType`. These changes would affect only those who use these classes directly for custom functions or custom column
   types. Creating columns via extension functions should not be affected.
+* The common `exposed-core` datetime API mentioned above relies on `kotlinx.datetime` [features](https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#using-in-your-projects)
+  that are only compatible with kotlin-stdlib 2.1.20+. Attempting to build with a datetime module dependency using an older Kotlin version may lead to
+  `NoClassDefFoundError` and will require bumping the Kotlin version.
 * Levels of deprecated API have been bumped. See [PR #2588](https://github.com/JetBrains/Exposed/pull/2588) and
   [Migration Guide](https://www.jetbrains.com/help/exposed/migration-guide-1-0-0.html) for full details.
 * Parameter `supportsSelectForUpdate` from `DatabaseDialect` was deprecated and should not be used. The parameter was moved to `JdbcExposedDatabaseMetadata`/

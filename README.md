@@ -71,6 +71,21 @@ As well as the following extension modules:
 | `exposed-spring-boot-starter` | A starter for [Spring Boot](https://spring.io/projects/spring-boot) to utilize Exposed as the ORM instead of [Hibernate](https://hibernate.org/)                                |
 | `spring-transaction`          | Transaction manager that builds on top of Spring's standard transaction workflow                                                                                                |
 
+### Requirements
+
+Kotlin version 2.1.+
+
+The following module(s) require JDK 17 or newer:
+* `spring-transaction` - depends on Spring Framework 6
+* `exposed-spring-boot-starter` - depends on Spring Boot 3
+* `exposed-crypt` - depends on Spring Security 6
+
+The following module(s) require JDK 11 or newer:
+* `exposed-r2dbc`
+* `exposed-migration-r2dbc`
+
+All other modules have a minimum requirement of JDK 8.
+
 ## Samples using Exposed
 
 Follow the [Getting Started with DSL tutorial](https://www.jetbrains.com/help/exposed/getting-started-with-exposed.html) for a quick start or check out the [samples](samples/README.md) for more in-depth projects.
