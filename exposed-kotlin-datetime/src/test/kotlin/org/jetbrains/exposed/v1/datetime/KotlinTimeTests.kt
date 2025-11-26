@@ -354,7 +354,7 @@ class KotlinTimeTests : DatabaseTestsBase() {
             val modified = jsonb<ModifierData>("modified", Json.Default)
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2_V2 + TestDB.SQLITE + TestDB.SQLSERVER + TestDB.ORACLE, tester) {
+        withTables(excludeSettings = TestDB.ALL_H2_V2 + TestDB.SQLSERVER + TestDB.ORACLE, tester) { testDb ->
             val dateTimeNow = now()
             tester.insert {
                 it[created] = dateTimeNow.date.minus(1, DateTimeUnit.YEAR).atTime(0, 0, 0)
@@ -371,8 +371,18 @@ class KotlinTimeTests : DatabaseTestsBase() {
             val modifiedAsString = tester.modified.extract<String>("${prefix}timestamp")
             val allModifiedAsString = tester.select(modifiedAsString)
             assertTrue(allModifiedAsString.all { it[modifiedAsString] == dateTimeNow.toString() })
-            // value extracted as json, with implicit LocalDateTime serializer() performing conversions
-            val modifiedAsJson = tester.modified.extract<LocalDateTime>("${prefix}timestamp", toScalar = false)
+
+            val modifiedAsJson = if (testDb == TestDB.SQLITE) {
+                // It is well documented that SQLite extract returns "the dequoted text for a JSON string value",
+                // which is not compatible with the KSerializer for LocalDateTime (decoder expects quotations).
+                // So a type cast ensures the serializer works as expected.
+                tester.modified
+                    .extract<LocalDateTime>("${prefix}timestamp", toScalar = false)
+                    .castTo(KotlinLocalDateTimeColumnType())
+            } else {
+                // value extracted as json, with implicit LocalDateTime serializer() performing conversions
+                tester.modified.extract<LocalDateTime>("${prefix}timestamp", toScalar = false)
+            }
             val allModifiedAsJson = tester.select(modifiedAsJson)
             assertTrue(allModifiedAsJson.all { it[modifiedAsJson] == dateTimeNow })
 
@@ -382,8 +392,17 @@ class KotlinTimeTests : DatabaseTestsBase() {
             } else {
                 tester.modified.extract<LocalDateTime>("${prefix}timestamp")
             }
-            val modifiedBeforeCreation = tester.selectAll().where { dateModified less tester.created }.single()
-            assertEquals(2, modifiedBeforeCreation[tester.modified].userId)
+            // SQLite requires JSON() function to convert JSONB binary format to readable text format
+            val modifiedColumn = if (testDb == TestDB.SQLITE) {
+                tester.modified.function("JSON")
+            } else {
+                tester.modified
+            }
+            val modifiedBeforeCreation = tester
+                .select(tester.created, modifiedColumn)
+                .where { dateModified less tester.created }
+                .single()
+            assertEquals(2, modifiedBeforeCreation[modifiedColumn]?.userId)
         }
     }
 
