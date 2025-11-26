@@ -4,7 +4,7 @@
 [versions]
 guava = "33.0.0-jre"
 junit-jupiter-engine = "5.10.2"
-exposed = "1.0.0-rc-3"
+exposed = "1.0.0-rc-4"
 slf4j = "2.0.16"
 jackson = "2.18.+"
 kotlin = "2.1.0"
