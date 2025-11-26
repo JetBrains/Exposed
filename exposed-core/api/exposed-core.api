@@ -2471,6 +2471,7 @@ public abstract class org/jetbrains/exposed/v1/core/Transaction : org/jetbrains/
 	public final fun fullIdentity (Lorg/jetbrains/exposed/v1/core/Column;)Ljava/lang/String;
 	public final fun getDebug ()Z
 	public final fun getDuration ()J
+	public final fun getId ()Ljava/lang/String;
 	public final fun getQueryTimeout ()Ljava/lang/Integer;
 	public final fun getStatementCount ()I
 	public final fun getStatementStats ()Ljava/util/HashMap;
