@@ -49,16 +49,16 @@ class TransactionContextElement(
         val currentTransaction = ThreadLocalTransactionsStack.getTransactionOrNull()
         if (currentTransaction == null) {
             exposedLogger.warn(
-                "restoreThreadContext called for transaction ${transaction.id} but stack is already empty. " +
+                "restoreThreadContext called for transaction ${transaction.transactionId} but stack is already empty. " +
                     "This is likely because withThreadLocalTransaction already popped the transaction. Skipping restore."
             )
             return
         }
 
         // Check if the top of the stack is actually our transaction before popping
-        if (currentTransaction.id != transaction.id) {
+        if (currentTransaction.transactionId != transaction.transactionId) {
             exposedLogger.warn(
-                "restoreThreadContext called for transaction ${transaction.id} but top of stack is ${currentTransaction.id}. " +
+                "restoreThreadContext called for transaction ${transaction.transactionId} but top of stack is ${currentTransaction.transactionId}. " +
                     "Skipping restore to avoid corrupting the stack."
             )
             return
@@ -66,14 +66,14 @@ class TransactionContextElement(
 
         // Safe to pop
         val poppedTransaction = ThreadLocalTransactionsStack.popTransaction()
-        if (poppedTransaction.id != transaction.id) {
+        if (poppedTransaction.transactionId != transaction.transactionId) {
             exposedLogger.warn(
-                "The current thread local stack of transactions had a transaction ${poppedTransaction.id} on the top. " +
-                    "But it differs from the transaction ${transaction.id} in the coroutine context. " +
+                "The current thread local stack of transactions had a transaction ${poppedTransaction.transactionId} on the top. " +
+                    "But it differs from the transaction ${transaction.transactionId} in the coroutine context. " +
                     "Normally it should not happen because the coroutine adds its transaction into the thread " +
                     "local stack on the start and removes it on the end of execution"
             )
-            exposedLogger.warn("Popped transaction ${poppedTransaction.id} doesn't match expected ${transaction.id}")
+            exposedLogger.warn("Popped transaction ${poppedTransaction.transactionId} doesn't match expected ${transaction.transactionId}")
         }
     }
 }

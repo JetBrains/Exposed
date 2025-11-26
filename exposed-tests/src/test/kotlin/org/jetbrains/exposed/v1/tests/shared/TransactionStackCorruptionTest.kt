@@ -48,7 +48,7 @@ class TransactionStackCorruptionTest : DatabaseTestsBase() {
 
             // Check for duplicates: if the same transaction appears multiple times
             @OptIn(InternalApi::class)
-            val transactionIds = ThreadLocalTransactionsStack.threadTransactions()!!.map { it.id }
+            val transactionIds = ThreadLocalTransactionsStack.threadTransactions()!!.map { it.transactionId }
             if (transactionIds.size != transactionIds.distinct().size) {
                 hasDuplicates.incrementAndGet()
             }
@@ -233,7 +233,7 @@ class TransactionStackCorruptionTest : DatabaseTestsBase() {
                     val txAfter = ThreadLocalTransactionsStack.getTransactionOrNull()
 
                     assertEquals(
-                        currentTxOnStack?.id, txAfter?.id,
+                        currentTxOnStack?.transactionId, txAfter?.transactionId,
                         "Transaction on stack changed during query execution"
                     )
                     assertEquals(1L, count)
