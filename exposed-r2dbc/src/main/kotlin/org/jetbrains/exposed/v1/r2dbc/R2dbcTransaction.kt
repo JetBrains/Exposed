@@ -2,6 +2,9 @@ package org.jetbrains.exposed.v1.r2dbc
 
 import io.r2dbc.spi.R2dbcException
 import io.r2dbc.spi.Row
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.emptyFlow
@@ -96,7 +99,7 @@ open class R2dbcTransaction(
 
     override suspend fun commit() {
         @OptIn(InternalApi::class)
-        withContext(asContext()) {
+        withTransactionContext(this) {
             val dataToStore = HashMap<Key<*>, Any?>()
             globalInterceptors.forEach {
                 dataToStore.putAll(it.keepUserDataInTransactionStoreOnCommit(userdata))
@@ -116,7 +119,7 @@ open class R2dbcTransaction(
 
     override suspend fun rollback() {
         @OptIn(InternalApi::class)
-        withContext(asContext()) {
+        withTransactionContext(this) {
             globalInterceptors.forEach { it.beforeRollback(this@R2dbcTransaction) }
             interceptors.forEach { it.beforeRollback(this@R2dbcTransaction) }
             transactionImpl.rollback()
@@ -247,7 +250,7 @@ open class R2dbcTransaction(
      */
     suspend fun <T, R> exec(stmt: SuspendExecutable<T, *>, body: suspend Statement<T>.(T) -> R): R? {
         @OptIn(InternalApi::class)
-        return withContext(asContext()) {
+        return withTransactionContext(this) {
             statementCount++
 
             val start = System.nanoTime()
@@ -355,8 +358,21 @@ open class R2dbcTransaction(
     }
 }
 
+private fun R2dbcTransaction.asContext() = transactionManager.createTransactionContext(this)
+
 /**
  * @suppress
  */
+@OptIn(ExperimentalStdlibApi::class)
 @InternalApi
-fun R2dbcTransaction.asContext() = transactionManager.createTransactionContext(this)
+suspend fun <T> withTransactionContext(transaction: R2dbcTransaction, block: suspend CoroutineScope.() -> T): T {
+    val dispatcher = currentCoroutineContext()[CoroutineDispatcher.Key]
+
+    val context = if (dispatcher != null) {
+        transaction.asContext()
+    } else {
+        transaction.asContext() + transaction.db.config.dispatcher
+    }
+
+    return withContext(context, block)
+}

@@ -1,5 +1,8 @@
 package org.jetbrains.exposed.v1.core
 
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 
 /**
@@ -24,6 +27,14 @@ interface DatabaseConfig {
     val defaultSchema: Schema?
     val logTooMuchResultSetsThreshold: Int
     val preserveKeywordCasing: Boolean
+
+    /**
+     * The [CoroutineDispatcher] to be used when determining the scope of Exposed transaction if
+     * It is run in a context with no dispatcher. It could be, for instance, a Ktor route or a standalone Kotlin script.
+     *
+     * Default dispatcher is [Dispatchers.IO].
+     */
+    val dispatcher: CoroutineDispatcher
 
     /**
      * Builder API responsible for constructing a custom [DatabaseApi] configuration parameter state.
@@ -137,6 +148,14 @@ interface DatabaseConfig {
          */
         @ExperimentalKeywordApi
         var preserveKeywordCasing: Boolean = true
+
+        /**
+         * The [CoroutineDispatcher] to be used when determining the scope of Exposed transaction if
+         * It is run in a context with no dispatcher. It could be, for instance, a Ktor route or a standalone Kotlin script.
+         *
+         * Default dispatcher is [Dispatchers.IO].
+         */
+        var dispatcher: CoroutineDispatcher = IO
     }
 
     companion object {
@@ -181,6 +200,8 @@ open class DatabaseConfigImpl(private val builder: DatabaseConfig.Builder) : Dat
         get() = builder.defaultSchema
     override val logTooMuchResultSetsThreshold: Int
         get() = builder.logTooMuchResultSetsThreshold
+    override val dispatcher: CoroutineDispatcher
+        get() = builder.dispatcher
 
     @OptIn(ExperimentalKeywordApi::class)
     override val preserveKeywordCasing: Boolean

@@ -141,7 +141,7 @@ public final class org/jetbrains/exposed/v1/jdbc/JdbcTransaction$Companion {
 }
 
 public final class org/jetbrains/exposed/v1/jdbc/JdbcTransactionKt {
-	public static final fun asContext (Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;)Lkotlin/coroutines/CoroutineContext;
+	public static final fun withTransactionContext (Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/v1/jdbc/LazySizedCollection : org/jetbrains/exposed/v1/jdbc/SizedIterable {

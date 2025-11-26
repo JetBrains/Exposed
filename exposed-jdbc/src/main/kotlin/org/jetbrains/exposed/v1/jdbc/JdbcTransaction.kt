@@ -1,5 +1,9 @@
 package org.jetbrains.exposed.v1.jdbc
 
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.withContext
 import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.GlobalStatementInterceptor
@@ -328,8 +332,21 @@ open class JdbcTransaction(
     }
 }
 
+private fun JdbcTransaction.asContext() = transactionManager.createTransactionContext(this)
+
 /**
  * @suppress
  */
+@OptIn(ExperimentalStdlibApi::class)
 @InternalApi
-fun JdbcTransaction.asContext() = transactionManager.createTransactionContext(this)
+suspend fun <T> withTransactionContext(transaction: JdbcTransaction, block: suspend CoroutineScope.() -> T): T {
+    val dispatcher = currentCoroutineContext()[CoroutineDispatcher.Key]
+
+    val context = if (dispatcher != null) {
+        transaction.asContext()
+    } else {
+        transaction.asContext() + transaction.db.config.dispatcher
+    }
+
+    return withContext(context, block)
+}

@@ -3,7 +3,6 @@ package org.jetbrains.exposed.v1.r2dbc.transactions
 import io.r2dbc.spi.IsolationLevel
 import io.r2dbc.spi.R2dbcException
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.SqlLogger
 import org.jetbrains.exposed.v1.core.exposedLogger
@@ -12,7 +11,7 @@ import org.jetbrains.exposed.v1.r2dbc.ExposedR2dbcException
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
-import org.jetbrains.exposed.v1.r2dbc.asContext
+import org.jetbrains.exposed.v1.r2dbc.withTransactionContext
 import java.util.concurrent.ThreadLocalRandom
 
 /**
@@ -118,7 +117,7 @@ suspend fun <T> suspendTransaction(
         val transaction = outer.transactionManager.newTransaction(transactionIsolation, readOnly, outer)
 
         @OptIn(InternalApi::class)
-        withContext(transaction.asContext()) {
+        withTransactionContext(transaction) {
             executeR2dbcTransactionWithErrorHandling(
                 transaction,
                 shouldCommit = outer.db.useNestedTransactions
@@ -177,7 +176,7 @@ suspend fun <T> inTopLevelSuspendTransaction(
 
         try {
             @OptIn(InternalApi::class)
-            return withContext(transaction.asContext()) {
+            return withTransactionContext(transaction) {
                 try {
                     executeR2dbcTransactionWithErrorHandling(transaction, shouldCommit = true) {
                         transaction.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
@@ -217,7 +216,10 @@ suspend fun <T> inTopLevelSuspendTransaction(
                 throw cause
             }
         } finally {
-            closeStatementsAndConnection(transaction)
+            @OptIn(InternalApi::class)
+            withTransactionContext(transaction) {
+                closeStatementsAndConnection(transaction)
+            }
         }
     }
 }
