@@ -41,8 +41,7 @@ class R2dbcDatabaseMetadataImpl(
     override fun getMinorVersion(): Int = connectionData.databaseVersion.split('.', ' ')[1].toInt()
 
     override fun getDatabaseDialectName(): String {
-        val dbProductName = connectionData.databaseProductName
-        return when (dbProductName) {
+        return when (val dbProductName = connectionData.databaseProductName) {
             "MySQL Community Server - GPL", "MySQL Community Server (GPL)" -> MysqlDialect.dialectName
             "MariaDB" -> MariaDBDialect.dialectName
             "H2" -> H2Dialect.dialectName

@@ -381,8 +381,8 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
             }
 
             list1 = assertNotNull(testData.selectAll().singleOrNull())
-            assertEquals("test1", list1?.get(testData.name))
-            assertEquals(date.millis, list1?.get(testData.dateTime)?.millis)
+            assertEquals("test1", list1[testData.name])
+            assertEquals(date.millis, list1[testData.dateTime].millis)
         }
         assertEquals("test1", list1?.get(testData.name))
         assertEquals(date.millis, list1?.get(testData.dateTime)?.millis)

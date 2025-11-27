@@ -58,7 +58,7 @@ class KotlinTimeTests : DatabaseTestsBase() {
 
             assertEquals(now.year, insertedYear)
             assertEquals(now.month.number, insertedMonth)
-            assertEquals(now.dayOfMonth, insertedDay)
+            assertEquals(now.day, insertedDay)
             assertEquals(now.hour, insertedHour)
             assertEquals(now.minute, insertedMinute)
             assertEquals(now.second, insertedSecond)
@@ -86,8 +86,8 @@ class KotlinTimeTests : DatabaseTestsBase() {
 
                 val now = now()
                 assertEquals(now.year, result[year])
-                assertEquals(now.monthNumber, result[month])
-                assertEquals(now.dayOfMonth, result[day])
+                assertEquals(now.month.number, result[month])
+                assertEquals(now.day, result[day])
                 assertEquals(now.hour, result[hour])
                 assertEquals(now.minute, result[minute])
             } finally {
@@ -196,8 +196,8 @@ class KotlinTimeTests : DatabaseTestsBase() {
 
                 val result1 = testTable.select(year, month, day).single()
                 assertEquals(today.year, result1[year])
-                assertEquals(today.monthNumber, result1[month])
-                assertEquals(today.dayOfMonth, result1[day])
+                assertEquals(today.month.number, result1[month])
+                assertEquals(today.day, result1[day])
 
                 val lastDayOfMonth = CustomDateFunction(
                     "date",
@@ -206,7 +206,7 @@ class KotlinTimeTests : DatabaseTestsBase() {
                     stringLiteral("+1 month"),
                     stringLiteral("-1 day")
                 )
-                val nextMonth = LocalDate(today.year, today.monthNumber, 1).plus(1, DateTimeUnit.MONTH)
+                val nextMonth = LocalDate(today.year, today.month.number, 1).plus(1, DateTimeUnit.MONTH)
                 val expectedLastDayOfMonth = nextMonth.minus(1, DateTimeUnit.DAY)
 
                 val result2 = testTable.select(lastDayOfMonth).single()

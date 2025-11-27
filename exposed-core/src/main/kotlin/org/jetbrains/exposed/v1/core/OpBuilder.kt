@@ -317,9 +317,9 @@ fun <T : Any, E : EntityID<T>?> Column<E>.between(from: T, to: T): Between =
     Between(this, wrap(EntityID(from, this.idTable())), wrap(EntityID(to, this.idTable())))
 
 /** Returns `true` if this expression is null, `false` otherwise. */
-fun <T> Expression<T>.isNull(): Op<Boolean> = when {
-    this is Column<*> && isEntityIdentifier() -> table.mapIdOperator(::IsNullOp)
-    this is QueryParameter && compositeValue != null -> {
+fun <T> Expression<T>.isNull(): Op<Boolean> = when (this) {
+    is Column<*> if isEntityIdentifier() -> table.mapIdOperator(::IsNullOp)
+    is QueryParameter if compositeValue != null -> {
         val table = compositeValue.values.keys.first().table
         table.mapIdOperator(::IsNullOp)
     }
@@ -330,9 +330,9 @@ fun <T> Expression<T>.isNull(): Op<Boolean> = when {
 fun <T : String?> Expression<T>.isNullOrEmpty(): Op<Boolean> = IsNullOp(this).or { this@isNullOrEmpty.charLength() eq 0 }
 
 /** Returns `true` if this expression is not null, `false` otherwise. */
-fun <T> Expression<T>.isNotNull(): Op<Boolean> = when {
-    this is Column<*> && isEntityIdentifier() -> table.mapIdOperator(::IsNotNullOp)
-    this is QueryParameter && compositeValue != null -> {
+fun <T> Expression<T>.isNotNull(): Op<Boolean> = when (this) {
+    is Column<*> if isEntityIdentifier() -> table.mapIdOperator(::IsNotNullOp)
+    is QueryParameter if compositeValue != null -> {
         val table = compositeValue.values.keys.first().table
         table.mapIdOperator(::IsNotNullOp)
     }

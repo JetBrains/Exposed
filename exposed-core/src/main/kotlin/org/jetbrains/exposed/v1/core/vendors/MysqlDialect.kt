@@ -48,8 +48,8 @@ internal open class MysqlDataTypeProvider : DataTypeProvider() {
 
     override fun jsonBType(): String = "JSON"
 
-    override fun processForDefaultValue(e: Expression<*>): String = when {
-        e is LiteralOp<*> && e.columnType is JsonColumnMarker -> when {
+    override fun processForDefaultValue(e: Expression<*>): String = when (e) {
+        is LiteralOp<*> if e.columnType is JsonColumnMarker -> when {
             ((currentDialect as? MysqlDialect)?.fullVersion ?: "0") >= "8.0.13" -> "(${super.processForDefaultValue(e)})"
             else -> throw UnsupportedByDialectException(
                 "MySQL versions prior to 8.0.13 do not accept default values on JSON columns",
@@ -61,9 +61,11 @@ internal open class MysqlDataTypeProvider : DataTypeProvider() {
         // default values. The exception is that, for TIMESTAMP and DATETIME columns, you can specify the
         // CURRENT_TIMESTAMP function as the default, without enclosing parentheses.
         // https://dev.mysql.com/doc/refman/8.0/en/data-type-defaults.html#data-type-defaults-explicit
-        e is ExpressionWithColumnType<*> && e.columnType is IDateColumnType && e.toString().startsWith("CURRENT_TIMESTAMP") ->
+        is ExpressionWithColumnType<*> if (
+            e.columnType is IDateColumnType && e.toString().startsWith("CURRENT_TIMESTAMP")
+            ) ->
             super.processForDefaultValue(e)
-        e !is LiteralOp<*> && ((currentDialect as? MysqlDialect)?.fullVersion ?: "0") >= "8.0.13" ->
+        !is LiteralOp<*> if ((currentDialect as? MysqlDialect)?.fullVersion ?: "0") >= "8.0.13" ->
             "(${super.processForDefaultValue(e)})"
         else -> super.processForDefaultValue(e)
     }

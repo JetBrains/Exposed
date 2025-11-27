@@ -655,10 +655,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Converts the @receiver column to an [EntityID] column. */
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> Column<T>.entityId(): Column<EntityID<T>> {
-        val newColumn = Column<EntityID<T>>(table, name, EntityIDColumnType(this)).also {
-            it.defaultValueFun = defaultValueFun?.let { { EntityIDFunctionProvider.createEntityID(it(), table as IdTable<T>) } }
-            it.dbDefaultValue = dbDefaultValue?.let { default -> default as Expression<EntityID<T>> }
-            it.extraDefinitions = extraDefinitions
+        val newColumn = Column<EntityID<T>>(table, name, EntityIDColumnType(this)).also { newCol ->
+            newCol.defaultValueFun = defaultValueFun?.let { { EntityIDFunctionProvider.createEntityID(it(), table as IdTable<T>) } }
+            newCol.dbDefaultValue = dbDefaultValue?.let { default -> default as Expression<EntityID<T>> }
+            newCol.extraDefinitions = extraDefinitions
         }
         (table as IdTable<T>).addIdColumnInternal(newColumn)
         return replaceColumn(this, newColumn)

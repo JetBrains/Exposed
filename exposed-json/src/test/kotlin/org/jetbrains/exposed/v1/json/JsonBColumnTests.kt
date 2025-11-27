@@ -135,7 +135,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
             val userIsInactive = JsonTestsData.JsonBTable.jsonBColumn.contains("{\"active\":false}")
             assertEquals(0, tester.selectAll().where { userIsInactive }.count())
 
-            val alphaTeamUserAsJson = "{\"user\":${Json.Default.encodeToString(alphaTeamUser)}}"
+            val alphaTeamUserAsJson = "{\"user\":${Json.encodeToString(alphaTeamUser)}}"
             var userIsInAlphaTeam = JsonTestsData.JsonBTable.jsonBColumn.contains(stringLiteral(alphaTeamUserAsJson))
             assertEquals(1, tester.selectAll().where { userIsInAlphaTeam }.count())
 
@@ -176,7 +176,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
                 val usersWithMaxLogin = tester.select(tester.id).where { hasMaxLogins }
                 assertEquals(newId, usersWithMaxLogin.single()[tester.id])
 
-                val (jsonPath, optionalArg) = ".user.team ? (@ == \$team)" to "{\"team\":\"$teamA\"}"
+                val (jsonPath, optionalArg) = $$".user.team ? (@ == $team)" to "{\"team\":\"$teamA\"}"
                 val isOnTeamA = JsonTestsData.JsonBTable.jsonBColumn.exists(jsonPath, optional = optionalArg)
                 val usersOnTeamA = tester.select(tester.id).where { isOnTeamA }
                 assertEquals(newId, usersOnTeamA.single()[tester.id])

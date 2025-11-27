@@ -46,18 +46,18 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> = QueryBuilder(true).run {
         val dialect = currentDialect
-        when {
-            targetsSet is Join && dialect is OracleDialect -> {
+        when (targetsSet) {
+            is Join if dialect is OracleDialect -> {
                 registerAdditionalArgs(targetsSet)
                 registerWhereArg()
                 registerUpdateArgs()
             }
-            targetsSet is Join && (dialect is SQLServerDialect || dialect is PostgreSQLDialect) -> {
+            is Join if (dialect is SQLServerDialect || dialect is PostgreSQLDialect) -> {
                 registerUpdateArgs()
                 registerAdditionalArgs(targetsSet)
                 registerWhereArg()
             }
-            targetsSet is Join -> {
+            is Join -> {
                 registerAdditionalArgs(targetsSet)
                 registerUpdateArgs()
                 registerWhereArg()
