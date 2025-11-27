@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test
 import kotlin.concurrent.thread
 import kotlin.test.assertNotNull
 
+// TODO
 class ImmutableEntityTest : DatabaseTestsBase() {
 
     object Schema {

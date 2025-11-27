@@ -47,6 +47,7 @@ object LongIdTables {
     }
 }
 
+// TODO
 class LongIdTableEntityTest : DatabaseTestsBase() {
     @Test
     fun `create tables`() {

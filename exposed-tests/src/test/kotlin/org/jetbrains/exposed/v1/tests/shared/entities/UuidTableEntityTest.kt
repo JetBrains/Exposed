@@ -63,6 +63,7 @@ object UUIDTables {
     }
 }
 
+// TODO
 class UUIDTableEntityTest : DatabaseTestsBase() {
     @Test
     fun `create tables`() {

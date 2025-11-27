@@ -19,6 +19,8 @@ private inline fun <reified T : Any> Table.array3(name: String, maximumCardinali
 private inline fun <reified T : Any> Table.array2(name: String, maximumCardinality: List<Int>? = null): Column<List<List<T>>> =
     array<T, List<List<T>>>(name, maximumCardinality, dimensions = 2)
 
+// TODO
+// Arrays more than 2D not currently supported by any R2DBC drivers
 class MultiArrayColumnTypeTests : DatabaseTestsBase() {
 
     private val multiArrayTypeUnsupportedDb = TestDB.ALL - TestDB.ALL_POSTGRES.toSet()

@@ -100,6 +100,7 @@ class AliasesTests : DatabaseTestsBase() {
         }
     }
 
+    // TODO
     @Test
     fun testWrapRowWithAliasedTable() {
         withTables(EntityTestsData.XTable, EntityTestsData.YTable) {
@@ -118,6 +119,7 @@ class AliasesTests : DatabaseTestsBase() {
         }
     }
 
+    // TODO
     @Test
     fun testWrapRowWithAliasedQuery() {
         withTables(EntityTestsData.XTable, EntityTestsData.YTable) {

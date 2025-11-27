@@ -67,6 +67,8 @@ class TransactionExecTests : DatabaseTestsBase() {
         }
     }
 
+    // TODO
+    // r2dbc-mysql does NOT support allowMultiQueries option: https://github.com/asyncer-io/r2dbc-mysql/issues/291
     @Test
     fun testExecWithMultiStatementQueryUsingMySQL() {
         Assumptions.assumeTrue(TestDB.ALL_MYSQL_MARIADB.containsAll(TestDB.enabledDialects()))

@@ -60,6 +60,7 @@ object EntityHookTestData {
     val allTables = arrayOf(Users, Cities, UsersToCities, Countries)
 }
 
+// TODO
 class EntityHookTest : DatabaseTestsBase() {
 
     private fun <T> trackChanges(statement: JdbcTransaction.() -> T): Triple<T, Collection<EntityChange>, String> {

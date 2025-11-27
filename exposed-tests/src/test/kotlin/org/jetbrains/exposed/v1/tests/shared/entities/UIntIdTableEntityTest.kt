@@ -12,6 +12,7 @@ import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.junit.jupiter.api.Test
 
+// TODO
 class UIntIdTableEntityTest : DatabaseTestsBase() {
 
     @Test

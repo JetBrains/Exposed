@@ -279,6 +279,8 @@ class CoroutineTests : DatabaseTestsBase() {
         }
     }
 
+    // TODO
+    // No relevance to R2DBC
     @RepeatedTest(10)
     @CoroutinesTimeout(60000)
     fun suspendedAndNormalTransactions() {
@@ -319,6 +321,7 @@ class CoroutineTests : DatabaseTestsBase() {
         companion object : IntEntityClass<TestingEntity>(Testing)
     }
 
+    // TODO
     @Test
     @CoroutinesTimeout(60000)
     fun testCoroutinesWithExceptionWithin() {
@@ -336,7 +339,7 @@ class CoroutineTests : DatabaseTestsBase() {
 
             while (!mainJob.isCompleted) Thread.sleep(100)
             assertNotNull(connection)
-            assertTrue(connection!!.isClosed)
+            assertTrue(connection.isClosed)
             assertTrue(mainJob.getCompletionExceptionOrNull() is ExposedSQLException)
             assertEquals(1, Testing.selectAll().count())
         }

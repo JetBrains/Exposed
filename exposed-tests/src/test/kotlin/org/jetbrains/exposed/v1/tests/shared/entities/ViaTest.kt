@@ -76,6 +76,7 @@ class VString(id: EntityID<Long>) : Entity<Long>(id) {
     companion object : EntityClass<Long, VString>(ViaTestData.StringsTable)
 }
 
+// TODO
 class ViaTests : DatabaseTestsBase() {
 
     private fun VNumber.testWithBothTables(valuesToSet: List<VString>, body: (ViaTestData.IConnectionTable, List<ResultRow>) -> Unit) {

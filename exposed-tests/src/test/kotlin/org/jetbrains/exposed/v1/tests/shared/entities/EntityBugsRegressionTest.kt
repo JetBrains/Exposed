@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
+// TODO
 class `Table id not in Record Test issue 1341` : DatabaseTestsBase() {
 
     object NamesTable : IdTable<Int>("names_table") {

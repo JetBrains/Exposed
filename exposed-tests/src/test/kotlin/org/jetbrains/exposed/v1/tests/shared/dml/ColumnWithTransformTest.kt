@@ -201,6 +201,7 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
         companion object : IntEntityClass<TransformEntity>(TransformTable)
     }
 
+    // TODO
     @Test
     fun testTransformedValuesWithDAO() {
         withTables(TransformTable) {
@@ -218,6 +219,7 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
         }
     }
 
+    // TODO
     @Test
     fun testEntityWithDefaultValue() {
         withTables(TransformTable) {
@@ -384,6 +386,7 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
         }
     }
 
+    // TODO
     @Test
     fun testWrapRowWithAliases() {
         withTables(TransformTable) {

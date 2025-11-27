@@ -272,6 +272,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
         var doubles by ArrayTestTable.doubles
     }
 
+    // TODO
     @Test
     fun testArrayColumnWithDAOFunctions() {
         withTestTableAndExcludeSettings {

@@ -27,6 +27,7 @@ class CountTests : DatabaseTestsBase() {
         }
     }
 
+    // TODO - partial
     @Test
     fun `test that count() returns right value for Query with group by`() {
         withCitiesAndUsers { _, _, userData ->

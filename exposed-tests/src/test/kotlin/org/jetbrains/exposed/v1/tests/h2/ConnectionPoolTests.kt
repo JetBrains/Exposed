@@ -33,6 +33,7 @@ class ConnectionPoolTests : LogDbInTestName() {
         Database.connect(hikariDataSource1)
     }
 
+    // TODO - partial
     @Test
     fun testSuspendTransactionsExceedingPoolSize() {
         Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())

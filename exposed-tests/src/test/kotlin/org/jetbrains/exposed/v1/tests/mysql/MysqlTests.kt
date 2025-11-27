@@ -35,6 +35,9 @@ class MysqlTests : DatabaseTestsBase() {
         }
     }
 
+    // TODO
+    // NOTE: UNSUPPORTED by r2dbc-mysql
+    // rewriteBatchedStatements property: https://github.com/asyncer-io/r2dbc-mysql/issues/136
     @Test
     fun testBatchInsertWithRewriteBatchedStatementsOn() {
         val mysqlOnly = TestDB.enabledDialects() - TestDB.MYSQL_V8

@@ -14,6 +14,7 @@ import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
 
+// TODO
 class NonAutoIncEntities : DatabaseTestsBase() {
 
     abstract class BaseNonAutoIncTable(name: String) : IdTable<Int>(name) {

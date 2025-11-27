@@ -345,6 +345,7 @@ class SequencesTests : DatabaseTestsBase() {
         }
     }
 
+    // TODO
     @Test
     fun testAutoIncrementColumnAccessWithEntity() {
         Assumptions.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())

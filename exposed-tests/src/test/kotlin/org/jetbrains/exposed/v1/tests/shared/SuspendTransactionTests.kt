@@ -25,6 +25,7 @@ class SuspendTransactionTests : DatabaseTestsBase() {
         val value = integer("value")
     }
 
+    // equivalent to exposed-r2dbc-tests/PostgresqlTests.kt/testClosedSuspendTransaction()
     @Test
     fun testClosedSuspendTransaction() {
         withTables(

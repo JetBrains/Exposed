@@ -94,6 +94,7 @@ class DefaultsTest : DatabaseTestsBase() {
         assertEquals(defaultValue, returnedDefault, "Expected clientDefault to return $defaultValue, but was $returnedDefault")
     }
 
+    // TODO
     @Test
     fun testDefaultsWithExplicit01() {
         withTables(TableWithDBDefault) {
@@ -114,6 +115,7 @@ class DefaultsTest : DatabaseTestsBase() {
         }
     }
 
+    // TODO
     @Test
     fun testDefaultsWithExplicit02() {
         withTables(TableWithDBDefault) {
@@ -134,6 +136,7 @@ class DefaultsTest : DatabaseTestsBase() {
         }
     }
 
+    // TODO
     @Test
     fun testDefaultsInvokedOnlyOncePerEntity() {
         withTables(TableWithDBDefault) {
@@ -147,6 +150,7 @@ class DefaultsTest : DatabaseTestsBase() {
         }
     }
 
+    // TODO
     @Test
     fun testDefaultsCanBeOverridden() {
         withTables(TableWithDBDefault) {
@@ -591,6 +595,7 @@ class DefaultsTest : DatabaseTestsBase() {
         var timestamp: OffsetDateTime by DefaultTimestampTable.timestamp
     }
 
+    // TODO
     @Test
     fun testCustomDefaultTimestampFunctionWithEntity() {
         withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES - TestDB.MYSQL_V8 - TestDB.ALL_H2_V2, DefaultTimestampTable) {
@@ -630,6 +635,7 @@ class DefaultsTest : DatabaseTestsBase() {
         companion object : EntityClass<Int, TableWithDefaultValueEntity>(TableWithDefaultValue)
     }
 
+    // TODO
     @Test
     fun testExplicitInsertionOfDefaultValuesWithIdTable() {
         withTables(TableWithDefaultValue) {

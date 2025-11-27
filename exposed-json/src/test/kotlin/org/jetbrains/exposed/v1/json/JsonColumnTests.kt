@@ -110,6 +110,7 @@ class JsonColumnTests : DatabaseTestsBase() {
         }
     }
 
+    // TODO
     @Test
     fun testDAOFunctionsWithJsonColumn() {
         val dataTable = JsonTestsData.JsonTable

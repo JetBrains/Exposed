@@ -73,6 +73,7 @@ open class MoneyBaseTest : DatabaseTestsBase() {
         }
     }
 
+    // TODO
     @Test
     fun testSearchByCompositeColumn() {
         val money = Money.of(BigDecimal.TEN, "USD")

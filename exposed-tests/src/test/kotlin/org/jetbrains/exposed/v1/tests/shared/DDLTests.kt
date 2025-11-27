@@ -1035,6 +1035,7 @@ class DDLTests : DatabaseTestsBase() {
         val bool = bool("bool")
     }
 
+    // TODO
     // https://github.com/JetBrains/Exposed/issues/112
     @Test
     fun testDropTableFlushesCache() {

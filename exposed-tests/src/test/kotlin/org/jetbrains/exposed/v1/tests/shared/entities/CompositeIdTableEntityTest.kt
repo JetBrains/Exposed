@@ -24,6 +24,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
+// TODO
 // SQLite excluded from most tests as it only allows auto-increment on single column PKs.
 // SQL Server is sometimes excluded because it doesn't allow inserting explicit values for identity columns.
 class CompositeIdTableEntityTest : DatabaseTestsBase() {

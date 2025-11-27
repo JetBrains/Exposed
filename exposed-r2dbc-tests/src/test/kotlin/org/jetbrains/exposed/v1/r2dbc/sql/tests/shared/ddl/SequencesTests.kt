@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
-// NOTE: 1 DAO TEST REMOVED
 class SequencesTests : R2dbcDatabaseTestsBase() {
     @Test
     fun createSequenceStatementTest() {

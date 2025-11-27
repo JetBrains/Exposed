@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import kotlin.test.assertNull
 
+// TODO
 class MoneyDefaultsTest : DatabaseTestsBase() {
 
     object TableWithDBDefault : IntIdTable() {

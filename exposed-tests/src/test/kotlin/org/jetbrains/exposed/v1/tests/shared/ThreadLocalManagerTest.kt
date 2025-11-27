@@ -23,7 +23,10 @@ import kotlin.test.assertFails
 import kotlin.test.assertNotEquals
 import kotlin.test.fail
 
+// equivalent to exposed-r2dbc-tests/ReadOnlyTests.kt
 class ThreadLocalManagerTest : DatabaseTestsBase() {
+    // TODO
+    // No relevance to R2DBC
     @Test
     fun testReconnection() {
         Assumptions.assumeTrue(TestDB.MYSQL_V5 in TestDB.enabledDialects())
@@ -49,6 +52,8 @@ class ThreadLocalManagerTest : DatabaseTestsBase() {
         assertEquals(secondThreadTm, db2.transactionManager)
     }
 
+    // TODO
+    // The test below is used for R2DBC instead
     @Test
     fun testReadOnly() {
         withTables(excludeSettings = READ_ONLY_EXCLUDED_VENDORS, RollbackTable) {

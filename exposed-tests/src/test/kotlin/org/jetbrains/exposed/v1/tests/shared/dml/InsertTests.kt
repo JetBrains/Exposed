@@ -380,6 +380,7 @@ class InsertTests : DatabaseTestsBase() {
         var order by OrderedDataTable.order
     }
 
+    // TODO
     // https://github.com/JetBrains/Exposed/issues/192
     @Test
     fun testInsertWithColumnNamedWithKeyword() {
@@ -496,6 +497,8 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
+    // TODO
+    // Normal transactions in R2DBC are suspend (see test below)
     @Test
     fun testRollbackOnConstraintExceptionWithNormalTransactions() {
         val testTable = object : IntIdTable("TestRollback") {
@@ -567,6 +570,7 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
+    // TODO
     @Test
     fun testOptReferenceAllowsNullValues() {
         withTables(EntityTests.Posts) {

@@ -59,6 +59,7 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
         companion object : IntEntityClass<DBDefault>(TableWithDBDefault)
     }
 
+    // TODO
     @Test
     fun testDefaultsWithExplicit01() {
         withTables(TableWithDBDefault) {
@@ -79,6 +80,7 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
         }
     }
 
+    // TODO
     @Test
     fun testDefaultsWithExplicit02() {
         // MySql 5 is excluded because it does not support `CURRENT_DATE()` as a default value
@@ -100,6 +102,7 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
         }
     }
 
+    // TODO
     @Test
     fun testDefaultsInvokedOnlyOncePerEntity() {
         withTables(TableWithDBDefault) {
@@ -524,6 +527,7 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
         var timestamp: DateTime by DefaultTimestampTable.timestamp
     }
 
+    // TODO
     @Test
     fun testCustomDefaultTimestampFunctionWithEntity() {
         withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES - TestDB.MYSQL_V8 - TestDB.ALL_H2_V2, DefaultTimestampTable) {

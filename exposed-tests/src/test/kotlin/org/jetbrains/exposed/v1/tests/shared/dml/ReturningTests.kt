@@ -133,6 +133,7 @@ class ReturningTests : DatabaseTestsBase() {
         }
     }
 
+    // TODO
     @Test
     fun testUpsertReturningWithDAO() {
         withTables(TestDB.ALL - returningSupportedDb, Items) {

@@ -3,6 +3,7 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.max
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.r2dbc.batchInsert
 import org.jetbrains.exposed.v1.r2dbc.insert
@@ -26,6 +27,15 @@ class CountTests : R2dbcDatabaseTestsBase() {
     fun `test that count() works with Query that contains distinct and columns with same name from different tables and already defined alias`() {
         withCitiesAndUsers { cities, users, _ ->
             assertEquals(3L, cities.innerJoin(users).select(users.id.alias("usersId"), cities.id).withDistinct().count())
+        }
+    }
+
+    @Test
+    fun `test that count() returns right value for Query with group by`() {
+        withCitiesAndUsers { _, _, userData ->
+            val uniqueUsersInData = userData.select(userData.user_id).withDistinct().count()
+            val sameQueryWithGrouping = userData.select(userData.value.max()).groupBy(userData.user_id).count()
+            assertEquals(uniqueUsersInData, sameQueryWithGrouping)
         }
     }
 

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+// TODO
 class SelfReferenceTest {
 
     @Test

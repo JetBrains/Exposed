@@ -113,6 +113,12 @@ class BlobColumnTypeTests : DatabaseTestsBase() {
         }
     }
 
+    // TODO
+    // r2dbc-postgresql supports OID type, but only as a numeric (default is Integer) value;
+    // so attempting to read/write expects a single identifier value;
+    // there is no LargeObject functionality equivalent to JDBC setBlob() or getBlob();
+    // there is only ByteBuffer or byte arrays, which is not a compatible mapping for encoding/decoding oid type.
+    // Feature request: https://github.com/pgjdbc/r2dbc-postgresql/issues/255
     @Test
     fun testBlobAsOid() {
         val defaultBytes = "test".toByteArray()

@@ -91,6 +91,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
         }
     }
 
+    // TODO
     @Test
     fun testDAOFunctionsWithJsonBColumn() {
         val dataTable = JsonTestsData.JsonBTable

@@ -50,6 +50,7 @@ class EnumerationTests : DatabaseTestsBase() {
         }
     }
 
+    // TODO - partial
     @Test
     fun testCustomEnumeration01() {
         withDb(supportsCustomEnumerationDB) {
