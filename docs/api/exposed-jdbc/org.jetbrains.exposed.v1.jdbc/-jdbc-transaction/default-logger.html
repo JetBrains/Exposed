@@ -2,7 +2,7 @@
 <html class="no-js" lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
-    <title>dispatcher</title>
+    <title>defaultLogger</title>
 <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
     <script>document.documentElement.classList.replace("no-js", "js");</script>
     <script>const storage = localStorage.getItem("dokka-dark-mode")
@@ -39,11 +39,11 @@
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
-        <div class="library-version" id="library-version">1.0.0-rc-3
+        <div class="library-version" id="library-version">1.0.0-rc-4
         </div>
         <div class="navigation-controls">
         <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
-                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":exposed-r2dbc/main">jvm</button>
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":exposed-jdbc/main">jvm</button>
             <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
                 <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
                 <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
@@ -54,7 +54,7 @@
                     </div>
                         <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
                             <label class="checkbox">
-                                <input type="checkbox" class="checkbox--input" id=":exposed-r2dbc/main" data-filter=":exposed-r2dbc/main">
+                                <input type="checkbox" class="checkbox--input" id=":exposed-jdbc/main" data-filter=":exposed-jdbc/main">
                                 <span class="checkbox--icon"></span>
                                 jvm
                             </label>
@@ -90,12 +90,12 @@
         </nav>
         <div id="resizer" class="resizer" data-item-type="BAR"></div>
         <div id="main" data-item-type="SECTION" role="main">
-<div class="main-content" data-page-type="member" id="content" pageids="exposed-r2dbc::org.jetbrains.exposed.v1.r2dbc/R2dbcDatabaseConfig/dispatcher/#/PointingToDeclaration//876859814">
-  <div class="breadcrumbs"><a href="../../index.html">exposed-r2dbc</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.v1.r2dbc</a><span class="delimiter">/</span><a href="index.html">R2dbcDatabaseConfig</a><span class="delimiter">/</span><span class="current">dispatcher</span></div>
+<div class="main-content" data-page-type="member" id="content" pageids="exposed-jdbc::org.jetbrains.exposed.v1.jdbc/JdbcTransaction/defaultLogger/#/PointingToDeclaration//-1624674168">
+  <div class="breadcrumbs"><a href="../../index.html">exposed-jdbc</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.v1.jdbc</a><span class="delimiter">/</span><a href="index.html">JdbcTransaction</a><span class="delimiter">/</span><span class="current">defaultLogger</span></div>
   <div class="cover ">
-    <h1 class="cover"><span><span>dispatcher</span></span></h1>
+    <h1 class="cover"><span>default</span><wbr><span><span>Logger</span></span></h1>
   </div>
-  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="dispatcher.html">dispatcher</a><span class="token operator">: </span><span data-unresolved-link="kotlinx.coroutines/CoroutineDispatcher///PointingToDeclaration/">CoroutineDispatcher</span></div><p class="paragraph">The <span data-unresolved-link="kotlinx.coroutines/CoroutineDispatcher///PointingToDeclaration/">CoroutineDispatcher</span> to be used when determining the scope of the underlying R2DBC database connection object.</p><p class="paragraph">Default dispatcher is <span data-unresolved-link="kotlinx.coroutines/Dispatchers/IO/#/PointingToDeclaration/">Dispatchers.IO</span>.</p></div></div>
+  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="default-logger.html">defaultLogger</a><span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-composite-sql-logger/index.html">CompositeSqlLogger</a></div><p class="paragraph">A <a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-composite-sql-logger/index.html">CompositeSqlLogger</a> containing any <a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-sql-logger/index.html">SqlLogger</a> instances that are implicitly added to a new transaction.</p><p class="paragraph">By default, this property will store the value passed to <code class="lang-kotlin">DatabaseConfig.sqlLogger</code> when <code class="lang-kotlin">Database.connect()</code> is invoked, wrapped as a <a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-composite-sql-logger/index.html">CompositeSqlLogger</a>. If no value is configured, the default setting is a wrapped <code class="lang-kotlin">Slf4jSqlDebugLogger</code>, which only logs SQL strings if DEBUG level is enabled.</p></div></div>
 </div>
     <div class="footer">
         <div class="footer--container">

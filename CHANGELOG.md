@@ -1,3 +1,27 @@
+# 1.0.0-rc-4
+
+Breaking changes:
+* build(deps)!: EXPOSED-918 Bump H2 and H2-R2DBC test driver versions by @bog-walk in https://github.com/JetBrains/Exposed/pull/2654
+* fix!: EXPOSED-870 Schema migration detection not compatible with sqlite-jdbc 3.50.2.0 by @bog-walk in https://github.com/JetBrains/Exposed/pull/2652
+* chore!: Rename field Transaction.id to Transaction.txId by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2602
+
+Infrastructure:
+* gradle-maven-publish-plugin 0.35.0
+* springFramework 6.2.14
+* springBoot 3.5.8
+
+Features:
+* feat: EXPOSED-845 Add read access to default logger in Transaction classes by @bog-walk in https://github.com/JetBrains/Exposed/pull/2657
+* feat: EXPOSED-822 Enable JSONB/BLOB support for SQLite by @bog-walk in https://github.com/JetBrains/Exposed/pull/2659
+
+Bug fixes:
+* fix: EXPOSED-877 Error 'No transaction in context' for select by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2661
+
+Docs:
+* docs: Update defaults for transaction isolation by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2650
+* docs: Fix typos in Transactions.md by @kchung1995 in https://github.com/JetBrains/Exposed/pull/2660
+* docs: EXPOSED-947 Document any minimum setup requirements by @bog-walk in https://github.com/JetBrains/Exposed/pull/2669
+
 # 1.0.0-rc-3
 
 Breaking changes:
