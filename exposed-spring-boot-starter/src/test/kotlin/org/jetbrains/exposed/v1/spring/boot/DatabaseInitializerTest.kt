@@ -9,6 +9,7 @@ import org.jetbrains.exposed.v1.spring.boot.tables.ignore.IgnoreTable
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.DefaultApplicationArguments
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.ApplicationContext
 
@@ -26,9 +27,12 @@ open class DatabaseInitializerTest {
         Assertions.assertThrows(ExposedSQLException::class.java) {
             Database.connect("jdbc:h2:mem:test-spring", user = "sa", driver = "org.h2.Driver")
             transaction {
-                DatabaseInitializer(applicationContext, listOf("org.jetbrains.exposed.v1.spring.boot.tables.ignore")).run(
-                    null
+                val noArgs = DefaultApplicationArguments()
+                DatabaseInitializer(
+                    applicationContext,
+                    listOf("org.jetbrains.exposed.v1.spring.boot.tables.ignore")
                 )
+                    .run(noArgs)
                 Assertions.assertEquals(0L, TestTable.selectAll().count())
                 IgnoreTable.selectAll().count()
             }
