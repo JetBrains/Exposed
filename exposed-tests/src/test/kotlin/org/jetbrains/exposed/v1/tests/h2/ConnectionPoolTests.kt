@@ -13,10 +13,12 @@ import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.tests.INCOMPLETE_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.LogDbInTestName
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
 class ConnectionPoolTests : LogDbInTestName() {
@@ -33,7 +35,7 @@ class ConnectionPoolTests : LogDbInTestName() {
         Database.connect(hikariDataSource1)
     }
 
-    // TODO - partial
+    @Tag(INCOMPLETE_R2DBC_TEST)
     @Test
     fun testSuspendTransactionsExceedingPoolSize() {
         Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())

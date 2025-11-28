@@ -5,11 +5,16 @@ import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.max
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
-import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.INCOMPLETE_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
 class CountTests : DatabaseTestsBase() {
@@ -27,7 +32,7 @@ class CountTests : DatabaseTestsBase() {
         }
     }
 
-    // TODO - partial
+    @Tag(INCOMPLETE_R2DBC_TEST)
     @Test
     fun `test that count() returns right value for Query with group by`() {
         withCitiesAndUsers { _, _, userData ->

@@ -9,13 +9,21 @@ import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption.MySQL
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption.MySQL.ForUpdate
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption.MySQL.MODE
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
-import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.Query
+import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
+import org.jetbrains.exposed.v1.tests.NO_R2DBC_SUPPORT
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.v1.tests.shared.expectException
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -35,9 +43,9 @@ class MysqlTests : DatabaseTestsBase() {
         }
     }
 
-    // TODO
-    // NOTE: UNSUPPORTED by r2dbc-mysql
     // rewriteBatchedStatements property: https://github.com/asyncer-io/r2dbc-mysql/issues/136
+    @Tag(MISSING_R2DBC_TEST)
+    @Tag(NO_R2DBC_SUPPORT)
     @Test
     fun testBatchInsertWithRewriteBatchedStatementsOn() {
         val mysqlOnly = TestDB.enabledDialects() - TestDB.MYSQL_V8

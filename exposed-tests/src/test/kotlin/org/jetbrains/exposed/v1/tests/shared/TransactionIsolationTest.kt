@@ -12,8 +12,11 @@ import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
+import org.jetbrains.exposed.v1.tests.NO_R2DBC_SUPPORT
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.sql.Connection
 import kotlin.test.assertNotNull
@@ -31,8 +34,9 @@ class TransactionIsolationTest : DatabaseTestsBase() {
         }
     }
 
-    // TODO
     // R2DBC driver (pool or connection factory) do not support setting transaction isolation for all future transactions
+    @Tag(MISSING_R2DBC_TEST)
+    @Tag(NO_R2DBC_SUPPORT)
     @Test
     fun testTransactionIsolationWithHikariDataSource() {
         Assumptions.assumeTrue(transactionIsolationSupportDb.containsAll(TestDB.enabledDialects()))
@@ -71,8 +75,9 @@ class TransactionIsolationTest : DatabaseTestsBase() {
         TransactionManager.closeAndUnregister(db)
     }
 
-    // TODO
     // R2DBC driver (pool or connection factory) do not support setting transaction isolation for all future transactions
+    @Tag(MISSING_R2DBC_TEST)
+    @Tag(NO_R2DBC_SUPPORT)
     @Test
     fun testTransactionIsolationWithHikariAndDatabaseConfig() {
         Assumptions.assumeTrue(transactionIsolationSupportDb.containsAll(TestDB.enabledDialects()))
@@ -113,7 +118,7 @@ class TransactionIsolationTest : DatabaseTestsBase() {
 
     @Test
     fun testTransactionIsolationSetOnDatabaseConfig() {
-        Assume.assumeTrue(transactionIsolationSupportDb.containsAll(TestDB.enabledDialects()))
+        Assumptions.assumeTrue(transactionIsolationSupportDb.containsAll(TestDB.enabledDialects()))
 
         val db = dialect.connect { defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED }
 

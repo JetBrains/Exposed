@@ -14,10 +14,10 @@ import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.junit.Assume
-import org.junit.Before
-import org.junit.Ignore
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
@@ -47,12 +47,12 @@ class TransactionStackCorruptionTest : R2dbcDatabaseTestsBase() {
         }
     }
 
-    @Before
+    @BeforeEach
     fun before() {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
     }
 
-    @Ignore
+    @Disabled
     @Test
     fun testNoDuplicateTransactionsOnStack() = runTest {
         val testDb = TestDB.H2_V2.connect()
@@ -95,7 +95,7 @@ class TransactionStackCorruptionTest : R2dbcDatabaseTestsBase() {
         }
     }
 
-    @Ignore
+    @Disabled
     @Test
     fun testMultipleQueriesNoDuplicates() = runTest {
         val testDb = TestDB.H2_V2.connect()
@@ -139,7 +139,7 @@ class TransactionStackCorruptionTest : R2dbcDatabaseTestsBase() {
         }
     }
 
-    @Ignore
+    @Disabled
     @Test
     fun testParallelQueriesNoDuplicates() = runTest {
         val testDb = TestDB.H2_V2.connect()

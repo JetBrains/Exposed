@@ -12,14 +12,16 @@ import org.jetbrains.exposed.v1.dao.LongEntity
 import org.jetbrains.exposed.v1.dao.LongEntityClass
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.shared.assertFalse
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import kotlin.test.assertContentEquals
 
-// TODO
 /**
  * A case when a table's primary key is a foreign key to some other table (ProjectConfigs.id -> Project.id)
  */
+@Tag(MISSING_R2DBC_TEST)
 class ForeignIdEntityTest : DatabaseTestsBase() {
 
     object Schema {

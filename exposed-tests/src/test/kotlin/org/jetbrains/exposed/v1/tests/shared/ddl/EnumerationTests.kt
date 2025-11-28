@@ -14,9 +14,11 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.INCOMPLETE_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.postgresql.util.PGobject
 
@@ -50,7 +52,7 @@ class EnumerationTests : DatabaseTestsBase() {
         }
     }
 
-    // TODO - partial
+    @Tag(INCOMPLETE_R2DBC_TEST)
     @Test
     fun testCustomEnumeration01() {
         withDb(supportsCustomEnumerationDB) {

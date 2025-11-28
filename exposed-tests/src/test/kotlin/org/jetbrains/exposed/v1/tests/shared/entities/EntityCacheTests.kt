@@ -20,17 +20,19 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.sql.Connection.TRANSACTION_SERIALIZABLE
 import java.sql.SQLException
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
 
-// TODO
+@Tag(MISSING_R2DBC_TEST)
 class EntityCacheTests : DatabaseTestsBase() {
 
     object TestTable : IntIdTable("TestCache") {

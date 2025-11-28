@@ -2,7 +2,7 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared
 
 import io.r2dbc.spi.IsolationLevel
 import kotlinx.coroutines.*
-import kotlinx.coroutines.debug.junit4.CoroutinesTimeout
+import kotlinx.coroutines.debug.junit5.CoroutinesTimeout
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
@@ -14,15 +14,13 @@ import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.tests.RepeatableTest
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.update
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.RepeatedTest
 import java.util.concurrent.Executors
 
 private val singleThreadDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
@@ -44,12 +42,8 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
         val id = integer("id").uniqueIndex()
     }
 
-    @Rule
-    @JvmField
-    val timeout = CoroutinesTimeout.seconds(60)
-
-    @Test
-    @RepeatableTest(10)
+    @RepeatedTest(10)
+    @CoroutinesTimeout(60000)
     fun suspendedTx() {
         withTables(Testing) {
             val mainJob = GlobalScope.async(singleThreadDispatcher) {
@@ -79,8 +73,8 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
         }
     }
 
-    @Test
-    @RepeatableTest(10)
+    @RepeatedTest(10)
+    @CoroutinesTimeout(60000)
     fun testSuspendTransactionWithRepetition() {
         withTables(TestingUnique) { _ ->
             val (originalId, updatedId) = 1 to 99
@@ -128,8 +122,8 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
         }
     }
 
-    @Test
-    @RepeatableTest(10)
+    @RepeatedTest(10)
+    @CoroutinesTimeout(60000)
     fun suspendTxAsync() {
         withTables(Testing) {
             val job = GlobalScope.async {
@@ -170,8 +164,8 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
         }
     }
 
-    @Test
-    @RepeatableTest(10)
+    @RepeatedTest(10)
+    @CoroutinesTimeout(60000)
     fun testSuspendTransactionAsyncWithRepetition() {
         withTables(TestingUnique) {
             val (originalId, updatedId) = 1 to 99
@@ -216,8 +210,8 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
         }
     }
 
-    @Test
-    @RepeatableTest(10)
+    @RepeatedTest(10)
+    @CoroutinesTimeout(60000)
     fun nestedSuspendTxTest() {
         suspend fun insertTesting(db: R2dbcDatabase) = suspendTransaction(db = db) {
             Testing.insert {}
@@ -256,8 +250,8 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
         }
     }
 
-    @Test
-    @RepeatableTest(10)
+    @RepeatedTest(10)
+    @CoroutinesTimeout(60000)
     fun nestedSuspendAsyncTxTest() {
         withTables(listOf(TestDB.H2_V2, TestDB.H2_V2_MYSQL), Testing) {
             val mainJob = GlobalScope.async {
@@ -293,8 +287,8 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
         }
     }
 
-    @Test
-    @RepeatableTest(10)
+    @RepeatedTest(10)
+    @CoroutinesTimeout(60000)
     fun awaitAllTest() {
         withTables(Testing) {
             val mainJob = GlobalScope.async {

@@ -13,9 +13,12 @@ import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
+import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.dml.DMLTestsData
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import kotlin.concurrent.thread
 import kotlin.test.assertEquals
@@ -25,8 +28,8 @@ import kotlin.test.fail
 
 // equivalent to exposed-r2dbc-tests/ReadOnlyTests.kt
 class ThreadLocalManagerTest : DatabaseTestsBase() {
-    // TODO
-    // No relevance to R2DBC
+    @Tag(MISSING_R2DBC_TEST)
+    @Tag(NOT_APPLICABLE_TO_R2DBC)
     @Test
     fun testReconnection() {
         Assumptions.assumeTrue(TestDB.MYSQL_V5 in TestDB.enabledDialects())
@@ -52,8 +55,8 @@ class ThreadLocalManagerTest : DatabaseTestsBase() {
         assertEquals(secondThreadTm, db2.transactionManager)
     }
 
-    // TODO
-    // The test below is used for R2DBC instead
+    @Tag(MISSING_R2DBC_TEST)
+    @Tag(NOT_APPLICABLE_TO_R2DBC)
     @Test
     fun testReadOnly() {
         withTables(excludeSettings = READ_ONLY_EXCLUDED_VENDORS, RollbackTable) {

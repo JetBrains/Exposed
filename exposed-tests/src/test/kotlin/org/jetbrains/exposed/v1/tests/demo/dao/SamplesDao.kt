@@ -9,8 +9,10 @@ import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Tag
 import kotlin.test.Test
 
 object Users : IntIdTable() {
@@ -79,7 +81,7 @@ fun main() {
     }
 }
 
-// TODO
+@Tag(MISSING_R2DBC_TEST)
 class SamplesDao {
     @Test
     fun ensureSamplesDoesntCrash() {

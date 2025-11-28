@@ -9,8 +9,8 @@ import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
-import org.junit.Ignore
-import org.junit.Test
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 import kotlin.test.fail
 
 class QueryTimeoutTest : R2dbcDatabaseTestsBase() {
@@ -26,8 +26,7 @@ class QueryTimeoutTest : R2dbcDatabaseTestsBase() {
 
     private val timeoutTestDBList = TestDB.ALL_MARIADB + TestDB.ALL_POSTGRES + TestDB.SQLSERVER + TestDB.MYSQL_V8
 
-    // TODO - bug
-    @Ignore
+    @Disabled
     @Test
     fun timeoutStatements() {
         withDb(timeoutTestDBList) { testDB ->
@@ -67,8 +66,7 @@ class QueryTimeoutTest : R2dbcDatabaseTestsBase() {
         }
     }
 
-    // TODO - bug
-    @Ignore
+    @Disabled
     @Test
     fun timeoutMinusWithTimeoutStatement() {
         withDb(timeoutTestDBList) { testDB ->

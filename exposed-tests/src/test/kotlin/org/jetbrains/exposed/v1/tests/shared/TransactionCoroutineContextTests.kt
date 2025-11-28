@@ -5,7 +5,7 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
-import org.junit.Assume
+import org.junit.jupiter.api.Assumptions
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.Continuation
@@ -21,7 +21,7 @@ class TransactionCoroutineContextTests : DatabaseTestsBase() {
 
     @Test
     fun testSuspendMain() {
-        Assume.assumeTrue(dialect == TestDB.POSTGRESQL)
+        Assumptions.assumeTrue(dialect == TestDB.POSTGRESQL)
 
         val latch = CountDownLatch(1)
         var exception: Throwable? = null

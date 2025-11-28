@@ -11,12 +11,14 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import kotlin.concurrent.thread
 import kotlin.test.assertNotNull
 
-// TODO
+@Tag(MISSING_R2DBC_TEST)
 class ImmutableEntityTest : DatabaseTestsBase() {
 
     object Schema {

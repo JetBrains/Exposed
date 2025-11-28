@@ -1,17 +1,20 @@
 package org.jetbrains.exposed.v1.tests.shared.entities
 
-import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.dao.*
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
 object EntityHookTestData {
@@ -60,7 +63,7 @@ object EntityHookTestData {
     val allTables = arrayOf(Users, Cities, UsersToCities, Countries)
 }
 
-// TODO
+@Tag(MISSING_R2DBC_TEST)
 class EntityHookTest : DatabaseTestsBase() {
 
     private fun <T> trackChanges(statement: JdbcTransaction.() -> T): Triple<T, Collection<EntityChange>, String> {

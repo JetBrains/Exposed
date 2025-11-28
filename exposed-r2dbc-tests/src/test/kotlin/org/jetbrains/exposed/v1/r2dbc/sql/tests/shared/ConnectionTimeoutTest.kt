@@ -12,7 +12,7 @@ import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import org.reactivestreams.Publisher
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

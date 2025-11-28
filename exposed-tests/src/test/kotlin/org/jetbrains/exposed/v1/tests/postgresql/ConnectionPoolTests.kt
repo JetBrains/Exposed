@@ -21,11 +21,14 @@ import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.tests.LogDbInTestName
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
+import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.expectException
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import java.sql.Connection
@@ -83,10 +86,9 @@ class ConnectionPoolTests : LogDbInTestName() {
         TransactionManager.closeAndUnregister(hikariPG)
     }
 
-    // TODO
     @Test
     fun testSuspendTransactionsExceedingPoolSize() = runTest {
-        Assume.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
 
         val singleId = 99
 
@@ -128,9 +130,9 @@ class ConnectionPoolTests : LogDbInTestName() {
         TransactionManager.closeAndUnregister(hikariPGBasic)
     }
 
-    // TODO
-    // NOTE: NO RELEVANCE
-    // readOnly cannot be set from pool driver/connection, only afterwards in beginTransaction()
+    // readOnly cannot be set from pool driver/connection, only afterward in beginTransaction()
+    @Tag(MISSING_R2DBC_TEST)
+    @Tag(NOT_APPLICABLE_TO_R2DBC)
     @Test
     fun testReadOnlyModeWithHikariAndPostgres() {
         Assumptions.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
@@ -157,9 +159,9 @@ class ConnectionPoolTests : LogDbInTestName() {
         TransactionManager.closeAndUnregister(hikariPG)
     }
 
-    // TODO
-    // NOTE: NO RELEVANCE
-    // readOnly cannot be set from pool driver/connection, only afterwards in beginTransaction()
+    // readOnly cannot be set from pool driver/connection, only afterward in beginTransaction()
+    @Tag(MISSING_R2DBC_TEST)
+    @Tag(NOT_APPLICABLE_TO_R2DBC)
     @Test
     fun testSuspendedReadOnlyModeWithHikariAndPostgres() = runTest {
         Assumptions.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())

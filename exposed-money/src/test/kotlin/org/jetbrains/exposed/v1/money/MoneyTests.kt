@@ -13,9 +13,11 @@ import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.expectException
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import javax.money.CurrencyUnit
@@ -73,7 +75,7 @@ open class MoneyBaseTest : DatabaseTestsBase() {
         }
     }
 
-    // TODO
+    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testSearchByCompositeColumn() {
         val money = Money.of(BigDecimal.TEN, "USD")

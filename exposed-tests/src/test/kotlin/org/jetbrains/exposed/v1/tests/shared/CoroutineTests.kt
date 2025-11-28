@@ -16,8 +16,11 @@ import org.jetbrains.exposed.v1.jdbc.transactions.experimental.suspendedTransact
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.withSuspendTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
+import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.junit.jupiter.api.RepeatedTest
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.sql.Connection
 import java.util.concurrent.Executors
@@ -279,8 +282,8 @@ class CoroutineTests : DatabaseTestsBase() {
         }
     }
 
-    // TODO
-    // No relevance to R2DBC
+    @Tag(MISSING_R2DBC_TEST)
+    @Tag(NOT_APPLICABLE_TO_R2DBC)
     @RepeatedTest(10)
     @CoroutinesTimeout(60000)
     fun suspendedAndNormalTransactions() {
@@ -321,7 +324,7 @@ class CoroutineTests : DatabaseTestsBase() {
         companion object : IntEntityClass<TestingEntity>(Testing)
     }
 
-    // TODO
+    @Tag(MISSING_R2DBC_TEST)
     @Test
     @CoroutinesTimeout(60000)
     fun testCoroutinesWithExceptionWithin() {

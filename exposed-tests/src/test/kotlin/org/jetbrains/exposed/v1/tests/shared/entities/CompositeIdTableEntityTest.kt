@@ -10,6 +10,7 @@ import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentTestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
@@ -17,6 +18,7 @@ import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.expectException
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.sql.Connection
 import java.util.*
@@ -24,9 +26,9 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
-// TODO
 // SQLite excluded from most tests as it only allows auto-increment on single column PKs.
 // SQL Server is sometimes excluded because it doesn't allow inserting explicit values for identity columns.
+@Tag(MISSING_R2DBC_TEST)
 class CompositeIdTableEntityTest : DatabaseTestsBase() {
     // CompositeIdTable with 2 key columns - int & uuid (both db-generated)
     object Publishers : CompositeIdTable("publishers") {
