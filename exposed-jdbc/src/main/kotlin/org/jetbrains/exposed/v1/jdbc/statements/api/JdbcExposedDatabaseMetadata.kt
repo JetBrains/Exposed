@@ -28,7 +28,11 @@ abstract class JdbcExposedDatabaseMetadata(database: String) : ExposedDatabaseMe
     /**  The minor version number of the database. */
     abstract val minorVersion: Int
 
-    /** The name of the database based on the name of the underlying JDBC driver. */
+    /**
+     * The name of the database based on the name of the underlying JDBC driver.
+     *
+     * @throws IllegalStateException If the driver returns a string value without a `VendorDialect` mapping.
+     */
     abstract val databaseDialectName: String
 
     /** The name of the mode of the database. This is currently applicable only to H2 databases. */

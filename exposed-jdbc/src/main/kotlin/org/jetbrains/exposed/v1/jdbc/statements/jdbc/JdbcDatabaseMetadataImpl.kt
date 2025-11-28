@@ -34,7 +34,6 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     override val databaseDialectName: String by lazyMetadata {
         when (driverName) {
             "MySQL-AB JDBC Driver", "MySQL Connector/J", "MySQL Connector Java" -> MysqlDialect.dialectName
-
             "MariaDB Connector/J" -> MariaDBDialect.dialectName
             "SQLite JDBC" -> SQLiteDialect.dialectName
             "H2 JDBC Driver" -> H2Dialect.dialectName

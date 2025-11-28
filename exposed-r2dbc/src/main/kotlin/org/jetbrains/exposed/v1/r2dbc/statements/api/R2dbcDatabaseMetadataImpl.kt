@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap
 class R2dbcDatabaseMetadataImpl(
     database: String,
     private val connection: Connection,
-    vendorDialect: String,
+    private val vendorDialect: String,
 ) : R2dbcLocalMetadataImpl(database, vendorDialect) {
     private val connectionData: ConnectionMetadata = connection.metadata
     private val metadataProvider: MetadataProvider = MetadataProvider.getProvider(vendorDialect)
@@ -48,10 +48,13 @@ class R2dbcDatabaseMetadataImpl(
             "PostgreSQL" -> PostgreSQLDialect.dialectName
             "Oracle" -> OracleDialect.dialectName
             else -> {
-                if (dbProductName.startsWith("Microsoft Azure SQL ")) {
+                if (
+                    dbProductName.startsWith("Microsoft Azure SQL ") ||
+                    dbProductName.startsWith("Microsoft SQL Server ")
+                ) {
                     SQLServerDialect.dialectName
                 } else {
-                    error("Unsupported driver $dbProductName detected")
+                    vendorDialect
                 }
             }
         }
