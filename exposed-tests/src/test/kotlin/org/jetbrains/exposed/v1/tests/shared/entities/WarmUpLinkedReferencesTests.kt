@@ -5,9 +5,12 @@ import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
+@Tag(MISSING_R2DBC_TEST)
 class WarmUpLinkedReferencesTests : DatabaseTestsBase() {
 
     object Box : IntIdTable() {

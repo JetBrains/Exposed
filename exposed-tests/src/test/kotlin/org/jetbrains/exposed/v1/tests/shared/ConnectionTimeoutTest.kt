@@ -3,6 +3,7 @@ package org.jetbrains.exposed.v1.tests.shared
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.junit.jupiter.api.Test
@@ -40,6 +41,8 @@ class ConnectionTimeoutTest : DatabaseTestsBase() {
         } catch (e: ExposedSQLException) {
             assertTrue(e.cause is GetConnectException)
             assertEquals(42, datasource.connectCount)
+        } finally {
+            TransactionManager.closeAndUnregister(db)
         }
     }
 
@@ -75,6 +78,8 @@ class ConnectionTimeoutTest : DatabaseTestsBase() {
             fail("Should have thrown ${GetConnectException::class.simpleName}")
         } catch (cause: ExposedSQLException) {
             assertEquals(25, datasource.connectCount)
+        } finally {
+            TransactionManager.closeAndUnregister(db)
         }
     }
 }

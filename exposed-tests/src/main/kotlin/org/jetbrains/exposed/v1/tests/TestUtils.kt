@@ -34,3 +34,8 @@ fun Table.insertAndWait(duration: Long) {
     TransactionManager.current().commit()
     Thread.sleep(duration)
 }
+
+const val MISSING_R2DBC_TEST = "Test has no R2DBC version"
+const val INCOMPLETE_R2DBC_TEST = "Test has incomplete R2DBC version"
+const val NO_R2DBC_SUPPORT = "Test subject not supported by R2DBC"
+const val NOT_APPLICABLE_TO_R2DBC = "Test subject is not relevant to R2DBC"

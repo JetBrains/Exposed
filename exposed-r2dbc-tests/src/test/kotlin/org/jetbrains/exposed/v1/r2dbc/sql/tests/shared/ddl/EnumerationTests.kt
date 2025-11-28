@@ -72,7 +72,6 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
         }
     }
 
-    // NOTE: DAO part of test uncommented
     @Test
     fun testCustomEnumeration01() = runTest {
         Assumptions.assumeTrue(supportsCustomEnumerationDB.containsAll(TestDB.enabledDialects()))

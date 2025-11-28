@@ -11,12 +11,14 @@ import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.expectException
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertNotNull
@@ -272,6 +274,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
         var doubles by ArrayTestTable.doubles
     }
 
+    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testArrayColumnWithDAOFunctions() {
         withTestTableAndExcludeSettings {

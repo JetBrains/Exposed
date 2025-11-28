@@ -13,6 +13,7 @@ import org.jetbrains.exposed.v1.dao.UUIDEntityClass
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.v1.tests.currentDialectTest
@@ -20,6 +21,7 @@ import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.test.assertEquals
@@ -345,6 +347,7 @@ class SequencesTests : DatabaseTestsBase() {
         }
     }
 
+    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testAutoIncrementColumnAccessWithEntity() {
         Assumptions.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())

@@ -14,6 +14,7 @@ import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.dao.flushCache
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.constraintNamePart
 import org.jetbrains.exposed.v1.tests.currentDialectTest
@@ -23,6 +24,7 @@ import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.expectException
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -94,6 +96,7 @@ class DefaultsTest : DatabaseTestsBase() {
         assertEquals(defaultValue, returnedDefault, "Expected clientDefault to return $defaultValue, but was $returnedDefault")
     }
 
+    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testDefaultsWithExplicit01() {
         withTables(TableWithDBDefault) {
@@ -114,6 +117,7 @@ class DefaultsTest : DatabaseTestsBase() {
         }
     }
 
+    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testDefaultsWithExplicit02() {
         // MySql 5 is excluded because it does not support `CURRENT_DATE()` as a default value
@@ -135,6 +139,7 @@ class DefaultsTest : DatabaseTestsBase() {
         }
     }
 
+    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testDefaultsInvokedOnlyOncePerEntity() {
         withTables(TableWithDBDefault) {
@@ -644,6 +649,7 @@ class DefaultsTest : DatabaseTestsBase() {
         var timestamp: OffsetDateTime by DefaultTimestampTable.timestamp
     }
 
+    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testCustomDefaultTimestampFunctionWithEntity() {
         withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES - TestDB.MYSQL_V8 - TestDB.ALL_H2_V2, DefaultTimestampTable) {

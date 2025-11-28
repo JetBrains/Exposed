@@ -8,9 +8,11 @@ import org.jetbrains.exposed.v1.dao.entityCache
 import org.jetbrains.exposed.v1.dao.flushCache
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.dml.withCitiesAndUsers
 import org.jetbrains.exposed.v1.tests.shared.entities.EntityTestsData
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import kotlin.test.assertEquals
@@ -100,6 +102,7 @@ class AliasesTests : DatabaseTestsBase() {
         }
     }
 
+    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testWrapRowWithAliasedTable() {
         withTables(EntityTestsData.XTable, EntityTestsData.YTable) {
@@ -118,6 +121,7 @@ class AliasesTests : DatabaseTestsBase() {
         }
     }
 
+    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testWrapRowWithAliasedQuery() {
         withTables(EntityTestsData.XTable, EntityTestsData.YTable) {
