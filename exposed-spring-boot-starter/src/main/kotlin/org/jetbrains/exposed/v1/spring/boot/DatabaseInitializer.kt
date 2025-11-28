@@ -23,8 +23,10 @@ import java.util.regex.Pattern
  * @property applicationContext The Spring ApplicationContext container responsible for managing beans.
  * @property excludedPackages List of packages to exclude, so that their contained tables are not auto-created.
  */
-open class DatabaseInitializer(private val applicationContext: ApplicationContext, private val excludedPackages: List<String>) :
-    ApplicationRunner, Ordered {
+open class DatabaseInitializer(
+    private val applicationContext: ApplicationContext,
+    private val excludedPackages: List<String>
+) : ApplicationRunner, Ordered {
     override fun getOrder(): Int = DATABASE_INITIALIZER_ORDER
 
     companion object {
@@ -34,7 +36,7 @@ open class DatabaseInitializer(private val applicationContext: ApplicationContex
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Transactional
-    override fun run(args: ApplicationArguments?) {
+    override fun run(args: ApplicationArguments) {
         val exposedTables = discoverExposedTables(applicationContext, excludedPackages)
         logger.info("Schema generation for tables '{}'", exposedTables.map { it.tableName })
 
