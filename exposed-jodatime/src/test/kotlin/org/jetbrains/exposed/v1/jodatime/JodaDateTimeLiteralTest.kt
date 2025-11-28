@@ -10,7 +10,7 @@ import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
 
 class JodaDateTimeLiteralTest : DatabaseTestsBase() {

@@ -10,10 +10,11 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.entities.EntityTestsData
-import org.junit.After
-import org.junit.Assume
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import java.sql.Connection
 import kotlin.properties.Delegates
 import kotlin.test.assertEquals
@@ -40,9 +41,9 @@ class MultiDatabaseEntityTest {
     }
     private var currentDB: Database? = null
 
-    @Before
+    @BeforeEach
     fun before() {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         TransactionManager.currentOrNull()?.let {
             currentDB = it.db
         }
@@ -54,7 +55,7 @@ class MultiDatabaseEntityTest {
         }
     }
 
-    @After
+    @AfterEach
     fun after() {
         if (TestDB.H2_V2 in TestDB.enabledDialects()) {
             transaction(db1) {
@@ -204,14 +205,16 @@ class MultiDatabaseEntityTest {
         }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun crossReferencesProhibitedForEntitiesFromDifferentDB() {
-        transaction(db1) {
-            val db1b1 = EntityTestsData.BEntity.new(1) { }
+        Assertions.assertThrows(IllegalStateException::class.java) {
+            transaction(db1) {
+                val db1b1 = EntityTestsData.BEntity.new(1) { }
 
-            transaction(db2) {
-                assertEquals(0L, EntityTestsData.BEntity.count())
-                db1b1.y = EntityTestsData.YEntity.new("2") { }
+                transaction(db2) {
+                    assertEquals(0L, EntityTestsData.BEntity.count())
+                    db1b1.y = EntityTestsData.YEntity.new("2") { }
+                }
             }
         }
     }

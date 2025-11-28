@@ -1,34 +1,25 @@
 package org.jetbrains.exposed.v1.spring.transaction
 
 import kotlinx.coroutines.*
-import kotlinx.coroutines.debug.junit4.CoroutinesTimeout
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.suspendedTransactionAsync
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.tests.RepeatableTest
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.RepeatedTest
 import org.springframework.test.annotation.Commit
 import org.springframework.transaction.annotation.Transactional
 import kotlin.test.assertEquals
 
 open class SpringCoroutineTest : SpringTransactionTestBase() {
-
-    @Rule
-    @JvmField
-    val timeout = CoroutinesTimeout.seconds(60)
-
     object Testing : Table("COROUTINE_TESTING") {
         val id = integer("id").autoIncrement() // Column<Int>
 
         override val primaryKey = PrimaryKey(id)
     }
 
-    @RepeatableTest(times = 5)
-    @Test
+    @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
+    @RepeatedTest(5)
     @Transactional
     @Commit
     // Is this test flaky?
@@ -37,12 +28,15 @@ open class SpringCoroutineTest : SpringTransactionTestBase() {
             SchemaUtils.create(Testing)
 
             val mainJob = GlobalScope.async {
-                val results = (1..5).map { indx ->
-                    suspendedTransactionAsync(Dispatchers.IO) {
-                        Testing.insert { }
-                        indx
-                    }
-                }.awaitAll()
+                // @CoroutinesTimeout is not compatible with @Transactional
+                val results = withTimeout(1000) {
+                    (1..5).map { indx ->
+                        suspendedTransactionAsync(Dispatchers.IO) {
+                            Testing.insert { }
+                            indx
+                        }
+                    }.awaitAll()
+                }
 
                 assertEquals(15, results.sum())
             }
@@ -50,9 +44,7 @@ open class SpringCoroutineTest : SpringTransactionTestBase() {
             while (!mainJob.isCompleted) Thread.sleep(100)
             mainJob.getCompletionExceptionOrNull()?.let { throw it }
 
-            transaction {
-                assertEquals(5L, Testing.selectAll().count())
-            }
+            assertEquals(5L, Testing.selectAll().count())
         } finally {
             SchemaUtils.drop(Testing)
         }

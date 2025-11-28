@@ -28,9 +28,10 @@ dependencies {
     testImplementation(project(":exposed-money"))
     testCompileOnly(libs.postgre)
 
-    testImplementation(libs.junit)
-    testImplementation(kotlin("test-junit"))
     testImplementation(libs.logcaptor)
+    testImplementation(libs.junit5)
+    testRuntimeOnly(libs.junit.platform.launcher)
+    testImplementation(kotlin("test-junit5"))
 }
 
 tasks.withType<KotlinCompile>().configureEach {
@@ -41,4 +42,8 @@ tasks.withType<KotlinCompile>().configureEach {
 
 tasks.withType<JavaCompile>().configureEach {
     targetCompatibility = "8"
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }

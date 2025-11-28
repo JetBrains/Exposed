@@ -36,7 +36,8 @@ springBoot = "3.5.8"
 
 spring-security-crypto = "6.2.1"
 joda-time = "2.14.0"
-junit = "4.13.2"
+junit5 = "5.14.1"
+junit6 = "6.0.1"
 kotlinx-datetime = "0.7.1-0.6.x-compat"
 javax-money = "1.1"
 moneta = "1.4.5"
@@ -60,7 +61,9 @@ kotlinx-serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-seria
 slf4j = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
 spring-security-crypto = { group = "org.springframework.security", name = "spring-security-crypto", version.ref = "spring-security-crypto" }
 joda-time = { group = "joda-time", name = "joda-time", version.ref = "joda-time" }
-junit = { group = "junit", name = "junit", version.ref = "junit" }
+junit5 = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junit5" }
+junit6 = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junit6" }
+junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher" }
 javax-money = { group = "javax.money", name = "money-api", version.ref = "javax-money" }
 moneta = { group = "org.javamoney", name = "moneta", version.ref = "moneta" }
 

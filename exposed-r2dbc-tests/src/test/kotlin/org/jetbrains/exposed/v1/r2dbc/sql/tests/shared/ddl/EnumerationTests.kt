@@ -21,8 +21,8 @@ import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.update
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 
 class EnumerationTests : R2dbcDatabaseTestsBase() {
     // NOTE: UNSUPPORTED r2dbc-h2
@@ -75,7 +75,7 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
     // NOTE: DAO part of test uncommented
     @Test
     fun testCustomEnumeration01() = runTest {
-        Assume.assumeTrue(supportsCustomEnumerationDB.containsAll(TestDB.enabledDialects()))
+        Assumptions.assumeTrue(supportsCustomEnumerationDB.containsAll(TestDB.enabledDialects()))
         var sqlType = ""
 
 //          class EnumEntity(id: EntityID<Int>) : IntEntity(id) {
@@ -177,7 +177,7 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testCustomEnumerationWithReference() = runTest {
-        Assume.assumeTrue(supportsCustomEnumerationDB.containsAll(TestDB.enabledDialects()))
+        Assumptions.assumeTrue(supportsCustomEnumerationDB.containsAll(TestDB.enabledDialects()))
         var sqlType = ""
 
         val referenceTable = object : Table("ref_table") {

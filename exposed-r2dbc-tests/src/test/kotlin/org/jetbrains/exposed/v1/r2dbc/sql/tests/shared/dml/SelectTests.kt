@@ -21,7 +21,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.jetbrains.exposed.v1.r2dbc.tests.sorted
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertNull
 
 class SelectTests : R2dbcDatabaseTestsBase() {

@@ -5,7 +5,7 @@ import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.sql.Connection
 import java.sql.SQLTransientException
 import kotlin.test.assertEquals

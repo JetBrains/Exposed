@@ -1,10 +1,11 @@
 package org.jetbrains.exposed.v1.tests.shared.types
+
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class BooleanColumnTypeTests : DatabaseTestsBase() {
     object BooleanTable : IntIdTable("booleanTable") {

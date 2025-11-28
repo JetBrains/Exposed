@@ -1,16 +1,17 @@
 package org.jetbrains.exposed.v1.r2dbc.tests
 
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
+import org.junit.jupiter.params.Parameter
+import org.junit.jupiter.params.ParameterizedClass
+import org.junit.jupiter.params.provider.MethodSource
 
-@RunWith(Parameterized::class)
+@ParameterizedClass(name = "{0}", allowZeroInvocations = true)
+@MethodSource("data")
 abstract class LogDbInTestName {
-    @Parameterized.Parameter(0)
+    @Parameter(0)
     lateinit var dialect: String
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "{0}")
         fun data() = TestDB.enabledDialects().map { arrayOf(it.name) }
     }
 }

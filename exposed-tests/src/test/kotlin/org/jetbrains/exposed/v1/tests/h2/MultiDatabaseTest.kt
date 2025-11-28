@@ -17,9 +17,9 @@ import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.dml.DMLTestsData
-import org.junit.Assume
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import java.sql.Connection
 import java.util.concurrent.Executors
 import kotlin.test.assertEquals
@@ -45,9 +45,9 @@ class MultiDatabaseTest {
     }
     private var currentDB: Database? = null
 
-    @Before
+    @BeforeEach
     fun before() {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         TransactionManager.currentOrNull()?.db?.let {
             currentDB = it
         }

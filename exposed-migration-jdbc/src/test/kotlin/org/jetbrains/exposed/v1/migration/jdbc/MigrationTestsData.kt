@@ -87,7 +87,10 @@ object MigrationTestsData {
             { value -> Foo.valueOf(value as String) },
             { value ->
                 when (currentDialectTest) {
-                    is PostgreSQLDialect -> PGEnum(sqlType, value)
+                    is PostgreSQLDialect -> PGobject().apply {
+                        this.value = value.name
+                        type = sqlType
+                    }
                     else -> value.name
                 }
             }
@@ -112,12 +115,6 @@ object MigrationTestsData {
         Bar, Baz;
 
         override fun toString(): String = "Foo Enum ToString: $name"
-    }
-    class PGEnum<T : Enum<T>>(enumTypeName: String, enumValue: T?) : PGobject() {
-        init {
-            value = enumValue?.name
-            type = enumTypeName
-        }
     }
 
     private val sqlType by lazy {

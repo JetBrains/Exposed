@@ -36,7 +36,7 @@ import org.jetbrains.exposed.v1.tests.shared.expectException
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.LocalTime
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 class JodaTimeTests : DatabaseTestsBase() {

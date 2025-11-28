@@ -20,11 +20,13 @@ kotlin {
 dependencies {
     api(project(":exposed-core"))
     api(libs.kotlinx.serialization)
+
     testImplementation(project(":exposed-dao"))
     testImplementation(project(":exposed-tests"))
     testImplementation(project(":exposed-jdbc"))
-    testImplementation(libs.junit)
-    testImplementation(kotlin("test-junit"))
+    testImplementation(libs.junit5)
+    testRuntimeOnly(libs.junit.platform.launcher)
+    testImplementation(kotlin("test-junit5"))
 }
 
 tasks.withType<KotlinCompile>().configureEach {
@@ -35,4 +37,8 @@ tasks.withType<KotlinCompile>().configureEach {
 
 tasks.withType<JavaCompile>().configureEach {
     targetCompatibility = "8"
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }

@@ -15,9 +15,11 @@ import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.*
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import java.sql.Connection
 import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -518,7 +520,8 @@ class EntityTests : DatabaseTestsBase() {
         companion object : IntEntityClass<SelfReferencedEntity>(SelfReferenceTable)
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
     fun testSelfReferences() {
         withTables(SelfReferenceTable) {
             val ref1 = SelfReferencedEntity.new { }

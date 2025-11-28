@@ -18,7 +18,7 @@ import org.jetbrains.exposed.v1.tests.shared.MiscTable
 import org.jetbrains.exposed.v1.tests.shared.checkInsert
 import org.jetbrains.exposed.v1.tests.shared.checkRow
 import org.joda.time.DateTime
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import kotlin.test.assertEquals
 import kotlin.test.assertNull

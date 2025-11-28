@@ -22,7 +22,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.checkInsert
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.checkRow
 import org.jetbrains.exposed.v1.r2dbc.update
 import org.joda.time.DateTime
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import kotlin.test.assertEquals
 import kotlin.test.assertNull

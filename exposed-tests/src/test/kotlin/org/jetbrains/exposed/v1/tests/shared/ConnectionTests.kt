@@ -10,9 +10,9 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
-import org.junit.Assert.assertTrue
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import java.sql.Types
 import kotlin.test.assertContains
 
@@ -120,7 +120,7 @@ class ConnectionTests : DatabaseTestsBase() {
 
     @Test
     fun testAddingLoggerDoesNotCauseNoTransactionInContext() {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         TestDB.H2_V2.connect()
 
         val tester = object : Table("tester") {

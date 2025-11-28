@@ -12,8 +12,8 @@ import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.getInt
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.withTransactionContext
-import org.junit.Assume
-import org.junit.Before
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -26,10 +26,10 @@ class UserCreatedTransactionsTests : R2dbcDatabaseTestsBase() {
         val param = integer("param")
     }
 
-    @Before
+    @BeforeEach
     fun before() {
         if (dialect in excludeSettings) {
-            Assume.assumeFalse(true)
+            Assumptions.assumeFalse(true)
             return
         }
     }

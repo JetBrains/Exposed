@@ -10,8 +10,8 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
-import org.junit.Assume
-import org.junit.Before
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.BeforeEach
 import kotlin.collections.minus
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -26,10 +26,10 @@ class UserCreatedTransactionsTests : DatabaseTestsBase() {
         val param = integer("param")
     }
 
-    @Before
+    @BeforeEach
     fun before() {
         if (dialect in excludeSettings) {
-            Assume.assumeFalse(true)
+            Assumptions.assumeFalse(true)
             return
         }
     }

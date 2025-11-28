@@ -4,12 +4,12 @@ import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.jetbrains.exposed.v1.tests.TestDB
-import org.junit.Assume
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TemporaryFolder
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import org.sqlite.SQLiteDataSource
+import java.io.File
 import java.sql.Connection
 
 /**
@@ -27,17 +27,16 @@ import java.sql.Connection
  *
  */
 class MultipleDatabaseBugTest {
-
-    @Rule
     @JvmField
-    val folder = TemporaryFolder()
+    @TempDir
+    var folder: File? = null
 
     private var db: Database? = null
 
-    @Before
+    @BeforeEach
     fun before() {
-        Assume.assumeTrue(TestDB.SQLITE in TestDB.enabledDialects())
-        val filename = folder.newFile("foo.db").absolutePath
+        Assumptions.assumeTrue(TestDB.SQLITE in TestDB.enabledDialects())
+        val filename = folder?.resolve("foo.db")?.absolutePath
         val ds = SQLiteDataSource()
         ds.url = "jdbc:sqlite:$filename"
         val database = Database.connect(ds)

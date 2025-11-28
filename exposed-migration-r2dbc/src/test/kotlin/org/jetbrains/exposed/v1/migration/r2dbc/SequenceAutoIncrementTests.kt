@@ -17,11 +17,11 @@ import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 class SequenceAutoIncrementTests : R2dbcDatabaseTestsBase() {
-    @Before
+    @BeforeEach
     fun dropAllSequences() {
         withDb {
             if (currentDialectTest.supportsCreateSequence) {

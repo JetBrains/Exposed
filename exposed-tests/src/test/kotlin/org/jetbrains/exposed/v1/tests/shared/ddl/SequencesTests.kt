@@ -19,8 +19,8 @@ import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -347,7 +347,7 @@ class SequencesTests : DatabaseTestsBase() {
 
     @Test
     fun testAutoIncrementColumnAccessWithEntity() {
-        Assume.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
 
         TestDB.POSTGRESQL.connect()
 

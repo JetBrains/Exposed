@@ -16,8 +16,8 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.LogDbInTestName
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 
 class ConnectionPoolTests : LogDbInTestName() {
     private val hikariDataSource1 by lazy {
@@ -35,7 +35,7 @@ class ConnectionPoolTests : LogDbInTestName() {
 
     @Test
     fun testSuspendTransactionsExceedingPoolSize() {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         transaction(db = hikariDB1) {
             SchemaUtils.create(TestTable)
         }

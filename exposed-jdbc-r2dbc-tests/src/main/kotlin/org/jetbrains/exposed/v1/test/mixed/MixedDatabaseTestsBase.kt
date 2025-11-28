@@ -1,14 +1,19 @@
 package org.jetbrains.exposed.v1.test.mixed
 
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
-import org.junit.runners.Parameterized.Parameters
+import org.junit.jupiter.params.Parameter
+import org.junit.jupiter.params.ParameterizedClass
+import org.junit.jupiter.params.provider.MethodSource
 
-@RunWith(Parameterized::class)
+@ParameterizedClass(
+    name = "container: {0}, jdbcDialect: {1}, r2dbcDialect: {2}, name: {3}",
+    // JUnit5 is stricter & at least 1 arg must be set by default, so this allows 0 args to be set as parameters;
+    // because SQLite and PostgresNG will create an empty arg, since they are only compatibly with JDBC
+    allowZeroInvocations = true
+)
+@MethodSource("data")
 abstract class MixedDatabaseTestsBase {
 
     companion object {
-        @Parameters(name = "container: {0}, jdbcDialect: {1}, r2dbcDialect: {2}, name: {3}")
         @JvmStatic
         fun data(): Collection<Array<Any>> {
             val name = System.getProperty("exposed.test.name")
@@ -25,15 +30,15 @@ abstract class MixedDatabaseTestsBase {
         }
     }
 
-    @Parameterized.Parameter(0)
+    @Parameter(0)
     lateinit var container: String
 
-    @Parameterized.Parameter(1)
+    @Parameter(1)
     lateinit var jdbcDialect: org.jetbrains.exposed.v1.tests.TestDB
 
-    @Parameterized.Parameter(2)
+    @Parameter(2)
     lateinit var r2dbcDialect: org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 
-    @Parameterized.Parameter(3)
+    @Parameter(3)
     lateinit var testName: String
 }

@@ -19,8 +19,8 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import kotlin.test.assertContains
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
@@ -102,7 +102,7 @@ class NestedTransactionsTest : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testNestedTransactionNotCommittedAfterDatabaseFailure() = runTest {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
 
         val fakeSQLString = "BROKEN_SQL_THAT_CAUSES_EXCEPTION"
 
@@ -161,7 +161,7 @@ class NestedTransactionsTest : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testNestedTransactionNotCommittedAfterException() = runTest {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
 
         val exceptionMessage = "Failure!"
 

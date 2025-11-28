@@ -11,7 +11,8 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 import java.util.*
 
 class FetchBatchedResultsTests : DatabaseTestsBase() {
@@ -99,14 +100,18 @@ class FetchBatchedResultsTests : DatabaseTestsBase() {
         }
     }
 
-    @Test(expected = java.lang.UnsupportedOperationException::class)
+    @Test
     fun `when the table doesn't have an autoinc column, fetchBatchedResults should throw an exception`() {
-        DMLTestsData.UserData.selectAll().fetchBatchedResults()
+        Assertions.assertThrows(java.lang.UnsupportedOperationException::class.java) {
+            DMLTestsData.UserData.selectAll().fetchBatchedResults()
+        }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun `when batch size is 0 or less, should throw an exception`() {
-        DMLTestsData.Cities.selectAll().fetchBatchedResults(batchSize = -1)
+        Assertions.assertThrows(IllegalArgumentException::class.java) {
+            DMLTestsData.UserData.selectAll().fetchBatchedResults(batchSize = -1)
+        }
     }
 
     @Test

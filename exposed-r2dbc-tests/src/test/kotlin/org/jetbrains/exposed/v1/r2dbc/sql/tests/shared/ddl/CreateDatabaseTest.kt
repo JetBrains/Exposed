@@ -4,7 +4,7 @@ import io.r2dbc.spi.R2dbcException
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
 
 class CreateDatabaseTest : R2dbcDatabaseTestsBase() {

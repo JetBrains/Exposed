@@ -23,8 +23,9 @@ dependencies {
     implementation(libs.kotlinx.coroutines)
     implementation(libs.kotlinx.coroutines.debug)
 
-    implementation(kotlin("test-junit"))
-    implementation(libs.junit)
+    implementation(kotlin("test-junit5"))
+    implementation(libs.junit5)
+    testRuntimeOnly(libs.junit.platform.launcher)
 
     implementation(project(":exposed-core"))
     implementation(project(":exposed-jdbc"))
@@ -66,4 +67,6 @@ tasks.withType<Test>().configureEach {
         showStandardStreams = true
         exceptionFormat = TestExceptionFormat.FULL
     }
+
+    useJUnitPlatform()
 }

@@ -17,7 +17,7 @@ import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import org.postgresql.util.PGobject
 
 class EnumerationTests : DatabaseTestsBase() {
@@ -27,13 +27,6 @@ class EnumerationTests : DatabaseTestsBase() {
         Bar, Baz;
 
         override fun toString(): String = "Foo Enum ToString: $name"
-    }
-
-    class PGEnum<T : Enum<T>>(enumTypeName: String, enumValue: T?) : PGobject() {
-        init {
-            value = enumValue?.name
-            type = enumTypeName
-        }
     }
 
     object EnumTable : IntIdTable("EnumTable") {
@@ -46,7 +39,10 @@ class EnumerationTests : DatabaseTestsBase() {
                 { value -> Foo.valueOf(value as String) },
                 { value ->
                     when (currentDialectTest) {
-                        is PostgreSQLDialect -> PGEnum(sql, value)
+                        is PostgreSQLDialect -> PGobject().apply {
+                            this.value = value.name
+                            type = sql
+                        }
                         else -> value.name
                     }
                 }

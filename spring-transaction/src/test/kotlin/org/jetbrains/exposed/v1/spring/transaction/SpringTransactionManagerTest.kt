@@ -1,9 +1,11 @@
 package org.jetbrains.exposed.v1.spring.transaction
 
-import junit.framework.TestCase.assertEquals
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy
 import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy
 import org.springframework.transaction.IllegalTransactionStateException
@@ -12,8 +14,6 @@ import org.springframework.transaction.TransactionStatus
 import org.springframework.transaction.TransactionSystemException
 import org.springframework.transaction.support.TransactionTemplate
 import java.sql.SQLException
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
@@ -24,13 +24,13 @@ class SpringTransactionManagerTest {
     private val ds2 = DataSourceSpy(::ConnectionSpy)
     private val con2 = ds2.con as ConnectionSpy
 
-    @BeforeTest
+    @BeforeEach
     fun beforeTest() {
         con1.clearMock()
         con2.clearMock()
     }
 
-    @AfterTest
+    @AfterEach
     fun afterTest() {
         while (TransactionManager.defaultDatabase != null) {
             TransactionManager.defaultDatabase?.let { TransactionManager.closeAndUnregister(it) }

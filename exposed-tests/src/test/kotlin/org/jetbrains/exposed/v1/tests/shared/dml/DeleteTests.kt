@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.v1.tests.shared.dml
 
-import junit.framework.TestCase.assertNull
 import org.jetbrains.exposed.v1.core.Join
 import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.eq
@@ -18,7 +17,8 @@ import org.jetbrains.exposed.v1.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNull
 import kotlin.test.assertTrue
 import kotlin.test.expect
 

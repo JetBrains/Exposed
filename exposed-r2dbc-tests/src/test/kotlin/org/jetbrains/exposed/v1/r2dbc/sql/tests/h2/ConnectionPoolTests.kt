@@ -13,8 +13,8 @@ import org.jetbrains.exposed.v1.r2dbc.tests.LogDbInTestName
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 
 class ConnectionPoolTests : LogDbInTestName() {
     private val maximumPoolSize = 10
@@ -25,7 +25,7 @@ class ConnectionPoolTests : LogDbInTestName() {
 
     @Test
     fun testSuspendTransactionsExceedingPoolSize() = runTest {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         suspendTransaction(h2PoolDB1) {
             SchemaUtils.create(TestTable)
         }

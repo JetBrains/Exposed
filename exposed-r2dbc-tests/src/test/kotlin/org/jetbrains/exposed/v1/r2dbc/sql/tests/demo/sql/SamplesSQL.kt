@@ -7,8 +7,8 @@ import org.jetbrains.exposed.v1.r2dbc.*
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.forEach
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 object Users : Table() {
@@ -28,7 +28,7 @@ object Cities : Table() {
 
 @Suppress("LongMethod")
 fun main() {
-    Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+    Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
     R2dbcDatabase.connect("r2dbc:h2:mem:///test;USER=root;")
 
     runBlocking {

@@ -25,12 +25,14 @@ kotlin {
 
 dependencies {
     api(project(":exposed-core"))
+
     testCompileOnly(project(":exposed-jdbc"))
     testImplementation(project(":exposed-dao"))
     testImplementation(project(":exposed-tests"))
     testImplementation(project(":exposed-json"))
-    testImplementation(libs.junit)
-    testImplementation(kotlin("test-junit"))
+    testImplementation(libs.junit5)
+    testRuntimeOnly(libs.junit.platform.launcher)
+    testImplementation(kotlin("test-junit5"))
 }
 
 tasks.withType<KotlinCompile>().configureEach {
@@ -52,4 +54,6 @@ tasks.withType<Test>().configureEach {
         showStandardStreams = true
         exceptionFormat = TestExceptionFormat.FULL
     }
+
+    useJUnitPlatform()
 }

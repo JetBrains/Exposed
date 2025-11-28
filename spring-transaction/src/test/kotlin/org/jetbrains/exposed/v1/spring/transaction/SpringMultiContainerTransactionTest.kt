@@ -7,8 +7,9 @@ import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -18,7 +19,6 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import org.springframework.transaction.annotation.Transactional
 import javax.sql.DataSource
-import kotlin.test.BeforeTest
 
 open class SpringMultiContainerTransactionTest {
 
@@ -28,7 +28,7 @@ open class SpringMultiContainerTransactionTest {
     val orders: Orders = orderContainer.getBean(Orders::class.java)
     val payments: Payments = paymentContainer.getBean(Payments::class.java)
 
-    @BeforeTest
+    @BeforeEach
     open fun beforeTest() {
         orders.init()
         payments.init()
@@ -36,16 +36,16 @@ open class SpringMultiContainerTransactionTest {
 
     @Test
     open fun test1() {
-        Assert.assertEquals(0, orders.findAll().size)
-        Assert.assertEquals(0, payments.findAll().size)
+        Assertions.assertEquals(0, orders.findAll().size)
+        Assertions.assertEquals(0, payments.findAll().size)
     }
 
     @Test
     open fun test2() {
         orders.create()
-        Assert.assertEquals(1, orders.findAll().size)
+        Assertions.assertEquals(1, orders.findAll().size)
         payments.create()
-        Assert.assertEquals(1, payments.findAll().size)
+        Assertions.assertEquals(1, payments.findAll().size)
     }
 
     @Test
@@ -55,8 +55,8 @@ open class SpringMultiContainerTransactionTest {
             orders.create()
             payments.create()
         }
-        Assert.assertEquals(1, orders.findAll().size)
-        Assert.assertEquals(2, payments.findAll().size)
+        Assertions.assertEquals(1, orders.findAll().size)
+        Assertions.assertEquals(2, payments.findAll().size)
     }
 
     @Test
@@ -68,8 +68,8 @@ open class SpringMultiContainerTransactionTest {
                 throw SpringTransactionTestException()
             }
         }
-        Assert.assertEquals(0, orders.findAll().size)
-        Assert.assertEquals(1, payments.findAll().size)
+        Assertions.assertEquals(0, orders.findAll().size)
+        Assertions.assertEquals(1, payments.findAll().size)
     }
 
     @Test
@@ -83,22 +83,22 @@ open class SpringMultiContainerTransactionTest {
                 }
             }
         }
-        Assert.assertEquals(0, orders.findAll().size)
-        Assert.assertEquals(0, payments.findAll().size)
+        Assertions.assertEquals(0, orders.findAll().size)
+        Assertions.assertEquals(0, payments.findAll().size)
     }
 
     @Test
     open fun test6() {
-        Assert.assertEquals(0, orders.findAllWithExposedTrxBlock().size)
-        Assert.assertEquals(0, payments.findAllWithExposedTrxBlock().size)
+        Assertions.assertEquals(0, orders.findAllWithExposedTrxBlock().size)
+        Assertions.assertEquals(0, payments.findAllWithExposedTrxBlock().size)
     }
 
     @Test
     open fun test7() {
         orders.createWithExposedTrxBlock()
-        Assert.assertEquals(1, orders.findAllWithExposedTrxBlock().size)
+        Assertions.assertEquals(1, orders.findAllWithExposedTrxBlock().size)
         payments.createWithExposedTrxBlock()
-        Assert.assertEquals(1, payments.findAllWithExposedTrxBlock().size)
+        Assertions.assertEquals(1, payments.findAllWithExposedTrxBlock().size)
     }
 
     @Test
@@ -108,8 +108,8 @@ open class SpringMultiContainerTransactionTest {
             orders.createWithExposedTrxBlock()
             payments.createWithExposedTrxBlock()
         }
-        Assert.assertEquals(1, orders.findAllWithExposedTrxBlock().size)
-        Assert.assertEquals(2, payments.findAllWithExposedTrxBlock().size)
+        Assertions.assertEquals(1, orders.findAllWithExposedTrxBlock().size)
+        Assertions.assertEquals(2, payments.findAllWithExposedTrxBlock().size)
     }
 
     @Test
@@ -121,8 +121,8 @@ open class SpringMultiContainerTransactionTest {
                 throw SpringTransactionTestException()
             }
         }
-        Assert.assertEquals(0, orders.findAllWithExposedTrxBlock().size)
-        Assert.assertEquals(1, payments.findAllWithExposedTrxBlock().size)
+        Assertions.assertEquals(0, orders.findAllWithExposedTrxBlock().size)
+        Assertions.assertEquals(1, payments.findAllWithExposedTrxBlock().size)
     }
 
     @Test
@@ -136,8 +136,8 @@ open class SpringMultiContainerTransactionTest {
                 }
             }
         }
-        Assert.assertEquals(0, orders.findAllWithExposedTrxBlock().size)
-        Assert.assertEquals(0, payments.findAllWithExposedTrxBlock().size)
+        Assertions.assertEquals(0, orders.findAllWithExposedTrxBlock().size)
+        Assertions.assertEquals(0, payments.findAllWithExposedTrxBlock().size)
     }
 }
 
