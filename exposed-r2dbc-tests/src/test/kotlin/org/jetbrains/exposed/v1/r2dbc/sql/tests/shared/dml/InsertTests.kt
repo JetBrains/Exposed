@@ -27,10 +27,10 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 import java.util.*
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.fail

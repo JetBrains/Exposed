@@ -3,7 +3,11 @@ package org.jetbrains.exposed.v1.r2dbc
 import io.r2dbc.spi.ConnectionFactoryOptions
 import org.jetbrains.exposed.v1.core.vendors.*
 
-/** Returns the exact [VendorDialect] used by this [ConnectionFactoryOptions] state holder. */
+/**
+ * Returns the exact [VendorDialect] used by this [ConnectionFactoryOptions] state holder.
+ *
+ * @throws IllegalStateException If [ConnectionFactoryOptions] returns a string value without a `VendorDialect` mapping.
+ */
 val ConnectionFactoryOptions.dialect: VendorDialect.DialectNameProvider
     get() {
         val dbDialect = getValue(ConnectionFactoryOptions.DRIVER)?.toString()
@@ -17,7 +21,7 @@ val ConnectionFactoryOptions.dialect: VendorDialect.DialectNameProvider
             "mariadb" -> MariaDBDialect
             "oracle" -> OracleDialect
             "mssql" -> SQLServerDialect
-            else -> error("Unsupported dialect: $dbDialect")
+            else -> error("Unsupported driver dialect detected: $dbDialect")
         }
     }
 
