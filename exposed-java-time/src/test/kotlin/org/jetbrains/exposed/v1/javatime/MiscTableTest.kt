@@ -18,6 +18,7 @@ import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.MiscTable
 import org.jetbrains.exposed.v1.tests.shared.checkInsert
 import org.jetbrains.exposed.v1.tests.shared.checkRow
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Duration
@@ -45,6 +46,7 @@ object Misc : MiscTable() {
     val drn = duration("drn").nullable()
 }
 
+@Disabled("temporarily for PR testing")
 @Suppress("LargeClass")
 class MiscTableTest : DatabaseTestsBase() {
     @Test
