@@ -11,6 +11,7 @@
 <div align="center">
 
 [![JetBrains team project](https://jb.gg/badges/team.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
+[![Kotlin](https://img.shields.io/badge/dynamic/toml?url=https://raw.githubusercontent.com/JetBrains/Exposed/refs/heads/main/gradle/libs.versions.toml&query=%24.versions.kotlin&logo=kotlin&label=kotlin&color=blue)](http://kotlinlang.org)
 [![Slack Channel](https://img.shields.io/badge/chat-exposed-yellow.svg?logo=slack)](https://kotlinlang.slack.com/messages/exposed/)
 [![TC Build status](https://exposed.teamcity.com/app/rest/builds/buildType:id:Exposed_Build/statusIcon.svg)](https://exposed.teamcity.com/viewType.html?buildTypeId=Exposed_Build&guest=1)
 [![Maven Central](https://img.shields.io/maven-central/v/org.jetbrains.exposed/exposed-core?label=maven+central)](https://central.sonatype.com/search?namespace=org.jetbrains.exposed)
