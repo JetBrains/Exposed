@@ -1,9 +1,9 @@
 [versions]
 kotlin-version = "2.2.0"
-ktor-version = "3.2.3"
+ktor-version = "3.3.2"
 exposed-version = "1.0.0-rc-4"
-postgresql-r2dbc-version = "1.0.7.RELEASE"
-logback-version = "1.5.18"
+postgresql-r2dbc-version = "1.1.1.RELEASE"
+logback-version = "1.5.21"
 
 [libraries]
 ktor-server-call-logging = { module = "io.ktor:ktor-server-call-logging", version.ref = "ktor-version" }

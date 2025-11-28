@@ -47,6 +47,25 @@ class UserController(
         val age: Int,
     )
 
+    // Read All Users
+    @GetMapping("/")
+    fun findAllUsers(): ResponseEntity<List<UserResponse>> {
+        val users = userService.findAllUsers()
+        val response = users.map { user ->
+            UserResponse(
+                id = user.id.value,
+                name = user.name,
+                age = user.age,
+            )
+        }
+
+        return if (response.isNotEmpty()) {
+            ResponseEntity.ok(response)
+        } else {
+            ResponseEntity.noContent().build()
+        }
+    }
+
     // Create User
     @PostMapping
     fun create(
