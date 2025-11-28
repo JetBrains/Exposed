@@ -11,6 +11,7 @@ import org.jetbrains.exposed.v1.r2dbc.ExposedR2dbcException
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.Test
 import org.reactivestreams.Publisher
@@ -53,6 +54,8 @@ class ConnectionTimeoutTest : R2dbcDatabaseTestsBase() {
         } catch (e: ExposedR2dbcException) {
             assertTrue(e.cause?.cause is GetConnectException)
             assertEquals(42, connectionFactory.connectCount)
+        } finally {
+            TransactionManager.closeAndUnregister(db)
         }
     }
 
@@ -89,6 +92,8 @@ class ConnectionTimeoutTest : R2dbcDatabaseTestsBase() {
             fail("Should have thrown ${GetConnectException::class.simpleName}")
         } catch (_: ExposedR2dbcException) {
             assertEquals(25, connectionFactory.connectCount)
+        } finally {
+            TransactionManager.closeAndUnregister(db)
         }
     }
 }
