@@ -29,6 +29,17 @@ class UserService {
         }
     }
 
+    // read all users
+    fun findAllUsers(): List<User> {
+        return UserEntity.selectAll().map {
+            User(
+                id = UserId(it[UserEntity.id].value),
+                name = it[UserEntity.name],
+                age = it[UserEntity.age],
+            )
+        }
+    }
+
     // create user
     fun create(request: UserCreateRequest): UserId {
         val id = UserEntity.insertAndGetId {
