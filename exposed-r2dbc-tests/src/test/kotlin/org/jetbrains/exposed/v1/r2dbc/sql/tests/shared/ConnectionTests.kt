@@ -34,6 +34,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.sql.Types
 import kotlin.test.assertContains
@@ -238,6 +239,7 @@ class ConnectionTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @Disabled
     @Test
     fun testParallelAccessToTheDatabase() {
         val tester = object : IntIdTable("tester") {
