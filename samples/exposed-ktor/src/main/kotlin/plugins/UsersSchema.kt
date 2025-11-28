@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.*
-import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelSuspendTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 @Serializable
@@ -30,7 +30,7 @@ class UserService(private val database: Database) {
     }
 
     suspend fun <T> dbQuery(block: suspend () -> T): T = withContext(Dispatchers.IO) {
-        suspendTransaction { block() }
+        inTopLevelSuspendTransaction { block() }
     }
 
     suspend fun create(user: ExposedUser): Int = dbQuery {
