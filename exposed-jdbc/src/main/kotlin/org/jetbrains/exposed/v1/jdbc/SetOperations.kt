@@ -74,10 +74,9 @@ sealed class SetOperation(
     override fun count(): Long {
         try {
             count = true
-            return transaction.exec(this) { rs ->
-                check(rs is JdbcResult) { "Unexpected result type: $rs" }
+            return transaction.execQuery(this) { rs ->
                 rs.next()
-                (rs.getObject(1) as? Number)?.toLong().also {
+                rs.getLong(1).also {
                     rs.close()
                 }
             }!!
@@ -91,8 +90,7 @@ sealed class SetOperation(
         val oldLimit = limit
         try {
             limit = 1
-            val rs = transaction.exec(this)!!
-            check(rs is JdbcResult) { "Unexpected result type: $rs" }
+            val rs = transaction.execQuery(this)
             return !rs.next().also { rs.close() }
         } finally {
             limit = oldLimit
@@ -156,8 +154,8 @@ sealed class SetOperation(
         get() = this
 
     override fun iterator(): Iterator<ResultRow> {
-        val rs = transaction.exec(queryToExecute)!! as JdbcResult
-        val resultIterator = ResultIterator(rs.result)
+        val rs = transaction.execQuery(queryToExecute)
+        val resultIterator = ResultIterator(rs)
         return if (transaction.db.supportsMultipleResultSets) {
             resultIterator
         } else {
@@ -183,7 +181,7 @@ sealed class SetOperation(
             val threshold = transaction.db.config.logTooMuchResultSetsThreshold
             if (threshold > 0 && threshold < transaction.openResultSetsCount) {
                 val message = "Current opened result sets size ${transaction.openResultSetsCount} " +
-                    "exceeds $threshold threshold for transaction ${transaction.id} "
+                    "exceeds $threshold threshold for transaction ${transaction.transactionId} "
                 val stackTrace = Exception(message).stackTraceToString()
                 exposedLogger.error(stackTrace)
             }
@@ -283,7 +281,7 @@ class Except(
 /**
  * Combines all results from [this] query with the results of [other], WITHOUT including duplicates.
  *
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.UnionTests.testUnionWithLimit
+ * @sample org.jetbrains.exposed.v1.tests.shared.dml.UnionTests.testUnionWithLimit
  */
 fun AbstractQuery<*>.union(other: Query): Union = Union(this, other)
 
@@ -297,13 +295,13 @@ fun AbstractQuery<*>.unionAll(other: Query): UnionAll = UnionAll(this, other)
 /**
  * Returns only results from [this] query that are common to the results of [other], WITHOUT including any duplicates.
  *
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.UnionTests.testIntersectWithThreeQueries
+ * @sample org.jetbrains.exposed.v1.tests.shared.dml.UnionTests.testIntersectWithThreeQueries
  */
 fun AbstractQuery<*>.intersect(other: Query): Intersect = Intersect(this, other)
 
 /**
  * Returns only distinct results from [this] query that are NOT common to the results of [other].
  *
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.UnionTests.testExceptWithTwoQueries
+ * @sample org.jetbrains.exposed.v1.tests.shared.dml.UnionTests.testExceptWithTwoQueries
  */
 fun AbstractQuery<*>.except(other: Query): Except = Except(this, other)

@@ -10,8 +10,8 @@ import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import java.sql.Connection
 import kotlin.test.assertNotNull
 
@@ -21,7 +21,7 @@ class TransactionIsolationTest : DatabaseTestsBase() {
     @Test
     fun testWhatTransactionIsolationWasApplied() {
         withDb {
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 assertEquals(Connection.TRANSACTION_SERIALIZABLE, this.connection.transactionIsolation)
             }
@@ -30,12 +30,13 @@ class TransactionIsolationTest : DatabaseTestsBase() {
 
     @Test
     fun testTransactionIsolationWithHikariDataSource() {
-        Assume.assumeTrue(transactionIsolationSupportDb.containsAll(TestDB.enabledDialects()))
+        Assumptions.assumeTrue(transactionIsolationSupportDb.containsAll(TestDB.enabledDialects()))
         val dialect = TestDB.enabledDialects().first()
 
         val db = Database.connect(
             HikariDataSource(setupHikariConfig(dialect, "TRANSACTION_REPEATABLE_READ"))
         )
+
         val manager = TransactionManager.managerFor(db)
 
         transaction(db) {
@@ -67,7 +68,7 @@ class TransactionIsolationTest : DatabaseTestsBase() {
 
     @Test
     fun testTransactionIsolationWithHikariAndDatabaseConfig() {
-        Assume.assumeTrue(transactionIsolationSupportDb.containsAll(TestDB.enabledDialects()))
+        Assumptions.assumeTrue(transactionIsolationSupportDb.containsAll(TestDB.enabledDialects()))
         val dialect = TestDB.enabledDialects().first()
 
         val db = Database.connect(
@@ -78,23 +79,23 @@ class TransactionIsolationTest : DatabaseTestsBase() {
 
         transaction(db) {
             // transaction manager should default to use DatabaseConfig level
-            assertEquals(Connection.TRANSACTION_READ_COMMITTED, manager?.defaultIsolationLevel)
+            assertEquals(Connection.TRANSACTION_READ_COMMITTED, manager.defaultIsolationLevel)
 
             // database level should be set by DatabaseConfig
             assertTransactionIsolationLevel(dialect, Connection.TRANSACTION_READ_COMMITTED)
             // after first connection, transaction manager should retain DatabaseConfig level
-            assertEquals(Connection.TRANSACTION_READ_COMMITTED, manager?.defaultIsolationLevel)
+            assertEquals(Connection.TRANSACTION_READ_COMMITTED, manager.defaultIsolationLevel)
         }
 
         transaction(transactionIsolation = Connection.TRANSACTION_REPEATABLE_READ, db = db) {
-            assertEquals(Connection.TRANSACTION_READ_COMMITTED, manager?.defaultIsolationLevel)
+            assertEquals(Connection.TRANSACTION_READ_COMMITTED, manager.defaultIsolationLevel)
 
             // database level should be set by transaction-specific setting
             assertTransactionIsolationLevel(dialect, Connection.TRANSACTION_REPEATABLE_READ)
         }
 
         transaction(db) {
-            assertEquals(Connection.TRANSACTION_READ_COMMITTED, manager?.defaultIsolationLevel)
+            assertEquals(Connection.TRANSACTION_READ_COMMITTED, manager.defaultIsolationLevel)
 
             // database level should be set by DatabaseConfig
             assertTransactionIsolationLevel(dialect, Connection.TRANSACTION_READ_COMMITTED)

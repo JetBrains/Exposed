@@ -1,11 +1,13 @@
 package org.jetbrains.exposed.v1.money
 
 import org.javamoney.moneta.Money
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.isNotNull
+import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
@@ -14,7 +16,7 @@ import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import javax.money.CurrencyUnit
 import javax.money.Monetary

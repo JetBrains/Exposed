@@ -1,8 +1,10 @@
 package org.jetbrains.exposed.v1.jdbc.vendors
 
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.utils.CacheWithDefault
 import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
 import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import java.util.concurrent.ConcurrentHashMap
@@ -10,9 +12,8 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Common interface for all database dialect metadata.
  */
-// TODO document that class name was changed from DatabaseDialect to DatabaseDialectMetadata for those who extend it
 abstract class DatabaseDialectMetadata {
-    private var _allTableNames: Map<String, List<String>>? = null
+    private var _allTableNames: CacheWithDefault<String, List<String>>? = null
 
     private var _allSchemaNames: List<String>? = null
 
@@ -26,7 +27,7 @@ abstract class DatabaseDialectMetadata {
             return connection.metadata { tableNamesByCurrentSchema(getAllTableNamesCache()).tableNames }
         }
 
-    protected fun getAllTableNamesCache(): Map<String, List<String>> {
+    protected fun getAllTableNamesCache(): CacheWithDefault<String, List<String>> {
         if (_allTableNames == null) {
             _allTableNames = TransactionManager.current().connection.metadata { tableNames }
         }
@@ -63,14 +64,15 @@ abstract class DatabaseDialectMetadata {
      */
     fun allTablesNamesInAllSchemas(): List<String> {
         return getAllSchemaNamesCache().flatMap { schema ->
-            getAllTableNamesCache().getValue(schema)
+            getAllTableNamesCache().get(schema)
         }
     }
 
     /** Checks if the specified table exists in the database. */
     fun tableExists(table: Table): Boolean {
+        @OptIn(InternalApi::class)
         return table.schemaName?.let { schema ->
-            getAllTableNamesCache().getValue(schema.inProperCase()).any {
+            getAllTableNamesCache().get(schema.inProperCase()).any {
                 it == table.nameInDatabaseCase()
             }
         } ?: run {
@@ -84,10 +86,10 @@ abstract class DatabaseDialectMetadata {
     }
 
     protected open fun String.metadataMatchesTable(schema: String, table: Table): Boolean {
+        @OptIn(InternalApi::class)
         return when {
             schema.isEmpty() -> this == table.nameInDatabaseCaseUnquoted()
             else -> {
-                @OptIn(InternalApi::class)
                 val sanitizedTableName = table.tableNameWithoutSchemeSanitized
                 val nameInDb = "$schema.$sanitizedTableName".inProperCase()
                 this == nameInDb
@@ -98,11 +100,13 @@ abstract class DatabaseDialectMetadata {
     /** Checks if the specified schema exists. */
     fun schemaExists(schema: Schema): Boolean {
         val allSchemas = getAllSchemaNamesCache()
+        @OptIn(InternalApi::class)
         return allSchemas.any { it == schema.identifier.inProperCase() }
     }
 
     /** Returns whether the specified sequence exists. */
     fun sequenceExists(sequence: Sequence): Boolean {
+        @OptIn(InternalApi::class)
         return sequences().any { it == sequence.identifier.inProperCase() }
     }
 
@@ -133,6 +137,13 @@ abstract class DatabaseDialectMetadata {
             }
         }
         return constraints
+    }
+
+    /** Returns whether a defined column is of the same type as the column to which it is mapped in the database. */
+    fun areEquivalentColumnTypes(columnMetadataSqlType: String, columnMetadataType: Int, columnType: String): Boolean {
+        return TransactionManager.current().db.metadata {
+            areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataType, columnType)
+        }
     }
 
     /** Returns a map with all the defined indices in each of the specified [tables]. */
@@ -188,6 +199,3 @@ private val explicitDialect = ThreadLocal<DatabaseDialectMetadata?>()
 /** Returns the dialect used in the current transaction, may throw an exception if there is no current transaction. */
 val currentDialectMetadata: DatabaseDialectMetadata
     get() = explicitDialect.get() ?: TransactionManager.current().db.dialectMetadata
-
-internal fun String.inProperCase(): String =
-    TransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this

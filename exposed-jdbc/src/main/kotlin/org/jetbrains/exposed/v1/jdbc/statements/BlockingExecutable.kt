@@ -1,9 +1,7 @@
 package org.jetbrains.exposed.v1.jdbc.statements
 
 import org.jetbrains.exposed.v1.core.InternalApi
-import org.jetbrains.exposed.v1.core.statements.Statement
-import org.jetbrains.exposed.v1.core.statements.StatementContext
-import org.jetbrains.exposed.v1.core.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.v1.core.statements.*
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
@@ -16,11 +14,11 @@ internal object DefaultValueMarker {
 /**
  * Executable provides a customizable execution mechanism for SQL statements within a transaction.
  *
- * This interface allows implementing classes to define specific execution logic specific to JDBC
+ * This interface allows implementing classes to define specific execution logic specific to a JDBC driver
  * and customize how the return value is handled.
  * It is primarily used when fine-grained control over statement execution is required.
  *
- * For the suspend alternative of this interface, see [SuspendExecutable].
+ * For the suspend R2DBC alternative of this interface, see `SuspendExecutable` provided with a dependency on `exposed-r2dbc`.
  *
  * ## Usage Example:
  * ```kotlin
@@ -38,12 +36,13 @@ internal object DefaultValueMarker {
  * }
  * ```
  *
- * The implemented Executable can be later used in the utility functions like [Table.batchUpsert].
+ * The implemented Executable can be later used in utility functions like `Table.batchUpsert()`.
  *
  * @param T The return type of the SQL execution result.
  * @param S The type of SQL statement that is executed.
  */
 interface BlockingExecutable<out T, S : Statement<T>> {
+    /** The actual Exposed [Statement] on which the specific execution logic should be used. */
     val statement: S
 
     /**
@@ -54,7 +53,7 @@ interface BlockingExecutable<out T, S : Statement<T>> {
 
     /**
      * Uses a [transaction] connection and an [sql] string representation to return a precompiled SQL statement,
-     * stored as an implementation of [PreparedStatementApi].
+     * stored as an implementation of [JdbcPreparedStatementApi].
      */
     fun prepared(
         transaction: JdbcTransaction,
@@ -77,6 +76,43 @@ interface BlockingExecutable<out T, S : Statement<T>> {
             transaction.exec(this)
         }
     }
+}
+
+/**
+ * Returns the associated [BlockingExecutable] that accepts this [Statement] type as an argument,
+ * allowing the provided statement to be then sent to the database for execution.
+ *
+ *```kotlin
+ * transaction {
+ *     val insertTaskStatement = buildStatement {
+ *         Tasks.insert {
+ *             it[title] = "Follow Exposed tutorial"
+ *             it[isComplete] = false
+ *         }
+ *     }
+ *
+ *     exec(insertTask.toExecutable())
+ * }
+ * ```
+ *
+ * @throws IllegalStateException If the invoking statement does not have a corresponding built-in executable.
+ */
+fun <T : Any, S : Statement<T>> S.toExecutable(): BlockingExecutable<T, S> {
+    @Suppress("UNCHECKED_CAST")
+    return when (this) {
+        is BatchUpsertStatement -> BatchUpsertBlockingExecutable(this)
+        is UpsertStatement<*> -> UpsertBlockingExecutable(this as UpsertStatement<T>)
+        is SQLServerBatchInsertStatement -> SQLServerBatchInsertBlockingExecutable(this)
+        is BatchInsertStatement -> BatchInsertBlockingExecutable(this)
+        is InsertStatement<*> -> InsertBlockingExecutable(this as InsertStatement<T>)
+        is BatchUpdateStatement -> BatchUpdateBlockingExecutable(this)
+        is UpdateStatement -> UpdateBlockingExecutable(this)
+        is DeleteStatement -> DeleteBlockingExecutable(this)
+        is InsertSelectStatement -> InsertSelectBlockingExecutable(this)
+        is MergeStatement -> MergeBlockingExecutable(this)
+        is ReturningStatement -> ReturningBlockingExecutable(this)
+        else -> error("An executable could not be associated with ${this::class.qualifiedName}. Pass this statement to a custom executable instance directly.")
+    } as BlockingExecutable<T, S>
 }
 
 @OptIn(InternalApi::class)

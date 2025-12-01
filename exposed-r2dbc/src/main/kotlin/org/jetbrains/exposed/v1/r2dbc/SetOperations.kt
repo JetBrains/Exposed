@@ -76,7 +76,7 @@ sealed class SetOperation(
     override suspend fun count(): Long {
         return try {
             count = true
-            val rs = transaction.exec(this) as R2dbcResult
+            val rs = transaction.execQuery(this)
             rs.mapRows { (it.getObject(1) as? Number)?.toLong() }.single()
                 ?: error("Count query didn't return any results")
         } catch (cause: R2dbcException) {
@@ -91,7 +91,7 @@ sealed class SetOperation(
         val oldLimit = limit
         try {
             limit = 1
-            val rs = transaction.exec(this)!!
+            val rs = transaction.execQuery(this)
             return rs.rowsCount() == 0
         } catch (cause: R2dbcException) {
             throw ExposedR2dbcException(cause, this.getContexts(), TransactionManager.current())
@@ -161,7 +161,7 @@ sealed class SetOperation(
             .mapIndexed { index, expression -> expression to index }
             .toMap()
         val tx = TransactionManager.current()
-        val rs = tx.exec(queryToExecute)!! as R2dbcResult
+        val rs = tx.execQuery(queryToExecute)
 
         rs.mapRows { row ->
             val value = ResultRow.create(row, fieldIndex)
@@ -175,7 +175,7 @@ sealed class SetOperation(
             val threshold = transaction.db.config.logTooMuchResultSetsThreshold
             if (threshold > 0 && threshold < transaction.openResultRowsCount) {
                 val message = "Current opened result sets size ${transaction.openResultRowsCount} " +
-                    "exceeds $threshold threshold for transaction ${transaction.id} "
+                    "exceeds $threshold threshold for transaction ${transaction.transactionId} "
                 val stackTrace = Exception(message).stackTraceToString()
                 exposedLogger.error(stackTrace)
             }
@@ -275,27 +275,27 @@ class Except(
 /**
  * Combines all results from [this] query with the results of [other], WITHOUT including duplicates.
  *
- * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.UnionTests.testUnionWithLimit
+ * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.UnionTests.testUnionWithLimit
  */
 fun AbstractQuery<*>.union(other: Query): Union = Union(this, other)
 
 /**
  * Combines all results from [this] query with the results of [other], WITH duplicates included.
  *
- * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.UnionTests.testUnionWithAllResults
+ * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.UnionTests.testUnionWithAllResults
  */
 fun AbstractQuery<*>.unionAll(other: Query): UnionAll = UnionAll(this, other)
 
 /**
  * Returns only results from [this] query that are common to the results of [other], WITHOUT including any duplicates.
  *
- * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.UnionTests.testIntersectWithThreeQueries
+ * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.UnionTests.testIntersectWithThreeQueries
  */
 fun AbstractQuery<*>.intersect(other: Query): Intersect = Intersect(this, other)
 
 /**
  * Returns only distinct results from [this] query that are NOT common to the results of [other].
  *
- * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.UnionTests.testExceptWithTwoQueries
+ * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.UnionTests.testExceptWithTwoQueries
  */
 fun AbstractQuery<*>.except(other: Query): Except = Except(this, other)

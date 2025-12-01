@@ -28,8 +28,8 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
-import org.junit.Assert.fail
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.fail
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.*
@@ -449,14 +449,13 @@ class JavaTimeTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testTimestampAlwaysSavedInUTC() {
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Africa/Cairo"))
+
         val tester = object : Table("tester") {
             val timestamp_col = timestamp("timestamp_col")
         }
 
-        // TODO MYSQL_V8 test does not work on R2DBC now. The problem is that received timestamp is shifted by timezone.
-        withTables(excludeSettings = listOf(TestDB.MYSQL_V8), tester) {
-            // Cairo time zone
-            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Africa/Cairo"))
+        withTables(tester) {
             assertEquals("Africa/Cairo", ZoneId.systemDefault().id)
 
             val instant = Instant.now().asJdk8()
@@ -468,6 +467,42 @@ class JavaTimeTests : R2dbcDatabaseTestsBase() {
             assertEquals(
                 instant, tester.selectAll().single()[tester.timestamp_col]
             )
+        }
+    }
+
+    @Test
+    fun testInsertAndReadWithNonUtcTimezone() {
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Africa/Cairo"))
+
+        val tester = object : Table("testInsertAndReadWithNonUtcTimezone") {
+            val ts = timestamp("ts")
+        }
+
+        val testerText = object : Table("testInsertAndReadWithNonUtcTimezone") {
+            val ts = text("ts")
+        }
+
+        withTables(tester) {
+            val now = Instant.now().asJdk8()
+
+            tester.insert {
+                it[tester.ts] = now
+            }
+
+            // It gives HH:MM:SS format in local time zone
+            val nowTimeString = now.atZone(ZoneId.systemDefault()).toLocalTime().toString().trim('0')
+
+            // This check validates that the value on database has local time (instead of UTC)
+            // It should prevent from the case when we convert value to UTC on insert, and back from UTC to local on reading
+            testerText.selectAll().first()[testerText.ts].let { valueAsText ->
+                kotlin.test.assertTrue(
+                    valueAsText.contains(nowTimeString),
+                    "Timestamp as text from database must contain the time in local time zone. Timestamp: $valueAsText, timeString: $nowTimeString"
+                )
+            }
+
+            val valueFromDb = tester.selectAll().first()[tester.ts]
+            assertEquals(now, valueFromDb)
         }
     }
 }

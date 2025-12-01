@@ -3,8 +3,9 @@ package org.example.examples
 import org.example.tables.ActorsIntIdTable
 import org.example.tables.StarWarsFilmsIntIdTable
 import org.example.tables.StarWarsFilmsTable
-import org.jetbrains.exposed.v1.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.JoinType
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.*
 
 private const val MOVIE_SEQUEL_ID = 7
 private const val ACTORS_SEQUEL_ID = 2

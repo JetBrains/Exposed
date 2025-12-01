@@ -7,13 +7,14 @@ import org.jetbrains.exposed.v1.core.IColumnType
 import org.jetbrains.exposed.v1.core.QueryBuilder
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.datetime.KotlinLocalDateTimeColumnType
 import org.jetbrains.exposed.v1.datetime.datetime
 import org.jetbrains.exposed.v1.r2dbc.batchInsert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 

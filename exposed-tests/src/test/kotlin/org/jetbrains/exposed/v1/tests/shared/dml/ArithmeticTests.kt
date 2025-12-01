@@ -1,16 +1,15 @@
 package org.jetbrains.exposed.v1.tests.shared.dml
 
 import org.jetbrains.exposed.v1.core.DivideOp.Companion.withScale
-import org.jetbrains.exposed.v1.core.Expression
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.div
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.minus
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.times
 import org.jetbrains.exposed.v1.core.decimalLiteral
+import org.jetbrains.exposed.v1.core.div
+import org.jetbrains.exposed.v1.core.minus
+import org.jetbrains.exposed.v1.core.times
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 class ArithmeticTests : DatabaseTestsBase() {
@@ -35,7 +34,7 @@ class ArithmeticTests : DatabaseTestsBase() {
             val ten = decimalLiteral(BigDecimal(10))
             val three = decimalLiteral(BigDecimal(3))
 
-            val divTenToThreeWithoutScale = Expression.build { ten / three }
+            val divTenToThreeWithoutScale = ten / three
             val resultWithoutScale = cities.select(divTenToThreeWithoutScale).limit(1).single()[divTenToThreeWithoutScale]
             assertEquals(BigDecimal(3), resultWithoutScale)
 

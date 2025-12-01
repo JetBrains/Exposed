@@ -3,13 +3,15 @@ package org.jetbrains.exposed.v1.tests.shared.dml
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.entities.EntityTests
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import kotlin.test.assertNull
 
 class SelectTests : DatabaseTestsBase() {
@@ -339,7 +341,7 @@ class SelectTests : DatabaseTestsBase() {
         }
     }
 
-    private val inAnyAllFromTablesNotSupported = TestDB.ALL - (TestDB.ALL_POSTGRES + TestDB.ALL_H2 + TestDB.MYSQL_V8).toSet()
+    private val inAnyAllFromTablesNotSupported = TestDB.ALL - (TestDB.ALL_POSTGRES + TestDB.ALL_H2_V2 + TestDB.MYSQL_V8).toSet()
 
     @Test
     fun testInTable() {
@@ -549,11 +551,11 @@ class SelectTests : DatabaseTestsBase() {
                 "Alex",
                 "Something"
             )
-            val orOp = allUsers.map { Op.build { users.name eq it } }.compoundOr()
+            val orOp = allUsers.map { users.name eq it }.compoundOr()
             val userNamesOr = users.selectAll().where(orOp).map { it[users.name] }.toSet()
             assertEquals(allUsers, userNamesOr)
 
-            val andOp = allUsers.map { Op.build { users.name eq it } }.compoundAnd()
+            val andOp = allUsers.map { users.name eq it }.compoundAnd()
             assertEquals(0L, users.selectAll().where(andOp).count())
         }
     }
@@ -653,6 +655,16 @@ class SelectTests : DatabaseTestsBase() {
                 val offsetResult = alphabet.selectAll().offset(start).map { it[alphabet.letter] }
                 assertEqualLists(allLetters.drop(start.toInt()), offsetResult)
             }
+        }
+    }
+
+    @Test
+    fun testSelectForUpdate() {
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLSERVER, TestDB.SQLITE)) { cities, _, _ ->
+            val query = cities.selectAll()
+                .forUpdate()
+
+            Assumptions.assumeTrue(query.prepareSQL(TransactionManager.current()).contains("FOR UPDATE"))
         }
     }
 }

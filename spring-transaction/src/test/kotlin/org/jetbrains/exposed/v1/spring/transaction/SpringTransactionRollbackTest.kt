@@ -6,7 +6,9 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -16,8 +18,6 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import org.springframework.transaction.annotation.Transactional
 import javax.sql.DataSource
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
@@ -28,7 +28,7 @@ class SpringTransactionRollbackTest {
 
     val container = AnnotationConfigApplicationContext(TransactionManagerAttributeSourceTestConfig::class.java)
 
-    @BeforeTest
+    @BeforeEach
     fun beforeTest() {
         val testRollback = container.getBean(TestRollback::class.java)
         testRollback.init()
@@ -75,7 +75,7 @@ class SpringTransactionRollbackTest {
         assertEquals(1, testRollback.entireTableSize())
     }
 
-    @AfterTest
+    @AfterEach
     fun afterTest() {
         container.close()
     }

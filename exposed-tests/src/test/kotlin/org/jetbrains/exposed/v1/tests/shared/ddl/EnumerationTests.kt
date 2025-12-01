@@ -9,6 +9,7 @@ import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
@@ -16,7 +17,7 @@ import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import org.postgresql.util.PGobject
 
 class EnumerationTests : DatabaseTestsBase() {
@@ -26,13 +27,6 @@ class EnumerationTests : DatabaseTestsBase() {
         Bar, Baz;
 
         override fun toString(): String = "Foo Enum ToString: $name"
-    }
-
-    class PGEnum<T : Enum<T>>(enumTypeName: String, enumValue: T?) : PGobject() {
-        init {
-            value = enumValue?.name
-            type = enumTypeName
-        }
     }
 
     object EnumTable : IntIdTable("EnumTable") {
@@ -45,7 +39,10 @@ class EnumerationTests : DatabaseTestsBase() {
                 { value -> Foo.valueOf(value as String) },
                 { value ->
                     when (currentDialectTest) {
-                        is PostgreSQLDialect -> PGEnum(sql, value)
+                        is PostgreSQLDialect -> PGobject().apply {
+                            this.value = value.name
+                            type = sql
+                        }
                         else -> value.name
                     }
                 }
@@ -74,7 +71,7 @@ class EnumerationTests : DatabaseTestsBase() {
                     exec("CREATE TYPE FooEnum AS ENUM ('Bar', 'Baz');")
                 }
                 EnumTable.initEnumColumn(sqlType)
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(EnumTable)
+                SchemaUtils.create(EnumTable)
                 // drop shared table object's unique index if created in other test
                 if (EnumTable.indices.isNotEmpty()) {
                     exec(EnumTable.indices.first().dropStatement().single())
@@ -99,7 +96,7 @@ class EnumerationTests : DatabaseTestsBase() {
                 assertEquals(Foo.Bar, enumClass.reload(entity, true)!!.enum)
             } finally {
                 try {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(EnumTable)
+                    SchemaUtils.drop(EnumTable)
                 } catch (ignore: Exception) {}
             }
         }
@@ -122,7 +119,7 @@ class EnumerationTests : DatabaseTestsBase() {
                 with(EnumTable) {
                     enumColumn.default(Foo.Bar)
                 }
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(EnumTable)
+                SchemaUtils.create(EnumTable)
                 // drop shared table object's unique index if created in other test
                 if (EnumTable.indices.isNotEmpty()) {
                     exec(EnumTable.indices.first().dropStatement().single())
@@ -133,7 +130,7 @@ class EnumerationTests : DatabaseTestsBase() {
                 assertEquals(Foo.Bar, default)
             } finally {
                 try {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(EnumTable)
+                    SchemaUtils.drop(EnumTable)
                 } catch (ignore: Exception) {}
             }
         }
@@ -165,10 +162,10 @@ class EnumerationTests : DatabaseTestsBase() {
                 with(EnumTable) {
                     if (indices.isEmpty()) enumColumn.uniqueIndex()
                 }
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(EnumTable)
+                SchemaUtils.create(EnumTable)
 
                 referenceTable.initRefColumn()
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(referenceTable)
+                SchemaUtils.create(referenceTable)
 
                 val fooBar = Foo.Bar
                 val id1 = EnumTable.insert {
@@ -181,9 +178,9 @@ class EnumerationTests : DatabaseTestsBase() {
                 assertEquals(fooBar, EnumTable.selectAll().single()[EnumTable.enumColumn])
                 assertEquals(fooBar, referenceTable.selectAll().single()[referenceTable.referenceColumn])
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(referenceTable)
+                SchemaUtils.drop(referenceTable)
                 exec(EnumTable.indices.first().dropStatement().single())
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(EnumTable)
+                SchemaUtils.drop(EnumTable)
             }
         }
     }

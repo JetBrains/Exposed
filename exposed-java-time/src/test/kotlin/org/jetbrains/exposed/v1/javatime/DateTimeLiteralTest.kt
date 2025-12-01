@@ -1,18 +1,18 @@
 package org.jetbrains.exposed.v1.javatime
 
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.test.assertNotNull
-
-// TODO think about design of datetime module packages & extracting tests to JDBC + R2DBC test modules
 
 class DateTimeLiteralTest : DatabaseTestsBase() {
     private val defaultDate = LocalDate.of(2000, 1, 1)

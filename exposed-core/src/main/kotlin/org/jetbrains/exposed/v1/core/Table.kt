@@ -2,13 +2,12 @@
 
 package org.jetbrains.exposed.v1.core
 
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.wrap
 import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.statements.api.ExposedBlob
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.exceptions.DuplicateColumnException
 import java.math.BigDecimal
@@ -90,7 +89,7 @@ abstract class ColumnSet : FieldSet {
         onColumn: Expression<*>? = null,
         otherColumn: Expression<*>? = null,
         lateral: Boolean = false,
-        additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+        additionalConstraint: (() -> Op<Boolean>)? = null,
     ): Join
 
     /** Creates an inner join relation with [otherTable]. */
@@ -119,7 +118,7 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.innerJoin(
     otherTable: C2,
     onColumn: (C1.() -> Expression<*>)? = null,
     otherColumn: (C2.() -> Expression<*>)? = null,
-    additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    additionalConstraint: (() -> Op<Boolean>)? = null,
 ): Join = join(otherTable, JoinType.INNER, onColumn?.invoke(this), otherColumn?.invoke(otherTable), false, additionalConstraint)
 
 /**
@@ -132,7 +131,7 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.leftJoin(
     otherTable: C2,
     onColumn: (C1.() -> Expression<*>)? = null,
     otherColumn: (C2.() -> Expression<*>)? = null,
-    additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    additionalConstraint: (() -> Op<Boolean>)? = null,
 ): Join = join(otherTable, JoinType.LEFT, onColumn?.invoke(this), otherColumn?.invoke(otherTable), false, additionalConstraint)
 
 /**
@@ -145,7 +144,7 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.rightJoin(
     otherTable: C2,
     onColumn: (C1.() -> Expression<*>)? = null,
     otherColumn: (C2.() -> Expression<*>)? = null,
-    additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    additionalConstraint: (() -> Op<Boolean>)? = null,
 ): Join = join(otherTable, JoinType.RIGHT, onColumn?.invoke(this), otherColumn?.invoke(otherTable), false, additionalConstraint)
 
 /**
@@ -158,7 +157,7 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.fullJoin(
     otherTable: C2,
     onColumn: (C1.() -> Expression<*>)? = null,
     otherColumn: (C2.() -> Expression<*>)? = null,
-    additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    additionalConstraint: (() -> Op<Boolean>)? = null,
 ): Join = join(otherTable, JoinType.FULL, onColumn?.invoke(this), otherColumn?.invoke(otherTable), false, additionalConstraint)
 
 /**
@@ -171,7 +170,7 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.crossJoin(
     otherTable: C2,
     onColumn: (C1.() -> Expression<*>)? = null,
     otherColumn: (C2.() -> Expression<*>)? = null,
-    additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    additionalConstraint: (() -> Op<Boolean>)? = null,
 ): Join = join(otherTable, JoinType.CROSS, onColumn?.invoke(this), otherColumn?.invoke(otherTable), false, additionalConstraint)
 
 /**
@@ -229,7 +228,7 @@ class Join(
         onColumn: Expression<*>? = null,
         otherColumn: Expression<*>? = null,
         lateral: Boolean = false,
-        additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+        additionalConstraint: (() -> Op<Boolean>)? = null,
     ) : this(table) {
         val newJoin = when {
             onColumn != null && otherColumn != null -> {
@@ -264,7 +263,7 @@ class Join(
         onColumn: Expression<*>?,
         otherColumn: Expression<*>?,
         lateral: Boolean,
-        additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?
+        additionalConstraint: (() -> Op<Boolean>)?
     ): Join {
         val cond = if (onColumn != null && otherColumn != null) {
             listOf(JoinCondition(onColumn, otherColumn))
@@ -322,7 +321,7 @@ class Join(
         otherTable: ColumnSet,
         joinType: JoinType,
         cond: List<JoinCondition>,
-        additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?,
+        additionalConstraint: (() -> Op<Boolean>)?,
         lateral: Boolean = false
     ): Join = join(JoinPart(joinType, otherTable, cond, lateral, additionalConstraint))
 
@@ -345,7 +344,7 @@ class Join(
         /** Indicates whether the LATERAL keyword should be included in the JOIN operation. */
         val lateral: Boolean = false,
         /** The conditions used to join tables, placed in the `ON` clause. */
-        val additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
+        val additionalConstraint: (() -> Op<Boolean>)? = null
     ) {
         init {
             require(
@@ -387,7 +386,7 @@ class Join(
                     append(" AND ")
                 }
                 append(" (")
-                append(SqlExpressionBuilder.(additionalConstraint)())
+                append(additionalConstraint())
                 append(")")
             }
         }
@@ -427,6 +426,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      *
      * If the table is quoted, a dot in the name is considered part of the table name and the whole string is taken to
      * be the table name as is. If it is not quoted, whatever is after the dot is considered to be the table name.
+     * @suppress
      */
     @InternalApi
     val tableNameWithoutScheme: String
@@ -439,6 +439,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * 1. Forming primary and foreign key names
      * 2. Comparing table names from database metadata (except MySQL and MariaDB)
      * @see org.jetbrains.exposed.v1.sql.vendors.VendorDialect.metadataMatchesTable
+     * @suppress
      */
     @InternalApi
     val tableNameWithoutSchemeSanitized: String
@@ -528,7 +529,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * Returns the table name in proper case.
      * Should be called within transaction or default [tableName] will be returned.
      */
-    fun nameInDatabaseCase(): String = tableName.inProperCase()
+    fun nameInDatabaseCase(): String {
+        @OptIn(InternalApi::class)
+        return tableName.inProperCase()
+    }
 
     /**
      * Returns the table name, without schema and in proper case, with wrapping single- and double-quotation characters removed.
@@ -558,7 +562,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         onColumn: Expression<*>?,
         otherColumn: Expression<*>?,
         lateral: Boolean,
-        additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?
+        additionalConstraint: (() -> Op<Boolean>)?
     ): Join = Join(this, otherTable, joinType, onColumn, otherColumn, lateral, additionalConstraint)
 
     override infix fun innerJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.INNER)
@@ -617,7 +621,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * Represents a primary key composed by the specified [columns], and with the specified [name].
      * If no name is specified, the table name with the "pk_" prefix will be used instead.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.demo.sql.Users
+     * @sample org.jetbrains.exposed.v1.tests.demo.sql.Users
      */
     inner class PrimaryKey(
         /** Returns the columns that compose the primary key. */
@@ -651,10 +655,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Converts the @receiver column to an [EntityID] column. */
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> Column<T>.entityId(): Column<EntityID<T>> {
-        val newColumn = Column<EntityID<T>>(table, name, EntityIDColumnType(this)).also {
-            it.defaultValueFun = defaultValueFun?.let { { EntityIDFunctionProvider.createEntityID(it(), table as IdTable<T>) } }
-            it.dbDefaultValue = dbDefaultValue?.let { default -> default as Expression<EntityID<T>> }
-            it.extraDefinitions = extraDefinitions
+        val newColumn = Column<EntityID<T>>(table, name, EntityIDColumnType(this)).also { newCol ->
+            newCol.defaultValueFun = defaultValueFun?.let { { EntityIDFunctionProvider.createEntityID(it(), table as IdTable<T>) } }
+            newCol.dbDefaultValue = dbDefaultValue?.let { default -> default as Expression<EntityID<T>> }
+            newCol.extraDefinitions = extraDefinitions
         }
         (table as IdTable<T>).addIdColumnInternal(newColumn)
         return replaceColumn(this, newColumn)
@@ -857,7 +861,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * For the rest, please specify a length.
      * For H2 dialects, the maximum size is 1,000,000,000 bytes.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.DDLTests.testBinaryWithoutLength
+     * @sample org.jetbrains.exposed.v1.tests.shared.DDLTests.testBinaryWithoutLength
      */
     fun binary(name: String): Column<ByteArray> = registerColumn(name, BasicBinaryColumnType())
 
@@ -866,7 +870,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      *
      * **Note:** The length of the binary column is not required in PostgreSQL and will be ignored.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.DDLTests.testBinary
+     * @sample org.jetbrains.exposed.v1.tests.shared.DDLTests.testBinary
      */
     fun binary(name: String, length: Int): Column<ByteArray> = registerColumn(name, BinaryColumnType(length))
 
@@ -875,7 +879,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * If [useObjectIdentifier] is `true`, then the column will use the `OID` type on PostgreSQL
      * for storing large binary objects. The parameter must not be `true` for other databases.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.types.BlobColumnTypeTests.testBlob
+     * @sample org.jetbrains.exposed.v1.tests.shared.types.BlobColumnTypeTests.testBlob
      */
     fun blob(name: String, useObjectIdentifier: Boolean = false): Column<ExposedBlob> =
         registerColumn(name, BlobColumnType(useObjectIdentifier))
@@ -1029,14 +1033,14 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     @Deprecated(
         message = "This function will be removed in future releases.",
         replaceWith = ReplaceWith("autoIncrement(idSeqName)"),
-        level = DeprecationLevel.WARNING
+        level = DeprecationLevel.ERROR
     )
     fun <N : Any> Column<EntityID<N>>.autoinc(idSeqName: String? = null): Column<EntityID<N>> =
         cloneWithAutoInc(idSeqName).also { replaceColumn(this, it) }
 
     /** Sets the default value for this column in the database side. */
     fun <T> Column<T>.default(defaultValue: T): Column<T> = apply {
-        dbDefaultValue = with(SqlExpressionBuilder) { asLiteral(defaultValue) }
+        dbDefaultValue = asLiteral(defaultValue)
         defaultValueFun = { defaultValue }
     }
 
@@ -1084,7 +1088,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      *
      * @receiver A column from the current table where reference values will be stored.
      * @param ref A column from another table which will be used as a "parent".
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.JoinTests.testJoin04
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.JoinTests.testJoin04
      */
     infix fun <T : Any, S : T, C : Column<S>> C.references(ref: Column<T>): C = references(
         ref,
@@ -1104,7 +1108,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param onDelete Optional [ReferenceOption] for cases when a linked row from a parent table will be deleted.
      * @param onUpdate Optional [ReferenceOption] for cases when a value in a referenced column will be changed.
      * @param fkName Optional foreign key constraint name.
-     * @sample org.jetbrains.exposed.v1.sql.tests.sqlite.ForeignKeyConstraintTests.testUpdateAndDeleteRulesReadCorrectlyWhenSpecifiedInChildTable
+     * @sample org.jetbrains.exposed.v1.tests.sqlite.ForeignKeyConstraintTests.testUpdateAndDeleteRulesReadCorrectlyWhenSpecifiedInChildTable
      */
     fun <T : Any, S : T, C : Column<S>> C.references(
         ref: Column<T>,
@@ -1132,7 +1136,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param onDelete Optional [ReferenceOption] for cases when a linked row from a parent table will be deleted.
      * @param onUpdate Optional [ReferenceOption] for cases when a value in a referenced column will be changed.
      * @param fkName Optional foreign key constraint name.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.ddl.CreateMissingTablesAndColumnsTests.ExplicitTable
+     * @sample org.jetbrains.exposed.v1.tests.shared.ddl.CreateMissingTablesAndColumnsTests.ExplicitTable
      */
     @JvmName("referencesById")
     fun <T : Any, S : T, C : Column<S>> C.references(
@@ -1162,7 +1166,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param onDelete Optional [ReferenceOption] for cases when a linked row from a parent table will be deleted.
      * @param onUpdate Optional [ReferenceOption] for cases when a value in a referenced column will be changed.
      * @param fkName Optional foreign key constraint name.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Orders
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Orders
      */
     fun <T : Any> reference(
         name: String,
@@ -1192,7 +1196,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param onDelete Optional [ReferenceOption] for cases when a linked row from a parent table will be deleted.
      * @param onUpdate Optional [ReferenceOption] for cases when a value in a referenced column will be changed.
      * @param fkName Optional foreign key constraint name.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Schools
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Schools
      */
     @Suppress("UNCHECKED_CAST")
     @JvmName("referenceByIdColumn")
@@ -1219,7 +1223,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param onDelete Optional [ReferenceOption] for cases when a linked row from a parent table will be deleted.
      * @param onUpdate Optional [ReferenceOption] for cases when a value in a referenced column will be changed.
      * @param fkName Optional foreign key constraint name.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Schools
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Schools
      */
     fun <T : Any> reference(
         name: String,
@@ -1245,7 +1249,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param onDelete Optional [ReferenceOption] for cases when a linked row from a parent table will be deleted.
      * @param onUpdate Optional [ReferenceOption] for cases when a value in a referenced column will be changed.
      * @param fkName Optional foreign key constraint name.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Posts
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Posts
      */
     fun <T : Any> optReference(
         name: String,
@@ -1265,7 +1269,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param refColumn A column from another table which will be used as a "parent".
      * @param onDelete Optional [ReferenceOption] for cases when a linked row from a parent table will be deleted.
      * @param onUpdate Optional [ReferenceOption] for cases when a value in a referenced column will be changed.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Posts
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Posts
      */
     @JvmName("optReferenceByIdColumn")
     fun <T : Any, E : EntityID<T>> optReference(
@@ -1287,7 +1291,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param onDelete Optional [ReferenceOption] for cases when a linked row from a parent table will be deleted.
      * @param onUpdate Optional [ReferenceOption] for cases when a value in a referenced column will be changed.
      * @param fkName Optional foreign key constraint name.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Schools
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Schools
      */
     fun <T : Any> optReference(
         name: String,
@@ -1518,11 +1522,11 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     ) {
         _indices.add(
             Index(
-                columns.toList(),
+                columns.asList(),
                 isUnique,
                 customIndexName,
                 indexType,
-                filterCondition?.invoke(SqlExpressionBuilder),
+                filterCondition?.invoke(),
                 functions,
                 functions?.let { this }
             )
@@ -1582,7 +1586,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param onUpdate [ReferenceOption] when performing update operations.
      * @param onDelete [ReferenceOption] when performing delete operations.
      * @param name Custom foreign key constraint name.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.ddl.CreateMissingTablesAndColumnsTests.CompositeForeignKeyTable
+     * @sample org.jetbrains.exposed.v1.tests.shared.ddl.CreateMissingTablesAndColumnsTests.CompositeForeignKeyTable
      */
     fun foreignKey(
         vararg from: Column<*>,
@@ -1609,7 +1613,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param onUpdate [ReferenceOption] when performing update operations.
      * @param onDelete [ReferenceOption] when performing delete operations.
      * @param name Custom foreign key constraint name.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.DDLTests.testCompositeFKReferencingUniqueIndex
+     * @sample org.jetbrains.exposed.v1.tests.shared.DDLTests.testCompositeFKReferencingUniqueIndex
      */
     fun foreignKey(
         vararg references: Pair<Column<*>, Column<*>>,
@@ -1629,9 +1633,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * the database engine decides the default name.
      * @param op The expression against which the newly inserted values will be compared.
      */
-    fun <T> Column<T>.check(name: String = "", op: SqlExpressionBuilder.(Column<T>) -> Op<Boolean>): Column<T> = apply {
+    fun <T> Column<T>.check(name: String = "", op: (Column<T>) -> Op<Boolean>): Column<T> = apply {
         if (name.isEmpty() || table.checkConstraints.none { it.first.equals(name, true) }) {
-            table.checkConstraints.add(name to SqlExpressionBuilder.op(this))
+            table.checkConstraints.add(name to op(this))
         } else {
             exposedLogger
                 .warn("A CHECK constraint with name '$name' was ignored because there is already one with that name")
@@ -1645,9 +1649,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * the database engine decides the default name.
      * @param op The expression against which the newly inserted values will be compared.
      */
-    fun check(name: String = "", op: SqlExpressionBuilder.() -> Op<Boolean>) {
+    fun check(name: String = "", op: () -> Op<Boolean>) {
         if (name.isEmpty() || checkConstraints.none { it.first.equals(name, true) }) {
-            checkConstraints.add(name to SqlExpressionBuilder.op())
+            checkConstraints.add(name to op())
         } else {
             exposedLogger
                 .warn("A CHECK constraint with name '$name' was ignored because there is already one with that name")
@@ -1694,7 +1698,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     @OptIn(InternalApi::class)
     internal fun primaryKeyConstraint(): String? {
         return primaryKey?.let { primaryKey ->
-            val tr = CoreTransactionManager.currentTransaction()
+            val tr = currentTransaction()
             val constraint = tr.db.identifierManager.cutIfNecessaryAndQuote(primaryKey.name)
             return primaryKey.columns
                 .joinToString(prefix = "CONSTRAINT $constraint PRIMARY KEY (", postfix = ")", transform = tr::identity)
@@ -1713,7 +1717,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             if (currentDialect.supportsIfNotExists) {
                 append("IF NOT EXISTS ")
             }
-            append(CoreTransactionManager.currentTransaction().identity(this@Table))
+            append(currentTransaction().identity(this@Table))
 
             if (columns.isNotEmpty()) {
                 columns.joinTo(this, prefix = " (") { column ->
@@ -1759,7 +1763,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             if (currentDialect.supportsIfNotExists) {
                 append("IF EXISTS ")
             }
-            append(CoreTransactionManager.currentTransaction().identity(this@Table))
+            append(currentTransaction().identity(this@Table))
             if (currentDialectIfAvailable is OracleDialect) {
                 append(" CASCADE CONSTRAINTS")
             } else if (currentDialectIfAvailable is PostgreSQLDialect && TableUtils.checkCycle(this@Table)) {

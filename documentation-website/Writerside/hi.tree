@@ -8,11 +8,15 @@
 
     <toc-element topic="Home.topic" toc-title="Home"/>
     <toc-element topic="About.topic" toc-title="About"/>
-    <toc-element topic="Getting-Started-with-Exposed.topic" toc-title="Get started with Exposed"/>
+    <toc-element toc-title="Get started">
+        <toc-element topic="Get-Started-with-Exposed.topic" toc-title="Get started with Exposed" accepts-web-file-names="getting-started-with-exposed.html"/>
+        <toc-element topic="Get-started-with-Exposed-DAO.md"/>
+    </toc-element>
     <toc-element topic="Exposed-Modules.md"/>
     <toc-element toc-title="Databases">
         <toc-element topic="Working-with-Database.md"/>
         <toc-element topic="Working-with-DataSource.md"/>
+        <toc-element topic="Working-with-ConnectionFactory.md"/>
     </toc-element>
     <toc-element toc-title="Schemas">
         <toc-element topic="Working-with-Tables.topic"/>
@@ -24,6 +28,7 @@
             <toc-element topic="Date-and-time-types.topic"/>
             <toc-element topic="JSON-And-JSONB-types.topic"/>
             <toc-element topic="Custom-data-types.topic"/>
+            <toc-element topic="Custom-type-mapping.md"/>
             <toc-element topic="Column-transformation.topic"/>
         </toc-element>
         <toc-element topic="SQL-Functions.md"/>
@@ -41,6 +46,7 @@
         <toc-element topic="DSL-CRUD-operations.topic"/>
         <toc-element topic="Working-with-Sequence.topic"/>
         <toc-element topic="DSL-Querying-data.topic"/>
+        <toc-element topic="DSL-Statement-Builder.md"/>
     </toc-element>
     <toc-element toc-title="Deep Dive into DAO">
         <toc-element topic="DAO-Table-Types.topic"/>
@@ -50,7 +56,8 @@
     </toc-element>
     <toc-element toc-title="Releases">
         <toc-element topic="Breaking-Changes.md"/>
-        <toc-element topic="Migration-Guide.md"/>
+        <toc-element topic="Migration-Guide-0-46-0.md"/>
+        <toc-element topic="Migration-Guide-1-0-0.md"/>
     </toc-element>
     <toc-element topic="Frequently-Asked-Questions.md"/>
     <toc-element toc-title="Samples" href="https://github.com/JetBrains/Exposed/tree/main/samples"/>

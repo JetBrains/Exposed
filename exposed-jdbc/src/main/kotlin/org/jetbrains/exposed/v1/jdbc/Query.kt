@@ -1,12 +1,9 @@
 package org.jetbrains.exposed.v1.jdbc
 
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greater
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.less
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
-import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.jdbc.statements.BlockingExecutable
 import org.jetbrains.exposed.v1.jdbc.statements.StatementIterator
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
@@ -38,7 +35,7 @@ open class Query(
 
     override fun forUpdate(option: ForUpdateOption): Query {
         @OptIn(InternalApi::class)
-        this.forUpdate = if (option is ForUpdateOption.NoForUpdateOption || currentDialect.supportsSelectForUpdate) {
+        this.forUpdate = if (option is ForUpdateOption.NoForUpdateOption || transaction.db.supportsSelectForUpdate) {
             option
         } else {
             null
@@ -76,9 +73,6 @@ open class Query(
      * @param columns The columns and their sort orders to apply the `DISTINCT ON` clause.
      * @return The current `Query` instance with the `DISTINCT ON` clause and reordering applied.
      */
-    // TODO Check if it could be moved to the base query class,
-    // TODO probably we need to create another base query class that extends AbstractQuery class and used
-    // TODO as a base for R2DBC and JDBC Queries
     fun withDistinctOn(vararg columns: Pair<Column<*>, SortOrder>): Query = apply {
         if (columns.isEmpty()) return@apply
 
@@ -93,7 +87,7 @@ open class Query(
      *
      * @param body Builder for the new column set defined using `select()`, with the current [set]'s `source`
      * property used as the receiver and the current [set] as an argument.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.AdjustQueryTests.testAdjustQuerySlice
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.AdjustQueryTests.testAdjustQuerySlice
      */
     inline fun adjustSelect(body: ColumnSet.(FieldSet) -> Query): Query = apply { set = set.source.body(set).set }
 
@@ -102,7 +96,7 @@ open class Query(
      * while preserving its `fields` property.
      *
      * @param body Builder for the new column set, with the previous column set value as the receiver.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryColumnSet
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.AdjustQueryTests.testAdjustQueryColumnSet
      */
     inline fun adjustColumnSet(body: ColumnSet.() -> ColumnSet): Query {
         return adjustSelect { oldSlice -> body().select(oldSlice.fields) }
@@ -112,21 +106,21 @@ open class Query(
      * Changes the [where] field of this query.
      *
      * @param body Builder for the new `WHERE` condition, with the previous value used as the receiver.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryWhere
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.AdjustQueryTests.testAdjustQueryWhere
      */
     fun adjustWhere(body: Op<Boolean>?.() -> Op<Boolean>): Query = apply { where = where.body() }
 
     /**
      * Appends a `WHERE` clause with the specified [predicate] to this `SELECT` query.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.SelectTests.testSelect
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testSelect
      */
-    fun where(predicate: SqlExpressionBuilder.() -> Op<Boolean>): Query = where(SqlExpressionBuilder.predicate())
+    fun where(predicate: () -> Op<Boolean>): Query = where(predicate())
 
     /**
      * Appends a `WHERE` clause with the specified [predicate] to this `SELECT` query.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.ExistsTests.testExists01
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.ExistsTests.testExists01
      */
     fun where(predicate: Op<Boolean>): Query {
         where?.let {
@@ -145,7 +139,7 @@ open class Query(
      * @param batchSize Size of each sub-collection to return.
      * @param sortOrder Order in which the results should be retrieved.
      * @return Retrieved results as a collection of batched [ResultRow] sub-collections.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.FetchBatchedResultsTests.testFetchBatchedResultsWithWhereAndSetBatchSize
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.FetchBatchedResultsTests.testFetchBatchedResultsWithWhereAndSetBatchSize
      */
     fun fetchBatchedResults(
         batchSize: Int = 1000,
@@ -227,7 +221,7 @@ open class Query(
     /**
      * Returns the number of results retrieved after query execution.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.InsertSelectTests.testInsertSelect02
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.InsertSelectTests.testInsertSelect02
      */
     override fun count(): Long {
         return if (distinct || distinctOn != null || groupedByColumns.isNotEmpty() || limit != null || offset > 0) {
@@ -258,12 +252,9 @@ open class Query(
         } else {
             try {
                 count = true
-                // TODO !!! it would be not nice if users have to cast `rs` to `JdbcResult`, it's large breaking change.
-                transaction.exec(this) { rs ->
-                    check(rs is JdbcResult) { "Unexpected result type: $rs" }
-
+                transaction.execQuery(this) { rs ->
                     rs.next()
-                    (rs.getObject(1) as? Number)?.toLong().also {
+                    rs.getLong(1).also {
                         rs.close()
                     }
                 }!!
@@ -276,14 +267,13 @@ open class Query(
     /**
      * Returns whether any results were retrieved by query execution.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.SelectTests.testSizedIterable
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testSizedIterable
      */
     override fun empty(): Boolean {
         val oldLimit = limit
         try {
             if (!isForUpdate()) limit = 1
-            val resultSet = transaction.exec(this)!!
-            check(resultSet is JdbcResult) { "Unexpected result type: $resultSet" }
+            val resultSet = transaction.execQuery(this)
             return !resultSet.next().also { resultSet.close() }
         } finally {
             limit = oldLimit
@@ -309,8 +299,8 @@ open class Query(
         }
 
     override fun iterator(): Iterator<ResultRow> {
-        val rs = transaction.exec(queryToExecute)!! as JdbcResult
-        val resultIterator = ResultIterator(rs.result)
+        val rs = transaction.execQuery(queryToExecute)
+        val resultIterator = ResultIterator(rs)
         return if (transaction.db.supportsMultipleResultSets) {
             resultIterator
         } else {
@@ -336,7 +326,7 @@ open class Query(
             val threshold = transaction.db.config.logTooMuchResultSetsThreshold
             if (threshold > 0 && threshold < transaction.openResultSetsCount) {
                 val message =
-                    "Current opened result sets size ${transaction.openResultSetsCount} exceeds $threshold threshold for transaction ${transaction.id} "
+                    "Current opened result sets size ${transaction.openResultSetsCount} exceeds $threshold threshold for transaction ${transaction.transactionId} "
                 val stackTrace = Exception(message).stackTraceToString()
                 exposedLogger.error(stackTrace)
             }
@@ -349,8 +339,8 @@ open class Query(
  * Mutate Query instance and add `andPart` to having condition with `and` operator.
  * @return same Query instance which was provided as a receiver.
  */
-fun Query.andHaving(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHaving {
-    val expr = Op.build { andPart() }
+fun Query.andHaving(andPart: () -> Op<Boolean>) = adjustHaving {
+    val expr = andPart()
     if (this == null) expr else this and expr
 }
 
@@ -358,8 +348,8 @@ fun Query.andHaving(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHav
  * Mutate Query instance and add `orPart` to having condition with `or` operator.
  * @return same Query instance which was provided as a receiver.
  */
-fun Query.orHaving(orPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHaving {
-    val expr = Op.build { orPart() }
+fun Query.orHaving(orPart: () -> Op<Boolean>) = adjustHaving {
+    val expr = orPart()
     if (this == null) expr else this or expr
 }
 
@@ -367,8 +357,8 @@ fun Query.orHaving(orPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHavin
  * Mutate Query instance and add `andPart` to where condition with `and` operator.
  * @return same Query instance which was provided as a receiver.
  */
-fun Query.andWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
-    val expr = Op.build { andPart() }
+fun Query.andWhere(andPart: () -> Op<Boolean>) = adjustWhere {
+    val expr = andPart()
     if (this == null) expr else this and expr
 }
 
@@ -376,7 +366,7 @@ fun Query.andWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWher
  * Mutate Query instance and add `orPart` to where condition with `or` operator.
  * @return same Query instance which was provided as a receiver.
  */
-fun Query.orWhere(orPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
-    val expr = Op.build { orPart() }
+fun Query.orWhere(orPart: () -> Op<Boolean>) = adjustWhere {
+    val expr = orPart()
     if (this == null) expr else this or expr
 }

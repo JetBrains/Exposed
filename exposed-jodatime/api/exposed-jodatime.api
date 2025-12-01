@@ -14,24 +14,6 @@ public final class org/jetbrains/exposed/v1/jodatime/Date : org/jetbrains/expose
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 }
 
-public final class org/jetbrains/exposed/v1/jodatime/DateColumnType : org/jetbrains/exposed/v1/core/ColumnType, org/jetbrains/exposed/v1/core/IDateColumnType {
-	public fun <init> (Z)V
-	public fun equals (Ljava/lang/Object;)Z
-	public fun getHasTimePart ()Z
-	public final fun getTime ()Z
-	public fun hashCode ()I
-	public synthetic fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueAsDefaultString (Lorg/joda/time/DateTime;)Ljava/lang/String;
-	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueToString (Lorg/joda/time/DateTime;)Ljava/lang/String;
-	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun notNullValueToDB (Lorg/joda/time/DateTime;)Ljava/lang/Object;
-	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
-	public fun sqlType ()Ljava/lang/String;
-	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun valueFromDB (Ljava/lang/Object;)Lorg/joda/time/DateTime;
-}
-
 public final class org/jetbrains/exposed/v1/jodatime/DateColumnTypeKt {
 	public static final fun date (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Column;
 	public static final fun datetime (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Column;
@@ -62,17 +44,12 @@ public final class org/jetbrains/exposed/v1/jodatime/DateFunctionsKt {
 	public static final fun year (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/jodatime/Year;
 }
 
-public final class org/jetbrains/exposed/v1/jodatime/DateTimeWithTimeZoneColumnType : org/jetbrains/exposed/v1/core/ColumnType, org/jetbrains/exposed/v1/core/IDateColumnType {
+public final class org/jetbrains/exposed/v1/jodatime/DateTimeWithTimeZoneColumnType : org/jetbrains/exposed/v1/core/datetime/OffsetDateTimeColumnType {
 	public fun <init> ()V
-	public fun getHasTimePart ()Z
-	public synthetic fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueAsDefaultString (Lorg/joda/time/DateTime;)Ljava/lang/String;
-	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueToString (Lorg/joda/time/DateTime;)Ljava/lang/String;
-	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun notNullValueToDB (Lorg/joda/time/DateTime;)Ljava/lang/Object;
-	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
-	public fun sqlType ()Ljava/lang/String;
+	public synthetic fun fromOffsetDateTime (Ljava/time/OffsetDateTime;)Ljava/lang/Object;
+	public fun fromOffsetDateTime (Ljava/time/OffsetDateTime;)Lorg/joda/time/DateTime;
+	public synthetic fun toOffsetDateTime (Ljava/lang/Object;)Ljava/time/OffsetDateTime;
+	public fun toOffsetDateTime (Lorg/joda/time/DateTime;)Ljava/time/OffsetDateTime;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB (Ljava/lang/Object;)Lorg/joda/time/DateTime;
 }
@@ -89,18 +66,32 @@ public final class org/jetbrains/exposed/v1/jodatime/Hour : org/jetbrains/expose
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 }
 
-public final class org/jetbrains/exposed/v1/jodatime/LocalTimeColumnType : org/jetbrains/exposed/v1/core/ColumnType, org/jetbrains/exposed/v1/core/IDateColumnType {
+public final class org/jetbrains/exposed/v1/jodatime/JodaLocalDateColumnType : org/jetbrains/exposed/v1/core/datetime/LocalDateColumnType {
 	public fun <init> ()V
-	public fun getHasTimePart ()Z
-	public synthetic fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueAsDefaultString (Lorg/joda/time/LocalTime;)Ljava/lang/String;
-	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueToString (Lorg/joda/time/LocalTime;)Ljava/lang/String;
-	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun notNullValueToDB (Lorg/joda/time/LocalTime;)Ljava/lang/Object;
-	public fun sqlType ()Ljava/lang/String;
+	public synthetic fun fromLocalDate (Lkotlinx/datetime/LocalDate;)Ljava/lang/Object;
+	public fun fromLocalDate (Lkotlinx/datetime/LocalDate;)Lorg/joda/time/DateTime;
+	public synthetic fun toLocalDate (Ljava/lang/Object;)Lkotlinx/datetime/LocalDate;
+	public fun toLocalDate (Lorg/joda/time/DateTime;)Lkotlinx/datetime/LocalDate;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun valueFromDB (Ljava/lang/Object;)Lorg/joda/time/LocalTime;
+	public fun valueFromDB (Ljava/lang/Object;)Lorg/joda/time/DateTime;
+}
+
+public final class org/jetbrains/exposed/v1/jodatime/JodaLocalDateTimeColumnType : org/jetbrains/exposed/v1/core/datetime/LocalDateTimeColumnType {
+	public fun <init> ()V
+	public synthetic fun fromLocalDateTime (Lkotlinx/datetime/LocalDateTime;)Ljava/lang/Object;
+	public fun fromLocalDateTime (Lkotlinx/datetime/LocalDateTime;)Lorg/joda/time/DateTime;
+	public synthetic fun toLocalDateTime (Ljava/lang/Object;)Lkotlinx/datetime/LocalDateTime;
+	public fun toLocalDateTime (Lorg/joda/time/DateTime;)Lkotlinx/datetime/LocalDateTime;
+	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueFromDB (Ljava/lang/Object;)Lorg/joda/time/DateTime;
+}
+
+public final class org/jetbrains/exposed/v1/jodatime/JodaLocalTimeColumnType : org/jetbrains/exposed/v1/core/datetime/LocalTimeColumnType {
+	public fun <init> ()V
+	public synthetic fun fromLocalTime (Lkotlinx/datetime/LocalTime;)Ljava/lang/Object;
+	public fun fromLocalTime (Lkotlinx/datetime/LocalTime;)Lorg/joda/time/LocalTime;
+	public synthetic fun toLocalTime (Ljava/lang/Object;)Lkotlinx/datetime/LocalTime;
+	public fun toLocalTime (Lorg/joda/time/LocalTime;)Lkotlinx/datetime/LocalTime;
 }
 
 public final class org/jetbrains/exposed/v1/jodatime/Minute : org/jetbrains/exposed/v1/core/Function {

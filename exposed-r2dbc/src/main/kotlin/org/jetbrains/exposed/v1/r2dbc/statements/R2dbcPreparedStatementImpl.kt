@@ -4,10 +4,15 @@ import io.r2dbc.spi.Connection
 import io.r2dbc.spi.Statement
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.awaitFirstOrNull
-import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.ArrayColumnType
+import org.jetbrains.exposed.v1.core.BinaryColumnType
+import org.jetbrains.exposed.v1.core.BlobColumnType
+import org.jetbrains.exposed.v1.core.IColumnType
+import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.VarCharColumnType
 import org.jetbrains.exposed.v1.core.statements.StatementResult
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
-import org.jetbrains.exposed.v1.r2dbc.mappers.TypeMapperRegistry
+import org.jetbrains.exposed.v1.r2dbc.mappers.R2dbcTypeMapping
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcResult
 import java.io.InputStream
@@ -25,14 +30,14 @@ class R2dbcPreparedStatementImpl(
     val connection: Connection,
     val wasGeneratedKeysRequested: Boolean,
     private val currentDialect: DatabaseDialect,
-    private val typeMapperRegistry: TypeMapperRegistry
+    private val typeMapping: R2dbcTypeMapping
 ) : R2dbcPreparedStatementApi {
     private var resultRow: R2dbcResult? = null
 
     override suspend fun getResultRow(): R2dbcResult? {
         if (resultRow == null && wasGeneratedKeysRequested) {
             val resultPublisher = statement.execute()
-            resultRow = R2dbcResult(resultPublisher)
+            resultRow = R2dbcResult(resultPublisher, typeMapping)
         }
 
         return resultRow
@@ -52,20 +57,17 @@ class R2dbcPreparedStatementImpl(
         statement.add()
     }
 
-    override suspend fun executeQuery(): R2dbcResult = R2dbcResult(statement.execute())
+    override suspend fun executeQuery(): R2dbcResult = R2dbcResult(statement.execute(), typeMapping)
 
-    override suspend fun executeUpdate(): Int {
+    override suspend fun executeUpdate() {
         val result = statement.execute()
-        val r2dbcResult = R2dbcResult(result)
+        val r2dbcResult = R2dbcResult(result, typeMapping)
         resultRow = r2dbcResult
-
-        // Todo discuss if a return value is even necessary (since never used)
-        return 0
     }
 
     override suspend fun executeMultiple(): List<StatementResult> {
         val result = statement.execute()
-        val r2dbcResult = R2dbcResult(result)
+        val r2dbcResult = R2dbcResult(result, typeMapping)
         return listOf(StatementResult.Object(r2dbcResult))
         // full JDBC logic does not seem possible here
 //        return if (statement.execute()) {
@@ -79,10 +81,18 @@ class R2dbcPreparedStatementImpl(
 //        }
     }
 
+    @Deprecated(
+        message = "This operator function will be removed in future releases. " +
+            "Replace with the method `set(index, value, this)` that accepts a third argument for the IColumnType of the parameter value being bound.",
+        level = DeprecationLevel.ERROR
+    )
     override fun set(index: Int, value: Any) {
+        set(index, value, VarCharColumnType())
+    }
+
+    override fun set(index: Int, value: Any, columnType: IColumnType<*>) {
         // Try to use the type mappers first
-        // We use VarCharColumnType as a placeholder since we don't have a real column type
-        if (typeMapperRegistry.setValue(statement, currentDialect, VarCharColumnType(), value, index)) {
+        if (typeMapping.setValue(statement, currentDialect, columnType, value, index)) {
             return
         }
 
@@ -91,7 +101,7 @@ class R2dbcPreparedStatementImpl(
 
     override fun setNull(index: Int, columnType: IColumnType<*>) {
         // Try to use the type mappers first
-        if (typeMapperRegistry.setValue(statement, currentDialect, columnType, null, index)) {
+        if (typeMapping.setValue(statement, currentDialect, columnType, null, index)) {
             return
         }
 
@@ -100,20 +110,30 @@ class R2dbcPreparedStatementImpl(
 
     override fun setInputStream(index: Int, inputStream: InputStream, setAsBlobObject: Boolean) {
         val columnType = if (setAsBlobObject) BlobColumnType() else BinaryColumnType(Int.MAX_VALUE)
-        if (typeMapperRegistry.setValue(statement, currentDialect, columnType, inputStream, index)) {
+        if (typeMapping.setValue(statement, currentDialect, columnType, inputStream, index)) {
             return
         }
 
         throw IllegalArgumentException("Unsupported InputStream for column type: ${columnType::class.qualifiedName}")
     }
 
-    override fun setArray(index: Int, arrayType: ArrayColumnType<*, *>, array: Array<*>) {
+    @Deprecated(
+        message = "This function will be removed in future releases. " +
+            "Replace with the method `setArray(index, this, array)` that accepts an ArrayColumnType as the second argument instead of a string type representation.",
+        level = DeprecationLevel.ERROR
+    )
+    override fun setArray(index: Int, type: String, array: Array<*>) {
+        @OptIn(InternalApi::class)
+        setArray(index, getArrayColumnType(type), array)
+    }
+
+    override fun setArray(index: Int, type: ArrayColumnType<*, *>, array: Array<*>) {
         // Try to use the type mappers first
-        if (typeMapperRegistry.setValue(statement, currentDialect, arrayType, array, index)) {
+        if (typeMapping.setValue(statement, currentDialect, type, array, index)) {
             return
         }
 
-        throw IllegalArgumentException("Unsupported array type: ${arrayType::class.qualifiedName}")
+        throw IllegalArgumentException("Unsupported array type: ${type::class.qualifiedName}")
     }
 
     override suspend fun closeIfPossible() {
@@ -122,7 +142,7 @@ class R2dbcPreparedStatementImpl(
 
     override suspend fun executeBatch(): List<Int> {
         val result = statement.execute()
-        val r2dbcResult = R2dbcResult(result)
+        val r2dbcResult = R2dbcResult(result, typeMapping)
 
         return if (wasGeneratedKeysRequested) {
             resultRow = r2dbcResult

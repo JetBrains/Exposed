@@ -2,12 +2,13 @@ package org.jetbrains.exposed.v1.core
 
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
-import java.math.BigDecimal
 import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Base class representing the underlying database to which connections are made
  * and on which transaction tasks are performed.
+ *
+ * @param config Configuration holding all parameters that apply to a transaction using this database instance.
  */
 abstract class DatabaseApi protected constructor(
     protected val resolvedVendor: String? = null,
@@ -22,7 +23,7 @@ abstract class DatabaseApi protected constructor(
     /** The connection URL for the database. */
     abstract val url: String
 
-    /** The name of the database based on the name of the underlying JDBC driver. */
+    /** The name of the database based on the name of the underlying driver implementation. */
     abstract val vendor: String
 
     /** The name of the database as a [DatabaseDialect]. */
@@ -31,14 +32,8 @@ abstract class DatabaseApi protected constructor(
     /** The mode of the database. This currently only applies to H2 databases. */
     abstract val dialectMode: String?
 
-    /** The version number of the database as a [BigDecimal]. */
-    abstract val version: BigDecimal
-
-    /** Whether the version number of the database is equal to or greater than the provided [version]. */
-    abstract fun isVersionCovers(version: BigDecimal): Boolean
-
-    /** Whether the version number of the database is equal to or greater than the provided [majorVersion] and [minorVersion]. */
-    abstract fun isVersionCovers(majorVersion: Int, minorVersion: Int): Boolean
+    /** The version number of the database as a [Version]. */
+    abstract val version: Version
 
     /** The full version number of the database as a String. */
     abstract val fullVersion: String
@@ -52,6 +47,9 @@ abstract class DatabaseApi protected constructor(
     /** Whether the database supports getting multiple result sets from a single execute. */
     abstract val supportsMultipleResultSets: Boolean
 
+    /** Whether the database supports SELECT FOR UPDATE statements. */
+    abstract val supportsSelectForUpdate: Boolean
+
     /** The database-specific class responsible for parsing and processing identifier tokens in SQL syntax. */
     abstract val identifierManager: IdentifierManagerApi
 
@@ -60,8 +58,8 @@ abstract class DatabaseApi protected constructor(
         private set
 
     companion object {
-        // TODO Assess whether concurrent hash map is actually needed
-        @InternalApi // how to avoid this
+        /** @suppress */
+        @InternalApi
         val dialects = ConcurrentHashMap<String, () -> DatabaseDialect>()
 
         /** Registers a new [DatabaseDialect] with the identifier [prefix]. */

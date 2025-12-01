@@ -1,0 +1,277 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>SizedIterable</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
+                    exposed
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">1.0.0-rc-4
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":exposed-jdbc/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":exposed-jdbc/main" data-filter=":exposed-jdbc/main">
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    exposed
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="exposed-jdbc::org.jetbrains.exposed.v1.jdbc/SizedIterable///PointingToDeclaration//-1624674168">
+  <div class="breadcrumbs"><a href="../../index.html">exposed-jdbc</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.v1.jdbc</a><span class="delimiter">/</span><span class="current">SizedIterable</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Sized</span><wbr><span><span>Iterable</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">interface </span><a href="index.html">SizedIterable</a><span class="token operator">&lt;</span><span class="token keyword">out </span><a href="index.html">T</a><span class="token operator">&gt;</span> : <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-iterable/index.html">Iterable</a><span class="token operator">&lt;</span><a href="index.html">T</a><span class="token operator">&gt; </span></div><p class="paragraph">Represents the iterable elements of a database result.</p><h4 class="tableheader">Inheritors</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-lazy-sized-iterable/index.html">LazySizedIterable</a></div></span></div><div></div></div></div><div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-empty-sized-iterable/index.html">EmptySizedIterable</a></div></span></div><div></div></div></div><div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-sized-collection/index.html">SizedCollection</a></div></span></div><div></div></div></div><div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-lazy-sized-collection/index.html">LazySizedCollection</a></div></span></div><div></div></div></div><div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-query/index.html">Query</a></div></span></div><div></div></div></div><div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-set-operation/index.html">SetOperation</a></div></span></div><div></div></div></div></div></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button><button class="section-tab" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION,EXTENSION_PROPERTY,EXTENSION_FUNCTION">Members &amp; Extensions</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="-737780195%2FFunctions%2F-1624674168" anchor-label="copy" id="-737780195%2FFunctions%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="copy.html"><span><span>copy</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-737780195%2FFunctions%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="copy.html"><span class="token function">copy</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">SizedIterable</a><span class="token operator">&lt;</span><a href="index.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a new <a href="index.html">SizedIterable</a> that is a copy of the original.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1234390009%2FFunctions%2F-1624674168" anchor-label="count" id="1234390009%2FFunctions%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="count.html"><span><span>count</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1234390009%2FFunctions%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="count.html"><span class="token function">count</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a></div><div class="brief "><p class="paragraph">Returns the number of elements stored.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1520649861%2FFunctions%2F-1624674168" anchor-label="empty" id="-1520649861%2FFunctions%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="empty.html"><span><span>empty</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1520649861%2FFunctions%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="empty.html"><span class="token function">empty</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Whether there are no elements stored.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1837557740%2FFunctions%2F-1624674168" anchor-label="forUpdate" id="-1837557740%2FFunctions%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="for-update.html"><span>for</span><wbr><span><span>Update</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1837557740%2FFunctions%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="for-update.html"><span class="token function">forUpdate</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">option<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core.vendors/-for-update-option/index.html">ForUpdateOption</a><span class="token operator"> = </span>ForUpdateOption.ForUpdate</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">SizedIterable</a><span class="token operator">&lt;</span><a href="index.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a new <a href="index.html">SizedIterable</a> with a locking read for the elements according to the rules specified by <a href="for-update.html">option</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-858216167%2FFunctions%2F-1624674168" anchor-label="iterator" id="-858216167%2FFunctions%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-lazy-sized-iterable/index.html#-858216167%2FFunctions%2F-1624674168"><span><span>iterator</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-858216167%2FFunctions%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">operator </span><span class="token keyword">fun </span><a href="../-lazy-sized-iterable/index.html#-858216167%2FFunctions%2F-1624674168"><span class="token function">iterator</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-iterator/index.html">Iterator</a><span class="token operator">&lt;</span><a href="index.html">T</a><span class="token operator">&gt;</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="754255915%2FFunctions%2F-1624674168" anchor-label="limit" id="754255915%2FFunctions%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="limit.html"><span><span>limit</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="754255915%2FFunctions%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="limit.html"><span class="token function">limit</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">count<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">SizedIterable</a><span class="token operator">&lt;</span><a href="index.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a new <a href="index.html">SizedIterable</a> containing only <a href="limit.html">count</a> elements.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-941189832%2FFunctions%2F-1624674168" anchor-label="mapLazy" id="-941189832%2FFunctions%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../map-lazy.html"><span>map</span><wbr><span><span>Lazy</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-941189832%2FFunctions%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">infix </span><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../map-lazy.html">T</a><span class="token punctuation">, </span><a href="../map-lazy.html">R</a><span class="token operator">&gt; </span><a href="index.html">SizedIterable</a><span class="token operator">&lt;</span><a href="../map-lazy.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../map-lazy.html"><span class="token function">mapLazy</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">f<span class="token operator">: </span><span class="token punctuation">(</span><a href="../map-lazy.html">T</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="../map-lazy.html">R</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">SizedIterable</a><span class="token operator">&lt;</span><a href="../map-lazy.html">R</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a <a href="index.html">SizedIterable</a> containing the lazily evaluated results of applying the function <a href="../map-lazy.html">f</a> to each original element.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-413533581%2FFunctions%2F-1624674168" anchor-label="notForUpdate" id="-413533581%2FFunctions%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="not-for-update.html"><span>not</span><wbr><span>For</span><wbr><span><span>Update</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-413533581%2FFunctions%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="not-for-update.html"><span class="token function">notForUpdate</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">SizedIterable</a><span class="token operator">&lt;</span><a href="index.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a new <a href="index.html">SizedIterable</a> without any locking read for the elements.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2081519706%2FFunctions%2F-1624674168" anchor-label="offset" id="2081519706%2FFunctions%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="offset.html"><span><span>offset</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2081519706%2FFunctions%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="offset.html"><span class="token function">offset</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">start<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">SizedIterable</a><span class="token operator">&lt;</span><a href="index.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a new <a href="index.html">SizedIterable</a> containing only elements starting from the specified <a href="offset.html">start</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-156888108%2FFunctions%2F-1624674168" anchor-label="orderBy" id="-156888108%2FFunctions%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="order-by.html"><span>order</span><wbr><span><span>By</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-156888108%2FFunctions%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="order-by.html"><span class="token function">orderBy</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>order<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-pair/index.html">Pair</a><span class="token operator">&lt;</span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-expression/index.html">Expression</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-sort-order/index.html">SortOrder</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">SizedIterable</a><span class="token operator">&lt;</span><a href="index.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a new <a href="index.html">SizedIterable</a> with the elements sorted according to the specified expression <a href="order-by.html">order</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2025 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

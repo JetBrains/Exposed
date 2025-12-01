@@ -1,0 +1,247 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>StatementInterceptor</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
+                    exposed
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">1.0.0-rc-4
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":exposed-core/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":exposed-core/main" data-filter=":exposed-core/main">
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    exposed
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="exposed-core::org.jetbrains.exposed.v1.core.statements/StatementInterceptor///PointingToDeclaration//-1435837140">
+  <div class="breadcrumbs"><a href="../../index.html">exposed-core</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.v1.core.statements</a><span class="delimiter">/</span><span class="current">StatementInterceptor</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Statement</span><wbr><span><span>Interceptor</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">interface </span><a href="index.html">StatementInterceptor</a></div><p class="paragraph">Represents the processes that should be performed during a statement's lifecycle events in a transaction.</p><p class="paragraph">In general, statement execution flow works in the following way:</p><ol><li><p class="paragraph"><a href="before-execution.html">beforeExecution</a> of the statement</p></li><li><p class="paragraph">Creation of the prepared statement</p></li><li><p class="paragraph"><a href="after-statement-prepared.html">afterStatementPrepared</a> using the prepared statement from step 2</p></li><li><p class="paragraph">Execution of the SQL query</p></li><li><p class="paragraph"><a href="after-execution.html">afterExecution</a></p></li></ol><h4 class="tableheader">Inheritors</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../../org.jetbrains.exposed.v1.core/-composite-sql-logger/index.html">CompositeSqlLogger</a></div></span></div><div></div></div></div><div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-global-statement-interceptor/index.html">GlobalStatementInterceptor</a></div></span></div><div></div></div></div></div></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="2037135212%2FFunctions%2F-1435837140" anchor-label="afterCommit" id="2037135212%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="after-commit.html"><span>after</span><wbr><span><span>Commit</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2037135212%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="after-commit.html"><span class="token function">afterCommit</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">transaction<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-transaction/index.html">Transaction</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Performs steps after a <a href="after-commit.html">transaction</a> is committed.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="206090153%2FFunctions%2F-1435837140" anchor-label="afterExecution" id="206090153%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="after-execution.html"><span>after</span><wbr><span><span>Execution</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="206090153%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="after-execution.html"><span class="token function">afterExecution</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">transaction<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-transaction/index.html">Transaction</a><span class="token punctuation">, </span></span><span class="parameter ">contexts<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../-statement-context/index.html">StatementContext</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">executedStatement<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core.statements.api/-prepared-statement-api/index.html">PreparedStatementApi</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Performs steps after an <a href="after-execution.html">executedStatement</a>, from the provided <a href="after-execution.html">contexts</a>, is complete in <a href="after-execution.html">transaction</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1435587239%2FFunctions%2F-1435837140" anchor-label="afterRollback" id="-1435587239%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="after-rollback.html"><span>after</span><wbr><span><span>Rollback</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1435587239%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="after-rollback.html"><span class="token function">afterRollback</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">transaction<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-transaction/index.html">Transaction</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Performs steps after a rollback operation is issued on a <a href="after-rollback.html">transaction</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1705900742%2FFunctions%2F-1435837140" anchor-label="afterStatementPrepared" id="1705900742%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="after-statement-prepared.html"><span>after</span><wbr><span>Statement</span><wbr><span><span>Prepared</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1705900742%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="after-statement-prepared.html"><span class="token function">afterStatementPrepared</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">transaction<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-transaction/index.html">Transaction</a><span class="token punctuation">, </span></span><span class="parameter ">preparedStatement<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core.statements.api/-prepared-statement-api/index.html">PreparedStatementApi</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Performs steps after <a href="after-statement-prepared.html">preparedStatement</a> has been created in a <a href="after-statement-prepared.html">transaction</a>, but before the statement has been executed.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="733662339%2FFunctions%2F-1435837140" anchor-label="beforeCommit" id="733662339%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="before-commit.html"><span>before</span><wbr><span><span>Commit</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="733662339%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="before-commit.html"><span class="token function">beforeCommit</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">transaction<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-transaction/index.html">Transaction</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Performs steps before a <a href="before-commit.html">transaction</a> is committed.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1887128311%2FFunctions%2F-1435837140" anchor-label="beforeExecution" id="1887128311%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="before-execution.html"><span>before</span><wbr><span><span>Execution</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1887128311%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="before-execution.html"><span class="token function">beforeExecution</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">transaction<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-transaction/index.html">Transaction</a><span class="token punctuation">, </span></span><span class="parameter ">context<span class="token operator">: </span><a href="../-statement-context/index.html">StatementContext</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Performs steps before a statement, from the provided <a href="before-execution.html">context</a>, is executed in a <a href="before-execution.html">transaction</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="57432240%2FFunctions%2F-1435837140" anchor-label="beforeRollback" id="57432240%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="before-rollback.html"><span>before</span><wbr><span><span>Rollback</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="57432240%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="before-rollback.html"><span class="token function">beforeRollback</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">transaction<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-transaction/index.html">Transaction</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Performs steps before a rollback operation is issued on a <a href="before-rollback.html">transaction</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-136456158%2FFunctions%2F-1435837140" anchor-label="keepUserDataInTransactionStoreOnCommit" id="-136456158%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="keep-user-data-in-transaction-store-on-commit.html"><span>keep</span><wbr><span>User</span><wbr><span>Data</span><wbr><span>In</span><wbr><span>Transaction</span><wbr><span>Store</span><wbr><span>On</span><wbr><span><span>Commit</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-136456158%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="keep-user-data-in-transaction-store-on-commit.html"><span class="token function">keepUserDataInTransactionStoreOnCommit</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">userData<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="../../org.jetbrains.exposed.v1.core/-key/index.html">Key</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="../../org.jetbrains.exposed.v1.core/-key/index.html">Key</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a mapping of <a href="keep-user-data-in-transaction-store-on-commit.html">userData</a> that ensures required information is not lost from the transaction scope once the transaction is committed.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2025 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

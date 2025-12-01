@@ -1,17 +1,13 @@
 package org.jetbrains.exposed.v1.tests.shared.ddl
 
-import org.jetbrains.exposed.v1.core.Column
-import org.jetbrains.exposed.v1.core.Sequence
-import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.core.autoIncColumnType
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
-import org.jetbrains.exposed.v1.core.nextIntVal
-import org.jetbrains.exposed.v1.core.nextLongVal
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntityClass
 import org.jetbrains.exposed.v1.jdbc.*
@@ -20,12 +16,11 @@ import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.v1.tests.currentDialectTest
-import org.jetbrains.exposed.v1.tests.inProperCase
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -71,7 +66,7 @@ class SequencesTests : DatabaseTestsBase() {
 
                     assertEquals(myseq.startWith!! + myseq.incrementBy!!, developerId.toLong())
                 } finally {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropSequence(myseq)
+                    SchemaUtils.dropSequence(myseq)
                 }
             }
         }
@@ -103,7 +98,7 @@ class SequencesTests : DatabaseTestsBase() {
 
                     assertEquals(myseq.startWith!! + myseq.incrementBy!!, testerId.toLong())
                 } finally {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tester)
+                    SchemaUtils.drop(tester)
                     assertFalse(myseq.exists())
                 }
             }
@@ -130,7 +125,7 @@ class SequencesTests : DatabaseTestsBase() {
                     }
                     assertEquals(myseq.startWith!! + myseq.incrementBy!!, developerId.value)
                 } finally {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropSequence(myseq)
+                    SchemaUtils.dropSequence(myseq)
                 }
             }
         }
@@ -162,7 +157,7 @@ class SequencesTests : DatabaseTestsBase() {
 
                     assertEquals(myseq.startWith!! + myseq.incrementBy!!, testerId.value)
                 } finally {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tester)
+                    SchemaUtils.drop(tester)
                     assertFalse(myseq.exists())
                 }
             }
@@ -186,7 +181,7 @@ class SequencesTests : DatabaseTestsBase() {
                     }
                     assertEquals(developerId.value + 1, developerId2.value)
                 } finally {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(DeveloperWithAutoIncrementBySequence)
+                    SchemaUtils.drop(DeveloperWithAutoIncrementBySequence)
                 }
             }
         }
@@ -213,7 +208,7 @@ class SequencesTests : DatabaseTestsBase() {
                     val expSecondValue = expFirstValue + myseq.incrementBy!!
                     assertEquals(expSecondValue, secondValue.toLong())
                 } finally {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropSequence(myseq)
+                    SchemaUtils.dropSequence(myseq)
                 }
             }
         }
@@ -228,12 +223,13 @@ class SequencesTests : DatabaseTestsBase() {
 
                     assertTrue(myseq.exists())
                 } finally {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropSequence(myseq)
+                    SchemaUtils.dropSequence(myseq)
                 }
             }
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testExistingSequencesForAutoIncrementWithCustomSequence() {
         val tableWithExplicitSequenceName = object : IdTable<Long>() {
@@ -250,12 +246,13 @@ class SequencesTests : DatabaseTestsBase() {
                     assertTrue(sequences.isNotEmpty())
                     assertTrue(sequences.any { it == myseq.name.inProperCase() })
                 } finally {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tableWithExplicitSequenceName)
+                    SchemaUtils.drop(tableWithExplicitSequenceName)
                 }
             }
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testExistingSequencesForAutoIncrementWithExplicitSequenceName() {
         val sequenceName = "id_seq"
@@ -273,12 +270,13 @@ class SequencesTests : DatabaseTestsBase() {
                     assertTrue(sequences.isNotEmpty())
                     assertTrue(sequences.any { it == sequenceName.inProperCase() })
                 } finally {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tableWithExplicitSequenceName)
+                    SchemaUtils.drop(tableWithExplicitSequenceName)
                 }
             }
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testExistingSequencesForAutoIncrementWithoutExplicitSequenceName() {
         val tableWithoutExplicitSequenceName = object : IdTable<Long>() {
@@ -297,7 +295,7 @@ class SequencesTests : DatabaseTestsBase() {
                     val expected = tableWithoutExplicitSequenceName.id.autoIncColumnType!!.autoincSeq!!
                     assertTrue(sequences.any { it == if (testDb == TestDB.ORACLE) expected.inProperCase() else expected })
                 } finally {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tableWithoutExplicitSequenceName)
+                    SchemaUtils.drop(tableWithoutExplicitSequenceName)
                 }
             }
         }
@@ -325,7 +323,7 @@ class SequencesTests : DatabaseTestsBase() {
 
                 // Clean up: create table and drop it for removing sequence
                 SchemaUtils.create(DeveloperWithAutoIncrementBySequence)
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(DeveloperWithAutoIncrementBySequence)
+                SchemaUtils.drop(DeveloperWithAutoIncrementBySequence)
             }
         }
     }
@@ -342,14 +340,14 @@ class SequencesTests : DatabaseTestsBase() {
                 assertNotNull(foundSequence)
                 assertEquals(identityTable.sequences.single().identifier, foundSequence.identifier)
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(identityTable)
+                SchemaUtils.drop(identityTable)
             }
         }
     }
 
     @Test
     fun testAutoIncrementColumnAccessWithEntity() {
-        Assume.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
 
         TestDB.POSTGRESQL.connect()
 

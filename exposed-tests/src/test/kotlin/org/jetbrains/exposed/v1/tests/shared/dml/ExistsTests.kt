@@ -1,12 +1,12 @@
 package org.jetbrains.exposed.v1.tests.shared.dml
 
 import org.jetbrains.exposed.v1.core.Expression
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.case
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.booleanLiteral
+import org.jetbrains.exposed.v1.core.case
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.exists
+import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.core.notExists
 import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.core.vendors.OracleDialect
@@ -17,7 +17,7 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class ExistsTests : DatabaseTestsBase() {
     @Test

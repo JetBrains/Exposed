@@ -1,34 +1,35 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml
 
 import io.r2dbc.spi.R2dbcException
-import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.isNull
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.datetime.CurrentTimestamp
+import org.jetbrains.exposed.v1.datetime.XCurrentTimestamp
 import org.jetbrains.exposed.v1.datetime.timestamp
+import org.jetbrains.exposed.v1.datetime.xTimestamp
 import org.jetbrains.exposed.v1.r2dbc.*
-import org.jetbrains.exposed.v1.r2dbc.statements.BatchInsertSuspendExecutable
+import org.jetbrains.exposed.v1.r2dbc.statements.toExecutable
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.currentTestDB
-import org.jetbrains.exposed.v1.r2dbc.tests.inProperCase
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
-import org.junit.Assume
-import org.junit.Test
+import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -481,36 +482,37 @@ class InsertTests : R2dbcDatabaseTestsBase() {
     }
 
     @Test
-    fun testRollbackOnConstraintExceptionWithNormalTransactions() {
+    fun testRollbackOnConstraintExceptionWithSuspendTransactions() {
         val testTable = object : IntIdTable("TestRollback") {
             val foo = integer("foo").check { it greater 0 }
         }
         val dbToTest = TestDB.enabledDialects() - setOfNotNull(
             TestDB.MYSQL_V5.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
         )
-        Assume.assumeTrue(dbToTest.isNotEmpty())
+        Assumptions.assumeTrue(dbToTest.isNotEmpty())
         dbToTest.forEach { db ->
             try {
-                withDb(db) {
-                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(testTable)
-                }
                 try {
                     withDb(db) {
-                        // Todo Investigate whether calling commit in a tx is expected to enable auto-commit mode
-                        // and whether it is Exposed's responsibility to revert or the user's
-                        testTable.insert { it[foo] = 1 }
-                        testTable.insert { it[foo] = 0 }
+                        SchemaUtils.create(testTable)
                     }
-                    fail("Should fail on constraint > 0 with $db")
+                    runBlocking {
+                        suspendTransaction(db = db.db) {
+                            testTable.insert { it[foo] = 1 }
+                            testTable.insert { it[foo] = 0 }
+                        }
+                    }
+                    fail("Should fail on constraint > 0")
                 } catch (_: R2dbcException) {
                     // expected
                 }
+
                 withDb(db) {
                     assertTrue(testTable.selectAll().empty())
                 }
             } finally {
                 withDb(db) {
-                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(testTable)
+                    SchemaUtils.drop(testTable)
                 }
             }
         }
@@ -536,10 +538,6 @@ class InsertTests : R2dbcDatabaseTestsBase() {
         }
     }
 
-    class BatchInsertOnConflictDoNothingExecutable(
-        override val statement: BatchInsertOnConflictDoNothing
-    ) : BatchInsertSuspendExecutable<BatchInsertOnConflictDoNothing>(statement)
-
     @Test
     fun testBatchInsertNumberOfInsertedRows() {
         val tab = object : Table("tab") {
@@ -549,9 +547,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
         withTables(excludeSettings = insertIgnoreUnsupportedDB, tab) {
             tab.insert { it[id] = "foo" }
 
-            val executable = BatchInsertOnConflictDoNothingExecutable(
-                BatchInsertOnConflictDoNothing(tab)
-            )
+            val executable = BatchInsertOnConflictDoNothing(tab).toExecutable()
             val numInserted = executable.run {
                 statement.addBatch()
                 statement[tab.id] = "foo"
@@ -566,6 +562,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testInsertIntoNullableGeneratedColumn() {
         withDb { testDb ->
@@ -645,6 +642,19 @@ class InsertTests : R2dbcDatabaseTestsBase() {
             }.single()
             assertEquals("custom-id-value", result1[tester.id].value)
             assertEquals("custom-id-value", result1[tester.customId])
+        }
+    }
+
+    @Test
+    fun testXInsertReturnsValuesFromDefaultExpression() {
+        val tester = object : Table() {
+            val xDefaultDate = xTimestamp(name = "default_date").defaultExpression(XCurrentTimestamp)
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, tester) {
+            val entry = tester.insert {}
+
+            assertNotNull(entry[tester.xDefaultDate])
         }
     }
 

@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption.PostgreSQL
 import org.jetbrains.exposed.v1.r2dbc.Query
@@ -13,20 +14,15 @@ import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.tests.RepeatableTestRule
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.any
 import org.jetbrains.exposed.v1.r2dbc.tests.getString
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFalse
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 class PostgresqlTests : R2dbcDatabaseTestsBase() {
-    @get:Rule
-    val repeatRule = RepeatableTestRule()
-
     private val table = object : IntIdTable() {
         val name = varchar("name", 50)
     }

@@ -6,17 +6,17 @@ import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedConnection
 
+/** Represents a unit block of work that is performed on a database using an R2DBC driver. */
 interface R2dbcTransactionInterface : TransactionInterface {
     override val db: R2dbcDatabase
 
     override val outerTransaction: R2dbcTransaction?
 
     /** The transaction isolation level of the transaction, which may differ from the set database level. */
-    val transactionIsolation: IsolationLevel
+    val transactionIsolation: IsolationLevel?
 
-    // TODO Remove from interface & make suspend function
-    /** The database connection used by the transaction. */
-    val connection: R2dbcExposedConnection<*>
+    /** Retrieves the database connection used by the transaction. */
+    suspend fun connection(): R2dbcExposedConnection<*>
 
     /** Saves all changes since the last commit or rollback operation. */
     suspend fun commit()
@@ -29,14 +29,13 @@ interface R2dbcTransactionInterface : TransactionInterface {
 }
 
 /**
- * The [TransactionManager] instance that is associated with this [Database].
+ * The [TransactionManager] instance that is associated with this [R2dbcDatabase].
  *
- * @throws [RuntimeException] If a manager has not been registered for the database.
+ * @throws IllegalStateException if no transaction manager is registered for the given database.
  */
 @Suppress("TooGenericExceptionThrown")
-val R2dbcDatabase?.transactionManager: TransactionManager
-    get() = org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.managerFor(this)
-        ?: throw RuntimeException("Database $this does not have any transaction manager")
+val R2dbcDatabase.transactionManager: TransactionManager
+    get() = TransactionManager.managerFor(this)
 
 @Suppress("TooGenericExceptionCaught")
 internal suspend fun R2dbcTransactionInterface.rollbackLoggingException(log: (Exception) -> Unit) {

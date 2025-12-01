@@ -2,15 +2,18 @@ package org.jetbrains.exposed.v1.json
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.jetbrains.exposed.v1.core.CustomFunction
+import org.jetbrains.exposed.v1.core.ExpressionWithColumnType
+import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
-import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
-import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
+import org.jetbrains.exposed.v1.tests.currentDialectTest
 
 object JsonTestsData {
     object JsonTable : IntIdTable("j_table") {
@@ -28,9 +31,33 @@ object JsonTestsData {
     }
 
     class JsonBEntity(id: EntityID<Int>) : IntEntity(id) {
-        companion object : IntEntityClass<JsonBEntity>(JsonBTable)
+        private var jsonBOriginal by JsonBTable.jsonBColumn
 
-        var jsonBColumn by JsonBTable.jsonBColumn
+        var jsonBColumn: DataHolder
+            get() = (currentDialectTest as? SQLiteDialect)
+                ?.let { readValues.getOrNull(JsonBTable.jsonBColumn.asJson()) }
+                ?: jsonBOriginal
+            set(value) { jsonBOriginal = value }
+
+        companion object : IntEntityClass<JsonBEntity>(JsonBTable) {
+            override fun all(): SizedIterable<JsonBEntity> {
+                return if (currentDialectTest is SQLiteDialect) {
+                    wrapRows(JsonBTable.selectAll().notForUpdate().adjustSelectedProject())
+                } else {
+                    super.all()
+                }
+            }
+            override fun searchQuery(op: Op<Boolean>): Query {
+                return if (currentDialectTest is SQLiteDialect) {
+                    super.searchQuery(op).adjustSelectedProject()
+                } else {
+                    super.searchQuery(op)
+                }
+            }
+            private fun Query.adjustSelectedProject(): Query = adjustSelect { originalFields ->
+                select(originalFields.fields - JsonBTable.jsonBColumn + JsonBTable.jsonBColumn.asJson())
+            }
+        }
     }
 
     object JsonArrays : IntIdTable("j_arrays") {
@@ -92,7 +119,7 @@ fun DatabaseTestsBase.withJsonArrays(
 ) {
     val tester = JsonTestsData.JsonArrays
 
-    withTables(excludeSettings = withH2V1(exclude), tester) { testDb ->
+    withTables(excludeSettings = exclude, tester) { testDb ->
         val singleId = tester.insertAndGetId {
             it[groups] = UserGroup(listOf(User("A", "Team A")))
             it[numbers] = intArrayOf(100)
@@ -117,7 +144,7 @@ fun DatabaseTestsBase.withJsonBArrays(
 ) {
     val tester = JsonTestsData.JsonBArrays
 
-    withTables(excludeSettings = withH2V1(exclude), tester) { testDb ->
+    withTables(excludeSettings = exclude, tester) { testDb ->
         val singleId = tester.insertAndGetId {
             it[groups] = UserGroup(listOf(User("A", "Team A")))
             it[numbers] = intArrayOf(100)
@@ -139,3 +166,6 @@ data class User(val name: String, val team: String?)
 
 @Serializable
 data class UserGroup(val users: List<User>)
+
+/** SQLite function that converts non-readable JSONB binary format to text format. */
+fun <T> ExpressionWithColumnType<T>.asJson(): CustomFunction<T> = CustomFunction("JSON", columnType, this)

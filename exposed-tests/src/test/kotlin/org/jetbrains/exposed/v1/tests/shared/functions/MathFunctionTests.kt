@@ -1,9 +1,10 @@
 package org.jetbrains.exposed.v1.tests.shared.functions
 
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.div
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.decimalLiteral
+import org.jetbrains.exposed.v1.core.div
 import org.jetbrains.exposed.v1.core.doubleLiteral
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.functions.math.*
 import org.jetbrains.exposed.v1.core.intLiteral
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
@@ -11,7 +12,7 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.sql.SQLException
 
@@ -137,7 +138,7 @@ class MathFunctionTests : FunctionsTestBase() {
                 in (TestDB.ALL_MYSQL_MARIADB + TestDB.SQLITE) -> {
                     assertExpressionEqual(null, SqrtFunction(intLiteral(-100)))
                 }
-                in (TestDB.ALL_H2) -> {
+                in (TestDB.ALL_H2_V2) -> {
                     expectException<IllegalStateException> {
                         assertExpressionEqual(null, SqrtFunction(intLiteral(-100)))
                     }

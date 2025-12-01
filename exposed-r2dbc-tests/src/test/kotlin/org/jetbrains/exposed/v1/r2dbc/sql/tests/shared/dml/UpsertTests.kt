@@ -3,23 +3,26 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.concat
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.less
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.minus
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.neq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.plus
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.times
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.concat
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.intLiteral
+import org.jetbrains.exposed.v1.core.less
+import org.jetbrains.exposed.v1.core.like
+import org.jetbrains.exposed.v1.core.minus
+import org.jetbrains.exposed.v1.core.neq
+import org.jetbrains.exposed.v1.core.plus
 import org.jetbrains.exposed.v1.core.statements.BatchUpsertStatement
 import org.jetbrains.exposed.v1.core.statements.UpdateStatement
 import org.jetbrains.exposed.v1.core.statements.UpsertBuilder
+import org.jetbrains.exposed.v1.core.statements.insertValue
 import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.core.stringParam
+import org.jetbrains.exposed.v1.core.times
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.r2dbc.batchUpsert
 import org.jetbrains.exposed.v1.r2dbc.insert
@@ -34,10 +37,11 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.upsert
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.lang.Integer.parseInt
 import java.util.*
 import kotlin.properties.Delegates
+import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 
@@ -892,6 +896,62 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
             assertEqualLists(listOf(1.1, 2.2), value[tester.doubleArray])
             assertEqualLists(listOf('a', 'b'), value[tester.charArray])
             assertEqualLists(uuidList, value[tester.uuidArray])
+        }
+    }
+
+    @Test
+    fun testExcludedValueInWhereCondition() {
+        val tester = object : Table("upsert_where_excluded") {
+            val id = integer("id")
+                .uniqueIndex()
+            val name = text("name")
+            val order = integer("order")
+        }
+
+        class TesterData(val id: Int, val name: String, val order: Int)
+
+        suspend fun testerBatchUpsert(data: List<TesterData>) {
+            tester.batchUpsert(
+                data,
+                tester.id,
+                onUpdate = {
+                    it[tester.name] = insertValue(tester.name)
+                    it[tester.order] = insertValue(tester.order)
+                },
+                where = {
+                    tester.order less insertValue(tester.order)
+                }
+            ) {
+                this[tester.id] = it.id
+                this[tester.name] = it.name
+                this[tester.order] = it.order
+            }
+        }
+
+        suspend fun assertTesterName(id: Int, name: String) {
+            assertEquals(name, tester.selectAll().where { tester.id eq id }.single()[tester.name])
+        }
+
+        withTables(excludeSettings = TestDB.ALL_MYSQL_LIKE + upsertViaMergeDB, tester) {
+            testerBatchUpsert(
+                listOf(
+                    TesterData(1, "tester1", 10),
+                    TesterData(2, "tester2", 10),
+                )
+            )
+
+            assertTesterName(1, "tester1")
+            assertTesterName(2, "tester2")
+
+            testerBatchUpsert(
+                listOf(
+                    TesterData(1, "tester1-modified", 5),
+                    TesterData(2, "tester2-modified", 20),
+                )
+            )
+
+            assertTesterName(1, "tester1")
+            assertTesterName(2, "tester2-modified")
         }
     }
 }

@@ -5,6 +5,9 @@ import org.jetbrains.exposed.v1.core.vendors.H2FunctionProvider
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.core.vendors.h2Mode
 import java.math.BigDecimal
+import kotlin.collections.filterIsInstance
+
+// General Purpose Functions
 
 /**
  * Represents an SQL function.
@@ -365,77 +368,330 @@ sealed class NextVal<T>(
 // Conditional Expressions
 
 /**
- * Represents an SQL function that allows the comparison of [value] to chained conditional clauses.
+ * Base abstract class for SQL CASE expressions that provide conditional logic in queries.
  *
- * If [value] is not provided, each chained conditional will be evaluated independently.
+ * @param T The return type of the CASE expression
  */
-@Suppress("FunctionNaming")
-class Case(
-    /** The value that is compared against every conditional expression. */
-    val value: Expression<*>? = null
-) {
-    /** Adds a conditional expression with a [result] if the expression evaluates to `true`. */
-    fun <T> When(cond: Expression<Boolean>, result: Expression<T>): CaseWhen<T> = CaseWhen<T>(value).When(cond, result)
-}
+abstract class BaseCaseWhen<T> : ExpressionWithColumnType<T>(), ComplexExpression {
+    /** List of condition-result pairs that define the WHEN clauses */
+    abstract val cases: List<Pair<Expression<*>, Expression<out T>>>
 
-/**
- * Represents an SQL function that allows the comparison of [value] to chained conditional clauses.
- *
- * If [value] is not provided, each chained conditional will be evaluated independently.
- */
-@Suppress("FunctionNaming")
-class CaseWhen<T>(
-    /** The value that is compared against every conditional expression. */
-    val value: Expression<*>?
-) {
-    /** The boolean conditions to check and their resulting expressions if the condition is met. */
-    val cases: MutableList<Pair<Expression<Boolean>, Expression<out T>>> = mutableListOf()
+    /** Optional value to compare against in the CASE statement (for value-based CASE expressions) */
+    open val value: Expression<*>? = null
 
-    /** Adds a conditional expression with a [result] if the expression evaluates to `true`. */
-    fun When(cond: Expression<Boolean>, result: Expression<T>): CaseWhen<T> {
-        cases.add(cond to result)
-        return this
-    }
+    /** Optional ELSE result expression that is used when no WHEN conditions match */
+    open val elseResult: Expression<out T>? = null
 
-    /** Adds an expression that will be used as the function result if all [cases] evaluate to `false`. */
-    fun Else(e: Expression<T>): ExpressionWithColumnType<T> = CaseWhenElse(this, e)
-}
+    /** Returns all result expressions from the WHEN and ELSE clauses */
+    abstract fun expressions(): List<Expression<out T>>
 
-/**
- * Represents an SQL function that steps through conditions, and either returns a value when the first condition is met
- * or returns [elseResult] if all conditions are `false`.
- */
-class CaseWhenElse<T>(
-    /** The conditions to check and their results if met. */
-    val caseWhen: CaseWhen<T>,
-    /** The result if none of the conditions checked are found to be `true`. */
-    val elseResult: Expression<T>
-) : ExpressionWithColumnType<T>(), ComplexExpression {
-
+    /**
+     * Determines the column type by examining the result expressions.
+     */
     @Suppress("UNCHECKED_CAST")
-    override val columnType: IColumnType<T & Any> =
-        expressions().filterIsInstance<ExpressionWithColumnType<T>>().firstOrNull()?.columnType
+    override val columnType: IColumnType<T & Any>
+        get() = expressions().filterIsInstance<ExpressionWithColumnType<T>>().firstOrNull()?.columnType
             ?: expressions().filterIsInstance<Op.OpBoolean>().firstOrNull()?.let { BooleanColumnType.INSTANCE as IColumnType<T & Any> }
             ?: error("No column type has been found")
-
-    private fun expressions(): List<Expression<out T>> {
-        return caseWhen.cases.map { it.second } + elseResult
-    }
 
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         queryBuilder {
             append("CASE")
-            if (caseWhen.value != null) {
+            val caseValue = value
+            if (caseValue != null) {
                 +" "
-                +caseWhen.value
+                +caseValue
             }
 
-            for ((first, second) in caseWhen.cases) {
+            for ((first, second) in cases) {
                 append(" WHEN ", first, " THEN ", second)
             }
 
-            append(" ELSE ", elseResult, " END")
+            elseResult?.let {
+                append(" ELSE ", it)
+            }
+
+            append(" END")
         }
+    }
+}
+
+/**
+ * Builder class for creating value-based CASE expressions where a specific value is compared
+ * against different conditions.
+ *
+ * @param T The type of the value being compared
+ * @param value The expression whose value will be compared in WHEN clauses
+ */
+@Suppress("FunctionNaming")
+class ValueCase<T>(
+    val value: ExpressionWithColumnType<T>,
+) {
+    /**
+     * Adds a WHEN clause that compares the case value against a literal condition.
+     *
+     * @param R The return type of the result expression
+     * @param cond The literal value to compare against
+     * @param result The expression to return if the condition matches
+     * @return A [ValueCaseWhen] instance for method chaining
+     */
+    fun <R> When(cond: T, result: Expression<R>): ValueCaseWhen<T, R> {
+        return ValueCaseWhen<T, R>(value).When(cond, result)
+    }
+
+    /**
+     * Adds a WHEN clause that compares the case value against an expression condition.
+     *
+     * @param R The return type of the result expression
+     * @param cond The expression to compare against
+     * @param result The expression to return if the condition matches
+     * @return A [ValueCaseWhen] instance for method chaining
+     */
+    fun <R> When(cond: Expression<T>, result: Expression<R>): ValueCaseWhen<T, R> {
+        return ValueCaseWhen<T, R>(value).When(cond, result)
+    }
+
+    /**
+     * Adds a WHEN clause that compares the case value against an expression condition with a literal result.
+     *
+     * @param R The return type of the result value
+     * @param cond The expression to compare against
+     * @param result The literal value to return if the condition matches
+     * @param resultType Optional column type for the result value
+     * @return A [ValueCaseWhen] instance for method chaining
+     */
+    fun <R> When(cond: Expression<T>, result: R, resultType: IColumnType<R & Any>? = null): ValueCaseWhen<T, R> {
+        return ValueCaseWhen<T, R>(value).When(cond, result, resultType)
+    }
+
+    /**
+     * Adds a WHEN clause that compares the case value against a literal condition with a literal result.
+     *
+     * @param R The return type of the result value
+     * @param cond The literal value to compare against
+     * @param result The literal value to return if the condition matches
+     * @param resultType Optional column type for the result value
+     * @return A [ValueCaseWhen] instance for method chaining
+     */
+    fun <R> When(cond: T, result: R, resultType: IColumnType<R & Any>? = null): ValueCaseWhen<T, R> {
+        return ValueCaseWhen<T, R>(value).When(cond, result, resultType)
+    }
+}
+
+/**
+ * Represents a value-based CASE expression that can be extended with additional WHEN clauses
+ * or completed with an ELSE clause.
+ *
+ * @param T The type of the value being compared
+ * @param R The return type of the CASE expression
+ * @param value The expression whose value will be compared in WHEN clauses
+ */
+@Suppress("FunctionNaming")
+class ValueCaseWhen<T, R>(
+    override val value: ExpressionWithColumnType<T>,
+) : BaseCaseWhen<R?>() {
+    /** Mutable list of condition-result pairs for WHEN clauses */
+    override val cases: MutableList<Pair<Expression<T>, Expression<out R>>> = mutableListOf()
+
+    /**
+     * Adds a WHEN clause that compares against an expression condition.
+     *
+     * @param cond The expression to compare the case value against
+     * @param result The expression to return if the condition matches
+     * @return This ValueCaseWhen instance for method chaining
+     */
+    fun When(cond: Expression<T>, result: Expression<R>): ValueCaseWhen<T, R> {
+        cases.add(cond to result)
+        return this
+    }
+
+    /**
+     * Adds a WHEN clause that compares against a literal condition.
+     *
+     * @param cond The literal value to compare the case value against
+     * @param result The expression to return if the condition matches
+     * @return This ValueCaseWhen instance for method chaining
+     */
+    fun When(cond: T, result: Expression<R>): ValueCaseWhen<T, R> {
+        return When(QueryParameter(cond, value.columnType), result)
+    }
+
+    /**
+     * Adds a WHEN clause that compares against an expression condition with a literal result.
+     *
+     * If the result isn't an [Expression], it should be automatically converted to one behind the scenes.
+     * This requires providing an `IColumnType` for that value.
+     * That is needed only once at the start of the chain - after that, the column type value gets saved
+     * and reused for subsequent results.
+     *
+     * @param cond The expression to compare the case value against
+     * @param result The literal value to return if the condition matches
+     * @param resultType Optional column type for the result value
+     * @return This ValueCaseWhen instance for method chaining
+     */
+    @Suppress("UNCHECKED_CAST")
+    fun When(cond: Expression<T>, result: R, resultType: IColumnType<R & Any>? = null): ValueCaseWhen<T, R> {
+        @OptIn(InternalApi::class)
+        val resultColumnType = resultType
+            ?: result?.let { resolveColumnType(it::class) as IColumnType<R & Any> }
+            ?: columnType
+
+        return When(cond, QueryParameter(result, resultColumnType))
+    }
+
+    /**
+     * Adds a WHEN clause that compares against a literal condition with a literal result.
+     *
+     * @param cond The literal value to compare the case value against
+     * @param result The literal value to return if the condition matches
+     * @param resultType Optional column type for the result value
+     * @return This ValueCaseWhen instance for method chaining
+     */
+    fun When(cond: T, result: R, resultType: IColumnType<R & Any>? = null): ValueCaseWhen<T, R> {
+        return When(QueryParameter(cond, value.columnType), result, resultType)
+    }
+
+    /**
+     * Adds an ELSE clause with an expression result, completing the CASE statement.
+     *
+     * @param result The expression to return if no WHEN conditions match
+     * @return A completed ValueCaseWhenElse instance
+     */
+    fun Else(result: Expression<R>): ValueCaseWhenElse<T, R> {
+        return ValueCaseWhenElse(value, cases, result)
+    }
+
+    /**
+     * Adds an ELSE clause with a literal result, completing the CASE statement.
+     *
+     * @param result The literal value to return if no WHEN conditions match
+     * @param resultType Optional column type for the result value
+     * @return A completed ValueCaseWhenElse instance
+     */
+    fun Else(result: R, resultType: IColumnType<R & Any>? = null): ValueCaseWhenElse<T, R> {
+        return ValueCaseWhenElse(value, cases, QueryParameter(result, resultType ?: columnType))
+    }
+
+    /** Returns all result expressions from the WHEN clauses */
+    override fun expressions(): List<Expression<out R>> {
+        return cases.map { it.second }
+    }
+}
+
+/**
+ * Represents a completed value-based CASE expression with an ELSE clause.
+ *
+ * @param T The type of the value being compared
+ * @param R The return type of the CASE expression
+ * @param value The expression whose value is compared in WHEN clauses
+ * @param cases The list of condition-result pairs for WHEN clauses
+ * @param elseResult The result expression for the ELSE clause
+ */
+class ValueCaseWhenElse<T, R>(
+    override val value: Expression<T>,
+    override val cases: List<Pair<Expression<T>, Expression<out R>>>,
+    override val elseResult: Expression<out R>
+) : BaseCaseWhen<R>() {
+    /** Returns all result expressions from both WHEN clauses and the ELSE clause */
+    override fun expressions(): List<Expression<out R>> {
+        return cases.map { it.second } + elseResult
+    }
+}
+
+/**
+ * Builder class for creating conditional CASE expressions where each WHEN clause
+ * contains an independent boolean condition.
+ */
+@Suppress("FunctionNaming")
+class Case {
+    /**
+     * Adds a conditional expression with a result if the condition evaluates to true.
+     *
+     * @param T The return type of the result expression
+     * @param cond The boolean condition to evaluate
+     * @param result The expression to return if the condition is true
+     * @return A CaseWhen instance for method chaining
+     */
+    fun <T> When(cond: Expression<*>, result: Expression<T>): CaseWhen<T> = CaseWhen<T>().When(cond, result)
+}
+
+/**
+ * Represents a conditional CASE expression that can be extended with additional WHEN clauses
+ * or completed with an ELSE clause.
+ *
+ * @param T The return type of the CASE expression
+ */
+@Suppress("FunctionNaming")
+class CaseWhen<T> : BaseCaseWhen<T?>() {
+    /** The boolean conditions to check and their resulting expressions if the condition is met */
+    override val cases: MutableList<Pair<Expression<*>, Expression<out T>>> = mutableListOf()
+
+    /**
+     * Adds a conditional expression with a result if the condition evaluates to true.
+     *
+     * @param cond The boolean condition to evaluate
+     * @param result The expression to return if the condition is true
+     * @return This CaseWhen instance for method chaining
+     */
+    fun When(cond: Expression<*>, result: Expression<T>): CaseWhen<T> {
+        cases.add(cond to result)
+        return this
+    }
+
+    /**
+     * Adds a conditional expression with a literal result if the condition evaluates to true.
+     *
+     * @param cond The boolean condition to evaluate
+     * @param result The literal value to return if the condition is true
+     * @param resultType Optional column type for the result value
+     * @return This CaseWhen instance for method chaining
+     */
+    fun When(cond: Expression<T>, result: T, resultType: IColumnType<T & Any>? = null): CaseWhen<T> {
+        return When(cond, QueryParameter(result, resultType ?: columnType))
+    }
+
+    /** Returns all result expressions from the WHEN clauses */
+    override fun expressions(): List<Expression<out T?>> {
+        return cases.map { it.second }
+    }
+
+    /**
+     * Adds an ELSE clause with an expression result, completing the CASE statement.
+     *
+     * @param e The expression to return if all conditions are false
+     * @return A completed CaseWhenElse instance
+     */
+    fun Else(e: Expression<T>): ExpressionWithColumnType<T> = CaseWhenElse(cases, e)
+
+    /**
+     * Adds an ELSE clause with a literal result, completing the CASE statement.
+     *
+     * @param result The literal value to return if all conditions are false
+     * @param resultType Optional column type for the result value
+     * @return A completed CaseWhenElse instance
+     */
+    fun Else(result: T, resultType: IColumnType<T & Any>? = null): CaseWhenElse<T> {
+        return CaseWhenElse(cases, QueryParameter(result, resultType ?: columnType))
+    }
+}
+
+/**
+ * Represents a completed conditional CASE expression with an ELSE clause.
+ * Steps through conditions and returns a value when the first condition is met,
+ * or returns the ELSE result if all conditions are false.
+ *
+ * @param T The return type of the CASE expression
+ * @param cases The conditions to check and their results if met
+ * @param elseResult The result if none of the conditions are found to be true
+ */
+class CaseWhenElse<T>(
+    override val cases: List<Pair<Expression<*>, Expression<out T>>>,
+    override val elseResult: Expression<T>
+) : BaseCaseWhen<T>() {
+
+    /** Returns all result expressions from both WHEN clauses and the ELSE clause */
+    override fun expressions(): List<Expression<out T>> {
+        return cases.map { it.second } + elseResult
     }
 }
 

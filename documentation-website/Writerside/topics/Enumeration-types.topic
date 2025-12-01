@@ -9,6 +9,8 @@
         <p>
             <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-core</code>
         </p>
+        <include from="lib.topic" element-id="jdbc-supported"/>
+        <include from="lib.topic" element-id="r2dbc-limited-support"/>
     </tldr>
 
     <p>
@@ -24,7 +26,7 @@
         <deflist type="medium">
             <def id="enumeration-type">
                 <title>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/enumeration.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/enumeration.html">
                         <code>enumeration()</code>
                     </a>
                 </title>
@@ -36,7 +38,7 @@
             </def>
             <def id="enumerationByName-type">
                 <title>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/enumeration-by-name.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/enumeration-by-name.html">
                         <code>enumerationByName()</code>
                     </a>
                 </title>
@@ -48,7 +50,7 @@
             </def>
             <def id="customEnumeration-type">
                 <title>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/custom-enumeration.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/custom-enumeration.html">
                         <code>customEnumeration()</code>
                     </a>
                 </title>
@@ -118,18 +120,63 @@
                 your table. This differs from some other databases where enums can be defined inline within a
                 table definition.
             </p>
-            <code-block lang="kotlin"
-                        src="exposed-data-types/src/main/kotlin/org/example/examples/EnumerationExamples.kt"
-                        include-symbol="PGEnum"
-            />
-            <p>
-                Additionally, the PostgreSQL JDBC driver returns <code>PGobject</code> instances for such
-                values. So a <code>PGobject</code> with its type manually set to the ENUM type needs to be used for the <code>toDb</code> parameter.
-            </p>
+            <chapter title="JDBC" id="postgresql-jdbc">
+                <p>
+                    When using JDBC, the PostgreSQL driver returns <code>PGobject</code> instances for enum values.
+                    As such, a <code>PGobject</code> with its type manually set to the enum type must be used for the
+                    toDb parameter. You'll need a helper class like the following:
+                </p>
+                <code-block lang="kotlin"
+                            src="exposed-data-types/src/main/kotlin/org/example/examples/EnumerationExamples.kt"
+                            include-symbol="PGEnum"
+                />
+            </chapter>
+            <p>Example enum and table mapping:</p>
             <code-block lang="kotlin"
                         src="exposed-data-types/src/main/kotlin/org/example/examples/EnumerationExamples.kt"
                         include-symbol="Foo, EnumTable"
             />
+            <chapter title="R2DBC" id="postgresql-r2dbc">
+                <p>
+                    When using R2DBC, you must
+                    <a href="https://github.com/pgjdbc/r2dbc-postgresql?tab=readme-ov-file#postgres-enum-types">
+                        register the enum codec
+                    </a>
+                    when configuring your connection. This is done
+                    during the <code>R2dbcDatabase.connect()</code> step by providing a PostgreSQL-specific connection
+                    factory that uses <code>PostgresqlConnectionConfiguration.builder()</code> with a
+                    <code>codecRegistrar()</code>:
+                </p>
+                <code-block lang="Kotlin">
+                     val options = PostgresqlConnectionConfiguration.builder()
+                         .host("...")
+                         .username("...")
+                         .password("...")
+                         .database("...")
+                         // registered SQL enum name must match final name in database (PG always lower-case wrapped)
+                         .codecRegistrar(EnumCodec.builder().withEnum("fooenum", Foo::class.java).build())
+                         .build()
+                     val cxFactory = PostgresqlConnectionFactory(options)
+
+                     R2dbcDatabase.connect(
+                         connectionFactory = cxFactory,
+                         databaseConfig = R2dbcDatabaseConfig {
+                             explicitDialect = PostgreSQLDialect()
+                         }
+                     )
+                </code-block>
+                <p>With the codec registered, the table column mapping looks like this:</p>
+                <code-block lang="Kotlin"><![CDATA[
+                    object EnumTable : Table() {
+                        val enumColumn: Column<Foo> = customEnumeration(
+                            name = "enumColumn",
+                            sql = "FooEnum",
+                            fromDb = { value -> Foo.valueOf(value as String) },
+                            toDb = { value -> value }
+                        )
+                    }
+                ]]></code-block>
+            </chapter>
         </chapter>
     </chapter>
 </topic>

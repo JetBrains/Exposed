@@ -14,13 +14,13 @@ abstract class LongEntity(id: EntityID<Long>) : Entity<Long>(id)
  * @param [entityType] The expected [LongEntity] type. This can be left `null` if it is the class of type
  * argument [E] provided to this [LongEntityClass] instance. If this `LongEntityClass` is defined as a companion
  * object of a custom `LongEntity` class, the parameter will be set to this immediately enclosing class by default.
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.DDLTests.testDropTableFlushesCache
+ * @sample org.jetbrains.exposed.v1.tests.shared.DDLTests.testDropTableFlushesCache
  * @param [entityCtor] The function invoked to instantiate a [LongEntity] using a provided [EntityID] value.
  * If a reference to a specific constructor or a custom function is not passed as an argument, reflection will
  * be used to determine the primary constructor of the associated entity class on first access. If this `LongEntityClass`
  * is defined as a companion object of a custom `LongEntity` class, the constructor will be set to that of the
  * immediately enclosing class by default.
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.testExplicitEntityConstructor
+ * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.testExplicitEntityConstructor
  */
 abstract class LongEntityClass<out E : LongEntity>(
     table: IdTable<Long>,

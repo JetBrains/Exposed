@@ -2,13 +2,15 @@ package org.example.examples
 
 import kotlinx.datetime.*
 import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.insert
-import org.jetbrains.exposed.v1.kotlin.datetime.CurrentDateTime
-import org.jetbrains.exposed.v1.kotlin.datetime.CurrentTimestamp
-import org.jetbrains.exposed.v1.kotlin.datetime.date
-import org.jetbrains.exposed.v1.kotlin.datetime.datetime
-import org.jetbrains.exposed.v1.kotlin.datetime.time
-import org.jetbrains.exposed.v1.kotlin.datetime.timestamp
+import org.jetbrains.exposed.v1.datetime.CurrentDateTime
+import org.jetbrains.exposed.v1.datetime.CurrentTimestamp
+import org.jetbrains.exposed.v1.datetime.date
+import org.jetbrains.exposed.v1.datetime.datetime
+import org.jetbrains.exposed.v1.datetime.time
+import org.jetbrains.exposed.v1.datetime.timestamp
+import org.jetbrains.exposed.v1.jdbc.insert
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 class DateTimeExamples {
     companion object {
@@ -26,6 +28,8 @@ class DateTimeExamples {
         val startDate = date("start_date")
         val startTime = time("start_time").nullable()
         val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
+
+        @OptIn(ExperimentalTime::class)
         val updatedAt = timestamp("updated_at").defaultExpression(CurrentTimestamp)
 
         override val primaryKey = PrimaryKey(id)
@@ -38,6 +42,7 @@ class DateTimeExamples {
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     fun datetimeExample() {
         Events.insert {
             it[name] = "Team Meeting"
@@ -55,6 +60,7 @@ class DateTimeExamples {
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     fun timestampExample() {
         Events.insert {
             it[name] = "Project Deadline"

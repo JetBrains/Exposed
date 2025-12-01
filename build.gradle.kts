@@ -1,5 +1,6 @@
+import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.jetbrains.exposed.gradle.configureDetekt
-import org.jetbrains.exposed.gradle.configurePublishing
+import org.jetbrains.exposed.gradle.configureMavenCentralMetadata
 import org.jetbrains.exposed.gradle.testDb
 
 plugins {
@@ -9,6 +10,8 @@ plugins {
     id(libs.plugins.docker.compose.get().pluginId)
 
     alias(libs.plugins.dokka)
+    alias(libs.plugins.maven.publish)
+    alias(libs.plugins.kover)
 }
 
 dokka {
@@ -26,10 +29,35 @@ dependencies {
     dokka(projects.exposed.exposedJodatime)
     dokka(projects.exposed.exposedJson)
     dokka(projects.exposed.exposedKotlinDatetime)
-    dokka(projects.exposed.exposedMigration)
+    dokka(projects.exposed.exposedMigrationCore)
+    dokka(projects.exposed.exposedMigrationJdbc)
+    dokka(projects.exposed.exposedMigrationR2dbc)
     dokka(projects.exposed.exposedMoney)
+    dokka(projects.exposed.exposedR2dbc)
     dokka(projects.exposed.exposedSpringBootStarter)
     dokka(projects.exposed.springTransaction)
+
+    // Kover aggregated coverage dependencies
+    // Include all source modules for coverage aggregation
+    kover(project(":exposed-core"))
+    kover(project(":exposed-dao"))
+    kover(project(":exposed-jodatime"))
+    kover(project(":exposed-java-time"))
+    kover(project(":spring-transaction"))
+    kover(project(":exposed-spring-boot-starter"))
+    kover(project(":exposed-jdbc"))
+    kover(project(":exposed-money"))
+    kover(project(":exposed-kotlin-datetime"))
+    kover(project(":exposed-crypt"))
+    kover(project(":exposed-json"))
+    kover(project(":exposed-migration-core"))
+    kover(project(":exposed-migration-jdbc"))
+    kover(project(":exposed-migration-r2dbc"))
+    kover(project(":exposed-r2dbc"))
+
+    // Include test modules to ensure their tests are executed and coverage is collected
+    kover(project(":exposed-tests"))
+    kover(project(":exposed-r2dbc-tests"))
 }
 
 repositories {
@@ -38,13 +66,26 @@ repositories {
 }
 
 allprojects {
-    if (this.name != "exposed-tests" && this.name != "exposed-bom" && this.name != "exposed-r2dbc-tests" && this != rootProject) {
-        configurePublishing()
+    if (this.name != "exposed-tests" &&
+        this.name != "exposed-r2dbc-tests" &&
+        this.name != "exposed-jdbc-r2dbc-tests" &&
+        this != rootProject
+    ) {
+        apply(plugin = "com.vanniktech.maven.publish")
+        apply(plugin = "signing")
+        this@allprojects.mavenPublishing {
+            pom {
+                configureMavenCentralMetadata(this@allprojects)
+            }
+
+            publishToMavenCentral(automaticRelease = true)
+            signPublicationIfKeyPresent(this@allprojects, this)
+        }
     }
 }
 
 apiValidation {
-    ignoredProjects.addAll(listOf("exposed-tests", "exposed-bom", "exposed-r2dbc-tests"))
+    ignoredProjects.addAll(listOf("exposed-tests", "exposed-bom", "exposed-r2dbc-tests", "exposed-jdbc-r2dbc-tests"))
 }
 
 subprojects {
@@ -59,6 +100,7 @@ subprojects {
     if (name == "exposed-bom") return@subprojects
 
     apply(plugin = rootProject.libs.plugins.jvm.get().pluginId)
+    apply(plugin = rootProject.libs.plugins.kover.get().pluginId)
 
     testDb("h2_v2") {
         withContainer = false
@@ -66,15 +108,6 @@ subprojects {
 
         dependencies {
             dependency(rootProject.libs.h2)
-        }
-    }
-
-    testDb("h2_v1") {
-        withContainer = false
-        dialects("H2_V1", "H2_V1_MYSQL")
-
-        dependencies {
-            dependency(rootProject.libs.h1)
         }
     }
 
@@ -127,7 +160,7 @@ subprojects {
         port = 3003
         dialects("ORACLE")
         dependencies {
-            dependency(rootProject.libs.oracle19)
+            dependency(rootProject.libs.oracle)
         }
     }
 
@@ -154,6 +187,49 @@ subprojects {
         dialects("SQLSERVER")
         dependencies {
             dependency(rootProject.libs.mssql)
+        }
+    }
+}
+
+fun signPublicationIfKeyPresent(project: Project, publication: MavenPublishBaseExtension) {
+    val keyId = System.getenv("SIGNING_KEY_ID")
+    val signingKey = System.getenv("SIGNING_KEY")
+    val signingKeyPassphrase = System.getenv("SIGNING_PASSWORD")
+    if (!signingKey.isNullOrBlank()) {
+        println("In-memory GPG key found. Signing artifacts for ${project.path}.")
+        project.extensions.configure<SigningExtension>("signing") {
+            useInMemoryPgpKeys(keyId, preprocessPrivateGpgKey(signingKey), signingKeyPassphrase)
+            publication.signAllPublications()
+        }
+    }
+}
+
+private fun preprocessPrivateGpgKey(key: String): String {
+    val prefix = "-----BEGIN PGP PRIVATE KEY BLOCK-----"
+    val suffix = "-----END PGP PRIVATE KEY BLOCK-----"
+    val delimiter = "\r\n"
+    return prefix + delimiter + key
+        .replace(prefix, "")
+        .replace(suffix, "")
+        .replace(" ", "\r\n") + delimiter + suffix
+}
+
+// Configure Kover for aggregated project coverage
+kover {
+    reports {
+        total {
+            // Generate HTML report
+            html {
+                onCheck.set(true)
+            }
+            // Generate XML report for CI/CD integration
+            xml {
+                onCheck.set(true)
+            }
+            // Generate verification report
+            verify {
+                onCheck.set(true)
+            }
         }
     }
 }

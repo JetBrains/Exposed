@@ -4,7 +4,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
-import org.jetbrains.exposed.v1.*
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.statements.BatchDataInconsistentException
@@ -15,7 +14,6 @@ import org.jetbrains.exposed.v1.r2dbc.batchInsert
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
 import org.jetbrains.exposed.v1.r2dbc.selectAll
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.*
 import org.jetbrains.exposed.v1.r2dbc.tests.*
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
@@ -27,7 +25,7 @@ import org.jetbrains.exposed.v1.r2dbc.update
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.LocalTime
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -77,6 +75,7 @@ class JodaTimeDefaultsTest : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testDefaults01() {
         val currentDT = CurrentDateTime
@@ -283,6 +282,7 @@ class JodaTimeDefaultsTest : R2dbcDatabaseTestsBase() {
         assertEquals(date.millis, list1?.get(testData.dateTime)?.millis)
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testTimestampWithTimeZoneDefaults() {
         // UTC time zone

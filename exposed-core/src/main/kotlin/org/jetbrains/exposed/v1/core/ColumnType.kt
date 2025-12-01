@@ -6,8 +6,16 @@ import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.statements.api.ExposedBlob
 import org.jetbrains.exposed.v1.core.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.v1.core.statements.api.RowApi
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
-import org.jetbrains.exposed.v1.core.vendors.*
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.OracleDialect
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLNGDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
+import org.jetbrains.exposed.v1.core.vendors.h2Mode
 import java.io.InputStream
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -82,16 +90,14 @@ interface IColumnType<T> {
     fun nonNullValueAsDefaultString(value: T & Any): String = nonNullValueToString(value)
 
     /** Returns the object at the specified [index] in the [rs]. */
-    // TODO Could we avoid breaking change here for users?
-    // TODO What should do the users with custom column types that override this method?
-    fun readObject(rs: RowApi, index: Int): Any? = rs.getObject(index)
+    fun readObject(rs: RowApi, index: Int): Any? = rs.getObject(index, null, this)
 
     /** Sets the [value] at the specified [index] into the [stmt]. */
     fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         if (value == null || value is Op.NULL) {
             stmt.setNull(index, this)
         } else {
-            stmt[index] = value
+            stmt.set(index, value, this)
         }
     }
 
@@ -169,12 +175,12 @@ class AutoIncColumnType<T>(
             if (delegate is IntegerColumnType) sequence?.nextIntVal() else sequence?.nextLongVal()
         }
 
-    private fun resolveAutoIncType(columnType: IColumnType<*>): String = when {
-        columnType is EntityIDColumnType<*> -> resolveAutoIncType(columnType.idColumn.columnType)
-        columnType is IntegerColumnType && autoincSeq != null -> currentDialect.dataTypeProvider.integerType()
-        columnType is IntegerColumnType -> currentDialect.dataTypeProvider.integerAutoincType()
-        columnType is LongColumnType && autoincSeq != null -> currentDialect.dataTypeProvider.longType()
-        columnType is LongColumnType -> currentDialect.dataTypeProvider.longAutoincType()
+    private fun resolveAutoIncType(columnType: IColumnType<*>): String = when (columnType) {
+        is EntityIDColumnType<*> -> resolveAutoIncType(columnType.idColumn.columnType)
+        is IntegerColumnType if autoincSeq != null -> currentDialect.dataTypeProvider.integerType()
+        is IntegerColumnType -> currentDialect.dataTypeProvider.integerAutoincType()
+        is LongColumnType if autoincSeq != null -> currentDialect.dataTypeProvider.longType()
+        is LongColumnType -> currentDialect.dataTypeProvider.longAutoincType()
         else -> guessAutoIncTypeBy(columnType.sqlType())
     } ?: error("Unsupported type $delegate for auto-increment")
 
@@ -220,9 +226,9 @@ val Column<*>.autoIncColumnType: AutoIncColumnType<*>?
     get() = (columnType as? AutoIncColumnType)
         ?: (columnType as? EntityIDColumnType<*>)?.idColumn?.columnType as? AutoIncColumnType
 
-internal fun IColumnType<*>.rawSqlType(): IColumnType<*> = when {
-    this is AutoIncColumnType -> delegate
-    this is EntityIDColumnType<*> && idColumn.columnType is AutoIncColumnType -> idColumn.columnType.delegate
+internal fun IColumnType<*>.rawSqlType(): IColumnType<*> = when (this) {
+    is AutoIncColumnType -> delegate
+    is EntityIDColumnType<*> if idColumn.columnType is AutoIncColumnType -> idColumn.columnType.delegate
     else -> this
 }
 
@@ -611,18 +617,15 @@ class ULongColumnType : ColumnType<ULong>() {
     }
 
     override fun notNullValueToDB(value: ULong): Any {
-        val dialect = currentDialect
-        return when {
+        return when (currentDialect) {
             // PostgreSQLNG does not throw `out of range` error, so it's handled here to prevent storing invalid values
-            dialect is PostgreSQLNGDialect -> {
+            is PostgreSQLNGDialect -> {
                 value.takeIf { it >= 0uL && it <= Long.MAX_VALUE.toULong() }?.toLong()
                     ?: error("Value out of range: $value")
             }
-
-            dialect is PostgreSQLDialect -> BigInteger(value.toString())
+            is PostgreSQLDialect -> BigInteger(value.toString())
             // Long is also an accepted mapping, but this would require handling as above for Oor errors
-            dialect is H2Dialect -> BigDecimal(value.toString())
-
+            is H2Dialect -> BigDecimal(value.toString())
             else -> value.toString()
         }
     }
@@ -695,8 +698,6 @@ class DecimalColumnType(
         is BigDecimal -> value
         is Double -> {
             if (value.isNaN()) {
-                // TODO check for all `throw SQLException` in the code?
-                // TODO could some of them replaced wit other errors?
                 error("Unexpected value of type Double: NaN of ${value::class.qualifiedName}")
             } else {
                 value.toBigDecimal()
@@ -1048,12 +1049,12 @@ class BlobColumnType(
 class UUIDColumnType : ColumnType<UUID>() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.uuidType()
 
-    override fun valueFromDB(value: Any): UUID = when {
-        value is UUID -> value
-        value is ByteArray -> ByteBuffer.wrap(value).let { b -> UUID(b.long, b.long) }
-        value is String && value.matches(uuidRegexp) -> UUID.fromString(value)
-        value is String -> ByteBuffer.wrap(value.toByteArray()).let { b -> UUID(b.long, b.long) }
-        value is ByteBuffer -> value.let { b -> UUID(b.long, b.long) }
+    override fun valueFromDB(value: Any): UUID = when (value) {
+        is UUID -> value
+        is ByteArray -> ByteBuffer.wrap(value).let { b -> UUID(b.long, b.long) }
+        is String if value.matches(uuidRegexp) -> UUID.fromString(value)
+        is String -> ByteBuffer.wrap(value.toByteArray()).let { b -> UUID(b.long, b.long) }
+        is ByteBuffer -> value.let { b -> UUID(b.long, b.long) }
         else -> error("Unexpected value of type UUID: $value of ${value::class.qualifiedName}")
     }
 
@@ -1067,8 +1068,8 @@ class UUIDColumnType : ColumnType<UUID>() {
     @Suppress("MagicNumber")
     override fun readObject(rs: RowApi, index: Int): Any? {
         @OptIn(InternalApi::class)
-        val db = CoreTransactionManager.currentTransaction().db
-        if (currentDialect is MariaDBDialect && !db.isVersionCovers(10, 0)) {
+        val db = currentTransaction().db
+        if (currentDialect is MariaDBDialect && !db.version.covers(10)) {
             return rs.getObject(index, java.sql.Array::class.java)
         }
         return super.readObject(rs, index)
@@ -1330,11 +1331,10 @@ class ArrayColumnType<T, R : List<Any?>>(
     override fun readObject(rs: RowApi, index: Int): Any? = rs.getObject(index)
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
-        when {
-            value is Array<*> && isArrayOfByteArrays(value) ->
+        when (value) {
+            is Array<*> if isArrayOfByteArrays(value) ->
                 stmt.setArray(index, this, Array(value.size) { value[it] as ByteArray })
-
-            value is Array<*> -> stmt.setArray(index, this, value)
+            is Array<*> -> stmt.setArray(index, this, value)
             else -> super.setParameter(stmt, index, value)
         }
     }
@@ -1419,6 +1419,7 @@ interface JsonColumnMarker {
  * does not exist for type [T].
  *
  * @throws IllegalStateException If no column type mapping is found and a [defaultType] is not provided.
+ * @suppress
  */
 @InternalApi
 fun <T : Any> resolveColumnType(

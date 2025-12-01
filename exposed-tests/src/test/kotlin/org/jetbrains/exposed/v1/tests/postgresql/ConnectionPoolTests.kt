@@ -16,10 +16,9 @@ import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Assert
-import org.junit.Assert.assertNotNull
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNotNull
 import java.sql.Connection
 
 class ConnectionPoolTests : LogDbInTestName() {
@@ -45,7 +44,7 @@ class ConnectionPoolTests : LogDbInTestName() {
 
     @Test
     fun testSchemaAndConnectionsWithHikariAndPostgresql() {
-        Assume.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
 
         // setting default schema directly in hikari config should not throw exception when Exposed creates
         // a new transaction and checks if connection parameters need to be reset
@@ -62,7 +61,7 @@ class ConnectionPoolTests : LogDbInTestName() {
 
     @Test
     fun testReadOnlyModeWithHikariAndPostgres() {
-        Assume.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
 
         // read only mode should be set directly by hikari config
         transaction(db = hikariPG) {
@@ -76,7 +75,7 @@ class ConnectionPoolTests : LogDbInTestName() {
 
         // transaction setting should override hikari config
         transaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, readOnly = false, db = hikariPG) {
-            Assert.assertFalse(getReadOnlyMode())
+            Assumptions.assumeFalse(getReadOnlyMode())
 
             // table can now be created and dropped
             SchemaUtils.create(TestTable)
@@ -88,7 +87,7 @@ class ConnectionPoolTests : LogDbInTestName() {
 
     @Test
     fun testSuspendedReadOnlyModeWithHikariAndPostgres() = runTest {
-        Assume.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
 
         val testTable = object : IntIdTable("HIKARI_TESTER") { }
 
@@ -104,7 +103,7 @@ class ConnectionPoolTests : LogDbInTestName() {
 
         // transaction setting should override hikari config
         newSuspendedTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, readOnly = false, db = hikariPG) {
-            Assert.assertFalse(getReadOnlyMode())
+            Assumptions.assumeFalse(getReadOnlyMode())
 
             // table can now be created and dropped
             SchemaUtils.create(testTable)

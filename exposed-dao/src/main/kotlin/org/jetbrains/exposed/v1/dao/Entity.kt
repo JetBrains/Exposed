@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.v1.dao
 
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -65,7 +64,13 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
     var db: Database by Delegates.notNull()
         internal set
 
-    /** The initial column-value mapping for this [Entity] instance before being flushed and inserted into the database. */
+    /**
+     * The initial column-value mapping for this [Entity] instance before being flushed and inserted into the database.
+     *
+     * These values are transferred to [readValues] before being sent to the database during a flush operation.
+     * In case of a transaction failure, both [writeValues] and [readValues] are cleared before rollback
+     * to ensure that no stale data is carried over into a new transaction.
+     */
     val writeValues = LinkedHashMap<Column<Any?>, Any?>()
 
     @Suppress("VariableNaming")
@@ -75,7 +80,7 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
     val readValues: ResultRow
         get() = _readValues ?: run {
             val table = klass.table
-            _readValues = klass.searchQuery(Op.build { table.id eq id }).firstOrNull()
+            _readValues = klass.searchQuery(table.id eq id).firstOrNull()
                 ?: table.selectAll().where { table.id eq id }.first()
             _readValues!!
         }
@@ -93,7 +98,7 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
      *
      * @param flush Whether pending entity changes should be flushed prior to updating.
      * @throws EntityNotFoundException If the entity no longer exists in the database.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.testNewWithIdAndRefresh
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.testNewWithIdAndRefresh
      */
     open fun refresh(flush: Boolean = false) {
         val transaction = TransactionManager.current()
@@ -333,9 +338,9 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
      * The reference should have been defined by the creation of a column using `reference()` on an intermediate table.
      *
      * @param table The intermediate table containing reference columns to both child and parent objects.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityHookTestData.User
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityHookTestData.City
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityHookTestData.UsersToCities
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityHookTestData.User
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityHookTestData.City
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityHookTestData.UsersToCities
      */
     infix fun <TID : Any, Target : Entity<TID>> EntityClass<TID, Target>.via(
         table: Table
@@ -350,9 +355,9 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
      *
      * @param sourceColumn The intermediate table's reference column for the child entity class.
      * @param targetColumn The intermediate table's reference column for the parent entity class.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.ViaTests.NodesTable
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.ViaTests.Node
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.ViaTests.NodeToNodes
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.ViaTests.NodesTable
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.ViaTests.Node
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.ViaTests.NodeToNodes
      */
     fun <TID : Any, Target : Entity<TID>> EntityClass<TID, Target>.via(
         sourceColumn: Column<EntityID<ID>>,
@@ -362,7 +367,7 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
     /**
      * Deletes this [Entity] instance, both from the cache and from the database.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.testErrorOnSetToDeletedEntity
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.testErrorOnSetToDeletedEntity
      */
     open fun delete() {
         val table = klass.table
@@ -381,7 +386,7 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
      * @param batch The [EntityBatchUpdate] instance that should be used to perform a batch update operation
      * for multiple entities. If left `null`, a single update operation will be executed for this entity only.
      * @return `false` if no cached inserts or updates were sent to the database; `true`, otherwise.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityHookTest.testCallingFlushNotifiesEntityHookSubscribers
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityHookTest.testCallingFlushNotifiesEntityHookSubscribers
      */
     open fun flush(batch: EntityBatchUpdate? = null): Boolean {
         if (isNewEntity()) {

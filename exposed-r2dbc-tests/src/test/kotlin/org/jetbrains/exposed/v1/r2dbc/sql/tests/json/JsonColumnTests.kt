@@ -10,8 +10,6 @@ import kotlinx.serialization.builtins.ArraySerializer
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.OracleDialect
@@ -31,7 +29,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -246,8 +244,8 @@ class JsonColumnTests : R2dbcDatabaseTestsBase() {
             val userArray = json<Array<User>>("user_array", Json.Default)
         }
 
-        suspend fun selectIdWhere(condition: SqlExpressionBuilder.() -> Op<Boolean>): List<EntityID<Int>> {
-            val query = iterables.select(iterables.id).where(SqlExpressionBuilder.condition())
+        suspend fun selectIdWhere(condition: () -> Op<Boolean>): List<EntityID<Int>> {
+            val query = iterables.select(iterables.id).where(condition())
             return query.map { it[iterables.id] }.toList()
         }
 
@@ -285,10 +283,10 @@ class JsonColumnTests : R2dbcDatabaseTestsBase() {
                     SchemaUtils.createMissingTablesAndColumns(defaultTester)
                 }
             } else {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(defaultTester)
+                SchemaUtils.createMissingTablesAndColumns(defaultTester)
                 assertTrue(defaultTester.exists())
                 // ensure defaults match returned metadata defaults
-                val alters = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.statementsRequiredToActualizeScheme(defaultTester)
+                val alters = SchemaUtils.statementsRequiredToActualizeScheme(defaultTester)
                 assertTrue(alters.isEmpty())
 
                 defaultTester.insert {}
@@ -301,7 +299,7 @@ class JsonColumnTests : R2dbcDatabaseTestsBase() {
                     assertEquals(defaultUser.team, it[defaultTester.user2].team)
                 }
 
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(defaultTester)
+                SchemaUtils.drop(defaultTester)
             }
         }
     }
@@ -345,7 +343,7 @@ class JsonColumnTests : R2dbcDatabaseTestsBase() {
             val user = json<User>("user", Json.Default).nullable()
         }
 
-        withTables(tester) {
+        withTables(tester) { testDb ->
             val nullId = tester.insertAndGetId {
                 it[user] = null
             }
@@ -358,6 +356,21 @@ class JsonColumnTests : R2dbcDatabaseTestsBase() {
 
             val result2 = tester.select(tester.user).where { tester.id eq nonNullId }.single()
             assertNotNull(result2[tester.user])
+
+            val batchData = listOf(null, User("B", "Team B"))
+            val batchSql = mutableListOf<String>()
+            // Oracle throws: Batch execution returning generated values is not supported
+            tester.batchInsert(batchData, shouldReturnGeneratedValues = testDb != TestDB.ORACLE) { user ->
+                this[tester.user] = user
+
+                batchSql += this.prepareSQL(this@withTables, prepared = true)
+            }
+            assertEquals(batchData.size, batchSql.size)
+            val expectedMarker = when (testDb) {
+                in TestDB.ALL_POSTGRES -> "?::json"
+                else -> "?"
+            }
+            assertTrue(batchSql.all { it.contains(expectedMarker, ignoreCase = true) })
         }
     }
 

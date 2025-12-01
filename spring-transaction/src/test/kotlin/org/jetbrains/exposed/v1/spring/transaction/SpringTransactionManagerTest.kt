@@ -1,10 +1,12 @@
 package org.jetbrains.exposed.v1.spring.transaction
 
-import junit.framework.TestCase.assertEquals
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy
 import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy
 import org.springframework.transaction.IllegalTransactionStateException
@@ -13,8 +15,6 @@ import org.springframework.transaction.TransactionStatus
 import org.springframework.transaction.TransactionSystemException
 import org.springframework.transaction.support.TransactionTemplate
 import java.sql.SQLException
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
@@ -36,14 +36,14 @@ class SpringTransactionManagerTest {
      */
     private var databaseBeforeTestStart: Database? = null
 
-    @BeforeTest
+    @BeforeEach
     fun beforeTest() {
         databaseBeforeTestStart = TransactionManager.defaultDatabase
         con1.clearMock()
         con2.clearMock()
     }
 
-    @AfterTest
+    @AfterEach
     fun afterTest() {
         while (TransactionManager.defaultDatabase != databaseBeforeTestStart) {
             TransactionManager.defaultDatabase?.let { TransactionManager.closeAndUnregister(it) }
@@ -73,9 +73,10 @@ class SpringTransactionManagerTest {
 
         tm2.executeAssert(false) {
             tm.executeAssert(false)
+
             assertEquals(
-                TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),
-                TransactionManager.manager
+                TransactionManager.currentOrNull()?.db?.let { TransactionManager.managerFor(it) },
+                TransactionManager.current().transactionManager
             )
         }
     }
@@ -124,8 +125,8 @@ class SpringTransactionManagerTest {
         tm1.executeAssert {
             tm2.executeAssert()
             assertEquals(
-                TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),
-                TransactionManager.manager
+                TransactionManager.currentOrNull()?.db?.let { TransactionManager.managerFor(it) },
+                TransactionManager.current().transactionManager
             )
         }
 
@@ -146,8 +147,8 @@ class SpringTransactionManagerTest {
                     throw ex
                 }
                 assertEquals(
-                    TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),
-                    TransactionManager.manager
+                    TransactionManager.currentOrNull()?.db?.let { TransactionManager.managerFor(it) },
+                    TransactionManager.current().transactionManager
                 )
             }
         } catch (e: Exception) {
@@ -410,10 +411,13 @@ class SpringTransactionManagerTest {
         tt.propagationBehavior = propagationBehavior
         if (timeout != null) tt.timeout = timeout
         tt.executeWithoutResult {
-            assertEquals(
-                TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),
-                TransactionManager.manager
-            )
+            TransactionManager.currentOrNull()?.db?.let { db ->
+                assertEquals(
+                    TransactionManager.managerFor(db),
+                    TransactionManager.current().transactionManager
+                )
+            }
+
             if (initializeConnection) TransactionManager.current().connection
             body(it)
         }

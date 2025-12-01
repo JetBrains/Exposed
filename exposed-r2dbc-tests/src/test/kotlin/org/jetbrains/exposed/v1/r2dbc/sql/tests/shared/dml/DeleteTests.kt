@@ -1,16 +1,14 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml
 
-import junit.framework.TestCase.assertNull
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.v1.core.Join
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
 import org.jetbrains.exposed.v1.core.alias
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.innerJoin
 import org.jetbrains.exposed.v1.core.joinQuery
 import org.jetbrains.exposed.v1.core.lastQueryAlias
-import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.r2dbc.ExposedR2dbcException
@@ -27,7 +25,8 @@ import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Test
 import kotlin.test.assertTrue
 import kotlin.test.expect
 
@@ -91,8 +90,7 @@ class DeleteTests : R2dbcDatabaseTestsBase() {
                 userData.deleteWhere(limit = 1) { userData.value eq 20 }
                 userData.select(userData.user_id, userData.value).where { userData.value eq 20 }.let {
                     assertEquals(1L, it.count())
-                    val expected = if (currentDialectTest is H2Dialect) "smth" else "eugene"
-                    assertEquals(expected, it.single()[userData.user_id])
+                    assertEquals("eugene", it.single()[userData.user_id])
                 }
             }
         }

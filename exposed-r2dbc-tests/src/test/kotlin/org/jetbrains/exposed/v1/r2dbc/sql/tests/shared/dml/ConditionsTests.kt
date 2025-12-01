@@ -1,20 +1,13 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml
 
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greater
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greaterEq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.less
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
-import org.jetbrains.exposed.v1.r2dbc.ExposedR2dbcException
-import org.jetbrains.exposed.v1.r2dbc.insert
-import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
-import org.jetbrains.exposed.v1.r2dbc.select
-import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.*
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.forEach
@@ -22,8 +15,8 @@ import org.jetbrains.exposed.v1.r2dbc.tests.forEachIndexed
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
-import org.jetbrains.exposed.v1.r2dbc.update
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
 
 class ConditionsTests : R2dbcDatabaseTestsBase() {
@@ -109,13 +102,13 @@ class ConditionsTests : R2dbcDatabaseTestsBase() {
             val longRef = reference("long_ref", longTable)
         }
 
-        suspend fun selectIdWhere(condition: SqlExpressionBuilder.() -> Op<Boolean>): List<Long> {
-            val query = longTable.select(longTable.id).where(SqlExpressionBuilder.condition())
+        suspend fun selectIdWhere(condition: () -> Op<Boolean>): List<Long> {
+            val query = longTable.select(longTable.id).where(condition())
             return query.map { it[longTable.id].value }.toList()
         }
 
-        suspend fun selectIdFromJoinWhere(condition: SqlExpressionBuilder.() -> Op<Boolean>): List<Long> {
-            val query = (longTable innerJoin longTable2).select(longTable.id).where(SqlExpressionBuilder.condition())
+        suspend fun selectIdFromJoinWhere(condition: () -> Op<Boolean>): List<Long> {
+            val query = (longTable innerJoin longTable2).select(longTable.id).where(condition())
             return query.map { it[longTable.id].value }.toList()
         }
 
@@ -286,7 +279,7 @@ class ConditionsTests : R2dbcDatabaseTestsBase() {
     fun nullOpInCaseTest() {
         withCitiesAndUsers { cities, _, _ ->
             val caseCondition = Case()
-                .When(Op.build { cities.id eq 1 }, Op.nullOp<String>())
+                .When(cities.id eq 1, Op.nullOp<String>())
                 .Else(cities.name)
             var nullBranchWasExecuted = false
             cities.select(cities.id, cities.name, caseCondition).forEach {
@@ -307,16 +300,13 @@ class ConditionsTests : R2dbcDatabaseTestsBase() {
         withCitiesAndUsers { cities, _, _ ->
             val original = "ORIGINAL"
             val copy = "COPY"
-            val condition = Op.build { cities.id eq 1 }
+            val condition = cities.id eq 1
 
             val caseCondition1 = Case()
                 .When(condition, stringLiteral(original))
                 .Else(Op.nullOp())
             // Case().When().Else() invokes CaseWhenElse() so the 2 formats should be interchangeable as arguments
-            val caseCondition2 = CaseWhenElse(
-                Case().When(condition, stringLiteral(original)),
-                Op.nullOp()
-            )
+            val caseCondition2 = case().When(condition, stringLiteral(original)).Else(Op.nullOp())
             val function1 = Coalesce(caseCondition1, stringLiteral(copy))
             val function2 = Coalesce(caseCondition2, stringLiteral(copy))
 
@@ -341,12 +331,12 @@ class ConditionsTests : R2dbcDatabaseTestsBase() {
     fun testChainedAndNestedCaseWhenElseSyntax() {
         withCitiesAndUsers { cities, _, _ ->
             val nestedCondition = Case()
-                .When(Op.build { cities.id eq 1 }, intLiteral(1))
+                .When(cities.id eq 1, intLiteral(1))
                 .Else(intLiteral(-1))
             val chainedCondition = Case()
-                .When(Op.build { cities.name like "M%" }, intLiteral(0))
-                .When(Op.build { cities.name like "St. %" }, nestedCondition)
-                .When(Op.build { cities.name like "P%" }, intLiteral(2))
+                .When(cities.name like "M%", intLiteral(0))
+                .When(cities.name like "St. %", nestedCondition)
+                .When(cities.name like "P%", intLiteral(2))
                 .Else(intLiteral(-1))
 
             val results = cities.select(cities.name, chainedCondition)
@@ -418,6 +408,141 @@ class ConditionsTests : R2dbcDatabaseTestsBase() {
             tester.insert { it[name] = "Something" }
 
             assertEquals(2, tester.selectAll().where { tester.name.isNullOrEmpty() }.count())
+        }
+    }
+
+    @Test
+    fun testCaseWithCountAndSum() {
+        val tester = object : IntIdTable("checkins") {
+            val group = integer("group")
+            val type = text("type")
+        }
+
+        withTables(excludeSettings = listOf(TestDB.ORACLE), tester) {
+            tester.batchInsert(
+                listOf(
+                    0 to "CODE", 0 to "CODE", 0 to "CARD", 0 to "CARD",
+                    1 to "CARD", 1 to "CARD",
+                    2 to "CODE", 2 to "CODE", 2 to "CODE"
+                )
+            ) {
+                this[tester.group] = it.first
+                this[tester.type] = it.second
+            }
+
+            listOf(
+                Count(case(tester.type).When("CODE", 1, IntegerColumnType())),
+                Count(case(tester.type).When("CODE", intLiteral(1))),
+                Count(case().When(tester.type eq "CODE", intLiteral(1))),
+                Count(case().When(tester.type eq "CODE", intLiteral(1)).Else(Op.nullOp())),
+                Sum(case().When(tester.type eq "CODE", intLiteral(1)).Else(0), IntegerColumnType()),
+            )
+                .forEach { expr ->
+                    tester
+                        .select(
+                            tester.group,
+                            expr
+                        )
+                        .groupBy(tester.group)
+                        .orderBy(tester.group, SortOrder.ASC)
+                        .forEach {
+                            val count = it[expr]
+                            val group = it[tester.group]
+                            when (group) {
+                                0 -> assertEquals(2, count?.toInt())
+                                1 -> assertEquals(0, count?.toInt())
+                                2 -> assertEquals(3, count?.toInt())
+                            }
+                        }
+                }
+        }
+    }
+
+    @Test
+    fun testCaseWithQueryParameter() {
+        val tester = object : IntIdTable("tester") {
+            val key = integer("key")
+            val value = text("value")
+        }
+
+        withTables(excludeSettings = listOf(TestDB.ORACLE), tester) {
+            tester.batchInsert(
+                listOf(
+                    0 to "TEST0",
+                    1 to "TEST1"
+                ),
+                shouldReturnGeneratedValues = false
+            ) {
+                this[tester.key] = it.first
+                this[tester.value] = it.second
+            }
+
+            val expr = case().When(tester.value eq stringParam("TEST0"), intParam(100)).Else(intParam(0))
+
+            tester
+                .select(expr)
+                .where { tester.key eq 0 }
+                .first()[expr]
+                .let { assertEquals(100, it) }
+            tester
+                .select(expr)
+                .where { tester.key eq 1 }
+                .first()[expr]
+                .let { assertEquals(0, it) }
+        }
+    }
+
+    @Test
+    fun testValueCase() {
+        val tester = object : IntIdTable("tester") {
+            val key = integer("key")
+        }
+
+        withTables(excludeSettings = listOf(TestDB.ORACLE), tester) {
+            tester.batchInsert(listOf(0, 1)) {
+                this[tester.key] = it
+            }
+
+            case(tester.key).When(intParam(0), intParam(100)).Else(intParam(10))
+                .let { expr ->
+                    tester
+                        .select(expr)
+                        .where { tester.key eq 0 }
+                        .first()[expr]
+                        .let { assertEquals(100, it) }
+                }
+
+            case(tester.key).When(0, 100, IntegerColumnType()).Else(10)
+                .let { expr ->
+                    tester
+                        .select(expr)
+                        .where { tester.key eq 0 }
+                        .first()[expr]
+                        .let { assertEquals(100, it) }
+                }
+
+            case(tester.key).When(0, 100).Else(10)
+                .let { expr ->
+                    tester
+                        .select(expr)
+                        .where { tester.key eq 0 }
+                        .first()[expr]
+                        .let { assertEquals(100, it) }
+                }
+
+            class SimpleValueContainer(val value: Int)
+
+            assertFails {
+                // There is no source of column type for the result
+                case(tester.key).When(0, SimpleValueContainer(1)).Else(SimpleValueContainer(1))
+                    .let { expr ->
+                        tester
+                            .select(expr)
+                            .where { tester.key eq 0 }
+                            .first()[expr]
+                            .let { assertEquals(100, it) }
+                    }
+            }
         }
     }
 }

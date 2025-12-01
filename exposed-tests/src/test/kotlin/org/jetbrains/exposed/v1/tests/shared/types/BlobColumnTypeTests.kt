@@ -4,6 +4,7 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.blobParam
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.statements.api.ExposedBlob
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
@@ -17,7 +18,7 @@ import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.nio.charset.Charset
 import kotlin.random.Random
 import kotlin.test.assertContentEquals

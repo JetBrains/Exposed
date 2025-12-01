@@ -1,41 +1,54 @@
 package org.jetbrains.exposed.v1.tests.shared.dml
 
-import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.concat
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.less
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.minus
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.neq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.plus
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.times
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.concat
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.intLiteral
+import org.jetbrains.exposed.v1.core.less
+import org.jetbrains.exposed.v1.core.like
+import org.jetbrains.exposed.v1.core.minus
+import org.jetbrains.exposed.v1.core.neq
+import org.jetbrains.exposed.v1.core.plus
 import org.jetbrains.exposed.v1.core.statements.BatchUpsertStatement
 import org.jetbrains.exposed.v1.core.statements.UpdateStatement
 import org.jetbrains.exposed.v1.core.statements.UpsertBuilder
+import org.jetbrains.exposed.v1.core.statements.insertValue
+import org.jetbrains.exposed.v1.core.stringLiteral
+import org.jetbrains.exposed.v1.core.stringParam
+import org.jetbrains.exposed.v1.core.times
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
-import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.batchUpsert
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.upsert
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.lang.Integer.parseInt
 import java.util.*
 import kotlin.properties.Delegates
+import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 
 @Suppress("LargeClass")
 class UpsertTests : DatabaseTestsBase() {
     // these DB require key columns from ON clause to be included in the derived source table (USING clause)
-    private val upsertViaMergeDB = TestDB.ALL_H2 + TestDB.SQLSERVER + TestDB.ORACLE
+    private val upsertViaMergeDB = TestDB.ALL_H2_V2 + TestDB.SQLSERVER + TestDB.ORACLE
 
     @Test
     fun testUpsertWithPKConflict() {
-        withTables(excludeSettings = TestDB.ALL_H2_V1, AutoIncTable) { testDb ->
+        withTables(AutoIncTable) { testDb ->
             val id1 = AutoIncTable.insert {
                 it[name] = "A"
             } get AutoIncTable.id
@@ -65,7 +78,7 @@ class UpsertTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(idA, idB)
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, tester) {
+        withTables(tester) {
             val insertStmt = tester.insert {
                 it[idA] = 1
                 it[idB] = 1
@@ -109,7 +122,7 @@ class UpsertTests : DatabaseTestsBase() {
             }
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, tester) { testDb ->
+        withTables(tester) { testDb ->
             val primaryKeyValues = Pair("User A", "Key A")
             // insert new row
             upsertOnlyKeyColumns(primaryKeyValues)
@@ -126,7 +139,7 @@ class UpsertTests : DatabaseTestsBase() {
 
     @Test
     fun testUpsertWithUniqueIndexConflict() {
-        withTables(excludeSettings = TestDB.ALL_H2_V1, Words) {
+        withTables(Words) {
             val wordA = Words.upsert {
                 it[word] = "A"
                 it[count] = 10
@@ -154,7 +167,7 @@ class UpsertTests : DatabaseTestsBase() {
             val name = varchar("name", 64)
         }
 
-        withTables(excludeSettings = TestDB.ALL_MYSQL_LIKE + TestDB.ALL_H2_V1, tester) { testDb ->
+        withTables(excludeSettings = TestDB.ALL_MYSQL_LIKE, tester) { testDb ->
             val oldIdA = tester.insert {
                 it[idA] = 1
                 it[idB] = 1
@@ -200,7 +213,7 @@ class UpsertTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, tester) {
+        withTables(tester) {
             val uuid1 = tester.upsert {
                 it[title] = "A"
             } get tester.id
@@ -223,7 +236,7 @@ class UpsertTests : DatabaseTestsBase() {
 
         val okWithNoUniquenessDB = TestDB.ALL_MYSQL_LIKE + TestDB.SQLITE
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, tester) { testDb ->
+        withTables(tester) { testDb ->
             if (testDb in okWithNoUniquenessDB) {
                 tester.upsert {
                     it[name] = "A"
@@ -241,7 +254,7 @@ class UpsertTests : DatabaseTestsBase() {
 
     @Test
     fun testUpsertWithManualUpdateAssignment() {
-        withTables(excludeSettings = TestDB.ALL_H2_V1, Words) {
+        withTables(Words) {
             val testWord = "Test"
 
             repeat(3) {
@@ -274,7 +287,7 @@ class UpsertTests : DatabaseTestsBase() {
             statement[tester.losses] = tester.losses - insertValue(tester.amount)
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, tester) {
+        withTables(tester) {
             val itemA = tester.upsert {
                 it[item] = "Item A"
             } get tester.item
@@ -315,7 +328,7 @@ class UpsertTests : DatabaseTestsBase() {
             val phrase = varchar("phrase", 256).defaultExpression(stringParam(defaultPhrase))
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, tester) {
+        withTables(tester) {
             val testWord = "Test"
             tester.upsert { // default expression in insert
                 it[word] = testWord
@@ -358,7 +371,7 @@ class UpsertTests : DatabaseTestsBase() {
             val count = integer("count").default(1)
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, tester) {
+        withTables(tester) {
             tester.insert {
                 it[id] = 1
                 it[word] = "Word A"
@@ -410,7 +423,7 @@ class UpsertTests : DatabaseTestsBase() {
             val losses = integer("losses")
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, tester, configure = { useNestedTransactions = true }) {
+        withTables(tester, configure = { useNestedTransactions = true }) {
             val itemA = "Item A"
             tester.upsert {
                 it[item] = itemA
@@ -537,7 +550,7 @@ class UpsertTests : DatabaseTestsBase() {
             val name = varchar("name", 32)
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, tester1, tester2) { testDb ->
+        withTables(tester1, tester2) { testDb ->
             val id1 = tester1.insertAndGetId {
                 it[name] = "foo"
             }
@@ -563,7 +576,7 @@ class UpsertTests : DatabaseTestsBase() {
 
     @Test
     fun testBatchUpsertWithNoConflict() {
-        withTables(excludeSettings = TestDB.ALL_H2_V1, Words) {
+        withTables(Words) {
             val amountOfWords = 10
             val allWords = List(amountOfWords) { i -> "Word ${'A' + i}" to amountOfWords * i + amountOfWords }
 
@@ -579,7 +592,7 @@ class UpsertTests : DatabaseTestsBase() {
 
     @Test
     fun testBatchUpsertWithConflict() {
-        withTables(excludeSettings = TestDB.ALL_H2_V1, Words) {
+        withTables(Words) {
             val vowels = listOf("A", "E", "I", "O", "U")
             val alphabet = ('A'..'Z').map { it.toString() }
             val lettersWithDuplicates = alphabet + vowels
@@ -601,7 +614,7 @@ class UpsertTests : DatabaseTestsBase() {
 
     @Test
     fun testBatchUpsertWithSequence() {
-        withTables(excludeSettings = TestDB.ALL_H2_V1, Words) {
+        withTables(Words) {
             val amountOfWords = 25
             val allWords = List(amountOfWords) { UUID.randomUUID().toString() }.asSequence()
             Words.batchUpsert(allWords) { word -> this[Words.word] = word }
@@ -614,7 +627,7 @@ class UpsertTests : DatabaseTestsBase() {
 
     @Test
     fun testBatchUpsertWithEmptySequence() {
-        withTables(excludeSettings = TestDB.ALL_H2_V1, Words) {
+        withTables(Words) {
             val allWords = emptySequence<String>()
             Words.batchUpsert(allWords) { word -> this[Words.word] = word }
 
@@ -653,7 +666,7 @@ class UpsertTests : DatabaseTestsBase() {
 
     @Test
     fun testInsertedCountWithBatchUpsert() {
-        withTables(excludeSettings = TestDB.ALL_H2_V1, AutoIncTable) { testDb ->
+        withTables(AutoIncTable) { testDb ->
             // SQL Server requires statements to be executed before results can be obtained
             val isNotSqlServer = testDb != TestDB.SQLSERVER
             val data = listOf(1 to "A", 2 to "B", 3 to "C")
@@ -755,7 +768,7 @@ class UpsertTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(myTableId)
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, tester) {
+        withTables(tester) {
             tester.upsert {
                 it[myTableId] = 1
                 it[myTableValue] = "Hello"
@@ -799,7 +812,7 @@ class UpsertTests : DatabaseTestsBase() {
             val databaseGenerated = integer("databaseGenerated").default(-1)
         }
 
-        withTables(excludeSettings = listOf(TestDB.H2_V1), tester) {
+        withTables(tester) {
             testerWithFakeDefaults.batchUpsert(listOf(1, 2, 3)) {
                 this[testerWithFakeDefaults.number] = 10
             }
@@ -877,6 +890,65 @@ class UpsertTests : DatabaseTestsBase() {
             assertEqualLists(listOf(1.1, 2.2), value[tester.doubleArray])
             assertEqualLists(listOf('a', 'b'), value[tester.charArray])
             assertEqualLists(uuidList, value[tester.uuidArray])
+        }
+    }
+
+    @Test
+    fun testExcludedValueInWhereCondition() {
+        val tester = object : Table("upsert_where_excluded") {
+            val id = integer("id")
+                .uniqueIndex()
+            val name = text("name")
+            val order = integer("order")
+        }
+
+        class TesterData(val id: Int, val name: String, val order: Int)
+
+        fun testerBatchUpsert(data: List<TesterData>) {
+            tester.batchUpsert(
+                data,
+                tester.id,
+                onUpdate = {
+                    it[tester.name] = insertValue(tester.name)
+                    it[tester.order] = insertValue(tester.order)
+                },
+                where = {
+                    tester.order less insertValue(tester.order)
+                }
+            ) {
+                this[tester.id] = it.id
+                this[tester.name] = it.name
+                this[tester.order] = it.order
+            }
+        }
+
+        fun assertTesterName(id: Int, name: String) {
+            assertEquals(name, tester.selectAll().where { tester.id eq id }.single()[tester.name])
+        }
+
+        // SQL seems correct, but the statement fails on POSTGRESNG.
+        // It looks like POSTGRESNG driver fails if batch insert fails if the amount of result rows less
+        // than amount of statements in batch (due to `where` condition in this case)
+        withTables(excludeSettings = TestDB.ALL_MYSQL_LIKE + upsertViaMergeDB + TestDB.POSTGRESQLNG, tester) {
+            testerBatchUpsert(
+                listOf(
+                    TesterData(1, "tester1", 10),
+                    TesterData(2, "tester2", 10),
+                )
+            )
+
+            assertTesterName(1, "tester1")
+            assertTesterName(2, "tester2")
+
+            testerBatchUpsert(
+                listOf(
+                    TesterData(1, "tester1-modified", 5),
+                    TesterData(2, "tester2-modified", 20),
+                )
+            )
+
+            assertTesterName(1, "tester1")
+            assertTesterName(2, "tester2-modified")
         }
     }
 }

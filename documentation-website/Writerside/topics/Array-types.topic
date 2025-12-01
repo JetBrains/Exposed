@@ -9,6 +9,8 @@
         <p>
             <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-core</code>
         </p>
+        <include from="lib.topic" element-id="jdbc-supported"/>
+        <include from="lib.topic" element-id="r2dbc-limited-support"/>
     </tldr>
     <p>
         Exposed provides support for array data types, allowing you to store and manipulate arrays of various data
@@ -19,7 +21,7 @@
     <chapter title="Supported types" id="supported-types">
         <p>
             The <code>exposed-core</code> module supports two main ways to define array columns using the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/array.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/array.html">
                 <code>.array()</code>
             </a>
             function:
@@ -57,10 +59,13 @@
         <p>Here's an example of inserting data into array columns:</p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/ArrayExamples.kt"
-                    include-lines="59-63"
+                    include-lines="63-67"
         />
     </chapter>
     <chapter title="Multidimensional arrays" id="multidimensional-arrays">
+        <tldr>
+            <include from="lib.topic" element-id="r2dbc-not-supported"/>
+        </tldr>
         <p>PostgreSQL supports multidimensional arrays, which can be defined using the <code>dimensions</code> parameter:</p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/ArrayExamples.kt"
@@ -72,7 +77,7 @@
         <p>To access individual elements, use index operators:</p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/ArrayExamples.kt"
-                    include-lines="70-73"
+                    include-lines="74-77"
         />
         <note>
             <p>Both PostgreSQL and H2 use one-based indexing, so the first element is at index 1.</p>
@@ -82,14 +87,14 @@
     <chapter title="Array slicing" id="array-slicing">
         <p>
             Use
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/slice.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/slice.html">
                 <code>.slice()</code>
             </a>
             to extract subarrays:
         </p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/ArrayExamples.kt"
-                    include-lines="80"
+                    include-lines="84"
         />
         <p>Both lower and upper bounds are optional when using PostgreSQL.</p>
     </chapter>
@@ -98,7 +103,7 @@
         <p>Use array columns with SQL's <code>ANY</code> and <code>ALL</code> operators:</p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/ArrayExamples.kt"
-                    include-lines="87-93"
+                    include-lines="91-97"
         />
     </chapter>
 </topic>

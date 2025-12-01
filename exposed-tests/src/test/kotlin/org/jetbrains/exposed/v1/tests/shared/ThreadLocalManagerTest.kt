@@ -15,8 +15,8 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.dml.DMLTestsData
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import kotlin.concurrent.thread
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
@@ -26,7 +26,7 @@ import kotlin.test.fail
 class ThreadLocalManagerTest : DatabaseTestsBase() {
     @Test
     fun testReconnection() {
-        Assume.assumeTrue(TestDB.MYSQL_V5 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.MYSQL_V5 in TestDB.enabledDialects())
 
         var secondThreadTm: TransactionManager? = null
         val db1 = TestDB.MYSQL_V5.connect()
@@ -53,7 +53,7 @@ class ThreadLocalManagerTest : DatabaseTestsBase() {
     fun testReadOnly() {
         withTables(excludeSettings = READ_ONLY_EXCLUDED_VENDORS, RollbackTable) {
             assertFails {
-                inTopLevelTransaction(db.transactionManager.defaultIsolationLevel, true) {
+                inTopLevelTransaction(readOnly = true) {
                     maxAttempts = 1
                     RollbackTable.insert { it[value] = "random-something" }
                 }
@@ -63,7 +63,7 @@ class ThreadLocalManagerTest : DatabaseTestsBase() {
 
     @Test
     fun testSuspendedReadOnly() = runTest {
-        Assume.assumeFalse(dialect in READ_ONLY_EXCLUDED_VENDORS)
+        Assumptions.assumeFalse(dialect in READ_ONLY_EXCLUDED_VENDORS)
 
         val database = dialect.connect()
         newSuspendedTransaction(db = database, readOnly = true) {
@@ -95,4 +95,4 @@ object RollbackTable : IntIdTable("rollbackTable") {
 // Explanation: MariaDB driver never set readonly to true, MSSQL silently ignores the call, SQLite does not
 // promise anything, H2 has very limited functionality
 private val READ_ONLY_EXCLUDED_VENDORS =
-    TestDB.ALL_H2 + TestDB.ALL_MARIADB + listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)
+    TestDB.ALL_H2_V2 + TestDB.ALL_MARIADB + listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)

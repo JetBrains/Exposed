@@ -21,17 +21,17 @@ dependencies {
     api(project(":exposed-core"))
     api(project(":exposed-dao"))
     api(project(":spring-transaction"))
-    // TODO how to avoid this
-    //  Should we create r2dbc-spring-boot-starter module?
-    compileOnly(project(":exposed-jdbc"))
     api(libs.spring.boot.starter.jdbc)
     api(libs.spring.boot.autoconfigure)
     compileOnly(libs.spring.boot.configuration.processor)
+
     testImplementation(libs.spring.boot.starter.test)
     // put in testImplementation so no hard dependency for those using the starter
     testImplementation(libs.spring.boot.starter.webflux)
     testImplementation(libs.h2)
     testImplementation(project(":exposed-jdbc"))
+    testRuntimeOnly(libs.junit.platform.launcher)
+    testImplementation(libs.junit6)
 }
 
 tasks.withType<KotlinCompile>().configureEach {

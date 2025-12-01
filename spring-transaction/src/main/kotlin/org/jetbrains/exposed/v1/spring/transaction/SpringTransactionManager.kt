@@ -1,11 +1,13 @@
 package org.jetbrains.exposed.v1.spring.transaction
 
 import org.jetbrains.exposed.v1.core.DatabaseConfig
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.exposedLogger
+import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
+import org.jetbrains.exposed.v1.core.transactions.currentTransactionOrNull
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
-import org.jetbrains.exposed.v1.jdbc.addLogger
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.springframework.jdbc.datasource.ConnectionHandle
@@ -27,7 +29,7 @@ import javax.sql.DataSource
  * @param databaseConfig The configuration that defines custom properties to be used with connections.
  * If none is specified, the default configuration values will be used.
  * @property showSql Whether transaction queries should be logged. Defaults to `false`.
- * @sample org.jetbrains.exposed.spring.TestConfig
+ * @sample org.jetbrains.exposed.v1.spring.transaction.TestConfig
  */
 class SpringTransactionManager(
     private val dataSource: DataSource,
@@ -35,19 +37,11 @@ class SpringTransactionManager(
     private val showSql: Boolean = false,
 ) : AbstractPlatformTransactionManager() {
 
-    private var _database: Database
-    private var _transactionManager: TransactionManager
-
-    private val threadLocalTransactionManager: TransactionManager
-        get() = _transactionManager
+    private val database: Database = Database.connect(
+        datasource = dataSource, databaseConfig = databaseConfig
+    )
 
     init {
-        _database = Database.connect(
-            datasource = dataSource, databaseConfig = databaseConfig
-        ).apply {
-            _transactionManager = this.transactionManager
-        }
-
         isNestedTransactionAllowed = databaseConfig.useNestedTransactions
     }
 
@@ -60,12 +54,11 @@ class SpringTransactionManager(
     override fun useSavepointForNestedTransaction() = false
 
     override fun doGetTransaction(): Any {
-        val outerManager = TransactionManager.manager
-        val outer = threadLocalTransactionManager.currentOrNull()
+        // Get the transaction for this specific database from the stack
+        val outer = TransactionManager.currentOrNull()
 
         return ExposedTransactionObject(
-            manager = threadLocalTransactionManager,
-            outerManager = outerManager,
+            database = database,
             outerTransaction = outer,
         ).apply {
             // hold on to existing Spring JDBC connection holders
@@ -75,16 +68,14 @@ class SpringTransactionManager(
 
     override fun doSuspend(transaction: Any): Any {
         val trxObject = transaction as ExposedTransactionObject
-        val currentManager = trxObject.manager
 
+        @OptIn(InternalApi::class)
         return SuspendedObject(
-            transaction = currentManager.currentOrNull() as JdbcTransaction,
-            manager = currentManager,
+            transaction = trxObject.getCurrentTransaction() ?: error("No transaction to suspend"),
             // unbind Spring JDBC connection reference
             connectionHolder = TransactionSynchronizationManager.unbindResource(dataSource) as ConnectionHolder,
         ).apply {
-            currentManager.bindTransactionToThread(null)
-            TransactionManager.resetCurrent(null)
+            ThreadLocalTransactionsStack.popTransaction()
             trxObject.connectionHolder = null
         }
     }
@@ -92,16 +83,13 @@ class SpringTransactionManager(
     override fun doResume(transaction: Any?, suspendedResources: Any) {
         val suspendedObject = suspendedResources as SuspendedObject
 
-        // resume exposed transaction
-        TransactionManager.resetCurrent(suspendedObject.manager)
-        threadLocalTransactionManager.bindTransactionToThread(suspendedObject.transaction)
-        // resume Spring JDBC transaction
+        @OptIn(InternalApi::class)
+        ThreadLocalTransactionsStack.pushTransaction(suspendedObject.transaction)
         TransactionSynchronizationManager.bindResource(dataSource, suspendedObject.connectionHolder)
     }
 
     private data class SuspendedObject(
         val transaction: JdbcTransaction,
-        val manager: TransactionManager,
         val connectionHolder: ConnectionHolder,
     )
 
@@ -113,14 +101,21 @@ class SpringTransactionManager(
     override fun doBegin(transaction: Any, definition: TransactionDefinition) {
         val trxObject = transaction as ExposedTransactionObject
 
-        // Exposed transaction
-        val currentTransactionManager = trxObject.manager
-        TransactionManager.resetCurrent(threadLocalTransactionManager)
+        // If the current transaction in the stack is null (because it was suspended),
+        // or if it belongs to a different database, then we should not use it as outer transaction
+        @OptIn(InternalApi::class)
+        val currentTransaction = currentTransactionOrNull() as JdbcTransaction?
+        val outerTransactionToUse = if (currentTransaction?.db == database) {
+            currentTransaction
+        } else {
+            null
+        }
 
-        val transaction = currentTransactionManager.newTransaction(
+        // exposed transaction
+        val newTransaction = trxObject.database.transactionManager.newTransaction(
             isolation = definition.isolationLevel,
             readOnly = definition.isReadOnly,
-            outerTransaction = currentTransactionManager.currentOrNull()
+            outerTransaction = outerTransactionToUse
         ).apply {
             if (definition.timeout != TransactionDefinition.TIMEOUT_DEFAULT) {
                 queryTimeout = definition.timeout
@@ -130,12 +125,14 @@ class SpringTransactionManager(
                 addLogger(StdOutSqlLogger)
             }
         }
+        @OptIn(InternalApi::class)
+        ThreadLocalTransactionsStack.pushTransaction(newTransaction)
 
         // Spring JDBC transaction
         @Suppress("TooGenericExceptionCaught")
         try {
             if (trxObject.connectionHolder == null) {
-                trxObject.connectionHolder = ConnectionHolder(ExposedConnectionHandle(transaction))
+                trxObject.connectionHolder = ConnectionHolder(ExposedConnectionHandle(newTransaction))
                 trxObject.isNewConnectionHolder = true
             }
 
@@ -153,14 +150,12 @@ class SpringTransactionManager(
 
     override fun doCommit(status: DefaultTransactionStatus) {
         val trxObject = status.transaction as ExposedTransactionObject
-        TransactionManager.resetCurrent(trxObject.manager)
         trxObject.commit()
         // Spring JDBC implicitly committed since they share connection
     }
 
     override fun doRollback(status: DefaultTransactionStatus) {
         val trxObject = status.transaction as ExposedTransactionObject
-        TransactionManager.resetCurrent(trxObject.manager)
         trxObject.rollback()
         // Spring JDBC implicitly rolled back since they share connection
     }
@@ -172,7 +167,8 @@ class SpringTransactionManager(
         trxObject.cleanUpTransactionIfIsPossible {
             closeStatementsAndConnections(it)
         }
-        trxObject.setCurrentToOuter()
+        @OptIn(InternalApi::class)
+        ThreadLocalTransactionsStack.popTransaction()
 
         // Clean up Spring JDBC
         if (trxObject.isNewConnectionHolder) {
@@ -209,9 +205,8 @@ class SpringTransactionManager(
     }
 
     private data class ExposedTransactionObject(
-        val manager: TransactionManager,
-        val outerManager: TransactionManager,
-        private val outerTransaction: JdbcTransaction?,
+        val database: Database,
+        val outerTransaction: JdbcTransaction?,
     ) : SmartTransactionObject {
 
         private var isRollback: Boolean = false
@@ -225,15 +220,10 @@ class SpringTransactionManager(
             }
         }
 
-        fun setCurrentToOuter() {
-            manager.bindTransactionToThread(outerTransaction)
-            TransactionManager.resetCurrent(outerManager)
-        }
-
         @Suppress("TooGenericExceptionCaught")
         fun commit() {
             try {
-                manager.currentOrNull()?.commit()
+                getCurrentTransaction()?.commit()
             } catch (error: Exception) {
                 throw TransactionSystemException(error.message.orEmpty(), error)
             }
@@ -242,13 +232,17 @@ class SpringTransactionManager(
         @Suppress("TooGenericExceptionCaught")
         fun rollback() {
             try {
-                manager.currentOrNull()?.rollback()
+                getCurrentTransaction()?.rollback()
             } catch (error: Exception) {
                 throw TransactionSystemException(error.message.orEmpty(), error)
             }
         }
 
-        fun getCurrentTransaction(): JdbcTransaction? = manager.currentOrNull()
+        @OptIn(InternalApi::class)
+        fun getCurrentTransaction(): JdbcTransaction? {
+            // Get the transaction for this specific database from the stack
+            return ThreadLocalTransactionsStack.getTransactionOrNull(database) as JdbcTransaction?
+        }
 
         fun setRollbackOnly() {
             isRollback = true

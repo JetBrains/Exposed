@@ -4,6 +4,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.alias
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.intLiteral
 import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
@@ -24,7 +26,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.jetbrains.exposed.v1.r2dbc.union
 import org.jetbrains.exposed.v1.r2dbc.unionAll
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertTrue
 
 class UnionTests : R2dbcDatabaseTestsBase() {
@@ -97,8 +99,7 @@ class UnionTests : R2dbcDatabaseTestsBase() {
             val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
             val expectedUsers = usersQuery.map { it[users.id] }.toList() + "sergey"
             val intersectAppliedFirst = when (currentDialect) {
-                is PostgreSQLDialect, is SQLServerDialect, is MariaDBDialect -> true
-                is H2Dialect -> (currentDialect as H2Dialect).isSecondVersion
+                is PostgreSQLDialect, is SQLServerDialect, is MariaDBDialect, is H2Dialect -> true
                 else -> false
             }
             usersQuery.unionAll(usersQuery).intersect(sergeyQuery).map { it[users.id] }.toList().apply {

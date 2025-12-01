@@ -7,8 +7,12 @@ import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.innerJoin
+import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.joinQuery
+import org.jetbrains.exposed.v1.core.like
+import org.jetbrains.exposed.v1.core.neq
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
@@ -22,7 +26,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.forEach
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.jetbrains.exposed.v1.r2dbc.update
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertTrue
 
 class UpdateTests : R2dbcDatabaseTestsBase() {

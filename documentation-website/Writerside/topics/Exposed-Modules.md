@@ -33,11 +33,15 @@ Exposed consists of multiple modules that we've split into two categories:
 
 To use Exposed in your application you need the following core modules:
 
-| Module         | Function                                                                                                                                                      |
-|----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `exposed-core` | Provides the foundational components and abstractions needed to work with databases in a type-safe manner and includes the Domain-Specific Language (DSL) API |
-| `exposed-dao`  | (Optional) Allows you to work with the Data Access Object (DAO) API                                                                                           |
-| `exposed-jdbc` | Provides support for Java Database Connectivity (JDBC) with a transport-level implementation based on the Java JDBC API                                       |
+| Module          | Function                                                                                                                                                         |
+|-----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `exposed-core`  | Provides the foundational components and abstractions needed to work with databases in a type-safe manner and includes the Domain-Specific Language (DSL) API    |
+| `exposed-dao`   | (Optional) Allows you to work with the Data Access Object (DAO) API. <br> It is only compatible with `exposed-jdbc` and does not work with `exposed-r2dbc`.</br> |
+| `exposed-jdbc`  | Provides support for Java Database Connectivity (JDBC) with a transport-level implementation based on the Java JDBC API                                          |
+| `exposed-r2dbc` | Provides support for Reactive Relational Database Connectivity (R2DBC)                                                                                           |
+
+> You only need one transport module – either `exposed-jdbc` or `exposed-r2dbc`, not both.
+> {style="note"}
 
 Add the required Exposed modules to your project's dependencies:
 
@@ -68,12 +72,14 @@ and date-time handling:
 | `exposed-money`               | Extensions to support [`MonetaryAmount`](https://javamoney.github.io/apidocs/java.money/javax/money/MonetaryAmount.html) from the [JavaMoney API](https://javamoney.github.io/) |
 | `exposed-spring-boot-starter` | A starter for [Spring Boot](https://spring.io/projects/spring-boot) to utilize Exposed as the ORM instead of [Hibernate](https://hibernate.org/)                                |
 | `spring-transaction`          | Transaction manager that builds on top of Spring's standard transaction workflow                                                                                                |
-| `exposed-migration`           | Provides utilities to support database schema migrations                                                                                                                        |
+| `exposed-migration-core`      | Provides core common functionality for database schema migrations                                                                                                               |
+| `exposed-migration-jdbc`      | Provides utilities to support database schema migrations, with a reliance on a JDBC driver                                                                                      |
+| `exposed-migration-r2dbc`     | Provides utilities to support database schema migrations, with a reliance on a R2DBC driver                                                                                     |
 
 
-## Add a JDBC driver
+## Add a JDBC/R2DBC driver
 
-You also need a JDBC driver for the database system you are using. For example, the following dependency
+You also need a JDBC or R2DBC driver for the database system you are using. For example, the following dependency
 adds a JDBC driver for the H2 database:
 
 <tabs>

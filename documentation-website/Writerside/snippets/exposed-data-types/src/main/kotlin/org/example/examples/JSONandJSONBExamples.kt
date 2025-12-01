@@ -4,16 +4,17 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.lowerCase
-import org.jetbrains.exposed.v1.insert
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.json.contains
 import org.jetbrains.exposed.v1.json.exists
 import org.jetbrains.exposed.v1.json.extract
 import org.jetbrains.exposed.v1.json.json
-import org.jetbrains.exposed.v1.selectAll
-import org.jetbrains.exposed.v1.update
 
 const val GROUP_ID_LENGTH = 32
 const val INT_ARRAY_ITEM_1 = 1
@@ -124,4 +125,41 @@ class JSONandJSONBExamples {
             )
         }
     }
+
+    /*
+     Generated SQL:
+
+     INSERT INTO tasks (project)
+     VALUES (JSONB('{"name":"Main","language":"Java","active":true}'))
+     */
+    fun insertJSONBSqlite() {
+        TasksTable.insert {
+            it[project] = Project("Main", "Java", true)
+        }
+    }
+
+    /*
+     Generated SQL:
+
+     SELECT JSON(tasks.project) ptext FROM tasks
+     */
+    fun selectJSONBSqlite() {
+        val projectText = TasksTable.project.function("JSON").alias("ptext")
+        val projects = TasksTable.select(projectText).map { it[projectText] }
+        println(projects) // [Project(name=Main, language=Java, active=true)]
+    }
+}
+
+/*
+ Generated SQL:
+
+ CREATE TABLE IF NOT EXISTS tasks (
+    complete BOOLEAN DEFAULT 0 NOT NULL,
+    project BLOB DEFAULT (JSONB('{"name":"Main","language":"Kotlin","active":true}')) NOT NULL
+ )
+ */
+object TasksTable : Table("tasks") {
+    val complete = bool("complete").default(false)
+    val project = jsonb<Project>("project", Json.Default)
+        .default(Project("Main", "Kotlin", true))
 }

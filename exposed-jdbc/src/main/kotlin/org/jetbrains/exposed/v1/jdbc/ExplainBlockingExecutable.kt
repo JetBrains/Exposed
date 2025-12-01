@@ -2,8 +2,8 @@ package org.jetbrains.exposed.v1.jdbc
 
 import org.jetbrains.exposed.v1.core.ExplainQuery
 import org.jetbrains.exposed.v1.core.ExplainResultRow
-import org.jetbrains.exposed.v1.core.statements.IStatementBuilder
 import org.jetbrains.exposed.v1.core.statements.Statement
+import org.jetbrains.exposed.v1.core.statements.StatementBuilder
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
 import org.jetbrains.exposed.v1.core.statements.buildStatement
 import org.jetbrains.exposed.v1.jdbc.statements.BlockingExecutable
@@ -13,18 +13,21 @@ import org.jetbrains.exposed.v1.jdbc.statements.jdbc.JdbcResult
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import java.sql.ResultSet
 
+/**
+ * Represents the execution logic for an SQL statement that obtains information about a statement execution plan.
+ */
 open class ExplainBlockingExecutable(
     override val statement: ExplainQuery
 ) : BlockingExecutable<ResultApi, ExplainQuery>, Iterable<ExplainResultRow> {
     override fun JdbcPreparedStatementApi.executeInternal(transaction: JdbcTransaction): JdbcResult = executeQuery()
 
     override fun iterator(): Iterator<ExplainResultRow> {
-        val rs = TransactionManager.current().exec(this)!! as JdbcResult
-        val resultIterator = ResultIterator(rs.result)
+        val rs = TransactionManager.current().execQuery(this)
+        val resultIterator = ResultIterator(rs)
         return Iterable { resultIterator }.iterator()
     }
 
-    private inner class ResultIterator(rs: ResultSet) : StatementIterator<String, ExplainResultRow>(rs) {
+    private class ResultIterator(rs: ResultSet) : StatementIterator<String, ExplainResultRow>(rs) {
         override val fieldIndex: Map<String, Int> = List(result.metaData.columnCount) { i ->
             result.metaData.getColumnName(i + 1) to i
         }.toMap()
@@ -48,12 +51,12 @@ open class ExplainBlockingExecutable(
  * **Note:** Optional parameters are not supported by all vendors, please check the documentation.
  * @param body The statement for which an execution plan should be queried. This can be a `SELECT`, `INSERT`,
  * `REPLACE`, `UPDATE` or `DELETE` statement.
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.ExplainTests.testExplainWithStatementsNotExecuted
+ * @sample org.jetbrains.exposed.v1.tests.shared.dml.ExplainTests.testExplainWithStatementsNotExecuted
  */
 fun JdbcTransaction.explain(
     analyze: Boolean = false,
     options: String? = null,
-    body: IStatementBuilder.() -> Statement<*>
+    body: StatementBuilder.() -> Statement<*>
 ): ExplainBlockingExecutable {
     val stmt = ExplainQuery(analyze, options, buildStatement(body))
     return ExplainBlockingExecutable(stmt)

@@ -19,7 +19,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -285,7 +285,7 @@ class AliasesTests : R2dbcDatabaseTestsBase() {
                 it[isDraft] = false
             }
 
-            val inputSum = SqlExpressionBuilder.coalesce(
+            val inputSum = coalesce(
                 subInvoices.mainAmount.sum(), decimalLiteral(BigDecimal.ZERO)
             ).alias("input_sum")
 
@@ -294,9 +294,10 @@ class AliasesTests : R2dbcDatabaseTestsBase() {
                     subInvoices.isDraft eq false
                 }.groupBy(subInvoices.productId).alias("input")
 
-            val sumTotal = Expression.build {
-                coalesce(input[inputSum], decimalLiteral(BigDecimal.ZERO))
-            }.alias("inventory")
+            val sumTotal = coalesce(
+                input[inputSum],
+                decimalLiteral(BigDecimal.ZERO)
+            ).alias("inventory")
 
             val booleanValue = when (testDb) {
                 in TestDB.ALL_ORACLE_LIKE, in TestDB.ALL_SQLSERVER_LIKE -> "0"

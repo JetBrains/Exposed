@@ -3,14 +3,17 @@
 
 package org.jetbrains.exposed.v1.datetime
 
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
+import kotlinx.datetime.toDeprecatedInstant
 import org.jetbrains.exposed.v1.core.Cast
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.isNotNull
+import org.jetbrains.exposed.v1.core.isNull
+import org.jetbrains.exposed.v1.core.neq
 import org.jetbrains.exposed.v1.core.substring
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -21,13 +24,15 @@ import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.MiscTable
 import org.jetbrains.exposed.v1.tests.shared.checkInsert
 import org.jetbrains.exposed.v1.tests.shared.checkRow
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 @Suppress("LargeClass")
 class MiscTableTest : DatabaseTestsBase() {
@@ -37,7 +42,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val date = today
         val dateTime = now()
         val time = dateTime.time
-        val timestamp = Clock.System.now()
+        val timestamp = Clock.System.now().asJdk8()
         val duration = 1.minutes
 
         withTables(tbl) {
@@ -49,6 +54,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 it[t] = time
                 it[dt] = dateTime
                 it[ts] = timestamp
+                it[xts] = timestamp.toDeprecatedInstant()
                 it[dr] = duration
                 it[e] = MiscTable.E.ONE
                 it[es] = MiscTable.E.ONE
@@ -74,7 +80,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val date = today
         val dateTime = now()
         val time = dateTime.time
-        val timestamp = Clock.System.now()
+        val timestamp = Clock.System.now().asJdk8()
         val duration = 1.minutes
 
         withTables(tbl) {
@@ -92,7 +98,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 it[dt] = dateTime
                 it[dtn] = null
                 it[ts] = timestamp
-                it[tsn] = null
+                it[xts] = timestamp.toDeprecatedInstant()
+                it[xtsn] = null
                 it[dr] = duration
                 it[drn] = null
                 it[e] = MiscTable.E.ONE
@@ -123,7 +130,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val date = today
         val dateTime = now()
         val time = dateTime.time
-        val timestamp = Clock.System.now()
+        val timestamp = Clock.System.now().asJdk8()
         val duration = 1.minutes
 
         withTables(tbl) {
@@ -141,7 +148,9 @@ class MiscTableTest : DatabaseTestsBase() {
                 it[dt] = dateTime
                 it[dtn] = dateTime
                 it[ts] = timestamp
+                it[xts] = timestamp.toDeprecatedInstant()
                 it[tsn] = timestamp
+                it[xtsn] = timestamp.toDeprecatedInstant()
                 it[dr] = duration
                 it[drn] = duration
                 it[e] = MiscTable.E.ONE
@@ -175,7 +184,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val date = today
         val dateTime = now()
         val time = dateTime.time
-        val timestamp = Clock.System.now()
+        val timestamp = Clock.System.now().asJdk8()
         val duration = 1.minutes
 
         withTables(tbl) {
@@ -187,6 +196,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 it[t] = time
                 it[dt] = dateTime
                 it[ts] = timestamp
+                it[xts] = timestamp.toDeprecatedInstant()
                 it[dr] = duration
                 it[e] = MiscTable.E.ONE
                 it[es] = MiscTable.E.ONE
@@ -211,7 +221,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val date = today
         val dateTime = now()
         val time = dateTime.time
-        val timestamp = Clock.System.now()
+        val timestamp = Clock.System.now().asJdk8()
         val duration = 1.minutes
 
         withTables(tbl) {
@@ -223,6 +233,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 it[t] = time
                 it[dt] = dateTime
                 it[ts] = timestamp
+                it[xts] = timestamp.toDeprecatedInstant()
                 it[dr] = duration
                 it[e] = MiscTable.E.ONE
                 it[es] = MiscTable.E.ONE
@@ -252,7 +263,7 @@ class MiscTableTest : DatabaseTestsBase() {
             val date = today
             val dateTime = now()
             val time = dateTime.time
-            val timestamp = Clock.System.now()
+            val timestamp = Clock.System.now().asJdk8()
             val duration = 1.minutes
             val sTest = "test"
             val dec = BigDecimal("239.42")
@@ -264,6 +275,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 it[t] = time
                 it[dt] = dateTime
                 it[ts] = timestamp
+                it[xts] = timestamp.toDeprecatedInstant()
                 it[dr] = duration
                 it[e] = MiscTable.E.ONE
                 it[es] = MiscTable.E.ONE
@@ -693,7 +705,7 @@ class MiscTableTest : DatabaseTestsBase() {
             val date = today
             val dateTime = now()
             val time = dateTime.time
-            val timestamp = Clock.System.now()
+            val timestamp = Clock.System.now().asJdk8()
             val duration = 1.minutes
             val sTest = "test"
             val eOne = MiscTable.E.ONE
@@ -712,7 +724,9 @@ class MiscTableTest : DatabaseTestsBase() {
                 it[dt] = dateTime
                 it[dtn] = dateTime
                 it[ts] = timestamp
+                it[xts] = timestamp.toDeprecatedInstant()
                 it[tsn] = timestamp
+                it[xtsn] = timestamp.toDeprecatedInstant()
                 it[dr] = duration
                 it[drn] = duration
                 it[e] = eOne
@@ -1060,7 +1074,7 @@ class MiscTableTest : DatabaseTestsBase() {
             val eOne = MiscTable.E.ONE
             val sTest = "test"
             val dec = BigDecimal("239.42")
-            val timestamp = Clock.System.now()
+            val timestamp = Clock.System.now().asJdk8()
             val duration = 1.minutes
             tbl.insert {
                 it[by] = 13
@@ -1076,7 +1090,9 @@ class MiscTableTest : DatabaseTestsBase() {
                 it[dt] = dateTime
                 it[dtn] = dateTime
                 it[ts] = timestamp
+                it[xts] = timestamp.toDeprecatedInstant()
                 it[tsn] = timestamp
+                it[xtsn] = timestamp.toDeprecatedInstant()
                 it[dr] = duration
                 it[drn] = duration
                 it[e] = eOne
@@ -1098,7 +1114,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 it[dn] = null
                 it[tn] = null
                 it[dtn] = null
-                it[tsn] = null
+                it[xtsn] = null
                 it[drn] = null
                 it[en] = null
                 it[esn] = null
@@ -1149,7 +1165,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val date = today
         val dateTime = now()
         val time = dateTime.time
-        val timestamp = Clock.System.now()
+        val timestamp = Clock.System.now().asJdk8()
         val duration = 1.minutes
         val eOne = MiscTable.E.ONE
         val dec = BigDecimal("239.42")
@@ -1166,6 +1182,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 it[t] = time
                 it[dt] = dateTime
                 it[ts] = timestamp
+                it[xts] = timestamp.toDeprecatedInstant()
                 it[dr] = duration
                 it[e] = eOne
                 it[es] = eOne
@@ -1275,6 +1292,9 @@ object Misc : MiscTable() {
     val ts = timestamp("ts")
     val tsn = timestamp("tsn").nullable()
 
+    val xts = xTimestamp("xts")
+    val xtsn = xTimestamp("xtsn").nullable()
+
     val dr = duration("dr")
     val drn = duration("drn").nullable()
 }
@@ -1335,8 +1355,8 @@ fun Misc.checkRowDates(
     assertLocalTime(tn, row[Misc.tn])
     assertEqualDateTime(dt, row[Misc.dt])
     assertEqualDateTime(dtn, row[Misc.dtn])
-    assertEqualDateTime(ts, row[Misc.ts])
-    assertEqualDateTime(tsn, row[Misc.tsn])
+    assertEqualDateTime(ts.toDeprecatedInstant(), row[Misc.xts])
+    assertEqualDateTime(tsn?.toDeprecatedInstant(), row[Misc.xtsn])
     assertEquals(dr, row[Misc.dr])
     assertEquals(drn, row[Misc.drn])
 }

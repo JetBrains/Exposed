@@ -2,7 +2,7 @@ package org.example.examples
 
 import org.example.entities.ActorEntity
 import org.example.entities.StarWarsFilmEntity
-import org.jetbrains.exposed.v1.SizedCollection
+import org.jetbrains.exposed.v1.jdbc.SizedCollection
 
 const val MOVIE2_SEQUEL_ID = 9
 

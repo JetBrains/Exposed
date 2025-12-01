@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.v1.tests.shared.types
 
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -12,7 +14,7 @@ import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class UnsignedColumnTypeTests : DatabaseTestsBase() {
     object UByteTable : Table("ubyte_table") {
@@ -75,7 +77,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
     @Test
     fun testPreviousUByteColumnTypeWorksWithNewSmallIntType() {
         // MySQL and MariaDB type hasn't changed, and PostgreSQL and Oracle never supported TINYINT
-        withDb(TestDB.ALL_H2 - TestDB.H2_V2_PSQL + TestDB.SQLITE) { testDb ->
+        withDb(TestDB.ALL_H2_V2 - TestDB.H2_V2_PSQL + TestDB.SQLITE) { testDb ->
             try {
                 val tableName = UByteTable.nameInDatabaseCase()
                 val columnName = UByteTable.unsignedByte.nameInDatabaseCase()

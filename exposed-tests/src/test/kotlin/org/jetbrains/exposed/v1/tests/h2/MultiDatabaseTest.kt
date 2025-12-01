@@ -11,20 +11,19 @@ import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.withSuspendTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.dml.DMLTestsData
-import org.junit.After
-import org.junit.Assume
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import java.sql.Connection
 import java.util.concurrent.Executors
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class MultiDatabaseTest {
 
@@ -46,17 +45,12 @@ class MultiDatabaseTest {
     }
     private var currentDB: Database? = null
 
-    @Before
+    @BeforeEach
     fun before() {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
-        if (TransactionManager.isInitialized()) {
-            currentDB = TransactionManager.currentOrNull()?.db
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        TransactionManager.currentOrNull()?.db?.let {
+            currentDB = it
         }
-    }
-
-    @After
-    fun after() {
-        TransactionManager.resetCurrent(currentDB?.transactionManager)
     }
 
     @Test
@@ -227,7 +221,8 @@ class MultiDatabaseTest {
     fun `when default database is not explicitly set - should return the latest connection`() {
         db1
         db2
-        assertEquals(TransactionManager.defaultDatabase, db2)
+        assertNull(TransactionManager.defaultDatabase)
+        assertEquals(TransactionManager.primaryDatabase, db2)
     }
 
     @Test
@@ -236,6 +231,7 @@ class MultiDatabaseTest {
         db2
         TransactionManager.defaultDatabase = db1
         assertEquals(TransactionManager.defaultDatabase, db1)
+        assertEquals(TransactionManager.primaryDatabase, db1)
         TransactionManager.defaultDatabase = null
     }
 
@@ -245,7 +241,9 @@ class MultiDatabaseTest {
         db2
         TransactionManager.defaultDatabase = db1
         TransactionManager.closeAndUnregister(db1)
-        assertEquals(TransactionManager.defaultDatabase, db2)
+        // closeAndUnregister() also removes the db from any internal storage, like default if set
+        assertNull(TransactionManager.defaultDatabase)
+        assertEquals(TransactionManager.primaryDatabase, db2)
         TransactionManager.defaultDatabase = null
     }
 

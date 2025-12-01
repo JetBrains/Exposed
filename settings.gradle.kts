@@ -14,9 +14,12 @@ include("exposed-bom")
 include("exposed-kotlin-datetime")
 include("exposed-crypt")
 include("exposed-json")
-include("exposed-migration")
+include("exposed-migration-core")
+include("exposed-migration-jdbc")
+include("exposed-migration-r2dbc")
 include("exposed-r2dbc")
 include("exposed-r2dbc-tests")
+include("exposed-jdbc-r2dbc-tests")
 
 pluginManagement {
     repositories {
@@ -34,7 +37,7 @@ dependencyResolutionManagement {
 }
 
 plugins {
-    id("org.gradle.toolchains.foojay-resolver") version "0.10.0"
+    id("org.gradle.toolchains.foojay-resolver") version "1.0.0"
 }
 
 toolchainManagement {

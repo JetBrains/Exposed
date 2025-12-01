@@ -15,34 +15,27 @@ import org.jetbrains.exposed.v1.core.vendors.currentDialect
  */
 class DefaultTypeMapper : TypeMapper {
 
-    // TODO we could add ordering for column mappers based on priority
-    //  fun priority(): Double = 0.5
+    @Suppress("MagicNumber")
+    override val priority: Double = 0.01
 
     override fun setValue(
         statement: Statement,
         dialect: DatabaseDialect,
-        mapperRegistry: TypeMapperRegistry,
+        typeMapping: R2dbcTypeMapping,
         columnType: IColumnType<*>,
         value: Any?,
         index: Int
     ): Boolean {
         if (value == null) {
-            // TODO this code could be simplified
             if (currentDialect is PostgreSQLDialect) {
-                val typeProvider = currentDialect.dataTypeProvider
-                when (columnType.sqlType()) {
-                    typeProvider.integerType() -> statement.bindNull(index - 1, Int::class.java)
-                    typeProvider.longType() -> statement.bindNull(index - 1, Long::class.java)
-                    else -> statement.bindNull(index - 1, String::class.java)
-                }
-                return true
+                statement.bindNull(index - 1, Object::class.java)
             } else {
                 statement.bindNull(index - 1, String::class.java)
-                return true
             }
         } else {
             statement.bind(index - 1, value)
-            return true
         }
+
+        return true
     }
 }

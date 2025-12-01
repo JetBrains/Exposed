@@ -41,7 +41,7 @@
     </code-block>
     <p>
         The
-        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/transform.html">
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/transform.html">
             <code>.transform()</code>
         </a>
         function is used to apply custom transformations to the <code>mealTime</code>
@@ -56,7 +56,7 @@
         </li>
     </list>
     <p>Transformation could be also defined as an implementation of the
-        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-column-transformer/index.html">
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-column-transformer/index.html">
             <code>ColumnTransformer</code>
         </a>
         interface and reused across different tables:
@@ -91,7 +91,7 @@
     <chapter title="Null transform" id="null-transform">
         <p>
             The
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/null-transform.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/null-transform.html">
                 <code>.nullTransform()</code>
             </a>
             method applies a special transformation that allows a non-nullable database column

@@ -1,17 +1,17 @@
 package org.jetbrains.exposed.v1.spring.transaction
 
-import junit.framework.TestCase.assertTrue
-import org.junit.Before
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.support.TransactionSynchronization
 import org.springframework.transaction.support.TransactionSynchronizationManager
-import kotlin.test.Test
 
 class TransactionSynchronizationTest : SpringTransactionTestBase() {
 
     private var synchronization: TestSynchronization = TestSynchronization()
 
-    @Before
+    @BeforeEach
     fun setUp() {
         synchronization = TestSynchronization()
     }

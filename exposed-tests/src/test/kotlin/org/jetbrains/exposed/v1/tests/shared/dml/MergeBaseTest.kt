@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.tests.shared.dml
 
 import kotlinx.datetime.LocalDateTime
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.datetime.datetime
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -14,7 +15,7 @@ val TEST_DEFAULT_DATE_TIME = LocalDateTime(2000, 1, 1, 0, 0, 0, 0)
 abstract class MergeBaseTest : DatabaseTestsBase() {
     protected fun allDbExcept(includeSettings: Collection<TestDB>) = TestDB.ALL - includeSettings.toSet()
 
-    protected val defaultExcludeSettings = TestDB.ALL_MARIADB + TestDB.ALL_MYSQL + TestDB.SQLITE + TestDB.ALL_H2_V1
+    protected val defaultExcludeSettings = TestDB.ALL_MARIADB + TestDB.ALL_MYSQL + TestDB.SQLITE
 
     protected fun withMergeTestTables(
         excludeSettings: Collection<TestDB> = emptyList(),

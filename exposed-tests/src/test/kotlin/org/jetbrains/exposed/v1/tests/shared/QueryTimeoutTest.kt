@@ -2,12 +2,14 @@ package org.jetbrains.exposed.v1.tests.shared
 
 import com.impossibl.postgres.jdbc.PGSQLSimpleException
 import com.microsoft.sqlserver.jdbc.SQLServerException
+import nl.altindag.log.LogCaptor
+import org.jetbrains.exposed.v1.core.exposedLogger
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
-import org.junit.Assert.fail
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 import org.postgresql.util.PSQLException
 import java.sql.SQLException
 import java.sql.SQLSyntaxErrorException
@@ -41,7 +43,7 @@ class QueryTimeoutTest : DatabaseTestsBase() {
                 TransactionManager.current().exec(
                     generateTimeoutStatements(testDB, 5)
                 )
-                fail("Should have thrown a timeout or cancelled statement exception")
+                Assertions.fail("Should have thrown a timeout or cancelled statement exception")
             } catch (cause: ExposedSQLException) {
                 when (testDB) {
                     // PostgreSQL throws a regular PgSQLException with a cancelled statement message
@@ -82,7 +84,7 @@ class QueryTimeoutTest : DatabaseTestsBase() {
                 TransactionManager.current().exec(
                     generateTimeoutStatements(testDB, 1)
                 )
-                fail("Should have thrown a timeout or cancelled statement exception")
+                Assertions.fail("Should have thrown a timeout or cancelled statement exception")
             } catch (cause: ExposedSQLException) {
                 when (testDB) {
                     // PostgreSQL throws a regular PSQLException with a minus timeout value
@@ -97,5 +99,29 @@ class QueryTimeoutTest : DatabaseTestsBase() {
                 }
             }
         }
+    }
+
+    @Test
+    fun testLongQueryThrowsWarning() {
+        val logCaptor = LogCaptor.forName(exposedLogger.name)
+
+        withDb(timeoutTestDBList) { testDB ->
+            this.warnLongQueriesDuration = 2
+
+            assertTrue(logCaptor.warnLogs.isEmpty())
+
+            try {
+                TransactionManager.current().exec(
+                    generateTimeoutStatements(testDB, 4)
+                )
+            } catch (cause: ExposedSQLException) {
+                assertTrue(cause.cause is SQLTimeoutException)
+            }
+
+            assertTrue(logCaptor.warnLogs.single().contains("Long query"))
+        }
+
+        logCaptor.clearLogs()
+        logCaptor.close()
     }
 }

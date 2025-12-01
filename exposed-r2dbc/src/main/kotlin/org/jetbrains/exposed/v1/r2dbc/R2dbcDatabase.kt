@@ -2,30 +2,38 @@ package org.jetbrains.exposed.v1.r2dbc
 
 import io.r2dbc.spi.ConnectionFactories
 import io.r2dbc.spi.ConnectionFactory
+import io.r2dbc.spi.ConnectionFactoryOptions
 import io.r2dbc.spi.IsolationLevel
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.DatabaseApi
 import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.Version
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.r2dbc.statements.R2dbcConnectionImpl
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedConnection
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedDatabaseMetadata
+import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcLocalMetadataImpl
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.vendors.*
-import java.math.BigDecimal
 import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Class representing the underlying R2DBC database to which connections are made and on which transaction tasks are performed.
+ *
+ * @param connector Accessor for retrieving database connections wrapped as [R2dbcExposedConnection]
  */
 class R2dbcDatabase private constructor(
     resolvedVendor: String? = null,
     config: R2dbcDatabaseConfig,
     val connector: () -> R2dbcExposedConnection<*>
 ) : DatabaseApi(resolvedVendor, config) {
+    /**
+     * Calls the specified function [body] with an [R2dbcExposedDatabaseMetadata] implementation as its receiver and
+     * returns the retrieved metadata from the database as a result. If called outside a transaction block, a
+     * temporary connection is instantiated to call [body] before being closed.
+     */
     internal suspend fun <T> metadata(body: suspend R2dbcExposedDatabaseMetadata.() -> T): T {
         val transaction = TransactionManager.currentOrNull()
         return if (transaction == null) {
@@ -36,8 +44,29 @@ class R2dbcDatabase private constructor(
                 connection.close()
             }
         } else {
-            transaction.connection.metadata(body)
+            transaction.connection().metadata(body)
         }
+    }
+
+    /**
+     * Calls the specified function [body] with an [R2dbcExposedDatabaseMetadata] implementation as its receiver and
+     * returns the retrieved metadata as a result, with the metadata most likely originating from the connection instance
+     * itself. Metadata retrieval that requires sending a query to the database will not be accepted. If called outside
+     * a transaction block, a temporary connection is instantiated to call [body] before being closed.
+     */
+    internal fun <T> connectionMetadata(body: R2dbcExposedDatabaseMetadata.() -> T): T = runBlocking { metadata(body) }
+
+    /**
+     * Calls the specified function [body] with an [R2dbcLocalMetadataImpl] implementation as its receiver and
+     * returns the retrieved metadata from a local provider as a result.
+     *
+     * @throws IllegalStateException If metadata retrieval requires either a connection or sending a query to the database.
+     */
+    internal fun <T> localMetadata(body: R2dbcLocalMetadataImpl.() -> T): T = localMetadata.body()
+
+    private val localMetadata by lazy {
+        resolvedVendor?.let { R2dbcLocalMetadataImpl("", it) }
+            ?: error("The exact vendor dialect could not be resolved.")
     }
 
     private var connectionUrl: String = ""
@@ -46,8 +75,7 @@ class R2dbcDatabase private constructor(
         get() = connectionUrl
 
     override val vendor: String by lazy {
-        // cleanup -> getDatabaseDialectName() does not actually need suspend; relocate or refactor?
-        resolvedVendor ?: runBlocking { metadata { getDatabaseDialectName() } }
+        resolvedVendor ?: connectionMetadata { getDatabaseDialectName() }
     }
 
     override val dialect: DatabaseDialect by lazy {
@@ -56,7 +84,7 @@ class R2dbcDatabase private constructor(
                 @OptIn(InternalApi::class)
                 dialects[vendor.lowercase()]?.invoke()
             }
-            ?: error("No dialect registered for $name. URL=$url")
+            ?: error("No dialect registered for the database connected using URL=$url")
     }
 
     /** The name of the database as a [DatabaseDialectMetadata]. */
@@ -65,49 +93,51 @@ class R2dbcDatabase private constructor(
             ?: error("No dialect metadata registered for $name. URL=$url")
     }
 
-    // REVIEW: usage in core H2Dialect
-    override val dialectMode: String? by lazy { runBlocking { metadata { getDatabaseDialectMode() } } }
+    private var connectionUrlMode: String? = null
 
-    // cleanup -> getVersion() does not actually need suspend; relocate or refactor?
-    override val version: BigDecimal by lazy { runBlocking { metadata { getVersion() } } }
+    override val dialectMode: String? by lazy {
+        if (connectionUrlMode != H2_INVALID_MODE) {
+            connectionUrlMode
+        } else {
+            // dialectMode is used by property h2Mode in many places in exposed-core & cannot be made to suspend.
+            // this branch should only be reached if ConnectionFactoryOptions fails to return a database value,
+            // which should be highly unlikely given that the parsing happens when R2dbcDatabase.connect() is called.
+            runBlocking { metadata { getDatabaseDialectMode() } }
+        }
+    }
 
-    override fun isVersionCovers(version: BigDecimal): Boolean = this.version >= version
+    override val version: Version by lazy { connectionMetadata { getVersion() } }
 
-    /** The major version number of the database as a [Int]. */
-    // cleanup -> getMajorVersion() does not actually need suspend; relocate or refactor?
-    val majorVersion: Int by lazy { runBlocking { metadata { getMajorVersion() } } }
+    override val fullVersion: String by lazy { connectionMetadata { getDatabaseProductVersion() } }
 
-    /** The minor version number of the database as a [Int]. */
-    // cleanup -> getMinorVersion() does not actually need suspend; relocate or refactor?
-    val minorVersion: Int by lazy { runBlocking { metadata { getMinorVersion() } } }
+    override val supportsAlterTableWithAddColumn: Boolean by lazy { localMetadata { supportsAlterTableWithAddColumn } }
 
-    override fun isVersionCovers(majorVersion: Int, minorVersion: Int): Boolean =
-        this.majorVersion > majorVersion || (this.majorVersion == majorVersion && this.minorVersion >= minorVersion)
+    override val supportsAlterTableWithDropColumn: Boolean by lazy { localMetadata { supportsAlterTableWithDropColumn } }
 
-    // cleanup -> getDatabaseProductVersion() does not actually need suspend; relocate or refactor?
-    override val fullVersion: String by lazy { runBlocking { metadata { getDatabaseProductVersion() } } }
+    override val supportsMultipleResultSets: Boolean by lazy { localMetadata { supportsMultipleResultSets } }
 
-    // cleanup -> none of these properties need suspend; better to call MetadataProvider directly?
-    // TODO for properties that do not actually query metadata (hard-coded), switch to metadat property
-    override val supportsAlterTableWithAddColumn: Boolean by lazy { runBlocking { metadata { supportsAlterTableWithAddColumn } } }
+    override val supportsSelectForUpdate: Boolean by lazy { localMetadata { supportsSelectForUpdate } }
 
-    override val supportsAlterTableWithDropColumn: Boolean by lazy { runBlocking { metadata { supportsAlterTableWithDropColumn } } }
-
-    override val supportsMultipleResultSets: Boolean by lazy { runBlocking { metadata { supportsMultipleResultSets } } }
-
-    // cleanup -> definitely does not actually need suspend; relocate or refactor?
-    override val identifierManager: IdentifierManagerApi by lazy { runBlocking { metadata { identifierManager } } }
+    override val identifierManager: IdentifierManagerApi by lazy { connectionMetadata { identifierManager } }
 
     companion object {
 
         private val dialectsMetadata = ConcurrentHashMap<String, () -> DatabaseDialectMetadata>()
 
+        private val driverMapping = mutableMapOf(
+            "r2dbc:h2" to "h2",
+            "r2dbc:postgresql" to "postgresql",
+            "r2dbc:mysql" to "mysql",
+            "r2dbc:mariadb" to "mariadb",
+            "r2dbc:oracle" to "oracle",
+            "r2dbc:mssql" to "sqlserver",
+            "r2dbc:pool" to "pool",
+        )
+
         init {
             registerDialect(H2Dialect.dialectName) { H2Dialect() }
             registerDialect(MysqlDialect.dialectName) { MysqlDialect() }
             registerDialect(PostgreSQLDialect.dialectName) { PostgreSQLDialect() }
-            registerDialect(PostgreSQLNGDialect.dialectName) { PostgreSQLNGDialect() }
-            registerDialect(SQLiteDialect.dialectName) { SQLiteDialect() }
             registerDialect(OracleDialect.dialectName) { OracleDialect() }
             registerDialect(SQLServerDialect.dialectName) { SQLServerDialect() }
             registerDialect(MariaDBDialect.dialectName) { MariaDBDialect() }
@@ -115,8 +145,6 @@ class R2dbcDatabase private constructor(
             registerDialectMetadata(H2Dialect.dialectName) { H2DialectMetadata() }
             registerDialectMetadata(MysqlDialect.dialectName) { MysqlDialectMetadata() }
             registerDialectMetadata(PostgreSQLDialect.dialectName) { PostgreSQLDialectMetadata() }
-            registerDialectMetadata(PostgreSQLNGDialect.dialectName) { PostgreSQLNGDialectMetadata() }
-            registerDialectMetadata(SQLiteDialect.dialectName) { SQLiteDialectMetadata() }
             registerDialectMetadata(OracleDialect.dialectName) { OracleDialectMetadata() }
             registerDialectMetadata(SQLServerDialect.dialectName) { SQLServerDialectMetadata() }
             registerDialectMetadata(MariaDBDialect.dialectName) { MariaDBDialectMetadata() }
@@ -140,10 +168,11 @@ class R2dbcDatabase private constructor(
             val factory = connectionFactory ?: ConnectionFactories.get(options)
 
             return R2dbcDatabase(explicitVendor, config) {
-                R2dbcConnectionImpl(factory.create(), explicitVendor, R2dbcScope(config.dispatcher), config.typeMapperRegistry)
+                R2dbcConnectionImpl(factory.create(), explicitVendor, config.typeMapping)
             }.apply {
                 connectionUrl = options.urlString
-                CoreTransactionManager.registerDatabaseManager(this, manager(this))
+                connectionUrlMode = options.urlMode
+                TransactionManager.registerManager(this, manager(this))
                 // ABOVE should be replaced with BELOW when ThreadLocalTransactionManager is fully deprecated
                 // TransactionManager.registerManager(this, manager(this))
             }
@@ -163,7 +192,23 @@ class R2dbcDatabase private constructor(
         fun connect(
             manager: (R2dbcDatabase) -> TransactionManagerApi = { TransactionManager(it) },
             databaseConfig: R2dbcDatabaseConfig.Builder.() -> Unit = {}
-        ): R2dbcDatabase = doConnect(manager, null, R2dbcDatabaseConfig(databaseConfig))
+        ): R2dbcDatabase = doConnect(manager, null, R2dbcDatabaseConfig(databaseConfig).build())
+
+        /**
+         * Creates an [R2dbcDatabase] instance.
+         *
+         * **Note:** This function does not immediately instantiate an actual connection to a database,
+         * but instead provides the details necessary to do so whenever a connection is required by a transaction.
+         *
+         * @param manager The [TransactionManager] responsible for new transactions that use this [R2dbcDatabase] instance.
+         * @param databaseConfig Builder of configuration parameters for this [R2dbcDatabase] instance.
+         * @throws IllegalStateException If a corresponding database dialect cannot be resolved from values
+         * provided to [databaseConfig].
+         */
+        fun connect(
+            manager: (R2dbcDatabase) -> TransactionManagerApi = { TransactionManager(it) },
+            databaseConfig: R2dbcDatabaseConfig.Builder = R2dbcDatabaseConfig.Builder()
+        ): R2dbcDatabase = doConnect(manager, null, databaseConfig.build())
 
         /**
          * Creates an [R2dbcDatabase] instance.
@@ -173,15 +218,16 @@ class R2dbcDatabase private constructor(
          *
          * @param connectionFactory The [ConnectionFactory] entry point for an R2DBC driver when getting a connection.
          * @param manager The [TransactionManager] responsible for new transactions that use this [R2dbcDatabase] instance.
-         * @param databaseConfig Builder of configuration parameters for this [R2dbcDatabase] instance.
+         * @param databaseConfig Configuration parameters for this [R2dbcDatabase] instance. At minimum,
+         * a value for `explicitDialect` must be provided to prevent throwing an exception.
          * @throws IllegalStateException If a corresponding database dialect cannot be resolved from the [connectionFactory]
          * or from values provided to [databaseConfig].
          */
         fun connect(
             connectionFactory: ConnectionFactory,
-            databaseConfig: R2dbcDatabaseConfig = R2dbcDatabaseConfig.invoke(),
+            databaseConfig: R2dbcDatabaseConfig.Builder,
             manager: (R2dbcDatabase) -> TransactionManagerApi = { TransactionManager(it) }
-        ): R2dbcDatabase = doConnect(manager, connectionFactory, databaseConfig)
+        ): R2dbcDatabase = doConnect(manager, connectionFactory, databaseConfig.build())
 
         /**
          * Creates an [R2dbcDatabase] instance.
@@ -190,24 +236,36 @@ class R2dbcDatabase private constructor(
          * but instead provides the details necessary to do so whenever a connection is required by a transaction.
          *
          * @param url The URL that represents the database when getting a connection.
+         * @param driver The R2DBC driver class. If not provided, the specified [url] will be used to find
+         * a match from the existing driver mappings.
+         * @param user The database user that owns the new connections.
+         * @param password The password specific for the database [user].
          * @param databaseConfig Configuration parameters for this [R2dbcDatabase] instance.
          * @param manager The [TransactionManager] responsible for new transactions that use this [R2dbcDatabase] instance.
          * @throws IllegalStateException If a corresponding database dialect cannot be resolved from the provided [url].
          */
         fun connect(
             url: String,
+            driver: String = getDriver(url),
+            user: String = "",
+            password: String = "",
             manager: (R2dbcDatabase) -> TransactionManagerApi = { TransactionManager(it) },
-            databaseConfig: R2dbcDatabaseConfig.Builder.() -> Unit = {},
+            databaseConfig: R2dbcDatabaseConfig.Builder = R2dbcDatabaseConfig.Builder(),
         ): R2dbcDatabase {
-            val builder = R2dbcDatabaseConfig.Builder()
-            builder.setUrl(url)
-            databaseConfig(builder)
+            databaseConfig.setUrl(url)
+            databaseConfig.connectionFactoryOptions {
+                option(ConnectionFactoryOptions.DRIVER, driver)
+                user.takeUnless { it.isEmpty() }
+                    ?.let { option(ConnectionFactoryOptions.USER, it) }
+                password.takeUnless { it.isEmpty() }
+                    ?.let { option(ConnectionFactoryOptions.PASSWORD, it) }
+            }
 
-            return doConnect(manager, null, builder.build())
+            return doConnect(manager, null, databaseConfig.build())
         }
 
         /**
-         * Creates a [R2dbcDatabase] instance.
+         * Creates an [R2dbcDatabase] instance.
          *
          * **Note:** This function does not immediately instantiate an actual connection to a database,
          * but instead provides the details necessary to do so whenever a connection is required by a transaction.
@@ -231,9 +289,16 @@ class R2dbcDatabase private constructor(
                 is MysqlDialect -> IsolationLevel.REPEATABLE_READ
                 else -> IsolationLevel.READ_COMMITTED
             }
+
+        private fun getDriver(url: String) = driverMapping.entries.firstOrNull { (prefix, _) ->
+            url.startsWith(prefix)
+        }?.value ?: error("Database driver not found for $url")
     }
 }
 
 /** Returns the name of the database obtained from its connection URL. */
 val R2dbcDatabase.name: String
-    get() = url.substringBefore('?').substringAfterLast('/')
+    get() {
+        val propertyDelimiter = if (dialect is H2Dialect) ';' else '?'
+        return url.substringBefore(propertyDelimiter).substringAfterLast('/')
+    }

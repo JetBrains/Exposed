@@ -11,7 +11,7 @@ import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.dml.withCitiesAndUsers
 import org.jetbrains.exposed.v1.tests.shared.entities.EntityTestsData
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -311,7 +311,7 @@ class AliasesTests : DatabaseTestsBase() {
                 it[isDraft] = false
             }
 
-            val inputSum = SqlExpressionBuilder.coalesce(
+            val inputSum = coalesce(
                 subInvoices.mainAmount.sum(), decimalLiteral(BigDecimal.ZERO)
             ).alias("input_sum")
 
@@ -320,9 +320,10 @@ class AliasesTests : DatabaseTestsBase() {
                     subInvoices.isDraft eq false
                 }.groupBy(subInvoices.productId).alias("input")
 
-            val sumTotal = Expression.build {
-                coalesce(input[inputSum], decimalLiteral(BigDecimal.ZERO))
-            }.alias("inventory")
+            val sumTotal = coalesce(
+                input[inputSum],
+                decimalLiteral(BigDecimal.ZERO),
+            ).alias("inventory")
 
             val booleanValue = when (testDb) {
                 TestDB.SQLITE, in TestDB.ALL_ORACLE_LIKE, in TestDB.ALL_SQLSERVER_LIKE -> "0"
@@ -340,6 +341,67 @@ class AliasesTests : DatabaseTestsBase() {
                 expectedQuery,
                 input.select(sumTotal).prepareSQL(QueryBuilder(false))
             )
+        }
+    }
+
+    @Test
+    fun testExpressionWithColumnTypeAliasCastedToExpression() {
+        val tester = object : IntIdTable("Test") {
+            val weight = integer("weight")
+        }
+
+        val expression = tester.weight.sum()
+        val alias: ExpressionWithColumnTypeAlias<Int?> = expression.alias("task_weight")
+        val query: QueryAlias = tester.select(alias).alias("all_weight")
+
+        fun Expression<*>.toExpressionString() = QueryBuilder(true)
+            .also { this.toQueryBuilder(it) }
+            .toString().lowercase()
+
+        withTables(tester) {
+            assertEquals("all_weight.task_weight", query[alias].toExpressionString())
+            assertEquals("all_weight.task_weight", query[alias as ExpressionWithColumnType<Int?>].toExpressionString())
+            assertEquals("all_weight.task_weight", query[alias as Expression<Int?>].toExpressionString())
+        }
+    }
+
+    @Test
+    fun testExpressionAliasCastedToExpression() {
+        val tester = object : IntIdTable("Test") {
+            val weight = integer("weight")
+        }
+
+        val expression: Expression<Int?> = tester.weight.sum()
+        val alias: ExpressionAlias<Int?> = expression.alias("task_weight")
+        val query: QueryAlias = tester.select(alias).alias("all_weight")
+
+        fun Expression<*>.toExpressionString() = QueryBuilder(true)
+            .also { this.toQueryBuilder(it) }
+            .toString().lowercase()
+
+        withTables(tester) {
+            assertEquals("all_weight.task_weight", query[alias].toExpressionString())
+            assertEquals("all_weight.task_weight", query[alias as Expression<Int?>].toExpressionString())
+        }
+    }
+
+    @Test
+    fun testColumnCastedToExpression() {
+        val tester = object : IntIdTable("Test") {
+            val weight = integer("weight")
+        }
+
+        val column: Column<Int> = tester.weight
+        val query: QueryAlias = tester.select(column).alias("all_weight")
+
+        fun Expression<*>.toExpressionString() = QueryBuilder(true)
+            .also { this.toQueryBuilder(it) }
+            .toString().lowercase()
+
+        withTables(tester) {
+            assertEquals("all_weight.weight", query[column].toExpressionString())
+            assertEquals("all_weight.weight", query[column as ExpressionWithColumnType<Int>].toExpressionString())
+            assertEquals("all_weight.weight", query[column as Expression<Int>].toExpressionString())
         }
     }
 }

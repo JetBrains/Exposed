@@ -8,19 +8,17 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.BatchReplaceStatement
 import org.jetbrains.exposed.v1.core.statements.InsertStatement
 import org.jetbrains.exposed.v1.core.statements.ReplaceStatement
-import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
-import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
-import org.jetbrains.exposed.v1.core.vendors.currentDialect
+import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
-import org.jetbrains.exposed.v1.r2dbc.statements.api.R2DBCRow
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcResult
+import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcRow
 import org.jetbrains.exposed.v1.r2dbc.statements.api.metadata
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
-import org.jetbrains.exposed.v1.r2dbc.vendors.inProperCase
 
+/**
+ * Represents the execution logic for an SQL statement that inserts a new row into a table.
+ */
 open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
     override val statement: S
 ) : SuspendExecutable<Int, S> {
@@ -49,11 +47,11 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
         }
     }
 
-    @OptIn(InternalApi::class)
     override suspend fun R2dbcPreparedStatementApi.executeInternal(transaction: R2dbcTransaction): Int {
         val (inserted, rs) = execInsertFunction()
 
         val (processedCount, processedResults) = processResults(rs)
+        @OptIn(InternalApi::class)
         statement.resultedValues = processedResults
         val affectedRowCount = inserted ?: processedCount
         statement.insertedCount = affectedRowCount
@@ -64,24 +62,26 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
         // https://github.com/pgjdbc/pgjdbc/issues/1168
         // Column names always escaped/quoted in RETURNING clause
         columnsGeneratedOnDB().isNotEmpty() && currentDialect is PostgreSQLDialect ->
-            transaction.connection.prepareStatement(sql, true)
+            transaction.connection().prepareStatement(sql, true)
 
         autoIncColumns.isNotEmpty() -> {
             // [MariaDB] r2dbc returnGeneratedValues() does not support adding RETURNING clause to REPLACE statements
             // see: org.mariadb.r2dbc.util.ClientParser.parameterPartsCheckReturning() switch case 82 -> 114
             val needsManualReturning = (statement is ReplaceStatement<*> || statement is BatchReplaceStatement) &&
                 currentDialect is MariaDBDialect
+
+            @OptIn(InternalApi::class)
             val generatedColumns = autoIncColumns.map { it.name.inProperCase() }.toTypedArray()
 
             if (needsManualReturning) {
                 val replaceReturning = "$sql RETURNING ${generatedColumns.joinToString()}"
-                transaction.connection.prepareStatement(replaceReturning, false)
+                transaction.connection().prepareStatement(replaceReturning, false)
             } else {
-                transaction.connection.prepareStatement(sql, generatedColumns)
+                transaction.connection().prepareStatement(sql, generatedColumns)
             }
         }
 
-        else -> transaction.connection.prepareStatement(sql, false)
+        else -> transaction.connection().prepareStatement(sql, false)
     }
 
     protected val autoIncColumns: List<Column<*>>
@@ -140,6 +140,8 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
         val dialect = currentDialect
         val sendsResultsOnFailure = dialect is MysqlDialect && dialect !is MariaDBDialect
 
+        var isSqlServerBatchInsert = false
+
         mapSegments { segment ->
             var values: MutableMap<Column<*>, Any?>? = null
             var count: Int? = null
@@ -150,8 +152,10 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
                 count = segment.value().toInt()
             }
 
-            if (segment is Result.RowSegment) {
-                val row = R2DBCRow(segment.row())
+            if (segment is Result.RowSegment && !isSQLServerLastRowId(segment, isSqlServerBatchInsert, dialect)) {
+                isSqlServerBatchInsert = isSqlServerBatchInsert || isSQLServerBatchSegment(segment, dialect)
+
+                val row = R2dbcRow(segment.row(), typeMapping)
 
                 if (columnIndexesInResultSet == null) {
                     columnIndexesInResultSet = row.metadata.returnedColumns()
@@ -206,7 +210,6 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             // which leads to incorrect stored values in the insert statement;
             // If an insert did not occur, no generated values should be received and stored statement
             // values should be generated based on user-provided values
-            // Todo review potential edge cases not covered by tests
             count?.let { c ->
                 resultSetsCounts.add(c)
                 values.takeIf { sendsResultsOnFailure && c != 0 }?.let { resultSetsValues.add(it) }
@@ -214,20 +217,8 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             values.takeIf { !sendsResultsOnFailure }?.let { resultSetsValues.add(it) }
         }
 
-        // SQL Server returns a duplicate terminal row result from batch, even though it only attempts the correct executions;
-        // This happens with mapSegments(), mapRows(), and exec(), but not with plain SQL execution;
-        // So there must be some reason on our end that such a result is included
-        // Todo investigate why SQL Server delivers a duplicate final record
-        if (currentDialect is SQLServerDialect && resultSetsValues.size > 1 && resultSetsCounts.sum() >= 1) {
-            // equality check is tricky because of potential type mismatch
-            // e.g. An Int id returns a duplicated final row of type BigDecimal - is this maybe the mssql last_inserted_id?
-            val lastIndex = resultSetsValues.lastIndex
-            resultSetsValues.removeAt(lastIndex)
-        }
-
         // Some databases, like H2 and MariaDB, aren't returning UpdateCount segments;
-        // The workaround below therefore fails for upsert operations
-        // Todo review alternatives for these dialects
+        // The workaround below therefore fails for upsert operations; documented in upsert()
         val inserted = if (resultSetsCounts.isEmpty()) {
             resultSetsValues.size
         } else {
@@ -271,6 +262,28 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
         }
     }
 
+    /* This check is needed for SQLServer batch insert. The problem is that R2DBC driver for SQLServer database
+    returns extra `Result.RowSegment` with the id of the last row. Every insert of batch is returned as
+    a segment with `GENERATED_KEYS` column name in metadata, but after them the one extra segment with `id` name
+    is also returned.
+
+    We can't just filter segments with name `id`, because that name is also returned in general insert for column
+    with name `id`.
+
+    This check is quite optimistic, and we recognize the whole insert as batch insert if there is at least one
+    `GENERATED_KEYS` segment in the whole sequence. */
+    private fun isSQLServerLastRowId(segment: Result.RowSegment, isSqlServerBatchInsert: Boolean, dialect: DatabaseDialect): Boolean {
+        return dialect is SQLServerDialect && isSqlServerBatchInsert && segment.row().metadata.columnMetadatas.let {
+            it.size == 1 && it[0].name != "GENERATED_KEYS"
+        }
+    }
+
+    private fun isSQLServerBatchSegment(segment: Result.RowSegment, dialect: DatabaseDialect): Boolean {
+        return dialect is SQLServerDialect && segment.row().metadata.columnMetadatas.let {
+            it.size == 1 && it[0].name == "GENERATED_KEYS"
+        }
+    }
+
     /**
      * Returns all the columns for which value can not be derived without actual request.
      *
@@ -279,6 +292,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
     @OptIn(InternalApi::class)
     private fun columnsGeneratedOnDB(): Collection<Column<*>> = (autoIncColumns + statement.columnsWithDatabaseDefaults()).toSet()
 
+    @Suppress("UNCHECKED_CAST")
     private fun <T : Expression<*>> unwrapColumnValues(values: Map<T, Any?>): Map<T, Any?> = values.mapValues { (col, value) ->
         if (col !is ExpressionWithColumnType<*>) return@mapValues value
 

@@ -1,8 +1,6 @@
 package org.jetbrains.exposed.v1.tests.shared.ddl
 
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.neq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
@@ -15,7 +13,7 @@ import org.jetbrains.exposed.v1.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.expect
 
 class CreateIndexTests : DatabaseTestsBase() {
@@ -271,7 +269,7 @@ class CreateIndexTests : DatabaseTestsBase() {
             }
         }
 
-        val functionsNotSupported = TestDB.ALL_MARIADB + TestDB.ALL_H2 + TestDB.SQLSERVER + TestDB.MYSQL_V5
+        val functionsNotSupported = TestDB.ALL_MARIADB + TestDB.ALL_H2_V2 + TestDB.SQLSERVER + TestDB.MYSQL_V5
         withTables(excludeSettings = functionsNotSupported, tester) {
             org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns()
             assertTrue(tester.exists())
@@ -284,6 +282,25 @@ class CreateIndexTests : DatabaseTestsBase() {
 
             indices = getIndices(tester)
             assertEquals(0, indices.size)
+        }
+    }
+
+    @Test
+    fun testCreateAndDropIndexWithLongName() {
+        // Long index name
+        val indexName = "index-" + (0..100).joinToString(separator = "-") { "$it" }
+
+        val tester = object : Table("tester") {
+            val value = integer("value").index(indexName)
+        }
+
+        withDb {
+            val createStatement = tester.indices.single().createStatement().single()
+
+            val dropStatement = tester.indices.single().dropStatement().single()
+
+            // Both statements must have either full index name or shortened index name
+            assertEquals(createStatement.contains(indexName), dropStatement.contains(indexName))
         }
     }
 

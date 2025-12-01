@@ -3,14 +3,13 @@ package org.jetbrains.exposed.v1.core
 import org.jetbrains.exposed.v1.core.statements.Statement
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 
 @Suppress("ForbiddenComment")
-// TODO: check if Statement<T> is limited to ResultApi & if we can introduce typed exec()s to avoid casting ResultApi
 // TODO: consider naming this as QueryState (or something related to state of the query) and check that it has only single responsibility
-/** Base class representing an SQL query that returns a [ResultSet] when executed. */
+/** Base class representing an SQL query that returns a database result when executed. */
 abstract class AbstractQuery<T : AbstractQuery<T>>(
     targets: List<Table>
 ) : Statement<ResultApi>(StatementType.SELECT, targets) {
@@ -122,7 +121,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
      * Changes the [having] field of this query.
      *
      * @param body Builder for the new `HAVING` condition, with the previous value used as the receiver.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryHaving
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.AdjustQueryTests.testAdjustQueryHaving
      */
     fun adjustHaving(body: Op<Boolean>?.() -> Op<Boolean>): T = apply { having = having.body() } as T
 
@@ -132,7 +131,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
      * @param position The [CommentPosition] in the query that should be assigned a new value.
      * @param content The content of the comment that should be set. If left `null`, any comment at the specified
      * [position] will be removed.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.SelectTests.testSelectWithComment
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testSelectWithComment
      */
     fun adjustComments(position: CommentPosition, content: String? = null): T = apply {
         content?.let {
@@ -159,7 +158,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
     /**
      * Appends a `GROUP BY` clause with the specified [columns] to this `SELECT` query.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.GroupByTests.testGroupBy02
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.GroupByTests.testGroupBy02
      */
     fun groupBy(vararg columns: Expression<*>): T {
         for (column in columns) {
@@ -171,10 +170,10 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
     /**
      * Appends a `HAVING` clause with the specified [op] condition to this `SELECT` query.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.GroupByTests.testGroupBy02
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.GroupByTests.testGroupBy02
      */
-    fun having(op: SqlExpressionBuilder.() -> Op<Boolean>): T {
-        val oop = SqlExpressionBuilder.op()
+    fun having(op: () -> Op<Boolean>): T {
+        val oop = op()
         if (having != null) {
             error("HAVING clause is specified twice. Old value = '$having', new value = '$oop'")
         }
@@ -191,7 +190,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
      *
      * @throws IllegalStateException If a comment has already been appended at the specified [position]. An existing
      * comment can be removed or altered by [adjustComments].
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.SelectTests.testSelectWithComment
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testSelectWithComment
      */
     fun comment(content: String, position: CommentPosition = CommentPosition.FRONT): T {
         comments[position]?.let {
@@ -234,7 +233,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
             @OptIn(InternalApi::class)
             if (set.source != Table.Dual || currentDialect.supportsDualTableConcept) {
                 append(" FROM ")
-                set.source.describe(CoreTransactionManager.currentTransaction(), this)
+                set.source.describe(currentTransaction(), this)
             }
 
             where?.let {

@@ -1,7 +1,8 @@
 package org.jetbrains.exposed.v1.core.statements
 
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.statements.UpsertBuilder.Companion.getFunctionProvider
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.core.vendors.*
 
 /**
@@ -22,7 +23,7 @@ open class UpsertStatement<Key : Any>(
 ) : InsertStatement<Key>(table), UpsertBuilder {
     @Deprecated(
         "This constructor with `onUpdate` that takes a List may be removed in future releases.",
-        level = DeprecationLevel.ERROR
+        level = DeprecationLevel.HIDDEN
     )
     constructor(
         table: Table,
@@ -36,7 +37,7 @@ open class UpsertStatement<Key : Any>(
         }
     }
 
-    @Deprecated("This property will be removed in future releases.", level = DeprecationLevel.ERROR)
+    @Deprecated("This property will be removed in future releases.", level = DeprecationLevel.HIDDEN)
     var onUpdate: List<Pair<Column<*>, Expression<*>>>? = null
         private set
 
@@ -45,7 +46,7 @@ open class UpsertStatement<Key : Any>(
     override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
         val dialect = transaction.db.dialect
         val functionProvider = UpsertBuilder.getFunctionProvider(dialect)
-        val keyColumns = if (functionProvider is MysqlFunctionProvider) keys.toList() else getKeyColumns(keys = keys)
+        val keyColumns = if (functionProvider is MysqlFunctionProvider) keys.asList() else getKeyColumns(keys = keys)
         val insertValues = arguments!!.first()
         val insertValuesSql = insertValues.toSqlString(prepared)
         val updateExcludeColumns = (onUpdateExclude ?: emptyList()) + if (dialect is OracleDialect) keyColumns else emptyList()
@@ -85,21 +86,9 @@ sealed interface UpsertBuilder {
      * Specifies that this column should be updated using the same values that would be inserted if there was
      * no violation of a unique constraint in an upsert statement.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.UpsertTests.testUpsertWithManualUpdateUsingInsertValues
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.UpsertTests.testUpsertWithManualUpdateUsingInsertValues
      */
     fun <T> insertValue(column: Column<T>): ExpressionWithColumnType<T> = InsertValue(column, column.columnType)
-
-    @OptIn(InternalApi::class)
-    private class InsertValue<T>(
-        val column: Column<T>,
-        override val columnType: IColumnType<T & Any>
-    ) : ExpressionWithColumnType<T>() {
-        override fun toQueryBuilder(queryBuilder: QueryBuilder) {
-            val transaction = CoreTransactionManager.currentTransaction()
-            val functionProvider = getFunctionProvider(transaction.db.dialect)
-            functionProvider.insertValue(transaction.identity(column), queryBuilder)
-        }
-    }
 
     companion object {
         /** Returns the [FunctionProvider] for valid upsert statement syntax. */
@@ -116,8 +105,9 @@ sealed interface UpsertBuilder {
 /** Returns the columns to be used in the conflict condition of an upsert statement. */
 internal fun UpsertBuilder.getKeyColumns(vararg keys: Column<*>): List<Column<*>> {
     this as InsertStatement<*>
-    return keys.toList().ifEmpty {
-        table.primaryKey?.columns?.toList() ?: table.indices.firstOrNull { it.unique }?.columns
+    return keys.asList().ifEmpty {
+        // If the underlying `columns` array can be mutated after this call, use `toList()` to avoid reflecting future changes.
+        table.primaryKey?.columns?.asList() ?: table.indices.firstOrNull { it.unique }?.columns
     } ?: emptyList()
 }
 
@@ -153,3 +143,27 @@ internal fun UpsertBuilder.getAdditionalArgs(
         where?.toQueryBuilder(this)
     }.args
 }
+
+internal class InsertValue<T>(
+    val column: Column<T>,
+    override val columnType: IColumnType<T & Any>
+) : ExpressionWithColumnType<T>() {
+    @OptIn(InternalApi::class)
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        val transaction = currentTransaction()
+        val functionProvider = getFunctionProvider(transaction.db.dialect)
+        functionProvider.insertValue(transaction.identity(column), queryBuilder)
+    }
+}
+
+@Deprecated(
+    message = "This builder interface will continue to be phased out following release 1.0.0. " +
+        "All expression builder methods previously restricted to this interface have also been deprecated in favor of " +
+        "equivalent top-level functions, making implementations of this interface useless as a receiver in any scope. " +
+        "It will no longer be necessary to import each individual method when used outside a scoped block, " +
+        "and on demand imports will now be possible via 'import org.jetbrains.exposed.v1.core.*', if required.",
+    level = DeprecationLevel.ERROR
+)
+object UpsertSqlExpressionBuilder : ISqlExpressionBuilder
+
+fun <T> insertValue(column: Column<T>): ExpressionWithColumnType<T> = InsertValue(column, column.columnType)

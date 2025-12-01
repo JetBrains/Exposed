@@ -6,12 +6,7 @@ import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
-import org.jetbrains.exposed.v1.core.vendors.H2Dialect
-import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.core.vendors.OracleDialect
-import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
-import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
-import org.jetbrains.exposed.v1.core.vendors.h2Mode
+import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.dao.IntEntity
@@ -22,19 +17,31 @@ import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.constraintNamePart
 import org.jetbrains.exposed.v1.tests.currentDialectTest
-import org.jetbrains.exposed.v1.tests.inProperCase
 import org.jetbrains.exposed.v1.tests.insertAndWait
 import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.time.*
+import java.time.temporal.ChronoUnit
 import kotlin.random.Random.Default.nextInt
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+
+// The following were introduced for jdk17 compatibility:
+// EXPOSED-920: https://youtrack.jetbrains.com/issue/EXPOSED-920/Refactor-java-time-and-kotlin-datetime-tests-for-JDK-compatibility
+
+/** Forces [LocalDateTime] precision to be reduced to millisecond-level, for JDK8 test compatibility. */
+internal fun LocalDateTime.asJdk8(): LocalDateTime = truncatedTo(ChronoUnit.MILLIS)
+
+/** Forces [LocalTime] precision to be reduced to millisecond-level, for JDK8 test compatibility. */
+internal fun LocalTime.asJdk8(): LocalTime = truncatedTo(ChronoUnit.MILLIS)
+
+/** Forces [Instant] precision to be reduced to millisecond-level, for JDK8 test compatibility. */
+internal fun Instant.asJdk8(): Instant = truncatedTo(ChronoUnit.MILLIS)
 
 private val dbTimestampNow: CustomFunction<OffsetDateTime>
     get() = object : CustomFunction<OffsetDateTime>("now", JavaOffsetDateTimeColumnType()) {}
@@ -201,6 +208,7 @@ class DefaultsTest : DatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testDefaults01() {
         val currentDT = CurrentDateTime
@@ -401,6 +409,7 @@ class DefaultsTest : DatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testTimestampWithTimeZoneDefaults() {
         // UTC time zone
@@ -501,9 +510,8 @@ class DefaultsTest : DatabaseTestsBase() {
             val dateWithDefault = date("dateWithDefault").default(date)
         }
 
-        // SQLite does not support ALTER TABLE on a column that has a default value
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
-            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(tester)
+        withTables(tester) {
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -519,9 +527,8 @@ class DefaultsTest : DatabaseTestsBase() {
             )
         }
 
-        // SQLite does not support ALTER TABLE on a column that has a default value
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
-            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(tester)
+        withTables(tester) {
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -537,24 +544,22 @@ class DefaultsTest : DatabaseTestsBase() {
             )
         }
 
-        // SQLite does not support ALTER TABLE on a column that has a default value
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
-            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(tester)
+        withTables(tester) {
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
 
     @Test
     fun testTimeDefaultDoesNotTriggerAlterStatement() {
-        val time = LocalDateTime.now(ZoneId.of("Japan")).toLocalTime()
+        val time = LocalDateTime.now(ZoneId.of("Japan")).toLocalTime().asJdk8()
 
         val tester = object : Table("tester") {
             val timeWithDefault = time("timeWithDefault").default(time)
         }
 
-        // SQLite does not support ALTER TABLE on a column that has a default value
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
-            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(tester)
+        withTables(tester) {
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -567,11 +572,10 @@ class DefaultsTest : DatabaseTestsBase() {
             val timestampWithTimeZoneWithDefault = timestampWithTimeZone("timestampWithTimeZoneWithDefault").default(offsetDateTime)
         }
 
-        // SQLite does not support ALTER TABLE on a column that has a default value
         // MariaDB does not support TIMESTAMP WITH TIME ZONE column type
-        val unsupportedDatabases = TestDB.ALL_MARIADB + listOf(TestDB.SQLITE, TestDB.MYSQL_V5)
+        val unsupportedDatabases = TestDB.ALL_MARIADB + TestDB.MYSQL_V5
         withTables(excludeSettings = unsupportedDatabases, tester) {
-            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(tester)
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -589,7 +593,7 @@ class DefaultsTest : DatabaseTestsBase() {
 
     @Test
     fun testCustomDefaultTimestampFunctionWithEntity() {
-        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES - TestDB.MYSQL_V8 - TestDB.ALL_H2, DefaultTimestampTable) {
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES - TestDB.MYSQL_V8 - TestDB.ALL_H2_V2, DefaultTimestampTable) {
             val entity = DefaultTimestampEntity.new {}
 
             val timestamp = DefaultTimestampTable.selectAll().first()[DefaultTimestampTable.timestamp]

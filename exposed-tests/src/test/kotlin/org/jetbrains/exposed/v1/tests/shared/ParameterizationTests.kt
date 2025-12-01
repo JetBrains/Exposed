@@ -2,21 +2,21 @@ package org.jetbrains.exposed.v1.tests.shared
 
 import org.jetbrains.exposed.v1.core.BooleanColumnType
 import org.jetbrains.exposed.v1.core.IntegerColumnType
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.VarCharColumnType
 import org.jetbrains.exposed.v1.core.statements.StatementType
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
-import org.jetbrains.exposed.v1.jdbc.addLogger
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
-import org.jetbrains.exposed.v1.tests.inProperCase
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -41,9 +41,10 @@ class ParameterizationTests : DatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testSingleParametersWithMultipleStatements() {
-        Assume.assumeTrue(supportMultipleStatements.containsAll(TestDB.enabledDialects()))
+        Assumptions.assumeTrue(supportMultipleStatements.containsAll(TestDB.enabledDialects()))
 
         val dialect = TestDB.enabledDialects().first()
         val db = Database.connect(
@@ -91,9 +92,10 @@ class ParameterizationTests : DatabaseTestsBase() {
         TransactionManager.closeAndUnregister(db)
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testMultipleParametersWithMultipleStatements() {
-        Assume.assumeTrue(supportMultipleStatements.containsAll(TestDB.enabledDialects()))
+        Assumptions.assumeTrue(supportMultipleStatements.containsAll(TestDB.enabledDialects()))
 
         val tester = object : Table("tester") {
             val name = varchar("foo", 50)

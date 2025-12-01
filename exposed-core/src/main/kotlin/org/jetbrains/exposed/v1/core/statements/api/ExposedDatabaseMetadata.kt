@@ -1,14 +1,11 @@
 package org.jetbrains.exposed.v1.core.statements.api
 
-import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect.H2CompatibilityMode
-import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
-import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.core.vendors.OracleDialect
-import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.core.vendors.h2Mode
+import java.sql.Types
 
 /**
  * Base class responsible for shared utility methods needed for retrieving and storing information about
@@ -18,14 +15,11 @@ abstract class ExposedDatabaseMetadata(val database: String) {
     /** Clears and resets any stored information about the database's current schema to default values. */
     abstract fun resetCurrentScheme()
 
-    @Suppress("ForbiddenComment")
-    // TODO: THIS should become protected after the usage in DatabaseDialect is fully deprecated
     /**
      * Returns the corresponding [ReferenceOption] for the specified [refOption] result,
      * or `null` if the database result is an invalid string without a corresponding match.
      */
-    @InternalApi
-    abstract fun resolveReferenceOption(refOption: String): ReferenceOption?
+    protected abstract fun resolveReferenceOption(refOption: String): ReferenceOption?
 
     /** Clears any cached values. */
     abstract fun cleanCache()
@@ -33,117 +27,96 @@ abstract class ExposedDatabaseMetadata(val database: String) {
     /** The database-specific and metadata-reliant implementation of [IdentifierManagerApi]. */
     abstract val identifierManager: IdentifierManagerApi
 
-    @InternalApi
-    @Suppress("ForbiddenComment")
-    // TODO: drop inner and move to utils package
-    protected inner class CachableMapWithDefault<K, V>(
-        private val map: MutableMap<K, V> = mutableMapOf(),
-        val default: (K) -> V
-    ) : Map<K, V> by map {
-        // TODO review replacement of get vs getOrDefault() in RDMI.kt
-        override fun get(key: K): V? = map.getOrPut(key) { default(key) }
-        override fun containsKey(key: K): Boolean = true
-        override fun isEmpty(): Boolean = false
-
-        override val entries: Set<Map.Entry<K, V>>
-            get() = throw UnsupportedOperationException(
-                "The entries field should not be used on CachableMapWithDefault because the lazy population of the collection for missing keys " +
-                    "and entries may lead to inconsistencies between calls."
-            )
-
-        override val keys: Set<K>
-            get() = throw UnsupportedOperationException(
-                "The keys field should not be used on CachableMapWithDefault because the lazy population of the collection for missing keys " +
-                    "and keys may lead to inconsistencies between calls."
-            )
-    }
-
-    /**
-     * Here is the table of default values which are returned from the column `"COLUMN_DEF"` depending on how it was configured:
-     *
-     * - Not set: `varchar("any", 128).nullable()`
-     * - Set null: `varchar("any", 128).nullable().default(null)`
-     * - Set "NULL": `varchar("any", 128).nullable().default("NULL")`
-     * ```
-     * DB                  Not set    Set null                    Set "NULL"
-     * SqlServer           null       "(NULL)"                    "('NULL')"
-     * SQLite              null       "NULL"                      "'NULL'"
-     * Postgres            null       "NULL::character varying"   "'NULL'::character varying"
-     * PostgresNG          null       "NULL::character varying"   "'NULL'::character varying"
-     * Oracle              null       "NULL "                     "'NULL' "
-     * MySql5              null       null                        "NULL"
-     * MySql8              null       null                        "NULL"
-     * MariaDB3            "NULL"     "NULL"                      "'NULL'"
-     * MariaDB2            "NULL"     "NULL"                      "'NULL'"
-     * H2V1                null       "NULL"                      "'NULL'"
-     * H2V1 (MySql)        null       "NULL"                      "'NULL'"
-     * H2V2                null       "NULL"                      "'NULL'"
-     * H2V2 (MySql)        null       "NULL"                      "'NULL'"
-     * H2V2 (MariaDB)      null       "NULL"                      "'NULL'"
-     * H2V2 (PSQL)         null       "NULL"                      "'NULL'"
-     * H2V2 (Oracle)       null       "NULL"                      "'NULL'"
-     * H2V2 (SqlServer)    null       "NULL"                      "'NULL'"
-     * ```
-     * According to this table there is no simple rule of what is the default value. It should be checked
-     * for each DB (or groups of DBs) specifically.
-     * In the case of MySql and MariaDB it's also not possible to say whether was default value skipped or
-     * explicitly set to `null`.
-     *
-     * @return `null` - if the value was set to `null` or not configured. `defaultValue` in other case.
-     */
-    @Suppress("ForbiddenComment")
-    // TODO: move to the utility class, rename
-    @InternalApi
-    protected fun sanitizedDefault(defaultValue: String): String? {
-        val dialect = currentDialect
-        val h2Mode = dialect.h2Mode
+    /** Returns whether a defined column is of the same type as the column to which it is mapped in the database. */
+    fun areEquivalentColumnTypes(
+        columnMetadataSqlType: String,
+        columnMetadataType: Int,
+        columnType: String
+    ): Boolean {
         return when {
-            // Check for MariaDB must be before MySql because MariaDBDialect as a class inherits MysqlDialect
-            dialect is MariaDBDialect || h2Mode == H2CompatibilityMode.MariaDB -> when {
-                defaultValue.startsWith("b'") -> defaultValue.substringAfter("b'").trim('\'')
-                else -> defaultValue.extractNullAndStringFromDefaultValue()
-            }
-            // A special case, because MySql returns default string "NULL" as string "NULL", but other DBs return it as "'NULL'"
-            dialect is MysqlDialect && defaultValue == "NULL" -> defaultValue
-            dialect is MysqlDialect || h2Mode == H2CompatibilityMode.MySQL -> when {
-                defaultValue.startsWith("b'") -> defaultValue.substringAfter("b'").trim('\'')
-                else -> defaultValue.extractNullAndStringFromDefaultValue()
-            }
-            dialect is SQLServerDialect -> defaultValue.trim('(', ')').extractNullAndStringFromDefaultValue()
-            dialect is OracleDialect -> defaultValue.trim().extractNullAndStringFromDefaultValue()
-            else -> defaultValue.extractNullAndStringFromDefaultValue()
+            columnMetadataSqlType.equals(columnType, ignoreCase = true) -> true
+            currentDialect is H2Dialect -> areEquivalentColumnTypesH2(columnMetadataSqlType, columnMetadataType, columnType)
+            else -> false
         }
     }
 
-    private fun String.extractNullAndStringFromDefaultValue() = when {
-        this.startsWith("NULL") -> null
-        this.startsWith('\'') && this.endsWith('\'') -> this.trim('\'')
-        else -> this
-    }
+    @Suppress("CyclomaticComplexMethod")
+    private fun areEquivalentColumnTypesH2(columnMetadataSqlType: String, columnMetadataJdbcType: Int, columnType: String): Boolean {
+        val dialect = currentDialect
 
-    /** Returns the normalized column type. */
-    @InternalApi
-    protected fun normalizedColumnType(columnType: String): String {
-        val h2Mode = currentDialect.h2Mode
-        return when {
-            columnType.matches(Regex("CHARACTER VARYING(?:\\(\\d+\\))?")) -> when (h2Mode) {
-                H2CompatibilityMode.Oracle -> columnType.replace("CHARACTER VARYING", "VARCHAR2")
-                else -> columnType.replace("CHARACTER VARYING", "VARCHAR")
+        val columnMetadataSqlType = columnMetadataSqlType.uppercase()
+        val columnType = columnType.uppercase()
+
+        if (columnMetadataJdbcType == Types.ARRAY) {
+            val baseType = columnMetadataSqlType.substringBefore(" ARRAY")
+            return areEquivalentColumnTypes(baseType, Types.OTHER, columnType.substringBefore(" ARRAY")) &&
+                areEquivalentColumnTypes(columnMetadataSqlType.replaceBefore("ARRAY", ""), Types.OTHER, columnType.replaceBefore("ARRAY", ""))
+        }
+
+        if (columnType == "TEXT" && columnMetadataSqlType == "VARCHAR") {
+            return true
+        }
+
+        if (listOf(columnMetadataSqlType, columnType).all { it.matches(Regex("VARCHAR(?:\\((?:MAX|\\d+)\\))?")) }) {
+            return true
+        }
+
+        if (listOf(columnMetadataSqlType, columnType).all { it.matches(Regex("VARBINARY(?:\\((?:MAX|\\d+)\\))?")) }) {
+            return true
+        }
+
+        return when (dialect.h2Mode) {
+            H2CompatibilityMode.PostgreSQL -> {
+                when {
+                    // Auto-increment difference is dealt with elsewhere
+                    (columnType == "SERIAL" && columnMetadataSqlType == "INT") || (columnType == "BIGSERIAL" && columnMetadataSqlType == "BIGINT") -> true
+                    else -> false
+                }
             }
-            columnType.matches(Regex("CHARACTER(?:\\(\\d+\\))?")) -> columnType.replace("CHARACTER", "CHAR")
-            columnType.matches(Regex("BINARY VARYING(?:\\(\\d+\\))?")) -> when (h2Mode) {
-                H2CompatibilityMode.PostgreSQL -> "bytea"
-                H2CompatibilityMode.Oracle -> columnType.replace("BINARY VARYING", "RAW")
-                else -> columnType.replace("BINARY VARYING", "VARBINARY")
+            H2CompatibilityMode.Oracle -> {
+                when {
+                    columnType == "DATE" && columnMetadataSqlType == "TIMESTAMP(0)" -> true
+                    // Unlike Oracle, H2 Oracle mode does not distinguish between VARCHAR2(4000) and VARCHAR2(4000 CHAR).
+                    // It treats the length as a character count and does not enforce a separate byte limit.
+                    listOf(columnMetadataSqlType, columnType).all { it.matches(Regex("VARCHAR2(?:\\((?:MAX|\\d+)(?:\\s+CHAR)?\\))?")) } -> true
+                    else -> {
+                        // H2 maps NUMBER to NUMERIC
+                        val numberRegex = Regex("NUMBER(?:\\((\\d+)(?:,\\s?(\\d+))?\\))?")
+                        val numericRegex = Regex("NUMERIC(?:\\((\\d+)(?:,\\s?(\\d+))?\\))?")
+                        val numberMatch = numberRegex.find(columnType)
+                        val numericMatch = numericRegex.find(columnMetadataSqlType)
+                        if (numberMatch != null && numericMatch != null) {
+                            numberMatch.groupValues[1] == numericMatch.groupValues[1] // compare precision
+                        } else {
+                            false
+                        }
+                    }
+                }
             }
-            columnType == "BOOLEAN" -> when (h2Mode) {
-                H2CompatibilityMode.SQLServer -> "BIT"
-                else -> columnType
-            }
-            columnType == "BINARY LARGE OBJECT" -> "BLOB"
-            columnType == "CHARACTER LARGE OBJECT" -> "CLOB"
-            columnType == "INTEGER" && h2Mode != H2CompatibilityMode.Oracle -> "INT"
-            else -> columnType
+            H2CompatibilityMode.SQLServer ->
+                when {
+                    columnType.equals("uniqueidentifier", ignoreCase = true) && columnMetadataSqlType == "UUID" -> true
+                    // Auto-increment difference is dealt with elsewhere
+                    columnType.contains(" IDENTITY") ->
+                        areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataJdbcType, columnType.substringBefore(" IDENTITY"))
+                    // H2 maps DATETIME2 to TIMESTAMP
+                    columnType.matches(Regex("DATETIME2(?:\\(\\d+\\))?")) &&
+                        columnMetadataSqlType.matches(Regex("TIMESTAMP(?:\\(\\d+\\))?")) -> true
+                    // H2 maps NVARCHAR to VARCHAR
+                    columnType.matches(Regex("NVARCHAR(?:\\((\\d+|MAX)\\))?")) &&
+                        columnMetadataSqlType.matches(Regex("VARCHAR(?:\\((\\d+|MAX)\\))?")) -> true
+                    else -> false
+                }
+            null, H2CompatibilityMode.MySQL, H2CompatibilityMode.MariaDB ->
+                when {
+                    // Auto-increment difference is dealt with elsewhere
+                    columnType.contains(" AUTO_INCREMENT") ->
+                        areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataJdbcType, columnType.substringBefore(" AUTO_INCREMENT"))
+                    // H2 maps DATETIME to TIMESTAMP
+                    columnType.matches(Regex("DATETIME(?:\\(\\d+\\))?")) &&
+                        columnMetadataSqlType.matches(Regex("TIMESTAMP(?:\\(\\d+\\))?")) -> true
+                    else -> false
+                }
         }
     }
 }

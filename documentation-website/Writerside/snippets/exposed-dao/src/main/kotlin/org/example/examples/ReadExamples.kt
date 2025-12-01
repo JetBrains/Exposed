@@ -5,11 +5,12 @@ import org.example.tables.*
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.count
+import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.wrapAsExpression
-import org.jetbrains.exposed.v1.dao.id.CompositeID
-import org.jetbrains.exposed.v1.insert
-import org.jetbrains.exposed.v1.selectAll
-import org.jetbrains.exposed.v1.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.*
 
 const val MOVIE_SEQUELID = 8

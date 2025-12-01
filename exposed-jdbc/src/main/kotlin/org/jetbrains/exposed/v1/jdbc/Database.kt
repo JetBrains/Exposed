@@ -3,15 +3,14 @@ package org.jetbrains.exposed.v1.jdbc
 import org.jetbrains.exposed.v1.core.DatabaseApi
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.Version
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.jdbc.statements.api.ExposedConnection
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcExposedDatabaseMetadata
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.vendors.*
-import java.math.BigDecimal
 import java.sql.Connection
 import java.sql.DriverManager
 import java.util.*
@@ -19,7 +18,9 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.sql.DataSource
 
 /**
- * Class representing the underlying database to which connections are made and on which transaction tasks are performed.
+ * Class representing the underlying JDBC database to which connections are made and on which transaction tasks are performed.
+ *
+ * @param connector Accessor for retrieving database connections wrapped as [ExposedConnection]
  */
 class Database private constructor(
     resolvedVendor: String? = null,
@@ -63,18 +64,7 @@ class Database private constructor(
 
     override val dialectMode: String? by lazy { metadata { databaseDialectMode } }
 
-    override val version: BigDecimal by lazy { metadata { version } }
-
-    override fun isVersionCovers(version: BigDecimal): Boolean = this.version >= version
-
-    /** The major version number of the database as a [Int]. */
-    val majorVersion by lazy { metadata { majorVersion } }
-
-    /** The minor version number of the database as a [Int]. */
-    val minorVersion by lazy { metadata { minorVersion } }
-
-    override fun isVersionCovers(majorVersion: Int, minorVersion: Int): Boolean =
-        this.majorVersion > majorVersion || (this.majorVersion == majorVersion && this.minorVersion >= minorVersion)
+    override val version: Version by lazy { metadata { Version.from(version) } }
 
     override val fullVersion: String by lazy { metadata { databaseProductVersion } }
 
@@ -89,6 +79,10 @@ class Database private constructor(
     override val supportsMultipleResultSets: Boolean by lazy(
         LazyThreadSafetyMode.NONE
     ) { metadata { supportsMultipleResultSets } }
+
+    override val supportsSelectForUpdate: Boolean by lazy(
+        LazyThreadSafetyMode.NONE
+    ) { metadata { supportsSelectForUpdate } }
 
     override val identifierManager: IdentifierManagerApi by lazy { metadata { identifierManager } }
 
@@ -183,9 +177,7 @@ class Database private constructor(
             return Database(explicitVendor, config ?: DatabaseConfig.invoke()) {
                 connectionAutoRegistration(getNewConnection().apply { setupConnection(this) })
             }.apply {
-                CoreTransactionManager.registerDatabaseManager(this, manager(this))
-                // TODO ABOVE should be replaced with BELOW when ThreadLocalTransactionManager is fully deprecated
-                // TransactionManager.registerManager(this, manager(this))
+                TransactionManager.registerManager(this, manager(this))
             }
         }
 

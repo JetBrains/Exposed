@@ -2,7 +2,7 @@ package org.jetbrains.exposed.v1.core.vendors
 
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.StatementType
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.exceptions.throwUnsupportedException
 import java.util.*
 
@@ -19,20 +19,23 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
         exposedLogger.warn("The length of the binary column is not required.")
         return binaryType()
     }
+
     override fun blobType(): String = "bytea"
     override fun uuidToDB(value: UUID): Any = value
     override fun dateTimeType(): String = "TIMESTAMP"
     override fun jsonBType(): String = "JSONB"
 
-    override fun processForDefaultValue(e: Expression<*>): String = when {
-        e is LiteralOp<*> && e.columnType is JsonColumnMarker && (currentDialect as? H2Dialect) == null -> {
+    override fun processForDefaultValue(e: Expression<*>): String = when (e) {
+        is LiteralOp<*> if (e.columnType is JsonColumnMarker && (currentDialect as? H2Dialect) == null) -> {
             val cast = if (e.columnType.usesBinaryFormat) "::jsonb" else "::json"
             "${super.processForDefaultValue(e)}$cast"
         }
-        e is LiteralOp<*> && e.columnType is BlobColumnType && e.columnType.useObjectIdentifier && (currentDialect as? H2Dialect) == null -> {
+        is LiteralOp<*> if (
+            e.columnType is BlobColumnType && e.columnType.useObjectIdentifier && (currentDialect as? H2Dialect) == null
+            ) -> {
             "lo_from_bytea(0, ${super.processForDefaultValue(e)} :: bytea)"
         }
-        e is LiteralOp<*> && e.columnType is ArrayColumnType<*, *> -> {
+        is LiteralOp<*> if e.columnType is ArrayColumnType<*, *> -> {
             val processed = super.processForDefaultValue(e)
             processed
                 .takeUnless { it == "ARRAY[]" }
@@ -55,7 +58,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
 
     override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) {
         @OptIn(InternalApi::class)
-        val tr = CoreTransactionManager.currentTransaction()
+        val tr = currentTransaction()
         return when (expr.separator) {
             null -> tr.throwUnsupportedException("PostgreSQL requires explicit separator in STRING_AGG function.")
             else -> queryBuilder {
@@ -176,7 +179,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
     ) {
         @OptIn(InternalApi::class)
         path?.let {
-            CoreTransactionManager.currentTransaction().throwUnsupportedException("PostgreSQL does not support a JSON path argument")
+            currentTransaction().throwUnsupportedException("PostgreSQL does not support a JSON path argument")
         }
         val isNotJsonB = !(jsonType as JsonColumnMarker).usesBinaryFormat
         queryBuilder {
@@ -196,7 +199,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
     ) {
         @OptIn(InternalApi::class)
         if (path.size > 1) {
-            CoreTransactionManager.currentTransaction().throwUnsupportedException("PostgreSQL does not support multiple JSON path arguments")
+            currentTransaction().throwUnsupportedException("PostgreSQL does not support multiple JSON path arguments")
         }
         val isNotJsonB = !(jsonType as JsonColumnMarker).usesBinaryFormat
         queryBuilder {
@@ -292,7 +295,9 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         }
     }
 
-    override fun insertValue(columnName: String, queryBuilder: QueryBuilder) { queryBuilder { +"EXCLUDED.$columnName" } }
+    override fun insertValue(columnName: String, queryBuilder: QueryBuilder) {
+        queryBuilder { +"EXCLUDED.$columnName" }
+    }
 
     override fun delete(
         ignore: Boolean,
@@ -340,7 +345,9 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         }
     }
 
-    override fun StringBuilder.appendOptionsToExplain(options: String) { append("($options) ") }
+    override fun StringBuilder.appendOptionsToExplain(options: String) {
+        append("($options) ")
+    }
 
     override fun returning(
         mainSql: String,
@@ -367,13 +374,19 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
 
     override val supportsWindowFrameGroupsMode: Boolean = true
 
+    @Deprecated(
+        "The parameter was moved to JdbcExposedDatabaseMetadata/R2dbcExposedDatabaseMetadata classes",
+        ReplaceWith("TransactionManager.current().db.supportsSelectForUpdate")
+    )
+    override val supportsSelectForUpdate: Boolean = true
+
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> {
         @OptIn(InternalApi::class)
         val list = mutableListOf(
             buildString {
-                val tr = CoreTransactionManager.currentTransaction()
+                val tr = currentTransaction()
                 append("ALTER TABLE ${tr.identity(column.table)} ")
                 val colName = tr.identity(column)
 
@@ -425,11 +438,17 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
         return list
     }
 
-    override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
+    override fun createDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "CREATE DATABASE ${name.inProperCase()}"
+    }
 
     override fun listDatabases(): String = "SELECT datname FROM pg_database"
 
-    override fun dropDatabase(name: String): String = "DROP DATABASE ${name.inProperCase()}"
+    override fun dropDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "DROP DATABASE ${name.inProperCase()}"
+    }
 
     override fun setSchema(schema: Schema): String = "SET search_path TO ${schema.identifier}"
 
@@ -441,7 +460,7 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
         return if (isUnique && !isPartialOrFunctional) {
             "ALTER TABLE IF EXISTS ${identifierManager.quoteIfNecessary(tableName)} DROP CONSTRAINT IF EXISTS ${identifierManager.quoteIfNecessary(indexName)}"
         } else {
-            "DROP INDEX IF EXISTS ${identifierManager.quoteIfNecessary(indexName)}"
+            "DROP INDEX IF EXISTS ${identifierManager.cutIfNecessaryAndQuote(indexName)}"
         }
     }
 

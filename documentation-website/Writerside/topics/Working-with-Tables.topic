@@ -108,7 +108,7 @@
                 The <code>NOT NULL</code> SQL constraint restricts the column to accept the <code>null</code> value. By
                 default, Exposed applies this constraint to
                 all the columns. To allow the column to be nullable, apply the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/nullable.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/nullable.html">
                     <code>.nullable()</code>
                 </a>
                 method to a definition of an appropriate column.</p>
@@ -126,19 +126,19 @@
                 default values:</p>
             <list>
                 <li>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/default.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/default.html">
                         <code>.default(defaultValue: T)</code>
                     </a>
                     accepts a value with a type of the column.
                 </li>
                 <li>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/default-expression.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/default-expression.html">
                         <code>.defaultExpression(defaultValue: Expression&lt;T&gt;)</code>
                     </a>
                     accepts an expression.
                 </li>
                 <li>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/client-default.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/client-default.html">
                         <code>.clientDefault(defaultValue: () -&gt; T)</code>
                     </a>
                     accepts a function.
@@ -167,7 +167,7 @@
         <chapter title="Index" id="index">
             <p>
                 The <code>INDEX</code> SQL constraint makes traversing through tables quicker. Exposed supports the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/--index--.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/--index--.html">
                     <code>.index()</code>
                 </a>
                 method. It has six parameters, most of which are optional:
@@ -194,7 +194,7 @@
                     A custom type. Can be <code>&quot;BTREE&quot;</code> or <code>&quot;HASH&quot;</code>.
                 </def>
                 <def id="filterCondition">
-                    <title><code>filterCondition: (SqlExpressionBuilder.() -&gt; Op&lt;Boolean&gt;)? = null</code></title>
+                    <title><code>filterCondition: (() -&gt; Op&lt;Boolean&gt;)? = null</code></title>
                     Defines a condition used to create a partial index.
                 </def>
             </deflist>
@@ -269,7 +269,7 @@
                 <p>
                     Once a table has been created, the list of its indices can be accessed using the property
                     <code>Table.indices</code>. Table indices are represented by the data class
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-index/index.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-index/index.html">
                         <code>Index</code>
                     </a>
                     , so its properties can be checked in the following way:</p>
@@ -290,7 +290,7 @@
         <chapter title="Unique" id="unique">
             <p>
                 The <code>UNIQUE</code> SQL constraint restricts duplicates within this column. Exposed supports the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/unique-index.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/unique-index.html">
                     <code>.uniqueIndex()</code>
                 </a>
                 method which creates a unique index for the column. This method is the composition of
@@ -388,16 +388,16 @@
                 The <code>FOREIGN KEY</code> SQL constraint links two tables. A foreign key is a column from one table
                 that refers to the primary key or columns with a unique index from another table. To configure a
                 foreign key on a column, use
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/reference.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/reference.html">
                     <code>reference()</code>
                 </a>
                 or
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/opt-reference.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/opt-reference.html">
                     <code>optReference()</code>
                 </a>
                 methods. The latter lets the foreign key accept a <code>null</code> value. To configure a foreign key on
                 multiple columns, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/foreign-key.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/foreign-key.html">
                     <code>foreignKey()</code>
                 </a>
                 function directly within an <code>init</code> block.
@@ -427,7 +427,7 @@
             </deflist>
             <p>
                 Enum class
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-reference-option/index.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-reference-option/index.html">
                     <code>ReferenceOption</code>
                 </a>
                 has five values:
@@ -502,7 +502,7 @@
             <p>
                 The <code>CHECK</code> SQL constraint checks that all values in a column match some condition. Exposed
                 supports the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/check.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/check.html">
                     <code>.check()</code>
                 </a>
                 method. You apply this method to a column and pass the appropriate condition to it.
@@ -522,7 +522,7 @@
     <chapter title="Creating tables" id="dsl-create-table">
         <p>
             To create a table within a database, you need to use the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-schema-utils/create.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/-schema-utils/create.html">
                 <code>SchemaUtils.create()</code>
             </a>
             method within a

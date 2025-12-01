@@ -3,6 +3,9 @@ package org.jetbrains.exposed.v1.tests.shared
 import org.jetbrains.exposed.v1.core.Schema
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.less
+import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -13,30 +16,36 @@ import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 
 class SchemaTests : DatabaseTestsBase() {
     @Test
     fun `create and set schema in mysql`() {
         withDb(TestDB.ALL_MYSQL_MARIADB) {
             val schema = Schema("MYSCHEMA")
+            val manualSchema = Schema("MANUAL_SCHEMA")
             try {
                 SchemaUtils.createSchema(schema)
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.setSchema(schema)
+                SchemaUtils.setSchema(schema)
 
                 val catalogName = connection.catalog
 
                 assertEquals(catalogName, schema.identifier)
+
+                // set schema directly through connection
+                SchemaUtils.createSchema(manualSchema)
+                connection.catalog = manualSchema.identifier
+                assertEquals(manualSchema.identifier, connection.catalog)
             } finally {
-                SchemaUtils.dropSchema(schema)
+                SchemaUtils.dropSchema(schema, manualSchema)
             }
         }
     }
 
     @Test
     fun `create and set schema tests`() {
-        withDb(excludeSettings = TestDB.ALL_MYSQL + TestDB.ALL_MARIADB) {
+        withDb(excludeSettings = TestDB.ALL_MYSQL_MARIADB) {
             if (currentDialect.supportsCreateSchema) {
                 val schema = when (currentDialect) {
                     is SQLServerDialect -> {
@@ -51,7 +60,7 @@ class SchemaTests : DatabaseTestsBase() {
 
                 try {
                     SchemaUtils.createSchema(schema)
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.setSchema(schema)
+                    SchemaUtils.setSchema(schema)
                     assertEquals(TransactionManager.current().db.identifierManager.inProperCase(schema.identifier), connection.schema)
                 } finally {
                     SchemaUtils.dropSchema(schema)
@@ -85,7 +94,7 @@ class SchemaTests : DatabaseTestsBase() {
 
                 exec("DROP TABLE IF EXISTS test")
                 exec("CREATE TABLE test(id INT PRIMARY KEY)")
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.setSchema(schema)
+                SchemaUtils.setSchema(schema)
                 exec("DROP TABLE IF EXISTS test")
                 exec("CREATE TABLE test(id INT REFERENCES $firstCatalogName.test(id))")
 
@@ -139,7 +148,7 @@ class SchemaTests : DatabaseTestsBase() {
 
     @Test
     fun `test default schema`() {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         val schema = Schema("schema")
         TestDB.H2_V2.connect()
 
@@ -198,7 +207,7 @@ class SchemaTests : DatabaseTestsBase() {
             val schema = prepareSchemaForTest(schemaName)
             try {
                 SchemaUtils.createSchema(schema)
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(tester)
+                SchemaUtils.create(tester)
 
                 tester.insert {
                     it[amount1] = 99u
@@ -222,7 +231,7 @@ class SchemaTests : DatabaseTestsBase() {
                 }
             } finally {
                 if (testDb == TestDB.SQLSERVER) {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tester)
+                    SchemaUtils.drop(tester)
                     SchemaUtils.dropSchema(schema)
                 } else {
                     SchemaUtils.dropSchema(schema, cascade = true)

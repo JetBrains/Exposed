@@ -1,33 +1,48 @@
 package org.jetbrains.exposed.v1.jdbc
 
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.withContext
 import org.intellij.lang.annotations.Language
-import org.jetbrains.exposed.v1.core.CompositeSqlLogger
-import org.jetbrains.exposed.v1.core.IColumnType
-import org.jetbrains.exposed.v1.core.Key
-import org.jetbrains.exposed.v1.core.SqlLogger
-import org.jetbrains.exposed.v1.core.Transaction
-import org.jetbrains.exposed.v1.core.exposedLogger
-import org.jetbrains.exposed.v1.core.statements.*
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.GlobalStatementInterceptor
 import org.jetbrains.exposed.v1.core.statements.Statement
 import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
 import org.jetbrains.exposed.v1.core.statements.StatementResult
 import org.jetbrains.exposed.v1.core.statements.StatementType
+import org.jetbrains.exposed.v1.core.statements.api.ResultApi
+import org.jetbrains.exposed.v1.core.transactions.withThreadLocalTransaction
 import org.jetbrains.exposed.v1.exceptions.LongQueryException
 import org.jetbrains.exposed.v1.jdbc.statements.BlockingExecutable
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
 import org.jetbrains.exposed.v1.jdbc.statements.executeIn
 import org.jetbrains.exposed.v1.jdbc.statements.jdbc.JdbcResult
 import org.jetbrains.exposed.v1.jdbc.transactions.JdbcTransactionInterface
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import java.sql.ResultSet
 import java.util.*
 import java.util.concurrent.TimeUnit
 
+/** Class representing a unit block of work that is performed on a database using a JDBC driver. */
 open class JdbcTransaction(
     private val transactionImpl: JdbcTransactionInterface
 ) : Transaction(), JdbcTransactionInterface by transactionImpl {
     final override val db: Database = transactionImpl.db
+
+    override val transactionManager: TransactionManager
+        get() = db.transactionManager
+
+    /**
+     * A [CompositeSqlLogger] containing any [SqlLogger] instances that are implicitly added to a new transaction.
+     *
+     * By default, this property will store the value passed to `DatabaseConfig.sqlLogger` when `Database.connect()`
+     * is invoked, wrapped as a [CompositeSqlLogger].
+     * If no value is configured, the default setting is a wrapped `Slf4jSqlDebugLogger`, which only logs SQL strings
+     * if DEBUG level is enabled.
+     */
+    val defaultLogger: CompositeSqlLogger
 
     /**
      * The maximum amount of attempts that will be made to perform this `transaction` block.
@@ -54,7 +69,7 @@ open class JdbcTransaction(
     /** The current statement for which an execution plan should be queried, but which should never itself be executed. */
     internal var explainStatement: Statement<*>? = null
 
-    /** Whether this [Transaction] should prevent any statement execution from proceeding. */
+    /** Whether this [JdbcTransaction] should prevent any statement execution from proceeding. */
     internal var blockStatementExecution: Boolean = false
 
     internal val executedStatements: MutableList<JdbcPreparedStatementApi> = arrayListOf()
@@ -64,34 +79,40 @@ open class JdbcTransaction(
     internal val interceptors = arrayListOf<StatementInterceptor>()
 
     init {
-        addLogger(db.config.sqlLogger)
+        defaultLogger = addLogger(db.config.sqlLogger)
         globalInterceptors // init interceptors
     }
 
     override fun commit() {
-        val dataToStore = HashMap<Key<*>, Any?>()
-        globalInterceptors.forEach {
-            dataToStore.putAll(it.keepUserDataInTransactionStoreOnCommit(userdata))
-            it.beforeCommit(this)
+        @OptIn(InternalApi::class)
+        withThreadLocalTransaction(this) {
+            val dataToStore = HashMap<Key<*>, Any?>()
+            globalInterceptors.forEach {
+                dataToStore.putAll(it.keepUserDataInTransactionStoreOnCommit(userdata))
+                it.beforeCommit(this)
+            }
+            interceptors.forEach {
+                dataToStore.putAll(it.keepUserDataInTransactionStoreOnCommit(userdata))
+                it.beforeCommit(this)
+            }
+            transactionImpl.commit()
+            userdata.clear()
+            globalInterceptors.forEach { it.afterCommit(this) }
+            interceptors.forEach { it.afterCommit(this) }
+            userdata.putAll(dataToStore)
         }
-        interceptors.forEach {
-            dataToStore.putAll(it.keepUserDataInTransactionStoreOnCommit(userdata))
-            it.beforeCommit(this)
-        }
-        transactionImpl.commit()
-        userdata.clear()
-        globalInterceptors.forEach { it.afterCommit(this) }
-        interceptors.forEach { it.afterCommit(this) }
-        userdata.putAll(dataToStore)
     }
 
     override fun rollback() {
-        globalInterceptors.forEach { it.beforeRollback(this) }
-        interceptors.forEach { it.beforeRollback(this) }
-        transactionImpl.rollback()
-        globalInterceptors.forEach { it.afterRollback(this) }
-        interceptors.forEach { it.afterRollback(this) }
-        userdata.clear()
+        @OptIn(InternalApi::class)
+        withThreadLocalTransaction(this) {
+            globalInterceptors.forEach { it.beforeRollback(this) }
+            interceptors.forEach { it.beforeRollback(this) }
+            transactionImpl.rollback()
+            globalInterceptors.forEach { it.afterRollback(this) }
+            interceptors.forEach { it.afterRollback(this) }
+            userdata.clear()
+        }
     }
 
     /** Adds the specified [StatementInterceptor] to act on this transaction. */
@@ -109,7 +130,7 @@ open class JdbcTransaction(
      *
      * The [explicitStatementType] can be manually set to avoid iterating over [StatementType] values for the best match.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.ParameterizationTests.testInsertWithQuotesAndGetItBack
+     * @sample org.jetbrains.exposed.v1.tests.shared.ParameterizationTests.testInsertWithQuotesAndGetItBack
      */
     fun exec(
         @Language("sql") stmt: String,
@@ -130,8 +151,8 @@ open class JdbcTransaction(
      *
      * @return The result of [transform] on the [ResultSet] generated by the statement execution,
      * or `null` if no [ResultSet] was returned by the database.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.ParameterizationTests.testInsertWithQuotesAndGetItBack
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.TransactionExecTests.testExecWithSingleStatementQuery
+     * @sample org.jetbrains.exposed.v1.tests.shared.ParameterizationTests.testInsertWithQuotesAndGetItBack
+     * @sample org.jetbrains.exposed.v1.tests.shared.TransactionExecTests.testExecWithSingleStatementQuery
      */
     fun <T : Any> exec(
         @Language("sql") stmt: String,
@@ -179,7 +200,7 @@ open class JdbcTransaction(
     /**
      * Executes the provided [Statement] object and returns the generated value.
      *
-     * This function also updates its calling [Transaction] instance's statement count and overall duration,
+     * This function also updates its calling [JdbcTransaction] instance's statement count and overall duration,
      * as well as whether the execution time for [stmt] exceeds the threshold set by
      * `DatabaseConfig.warnLongQueriesDuration`. If [Transaction.debug] is set to `true`, these tracked values
      * are stored for each call in [Transaction.statementStats].
@@ -191,44 +212,87 @@ open class JdbcTransaction(
      * Select statements are not supported as it's impossible to return multiple results.
      */
     fun execInBatch(stmts: List<String>) {
-        connection.executeInBatch(stmts)
+        @OptIn(InternalApi::class)
+        withThreadLocalTransaction(this) {
+            connection.executeInBatch(stmts)
+        }
     }
 
     /**
      * Executes the provided [Statement] object, retrieves the generated value, then calls the specified
      * function [body] with this generated value as its argument and returns its result.
      *
-     * This function also updates its calling [Transaction] instance's statement count and overall duration,
+     * This function also updates its calling [JdbcTransaction] instance's statement count and overall duration,
      * as well as whether the execution time for [stmt] exceeds the threshold set by
      * `DatabaseConfig.warnLongQueriesDuration`. If [Transaction.debug] is set to `true`, these tracked values
      * are stored for each call in [Transaction.statementStats].
      */
     fun <T, R> exec(stmt: BlockingExecutable<T, *>, body: Statement<T>.(T) -> R): R? {
-        statementCount++
+        @OptIn(InternalApi::class)
+        return withThreadLocalTransaction(this) {
+            statementCount++
 
-        val start = System.nanoTime()
-        val answer = stmt.executeIn(this)
-        val delta = (System.nanoTime() - start).let { TimeUnit.NANOSECONDS.toMillis(it) }
+            val start = System.nanoTime()
+            val answer = stmt.executeIn(this)
+            val delta = (System.nanoTime() - start).let { TimeUnit.NANOSECONDS.toMillis(it) }
 
-        val lazySQL = lazy(LazyThreadSafetyMode.NONE) {
-            answer.second.map { it.sql(this) }.distinct().joinToString()
-        }
-
-        duration += delta
-
-        if (debug) {
-            statements.append(describeStatement(delta, lazySQL.value))
-            statementStats.getOrPut(lazySQL.value) { 0 to 0L }.let { (count, time) ->
-                statementStats[lazySQL.value] = (count + 1) to (time + delta)
+            val lazySQL = lazy(LazyThreadSafetyMode.NONE) {
+                answer.second.map { it.sql(this) }.distinct().joinToString()
             }
-        }
 
-        if (delta > (warnLongQueriesDuration ?: Long.MAX_VALUE)) {
-            exposedLogger.warn("Long query: ${describeStatement(delta, lazySQL.value)}", LongQueryException())
-        }
+            duration += delta
 
-        return answer.first?.let { stmt.statement.body(it) }
+            if (debug) {
+                statements.append(describeStatement(delta, lazySQL.value))
+                statementStats.getOrPut(lazySQL.value) { 0 to 0L }.let { (count, time) ->
+                    statementStats[lazySQL.value] = (count + 1) to (time + delta)
+                }
+            }
+
+            if (delta > (warnLongQueriesDuration ?: Long.MAX_VALUE)) {
+                exposedLogger.warn("Long query: ${describeStatement(delta, lazySQL.value)}", LongQueryException())
+            }
+
+            answer.first?.let { stmt.statement.body(it) }
+        }
     }
+
+    /**
+     * Executes the provided query object, retrieves the generated [ResultSet], then calls the specified
+     * function [body] with this generated value as its argument and returns its result.
+     *
+     * This function also updates its calling [JdbcTransaction] instance's statement count and overall duration,
+     * as well as whether the execution time for [query] exceeds the threshold set by
+     * `DatabaseConfig.warnLongQueriesDuration`. If [Transaction.debug] is set to `true`, these tracked values
+     * are stored for each call in [Transaction.statementStats].
+     *
+     * ```kotlin
+     * val allCompleteTasks = Tasks.selectAll().where { Tasks.isComplete eq true }
+     *
+     * val completeTitles = execQuery(allCompleteTasks) {
+     *     val titles = mutableListOf<String>()
+     *     while (it.next()) {
+     *         titles += it.getString("title")
+     *     }
+     *     titles
+     * }
+     * ```
+     *
+     * @param query An executable statement that is expected to potentially returns results. This includes instances of
+     * the [Query] class as well as executables defined using [explain] or any of the extension functions like
+     * [insertReturning] or [updateReturning].
+     * @return The result of calling [body] on the [ResultSet] generated by the query execution,
+     * or `null` if no [ResultSet] was returned by the database.
+     */
+    fun <R> execQuery(
+        query: BlockingExecutable<ResultApi, *>,
+        body: Statement<ResultApi>.(ResultSet) -> R
+    ): R? = exec(stmt = query) {
+        body((it as JdbcResult).result)
+    }
+
+    internal fun execQuery(query: BlockingExecutable<ResultApi, *>): ResultSet = execQuery(query) { it }
+        ?: error("A ResultSet was expected, but none was retrieved from the database")
 
     /** Closes all previously executed statements and resets or releases any used database and/or driver resources. */
     fun closeExecutedStatements() {
@@ -237,6 +301,15 @@ open class JdbcTransaction(
         }
         openResultSetsCount = 0
         executedStatements.clear()
+    }
+
+    final override fun addLogger(vararg logger: SqlLogger): CompositeSqlLogger {
+        @OptIn(InternalApi::class)
+        return withThreadLocalTransaction(this) {
+            super.addLogger(*logger).apply {
+                registerInterceptor(this)
+            }
+        }
     }
 
     internal fun getRetryInterval(): Long = if (maxAttempts > 0) {
@@ -259,10 +332,21 @@ open class JdbcTransaction(
     }
 }
 
-/** Adds one or more [SqlLogger]s to [this] transaction. */
-fun JdbcTransaction.addLogger(vararg logger: SqlLogger): CompositeSqlLogger {
-    return CompositeSqlLogger().apply {
-        logger.forEach { this.addLogger(it) }
-        registerInterceptor(this)
+private fun JdbcTransaction.asContext() = transactionManager.createTransactionContext(this)
+
+/**
+ * @suppress
+ */
+@OptIn(ExperimentalStdlibApi::class)
+@InternalApi
+suspend fun <T> withTransactionContext(transaction: JdbcTransaction, block: suspend CoroutineScope.() -> T): T {
+    val dispatcher = currentCoroutineContext()[CoroutineDispatcher.Key]
+
+    val context = if (dispatcher != null) {
+        transaction.asContext()
+    } else {
+        transaction.asContext() + transaction.db.config.dispatcher
     }
+
+    return withContext(context, block)
 }

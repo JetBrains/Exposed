@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
@@ -15,12 +14,12 @@ import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.OracleDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.r2dbc.*
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
 import org.jetbrains.exposed.v1.r2dbc.tests.forEach
-import org.jetbrains.exposed.v1.r2dbc.tests.inProperCase
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFailAndRollback
@@ -29,8 +28,8 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.test.assertNotNull
 import kotlin.test.expect
@@ -69,14 +68,14 @@ class DDLTests : R2dbcDatabaseTestsBase() {
     // flaky test?
     @Test
     fun testKeywordIdentifiersWithOptOut() = runTest {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
 
         val keywords = listOf("Integer", "name")
         val tester = object : Table(keywords[0]) {
             val name = varchar(keywords[1], 32)
         }
 
-        suspendTransaction(db = keywordFlagDB) {
+        suspendTransaction(keywordFlagDB) {
             assertFalse(db.config.preserveKeywordCasing)
 
             SchemaUtils.create(tester)
@@ -108,7 +107,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
     private val keywordFlagDB by lazy {
         R2dbcDatabase.connect(
             url = "r2dbc:h2:mem:///flagtest;DB_CLOSE_DELAY=-1;",
-            databaseConfig = {
+            databaseConfig = R2dbcDatabaseConfig {
                 @OptIn(ExperimentalKeywordApi::class)
                 preserveKeywordCasing = false
             }
@@ -127,7 +126,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         withDb { testDb ->
             assertTrue(db.config.preserveKeywordCasing)
 
-            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(keywordTable)
+            SchemaUtils.create(keywordTable)
             assertTrue(keywordTable.exists())
 
             val (tableName, publicName, dataName, constraintName) = keywords.map {
@@ -158,10 +157,10 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             }
 
             // check that identifiers match with returned jdbc metadata
-            val statements = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.statementsRequiredToActualizeScheme(keywordTable, withLogs = false)
+            val statements = SchemaUtils.statementsRequiredToActualizeScheme(keywordTable, withLogs = false)
             assertTrue(statements.isEmpty())
 
-            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(keywordTable)
+            SchemaUtils.drop(keywordTable)
         }
     }
 
@@ -173,6 +172,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         override val primaryKey = PrimaryKey(id)
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun unnamedTableWithQuotesSQL() {
         withTables(tables = arrayOf(unnamedTable)) { testDb ->
@@ -198,6 +198,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun namedEmptyTableWithoutQuotesSQL() {
         val testTable = object : Table("test_named_table") {}
@@ -207,6 +208,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun tableWithDifferentColumnTypesSQL01() {
         val testTable = object : Table("different_column_types") {
@@ -230,6 +232,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun tableWithDifferentColumnTypesSQL02() {
         val testTable = object : Table("with_different_column_types") {
@@ -320,10 +323,10 @@ class DDLTests : R2dbcDatabaseTestsBase() {
 
             assertTrue(singleColumnDescription.contains("PRIMARY KEY"))
 
-            if (h2Dialect.isSecondVersion && !isOracleMode) {
+            if (!isOracleMode) {
                 expect(Unit) {
-                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(testTable)
-                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(testTable)
+                    SchemaUtils.create(testTable)
+                    SchemaUtils.drop(testTable)
                 }
             } else {
                 expectException<ExposedR2dbcException> {
@@ -333,6 +336,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testIndices01() {
         val t = object : Table("t1") {
@@ -343,12 +347,13 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
 
         withTables(t) {
-            val alter = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(t.indices[0])
+            val alter = SchemaUtils.createIndex(t.indices[0])
             val q = db.identifierManager.quoteString
             assertEquals("CREATE INDEX ${"t1_name".inProperCase()} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q)", alter)
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testIndices02() {
         val t = object : Table("t2") {
@@ -365,17 +370,18 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
 
         withTables(t) {
-            val a1 = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(t.indices[0])
+            val a1 = SchemaUtils.createIndex(t.indices[0])
             val q = db.identifierManager.quoteString
             assertEquals("CREATE INDEX ${"t2_name".inProperCase()} ON ${"t2".inProperCase()} ($q${"name".inProperCase()}$q)", a1)
 
-            val a2 = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(t.indices[1])
+            val a2 = SchemaUtils.createIndex(t.indices[1])
             assertEquals(
                 "CREATE INDEX ${"t2_lvalue_rvalue".inProperCase()} ON ${"t2".inProperCase()} " + "(${"lvalue".inProperCase()}, ${"rvalue".inProperCase()})", a2
             )
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testIndexOnTextColumnInH2() {
         val testTable = object : Table("test_index_table") {
@@ -393,13 +399,13 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             val columnProperName = testTable.columns.single().name.inProperCase()
             val indexProperName = "${tableProperName}_$columnProperName"
 
-            val indexStatement = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(testTable.indices.single())
+            val indexStatement = SchemaUtils.createIndex(testTable.indices.single())
 
             assertEquals(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + tableProperName + " (" + testTable.columns.single().descriptionDdl(false) + ")", testTable.ddl
             )
 
-            if (h2Dialect.isSecondVersion && !isOracleMode) {
+            if (!isOracleMode) {
                 assertEquals(
                     "CREATE INDEX $indexProperName ON $tableProperName ($columnProperName)", indexStatement
                 )
@@ -409,6 +415,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testUniqueIndices01() {
         val t = object : Table("t1") {
@@ -419,12 +426,13 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
 
         withTables(t) {
-            val alter = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(t.indices[0])
+            val alter = SchemaUtils.createIndex(t.indices[0])
             val q = db.identifierManager.quoteString
             assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"t1_name_unique".inProperCase()} UNIQUE ($q${"name".inProperCase()}$q)", alter)
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testUniqueIndicesCustomName() {
         val t = object : Table("t1") {
@@ -436,11 +444,12 @@ class DDLTests : R2dbcDatabaseTestsBase() {
 
         withTables(t) {
             val q = db.identifierManager.quoteString
-            val alter = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(t.indices[0])
+            val alter = SchemaUtils.createIndex(t.indices[0])
             assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"U_T1_NAME"} UNIQUE ($q${"name".inProperCase()}$q)", alter)
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     @Suppress("MaximumLineLength")
     fun testMultiColumnIndex() {
@@ -455,8 +464,8 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
 
         withTables(t) {
-            val indexAlter = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(t.indices[0])
-            val uniqueAlter = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(t.indices[1])
+            val indexAlter = SchemaUtils.createIndex(t.indices[0])
+            val uniqueAlter = SchemaUtils.createIndex(t.indices[1])
             val q = db.identifierManager.quoteString
             assertEquals(
                 "CREATE INDEX ${"t1_name_type".inProperCase()} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q, $q${"type".inProperCase()}$q)", indexAlter
@@ -468,6 +477,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testMultiColumnIndexCustomName() {
         val t = object : Table("t1") {
@@ -481,8 +491,8 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
 
         withTables(t) {
-            val indexAlter = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(t.indices[0])
-            val uniqueAlter = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(t.indices[1])
+            val indexAlter = SchemaUtils.createIndex(t.indices[0])
+            val uniqueAlter = SchemaUtils.createIndex(t.indices[1])
             val q = db.identifierManager.quoteString
             assertEquals("CREATE INDEX ${"I_T1_NAME_TYPE"} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q, $q${"type".inProperCase()}$q)", indexAlter)
             assertEquals(
@@ -492,6 +502,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testIndexWithFunctions() {
         val tester = object : Table("tester") {
@@ -536,7 +547,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             }
 
             repeat(3) { i ->
-                val actualStatement = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(tester.indices[i])
+                val actualStatement = SchemaUtils.createIndex(tester.indices[i])
                 assertEquals(expectedStatements[i], actualStatement)
             }
         }
@@ -746,6 +757,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun tableWithDifferentTextTypes() {
         val testTable = object : Table("different_text_column_types") {
@@ -785,7 +797,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
                 it[txtLong] = "1TxtLong"
             }
 
-            val concat = SqlExpressionBuilder.concat(
+            val concat = concat(
                 separator = " ", listOf(LowerCase(testTable.txt), UpperCase(testTable.txtMed), LowerCase(testTable.txtLong))
             )
 
@@ -800,7 +812,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
     fun testDeleteMissingTable() {
         val missingTable = Table("missingTable")
         withDb {
-            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(missingTable)
+            SchemaUtils.drop(missingTable)
         }
     }
 
@@ -870,6 +882,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testCreateAndDropCheckConstraint() {
         val tester = object : Table("tester") {
@@ -956,13 +969,13 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         val one = prepareSchemaForTest("one")
         val two = prepareSchemaForTest("two")
         withSchemas(two, one) {
-            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(TableFromSchemeOne)
+            SchemaUtils.create(TableFromSchemeOne)
 
             if (currentDialectTest is OracleDialect) {
                 exec("GRANT REFERENCES ON ${TableFromSchemeOne.tableName} to TWO")
             }
 
-            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(TableFromSchemeTwo)
+            SchemaUtils.create(TableFromSchemeTwo)
             val idFromOne = TableFromSchemeOne.insertAndGetId { }
 
             TableFromSchemeTwo.insert {
@@ -973,7 +986,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             assertEquals(1L, TableFromSchemeTwo.selectAll().count())
 
             if (currentDialectTest is SQLServerDialect) {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(TableFromSchemeTwo, TableFromSchemeOne)
+                SchemaUtils.drop(TableFromSchemeTwo, TableFromSchemeOne)
             }
         }
     }
@@ -1142,7 +1155,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
 
         withSchemas(one) {
-            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(tableA, tableB)
+            SchemaUtils.create(tableA, tableB)
             tableA.insert {
                 it[idA] = 1
                 it[idB] = 1
@@ -1156,7 +1169,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             assertEquals(1, tableB.selectAll().count())
 
             if (currentDialectTest is SQLServerDialect) {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(tableA, tableB)
+                SchemaUtils.drop(tableA, tableB)
             }
         }
     }

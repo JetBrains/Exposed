@@ -4,6 +4,9 @@ import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.Schema
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.less
+import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
@@ -16,24 +19,31 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
+import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 
 class SchemaTests : R2dbcDatabaseTestsBase() {
     @Test
     fun `create and set schema in mysql`() {
         withDb(TestDB.ALL_MYSQL_MARIADB) {
             val schema = Schema("MYSCHEMA")
+            val manualSchema = Schema("MANUAL_SCHEMA")
             try {
                 SchemaUtils.createSchema(schema)
                 SchemaUtils.setSchema(schema)
 
-                val catalogName = connection.getCatalog()
+                val catalogName = connection().getCatalog()
 
                 assertEquals(catalogName, schema.identifier)
+
+                // set schema directly through connection
+                SchemaUtils.createSchema(manualSchema)
+                connection().setCatalog(manualSchema.identifier)
+                assertEquals(manualSchema.identifier, connection().getCatalog())
             } finally {
-                SchemaUtils.dropSchema(schema)
+                SchemaUtils.dropSchema(schema, manualSchema)
             }
         }
     }
@@ -57,8 +67,8 @@ class SchemaTests : R2dbcDatabaseTestsBase() {
                     SchemaUtils.createSchema(schema)
                     SchemaUtils.setSchema(schema)
                     assertEquals(
-                        org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.current().db.identifierManager.inProperCase(schema.identifier),
-                        connection.getSchema()
+                        TransactionManager.current().db.identifierManager.inProperCase(schema.identifier),
+                        connection().getSchema()
                     )
                 } finally {
                     SchemaUtils.dropSchema(schema)
@@ -88,7 +98,7 @@ class SchemaTests : R2dbcDatabaseTestsBase() {
             try {
                 SchemaUtils.createSchema(schema)
 
-                val firstCatalogName = connection.getCatalog()
+                val firstCatalogName = connection().getCatalog()
 
                 exec("DROP TABLE IF EXISTS test")
                 exec("CREATE TABLE test(id INT PRIMARY KEY)")
@@ -96,7 +106,7 @@ class SchemaTests : R2dbcDatabaseTestsBase() {
                 exec("DROP TABLE IF EXISTS test")
                 exec("CREATE TABLE test(id INT REFERENCES $firstCatalogName.test(id))")
 
-                val catalogName = connection.getCatalog()
+                val catalogName = connection().getCatalog()
 
                 assertEquals(catalogName, schema.identifier)
             } finally {
@@ -146,12 +156,12 @@ class SchemaTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun `test default schema`() = runTest {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         val schema = Schema("schema")
         TestDB.H2_V2.connect()
 
         suspendTransaction {
-            connection.metadata {
+            connection().metadata {
                 assertEquals("PUBLIC", tableNamesByCurrentSchema(null).schemaName)
             }
         }
@@ -164,16 +174,16 @@ class SchemaTests : R2dbcDatabaseTestsBase() {
             defaultSchema = schema
         }
 
-        suspendTransaction(db = db) {
-            connection.metadata {
+        suspendTransaction(db) {
+            connection().metadata {
                 val currentScheme = db.identifierManager.cutIfNecessaryAndQuote(
                     tableNamesByCurrentSchema(null).schemaName
                 )
                 assertEquals(schema.identifier, currentScheme)
             }
             // Nested transaction
-            suspendTransaction(db = db) {
-                connection.metadata {
+            suspendTransaction(db) {
+                connection().metadata {
                     val currentScheme = db.identifierManager.cutIfNecessaryAndQuote(
                         tableNamesByCurrentSchema(null).schemaName
                     )

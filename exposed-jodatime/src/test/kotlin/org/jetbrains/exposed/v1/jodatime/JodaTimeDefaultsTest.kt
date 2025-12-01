@@ -16,7 +16,6 @@ import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.constraintNamePart
 import org.jetbrains.exposed.v1.tests.currentDialectTest
-import org.jetbrains.exposed.v1.tests.inProperCase
 import org.jetbrains.exposed.v1.tests.insertAndWait
 import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
@@ -26,7 +25,7 @@ import org.jetbrains.exposed.v1.tests.shared.expectException
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.LocalTime
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -147,6 +146,7 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testDefaults01() {
         val currentDT = CurrentDateTime
@@ -381,13 +381,14 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
             }
 
             list1 = assertNotNull(testData.selectAll().singleOrNull())
-            assertEquals("test1", list1?.get(testData.name))
-            assertEquals(date.millis, list1?.get(testData.dateTime)?.millis)
+            assertEquals("test1", list1[testData.name])
+            assertEquals(date.millis, list1[testData.dateTime].millis)
         }
         assertEquals("test1", list1?.get(testData.name))
         assertEquals(date.millis, list1?.get(testData.dateTime)?.millis)
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testTimestampWithTimeZoneDefaults() {
         // UTC time zone
@@ -476,9 +477,8 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
             )
         }
 
-        // SQLite does not support ALTER TABLE on a column that has a default value
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
-            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(tester)
+        withTables(tester) {
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -491,9 +491,8 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
             val dateWithDefault = date("dateWithDefault").default(date)
         }
 
-        // SQLite does not support ALTER TABLE on a column that has a default value
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
-            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(tester)
+        withTables(tester) {
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -506,11 +505,10 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
             val timestampWithTimeZoneWithDefault = timestampWithTimeZone("timestampWithTimeZoneWithDefault").default(dateTime)
         }
 
-        // SQLite does not support ALTER TABLE on a column that has a default value
         // MariaDB does not support TIMESTAMP WITH TIME ZONE column type
-        val unsupportedDatabases = TestDB.ALL_MARIADB + TestDB.SQLITE + TestDB.MYSQL_V5
+        val unsupportedDatabases = TestDB.ALL_MARIADB + TestDB.MYSQL_V5
         withTables(excludeSettings = unsupportedDatabases, tester) {
-            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(tester)
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -528,7 +526,7 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
 
     @Test
     fun testCustomDefaultTimestampFunctionWithEntity() {
-        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES - TestDB.MYSQL_V8 - TestDB.ALL_H2, DefaultTimestampTable) {
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES - TestDB.MYSQL_V8 - TestDB.ALL_H2_V2, DefaultTimestampTable) {
             val entity = DefaultTimestampEntity.new {}
 
             val timestamp = DefaultTimestampTable.selectAll().first()[DefaultTimestampTable.timestamp]

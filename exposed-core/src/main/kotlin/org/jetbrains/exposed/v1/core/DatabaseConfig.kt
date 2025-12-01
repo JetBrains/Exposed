@@ -1,12 +1,12 @@
 package org.jetbrains.exposed.v1.core
 
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 
-// TODO instead of magic number? put back into DatabaseConfig?
-internal const val DEFAULT_MAX_ATTEMPTS = 3
-
 /**
- * A configuration for a [DatabaseApi] instance.
+ * Base configuration for a [DatabaseApi] instance.
  *
  * Parameters set in this class apply to all transactions that use the [DatabaseApi] instance,
  * unless an applicable override is specified in an individual transaction block.
@@ -28,6 +28,17 @@ interface DatabaseConfig {
     val logTooMuchResultSetsThreshold: Int
     val preserveKeywordCasing: Boolean
 
+    /**
+     * The [CoroutineDispatcher] to be used when determining the scope of Exposed transaction if
+     * It is run in a context with no dispatcher. It could be, for instance, a Ktor route or a standalone Kotlin script.
+     *
+     * Default dispatcher is [Dispatchers.IO].
+     */
+    val dispatcher: CoroutineDispatcher
+
+    /**
+     * Builder API responsible for constructing a custom [DatabaseApi] configuration parameter state.
+     */
     open class Builder {
         /**
          * SQLLogger to be used to log all SQL statements. [Slf4jSqlDebugLogger] by default.
@@ -48,23 +59,27 @@ interface DatabaseConfig {
          * Default transaction isolation level. If not specified, the database-specific level will be used.
          * This can be overridden on a per-transaction level by specifying the `transactionIsolation` parameter of
          * the `transaction` function.
-         * Check [Database.getDefaultIsolationLevel] for the database defaults.
+         *
+         * Check `Database.getDefaultIsolationLevel()` for the database defaults.
+         *
+         * If using Exposed with an R2DBC driver, `defaultR2dbcIsolationLevel` should be used directly instead.
          */
         open var defaultIsolationLevel: Int = -1
 
         /**
          * The maximum amount of attempts that will be made to perform any transaction block.
-         * If this value is set to 1 and an SQLException happens, the exception will be thrown without performing a retry.
+         * If this value is set to 1 and a database exception happens, the exception will be thrown without performing a retry.
          * This can be overridden on a per-transaction level by specifying the `maxAttempts` property in a
          * `transaction` block.
          * Default amount of attempts is 3.
          *
          * @throws IllegalArgumentException If the amount of attempts is set to a value less than 1.
          */
-        var defaultMaxAttempts: Int = DEFAULT_MAX_ATTEMPTS
+        @Suppress("MagicNumber")
+        var defaultMaxAttempts: Int = 3
 
         /**
-         * The minimum number of milliseconds to wait before retrying a transaction if an SQLException happens.
+         * The minimum number of milliseconds to wait before retrying a transaction if a database exception happens.
          * This can be overridden on a per-transaction level by specifying the `minRetryDelay` property in a
          * `transaction` block.
          * Default minimum delay is 0.
@@ -72,7 +87,7 @@ interface DatabaseConfig {
         var defaultMinRetryDelay: Long = 0
 
         /**
-         * The maximum number of milliseconds to wait before retrying a transaction if an SQLException happens.
+         * The maximum number of milliseconds to wait before retrying a transaction if a database exception happens.
          * This can be overridden on a per-transaction level by specifying the `maxRetryDelay` property in a
          * `transaction` block.
          * Default maximum delay is 0.
@@ -133,49 +148,62 @@ interface DatabaseConfig {
          */
         @ExperimentalKeywordApi
         var preserveKeywordCasing: Boolean = true
+
+        /**
+         * The [CoroutineDispatcher] to be used when determining the scope of Exposed transaction if
+         * It is run in a context with no dispatcher. It could be, for instance, a Ktor route or a standalone Kotlin script.
+         *
+         * Default dispatcher is [Dispatchers.IO].
+         */
+        var dispatcher: CoroutineDispatcher = IO
     }
 
     companion object {
-        // TODO make sure R2dbcDatabaseConfig has constructor function so that it is compatible with JDBC
         operator fun invoke(body: Builder.() -> Unit = {}): DatabaseConfig {
             val builder = Builder().apply(body)
             require(builder.defaultMaxAttempts > 0) { "defaultMaxAttempts must be set to perform at least 1 attempt." }
 
-            // TODO make default implementation to simplify & call constructor func instead
-            return object : DatabaseConfig {
-                override val sqlLogger: SqlLogger
-                    get() = builder.sqlLogger ?: Slf4jSqlDebugLogger
-                override val useNestedTransactions: Boolean
-                    get() = builder.useNestedTransactions
-                override val defaultFetchSize: Int?
-                    get() = builder.defaultFetchSize
-                override val defaultIsolationLevel: Int
-                    get() = builder.defaultIsolationLevel
-                override val defaultMaxAttempts: Int
-                    get() = builder.defaultMaxAttempts
-                override val defaultMinRetryDelay: Long
-                    get() = builder.defaultMinRetryDelay
-                override val defaultMaxRetryDelay: Long
-                    get() = builder.defaultMaxRetryDelay
-                override val defaultReadOnly: Boolean
-                    get() = builder.defaultReadOnly
-                override val warnLongQueriesDuration: Long?
-                    get() = builder.warnLongQueriesDuration
-                override val maxEntitiesToStoreInCachePerEntity: Int
-                    get() = builder.maxEntitiesToStoreInCachePerEntity
-                override val keepLoadedReferencesOutOfTransaction: Boolean
-                    get() = builder.keepLoadedReferencesOutOfTransaction
-                override val explicitDialect: DatabaseDialect?
-                    get() = builder.explicitDialect
-                override val defaultSchema: Schema?
-                    get() = builder.defaultSchema
-                override val logTooMuchResultSetsThreshold: Int
-                    get() = builder.logTooMuchResultSetsThreshold
-
-                @OptIn(ExperimentalKeywordApi::class)
-                override val preserveKeywordCasing: Boolean
-                    get() = builder.preserveKeywordCasing
-            }
+            @OptIn(InternalApi::class)
+            return DatabaseConfigImpl(builder)
         }
     }
+}
+
+/** @suppress */
+@InternalApi
+open class DatabaseConfigImpl(private val builder: DatabaseConfig.Builder) : DatabaseConfig {
+    override val sqlLogger: SqlLogger
+        get() = builder.sqlLogger ?: Slf4jSqlDebugLogger
+    override val useNestedTransactions: Boolean
+        get() = builder.useNestedTransactions
+    override val defaultFetchSize: Int?
+        get() = builder.defaultFetchSize
+    override val defaultIsolationLevel: Int
+        get() = builder.defaultIsolationLevel
+    override val defaultMaxAttempts: Int
+        get() = builder.defaultMaxAttempts
+    override val defaultMinRetryDelay: Long
+        get() = builder.defaultMinRetryDelay
+    override val defaultMaxRetryDelay: Long
+        get() = builder.defaultMaxRetryDelay
+    override val defaultReadOnly: Boolean
+        get() = builder.defaultReadOnly
+    override val warnLongQueriesDuration: Long?
+        get() = builder.warnLongQueriesDuration
+    override val maxEntitiesToStoreInCachePerEntity: Int
+        get() = builder.maxEntitiesToStoreInCachePerEntity
+    override val keepLoadedReferencesOutOfTransaction: Boolean
+        get() = builder.keepLoadedReferencesOutOfTransaction
+    override val explicitDialect: DatabaseDialect?
+        get() = builder.explicitDialect
+    override val defaultSchema: Schema?
+        get() = builder.defaultSchema
+    override val logTooMuchResultSetsThreshold: Int
+        get() = builder.logTooMuchResultSetsThreshold
+    override val dispatcher: CoroutineDispatcher
+        get() = builder.dispatcher
+
+    @OptIn(ExperimentalKeywordApi::class)
+    override val preserveKeywordCasing: Boolean
+        get() = builder.preserveKeywordCasing
 }

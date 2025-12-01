@@ -16,7 +16,6 @@ import org.jetbrains.exposed.v1.exceptions.throwUnsupportedException
  * @param limit Maximum number of rows to delete.
  * @param targetTables List of specific tables from [targetsSet] to delete rows from.
  */
-@Suppress("ForbiddenComment", "AnnotationSpacing")
 open class DeleteStatement(
     val targetsSet: ColumnSet,
     val where: Op<Boolean>? = null,
@@ -27,7 +26,7 @@ open class DeleteStatement(
     @Deprecated(
         "This constructor will be removed in future releases.",
         ReplaceWith("DeleteStatement(targetsSet = table, where, isIgnore, limit, emptyList())"),
-        DeprecationLevel.ERROR
+        DeprecationLevel.HIDDEN
     )
     @Suppress("UnusedPrivateProperty")
     constructor(
@@ -42,7 +41,7 @@ open class DeleteStatement(
         "This property will be removed in future releases and replaced with a property that stores a `ColumnSet`," +
             "which may be a `Table` or a `Join`. To access the table(s) to which the columns belong, use `ColumnSet.targetTables()`",
         ReplaceWith("targetsSet"),
-        DeprecationLevel.ERROR
+        DeprecationLevel.HIDDEN
     )
     val table: Table = targets.first()
 
@@ -50,7 +49,7 @@ open class DeleteStatement(
         "This property is not being used and will be removed in future releases. Please leave a comment on " +
             "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-550/DeleteStatement-holds-unused-offset-property) " +
             "with a use-case if your database supports the OFFSET clause in a DELETE statement.",
-        level = DeprecationLevel.ERROR
+        level = DeprecationLevel.HIDDEN
     )
     val offset: Long? = null
 
@@ -75,7 +74,7 @@ open class DeleteStatement(
         if (targetsSet is Join) {
             targetsSet.joinParts.forEach {
                 (it.joinPart as? QueryAlias)?.query?.prepareSQL(this)
-                it.additionalConstraint?.invoke(SqlExpressionBuilder)?.toQueryBuilder(this)
+                it.additionalConstraint?.invoke()?.toQueryBuilder(this)
             }
         }
         where?.toQueryBuilder(this)
@@ -86,16 +85,12 @@ open class DeleteStatement(
         @Suppress("FunctionOnlyReturningConstant", "UnusedParameter")
         @Deprecated(
             message = """
-                Statement execution has been removed from exposed-core.
+                This method will be removed in release 1.0.0. Statement execution has been removed from exposed-core.
                 Replace directly with a table extension function:
                     `table.deleteWhere(limit) { op }` OR `table.deleteIgnoreWhere(limit) { op }`
 
-                Or pass the expected statement to an instance of Executable:
-                For JDBC:
-                `DeleteBlockingExecutable(buildStatement { table.deleteWhere(limit, { op }) }).execute(transaction) ?: 0`
-
-                FOR R2DBC:
-                `DeleteSuspendExecutable(buildStatement { table.deleteWhere(limit, { op }) }).execute(transaction) ?: 0`
+                Or convert the expected statement to an instance of Executable:
+                    `buildStatement { table.deleteWhere(limit, { op }) }.toExecutable().execute(transaction) ?: 0`
             """,
             level = DeprecationLevel.ERROR
         )
@@ -104,14 +99,9 @@ open class DeleteStatement(
         @Suppress("FunctionOnlyReturningConstant", "UnusedParameter")
         @Deprecated(
             message = """
-                Statement execution has been removed from exposed-core.
-                Replace directly with a table extension function or pass the expected statement to an instance of Executable:
-
-                For JDBC:
-                `DeleteBlockingExecutable(buildStatement { table.deleteAll() }).execute(transaction) ?: 0`
-
-                FOR R2DBC:
-                `DeleteSuspendExecutable(buildStatement { table.deleteAll() }).execute(transaction) ?: 0`
+                This method will be removed in release 1.0.0. Statement execution has been removed from exposed-core.
+                Replace directly with a table extension function or convert the expected statement to an instance of Executable:
+                    `buildStatement { table.deleteAll() }.toExecutable().execute(transaction) ?: 0`
             """,
             level = DeprecationLevel.ERROR
         )

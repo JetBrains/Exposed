@@ -13,12 +13,16 @@
         <p>Exposed provides several functions to insert rows into a table:</p>
 
         <chapter title="Insert a single row" id="insert">
+            <tldr>
+                <p>API References: <a href="https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/insert.html">
+                    <code>insert</code> (JDBC)
+                </a>, <a href="https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/insert.html">
+                    <code>insert</code> (R2DBC)
+                </a>  </p>
+            </tldr>
             <p>
-                To create a new table row, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/insert.html">
-                    <code>.insert()</code>
-                </a>
-                function. If the same row already exists in the table, it throws an exception.
+                To create a new table row, use the <code>.insert()</code> function. If the same row already exists in
+                the table, it throws an exception.
             </p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
@@ -30,12 +34,14 @@
             <chapter title="Insert and get ID" id="insertAndGetId">
                 <tldr>
                     <p> Supported table types: <code>IdTable()</code> </p>
+                        <p>API References: <a href="https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/insert-and-get-id.html">
+                            <code>insertAndGetId</code> (JDBC)
+                        </a>, <a href="https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/insert-and-get-id.html">
+                            <code>insertAndGetId</code> (R2DBC)
+                        </a>  </p>
                 </tldr>
-                <p>To add a new row and return its ID, use
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/insert-and-get-id.html">
-                        <code>.insertAndGetId()</code>
-                    </a>. If the same row already exists in
-                    the table, it throws an exception.</p>
+                <p>To add a new row and return its ID, use <code>.insertAndGetId()</code>. If the same row already
+                    exists in the table, it throws an exception.</p>
 
                 <code-block lang="kotlin"
                             src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
@@ -48,10 +54,7 @@
 
         <chapter title="Insert from select" id="insert-from-select">
             <p>
-                For the <code>INSERT INTO ... SELECT </code> SQL clause, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/insert.html">
-                    <code>.insert()</code>
-                </a>
+                For the <code>INSERT INTO ... SELECT </code> SQL clause, use the <code>.insert()</code>
                 function with a <code>Query</code> parameter:
             </p>
             <code-block lang="kotlin"
@@ -70,11 +73,16 @@
         <chapter title="Insert and ignore" id="insertIgnore">
             <tldr>
                 <p>Supported on: MySQL, MariaDB, PostgreSQL, and SQLite</p>
+                <p>
+                    API References: <a href="https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/insert-ignore.html">
+                    <code>insertIgnore</code> (JDBC)
+                    </a>, <a href="https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/insert-ignore.html">
+                        <code>insertIgnore</code> (R2DBC)
+                    </a>
+                </p>
             </tldr>
-            <p>To allow insert statements to be executed without throwing any errors, use
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/insert-ignore.html">
-                    <code>.insertIgnore()</code>
-                </a>.
+            <p>
+                To allow insert statements to be executed without throwing any errors, use <code>.insertIgnore()</code>.
                 This may be useful, for example, when insertion conflicts are possible:</p>
 
             <code-block lang="kotlin"
@@ -87,13 +95,17 @@
             <chapter title="Insert and ignore and get ID" id="insertIgnoreAndGetId">
                 <tldr>
                     <p>Supported on: MySQL, MariaDB, PostgreSQL, and SQLite</p>
-                    <p>Table types: <code>IdTable()</code> </p>
+                    <p>Table types: <code>IdTable()</code></p>
+                    <p>
+                        API References: <a href="https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/insert-ignore-and-get-id.html">
+                        <code>insertIgnoreAndGetId</code> (JDBC)
+                    </a>, <a href="https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/insert-ignore-and-get-id.html">
+                        <code>insertIgnoreAndGetId</code> (R2DBC)
+                    </a>
+                    </p>
                 </tldr>
                 <p>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/insert-ignore-and-get-id.html">
-                        <code>.insertIgnoreAndGetId()</code>
-                    </a>
-                    adds a new row and returns its ID. If the same row already
+                    <code>.insertIgnoreAndGetId()</code> adds a new row and returns its ID. If the same row already
                     exists in the table, it ignores it and doesn't throw an exception.</p>
 
                 <code-block lang="kotlin"
@@ -106,12 +118,19 @@
         </chapter>
 
         <chapter title="Batch insert" id="batch-insert">
-            <p>
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/batch-insert.html">
-                    <code>.batchInsert()</code>
+            <tldr>
+                <p>
+                    API References: <a href="https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/batch-insert.html">
+                    <code>batchInsert</code> (JDBC)
+                </a>, <a href="https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/batch-insert.html">
+                    <code>batchInsert</code> (R2DBC)
                 </a>
-                allows mapping a list of entities into table rows in a single SQL statement.
-                It is more efficient than using the <code>insert</code> query for each row as it initiates only one statement.
+                </p>
+            </tldr>
+            <p>
+                <code>.batchInsert()</code> allows mapping a list of entities into table rows in a single SQL statement.
+                It is more efficient than using the <code>insert</code> query for each row as it initiates only one
+                statement.
             </p>
             <p>The following example uses a simple list:</p>
             <code-block lang="kotlin"
@@ -153,50 +172,60 @@
     </chapter>
     <chapter title="Read" id="read">
         <chapter title="Retrieve a record" id="select">
-            <p>The
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-column-set/select.html">
-                    <code>.select()</code>
+            <tldr>
+                <p>
+                    API References: <a href="https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/select.html">
+                    <code>select</code> (JDBC)
+                </a>, <a href="https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/select.html">
+                    <code>select</code> (R2DBC)
                 </a>
-                function allows you to select specific columns or/and expressions.</p>
+                </p>
+            </tldr>
+            <p>The <code>.select()</code> function allows you to select specific columns or/and expressions.</p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
                         include-symbol="filmAndDirector"/>
             <p>If you want to select only distinct value then use
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-query/with-distinct.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-abstract-query/with-distinct.html">
                     <code>.withDistinct()</code>
                 </a>
                 function:</p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
-                        include-lines="31-35"/>
+                        include-lines="32-36"/>
             <p>Some SQL dialects, such as PostgreSQL and H2, also support the <code>DISTINCT ON</code> clause.
                 You can use this clause with the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-query/with-distinct-on.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-abstract-query/with-distinct-on.html">
                     <code>.withDistinctOn()</code>
                 </a>
                 function:</p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
-                        include-lines="45-53"/>
+                        include-lines="46-54"/>
         </chapter>
         <chapter title="Retrieve all records" id="selectAll">
+            <tldr>
+                <p>
+                    API References: <a href="https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/select-all.html">
+                    <code>selectAll</code> (JDBC)
+                    </a>, <a href="https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/select-all.html">
+                        <code>selectAll</code> (R2DBC)
+                    </a>
+                </p>
+            </tldr>
             <p>
-                To retrieve all records from a table, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/select-all.html">
-                    <code>.selectAll()</code>
-                </a>
-                method:
+                To retrieve all records from a table, use the <code>.selectAll()</code> method:
             </p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
-                        include-lines="99-100"/>
+                        include-lines="100-101"/>
             <p>
                 <code>Query</code> inherits <code>Iterable</code> so it is possible to traverse it using <code>.map()</code>
                 or <code>.forEach()</code>:
             </p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
-                        include-lines="102-104"/>
+                        include-lines="103-105"/>
         </chapter>
         <chapter id="insertedCount" title="Retrieve the count of modified rows">
             <p>Some databases return a count of the number of rows inserted, updated, or deleted by the CRUD operation.
@@ -218,24 +247,36 @@
             </p>
             <list>
                 <li>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/insert-returning.html">
-                        <code>.insertReturning()</code>
-                    </a>
+                    <code>.insertReturning()</code> (
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/insert-returning.html">
+                        <code>JDBC</code>
+                    </a>, <a href="https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/insert-returning.html">
+                    <code>R2DBC</code>
+                </a>)
                 </li>
                 <li>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/upsert-returning.html">
-                        <code>.upsertReturning()</code>
-                    </a>
+                    <code>.upsertReturning()</code> (
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/upsert-returning.html">
+                        <code>JDBC</code>
+                    </a>, <a href="https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/upsert-returning.html">
+                    <code>R2DBC</code>
+                </a>)
                 </li>
                 <li>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/update-returning.html">
-                        <code>.updateReturning()</code>
-                    </a>
+                    <code>.updateReturning()</code> (
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/update-returning.html">
+                        <code>JDBC</code>
+                    </a>, <a href="https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/update-returning.html">
+                    <code>R2DBC</code>
+                </a>)
                 </li>
                 <li>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/delete-returning.html">
-                        <code>.deleteReturning()</code>
-                    </a>
+                    <code>.deleteReturning()</code> (
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/delete-returning.html">
+                        <code>JDBC</code>
+                    </a>, <a href="https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/delete-returning.html">
+                    <code>R2DBC</code>
+                </a>)
                 </li>
             </list>
             <p>
@@ -256,11 +297,18 @@
     </chapter>
     <chapter title="Update" id="update">
         <chapter title="Update a record" id="update-record">
-            <p>To update a record, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/update.html">
-                    <code>.update()</code>
+            <tldr>
+                <p>
+                    API References: <a href="https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/update.html">
+                    <code>update</code> (JDBC)
+                </a>, <a href="https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/update.html">
+                    <code>update</code> (R2DBC)
                 </a>
-                function. By default, it returns the number of updated rows.
+                </p>
+            </tldr>
+            <p>
+                To update a record, use the <code>.update()</code> function. By default, it returns the number of
+                updated rows.
             </p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/UpdateExamples.kt"
@@ -275,14 +323,19 @@
             />
         </chapter>
         <chapter title="Insert or update" id="insert-or-update">
+            <tldr>
+                <p>
+                    API References: <a href="https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/upsert.html">
+                    <code>upsert</code> (JDBC)
+                    </a>, <a href="https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/upsert.html">
+                        <code>upsert</code> (R2DBC)
+                    </a>
+                </p>
+            </tldr>
             <p>
                 Insert or update (Upsert) is a database operation that either inserts a new row or updates an existing row if
                 a duplicate constraint already exists.
-                The supported functionality of
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/upsert.html">
-                    <code>.upsert()</code>
-                </a>
-                is dependent on the specific database being used.
+                The supported functionality of <code>.upsert()</code> is dependent on the specific database being used.
                 For example, MySQL's <code>INSERT ... ON DUPLICATE KEY UPDATE</code> statement automatically assesses the
                 primary key and unique indices
                 for a duplicate value, so using the function in Exposed would look like this:
@@ -344,19 +397,23 @@
         <chapter title="Replace" id="replace">
             <tldr>
                 <p>Supported on: SQLite, MySQL, and MariaDB </p>
+                    <p>
+                        API References: <a href="https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/replace.html">
+                        <code>replace</code> (JDBC)
+                        </a>, <a href="https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/replace.html">
+                            <code>replace</code> (R2DBC)
+                        </a>
+                    </p>
             </tldr>
             <p>
-                The
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/replace.html">
-                    <code>.replace()</code>
-                </a>
-                method acts in a similar manner to an <code>.upsert()</code>. The only difference is that
-                if an insertion would violate a unique constraint, the existing row is deleted before the new row is inserted.
+                The <code>.replace()</code> method acts in a similar manner to an <code>.upsert()</code>. The only
+                difference is that if an insertion would violate a unique constraint, the existing row is deleted before
+                the new row is inserted.
             </p>
 
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReplaceExamples.kt"
-                        include-lines="26-39"
+                        include-lines="30-43"
             />
             <p>Unlike <code>.upsert()</code>, none of the supporting databases allows a <code>WHERE</code> clause.
                 Also, the constraints used to assess a violation are limited to the primary key and unique indexes, so there
@@ -373,7 +430,7 @@
             </p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReplaceExamples.kt"
-                        include-lines="43-46"
+                        include-lines="47-50"
             />
             <p>By default, it will try to insert into all non auto-increment <code>Table</code> columns in the order they
                 are defined in the <code>Table</code> instance.
@@ -381,40 +438,44 @@
                 parameter:</p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReplaceExamples.kt"
-                        include-lines="50-62"
+                        include-lines="54-66"
             />
         </chapter>
     </chapter>
     <chapter title="Delete" id="delete">
         <chapter title="Delete with a condition" id="deleteWhere">
-            <p>To delete records and return the count of deleted rows, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/delete-where.html">
-                    <code>.deleteWhere()</code>
-                </a>
+            <tldr>
+                <p>
+                    API References: <a href="https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/delete-where.html">
+                    <code>deleteWhere</code> (JDBC)
+                    </a>, <a href="https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/delete-where.html">
+                        <code>deleteWhere</code> (R2DBC)
+                    </a>
+                </p>
+            </tldr>
+            <p>
+                To delete records and return the count of deleted rows, use the <code>.deleteWhere()</code>
                 function.
             </p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/DeleteExamples.kt"
                         include-symbol="deletedRowsCount"
             />
-            <p>
-                Any <code>SqlExpressionBuilder</code> comparison operators or extension functions used in the <code>op</code>
-                parameter lambda block will require inclusion of an import statement:
-            </p>
-            <code-block lang="kotlin">
-                import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.*
-            </code-block>
         </chapter>
         <chapter title="Delete and ignore" id="deleteIgnoreWhere">
             <tldr>
                 <p>Supported on: MySQL and MariaDB</p>
+                <p>
+                    API References: <a href="https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/delete-ignore-where.html">
+                    <code>deleteIgnoreWhere</code> (JDBC)
+                    </a>, <a href="https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/delete-ignore-where.html">
+                        <code>deleteIgnoreWhere</code> (R2DBC)
+                    </a>
+                </p>
             </tldr>
             <p>
                 To delete records while ignoring any possible errors that occur during the process, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/delete-ignore-where.html">
-                    <code>.deleteIgnoreWhere()</code>
-                </a>
-                function. The function will return the count of deleted rows.
+                <code>.deleteIgnoreWhere()</code> function. The function will return the count of deleted rows.
             </p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/DeleteExamples.kt"
@@ -422,22 +483,34 @@
             />
         </chapter>
         <chapter title="Delete all" id="deleteAll">
-            <p>To delete all rows in a table and return the count of deleted rows, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/delete-all.html">
-                    <code>.deleteAll()</code>
-                </a>
-                function.</p>
+            <tldr>
+                <p>
+                    API References: <a href="https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/delete-all.html">
+                    <code>deleteAll</code> (JDBC)
+                    </a>, <a href="https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/delete-all.html">
+                        <code>deleteAll</code> (R2DBC)
+                    </a>
+                </p>
+            </tldr>
+            <p>To delete all rows in a table and return the count of deleted rows, use the <code>.deleteAll()</code>
+                function.
+            </p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/DeleteExamples.kt"
                         include-symbol="allDeletedRowsCount"
             />
         </chapter>
         <chapter title="Join delete" id="join-delete">
-            <p>To delete records from a table in a join relation, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/delete.html">
-                    <code>.delete()</code>
-                </a>
-                function with a
+            <tldr>
+                <p>
+                    API References: <a href="https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/delete.html">
+                    <code>delete</code> (JDBC)
+                    </a>, <a href="https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/delete.html">
+                        <code>delete</code> (R2DBC)
+                    </a>
+                </p>
+            </tldr>
+            <p>To delete records from a table in a join relation, use the <code>.delete()</code> function with a
                 <code>Join</code> as its receiver. Provide the specific table from which records should be deleted as
                 the argument to the parameter <code>targetTable</code>.
             </p>

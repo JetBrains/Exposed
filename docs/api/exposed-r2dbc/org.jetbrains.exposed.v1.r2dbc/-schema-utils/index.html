@@ -1,0 +1,487 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>SchemaUtils</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
+                    exposed
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">1.0.0-rc-4
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":exposed-r2dbc/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":exposed-r2dbc/main" data-filter=":exposed-r2dbc/main">
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    exposed
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="exposed-r2dbc::org.jetbrains.exposed.v1.r2dbc/SchemaUtils///PointingToDeclaration//876859814">
+  <div class="breadcrumbs"><a href="../../index.html">exposed-r2dbc</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.v1.r2dbc</a><span class="delimiter">/</span><span class="current">SchemaUtils</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Schema</span><wbr><span><span>Utils</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">object </span><a href="index.html">SchemaUtils</a> : <a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-schema-utility-api/index.html">SchemaUtilityApi</a></div><p class="paragraph">Utility functions that assist with creating, altering, and dropping database schema objects.</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="-2052937935%2FFunctions%2F876859814" anchor-label="addMissingColumnsStatements" id="-2052937935%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="add-missing-columns-statements.html"><span>add</span><wbr><span>Missing</span><wbr><span>Columns</span><wbr><span><span>Statements</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2052937935%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="add-missing-columns-statements.html"><span class="token function">addMissingColumnsStatements</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>tables<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span></span><span class="parameter ">withLogs<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns the SQL statements that create any columns defined in <a href="add-missing-columns-statements.html">tables</a>, which are missing from the existing tables in the database.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2147010733%2FFunctions%2F876859814" anchor-label="checkCycle" id="2147010733%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="check-cycle.html"><span>check</span><wbr><span><span>Cycle</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2147010733%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="check-cycle.html"><span class="token function">checkCycle</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>tables<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-table/index.html">Table</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Checks whether any of the <a href="check-cycle.html">tables</a> have a sequence of foreign key constraints that cycle back to them.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="51517533%2FFunctions%2F876859814" anchor-label="checkExcessiveForeignKeyConstraints" id="51517533%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="check-excessive-foreign-key-constraints.html"><span>check</span><wbr><span>Excessive</span><wbr><span>Foreign</span><wbr><span>Key</span><wbr><span><span>Constraints</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="51517533%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="check-excessive-foreign-key-constraints.html"><span class="token function">checkExcessiveForeignKeyConstraints</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>tables<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span></span><span class="parameter ">withLogs<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-foreign-key-constraint/index.html">ForeignKeyConstraint</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Checks all <a href="check-excessive-foreign-key-constraints.html">tables</a> for any that have more than one defined foreign key constraint and logs the findings. If found, this function also logs the SQL statements that can be used to drop these foreign key constraints.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="477055937%2FFunctions%2F876859814" anchor-label="checkExcessiveIndices" id="477055937%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="check-excessive-indices.html"><span>check</span><wbr><span>Excessive</span><wbr><span><span>Indices</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="477055937%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="check-excessive-indices.html"><span class="token function">checkExcessiveIndices</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>tables<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span></span><span class="parameter ">withLogs<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-index/index.html">Index</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Checks all <a href="check-excessive-indices.html">tables</a> for any that have more than one defined index and logs the findings. If found, this function also logs the SQL statements that can be used to drop these indices.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-929425905%2FFunctions%2F876859814" anchor-label="checkMappingConsistence" id="-929425905%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="check-mapping-consistence.html"><span>check</span><wbr><span>Mapping</span><wbr><span><span>Consistence</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-929425905%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="check-mapping-consistence.html"><span class="token function">checkMappingConsistence</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>tables<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span></span><span class="parameter ">withLogs<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Log Exposed table mappings &lt;-&gt; real database mapping problems and returns DDL Statements to fix them</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1725096893%2FFunctions%2F876859814" anchor-label="create" id="1725096893%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="create.html"><span><span>create</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1725096893%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="create.html">T</a><span class="token operator"> : </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token operator">&gt; </span><a href="create.html"><span class="token function">create</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>tables<span class="token operator">: </span><a href="create.html">T</a><span class="token punctuation">, </span></span><span class="parameter ">inBatch<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Creates all <a href="create.html">tables</a> that do not already exist, using a batch execution if <a href="create.html">inBatch</a> is set to <code class="lang-kotlin">true</code>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1900032902%2FFunctions%2F876859814" anchor-label="createDatabase" id="-1900032902%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="create-database.html"><span>create</span><wbr><span><span>Database</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1900032902%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="create-database.html"><span class="token function">createDatabase</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>databases<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">inBatch<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Creates databases</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1196217768%2FFunctions%2F876859814" anchor-label="createFKey" id="1196217768%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="create-f-key.html"><span>create</span><wbr><span><span>FKey</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1196217768%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="create-f-key.html"><span class="token function">createFKey</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">foreignKey<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-foreign-key-constraint/index.html">ForeignKeyConstraint</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns the SQL statements that create the provided <a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-foreign-key-constraint/index.html">ForeignKeyConstraint</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="829921033%2FFunctions%2F876859814" anchor-label="createIndex" id="829921033%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="create-index.html"><span>create</span><wbr><span><span>Index</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="829921033%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="create-index.html"><span class="token function">createIndex</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">index<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-index/index.html">Index</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns the SQL statements that create the provided <a href="create-index.html">index</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1513481100%2FFunctions%2F876859814" anchor-label="createMissingTablesAndColumns" id="1513481100%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="create-missing-tables-and-columns.html"><span>create</span><wbr><span>Missing</span><wbr><span>Tables</span><wbr><span>And</span><wbr><span><span>Columns</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1513481100%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="create-missing-tables-and-columns.html"><span class="token function"><strike>createMissingTablesAndColumns</strike></span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>tables<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span></span><span class="parameter ">inBatch<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter ">withLogs<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">This function should be used in cases when an easy-to-use auto-actualization of database schema is required. It creates any missing tables and, if possible, adds any missing columns for existing tables (for example, when columns are nullable or have default values).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="277055453%2FFunctions%2F876859814" anchor-label="createSchema" id="277055453%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="create-schema.html"><span>create</span><wbr><span><span>Schema</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="277055453%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="create-schema.html"><span class="token function">createSchema</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>schemas<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-schema/index.html">Schema</a><span class="token punctuation">, </span></span><span class="parameter ">inBatch<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Creates schemas</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1037890595%2FFunctions%2F876859814" anchor-label="createSequence" id="-1037890595%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="create-sequence.html"><span>create</span><wbr><span><span>Sequence</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1037890595%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="create-sequence.html"><span class="token function">createSequence</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>seq<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-sequence/index.html">Sequence</a><span class="token punctuation">, </span></span><span class="parameter ">inBatch<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Creates the provided sequences, using a batch execution if <a href="create-sequence.html">inBatch</a> is set to <code class="lang-kotlin">true</code>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1073544943%2FFunctions%2F876859814" anchor-label="createStatements" id="1073544943%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="create-statements.html"><span>create</span><wbr><span><span>Statements</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1073544943%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="create-statements.html"><span class="token function">createStatements</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>tables<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-table/index.html">Table</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns the SQL statements that create all <a href="create-statements.html">tables</a> that do not already exist.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1636322150%2FFunctions%2F876859814" anchor-label="drop" id="1636322150%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="drop.html"><span><span>drop</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1636322150%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="drop.html"><span class="token function">drop</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>tables<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span></span><span class="parameter ">inBatch<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Drops all <a href="drop.html">tables</a>, using a batch execution if <a href="drop.html">inBatch</a> is set to <code class="lang-kotlin">true</code>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1445748839%2FFunctions%2F876859814" anchor-label="dropDatabase" id="1445748839%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="drop-database.html"><span>drop</span><wbr><span><span>Database</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1445748839%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="drop-database.html"><span class="token function">dropDatabase</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>databases<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">inBatch<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Drops databases</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="329553780%2FFunctions%2F876859814" anchor-label="dropSchema" id="329553780%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="drop-schema.html"><span>drop</span><wbr><span><span>Schema</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="329553780%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="drop-schema.html"><span class="token function">dropSchema</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>schemas<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-schema/index.html">Schema</a><span class="token punctuation">, </span></span><span class="parameter ">cascade<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter ">inBatch<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Drops schemas</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1831062672%2FFunctions%2F876859814" anchor-label="dropSequence" id="1831062672%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="drop-sequence.html"><span>drop</span><wbr><span><span>Sequence</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1831062672%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="drop-sequence.html"><span class="token function">dropSequence</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>seq<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-sequence/index.html">Sequence</a><span class="token punctuation">, </span></span><span class="parameter ">inBatch<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Drops the provided sequences, using a batch execution if <a href="drop-sequence.html">inBatch</a> is set to <code class="lang-kotlin">true</code>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="547750575%2FFunctions%2F876859814" anchor-label="listDatabases" id="547750575%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="list-databases.html"><span>list</span><wbr><span><span>Databases</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="547750575%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="list-databases.html"><span class="token function">listDatabases</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a list of all databases.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1783498002%2FFunctions%2F876859814" anchor-label="listTables" id="-1783498002%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="list-tables.html"><span>list</span><wbr><span><span>Tables</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1783498002%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="list-tables.html"><span class="token function">listTables</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Retrieves a list of all table names in the current database schema. The names will be returned with schema prefixes if the database supports it.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1042340088%2FFunctions%2F876859814" anchor-label="listTablesInAllSchemas" id="1042340088%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="list-tables-in-all-schemas.html"><span>list</span><wbr><span>Tables</span><wbr><span>In</span><wbr><span>All</span><wbr><span><span>Schemas</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1042340088%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="list-tables-in-all-schemas.html"><span class="token function">listTablesInAllSchemas</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a list with the names of all the tables in all database schemas. The names will be returned with schema prefixes, if the database supports it, and non-user defined tables, like system information table names, will be included.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1439771947%2FFunctions%2F876859814" anchor-label="setSchema" id="1439771947%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="set-schema.html"><span>set</span><wbr><span><span>Schema</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1439771947%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="set-schema.html"><span class="token function">setSchema</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">schema<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-schema/index.html">Schema</a><span class="token punctuation">, </span></span><span class="parameter ">inBatch<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Sets the current default schema to <a href="set-schema.html">schema</a>. Supported by H2, MariaDB, Mysql, Oracle, PostgreSQL and SQL Server. SQLite doesn't support schemas.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-695025391%2FFunctions%2F876859814" anchor-label="sortTablesByReferences" id="-695025391%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="sort-tables-by-references.html"><span>sort</span><wbr><span>Tables</span><wbr><span>By</span><wbr><span><span>References</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-695025391%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="sort-tables-by-references.html"><span class="token function">sortTablesByReferences</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">tables<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-iterable/index.html">Iterable</a><span class="token operator">&lt;</span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a list of <a href="sort-tables-by-references.html">tables</a> sorted according to the targets of their foreign key constraints, if any exist.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1612279744%2FFunctions%2F876859814" anchor-label="statementsRequiredToActualizeScheme" id="-1612279744%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="statements-required-to-actualize-scheme.html"><span>statements</span><wbr><span>Required</span><wbr><span>To</span><wbr><span>Actualize</span><wbr><span><span>Scheme</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1612279744%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="statements-required-to-actualize-scheme.html"><span class="token function"><strike>statementsRequiredToActualizeScheme</strike></span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>tables<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span></span><span class="parameter ">withLogs<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns the SQL statements that need to be executed to make the existing database schema compatible with the table objects defined using Exposed.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1605532765%2FFunctions%2F876859814" anchor-label="withDataBaseLock" id="1605532765%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="with-data-base-lock.html"><span>with</span><wbr><span>Data</span><wbr><span>Base</span><wbr><span><span>Lock</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1605532765%2FFunctions%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="with-data-base-lock.html">T</a><span class="token operator">&gt; </span><a href="../-r2dbc-transaction/index.html">R2dbcTransaction</a><span class="token punctuation">.</span><a href="with-data-base-lock.html"><span class="token function">withDataBaseLock</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">body<span class="token operator">: </span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="with-data-base-lock.html">T</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Creates table with name "busy" (if not present) and single column to be used as "synchronization" point. Table wont be dropped after execution.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2025 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

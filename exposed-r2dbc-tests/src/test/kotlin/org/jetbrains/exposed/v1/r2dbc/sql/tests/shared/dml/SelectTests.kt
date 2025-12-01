@@ -17,9 +17,11 @@ import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.forEach
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.jetbrains.exposed.v1.r2dbc.tests.sorted
-import org.junit.Test
+import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
+import org.junit.jupiter.api.Test
 import kotlin.test.assertNull
 
 class SelectTests : R2dbcDatabaseTestsBase() {
@@ -527,11 +529,11 @@ class SelectTests : R2dbcDatabaseTestsBase() {
                 "Alex",
                 "Something"
             )
-            val orOp = allUsers.map { Op.build { users.name eq it } }.compoundOr()
+            val orOp = allUsers.map { users.name eq it }.compoundOr()
             val userNamesOr = users.selectAll().where(orOp).map { it[users.name] }.toSet()
             assertEquals(allUsers, userNamesOr)
 
-            val andOp = allUsers.map { Op.build { users.name eq it } }.compoundAnd()
+            val andOp = allUsers.map { users.name eq it }.compoundAnd()
             assertEquals(0L, users.selectAll().where(andOp).count())
         }
     }
@@ -631,6 +633,16 @@ class SelectTests : R2dbcDatabaseTestsBase() {
                 val offsetResult = alphabet.selectAll().offset(start).map { it[alphabet.letter] }
                 assertEqualLists(allLetters.drop(start.toInt()), offsetResult)
             }
+        }
+    }
+
+    @Test
+    fun testSelectForUpdate() {
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLSERVER)) { cities, _, _ ->
+            val query = cities.selectAll()
+                .forUpdate()
+
+            assertTrue(query.prepareSQL(TransactionManager.current()).contains("FOR UPDATE"))
         }
     }
 }

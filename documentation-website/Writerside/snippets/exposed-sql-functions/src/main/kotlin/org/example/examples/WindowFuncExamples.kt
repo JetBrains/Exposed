@@ -1,10 +1,11 @@
 package org.example.examples
 
 import org.example.tables.FilmBoxOfficeTable
-import org.jetbrains.exposed.v1.WindowFrameBound
 import org.jetbrains.exposed.v1.core.SortOrder
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.rowNumber
-import org.jetbrains.exposed.v1.sum
+import org.jetbrains.exposed.v1.core.WindowFrameBound
+import org.jetbrains.exposed.v1.core.rowNumber
+import org.jetbrains.exposed.v1.core.sum
+import org.jetbrains.exposed.v1.jdbc.select
 
 /*
     Important: This file is referenced by line number in `SQL-Functions.md`.

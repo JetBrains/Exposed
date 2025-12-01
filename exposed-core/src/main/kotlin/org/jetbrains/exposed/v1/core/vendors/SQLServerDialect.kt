@@ -6,7 +6,7 @@ import org.jetbrains.exposed.v1.core.statements.MergeStatement.ClauseAction.DELE
 import org.jetbrains.exposed.v1.core.statements.MergeStatement.ClauseAction.INSERT
 import org.jetbrains.exposed.v1.core.statements.MergeStatement.ClauseAction.UPDATE
 import org.jetbrains.exposed.v1.core.statements.StatementType
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.exceptions.throwUnsupportedException
 import java.util.*
 
@@ -63,13 +63,13 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
             SortOrder.DESC_NULLS_LAST -> super.precessOrderByClause(queryBuilder, expression, SortOrder.DESC)
             else -> {
                 val sortOrderClause = if (sortOrder == SortOrder.ASC_NULLS_LAST) {
-                    Expression.build {
-                        Case().When(expression.isNull(), intLiteral(1)).Else(intLiteral(0))
-                    } to SortOrder.ASC
+                    Case()
+                        .When(expression.isNull(), intLiteral(1))
+                        .Else(intLiteral(0)) to SortOrder.ASC
                 } else {
-                    Expression.build {
-                        Case().When(expression.isNull(), intLiteral(0)).Else(intLiteral(1))
-                    } to SortOrder.DESC
+                    Case()
+                        .When(expression.isNull(), intLiteral(0))
+                        .Else(intLiteral(1)) to SortOrder.DESC
                 }
                 queryBuilder.append(sortOrderClause.first, ", ")
                 super.precessOrderByClause(queryBuilder, expression, sortOrderClause.second)
@@ -94,7 +94,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
 
     override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) {
         @OptIn(InternalApi::class)
-        val tr = CoreTransactionManager.currentTransaction()
+        val tr = currentTransaction()
         return when {
             expr.separator == null -> tr.throwUnsupportedException("SQL Server requires explicit separator in STRING_AGG")
             expr.distinct -> tr.throwUnsupportedException("SQL Server doesn't support DISTINCT in STRING_AGG")
@@ -125,7 +125,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ) {
         @OptIn(InternalApi::class)
-        CoreTransactionManager.currentTransaction().throwUnsupportedException("SQLServer doesn't provide built in REGEXP expression, use LIKE instead.")
+        currentTransaction().throwUnsupportedException("SQLServer doesn't provide built in REGEXP expression, use LIKE instead.")
     }
 
     override fun <T> date(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
@@ -185,7 +185,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
     ) {
         @OptIn(InternalApi::class)
         if (path.size > 1) {
-            CoreTransactionManager.currentTransaction().throwUnsupportedException("SQLServer does not support multiple JSON path arguments")
+            currentTransaction().throwUnsupportedException("SQLServer does not support multiple JSON path arguments")
         }
         queryBuilder {
             append(if (toScalar) "JSON_VALUE" else "JSON_QUERY")
@@ -364,7 +364,7 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
 
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> {
         @OptIn(InternalApi::class)
-        val transaction = CoreTransactionManager.currentTransaction()
+        val transaction = currentTransaction()
 
         val alterTablePart = "ALTER TABLE ${transaction.identity(column.table)} "
 
@@ -427,11 +427,17 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
         return statements
     }
 
-    override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
+    override fun createDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "CREATE DATABASE ${name.inProperCase()}"
+    }
 
     override fun listDatabases(): String = "SELECT name FROM sys.databases"
 
-    override fun dropDatabase(name: String) = "DROP DATABASE ${name.inProperCase()}"
+    override fun dropDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "DROP DATABASE ${name.inProperCase()}"
+    }
 
     override fun setSchema(schema: Schema): String = "ALTER USER ${schema.authorization} WITH DEFAULT_SCHEMA = ${schema.identifier}"
 
@@ -466,7 +472,7 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
         return if (isUnique && !isPartialOrFunctional) {
             "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP CONSTRAINT IF EXISTS ${identifierManager.quoteIfNecessary(indexName)}"
         } else {
-            "DROP INDEX IF EXISTS ${identifierManager.quoteIfNecessary(indexName)} ON ${identifierManager.quoteIfNecessary(tableName)}"
+            "DROP INDEX IF EXISTS ${identifierManager.cutIfNecessaryAndQuote(indexName)} ON ${identifierManager.quoteIfNecessary(tableName)}"
         }
     }
 

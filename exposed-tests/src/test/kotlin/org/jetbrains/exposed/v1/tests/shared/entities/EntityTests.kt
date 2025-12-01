@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.v1.tests.shared.entities
+
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.less
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
@@ -16,9 +15,11 @@ import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.*
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import java.sql.Connection
 import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -375,7 +376,7 @@ class EntityTests : DatabaseTestsBase() {
 
     @Test
     fun testCacheInvalidatedOnDSLUpsert() {
-        withTables(excludeSettings = TestDB.ALL_H2_V1, Items) { testDb ->
+        withTables(Items) { testDb ->
             val oldPrice = 20.0
             val itemA = Item.new {
                 name = "Item A"
@@ -519,7 +520,8 @@ class EntityTests : DatabaseTestsBase() {
         companion object : IntEntityClass<SelfReferencedEntity>(SelfReferenceTable)
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
     fun testSelfReferences() {
         withTables(SelfReferenceTable) {
             val ref1 = SelfReferencedEntity.new { }
@@ -681,7 +683,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     private fun <T> newTransaction(statement: JdbcTransaction.() -> T) =
-        inTopLevelTransaction(TransactionManager.manager.defaultIsolationLevel, false, null, null, statement)
+        inTopLevelTransaction(null, statement = statement)
 
     @Test
     fun sharingEntityBetweenTransactions() {
@@ -846,7 +848,7 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 School.all().with(School::region)
                 assertNotNull(School.testCache(school1.id))
                 assertNotNull(School.testCache(school2.id))
@@ -883,7 +885,7 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 debug = true // enables tracking of executed statements in this transaction
 
                 val allSchools = School.all().with(School::region).toList()
@@ -909,7 +911,7 @@ class EntityTests : DatabaseTestsBase() {
             }
 
             // test that cached result doesn't propagate when SizedIterable query changes after loading
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 debug = true
 
                 val oneSchool = School.all().with(School::region).limit(1).toList()
@@ -940,7 +942,7 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 School.find {
                     Schools.id eq school1.id
@@ -985,7 +987,7 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 School.all().with(School::region, School::secondaryRegion)
                 assertNotNull(School.testCache(school1.id))
@@ -1016,7 +1018,7 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 val school2 = School.find {
                     Schools.id eq school1.id
@@ -1076,7 +1078,7 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 val cache = TransactionManager.current().entityCache
 
@@ -1118,7 +1120,7 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 val cache = TransactionManager.current().entityCache
 
@@ -1163,7 +1165,7 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 School.all().with(School::students, Student::detentions)
                 val cache = TransactionManager.current().entityCache
@@ -1226,7 +1228,7 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 School.all().with(School::holidays)
                 val cache = TransactionManager.current().entityCache
@@ -1374,7 +1376,7 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 Student.all().with(Student::bio)
                 val cache = TransactionManager.current().entityCache
@@ -1419,7 +1421,7 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 Student.all().first().load(Student::bio)
                 val cache = TransactionManager.current().entityCache

@@ -4,30 +4,58 @@
 [versions]
 guava = "33.0.0-jre"
 junit-jupiter-engine = "5.10.2"
-exposed = "1.0.0-beta-2"
-h2 = "2.2.224"
-mysql ="8.0.33"
-postgres = "42.7.3"
+exposed = "1.0.0-rc-4"
 slf4j = "2.0.16"
 jackson = "2.18.+"
 kotlin = "2.1.0"
 flyway = "10.15.0"
+
+h2 = "2.2.224"
+mysql ="8.0.33"
+postgres = "42.7.7"
+postgreNG = "0.8.9"
+mariadb = "3.3.1"
+oracle = "19.24.0.0"
+sqlite = "3.50.1.0"
+sqlserver = "9.4.1.jre8"
+
+h2-r2dbc = "1.0.0.RELEASE"
+mariadb-r2dbc = "1.3.0"
+mysql-r2dbc = "1.4.1"
+oracle-r2dbc = "1.3.0"
+postgresql-r2dbc = "1.0.7.RELEASE"
+sqlserver-r2dbc = "1.0.2.RELEASE"
 
 [libraries]
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit-jupiter-engine" }
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
+exposed-r2dbc = { module = "org.jetbrains.exposed:exposed-r2dbc", version.ref = "exposed" }
 exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
 exposed-kotlin-datetime = { module = "org.jetbrains.exposed:exposed-kotlin-datetime", version.ref = "exposed" }
 exposed-json = { module= "org.jetbrains.exposed:exposed-json", version.ref = "exposed" }
-exposed-migration = { module = "org.jetbrains.exposed:exposed-migration", version.ref = "exposed" }
-h2 = { module = "com.h2database:h2", version.ref = "h2" }
-mysql = { module = "mysql:mysql-connector-java", version.ref = "mysql"}
-postgresql = { module = "org.postgresql:postgresql", version.ref = "postgres"}
+exposed-migration-core = { module = "org.jetbrains.exposed:exposed-migration-core", version.ref = "exposed" }
+exposed-migration-jdbc = { module = "org.jetbrains.exposed:exposed-migration-jdbc", version.ref = "exposed" }
 slf4j = { module = "org.slf4j:slf4j-nop", version.ref = "slf4j" }
 jackson-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
 flyway = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
+
+h2 = { module = "com.h2database:h2", version.ref = "h2" }
+mysql = { module = "mysql:mysql-connector-java", version.ref = "mysql"}
+postgresql = { group = "org.postgresql", name = "postgresql", version.ref = "postgres" }
+pgjdbc-ng = { group = "com.impossibl.pgjdbc-ng", name = "pgjdbc-ng", version.ref = "postgreNG" }
+sqlite-jdbc = { group = "org.xerial", name = "sqlite-jdbc", version.ref = "sqlite" }
+maria-db = { group = "org.mariadb.jdbc", name = "mariadb-java-client", version.ref = "mariadb" }
+oracle = { group = "com.oracle.database.jdbc", name = "ojdbc8", version.ref = "oracle" }
+mssql = { group = "com.microsoft.sqlserver", name = "mssql-jdbc", version.ref = "sqlserver" }
+
+r2dbc-h2 = { group = "io.r2dbc", name = "r2dbc-h2", version.ref = "h2-r2dbc" }
+r2dbc-mariadb = { group = "org.mariadb", name = "r2dbc-mariadb", version.ref = "mariadb-r2dbc" }
+r2dbc-mysql = { group = "io.asyncer", name = "r2dbc-mysql", version.ref = "mysql-r2dbc" }
+r2dbc-oracle = { group = "com.oracle.database.r2dbc", name = "oracle-r2dbc", version.ref = "oracle-r2dbc" }
+r2dbc-postgresql = { group = "org.postgresql", name = "r2dbc-postgresql", version.ref = "postgresql-r2dbc" }
+r2dbc-sqlserver = { group = "io.r2dbc", name = "r2dbc-mssql", version.ref = "sqlserver-r2dbc" }
 
 [plugins]
 jvm = { id = "org.jetbrains.kotlin.jvm", version = "2.1.0" }

@@ -10,7 +10,7 @@ import org.jetbrains.exposed.v1.dao.flushCache
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.entities.EntityTestsData.YTable
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.test.assertNull
 

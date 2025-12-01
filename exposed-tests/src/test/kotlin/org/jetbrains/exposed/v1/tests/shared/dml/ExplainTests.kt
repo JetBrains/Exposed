@@ -1,12 +1,13 @@
 package org.jetbrains.exposed.v1.tests.shared.dml
 
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.intParam
+import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.core.or
-import org.jetbrains.exposed.v1.core.statements.IStatementBuilder
 import org.jetbrains.exposed.v1.core.statements.Statement
+import org.jetbrains.exposed.v1.core.statements.StatementBuilder
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
@@ -18,7 +19,7 @@ import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class ExplainTests : DatabaseTestsBase() {
     private val explainUnsupportedDb = TestDB.ALL_SQLSERVER_LIKE + TestDB.ALL_ORACLE_LIKE
@@ -55,12 +56,12 @@ class ExplainTests : DatabaseTestsBase() {
         var explainCount = 0
         val cityName = "City A"
 
-        fun JdbcTransaction.explainAndIncrement(body: IStatementBuilder.() -> Statement<*>) = explain(body = body).also {
+        fun JdbcTransaction.explainAndIncrement(body: StatementBuilder.() -> Statement<*>) = explain(body = body).also {
             it.toList() // as with select queries, explain is only executed when iterated over
             explainCount++
         }
 
-        withCitiesAndUsers(exclude = withH2V1(explainUnsupportedDb)) { cities, users, userData ->
+        withCitiesAndUsers(exclude = explainUnsupportedDb) { cities, users, userData ->
             val testDb = currentDialectTest
             debug = true
             statementCount = 0

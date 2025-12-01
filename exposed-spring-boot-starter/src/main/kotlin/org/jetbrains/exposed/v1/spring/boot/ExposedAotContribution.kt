@@ -55,8 +55,8 @@ class ExposedAotContribution : BeanFactoryInitializationAotProcessor {
 
     private fun RuntimeHints.registerResourceHints() {
         listOf(
-            "META-INF/services/org.jetbrains.exposed.v1.dao.id.EntityIDFactory",
-            "META-INF/services/org.jetbrains.exposed.v1.sql.DatabaseConnectionAutoRegistration",
+            "META-INF/services/org.jetbrains.exposed.v1.core.dao.id.EntityIDFactory",
+            "META-INF/services/org.jetbrains.exposed.v1.jdbc.DatabaseConnectionAutoRegistration",
             "META-INF/services/org.jetbrains.exposed.v1.core.statements.GlobalStatementInterceptor"
         ).forEach { resource ->
             resources().registerResource(ClassPathResource(resource))

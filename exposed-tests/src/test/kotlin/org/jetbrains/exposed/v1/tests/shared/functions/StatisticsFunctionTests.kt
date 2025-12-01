@@ -1,4 +1,5 @@
 package org.jetbrains.exposed.v1.tests.shared.functions
+
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.Function
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
@@ -7,7 +8,7 @@ import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.*
 
 class StatisticsFunctionTests : DatabaseTestsBase() {

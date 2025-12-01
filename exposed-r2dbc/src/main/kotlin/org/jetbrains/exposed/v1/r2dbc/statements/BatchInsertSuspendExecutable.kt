@@ -2,27 +2,33 @@ package org.jetbrains.exposed.v1.r2dbc.statements
 
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.ResultRow
-import org.jetbrains.exposed.v1.core.statements.BaseBatchInsertStatement
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
 import org.jetbrains.exposed.v1.core.statements.SQLServerBatchInsertStatement
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcResult
 
-open class BatchInsertSuspendExecutable<S : BaseBatchInsertStatement>(
+/**
+ * Represents the execution logic for an SQL statement that batch inserts new rows into a table.
+ */
+open class BatchInsertSuspendExecutable<S : BatchInsertStatement>(
     override val statement: S
 ) : InsertSuspendExecutable<List<ResultRow>, S>(statement) {
     override val isAlwaysBatch = true
 
     override suspend fun prepared(transaction: R2dbcTransaction, sql: String): R2dbcPreparedStatementApi {
         return if (!statement.shouldReturnGeneratedValues) {
-            transaction.connection.prepareStatement(sql, false)
+            transaction.connection().prepareStatement(sql, false)
         } else {
             super.prepared(transaction, sql)
         }
     }
 }
 
+/**
+ * Represents the execution logic for an SQL statement that batch inserts new rows into a table,
+ * specifically for the SQL Server database.
+ */
 open class SQLServerBatchInsertSuspendExecutable(
     override val statement: SQLServerBatchInsertStatement
 ) : BatchInsertSuspendExecutable<SQLServerBatchInsertStatement>(statement) {

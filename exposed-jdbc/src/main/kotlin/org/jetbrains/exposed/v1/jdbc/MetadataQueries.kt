@@ -13,7 +13,7 @@ fun Schema.exists(): Boolean = currentDialectMetadata.schemaExists(this)
 /**
  * Returns whether [this] table exists in the database.
  *
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.DDLTests.tableExists02
+ * @sample org.jetbrains.exposed.v1.tests.shared.DDLTests.tableExists02
  */
 fun Table.exists(): Boolean = currentDialectMetadata.tableExists(this)
 

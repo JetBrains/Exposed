@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.v1.jodatime
 
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -8,7 +10,7 @@ import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
 
 class JodaDateTimeLiteralTest : DatabaseTestsBase() {

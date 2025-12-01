@@ -3,14 +3,17 @@
 package org.jetbrains.exposed.samples.ktor
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
-import org.jetbrains.exposed.v1.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.v1.transactions.transaction
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelSuspendTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 @Serializable
 data class ExposedUser(val name: String, val age: Int)
+
 class UserService(private val database: Database) {
     object Users : Table() {
         val id = integer("id").autoIncrement()
@@ -26,8 +29,9 @@ class UserService(private val database: Database) {
         }
     }
 
-    suspend fun <T> dbQuery(block: suspend () -> T): T =
-        newSuspendedTransaction(Dispatchers.IO) { block() }
+    suspend fun <T> dbQuery(block: suspend () -> T): T = withContext(Dispatchers.IO) {
+        inTopLevelSuspendTransaction { block() }
+    }
 
     suspend fun create(user: ExposedUser): Int = dbQuery {
         Users.insert {
@@ -42,6 +46,13 @@ class UserService(private val database: Database) {
                 .where { Users.id eq id }
                 .map { ExposedUser(it[Users.name], it[Users.age]) }
                 .singleOrNull()
+        }
+    }
+
+    suspend fun readAll(): List<ExposedUser> {
+        return dbQuery {
+            Users.selectAll()
+                .map { ExposedUser(it[Users.name], it[Users.age]) }
         }
     }
 

@@ -9,8 +9,6 @@ import kotlinx.serialization.builtins.ArraySerializer
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
@@ -26,7 +24,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -219,10 +217,10 @@ class JsonBColumnTests : R2dbcDatabaseTestsBase() {
                     SchemaUtils.createMissingTablesAndColumns(defaultTester)
                 }
             } else {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(defaultTester)
+                SchemaUtils.createMissingTablesAndColumns(defaultTester)
                 assertTrue(defaultTester.exists())
                 // ensure defaults match returned metadata defaults
-                val alters = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.statementsRequiredToActualizeScheme(defaultTester)
+                val alters = SchemaUtils.statementsRequiredToActualizeScheme(defaultTester)
                 assertTrue(alters.isEmpty())
 
                 defaultTester.insert {}
@@ -279,7 +277,7 @@ class JsonBColumnTests : R2dbcDatabaseTestsBase() {
             val user = jsonb<User>("user", Json.Default).nullable()
         }
 
-        withTables(excludeSettings = binaryJsonNotSupportedDB, tester) {
+        withTables(excludeSettings = binaryJsonNotSupportedDB, tester) { testDb ->
             val nullId = tester.insertAndGetId {
                 it[user] = null
             }
@@ -292,6 +290,20 @@ class JsonBColumnTests : R2dbcDatabaseTestsBase() {
 
             val result2 = tester.select(tester.user).where { tester.id eq nonNullId }.single()
             assertNotNull(result2[tester.user])
+
+            val batchData = listOf(null, User("B", "Team B"))
+            val batchSql = mutableListOf<String>()
+            tester.batchInsert(batchData) { user ->
+                this[tester.user] = user
+
+                batchSql += this.prepareSQL(this@withTables, prepared = true)
+            }
+            assertEquals(batchData.size, batchSql.size)
+            val expectedMarker = when (testDb) {
+                in TestDB.ALL_POSTGRES -> "?::jsonb"
+                else -> "?"
+            }
+            assertTrue(batchSql.all { it.contains(expectedMarker, ignoreCase = true) })
         }
     }
 

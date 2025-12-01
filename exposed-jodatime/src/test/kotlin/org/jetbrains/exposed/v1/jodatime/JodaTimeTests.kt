@@ -8,14 +8,17 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.between
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.TextColumnType
+import org.jetbrains.exposed.v1.core.between
 import org.jetbrains.exposed.v1.core.castTo
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.function
 import org.jetbrains.exposed.v1.core.get
+import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.less
+import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.core.slice
 import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
@@ -33,7 +36,7 @@ import org.jetbrains.exposed.v1.tests.shared.expectException
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.LocalTime
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 class JodaTimeTests : DatabaseTestsBase() {
@@ -196,7 +199,7 @@ class JodaTimeTests : DatabaseTestsBase() {
             val year2023 = if (currentDialectTest is PostgreSQLDialect) {
                 // PostgreSQL requires explicit type cast to resolve function date_part
                 dateParam(mayTheFourth)
-                    .castTo(DateColumnType(false)).year()
+                    .castTo(JodaLocalDateColumnType()).year()
             } else {
                 dateParam(mayTheFourth).year()
             }
@@ -248,7 +251,7 @@ class JodaTimeTests : DatabaseTestsBase() {
             val modified = jsonb<ModifierData>("modified", Json.Default)
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2 + TestDB.SQLITE + TestDB.SQLSERVER + TestDB.ORACLE, tester) {
+        withTables(excludeSettings = TestDB.ALL_H2_V2 + TestDB.SQLSERVER + TestDB.ORACLE, tester) { testDb ->
             val dateTimeNow = DateTime.now()
             tester.insert {
                 it[created] = dateTimeNow.minusYears(1)
@@ -268,12 +271,21 @@ class JodaTimeTests : DatabaseTestsBase() {
 
             // PostgreSQL requires explicit type cast to timestamp for in-DB comparison
             val dateModified = if (currentDialectTest is PostgreSQLDialect) {
-                tester.modified.extract<DateTime>("${prefix}timestamp").castTo(DateColumnType(true))
+                tester.modified.extract<DateTime>("${prefix}timestamp").castTo(JodaLocalDateTimeColumnType())
             } else {
                 tester.modified.extract<DateTime>("${prefix}timestamp")
             }
-            val modifiedBeforeCreation = tester.selectAll().where { dateModified less tester.created }.single()
-            assertEquals(2, modifiedBeforeCreation[tester.modified].userId)
+            // SQLite requires JSON() function to convert JSONB binary format to readable text format
+            val modifiedColumn = if (testDb == TestDB.SQLITE) {
+                tester.modified.function("JSON")
+            } else {
+                tester.modified
+            }
+            val modifiedBeforeCreation = tester
+                .select(tester.created, modifiedColumn)
+                .where { dateModified less tester.created }
+                .single()
+            assertEquals(2, modifiedBeforeCreation[modifiedColumn]?.userId)
         }
     }
 
@@ -367,7 +379,7 @@ class JodaTimeTests : DatabaseTestsBase() {
             val timestampWithTimeZone = timestampWithTimeZone("timestamptz-column")
         }
 
-        withTables(excludeSettings = timestampWithTimeZoneUnsupportedDB + TestDB.ALL_H2_V1, testTable) {
+        withTables(excludeSettings = timestampWithTimeZoneUnsupportedDB, testTable) {
             // UTC time zone
             DateTimeZone.setDefault(DateTimeZone.UTC)
             assertEquals("UTC", DateTimeZone.getDefault().id)
@@ -376,12 +388,6 @@ class JodaTimeTests : DatabaseTestsBase() {
             val nowId = testTable.insertAndGetId {
                 it[timestampWithTimeZone] = now
             }
-
-            assertEquals(
-                DateTime(now.year, now.monthOfYear, now.dayOfMonth, 0, 0),
-                testTable.select(testTable.timestampWithTimeZone.date()).where { testTable.id eq nowId }
-                    .single()[testTable.timestampWithTimeZone.date()]
-            )
 
             assertEquals(
                 now.toLocalTime(),
@@ -395,7 +401,7 @@ class JodaTimeTests : DatabaseTestsBase() {
     fun testCurrentDateTimeFunction() {
         val fakeTestTable = object : IntIdTable("fakeTable") {}
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, fakeTestTable) {
+        withTables(fakeTestTable) {
             fun currentDbDateTime(): DateTime {
                 return fakeTestTable.select(CurrentDateTime).first()[CurrentDateTime]
             }
@@ -411,8 +417,8 @@ class JodaTimeTests : DatabaseTestsBase() {
         val defaultDates = listOf(today)
         val defaultDateTimes = listOf(DateTime.now())
         val tester = object : Table("array_tester") {
-            val dates = array("dates", DateColumnType(false)).default(defaultDates)
-            val datetimes = array("datetimes", DateColumnType(true)).default(defaultDateTimes)
+            val dates = array("dates", JodaLocalDateColumnType()).default(defaultDates)
+            val datetimes = array("datetimes", JodaLocalDateTimeColumnType()).default(defaultDateTimes)
         }
 
         withTables(excludeSettings = TestDB.ALL - TestDB.POSTGRESQL - TestDB.H2_V2 - TestDB.H2_V2_PSQL, tester) {

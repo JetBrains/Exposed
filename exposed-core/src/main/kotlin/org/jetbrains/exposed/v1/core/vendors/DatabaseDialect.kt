@@ -1,7 +1,8 @@
 package org.jetbrains.exposed.v1.core.vendors
 
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
+import org.jetbrains.exposed.v1.core.transactions.currentTransactionOrNull
 
 /**
  * Common interface for all database dialects.
@@ -81,6 +82,10 @@ interface DatabaseDialect {
     val supportsColumnTypeChange: Boolean get() = false
 
     /** Returns `true` if the dialect supports `SELECT FOR UPDATE` statements, `false` otherwise. */
+    @Deprecated(
+        "The parameter was moved to JdbcExposedDatabaseMetadata/R2dbcExposedDatabaseMetadata classes",
+        ReplaceWith("TransactionManager.current().db.supportsSelectForUpdate")
+    )
     val supportsSelectForUpdate: Boolean get() = false
 
     /** Returns `true` if the specified [e] is allowed as a default column value in the dialect, `false` otherwise. */
@@ -97,17 +102,28 @@ interface DatabaseDialect {
     /** Returns the SQL statement that modifies the specified [column]. */
     fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String>
 
+    /** Returns the SQL statement that modifies the specified [column], using the current [originalColumnData] state. */
+    fun modifyColumn(originalColumnData: ColumnMetadata, column: Column<*>, columnDiff: ColumnDiff): List<String> {
+        return modifyColumn(column, columnDiff)
+    }
+
     /** Returns the SQL statement that adds a primary key specified [pkName] to an existing [table]. */
     fun addPrimaryKey(table: Table, pkName: String?, vararg pkColumns: Column<*>): String
 
     /** Returns the SQL statement that creates a database with the specified [name]. */
-    fun createDatabase(name: String) = "CREATE DATABASE IF NOT EXISTS ${name.inProperCase()}"
+    fun createDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "CREATE DATABASE IF NOT EXISTS ${name.inProperCase()}"
+    }
 
     /** Returns the SQL query that retrieves a set of existing databases. */
     fun listDatabases(): String = "SHOW DATABASES"
 
     /** Returns the SQL statement that drops the database with the specified [name]. */
-    fun dropDatabase(name: String) = "DROP DATABASE IF EXISTS ${name.inProperCase()}"
+    fun dropDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "DROP DATABASE IF EXISTS ${name.inProperCase()}"
+    }
 
     /** Returns the SQL statement that sets the current schema to the specified [schema]. */
     fun setSchema(schema: Schema): String = "SET SCHEMA ${schema.identifier}"
@@ -128,12 +144,15 @@ interface DatabaseDialect {
         }
     }
 
-    // TODO move it to JDBC or R2DBC metadata
     /** Returns whether the [columnMetadataSqlType] type and the [columnType] are equivalent.
      *
      * [columnMetadataJdbcType], the value of which comes from [java.sql.Types], is taken into consideration if needed by a specific database.
      * @see [H2Dialect.areEquivalentColumnTypes]
      */
+    @Deprecated(
+        "This method was moved to ExposedDatabaseMetadata and should not be used anymore from here.",
+        ReplaceWith("currentDialectMetadata.areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataJdbcType, columnType)")
+    )
     fun areEquivalentColumnTypes(columnMetadataSqlType: String, columnMetadataJdbcType: Int, columnType: String): Boolean =
         columnMetadataSqlType.equals(columnType, ignoreCase = true)
 
@@ -157,17 +176,19 @@ internal fun <T> withDialect(dialect: DatabaseDialect, body: () -> T): T {
 val currentDialect: DatabaseDialect
     get() {
         @OptIn(InternalApi::class)
-        return explicitDialect.get() ?: CoreTransactionManager.currentTransaction().db.dialect
+        return explicitDialect.get() ?: currentTransaction().db.dialect
     }
 
 @OptIn(InternalApi::class)
 internal val currentDialectIfAvailable: DatabaseDialect?
-    get() = if (CoreTransactionManager.getDefaultDatabaseOrFirst() != null && CoreTransactionManager.currentTransactionOrNull() != null) {
+    get() = if (currentTransactionOrNull() != null) {
         currentDialect
     } else {
         null
     }
 
+/** @suppress */
 @OptIn(InternalApi::class)
-internal fun String.inProperCase(): String =
-    CoreTransactionManager.currentTransactionOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this
+@InternalApi
+fun String.inProperCase(): String =
+    currentTransactionOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this

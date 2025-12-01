@@ -11,7 +11,7 @@ import org.jetbrains.exposed.v1.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.v1.tests.currentTestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertTrue
 
 class UpdateTests : DatabaseTestsBase() {
@@ -107,7 +107,7 @@ class UpdateTests : DatabaseTestsBase() {
 
     @Test
     fun testUpdateWithMultipleJoins() {
-        withCitiesAndUsers(exclude = TestDB.ALL_H2 + TestDB.SQLITE) { cities, users, userData ->
+        withCitiesAndUsers(exclude = TestDB.ALL_H2_V2 + TestDB.SQLITE) { cities, users, userData ->
             val join = cities.innerJoin(users).innerJoin(userData)
             join.update {
                 it[userData.comment] = users.name
@@ -131,7 +131,7 @@ class UpdateTests : DatabaseTestsBase() {
             val tableAId = reference("table_a_id", tableA)
         }
 
-        val supportWhere = TestDB.entries - TestDB.ALL_H2.toSet() - TestDB.SQLITE + TestDB.H2_V2_ORACLE
+        val supportWhere = TestDB.entries - TestDB.ALL_H2_V2.toSet() - TestDB.SQLITE + TestDB.H2_V2_ORACLE
 
         withTables(tableA, tableB) { testingDb ->
             val aId = tableA.insertAndGetId { it[foo] = "foo" }
@@ -167,7 +167,7 @@ class UpdateTests : DatabaseTestsBase() {
 
     @Test
     fun testUpdateWithJoinQuery() {
-        withCitiesAndUsers(exclude = TestDB.ALL_H2_V1 + TestDB.SQLITE) { _, users, userData ->
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLITE)) { _, users, userData ->
             // single join query using join()
             val userAlias = users.selectAll().where { users.cityId neq 1 }.alias("u2")
             val joinWithSubQuery = userData.innerJoin(userAlias, { userData.user_id }, { userAlias[users.id] })
@@ -179,7 +179,7 @@ class UpdateTests : DatabaseTestsBase() {
                 assertEquals(123, it[userData.value])
             }
 
-            if (currentTestDB !in TestDB.ALL_H2) { // does not support either multi-table joins or update(where)
+            if (currentTestDB !in TestDB.ALL_H2_V2) { // does not support either multi-table joins or update(where)
                 // single join query using join() with update(where)
                 joinWithSubQuery.update({ userData.comment like "Comment%" }) {
                     it[userData.value] = 0

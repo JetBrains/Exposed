@@ -1,14 +1,12 @@
 package org.jetbrains.exposed.v1.tests.shared.dml
 
-import junit.framework.TestCase.assertNull
 import org.jetbrains.exposed.v1.core.Join
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
 import org.jetbrains.exposed.v1.core.alias
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.innerJoin
 import org.jetbrains.exposed.v1.core.joinQuery
 import org.jetbrains.exposed.v1.core.lastQueryAlias
-import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
@@ -19,7 +17,8 @@ import org.jetbrains.exposed.v1.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNull
 import kotlin.test.assertTrue
 import kotlin.test.expect
 
@@ -31,7 +30,7 @@ class DeleteTests : DatabaseTestsBase() {
             val userDataExists = userData.selectAll().any()
             assertEquals(false, userDataExists)
 
-            val smthId = users.select(users.id).where { users.name.like("%thing") }.single()[users.id]
+            val smthId = users.select(users.id).where { users.name like "%thing" }.single()[users.id]
             assertEquals("smth", smthId)
 
             users.deleteWhere { users.name like "%thing" }
@@ -83,8 +82,7 @@ class DeleteTests : DatabaseTestsBase() {
                 userData.deleteWhere(limit = 1) { userData.value eq 20 }
                 userData.select(userData.user_id, userData.value).where { userData.value eq 20 }.let {
                     assertEquals(1L, it.count())
-                    val expected = if (currentDialectTest is H2Dialect) "smth" else "eugene"
-                    assertEquals(expected, it.single()[userData.user_id])
+                    assertEquals("eugene", it.single()[userData.user_id])
                 }
             }
         }
@@ -110,7 +108,7 @@ class DeleteTests : DatabaseTestsBase() {
 
     @Test
     fun testDeleteWithMultipleAliasJoins() {
-        withCitiesAndUsers(exclude = TestDB.ALL_H2 + TestDB.SQLITE) { cities, users, userData ->
+        withCitiesAndUsers(exclude = TestDB.ALL_H2_V2 + TestDB.SQLITE) { cities, users, userData ->
             val towns = cities.alias("towns")
             val people = users.alias("people")
             val stats = userData.alias("stats")
@@ -127,7 +125,7 @@ class DeleteTests : DatabaseTestsBase() {
 
     @Test
     fun testDeleteWithJoinQuery() {
-        withCitiesAndUsers(exclude = TestDB.ALL_H2_V1 + TestDB.SQLITE) { _, users, userData ->
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLITE)) { _, users, userData ->
             val singleJoinQuery = userData.joinQuery(
                 on = { userData.user_id eq it[users.id] },
                 joinPart = { users.selectAll().where { users.cityId eq 2 } }

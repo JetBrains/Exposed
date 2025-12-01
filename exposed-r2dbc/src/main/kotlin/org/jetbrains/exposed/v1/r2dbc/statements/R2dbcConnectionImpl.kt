@@ -8,24 +8,28 @@ import io.r2dbc.spi.Statement
 import io.r2dbc.spi.ValidationDepth
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitFirstOrNull
+import kotlinx.coroutines.reactive.awaitLast
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactive.collect
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
+import org.jetbrains.exposed.v1.core.transactions.withThreadLocalTransaction
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.OracleDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
-import org.jetbrains.exposed.v1.r2dbc.R2dbcScope
-import org.jetbrains.exposed.v1.r2dbc.mappers.TypeMapperRegistry
+import org.jetbrains.exposed.v1.r2dbc.mappers.R2dbcTypeMapping
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcDatabaseMetadataImpl
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedConnection
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedDatabaseMetadata
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcSavepoint
 import org.jetbrains.exposed.v1.r2dbc.statements.api.getBoolean
 import org.jetbrains.exposed.v1.r2dbc.statements.api.getString
+import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.MetadataProvider
 import org.reactivestreams.Publisher
 import java.util.*
@@ -37,8 +41,7 @@ import java.util.*
 class R2dbcConnectionImpl(
     override val connection: Publisher<out Connection>,
     private val vendorDialect: String,
-    private val scope: R2dbcScope,
-    private val typeMapperRegistry: TypeMapperRegistry
+    private val typeMapping: R2dbcTypeMapping
 ) : R2dbcExposedConnection<Publisher<out Connection>> {
     private val metadataProvider: MetadataProvider = MetadataProvider.getProvider(vendorDialect)
 
@@ -51,7 +54,7 @@ class R2dbcConnectionImpl(
     }
 
     override suspend fun setCatalog(value: String) {
-        withConnection { executeSQL(metadataProvider.getCatalog()) }
+        withConnection { executeSQL(metadataProvider.setCatalog(value)) }
     }
 
     override suspend fun getSchema(): String = withConnection {
@@ -111,10 +114,7 @@ class R2dbcConnectionImpl(
         } else {
             createStatement(preparedSql)
         }
-//        TODO
-//        val r2dbcQuery = if (returnKeys) "$preparedSql RETURNING *" else preparedSql
-//        R2dbcPreparedStatementImpl(createStatement(r2dbcQuery), this, returnKeys, isInsert = r2dbcQuery.startsWith("INSERT"))
-        R2dbcPreparedStatementImpl(r2dbcStatement, this, returnKeys, currentDialect, typeMapperRegistry)
+        R2dbcPreparedStatementImpl(r2dbcStatement, this, returnKeys, currentDialect, typeMapping)
     }
 
     override suspend fun prepareStatement(
@@ -123,7 +123,7 @@ class R2dbcConnectionImpl(
     ): R2dbcPreparedStatementImpl = withConnection {
         val preparedSql = r2dbcPreparedSql(sql)
         val r2dbcStatement = createStatement(preparedSql).returnGeneratedValues(*columns)
-        R2dbcPreparedStatementImpl(r2dbcStatement, this, true, currentDialect, typeMapperRegistry)
+        R2dbcPreparedStatementImpl(r2dbcStatement, this, true, currentDialect, typeMapping)
     }
 
     private fun r2dbcPreparedSql(sql: String): String {
@@ -142,9 +142,8 @@ class R2dbcConnectionImpl(
 
             var i = -1
             while (++i < sql.length) {
-                val char = sql[i]
-                when {
-                    char == '?' && quoteStack.isEmpty() -> {
+                when (val char = sql[i]) {
+                    '?' if quoteStack.isEmpty() -> {
                         if (sql.getOrNull(i + 1) == '?') {
                             i++
                             append(sql.substring(lastPos, i))
@@ -154,7 +153,7 @@ class R2dbcConnectionImpl(
                         append("${sql.substring(lastPos, i)}${parameterMarker}${++paramCount}")
                         lastPos = i + 1
                     }
-                    char == '\'' || char == '\"' -> {
+                    '\'', '\"' -> {
                         when {
                             quoteStack.isEmpty() -> quoteStack.push(char)
                             quoteStack.peek() == char -> quoteStack.pop()
@@ -183,7 +182,7 @@ class R2dbcConnectionImpl(
         withConnection {
             val batch = createBatch()
             sqls.forEach { sql -> batch.add(sql) }
-            batch.execute().awaitFirstOrNull()
+            batch.execute().collect { }
         }
     }
 
@@ -208,33 +207,23 @@ class R2dbcConnectionImpl(
 
     override suspend fun <T> metadata(body: suspend R2dbcExposedDatabaseMetadata.() -> T): T = withConnection {
         if (metadataImpl == null) {
-            metadataImpl = R2dbcDatabaseMetadataImpl(getCatalog(), this, vendorDialect, scope)
+            metadataImpl = R2dbcDatabaseMetadataImpl(getCatalog(), this, vendorDialect)
         }
         metadataImpl!!.body()
     }
 
+    private val localConnectionLock = Mutex()
     private var localConnection: Connection? = null
 
-    // TODO Recheck the reason of creating new context with `scope.coroutineContext`
-    //   It couses the issues `No transaction in context` if Exposed is used inside ktor server
-    //   To reproduce the problem it's enough to run the following script with any table Customers inside the server code
-    //   runBlocking {
-    //        val database = R2dbcDatabase.connect("r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1")
-    //        suspendTransaction(db = database) {
-    //            SchemaUtils.create(Customers)
-    //        }
-    //    }
-    //
-    //    Old function definition
-    //    private suspend fun <T> withConnection(body: suspend Connection.() -> T): T = withContext(scope.coroutineContext) {
     private suspend fun <T> withConnection(body: suspend Connection.() -> T): T {
-        if (localConnection == null) {
-            localConnection = connection.awaitFirst().also {
+        val acquiredConnection = localConnectionLock.withLock {
+            localConnection ?: connection.awaitLast().also {
                 // this starts an explicit transaction with autoCommit mode off
                 it.beginTransaction().awaitFirstOrNull()
+                localConnection = it
             }
         }
-        return localConnection!!.body()
+        return acquiredConnection.body()
     }
 }
 
@@ -262,18 +251,25 @@ internal suspend fun Connection.executeSQL(sqlQuery: String) {
     createStatement(sqlQuery).execute().awaitFirstOrNull()
 }
 
+@OptIn(InternalApi::class)
 internal suspend fun <T> Connection.executeSQL(
     sqlQuery: String,
     transform: (Row, RowMetadata) -> T
 ): List<T>? {
     if (sqlQuery.isEmpty()) return null
 
+    val currentTransaction = TransactionManager.current()
+
     return flow {
         createStatement(sqlQuery)
             .execute()
             .collect { row ->
                 row.map { row, metadata ->
-                    transform(row, metadata)
+                    // The current block is run in another thread outside of coroutine,
+                    // so that thread should also get the correct transaction into the thread local variables
+                    withThreadLocalTransaction(currentTransaction) {
+                        transform(row, metadata)
+                    }
                 }.collect { emit(it) }
             }
     }.toList()

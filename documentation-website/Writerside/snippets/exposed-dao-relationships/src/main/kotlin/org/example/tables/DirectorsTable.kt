@@ -1,7 +1,7 @@
 package org.example.tables
 
-import org.jetbrains.exposed.v1.dao.id.CompositeIdTable
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 
 enum class Genre { HORROR, DRAMA, THRILLER, SCI_FI }
 const val NAME_LENGTH = 50

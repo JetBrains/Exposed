@@ -1,16 +1,24 @@
 package org.jetbrains.exposed.v1.tests.shared
 
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.autoIncColumnType
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.core.statements.StatementType
+import org.jetbrains.exposed.v1.core.statements.buildStatement
+import org.jetbrains.exposed.v1.core.upperCase
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.statements.jdbc.JdbcResult
+import org.jetbrains.exposed.v1.jdbc.statements.toExecutable
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
-import org.jetbrains.exposed.v1.tests.inProperCase
-import org.junit.Assume
-import org.junit.Test
+import org.jetbrains.exposed.v1.tests.shared.dml.withCitiesAndUsers
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -21,6 +29,7 @@ class TransactionExecTests : DatabaseTestsBase() {
         override val primaryKey = PrimaryKey(id)
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testExecWithSingleStatementQuery() {
         withTables(ExecTable) {
@@ -51,7 +60,7 @@ class TransactionExecTests : DatabaseTestsBase() {
         // Both SQLite and H2 drivers allow multiple but only return the result of the first statement:
         // SQLite issue tracker: https://github.com/xerial/sqlite-jdbc/issues/277
         // H2 issue tracker: https://github.com/h2database/h2database/issues/3704
-        val toExclude = TestDB.ALL_H2 + TestDB.ALL_MYSQL_LIKE + listOf(TestDB.SQLITE, TestDB.POSTGRESQLNG)
+        val toExclude = TestDB.ALL_H2_V2 + TestDB.ALL_MYSQL_LIKE + listOf(TestDB.SQLITE, TestDB.POSTGRESQLNG)
 
         withTables(excludeSettings = toExclude, ExecTable) { testDb ->
             testInsertAndSelectInSingleExec(testDb)
@@ -60,7 +69,7 @@ class TransactionExecTests : DatabaseTestsBase() {
 
     @Test
     fun testExecWithMultiStatementQueryUsingMySQL() {
-        Assume.assumeTrue(TestDB.ALL_MYSQL_MARIADB.containsAll(TestDB.enabledDialects()))
+        Assumptions.assumeTrue(TestDB.ALL_MYSQL_MARIADB.containsAll(TestDB.enabledDialects()))
 
         val dialect = TestDB.enabledDialects().first()
         val extra = if (dialect in TestDB.ALL_MARIADB) "?" else ""
@@ -84,6 +93,7 @@ class TransactionExecTests : DatabaseTestsBase() {
         TransactionManager.closeAndUnregister(db)
     }
 
+    @OptIn(InternalApi::class)
     private fun JdbcTransaction.testInsertAndSelectInSingleExec(testDb: TestDB) {
         ExecTable.insert {
             it[amount] = 99
@@ -130,6 +140,7 @@ class TransactionExecTests : DatabaseTestsBase() {
         assertEquals(2, result)
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testExecWithNullableAndEmptyResultSets() {
         val tester = object : Table("tester") {
@@ -169,6 +180,98 @@ class TransactionExecTests : DatabaseTestsBase() {
                 }
             }
             assertNull(nullTransformResult)
+        }
+    }
+
+    @Test
+    fun testExecWithBuildStatement() {
+        withCitiesAndUsers { cities, users, userData ->
+            val initialCityCount = cities.selectAll().count()
+            val initialUserDataCount = userData.selectAll().count()
+
+            val newCity = "Amsterdam"
+            val insertCity = buildStatement {
+                cities.insert {
+                    it[name] = newCity
+                }
+            }
+            val upsertCity = buildStatement {
+                cities.upsert(onUpdate = { it[cities.name] = cities.name.upperCase() }) {
+                    it[id] = initialCityCount.toInt() + 1
+                    it[name] = newCity
+                }
+            }
+            val newName = "Alexey"
+            val userFilter = users.id eq "alex"
+            val updateUser = buildStatement {
+                users.update({ userFilter }) {
+                    it[users.name] = newName
+                }
+            }
+            val deleteAllUserData = buildStatement { userData.deleteAll() }
+
+            insertCity.toExecutable().execute(this)
+            assertEquals(initialCityCount + 1, cities.selectAll().count())
+
+            exec(upsertCity.toExecutable())
+            assertEquals(initialCityCount + 1, cities.selectAll().count())
+            val updatedCity = cities.selectAll().where { cities.id eq (initialCityCount.toInt() + 1) }.single()
+            assertEquals(newCity.uppercase(), updatedCity[cities.name])
+
+            updateUser.toExecutable().execute(this)
+            val updatedUserName = users.select(users.name).where { userFilter }.first()
+            assertEquals(newName, updatedUserName[users.name])
+
+            val rowsDeleted = exec(deleteAllUserData.toExecutable())
+            assertEquals(initialUserDataCount, rowsDeleted?.toLong())
+            assertEquals(0, userData.selectAll().count())
+        }
+    }
+
+    @Test
+    fun testExecWithQueryInstance() {
+        withTables(ExecTable) {
+            val selectQuery = ExecTable.select(ExecTable.amount).where { ExecTable.amount less 100 }
+
+            val amounts = (90..99).toList()
+            ExecTable.batchInsert(amounts, shouldReturnGeneratedValues = false) { amount ->
+                this[ExecTable.id] = (amount % 10 + 1)
+                this[ExecTable.amount] = amount
+            }
+
+            val expectedSum = amounts.sum()
+
+            // using broader exec(BlockingExecutable) with JdbcResult wrapper
+            val result1 = exec(selectQuery) {
+                it as JdbcResult
+                var sum = 0
+                while (it.next()) {
+                    sum += it.getObject(1, java.lang.Integer::class.java)?.toInt() ?: 0
+                }
+                sum
+            }
+            assertEquals(expectedSum, result1)
+
+            // using broader exec(BlockingExecutable) with wrapped ResultSet directly
+            val result2 = exec(selectQuery) {
+                val result = (it as JdbcResult).result
+                var sum = 0
+                while (result.next()) {
+                    sum += result.getInt(1)
+                }
+                sum
+            }
+            assertEquals(expectedSum, result2)
+
+            // using typed exec(AbstractQuery) that exposes ResultSet directly
+            val result3 = execQuery(selectQuery) {
+                var sum = 0
+                while (it.next()) {
+                    sum += it.getInt(1)
+                }
+                sum
+            }
+            assertEquals(expectedSum, result3)
         }
     }
 }

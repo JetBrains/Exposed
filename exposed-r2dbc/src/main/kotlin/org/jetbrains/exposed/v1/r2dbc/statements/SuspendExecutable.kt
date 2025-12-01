@@ -2,8 +2,7 @@ package org.jetbrains.exposed.v1.r2dbc.statements
 
 import io.r2dbc.spi.R2dbcException
 import org.jetbrains.exposed.v1.core.InternalApi
-import org.jetbrains.exposed.v1.core.statements.Statement
-import org.jetbrains.exposed.v1.core.statements.StatementContext
+import org.jetbrains.exposed.v1.core.statements.*
 import org.jetbrains.exposed.v1.r2dbc.ExposedR2dbcException
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcPreparedStatementApi
@@ -15,11 +14,11 @@ internal object DefaultValueMarker {
 /**
  * Executable provides a customizable execution mechanism for SQL statements within a transaction.
  *
- * This interface allows implementing classes to define specific execution logic specific to R2DBC
+ * This interface allows implementing classes to define specific execution logic specific to an R2DBC driver
  * and customize how the return value is handled.
  * It is primarily used when fine-grained control over statement execution is required.
  *
- * For the blocking JDBC alternative of this interface, see [BlockingExecutable].
+ * For the blocking JDBC alternative of this interface, see `BlockingExecutable` provided with a dependency on `exposed-jdbc`.
  *
  * ## Usage Example:
  * ```kotlin
@@ -29,7 +28,7 @@ internal object DefaultValueMarker {
  *     override suspend fun prepared(transaction: R2dbcTransaction, sql: String): R2dbcPreparedStatementApi {
  *         // We must return values from upsert because returned id could be different depending on insert or upsert happened
  *         if (!currentDialect.supportsOnlyIdentifiersInGeneratedKeys) {
- *             return transaction.connection.prepareStatement(sql, statement.shouldReturnGeneratedValues)
+ *             return transaction.connection().prepareStatement(sql, statement.shouldReturnGeneratedValues)
  *         }
  *
  *         return super.prepared(transaction, sql)
@@ -37,12 +36,13 @@ internal object DefaultValueMarker {
  * }
  * ```
  *
- * The implemented Executable can be later used in the utility functions like [Table.batchUpsert].
+ * The implemented Executable can be later used in the utility functions like `Table.batchUpsert()`.
  *
  * @param T The return type of the SQL execution result.
  * @param S The type of SQL statement that is executed.
  */
 interface SuspendExecutable<out T, S : Statement<T>> {
+    /** The actual Exposed [Statement] on which the specific execution logic should be used. */
     val statement: S
 
     /**
@@ -53,12 +53,12 @@ interface SuspendExecutable<out T, S : Statement<T>> {
 
     /**
      * Uses a [transaction] connection and an [sql] string representation to return a precompiled SQL statement,
-     * stored as an implementation of [PreparedStatementApi].
+     * stored as an implementation of [R2dbcPreparedStatementApi].
      */
     suspend fun prepared(
         transaction: R2dbcTransaction,
         sql: String
-    ): R2dbcPreparedStatementApi = transaction.connection.prepareStatement(sql, false)
+    ): R2dbcPreparedStatementApi = transaction.connection().prepareStatement(sql, false)
 
     /** Whether the SQL statement is meant to be performed as part of a batch execution. */
     val isAlwaysBatch: Boolean
@@ -76,6 +76,43 @@ interface SuspendExecutable<out T, S : Statement<T>> {
             transaction.exec(this)
         }
     }
+}
+
+/**
+ * Returns the associated [SuspendExecutable] that accepts this [Statement] type as an argument,
+ * allowing the provided statement to be then sent to the database for execution.
+ *
+ *```kotlin
+ * suspendTransaction {
+ *     val insertTaskStatement = buildStatement {
+ *         Tasks.insert {
+ *             it[title] = "Follow Exposed tutorial"
+ *             it[isComplete] = false
+ *         }
+ *     }
+ *
+ *     exec(insertTask.toExecutable())
+ * }
+ * ```
+ *
+ * @throws IllegalStateException If the invoking statement does not have a corresponding built-in executable.
+ */
+fun <T : Any, S : Statement<T>> S.toExecutable(): SuspendExecutable<T, S> {
+    @Suppress("UNCHECKED_CAST")
+    return when (this) {
+        is BatchUpsertStatement -> BatchUpsertSuspendExecutable(this)
+        is UpsertStatement<*> -> UpsertSuspendExecutable(this as UpsertStatement<T>)
+        is SQLServerBatchInsertStatement -> SQLServerBatchInsertSuspendExecutable(this)
+        is BatchInsertStatement -> BatchInsertSuspendExecutable(this)
+        is InsertStatement<*> -> InsertSuspendExecutable(this as InsertStatement<T>)
+        is BatchUpdateStatement -> BatchUpdateSuspendExecutable(this)
+        is UpdateStatement -> UpdateSuspendExecutable(this)
+        is DeleteStatement -> DeleteSuspendExecutable(this)
+        is InsertSelectStatement -> InsertSelectSuspendExecutable(this)
+        is MergeStatement -> MergeSuspendExecutable(this)
+        is ReturningStatement -> ReturningSuspendExecutable(this)
+        else -> error("An executable could not be associated with ${this::class.qualifiedName}. Pass this statement to a custom executable instance directly.")
+    } as SuspendExecutable<T, S>
 }
 
 @OptIn(InternalApi::class)

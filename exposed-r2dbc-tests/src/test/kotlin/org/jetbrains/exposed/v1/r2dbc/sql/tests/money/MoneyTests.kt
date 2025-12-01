@@ -5,6 +5,9 @@ import org.javamoney.moneta.Money
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.isNotNull
+import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.money.compositeMoney
 import org.jetbrains.exposed.v1.money.currency
 import org.jetbrains.exposed.v1.money.nullable
@@ -12,7 +15,7 @@ import org.jetbrains.exposed.v1.r2dbc.*
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import javax.money.CurrencyUnit
 import javax.money.Monetary

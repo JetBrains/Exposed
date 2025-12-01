@@ -2,16 +2,17 @@ package org.jetbrains.exposed.v1.spring.transaction
 
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntityClass
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.annotation.Commit
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -80,7 +81,7 @@ open class SpringTransactionEntityTest : SpringTransactionTestBase() {
     @Autowired
     lateinit var service: Service
 
-    @BeforeTest
+    @BeforeEach
     open fun beforeTest() {
         service.init()
     }
@@ -108,7 +109,7 @@ open class SpringTransactionEntityTest : SpringTransactionTestBase() {
         }
     }
 
-    @AfterTest
+    @AfterEach
     fun afterTest() {
         service.cleanUp()
     }

@@ -4,53 +4,44 @@ import io.r2dbc.spi.Connection
 import io.r2dbc.spi.ConnectionMetadata
 import io.r2dbc.spi.IsolationLevel
 import io.r2dbc.spi.Row
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.collect
-import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.statements.api.ExposedMetadataUtils
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
+import org.jetbrains.exposed.v1.core.utils.CachableMapWithSuspendableDefault
+import org.jetbrains.exposed.v1.core.utils.CacheWithSuspendableDefault
 import org.jetbrains.exposed.v1.core.vendors.*
-import org.jetbrains.exposed.v1.r2dbc.R2dbcScope
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
+import org.jetbrains.exposed.v1.r2dbc.mappers.R2dbcRegistryTypeMappingImpl
 import org.jetbrains.exposed.v1.r2dbc.statements.executeSQL
 import org.jetbrains.exposed.v1.r2dbc.statements.getCurrentCatalog
 import org.jetbrains.exposed.v1.r2dbc.statements.getCurrentSchema
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.MetadataProvider
-import java.math.BigDecimal
-import java.sql.Types
 import java.util.concurrent.ConcurrentHashMap
 
-// TODO review why constructor parameters are not being used, e.g. 'scope'
 /**
- * Base class responsible for retrieving and storing information about the R2DBC driver and underlying database.
+ * Class responsible for retrieving and storing information about the R2DBC driver and underlying database.
  */
 @Suppress("UnusedPrivateMember", "UnusedParameter")
 class R2dbcDatabaseMetadataImpl(
     database: String,
     private val connection: Connection,
-    private val vendorDialect: String,
-    private val scope: R2dbcScope
-) : R2dbcExposedDatabaseMetadata(database) {
+    vendorDialect: String,
+) : R2dbcLocalMetadataImpl(database, vendorDialect) {
     private val connectionData: ConnectionMetadata = connection.metadata
     private val metadataProvider: MetadataProvider = MetadataProvider.getProvider(vendorDialect)
 
-    // TODO REVIEW db with major/minor/patch
-    override fun getVersion(): BigDecimal = connectionData.databaseVersion
-        .split('.', ' ')
-        .let {
-            BigDecimal("${it[0]}.${it[1]}")
-        }
+    override fun getVersion() = Version.from(connectionData.databaseVersion)
 
     override fun getMajorVersion(): Int = connectionData.databaseVersion.split('.', ' ')[0].toInt()
 
     override fun getMinorVersion(): Int = connectionData.databaseVersion.split('.', ' ')[1].toInt()
 
     override fun getDatabaseDialectName(): String {
-        val dbProductName = connectionData.databaseProductName
-        return when (dbProductName) {
+        return when (val dbProductName = connectionData.databaseProductName) {
             "MySQL Community Server - GPL", "MySQL Community Server (GPL)" -> MysqlDialect.dialectName
             "MariaDB" -> MariaDBDialect.dialectName
             "H2" -> H2Dialect.dialectName
@@ -79,37 +70,19 @@ class R2dbcDatabaseMetadataImpl(
 
     override fun getDatabaseProductVersion(): String = connectionData.databaseVersion
 
-    override suspend fun getDefaultIsolationLevel(): IsolationLevel = connection.transactionIsolationLevel
-
-    override val supportsAlterTableWithAddColumn: Boolean by lazy {
-        metadataProvider.propertyProvider.supportsAlterTableWithAddColumn
-    }
-
-    override val supportsAlterTableWithDropColumn: Boolean by lazy {
-        metadataProvider.propertyProvider.supportsAlterTableWithDropColumn
-    }
-
-    override val supportsMultipleResultSets: Boolean by lazy {
-        metadataProvider.propertyProvider.supportsMultipleResultSets
-    }
-
-    override val supportsSelectForUpdate: Boolean by lazy {
-        metadataProvider.propertyProvider.supportsSelectForUpdate
-    }
-
-    override val supportsLimitWithUpdateOrDelete: Boolean by lazy {
-        metadataProvider.propertyProvider.supportsLimitWithUpdateOrDelete
-    }
+    override fun getDefaultIsolationLevel(): IsolationLevel = connection.transactionIsolationLevel
 
     override val identifierManager: IdentifierManagerApi by lazy {
         // db URL as KEY causes issues with multi-tenancy!
-        // TODO REVIEW use of JDBC url versus database here
+        // 'database' string may certainly be less complex a key than JDBC 'connection.url' value.
+        // To use an identical url string, we would need to save/parse it to/from ConnectionFactoryOptions & pass to this class.
+        // This is what is done for R2dbcDatabase.url, for example.
+        // So far this is the only use for us storing ConnectionFactoryOptions details in this class, but perhaps if other cases arise?
         identityManagerCache.getOrPut(database) { R2dbcIdentifierManager(metadataProvider, connectionData) }
     }
 
     private var currentSchema: String? = null
 
-    // TODO compare side-by-side JDBC VS R2DBC (all API files in this package) to make sure nothing was left out
     private suspend fun getCurrentSchema(): String {
         if (currentSchema == null) {
             currentSchema = try {
@@ -131,12 +104,11 @@ class R2dbcDatabaseMetadataImpl(
         currentSchema = null
     }
 
-    override suspend fun tableNames(): Map<String, List<String>> {
+    override suspend fun tableNames(): CacheWithSuspendableDefault<String, List<String>> {
         @OptIn(InternalApi::class)
-        return CachableMapWithDefault( // should this internal cache model be refactored?
+        return CachableMapWithSuspendableDefault( // should this internal cache model be refactored?
             default = { schemaName ->
-                // TODO replace runBlocking with SuspendCachableMapWithDefault
-                runBlocking { tableNamesFor(schemaName) }
+                tableNamesFor(schemaName)
             }
         )
     }
@@ -177,9 +149,10 @@ class R2dbcDatabaseMetadataImpl(
         return schemas.map { identifierManager.inProperCase(it) }
     }
 
-    override suspend fun tableNamesByCurrentSchema(tableNamesCache: Map<String, List<String>>?): SchemaMetadata {
+    override suspend fun tableNamesByCurrentSchema(tableNamesCache: CacheWithSuspendableDefault<String, List<String>>?): SchemaMetadata {
         // since properties are not used, should this be cached
-        val tablesInSchema = (tableNamesCache ?: tableNames()).getValue(getCurrentSchema())
+        val schema = getCurrentSchema()
+        val tablesInSchema = tableNamesCache?.get(schema) ?: tableNames().get(schema)
         return SchemaMetadata(getCurrentSchema(), tablesInSchema)
     }
 
@@ -191,11 +164,17 @@ class R2dbcDatabaseMetadataImpl(
         for ((schema, schemaTables) in tablesBySchema.entries) {
             for (table in schemaTables) {
                 val catalog = if (!useSchemaInsteadOfDatabase || schema == getCurrentSchema()) getDatabaseName() else schema
-                // TODO is this necessary with R2DBC?
+                // TODO is this necessary with R2DBC? Answer is no, because all data is returned by getColumns() query below
+                // But it is temporarily left in as executeSQL block below needs to be refactored to process & emit 2 different results
                 val prefetchedColumnTypes = fetchAllColumnTypes(table.nameInDatabaseCase())
                 val query = metadataProvider.getColumns(catalog, schema, table.nameInDatabaseCaseUnquoted())
+
+                @OptIn(InternalApi::class)
                 val columns = connection.executeSQL(query) { row, _ ->
-                    row.asColumnMetadata(prefetchedColumnTypes)
+                    // Unlike JdbcResult, R2dbcResult is split apart for ResultApi vs RowApi, so a 2nd arg placeholder has to be used
+                    with(ExposedMetadataUtils) {
+                        R2dbcRow(row, R2dbcRegistryTypeMappingImpl()).asColumnMetadata(prefetchedColumnTypes)
+                    }
                 }.orEmpty()
                 check(columns.isNotEmpty())
                 result[table] = columns
@@ -205,49 +184,19 @@ class R2dbcDatabaseMetadataImpl(
         return result
     }
 
-    // TODO is this necessary with R2DBC?
-    /** Returns a map of all the columns' names mapped to their type. */
+    /**
+     * Returns a map of all the columns' names mapped to their type.
+     *
+     * Currently, only H2Dialect will actually return a result.
+     */
     private suspend fun fetchAllColumnTypes(tableName: String): Map<String, String> {
         if (currentDialect !is H2Dialect) return emptyMap()
 
-        // TODO extract if needed to metadataProvider for future extension
-        return TransactionManager.current().exec("SHOW COLUMNS FROM $tableName") { row ->
+        return connection.executeSQL("SHOW COLUMNS FROM $tableName") { row, _ ->
             val field = row.getString("FIELD")
             val type = row.getString("TYPE")?.uppercase() ?: ""
             field?.let { it to type }
         }?.filterNotNull()?.toList().orEmpty().toMap()
-    }
-
-    // All H2 V1 databases are excluded because Exposed will be dropping support for it soon
-    @OptIn(InternalApi::class)
-    private fun getColumnType(resultSet: Row, prefetchedColumnTypes: Map<String, String>): String {
-        if (currentDialect !is H2Dialect) return ""
-
-        val columnName = resultSet.getString("COLUMN_NAME")!!
-        val columnType = prefetchedColumnTypes[columnName] ?: resultSet.getString("DATA_TYPE_OG")?.uppercase()!!
-        val dataType = resultSet.getInt("DATA_TYPE")!!
-        // TODO check if it works with R2DBC. It's possible that R2DBC does not use java.sql types.
-        return if (dataType == Types.ARRAY) {
-            val baseType = columnType.substringBefore(" ARRAY")
-            normalizedColumnType(baseType) + columnType.replaceBefore(" ARRAY", "")
-        } else {
-            normalizedColumnType(columnType)
-        }
-    }
-
-    // TODO Could Row be replaced with RowApi to share this between jdbc/r2dbc
-    @OptIn(InternalApi::class)
-    private fun Row.asColumnMetadata(prefetchedColumnTypes: Map<String, String> = emptyMap()): ColumnMetadata {
-        val defaultDbValue = getString("COLUMN_DEF")?.let { sanitizedDefault(it) }
-        val autoIncrement = getString("IS_AUTOINCREMENT") == "YES"
-        val type = getInt("DATA_TYPE")!!
-        val name = getString("COLUMN_NAME")!!
-        val nullable = getBoolean("NULLABLE")
-        val size = getInt("COLUMN_SIZE").takeIf { it != 0 }
-        val scale = getInt("DECIMAL_DIGITS").takeIf { it != 0 }
-        val sqlType = getColumnType(this, prefetchedColumnTypes)
-
-        return ColumnMetadata(name, type, sqlType, nullable, size, scale, autoIncrement, defaultDbValue?.takeIf { !autoIncrement })
     }
 
     private val existingIndicesCache = HashMap<Table, List<Index>>()
@@ -433,14 +382,6 @@ class R2dbcDatabaseMetadataImpl(
         )
     }
 
-    @OptIn(InternalApi::class)
-    override fun resolveReferenceOption(refOption: String): ReferenceOption? {
-        val refOptionInt = refOption.toIntOrNull() ?: return null
-
-        val dialectMapping = metadataProvider.typeProvider.referenceOptions
-        return dialectMapping.keys.first { dialectMapping[it] == refOptionInt }
-    }
-
     override fun cleanCache() {
         existingIndicesCache.clear()
     }
@@ -459,9 +400,7 @@ class R2dbcDatabaseMetadataImpl(
     }
 }
 
-// TODO are these not covered as part of RowApi or something public? Should they be?
+// Core RowApi and R2dbcRow only provide getObject() variants, as per the only R2dbc SPI methods offered.
 internal fun Row.getString(name: String): String? = get(name, java.lang.String::class.java)?.toString()
 
 internal fun Row.getBoolean(name: String): Boolean = get(name)?.toString()?.toBoolean() == true
-
-internal fun Row.getInt(name: String): Int? = get(name)?.toString()?.toInt()

@@ -12,7 +12,7 @@ repositories {
 }
 
 kotlin {
-    jvmToolchain(11)
+    jvmToolchain(17)
 }
 
 dependencies {
@@ -23,14 +23,15 @@ dependencies {
 
     implementation(libs.slf4j)
 
-    // TODO are both needed? can we remove both of them?
-    compileOnly(libs.postgre)
     compileOnly(libs.r2dbc.postgresql)
 }
-// TODO confirm use of repomix.config.json +/- remove?
 
 tasks.withType<KotlinCompile>().configureEach {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_11)
     }
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    targetCompatibility = "11"
 }

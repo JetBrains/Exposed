@@ -1,0 +1,291 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>org.jetbrains.exposed.v1.core.ops</title>
+<link href="../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../styles/style.css" rel="Stylesheet">
+<link href="../../styles/main.css" rel="Stylesheet">
+<link href="../../styles/prism.css" rel="Stylesheet">
+<link href="../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../ui-kit/ui-kit.min.js" defer></script></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../index.html" tabindex="1">
+                    exposed
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">1.0.0-rc-4
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":exposed-core/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":exposed-core/main" data-filter=":exposed-core/main">
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    exposed
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="package" id="content" pageids="exposed-core::org.jetbrains.exposed.v1.core.ops////PointingToDeclaration//-1435837140">
+  <div class="breadcrumbs"><a href="../index.html">exposed-core</a><span class="delimiter">/</span><span class="current">org.jetbrains.exposed.v1.core.ops</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>Package-level</span></span> <span><span>declarations</span></span></h1>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="TYPE">Types</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="TYPE">
+        <h2 class="tableheader">Types</h2>
+        <div class="table"><a data-name="-918313131%2FClasslikes%2F-1435837140" anchor-label="AllAnyFromArrayOp" id="-918313131%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-all-any-from-array-op/index.html"><span>All</span><wbr><span>Any</span><wbr><span>From</span><wbr><span>Array</span><wbr><span><span>Op</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-918313131%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-all-any-from-array-op/index.html">AllAnyFromArrayOp</a><span class="token operator">&lt;</span><a href="-all-any-from-array-op/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">isAny<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter ">array<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="-all-any-from-array-op/index.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">delegateType<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-column-type/index.html">ColumnType</a><span class="token operator">&lt;</span><a href="-all-any-from-array-op/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="-all-any-from-base-op/index.html">AllAnyFromBaseOp</a><span class="token operator">&lt;</span><a href="-all-any-from-array-op/index.html">T</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="-all-any-from-array-op/index.html">T</a><span class="token operator">&gt;</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Represents an SQL operator that checks a value, based on the preceding comparison operator, against an array of values.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1038810145%2FClasslikes%2F-1435837140" anchor-label="AllAnyFromBaseOp" id="1038810145%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-all-any-from-base-op/index.html"><span>All</span><wbr><span>Any</span><wbr><span>From</span><wbr><span>Base</span><wbr><span><span>Op</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1038810145%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-all-any-from-base-op/index.html">AllAnyFromBaseOp</a><span class="token operator">&lt;</span><a href="-all-any-from-base-op/index.html">T</a><span class="token punctuation">, </span><a href="-all-any-from-base-op/index.html">SubSearch</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>isAny<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>subSearch<span class="token operator">: </span><a href="-all-any-from-base-op/index.html">SubSearch</a></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-op/index.html">Op</a><span class="token operator">&lt;</span><a href="-all-any-from-base-op/index.html">T</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Represents an SQL operator that checks a value, based on the preceding comparison operator, against elements returned by <a href="../../exposed-core/org.jetbrains.exposed.v1.core.ops/-all-any-from-base-op/--root--.html">subSearch</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1011346822%2FClasslikes%2F-1435837140" anchor-label="AllAnyFromExpressionOp" id="-1011346822%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-all-any-from-expression-op/index.html"><span>All</span><wbr><span>Any</span><wbr><span>From</span><wbr><span>Expression</span><wbr><span><span>Op</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1011346822%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-all-any-from-expression-op/index.html">AllAnyFromExpressionOp</a><span class="token operator">&lt;</span><a href="-all-any-from-expression-op/index.html">E</a><span class="token punctuation">, </span><a href="-all-any-from-expression-op/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="-all-any-from-expression-op/index.html">E</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">isAny<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="-all-any-from-expression-op/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="-all-any-from-base-op/index.html">AllAnyFromBaseOp</a><span class="token operator">&lt;</span><a href="-all-any-from-expression-op/index.html">E</a><span class="token punctuation">, </span><a href="../org.jetbrains.exposed.v1.core/-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="-all-any-from-expression-op/index.html">T</a><span class="token operator">&gt;</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Represents an SQL operator that checks a value, based on the preceding comparison operator, against a collection of values returned by the provided expression.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-961988310%2FClasslikes%2F-1435837140" anchor-label="AllAnyFromSubQueryOp" id="-961988310%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-all-any-from-sub-query-op/index.html"><span>All</span><wbr><span>Any</span><wbr><span>From</span><wbr><span>Sub</span><wbr><span>Query</span><wbr><span><span>Op</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-961988310%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-all-any-from-sub-query-op/index.html">AllAnyFromSubQueryOp</a><span class="token operator">&lt;</span><a href="-all-any-from-sub-query-op/index.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">isAny<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter ">subQuery<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-abstract-query/index.html">AbstractQuery</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="-all-any-from-base-op/index.html">AllAnyFromBaseOp</a><span class="token operator">&lt;</span><a href="-all-any-from-sub-query-op/index.html">T</a><span class="token punctuation">, </span><a href="../org.jetbrains.exposed.v1.core/-abstract-query/index.html">AbstractQuery</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Represents an SQL operator that checks a value, based on the preceding comparison operator, against results returned by a query.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1823644864%2FClasslikes%2F-1435837140" anchor-label="AllAnyFromTableOp" id="1823644864%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-all-any-from-table-op/index.html"><span>All</span><wbr><span>Any</span><wbr><span>From</span><wbr><span>Table</span><wbr><span><span>Op</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1823644864%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-all-any-from-table-op/index.html">AllAnyFromTableOp</a><span class="token operator">&lt;</span><a href="-all-any-from-table-op/index.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">isAny<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter ">table<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-table/index.html">Table</a></span></span><span class="token punctuation">)</span> : <a href="-all-any-from-base-op/index.html">AllAnyFromBaseOp</a><span class="token operator">&lt;</span><a href="-all-any-from-table-op/index.html">T</a><span class="token punctuation">, </span><a href="../org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Represents an SQL operator that checks a value, based on the preceding comparison operator, against elements in a single-column table.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1057713672%2FClasslikes%2F-1435837140" anchor-label="InListOrNotInListBaseOp" id="-1057713672%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-in-list-or-not-in-list-base-op/index.html"><span>In</span><wbr><span>List</span><wbr><span>Or</span><wbr><span>Not</span><wbr><span>In</span><wbr><span>List</span><wbr><span>Base</span><wbr><span><span>Op</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1057713672%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-in-list-or-not-in-list-base-op/index.html">InListOrNotInListBaseOp</a><span class="token operator">&lt;</span><a href="-in-list-or-not-in-list-base-op/index.html">V</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>expr<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>list<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-iterable/index.html">Iterable</a><span class="token operator">&lt;</span><a href="-in-list-or-not-in-list-base-op/index.html">V</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>isInList<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt; </span>, <a href="../org.jetbrains.exposed.v1.core/-complex-expression/index.html">ComplexExpression</a></div><div class="brief "><p class="paragraph">Represents an SQL operator that checks if <a href="../../exposed-core/org.jetbrains.exposed.v1.core.ops/-in-list-or-not-in-list-base-op/--root--.html">expr</a> is equals to any element from <a href="../../exposed-core/org.jetbrains.exposed.v1.core.ops/-in-list-or-not-in-list-base-op/--root--.html">list</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1394402288%2FClasslikes%2F-1435837140" anchor-label="InTableOp" id="-1394402288%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-in-table-op/index.html"><span>In</span><wbr><span>Table</span><wbr><span><span>Op</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1394402288%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-in-table-op/index.html">InTableOp</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>expr<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression/index.html">Expression</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>table<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>isInTable<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt; </span>, <a href="../org.jetbrains.exposed.v1.core/-complex-expression/index.html">ComplexExpression</a></div><div class="brief "><p class="paragraph">Represents an SQL operator that checks if <a href="../../exposed-core/org.jetbrains.exposed.v1.core.ops/-in-table-op/--root--.html">expr</a> is equal to any element from a single-column <a href="../../exposed-core/org.jetbrains.exposed.v1.core.ops/-in-table-op/--root--.html">table</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-958003788%2FClasslikes%2F-1435837140" anchor-label="MultipleInListOp" id="-958003788%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-multiple-in-list-op/index.html"><span>Multiple</span><wbr><span>In</span><wbr><span>List</span><wbr><span><span>Op</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-958003788%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-multiple-in-list-op/index.html">MultipleInListOp</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>expr<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">list<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-iterable/index.html">Iterable</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">isInList<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span></span></span><span class="token punctuation">)</span> : <a href="-in-list-or-not-in-list-base-op/index.html">InListOrNotInListBaseOp</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Represents an SQL operator that checks if all columns of a <code class="lang-kotlin">List</code> <a href="../../exposed-core/org.jetbrains.exposed.v1.core.ops/-multiple-in-list-op/--root--.html">expr</a> match any of the lists of values from <a href="../../exposed-core/org.jetbrains.exposed.v1.core.ops/-multiple-in-list-op/--root--.html">list</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1777988182%2FClasslikes%2F-1435837140" anchor-label="PairInListOp" id="-1777988182%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-pair-in-list-op/index.html"><span>Pair</span><wbr><span>In</span><wbr><span>List</span><wbr><span><span>Op</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1777988182%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-pair-in-list-op/index.html">PairInListOp</a><span class="token operator">&lt;</span><a href="-pair-in-list-op/index.html">T1</a><span class="token punctuation">, </span><a href="-pair-in-list-op/index.html">T2</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>expr<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-pair/index.html">Pair</a><span class="token operator">&lt;</span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-pair-in-list-op/index.html">T1</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-pair-in-list-op/index.html">T2</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">list<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-iterable/index.html">Iterable</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-pair/index.html">Pair</a><span class="token operator">&lt;</span><a href="-pair-in-list-op/index.html">T1</a><span class="token punctuation">, </span><a href="-pair-in-list-op/index.html">T2</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">isInList<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span></span></span><span class="token punctuation">)</span> : <a href="-in-list-or-not-in-list-base-op/index.html">InListOrNotInListBaseOp</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-pair/index.html">Pair</a><span class="token operator">&lt;</span><a href="-pair-in-list-op/index.html">T1</a><span class="token punctuation">, </span><a href="-pair-in-list-op/index.html">T2</a><span class="token operator">&gt;</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Represents an SQL operator that checks if both values of a <code class="lang-kotlin">Pair</code> <a href="../../exposed-core/org.jetbrains.exposed.v1.core.ops/-pair-in-list-op/--root--.html">expr</a> match any element from <a href="../../exposed-core/org.jetbrains.exposed.v1.core.ops/-pair-in-list-op/--root--.html">list</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="708628941%2FClasslikes%2F-1435837140" anchor-label="SingleValueInListOp" id="708628941%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-single-value-in-list-op/index.html"><span>Single</span><wbr><span>Value</span><wbr><span>In</span><wbr><span>List</span><wbr><span><span>Op</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="708628941%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-single-value-in-list-op/index.html">SingleValueInListOp</a><span class="token operator">&lt;</span><a href="-single-value-in-list-op/index.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>expr<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><span class="token keyword">out </span><a href="-single-value-in-list-op/index.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">list<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-iterable/index.html">Iterable</a><span class="token operator">&lt;</span><a href="-single-value-in-list-op/index.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">isInList<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span></span></span><span class="token punctuation">)</span> : <a href="-in-list-or-not-in-list-base-op/index.html">InListOrNotInListBaseOp</a><span class="token operator">&lt;</span><a href="-single-value-in-list-op/index.html">T</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Represents an SQL operator that checks if a single-value <a href="../../exposed-core/org.jetbrains.exposed.v1.core.ops/-single-value-in-list-op/--root--.html">expr</a> is equal to any element from <a href="../../exposed-core/org.jetbrains.exposed.v1.core.ops/-single-value-in-list-op/--root--.html">list</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1549980954%2FClasslikes%2F-1435837140" anchor-label="TripleInListOp" id="-1549980954%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-triple-in-list-op/index.html"><span>Triple</span><wbr><span>In</span><wbr><span>List</span><wbr><span><span>Op</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1549980954%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-triple-in-list-op/index.html">TripleInListOp</a><span class="token operator">&lt;</span><a href="-triple-in-list-op/index.html">T1</a><span class="token punctuation">, </span><a href="-triple-in-list-op/index.html">T2</a><span class="token punctuation">, </span><a href="-triple-in-list-op/index.html">T3</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>expr<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-triple/index.html">Triple</a><span class="token operator">&lt;</span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-triple-in-list-op/index.html">T1</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-triple-in-list-op/index.html">T2</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-triple-in-list-op/index.html">T3</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">list<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-iterable/index.html">Iterable</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-triple/index.html">Triple</a><span class="token operator">&lt;</span><a href="-triple-in-list-op/index.html">T1</a><span class="token punctuation">, </span><a href="-triple-in-list-op/index.html">T2</a><span class="token punctuation">, </span><a href="-triple-in-list-op/index.html">T3</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">isInList<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span></span></span><span class="token punctuation">)</span> : <a href="-in-list-or-not-in-list-base-op/index.html">InListOrNotInListBaseOp</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-triple/index.html">Triple</a><span class="token operator">&lt;</span><a href="-triple-in-list-op/index.html">T1</a><span class="token punctuation">, </span><a href="-triple-in-list-op/index.html">T2</a><span class="token punctuation">, </span><a href="-triple-in-list-op/index.html">T3</a><span class="token operator">&gt;</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Represents an SQL operator that checks if all values of a <code class="lang-kotlin">Triple</code> <a href="../../exposed-core/org.jetbrains.exposed.v1.core.ops/-triple-in-list-op/--root--.html">expr</a> match any element from <a href="../../exposed-core/org.jetbrains.exposed.v1.core.ops/-triple-in-list-op/--root--.html">list</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2025 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

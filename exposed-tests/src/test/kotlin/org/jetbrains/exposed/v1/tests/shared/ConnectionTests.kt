@@ -1,12 +1,20 @@
 package org.jetbrains.exposed.v1.tests.shared
 
+import org.jetbrains.exposed.v1.core.StdOutSqlLogger
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.jdbc.name
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import java.sql.Types
+import kotlin.test.assertContains
 
 class ConnectionTests : DatabaseTestsBase() {
 
@@ -41,6 +49,47 @@ class ConnectionTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testDatabaseNameParsedFromConnectionUrl() {
+        // MSSQL connection url with a named database requires that the database already exists in the server,
+        // so TestDB.SQLSERVER uses a url that omits this to connect to the default (master) database.
+        // All H2 modes omitted for simplicity because they follow the same pattern as TestDB.H2_V2 but with different names.
+        val excludedDb = TestDB.ALL_H2_V2 - TestDB.H2_V2 + TestDB.SQLSERVER
+
+        withDb(excludeSettings = excludedDb) { testDb ->
+            val expectedName = when (testDb) {
+                TestDB.ORACLE -> "FREEPDB1"
+                in TestDB.ALL_POSTGRES -> "postgres"
+                TestDB.SQLITE -> "jdbc:sqlite:file:test"
+                TestDB.H2_V2 -> "jdbc:h2:mem:regular"
+                else -> "testdb"
+            }
+            val actualName = this.db.name
+            assertEquals(expectedName, actualName)
+
+            // Getting attached db names should be possible using SQLite's "PRAGMA database_list",
+            // but this returns no name for the main db, assuming this is because an in-memory db is being used.
+            if (testDb != TestDB.SQLITE) {
+                val queryDatabaseName = when (testDb) {
+                    TestDB.ORACLE -> "SELECT SYS_CONTEXT('USERENV','DB_NAME') FROM DUAL"
+                    in TestDB.ALL_POSTGRES -> "SELECT current_database()"
+                    TestDB.H2_V2 -> "SELECT CURRENT_CATALOG"
+                    else -> "SELECT DATABASE()"
+                }
+
+                val resultName = exec(queryDatabaseName) {
+                    it.next()
+                    it.getString(1)
+                }
+                if (testDb == TestDB.H2_V2) {
+                    assertTrue(actualName.substringAfterLast(':').equals(resultName, ignoreCase = true))
+                } else {
+                    assertTrue(actualName.equals(resultName, ignoreCase = true))
+                }
+            }
+        }
+    }
+
+    @Test
     fun testTableConstraintsWithFKColumnsThatNeedQuoting() {
         val parent = object : LongIdTable("parent") {
             val scale = integer("scale").uniqueIndex()
@@ -66,6 +115,27 @@ class ConnectionTests : DatabaseTestsBase() {
                     }
                 )
             }
+        }
+    }
+
+    @Test
+    fun testAddingLoggerDoesNotCauseNoTransactionInContext() {
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        TestDB.H2_V2.connect()
+
+        val tester = object : Table("tester") {
+            val amount = integer("amount")
+        }
+
+        try {
+            transaction {
+                // the logger is left in to test that it does not throw 'no transaction in context'
+                addLogger(StdOutSqlLogger)
+                tester.selectAll().toList()
+            }
+        } catch (cause: Exception) {
+            assertTrue(cause.message != null)
+            assertContains(cause.message!!, "Table \"TESTER\" not found")
         }
     }
 }

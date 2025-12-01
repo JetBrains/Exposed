@@ -1,0 +1,570 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>JdbcExposedDatabaseMetadata</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
+                    exposed
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">1.0.0-rc-4
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":exposed-jdbc/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":exposed-jdbc/main" data-filter=":exposed-jdbc/main">
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    exposed
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="exposed-jdbc::org.jetbrains.exposed.v1.jdbc.statements.api/JdbcExposedDatabaseMetadata///PointingToDeclaration//-1624674168">
+  <div class="breadcrumbs"><a href="../../index.html">exposed-jdbc</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.v1.jdbc.statements.api</a><span class="delimiter">/</span><span class="current">JdbcExposedDatabaseMetadata</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Jdbc</span><wbr><span>Exposed</span><wbr><span>Database</span><wbr><span><span>Metadata</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="index.html">JdbcExposedDatabaseMetadata</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">database<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span> : <a href="../../../exposed-core/org.jetbrains.exposed.v1.core.statements.api/-exposed-database-metadata/index.html">ExposedDatabaseMetadata</a></div><p class="paragraph">Base class responsible for retrieving and storing information about the JDBC driver and underlying database.</p><h4 class="tableheader">Inheritors</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../../org.jetbrains.exposed.v1.jdbc.statements.jdbc/-jdbc-database-metadata-impl/index.html">JdbcDatabaseMetadataImpl</a></div></span></div><div></div></div></div></div></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="tableheader">Constructors</h2>
+        <div class="table"><a data-name="1419719367%2FConstructors%2F-1624674168" anchor-label="JdbcExposedDatabaseMetadata" id="1419719367%2FConstructors%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-jdbc-exposed-database-metadata.html"><span>Jdbc</span><wbr><span>Exposed</span><wbr><span>Database</span><wbr><span><span>Metadata</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1419719367%2FConstructors%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">database<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="tableheader">Properties</h2>
+        <div class="table"><a data-name="-220353046%2FProperties%2F-1624674168" anchor-label="database" id="-220353046%2FProperties%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../../org.jetbrains.exposed.v1.jdbc.statements.jdbc/-jdbc-database-metadata-impl/index.html#-220353046%2FProperties%2F-1624674168"><span><span>database</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-220353046%2FProperties%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="../../org.jetbrains.exposed.v1.jdbc.statements.jdbc/-jdbc-database-metadata-impl/index.html#-220353046%2FProperties%2F-1624674168">database</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1781882430%2FProperties%2F-1624674168" anchor-label="databaseDialectMode" id="1781882430%2FProperties%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="database-dialect-mode.html"><span>database</span><wbr><span>Dialect</span><wbr><span><span>Mode</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1781882430%2FProperties%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="database-dialect-mode.html">databaseDialectMode</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The name of the mode of the database. This is currently applicable only to H2 databases.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1810920022%2FProperties%2F-1624674168" anchor-label="databaseDialectName" id="1810920022%2FProperties%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="database-dialect-name.html"><span>database</span><wbr><span>Dialect</span><wbr><span><span>Name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1810920022%2FProperties%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="database-dialect-name.html">databaseDialectName</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">The name of the database based on the name of the underlying JDBC driver.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1535344490%2FProperties%2F-1624674168" anchor-label="databaseProductVersion" id="1535344490%2FProperties%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="database-product-version.html"><span>database</span><wbr><span>Product</span><wbr><span><span>Version</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1535344490%2FProperties%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="database-product-version.html">databaseProductVersion</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">The version number of the database product as a <code class="lang-kotlin">String</code>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1785376021%2FProperties%2F-1624674168" anchor-label="defaultIsolationLevel" id="1785376021%2FProperties%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="default-isolation-level.html"><span>default</span><wbr><span>Isolation</span><wbr><span><span>Level</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1785376021%2FProperties%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="default-isolation-level.html">defaultIsolationLevel</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">The default transaction isolation level for the database.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-991194319%2FProperties%2F-1624674168" anchor-label="identifierManager" id="-991194319%2FProperties%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-991194319%2FProperties%2F-1624674168"><span>identifier</span><wbr><span><span>Manager</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-991194319%2FProperties%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="index.html#-991194319%2FProperties%2F-1624674168">identifierManager</a><span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core.statements.api/-identifier-manager-api/index.html">IdentifierManagerApi</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-723433617%2FProperties%2F-1624674168" anchor-label="majorVersion" id="-723433617%2FProperties%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="major-version.html"><span>major</span><wbr><span><span>Version</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-723433617%2FProperties%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="major-version.html">majorVersion</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">The major version number of the database.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="306055531%2FProperties%2F-1624674168" anchor-label="minorVersion" id="306055531%2FProperties%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="minor-version.html"><span>minor</span><wbr><span><span>Version</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="306055531%2FProperties%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="minor-version.html">minorVersion</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">The minor version number of the database.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1203159643%2FProperties%2F-1624674168" anchor-label="schemaNames" id="-1203159643%2FProperties%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="schema-names.html"><span>schema</span><wbr><span><span>Names</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1203159643%2FProperties%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="schema-names.html">schemaNames</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">A list of existing schema names.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="164040311%2FProperties%2F-1624674168" anchor-label="supportsAlterTableWithAddColumn" id="164040311%2FProperties%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="supports-alter-table-with-add-column.html"><span>supports</span><wbr><span>Alter</span><wbr><span>Table</span><wbr><span>With</span><wbr><span>Add</span><wbr><span><span>Column</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="164040311%2FProperties%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="supports-alter-table-with-add-column.html">supportsAlterTableWithAddColumn</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Whether the database supports <code class="lang-kotlin">ALTER TABLE</code> with an add column clause.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1414903769%2FProperties%2F-1624674168" anchor-label="supportsAlterTableWithDropColumn" id="-1414903769%2FProperties%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="supports-alter-table-with-drop-column.html"><span>supports</span><wbr><span>Alter</span><wbr><span>Table</span><wbr><span>With</span><wbr><span>Drop</span><wbr><span><span>Column</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1414903769%2FProperties%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="supports-alter-table-with-drop-column.html">supportsAlterTableWithDropColumn</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Whether the database supports <code class="lang-kotlin">ALTER TABLE</code> with a drop column clause.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-166075892%2FProperties%2F-1624674168" anchor-label="supportsMultipleResultSets" id="-166075892%2FProperties%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="supports-multiple-result-sets.html"><span>supports</span><wbr><span>Multiple</span><wbr><span>Result</span><wbr><span><span>Sets</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-166075892%2FProperties%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="supports-multiple-result-sets.html">supportsMultipleResultSets</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Whether the database supports getting multiple result sets from a single execute.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2011091590%2FProperties%2F-1624674168" anchor-label="supportsSelectForUpdate" id="-2011091590%2FProperties%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="supports-select-for-update.html"><span>supports</span><wbr><span>Select</span><wbr><span>For</span><wbr><span><span>Update</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2011091590%2FProperties%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="supports-select-for-update.html">supportsSelectForUpdate</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Whether the database supports <code class="lang-kotlin">SELECT FOR UPDATE</code> statements.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2105640748%2FProperties%2F-1624674168" anchor-label="tableNames" id="-2105640748%2FProperties%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="table-names.html"><span>table</span><wbr><span><span>Names</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2105640748%2FProperties%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="table-names.html">tableNames</a><span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core.utils/-cache-with-default/index.html">CacheWithDefault</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">A mapping of all schema names in the database to a list of all defined table names in each schema.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-742627747%2FProperties%2F-1624674168" anchor-label="url" id="-742627747%2FProperties%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="url.html"><span><span>url</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-742627747%2FProperties%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="url.html">url</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">The connection URL for the database.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1860949908%2FProperties%2F-1624674168" anchor-label="version" id="1860949908%2FProperties%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="version.html"><span><span>version</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1860949908%2FProperties%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="version.html">version</a><span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/math/BigDecimal.html">BigDecimal</a></div><div class="brief "><p class="paragraph">The version number of the database as a <code class="lang-kotlin">BigDecimal</code>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="-770646626%2FFunctions%2F-1624674168" anchor-label="areEquivalentColumnTypes" id="-770646626%2FFunctions%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../../org.jetbrains.exposed.v1.jdbc.statements.jdbc/-jdbc-database-metadata-impl/index.html#-770646626%2FFunctions%2F-1624674168"><span>are</span><wbr><span>Equivalent</span><wbr><span>Column</span><wbr><span><span>Types</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-770646626%2FFunctions%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.v1.jdbc.statements.jdbc/-jdbc-database-metadata-impl/index.html#-770646626%2FFunctions%2F-1624674168"><span class="token function">areEquivalentColumnTypes</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">columnMetadataSqlType<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">columnMetadataType<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">columnType<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-998358932%2FFunctions%2F-1624674168" anchor-label="cleanCache" id="-998358932%2FFunctions%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-998358932%2FFunctions%2F-1624674168"><span>clean</span><wbr><span><span>Cache</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-998358932%2FFunctions%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="index.html#-998358932%2FFunctions%2F-1624674168"><span class="token function">cleanCache</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="736816689%2FFunctions%2F-1624674168" anchor-label="columns" id="736816689%2FFunctions%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="columns.html"><span><span>columns</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="736816689%2FFunctions%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="columns.html"><span class="token function">columns</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>tables<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-table/index.html">Table</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core.vendors/-column-metadata/index.html">ColumnMetadata</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a map with the <a href="../../../exposed-core/org.jetbrains.exposed.v1.core.vendors/-column-metadata/index.html">ColumnMetadata</a> of all the defined columns in each of the specified <a href="columns.html">tables</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1087112267%2FFunctions%2F-1624674168" anchor-label="existingCheckConstraints" id="1087112267%2FFunctions%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="existing-check-constraints.html"><span>existing</span><wbr><span>Check</span><wbr><span><span>Constraints</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1087112267%2FFunctions%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="existing-check-constraints.html"><span class="token function">existingCheckConstraints</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>tables<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-table/index.html">Table</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-check-constraint/index.html">CheckConstraint</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a map with all the defined check constraints in each of the specified <a href="existing-check-constraints.html">tables</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1971388304%2FFunctions%2F-1624674168" anchor-label="existingIndices" id="-1971388304%2FFunctions%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="existing-indices.html"><span>existing</span><wbr><span><span>Indices</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1971388304%2FFunctions%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="existing-indices.html"><span class="token function">existingIndices</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>tables<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-table/index.html">Table</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-index/index.html">Index</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a map with all the defined indices in each of the specified <a href="existing-indices.html">tables</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1060374623%2FFunctions%2F-1624674168" anchor-label="existingPrimaryKeys" id="1060374623%2FFunctions%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="existing-primary-keys.html"><span>existing</span><wbr><span>Primary</span><wbr><span><span>Keys</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1060374623%2FFunctions%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="existing-primary-keys.html"><span class="token function">existingPrimaryKeys</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>tables<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-table/index.html">Table</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core.vendors/-primary-key-metadata/index.html">PrimaryKeyMetadata</a><span class="token operator">?</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a map with the <a href="../../../exposed-core/org.jetbrains.exposed.v1.core.vendors/-primary-key-metadata/index.html">PrimaryKeyMetadata</a> in each of the specified <a href="existing-primary-keys.html">tables</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-482580069%2FFunctions%2F-1624674168" anchor-label="existingSequences" id="-482580069%2FFunctions%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="existing-sequences.html"><span>existing</span><wbr><span><span>Sequences</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-482580069%2FFunctions%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="existing-sequences.html"><span class="token function">existingSequences</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>tables<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-table/index.html">Table</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-sequence/index.html">Sequence</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a map with all the defined sequences that hold a relation to the specified <a href="existing-sequences.html">tables</a> in the database.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-394193802%2FFunctions%2F-1624674168" anchor-label="resetCurrentScheme" id="-394193802%2FFunctions%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-394193802%2FFunctions%2F-1624674168"><span>reset</span><wbr><span>Current</span><wbr><span><span>Scheme</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-394193802%2FFunctions%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="index.html#-394193802%2FFunctions%2F-1624674168"><span class="token function">resetCurrentScheme</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1368281370%2FFunctions%2F-1624674168" anchor-label="sequences" id="1368281370%2FFunctions%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="sequences.html"><span><span>sequences</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1368281370%2FFunctions%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="sequences.html"><span class="token function">sequences</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a list of the names of all sequences in the database.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1864767288%2FFunctions%2F-1624674168" anchor-label="supportsLimitWithUpdateOrDelete" id="1864767288%2FFunctions%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="supports-limit-with-update-or-delete.html"><span>supports</span><wbr><span>Limit</span><wbr><span>With</span><wbr><span>Update</span><wbr><span>Or</span><wbr><span><span>Delete</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1864767288%2FFunctions%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="supports-limit-with-update-or-delete.html"><span class="token function">supportsLimitWithUpdateOrDelete</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Whether the database supports the <code class="lang-kotlin">LIMIT</code> clause with update and delete statements.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1608427572%2FFunctions%2F-1624674168" anchor-label="tableConstraints" id="1608427572%2FFunctions%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="table-constraints.html"><span>table</span><wbr><span><span>Constraints</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1608427572%2FFunctions%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="table-constraints.html"><span class="token function">tableConstraints</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">tables<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-foreign-key-constraint/index.html">ForeignKeyConstraint</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a map with the <a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-foreign-key-constraint/index.html">ForeignKeyConstraint</a> of all the defined columns in each of the specified <a href="table-constraints.html">tables</a>, with the table name used as the key.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-679156032%2FFunctions%2F-1624674168" anchor-label="tableNamesByCurrentSchema" id="-679156032%2FFunctions%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="table-names-by-current-schema.html"><span>table</span><wbr><span>Names</span><wbr><span>By</span><wbr><span>Current</span><wbr><span><span>Schema</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-679156032%2FFunctions%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="table-names-by-current-schema.html"><span class="token function">tableNamesByCurrentSchema</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">tableNamesCache<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core.utils/-cache-with-default/index.html">CacheWithDefault</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core.vendors/-schema-metadata/index.html">SchemaMetadata</a></div><div class="brief "><p class="paragraph">Returns the current schema name and a list of its existing table names, stored as <a href="../../../exposed-core/org.jetbrains.exposed.v1.core.vendors/-schema-metadata/index.html">SchemaMetadata</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2025 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

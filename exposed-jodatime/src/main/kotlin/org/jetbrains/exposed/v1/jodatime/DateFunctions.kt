@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.v1.jodatime
 
-import org.jetbrains.exposed.v1.*
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.Function
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
@@ -13,14 +12,14 @@ import org.joda.time.DateTime
 import org.joda.time.LocalTime
 
 /** Represents an SQL function that extracts the date part from a given datetime [expr]. */
-class Date<T : DateTime?>(val expr: Expression<T>) : Function<DateTime>(DateColumnType(false)) {
+class Date<T : DateTime?>(val expr: Expression<T>) : Function<DateTime>(JodaLocalDateColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         currentDialect.functionProvider.date(expr, queryBuilder)
     }
 }
 
 /** Represents an SQL function that extracts the time part from a given datetime [expr]. */
-class Time<T : DateTime?>(val expr: Expression<T>) : Function<LocalTime>(LocalTimeColumnType()) {
+class Time<T : DateTime?>(val expr: Expression<T>) : Function<LocalTime>(JodaLocalTimeColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         val dialect = currentDialect
         val functionProvider = when (dialect.h2Mode) {
@@ -35,9 +34,9 @@ class Time<T : DateTime?>(val expr: Expression<T>) : Function<LocalTime>(LocalTi
 /**
  * Represents an SQL function that returns the current date and time, as [DateTime]
  *
- * @sample org.jetbrains.exposed.JodaTimeDefaultsTest.testDefaultExpressions02
+ * @sample org.jetbrains.exposed.v1.jodatime.JodaTimeDefaultsTest.testDefaultExpressions02
  */
-object CurrentDateTime : Function<DateTime>(DateColumnType(true)) {
+object CurrentDateTime : Function<DateTime>(JodaLocalDateTimeColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
             (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
@@ -49,9 +48,9 @@ object CurrentDateTime : Function<DateTime>(DateColumnType(true)) {
 /**
  * Represents an SQL function that returns the current date, as [DateTime].
  *
- * @sample org.jetbrains.exposed.JodaTimeDefaultsTest.testDefaultExpressions02
+ * @sample org.jetbrains.exposed.v1.jodatime.JodaTimeDefaultsTest.testDefaultExpressions02
  */
-object CurrentDate : Function<DateTime>(DateColumnType(false)) {
+object CurrentDate : Function<DateTime>(JodaLocalDateColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when (currentDialect) {
             is MariaDBDialect -> "curdate()"
@@ -159,26 +158,26 @@ fun <T : DateTime?> Expression<T>.minute() = Minute(this)
 fun <T : DateTime?> Expression<T>.second() = Second(this)
 
 /** Returns the specified [value] as a date query parameter. */
-fun dateParam(value: DateTime): Expression<DateTime> = QueryParameter(value, DateColumnType(false))
+fun dateParam(value: DateTime): Expression<DateTime> = QueryParameter(value, JodaLocalDateColumnType())
 
 /** Returns the specified [value] as a date with time query parameter. */
-fun dateTimeParam(value: DateTime): Expression<DateTime> = QueryParameter(value, DateColumnType(true))
+fun dateTimeParam(value: DateTime): Expression<DateTime> = QueryParameter(value, JodaLocalDateTimeColumnType())
 
 /** Returns the specified [value] as a time query parameter. */
-fun timeParam(value: LocalTime): Expression<LocalTime> = QueryParameter(value, LocalTimeColumnType())
+fun timeParam(value: LocalTime): Expression<LocalTime> = QueryParameter(value, JodaLocalTimeColumnType())
 
 /** Returns the specified [value] as a date with time and time zone query parameter. */
 fun timestampWithTimeZoneParam(value: DateTime): Expression<DateTime> =
     QueryParameter(value, DateTimeWithTimeZoneColumnType())
 
 /** Returns the specified [value] as a date literal. */
-fun dateLiteral(value: DateTime): LiteralOp<DateTime> = LiteralOp(DateColumnType(false), value)
+fun dateLiteral(value: DateTime): LiteralOp<DateTime> = LiteralOp(JodaLocalDateColumnType(), value)
 
 /** Returns the specified [value] as a date with time literal. */
-fun dateTimeLiteral(value: DateTime): LiteralOp<DateTime> = LiteralOp(DateColumnType(true), value)
+fun dateTimeLiteral(value: DateTime): LiteralOp<DateTime> = LiteralOp(JodaLocalDateTimeColumnType(), value)
 
 /** Returns the specified [value] as a time literal. */
-fun timeLiteral(value: LocalTime): LiteralOp<LocalTime> = LiteralOp(LocalTimeColumnType(), value)
+fun timeLiteral(value: LocalTime): LiteralOp<LocalTime> = LiteralOp(JodaLocalTimeColumnType(), value)
 
 /** Returns the specified [value] as a date with time and time zone literal. */
 fun timestampWithTimeZoneLiteral(value: DateTime): LiteralOp<DateTime> =
@@ -190,7 +189,7 @@ fun timestampWithTimeZoneLiteral(value: DateTime): LiteralOp<DateTime> =
  */
 @Suppress("FunctionNaming")
 fun CustomDateTimeFunction(functionName: String, vararg params: Expression<*>) =
-    CustomFunction<DateTime?>(functionName, DateColumnType(true), *params)
+    CustomFunction<DateTime?>(functionName, JodaLocalDateTimeColumnType(), *params)
 
 /**
  * Calls a custom SQL function with the specified [functionName], that returns a date only,
@@ -198,7 +197,7 @@ fun CustomDateTimeFunction(functionName: String, vararg params: Expression<*>) =
  */
 @Suppress("FunctionNaming")
 fun CustomDateFunction(functionName: String, vararg params: Expression<*>) =
-    CustomFunction<DateTime?>(functionName, DateColumnType(false), *params)
+    CustomFunction<DateTime?>(functionName, JodaLocalDateColumnType(), *params)
 
 /**
  * Calls a custom SQL function with the specified [functionName], that returns a time only,
@@ -206,7 +205,7 @@ fun CustomDateFunction(functionName: String, vararg params: Expression<*>) =
  */
 @Suppress("FunctionNaming")
 fun CustomTimeFunction(functionName: String, vararg params: Expression<*>): CustomFunction<LocalTime?> =
-    CustomFunction(functionName, LocalTimeColumnType(), *params)
+    CustomFunction(functionName, JodaLocalTimeColumnType(), *params)
 
 /**
  * Calls a custom SQL function with the specified [functionName], that returns both a date and a time with time zone,

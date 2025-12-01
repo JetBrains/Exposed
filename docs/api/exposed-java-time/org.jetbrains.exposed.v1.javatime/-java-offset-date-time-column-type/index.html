@@ -1,0 +1,454 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>JavaOffsetDateTimeColumnType</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
+                    exposed
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">1.0.0-rc-4
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":exposed-java-time/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":exposed-java-time/main" data-filter=":exposed-java-time/main">
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    exposed
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="exposed-java-time::org.jetbrains.exposed.v1.javatime/JavaOffsetDateTimeColumnType///PointingToDeclaration//2069758617">
+  <div class="breadcrumbs"><a href="../../index.html">exposed-java-time</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.v1.javatime</a><span class="delimiter">/</span><span class="current">JavaOffsetDateTimeColumnType</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Java</span><wbr><span>Offset</span><wbr><span>Date</span><wbr><span>Time</span><wbr><span>Column</span><wbr><span><span>Type</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-java-time/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">JavaOffsetDateTimeColumnType</a> : <a href="../../../exposed-core/org.jetbrains.exposed.v1.core.datetime/-offset-date-time-column-type/index.html">OffsetDateTimeColumnType</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/OffsetDateTime.html">OffsetDateTime</a><span class="token operator">&gt; </span></div><p class="paragraph">Column for storing dates and times with time zone, as <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/OffsetDateTime.html">OffsetDateTime</a>.</p><h4 class="">Samples</h4>timestampWithTimeZone</div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="tableheader">Constructors</h2>
+        <div class="table"><a data-name="-1937904309%2FConstructors%2F2069758617" anchor-label="JavaOffsetDateTimeColumnType" id="-1937904309%2FConstructors%2F2069758617" data-filterable-set=":exposed-java-time/main"></a>
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":exposed-java-time/main" data-filterable-set=":exposed-java-time/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-java-offset-date-time-column-type.html"><span>Java</span><wbr><span>Offset</span><wbr><span>Date</span><wbr><span>Time</span><wbr><span>Column</span><wbr><span><span>Type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1937904309%2FConstructors%2F2069758617"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-java-time/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="TYPE">
+        <h2 class="tableheader">Types</h2>
+        <div class="table"><a data-name="341363254%2FClasslikes%2F2069758617" anchor-label="Companion" id="341363254%2FClasslikes%2F2069758617" data-filterable-set=":exposed-java-time/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-java-time/main" data-filterable-set=":exposed-java-time/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-companion/index.html"><span><span>Companion</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="341363254%2FClasslikes%2F2069758617"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-java-time/main"><div class="symbol monospace"><span class="token keyword">object </span><a href="-companion/index.html">Companion</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="tableheader">Properties</h2>
+        <div class="table"><a data-name="996692844%2FProperties%2F2069758617" anchor-label="hasTimePart" id="996692844%2FProperties%2F2069758617" data-filterable-set=":exposed-java-time/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-java-time/main" data-filterable-set=":exposed-java-time/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#996692844%2FProperties%2F2069758617"><span>has</span><wbr><span>Time</span><wbr><span><span>Part</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="996692844%2FProperties%2F2069758617"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-java-time/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="index.html#996692844%2FProperties%2F2069758617">hasTimePart</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-136699414%2FProperties%2F2069758617" anchor-label="nullable" id="-136699414%2FProperties%2F2069758617" data-filterable-set=":exposed-java-time/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-java-time/main" data-filterable-set=":exposed-java-time/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-java-duration-column-type/index.html#-136699414%2FProperties%2F2069758617"><span><span>nullable</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-136699414%2FProperties%2F2069758617"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-java-time/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">var </span><a href="../-java-duration-column-type/index.html#-136699414%2FProperties%2F2069758617">nullable</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="-753882698%2FFunctions%2F2069758617" anchor-label="equals" id="-753882698%2FFunctions%2F2069758617" data-filterable-set=":exposed-java-time/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-java-time/main" data-filterable-set=":exposed-java-time/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-java-duration-column-type/index.html#-753882698%2FFunctions%2F2069758617"><span><span>equals</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-753882698%2FFunctions%2F2069758617"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-java-time/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">operator override </span><span class="token keyword">fun </span><a href="../-java-duration-column-type/index.html#-753882698%2FFunctions%2F2069758617"><span class="token function">equals</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">other<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="42223600%2FFunctions%2F2069758617" anchor-label="fromOffsetDateTime" id="42223600%2FFunctions%2F2069758617" data-filterable-set=":exposed-java-time/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-java-time/main" data-filterable-set=":exposed-java-time/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="from-offset-date-time.html"><span>from</span><wbr><span>Offset</span><wbr><span>Date</span><wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="42223600%2FFunctions%2F2069758617"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-java-time/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="from-offset-date-time.html"><span class="token function">fromOffsetDateTime</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">datetime<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/OffsetDateTime.html">OffsetDateTime</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/OffsetDateTime.html">OffsetDateTime</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1989567888%2FFunctions%2F2069758617" anchor-label="hashCode" id="-1989567888%2FFunctions%2F2069758617" data-filterable-set=":exposed-java-time/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-java-time/main" data-filterable-set=":exposed-java-time/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-java-duration-column-type/index.html#-1989567888%2FFunctions%2F2069758617"><span>hash</span><wbr><span><span>Code</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1989567888%2FFunctions%2F2069758617"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-java-time/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-java-duration-column-type/index.html#-1989567888%2FFunctions%2F2069758617"><span class="token function">hashCode</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1660856325%2FFunctions%2F2069758617" anchor-label="nonNullValueAsDefaultString" id="-1660856325%2FFunctions%2F2069758617" data-filterable-set=":exposed-java-time/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-java-time/main" data-filterable-set=":exposed-java-time/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1660856325%2FFunctions%2F2069758617"><span>non</span><wbr><span>Null</span><wbr><span>Value</span><wbr><span>As</span><wbr><span>Default</span><wbr><span><span>String</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1660856325%2FFunctions%2F2069758617"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-java-time/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="index.html#-1660856325%2FFunctions%2F2069758617"><span class="token function">nonNullValueAsDefaultString</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/OffsetDateTime.html">OffsetDateTime</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2097798035%2FFunctions%2F2069758617" anchor-label="nonNullValueToString" id="2097798035%2FFunctions%2F2069758617" data-filterable-set=":exposed-java-time/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-java-time/main" data-filterable-set=":exposed-java-time/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#2097798035%2FFunctions%2F2069758617"><span>non</span><wbr><span>Null</span><wbr><span>Value</span><wbr><span>To</span><wbr><span><span>String</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2097798035%2FFunctions%2F2069758617"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-java-time/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="index.html#2097798035%2FFunctions%2F2069758617"><span class="token function">nonNullValueToString</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/OffsetDateTime.html">OffsetDateTime</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-288450278%2FFunctions%2F2069758617" anchor-label="notNullValueToDB" id="-288450278%2FFunctions%2F2069758617" data-filterable-set=":exposed-java-time/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-java-time/main" data-filterable-set=":exposed-java-time/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-288450278%2FFunctions%2F2069758617"><span>not</span><wbr><span>Null</span><wbr><span>Value</span><wbr><span>To</span><wbr><span><span>DB</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-288450278%2FFunctions%2F2069758617"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-java-time/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="index.html#-288450278%2FFunctions%2F2069758617"><span class="token function">notNullValueToDB</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/OffsetDateTime.html">OffsetDateTime</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1873727714%2FFunctions%2F2069758617" anchor-label="parameterMarker" id="1873727714%2FFunctions%2F2069758617" data-filterable-set=":exposed-java-time/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-java-time/main" data-filterable-set=":exposed-java-time/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-java-duration-column-type/index.html#1873727714%2FFunctions%2F2069758617"><span>parameter</span><wbr><span><span>Marker</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1873727714%2FFunctions%2F2069758617"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-java-time/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../-java-duration-column-type/index.html#1873727714%2FFunctions%2F2069758617"><span class="token function">parameterMarker</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/OffsetDateTime.html">OffsetDateTime</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-626789748%2FFunctions%2F2069758617" anchor-label="readObject" id="-626789748%2FFunctions%2F2069758617" data-filterable-set=":exposed-java-time/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-java-time/main" data-filterable-set=":exposed-java-time/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-626789748%2FFunctions%2F2069758617"><span>read</span><wbr><span><span>Object</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-626789748%2FFunctions%2F2069758617"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-java-time/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="index.html#-626789748%2FFunctions%2F2069758617"><span class="token function">readObject</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">rs<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core.statements.api/-row-api/index.html">RowApi</a><span class="token punctuation">, </span></span><span class="parameter ">index<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1144567371%2FFunctions%2F2069758617" anchor-label="setParameter" id="1144567371%2FFunctions%2F2069758617" data-filterable-set=":exposed-java-time/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-java-time/main" data-filterable-set=":exposed-java-time/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-java-duration-column-type/index.html#1144567371%2FFunctions%2F2069758617"><span>set</span><wbr><span><span>Parameter</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1144567371%2FFunctions%2F2069758617"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-java-time/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../-java-duration-column-type/index.html#1144567371%2FFunctions%2F2069758617"><span class="token function">setParameter</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">stmt<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core.statements.api/-prepared-statement-api/index.html">PreparedStatementApi</a><span class="token punctuation">, </span></span><span class="parameter ">index<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">value<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1835383454%2FFunctions%2F2069758617" anchor-label="sqlType" id="1835383454%2FFunctions%2F2069758617" data-filterable-set=":exposed-java-time/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-java-time/main" data-filterable-set=":exposed-java-time/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1835383454%2FFunctions%2F2069758617"><span>sql</span><wbr><span><span>Type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1835383454%2FFunctions%2F2069758617"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-java-time/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="index.html#1835383454%2FFunctions%2F2069758617"><span class="token function">sqlType</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1024501375%2FFunctions%2F2069758617" anchor-label="toOffsetDateTime" id="1024501375%2FFunctions%2F2069758617" data-filterable-set=":exposed-java-time/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-java-time/main" data-filterable-set=":exposed-java-time/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="to-offset-date-time.html"><span>to</span><wbr><span>Offset</span><wbr><span>Date</span><wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1024501375%2FFunctions%2F2069758617"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-java-time/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="to-offset-date-time.html"><span class="token function">toOffsetDateTime</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/OffsetDateTime.html">OffsetDateTime</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/OffsetDateTime.html">OffsetDateTime</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2127233343%2FFunctions%2F2069758617" anchor-label="toString" id="2127233343%2FFunctions%2F2069758617" data-filterable-set=":exposed-java-time/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-java-time/main" data-filterable-set=":exposed-java-time/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-java-duration-column-type/index.html#2127233343%2FFunctions%2F2069758617"><span>to</span><wbr><span><span>String</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2127233343%2FFunctions%2F2069758617"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-java-time/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-java-duration-column-type/index.html#2127233343%2FFunctions%2F2069758617"><span class="token function">toString</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1302646878%2FFunctions%2F2069758617" anchor-label="validateValueBeforeUpdate" id="-1302646878%2FFunctions%2F2069758617" data-filterable-set=":exposed-java-time/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-java-time/main" data-filterable-set=":exposed-java-time/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-java-duration-column-type/index.html#-1302646878%2FFunctions%2F2069758617"><span>validate</span><wbr><span>Value</span><wbr><span>Before</span><wbr><span><span>Update</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1302646878%2FFunctions%2F2069758617"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-java-time/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../-java-duration-column-type/index.html#-1302646878%2FFunctions%2F2069758617"><span class="token function">validateValueBeforeUpdate</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/OffsetDateTime.html">OffsetDateTime</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1961873360%2FFunctions%2F2069758617" anchor-label="valueAsDefaultString" id="1961873360%2FFunctions%2F2069758617" data-filterable-set=":exposed-java-time/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-java-time/main" data-filterable-set=":exposed-java-time/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-java-duration-column-type/index.html#1961873360%2FFunctions%2F2069758617"><span>value</span><wbr><span>As</span><wbr><span>Default</span><wbr><span><span>String</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1961873360%2FFunctions%2F2069758617"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-java-time/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../-java-duration-column-type/index.html#1961873360%2FFunctions%2F2069758617"><span class="token function">valueAsDefaultString</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/OffsetDateTime.html">OffsetDateTime</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1765578322%2FFunctions%2F2069758617" anchor-label="valueFromDB" id="-1765578322%2FFunctions%2F2069758617" data-filterable-set=":exposed-java-time/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-java-time/main" data-filterable-set=":exposed-java-time/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1765578322%2FFunctions%2F2069758617"><span>value</span><wbr><span>From</span><wbr><span><span>DB</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1765578322%2FFunctions%2F2069758617"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-java-time/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="index.html#-1765578322%2FFunctions%2F2069758617"><span class="token function">valueFromDB</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/OffsetDateTime.html">OffsetDateTime</a><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1949957893%2FFunctions%2F2069758617" anchor-label="valueToDB" id="-1949957893%2FFunctions%2F2069758617" data-filterable-set=":exposed-java-time/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-java-time/main" data-filterable-set=":exposed-java-time/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-java-duration-column-type/index.html#-1949957893%2FFunctions%2F2069758617"><span>value</span><wbr><span>To</span><wbr><span><span>DB</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1949957893%2FFunctions%2F2069758617"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-java-time/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../-java-duration-column-type/index.html#-1949957893%2FFunctions%2F2069758617"><span class="token function">valueToDB</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/OffsetDateTime.html">OffsetDateTime</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-418200280%2FFunctions%2F2069758617" anchor-label="valueToString" id="-418200280%2FFunctions%2F2069758617" data-filterable-set=":exposed-java-time/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-java-time/main" data-filterable-set=":exposed-java-time/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-java-duration-column-type/index.html#-418200280%2FFunctions%2F2069758617"><span>value</span><wbr><span>To</span><wbr><span><span>String</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-418200280%2FFunctions%2F2069758617"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-java-time/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../-java-duration-column-type/index.html#-418200280%2FFunctions%2F2069758617"><span class="token function">valueToString</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/OffsetDateTime.html">OffsetDateTime</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2025 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

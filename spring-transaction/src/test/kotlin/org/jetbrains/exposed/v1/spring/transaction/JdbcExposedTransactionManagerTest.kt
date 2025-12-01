@@ -4,8 +4,10 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.test.annotation.Commit
@@ -16,8 +18,6 @@ import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
 import java.util.Random
 import javax.sql.DataSource
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
 import kotlin.test.assertFailsWith
 
 /**
@@ -60,7 +60,7 @@ open class JdbcExposedTransactionManagerTest : SpringTransactionTestBase() {
         .sql("SELECT * FROM ${T1.tableName}")
         .query().singleRow()["c1"] as String
 
-    @BeforeTest
+    @BeforeEach
     fun beforeTest() {
         transactionManager.execute {
             SchemaUtils.create(T1)
@@ -95,7 +95,7 @@ open class JdbcExposedTransactionManagerTest : SpringTransactionTestBase() {
             insert(rnd)
             assertEquals(rnd, getSingleValue())
 
-            transactionManager.execute {
+            this@JdbcExposedTransactionManagerTest.transactionManager.execute {
                 insertRandom()
                 assertEquals(2, getCount())
             }
@@ -306,7 +306,7 @@ open class JdbcExposedTransactionManagerTest : SpringTransactionTestBase() {
         assertTransactionIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED)
     }
 
-    @AfterTest
+    @AfterEach
     fun afterTest() {
         transactionManager.execute {
             SchemaUtils.drop(T1)

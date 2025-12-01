@@ -26,8 +26,8 @@ import org.jetbrains.exposed.v1.tests.shared.entities.EntityTestsData
 import org.jetbrains.exposed.v1.tests.shared.entities.VNumber
 import org.jetbrains.exposed.v1.tests.shared.entities.VString
 import org.jetbrains.exposed.v1.tests.shared.entities.ViaTestData
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import kotlin.properties.Delegates
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
@@ -47,13 +47,13 @@ class EntityReferenceCacheTest : DatabaseTestsBase() {
     }
 
     private fun executeOnH2(vararg tables: Table, body: () -> Unit) {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         var testWasStarted = false
         transaction(db) {
             SchemaUtils.create(*tables)
             testWasStarted = true
         }
-        Assume.assumeTrue(testWasStarted)
+        Assumptions.assumeTrue(testWasStarted)
         if (testWasStarted) {
             try {
                 body()

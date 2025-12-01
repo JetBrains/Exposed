@@ -5,7 +5,7 @@ import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.statements.api.ExposedConnection
 
-// TODO add missed KDocs
+/** Represents a unit block of work that is performed on a database using a JDBC driver. */
 interface JdbcTransactionInterface : TransactionInterface {
     override val db: Database
 
@@ -30,13 +30,10 @@ interface JdbcTransactionInterface : TransactionInterface {
 /**
  * The [TransactionManager] instance that is associated with this [Database].
  *
- * @throws [RuntimeException] If a manager has not been registered for the database.
+ * @throws IllegalStateException if no transaction manager is registered for the given database.
  */
-// TODO check if we can move it to Database to make it field/method there.
-@Suppress("TooGenericExceptionThrown")
-val Database?.transactionManager: TransactionManager
-    get() = org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager.managerFor(this)
-        ?: throw RuntimeException("Database $this does not have any transaction manager")
+val Database.transactionManager: TransactionManager
+    get() = TransactionManager.managerFor(this)
 
 @Suppress("TooGenericExceptionCaught")
 internal fun JdbcTransactionInterface.rollbackLoggingException(log: (Exception) -> Unit) {

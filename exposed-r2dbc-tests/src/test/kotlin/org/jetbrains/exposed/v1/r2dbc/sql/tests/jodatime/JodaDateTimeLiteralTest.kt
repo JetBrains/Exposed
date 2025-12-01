@@ -3,6 +3,8 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.jodatime
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.jodatime.dateTimeLiteral
 import org.jetbrains.exposed.v1.jodatime.datetime
 import org.jetbrains.exposed.v1.r2dbc.insert
@@ -12,7 +14,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
 
 class JodaDateTimeLiteralTest : R2dbcDatabaseTestsBase() {

@@ -9,15 +9,17 @@
         <p>
             <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-json</code>
         </p>
+        <include from="lib.topic" element-id="jdbc-supported"/>
+        <include from="lib.topic" element-id="r2dbc-supported"/>
     </tldr>
     <p>
         Exposed works together with the JSON serialization library of your choice by allowing column
         definitions that accept generic serializer and deserializer arguments through the
-        <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.sql.json/json.html">
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.json/json.html">
             <code>json()</code>
         </a>
         and
-        <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.sql.json/jsonb.html">
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.json/jsonb.html">
             <code>jsonb()</code>
         </a>
         functions.
@@ -38,7 +40,7 @@
 
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                    include-lines="5-6,8,13,17-18,28-37" />
+                    include-lines="5-6,8,13,18-19,29-38" />
         <p>
             Here's how the same <code>Project</code> and <code>Teams</code> would be defined using <a
             href="https://github.com/FasterXML/jackson">Jackson</a>
@@ -46,7 +48,7 @@
         </p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                    include-lines="3-4,17-18,28-30,40-47"
+                    include-lines="3-4,18-19,29-31,41-48"
         />
     </chapter>
     <chapter title="Supported types" id="supported-types">
@@ -56,7 +58,7 @@
         <deflist type="medium">
             <def id="json-type">
                 <title>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.sql.json/json.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.json/json.html">
                         <code>json()</code>
                     </a>
                 </title>
@@ -70,19 +72,103 @@
             </def>
             <def id="jsonb-type">
                 <title>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.sql.json/jsonb.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.json/jsonb.html">
                         <code>jsonb()</code>
                     </a>
                 </title>
-                <p>Maps to database <code>JSONB</code>. Used for storing JSON data in binary format (supported by
-                    PostgreSQL).</p>
+                <p>Maps to database <code>JSONB</code>. Used for storing JSON data in binary format.</p>
                 <p>Database-specific mappings:</p>
                 <list>
                     <li>MySQL and H2: Maps to <code>JSON</code></li>
-                    <li>SQLite and Oracle: Not supported</li>
+                    <li>SQLite: Maps to <code>BLOB</code> from version 3.45.0.0+; otherwise, not supported</li>
+                    <li>Oracle: Not supported</li>
                 </list>
             </def>
         </deflist>
+        <chapter title="SQLite and JSONB" id="sqlite">
+            <p>
+                Storing JSON strings as JSONB binary format is supported in SQLite starting from version 3.45.0.0. To
+                facilitate this, any JSON value set to a <code>.jsonb()</code> column will be automatically wrapped by
+                the SQL function <code>JSONB()</code>. This applies to values set in DDL default clauses:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="30-31,152,161-165"
+            />
+            <code-block lang="sql"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="156-159"
+            />
+            <p>
+                And to values set in DML operations:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="136-138"
+            />
+            <code-block lang="sql"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="132-133"
+            />
+            <p>
+                This means that attempting to read the value directly as it is stored in the column will throw a
+                decode exception due to the non-readable JSONB binary format. SQLite provides the SQL function <code>JSON()</code>
+                when it is required to read the stored value in a text format:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="147-149"
+            />
+            <code-block lang="sql"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="144"
+            />
+            <p>
+                If you want to use SQLite with JSONB via the DAO approach, some adjustments will be required on the entity
+                in order to make sure that the read value is always in a text format:
+            </p>
+            <code-block lang="kotlin">
+                object TasksTable : IntIdTable("tasks") {
+                    // ...
+                    val project = jsonb&lt;Project&gt;("project", Json.Default)
+                    val projectAsJson = CustomFunction("JSON", project.columnType, project)
+                }
+
+                class TaskEntity(id: EntityID&lt;Int&gt;) : IntEntity(id) {
+                    private var projectAsBinary by TasksTable.project
+
+                    var project: Project
+                        get() = readValues.getOrNull(TasksTable.projectAsJson) ?: projectAsBinary
+                        set(value) { projectAsBinary = value }
+
+                    companion object : IntEntityClass&lt;TaskEntity&gt;(TasksTable) {
+                        override fun searchQuery(op: Op&lt;Boolean&gt;): Query {
+                            return super.searchQuery(op).adjustSelectedProject()
+                        }
+
+                        override fun all(): SizedIterable&lt;TaskEntity&gt; {
+                            return wrapRows(TasksTable.selectAll().notForUpdate().adjustSelectedProject())
+                        }
+
+                        private fun Query.adjustSelectedProject(): Query = adjustSelect { original ->
+                            select(original.fields - TasksTable.project + TasksTable.projectAsJson)
+                        }
+                    }
+                }
+            </code-block>
+            <p>
+                In the example above, the traditional entity property delegate is made private while a custom <code>project</code>
+                field is given a custom getter that always attempts to read the result of the custom <code>JSON()</code>
+                from a query. This read logic falls back to the standard delegate result in the event the entity is being
+                read directly from the cache.
+            </p>
+            <p>
+                The low-level methods that may be invoked by queries like <code>TaskEntity.all()</code> are then given overrides
+                that always replace the original column with the function expression. With this implementation, a <code>TaskEntity</code>
+                can be created, updated, and queried as normal and any JSON value set to its <code>project</code> field will
+                be stored in the binary format and retrieved in text format.
+            </p>
+        </chapter>
     </chapter>
     <chapter title="JSON functions" id="json-functions">
 
@@ -90,14 +176,14 @@
             <p>
                 You can use JSON path strings to extract values as JSON or as a scalar value at a specific
                 field/key. To do this, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.sql.json/extract.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.json/extract.html">
                     <code>.extract()</code>
                 </a>
                 function:
             </p>
             <code-block lang="kotlin"
                         src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                        include-lines="78-81"
+                        include-lines="79-82"
             />
             <p>
                 Databases that support a path context root <code>$</code> will have this value appended to the generated
@@ -109,41 +195,41 @@
         <chapter title="Check if data exists">
             <p>
                 To check whether data exists within a JSON expression, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.sql.json/exists.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.json/exists.html">
                     <code>.exists()</code>
                 </a>
                 function:
             </p>
             <code-block lang="kotlin"
                         src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                        include-lines="84-86"
+                        include-lines="85-87"
             />
             <p>
                 Depending on the database, filter paths can be provided instead, as well as optional arguments:
             </p>
             <code-block lang="kotlin"
                         src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                        include-lines="92-94"
+                        include-lines="93-95"
             />
         </chapter>
         <chapter title="Check if JSON contains an expression">
             <p>
                 To check whether an expression is contained within a JSON, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.sql.json/contains.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.json/contains.html">
                     <code>.contains()</code>
                 </a>
                 function:
             </p>
             <code-block lang="kotlin"
                         src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                        include-lines="99-101"
+                        include-lines="100-102"
             />
             <p>
                 Depending on the database, you could also provide an optional path:
             </p>
             <code-block lang="kotlin"
                         src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                        include-lines="107-109"
+                        include-lines="108-110"
             />
         </chapter>
     </chapter>
@@ -154,7 +240,7 @@
         </p>
         <p>
             To define a JSON column that holds an array, use the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.sql.json/json.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.json/json.html">
                 <code>json()</code>
             </a>
             function with the appropriate type. The following example defines JSON columns for arrays of primitive
@@ -169,14 +255,14 @@
         </p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                    include-lines="119-125"
+                    include-lines="120-126"
         />
         <p>
             This results in the following SQL query:
         </p>
         <code-block lang="sql"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                    include-lines="115-116"
+                    include-lines="116-117"
         />
     </chapter>
 </topic>

@@ -15,6 +15,9 @@ import kotlin.reflect.KClass
  * Mapper for array types.
  */
 class ArrayTypeMapper : TypeMapper {
+    @Suppress("MagicNumber")
+    override val priority = 0.2
+
     override val columnTypes: List<KClass<out IColumnType<*>>>
         get() = listOf(ArrayColumnType::class)
 
@@ -24,7 +27,7 @@ class ArrayTypeMapper : TypeMapper {
     override fun setValue(
         statement: Statement,
         dialect: DatabaseDialect,
-        mapperRegistry: TypeMapperRegistry,
+        typeMapping: R2dbcTypeMapping,
         columnType: IColumnType<*>,
         value: Any?,
         index: Int
@@ -61,34 +64,33 @@ class ArrayTypeMapper : TypeMapper {
             return true
         }
 
-        val dimension = columnType.dimensions
-        val result = when (dimension) {
-            1 -> mapPgArray(dialect, mapperRegistry, columnType, value)
+        val result = when (val dimension = columnType.dimensions) {
+            1 -> mapPgArray(dialect, typeMapping, columnType, value)
             else -> error("Unsupported array dimension: $dimension. https://github.com/pgjdbc/r2dbc-postgresql#data-type-mapping")
         }
         statement.bind(index - 1, result)
         return true
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun mapPgArray(
         dialect: DatabaseDialect,
-        mapperRegistry: TypeMapperRegistry,
+        typeMapping: R2dbcTypeMapping,
         columnType: ArrayColumnType<*, *>,
         value: Array<*>
     ): Any {
-        val list = value.toList()
         val itemType = columnType.delegate
 
-        // Map each element using the mapperRegistry
-        val mappedList = list.map { element ->
+        // Map each element using the typeMapping
+        val mappedList = value.map { element ->
             if (element == null) return@map null
 
             // Create a temporary statement to map the element
             val tempStatement = TempStatement()
             val tempIndex = 1
 
-            // Try to map the element using the mapperRegistry
-            if (mapperRegistry.setValue(tempStatement, dialect, itemType, element, tempIndex)) {
+            // Try to map the element using the typeMapping
+            if (typeMapping.setValue(tempStatement, dialect, itemType, element, tempIndex)) {
                 tempStatement.getValue(tempIndex - 1)
             } else {
                 element
@@ -96,22 +98,23 @@ class ArrayTypeMapper : TypeMapper {
         }
 
         // For PostgreSQL, we need to explicitly create arrays of primitive types
-        return when {
-            columnType.delegate is BooleanColumnType -> (mappedList as List<Boolean>).toTypedArray()
-            columnType.delegate is ByteColumnType -> (mappedList as List<Byte>).toTypedArray()
-            columnType.delegate is UByteColumnType -> (mappedList as List<UByte>).toTypedArray()
-            columnType.delegate is ShortColumnType -> (mappedList as List<Short>).toTypedArray()
-            columnType.delegate is UShortColumnType -> (mappedList as List<UShort>).toTypedArray()
-            columnType.delegate is IntegerColumnType -> (mappedList as List<Int>).toTypedArray()
-            columnType.delegate is UIntegerColumnType -> (mappedList as List<UInt>).toTypedArray()
-            columnType.delegate is LongColumnType -> (mappedList as List<Long>).toTypedArray()
-            columnType.delegate is ULongColumnType -> (mappedList as List<ULong>).toTypedArray()
-            columnType.delegate is FloatColumnType -> (mappedList as List<Float>).toTypedArray()
-            columnType.delegate is DoubleColumnType -> (mappedList as List<Double>).toTypedArray()
-            columnType.delegate is BinaryColumnType -> (mappedList as List<ByteArray>).toTypedArray()
-            columnType.delegate is TextColumnType -> (mappedList as List<String>).toTypedArray()
-            columnType.delegate is DecimalColumnType -> (mappedList as List<java.math.BigDecimal>).toTypedArray()
-            columnType.delegate is IDateColumnType -> {
+        return when (columnType.delegate) {
+            is BooleanColumnType -> (mappedList as List<Boolean>).toTypedArray()
+            is ByteColumnType -> (mappedList as List<Byte>).toTypedArray()
+            is UByteColumnType -> (mappedList as List<UByte>).toTypedArray()
+            is ShortColumnType -> (mappedList as List<Short>).toTypedArray()
+            is UShortColumnType -> (mappedList as List<UShort>).toTypedArray()
+            is IntegerColumnType -> (mappedList as List<Int>).toTypedArray()
+            is UIntegerColumnType -> (mappedList as List<UInt>).toTypedArray()
+            is LongColumnType -> (mappedList as List<Long>).toTypedArray()
+            is ULongColumnType -> (mappedList as List<ULong>).toTypedArray()
+            is FloatColumnType -> (mappedList as List<Float>).toTypedArray()
+            is DoubleColumnType -> (mappedList as List<Double>).toTypedArray()
+            is BinaryColumnType -> (mappedList as List<ByteArray>).toTypedArray()
+            is TextColumnType -> (mappedList as List<String>).toTypedArray()
+            is DecimalColumnType -> (mappedList as List<java.math.BigDecimal>).toTypedArray()
+            is UUIDColumnType -> (mappedList as List<java.util.UUID>).toTypedArray()
+            is IDateColumnType -> {
                 // For date/time types, we need to handle them specially
                 // The hasTimePart property tells us whether it's a DATE or DATETIME column
                 val hasTimePart = (columnType.delegate as IDateColumnType).hasTimePart

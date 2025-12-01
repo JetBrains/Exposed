@@ -1,3 +1,230 @@
+# 1.0.0-rc-4
+
+Breaking changes:
+* build(deps)!: EXPOSED-918 Bump H2 and H2-R2DBC test driver versions by @bog-walk in https://github.com/JetBrains/Exposed/pull/2654
+* fix!: EXPOSED-870 Schema migration detection not compatible with sqlite-jdbc 3.50.2.0 by @bog-walk in https://github.com/JetBrains/Exposed/pull/2652
+* chore!: Rename field Transaction.id to Transaction.txId by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2602
+
+Infrastructure:
+* gradle-maven-publish-plugin 0.35.0
+* springFramework 6.2.14
+* springBoot 3.5.8
+
+Features:
+* feat: EXPOSED-845 Add read access to default logger in Transaction classes by @bog-walk in https://github.com/JetBrains/Exposed/pull/2657
+* feat: EXPOSED-822 Enable JSONB/BLOB support for SQLite by @bog-walk in https://github.com/JetBrains/Exposed/pull/2659
+
+Bug fixes:
+* fix: EXPOSED-877 Error 'No transaction in context' for select by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2661
+
+Docs:
+* docs: Update defaults for transaction isolation by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2650
+* docs: Fix typos in Transactions.md by @kchung1995 in https://github.com/JetBrains/Exposed/pull/2660
+* docs: EXPOSED-947 Document any minimum setup requirements by @bog-walk in https://github.com/JetBrains/Exposed/pull/2669
+
+# 1.0.0-rc-3
+
+Breaking changes:
+* chore!: EXPOSED-893 Read-only transaction initiation convenience by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2628
+* chore!: Refactoring of JDBC transaction management by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2632
+
+Infrastructure:
+* springFramework 6.2.12
+* springBoot 3.5.7
+* r2dbc-postgresql 1.1.1.RELEASE
+* dokka 2.1.0
+* ojdbc11 23.26.0.0.0
+
+Build:
+* build(deps): [EXPOSED-921] Bump jvmToolchain and set compile jvmTarget by @bog-walk in https://github.com/JetBrains/Exposed/pull/2643
+
+Bug fixes:
+* fix: EXPOSED-880 [PostgreSQL] Fix casting nullable JSON columns by @nicktelford in https://github.com/JetBrains/Exposed/pull/2616
+* fix: Fix R2DBC connection retrieval by @IlyaPechuro in https://github.com/JetBrains/Exposed/pull/2641
+
+Refactoring:
+* refactor: Replace invocations of `Array.toList` with `Array.asList` to slightly reduce some copy overhead by @ShreckYe in https://github.com/JetBrains/Exposed/pull/2637
+
+Docs:
+* docs: EXPOSED-911 Update Exposed logo in docs and README.md by @vnikolova in https://github.com/JetBrains/Exposed/pull/2640
+* docs: Update migration guide & docs with JDBC transaction management changes by @bog-walk in https://github.com/JetBrains/Exposed/pull/2642
+
+# 1.0.0-rc-2
+
+Infrastructure:
+* springFramework 6.2.11
+* springBoot 3.5.6
+* logcaptor 2.12.1
+* r2dbc-mssql 1.0.3.RELEASE
+* org.postgresql:postgresql 42.7.8
+
+Breaking changes:
+* feat!: EXPOSED-882 Add StatementInterceptor that allows suspend operations by @bog-walk in https://github.com/JetBrains/Exposed/pull/2621
+
+Bug fixes:
+* fix: EXPOSED-856 Add support for inserting UUID arrays in R2DBC by @Blad3Mak3r in https://github.com/JetBrains/Exposed/pull/2593
+* fix: Refactoring of switching between coroutines by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2619
+* fix: EXPOSED-886 Changes made to DAO (entity) can be lost on serializable transaction retry by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2627
+
+Docs:
+* docs: fix: EXPOSED-873 Update API links and extension modules table by @vnikolova in https://github.com/JetBrains/Exposed/pull/2612
+* docs: fix: EXPOSED-883 Broken API links in Statement-Interceptors.md by @vnikolova in https://github.com/JetBrains/Exposed/pull/2625
+
+# 1.0.0-rc-1
+
+## What's Changed
+
+Breaking changes:
+* chore!: Drop return value of R2dbcPreparedStatementApi.executeUpdate() by @bog-walk in https://github.com/JetBrains/Exposed/pull/2583
+* chore!: Move areEquivalentColumnTypes from DatabaseDialect to Exposed DatabaseMetadata by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2590
+* chore!: EXPOSED-844 supportsSelectForUpdate parameter from DatabaseDialect should be deprecated by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2576
+* fix!: Replace SqlExpressionBuilder methods with top-level functions  by @bog-walk in https://github.com/JetBrains/Exposed/pull/2600
+* chore!: Rename R2DBCRow to R2dbcRow by @bog-walk in https://github.com/JetBrains/Exposed/pull/2605
+* chore!: Refactoring of date time modules by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2595
+* fix!: Refactor use of runBlocking to be conditional for metadata properties by @bog-walk in https://github.com/JetBrains/Exposed/pull/2530
+* refactor!: Align suspendTransaction() with transaction() & drop context parameter by @bog-walk in https://github.com/JetBrains/Exposed/pull/2601
+* feat!: EXPOSED-841 Enable exposed-migration that works with R2DBC by @bog-walk in https://github.com/JetBrains/Exposed/pull/2604
+
+Deprecations:
+* deprecate: Raise deprecation levels of API elements by @bog-walk in https://github.com/JetBrains/Exposed/pull/2588
+
+Infrastructure:
+* springFramework 6.2.10
+* springBoot 3.5.5
+
+Bug fixes:
+* fix: [H2] R2dbcDatabase.name parsing error returns all url properties by @bog-walk in https://github.com/JetBrains/Exposed/pull/2578
+* fix: EXPOSED-801 NoClassDefFoundError when using exposed-json with pg-r2dbc dependency only by @bog-walk in https://github.com/JetBrains/Exposed/pull/2579
+* fix: EXPOSED-815 Fix resolving ExpressionAlias by @ntkoopman in https://github.com/JetBrains/Exposed/pull/2569
+* fix: Provide typed exec(query) to avoid casting results in lamdba block by @bog-walk in https://github.com/JetBrains/Exposed/pull/2584
+* fix: Unify database connect functions between r2dbc and jdbc by @e5l in https://github.com/JetBrains/Exposed/pull/2591
+
+Docs:
+* docs: Add section on DSL buildStatement() and prepareSQL() by @bog-walk in https://github.com/JetBrains/Exposed/pull/2563
+* docs: build: EXPOSED-852 Add GA4 script by @vnikolova in https://github.com/JetBrains/Exposed/pull/2587
+* docs: build: EXPOSED-850 Add configuration for feedback widget by @vnikolova in https://github.com/JetBrains/Exposed/pull/2592
+* docs: fix: EXPOSED-853 Wrong import shown in exposed-kotlin-datetime example by @vnikolova in https://github.com/JetBrains/Exposed/pull/2586
+* docs: fix: EXPOSED-820 fix examples and update r2dbc connect functions by @vnikolova in https://github.com/JetBrains/Exposed/pull/2596
+* docs: EXPOSED-865 Sample projects not compiling with beta versions by @bog-walk in https://github.com/JetBrains/Exposed/pull/2597
+* docs: Exclude @InternalApi elements from generated dokka files by @bog-walk in https://github.com/JetBrains/Exposed/pull/2606
+* docs: Update docs with change to R2dbcDatabase.connect() overload by @bog-walk in https://github.com/JetBrains/Exposed/pull/2607
+
+Build:
+* build: Include api(exposed-jdbc) dependency with exposed-migration by @bog-walk in https://github.com/JetBrains/Exposed/pull/2582
+* build: Include api(exposed-jdbc) dependency with spring-transaction by @bog-walk in https://github.com/JetBrains/Exposed/pull/2581
+
+# 1.0.0-beta-5
+
+## What's Changed
+
+Breaking changes:
+* Separate multiple internal classes from single file by @bog-walk in https://github.com/JetBrains/Exposed/pull/2564
+* Rename IStatementBuilder interface and add executable converter by @bog-walk in https://github.com/JetBrains/Exposed/pull/2562
+* Address internal TODOs and checks by @bog-walk in https://github.com/JetBrains/Exposed/pull/2572
+* EXPOSED-813 When is the plan to migrate kotlinx.datetime.Instant to kotlin.time.Instant? by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2557
+* Add hint about package naming changes in Exposed 1.0.0 by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2561
+* Phase out support for H2 version 1.x  by @bog-walk in https://github.com/JetBrains/Exposed/pull/2573
+
+Infrastructure:
+* Kotlin 2.1.0
+* Bump org.jetbrains.kotlinx.binary-compatibility-validator from 0.18.0 to 0.18.1 by @dependabot[bot] in https://github.com/JetBrains/Exposed/pull/2554
+* Bump springFramework from 6.2.8 to 6.2.9 by @dependabot[bot] in https://github.com/JetBrains/Exposed/pull/2560
+* Bump springBoot from 3.5.3 to 3.5.4 by @dependabot[bot] in https://github.com/JetBrains/Exposed/pull/2571
+* Bump org.junit:junit-bom from 5.13.3 to 5.13.4 by @dependabot[bot] in https://github.com/JetBrains/Exposed/pull/2566
+* Bump io.asyncer:r2dbc-mysql from 1.3.2 to 1.4.1 by @dependabot[bot] in https://github.com/JetBrains/Exposed/pull/2477
+* Bump io.github.hakky54:logcaptor from 2.11.0 to 2.12.0 by @dependabot[bot] in https://github.com/JetBrains/Exposed/pull/2574
+* Bump com.vanniktech:gradle-maven-publish-plugin from 0.33.0 to 0.34.0 by @dependabot[bot] in https://github.com/JetBrains/Exposed/pull/2570
+* Migrate to Vanniktech Maven Publish plugin by @e5l in https://github.com/JetBrains/Exposed/pull/2552
+* Remove fixed or addressed TODOs by @bog-walk in https://github.com/JetBrains/Exposed/pull/2551
+ 
+Docs:
+* docs: Merge gh-pages commits into main by @bog-walk in https://github.com/JetBrains/Exposed/pull/2546
+
+Features:
+* feat: EXPOSED-826 Extend MigrationUtils with dropUnmappedIndices and dropUnmappedSequence by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2547
+
+Bug fixes:
+* EXPOSED-768 UUID inserts into BINARY(16) column types in H2 by @med01-flutter-uki in https://github.com/JetBrains/Exposed/pull/2463
+* EXPOSED-811 argument "where" in "batchUpsert" have no way to use it by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2529
+* readObject() parameter change requires casting to keep using by @bog-walk in https://github.com/JetBrains/Exposed/pull/2550
+* Fix the duplicated segments on SQLServer dialect by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2558
+* EXPOSED-815 Check types for QueryAlias.get() at runtime by @ntkoopman in https://github.com/JetBrains/Exposed/pull/2532
+* Enable "SELECT FOR UPDATE" for the several applicable dialects by @sokomishalov in https://github.com/JetBrains/Exposed/pull/2567
+* EXPOSED-731 Timestamp support for SQLite is broken by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2568
+* EXPOSED-825 Case().When(...).Else(...) with QueryParameter(...,… by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2565
+
+## New Contributors
+* @med01-flutter-uki made their first contribution in https://github.com/JetBrains/Exposed/pull/2463
+* @ntkoopman made their first contribution in https://github.com/JetBrains/Exposed/pull/2532
+* @sokomishalov made their first contribution in https://github.com/JetBrains/Exposed/pull/2567
+
+# 1.0.0-beta-4
+
+## What's Changed
+
+Breaking changes:
+* refactor!: Make ThreadLocalMap internal & move mtc package into transactions by @bog-walk in https://github.com/JetBrains/Exposed/pull/2542
+* refactor!: Move addLogger() to exposed-core Transaction class by @bog-walk in https://github.com/JetBrains/Exposed/pull/2543
+
+Infrastructure:
+* org.junit:junit-bom 5.13.3
+
+Docs:
+* docs: Update KDocs @sample to use correct v1 package paths by @bog-walk in https://github.com/JetBrains/Exposed/pull/2541
+
+Bug fixes:
+* fix: EXPOSED-827 forUpdate() query method doesn't add actual `FOR UDPATE` modifier by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2548
+
+# 1.0.0-beta-3
+
+## What's Changed
+
+Infrastructure:
+* org.postgresql:postgresql 42.7.7
+* springBoot 3.5.3
+* springFramework 6.2.8
+* org.gradle.toolchains.foojay-resolver 1.0.0
+* org.junit:junit-bom 5.13.2
+* org.xerial:sqlite-jdbc 3.50.1.0
+* log4j2 2.25.0
+* org.jetbrains.kotlinx.binary-compatibility-validator 0.18.0
+
+Breaking changes:
+* fix!: EXPOSED-800 NoClassDefFoundError when using R2DBC with a database other than PostgreSQL by @bog-walk in https://github.com/JetBrains/Exposed/pull/2501
+* deprecate!: Replace PreparedStatementApi.setArray() with version that accepts column type by @bog-walk in https://github.com/JetBrains/Exposed/pull/2504
+* fix!: Join BatchInsertStatement with BaseBatchInsertStatement by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2521
+* fix!: Versioning via Version class instead of BigDecimals by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2520
+* fix!: Introduce SuspendCachableMapWithDefault to avoid using runBlocking inside CachableMapWithDefault by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2525
+* fix!: Move handling Json in R2DBC to TypeMappers by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2526
+
+Features:
+* feat: EXPOSED-786 Add R2dbcDatabase.connect() that matches JDBC constructor option by @bog-walk in https://github.com/JetBrains/Exposed/pull/2517
+
+Bug fixes:
+* fix: EXPOSED-787 Disparity between create/drop index statements when … by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2491
+* fix: EXPOSED-803 ImmutableCachedEntityClass throws NullPointerException on concurrent access by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2506
+* fix: getValue for type mappers by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2509
+* fix: Ordering of type mappers, interface for type mappers registry by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2513
+* revert: insert() and insertAndGetId() body parameter type by @bog-walk in https://github.com/JetBrains/Exposed/pull/2516
+* fix: EXPOSED-806 Inconsistent migration of JSON generated columns on Postgres by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2519
+* fix: Split date/time type mapper by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2518
+* fix: Remove duplications of inProperCase() by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2522
+* fix: Update resource paths in ExposedAotContribution to match current package structure by @marceligrabowski in https://github.com/JetBrains/Exposed/pull/2512
+* refactor: Address multiple metadata TODOs by @bog-walk in https://github.com/JetBrains/Exposed/pull/2531
+* fix: EXPOSED-752 Connection is closed is throw when `newSuspendedTransaction` is used by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2538
+
+Docs:
+* docs: update to 1.0.0-beta-1 and add release details by @vnikolova in https://github.com/JetBrains/Exposed/pull/2486
+* docs: Improve documentation through 'Deep Dive into DAO' section by @Attacktive in https://github.com/JetBrains/Exposed/pull/2495
+* docs: Add missing KDocs for version 1.0.0 by @bog-walk in https://github.com/JetBrains/Exposed/pull/2505
+* docs: EXPOSED-799 Add migration guide for 1.0.0 by @bog-walk in https://github.com/JetBrains/Exposed/pull/2498
+* docs: EXPOSED-531 Add sample project using Ktor and R2DBC by @bog-walk in https://github.com/JetBrains/Exposed/pull/2499
+* docs: EXPOSED-534 Add documentation for R2DBC support by @vnikolova in https://github.com/JetBrains/Exposed/pull/2503
+
+Tests:
+* test: Fix spring-boot-starter test blockage following bump to 3.5.0 by @bog-walk in https://github.com/JetBrains/Exposed/pull/2502
+* test: Enable PostgreSQL tests for R2DBC customEnumeration() by @bog-walk in https://github.com/JetBrains/Exposed/pull/2515
+
 # 1.0.0-beta-2
 
 ## What's Changed

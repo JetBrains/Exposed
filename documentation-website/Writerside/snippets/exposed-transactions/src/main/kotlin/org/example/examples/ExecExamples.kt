@@ -1,13 +1,12 @@
 package org.example.examples
 
 import org.example.tables.FilmsTable
-import org.jetbrains.exposed.v1.DoubleColumnType
-import org.jetbrains.exposed.v1.addLogger
 import org.jetbrains.exposed.v1.core.BooleanColumnType
+import org.jetbrains.exposed.v1.core.DoubleColumnType
 import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.statements.StatementType
-import org.jetbrains.exposed.v1.insert
-import org.jetbrains.exposed.v1.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 /*
     Important: This file is referenced by line number in `Working-with-SQL-Strings.md`.

@@ -1,10 +1,9 @@
 package org.jetbrains.exposed.v1.core.vendors
 
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.exceptions.throwUnsupportedException
-import java.math.BigDecimal
 
 internal open class MysqlDataTypeProvider : DataTypeProvider() {
     override fun binaryType(): String {
@@ -49,8 +48,8 @@ internal open class MysqlDataTypeProvider : DataTypeProvider() {
 
     override fun jsonBType(): String = "JSON"
 
-    override fun processForDefaultValue(e: Expression<*>): String = when {
-        e is LiteralOp<*> && e.columnType is JsonColumnMarker -> when {
+    override fun processForDefaultValue(e: Expression<*>): String = when (e) {
+        is LiteralOp<*> if e.columnType is JsonColumnMarker -> when {
             ((currentDialect as? MysqlDialect)?.fullVersion ?: "0") >= "8.0.13" -> "(${super.processForDefaultValue(e)})"
             else -> throw UnsupportedByDialectException(
                 "MySQL versions prior to 8.0.13 do not accept default values on JSON columns",
@@ -62,9 +61,11 @@ internal open class MysqlDataTypeProvider : DataTypeProvider() {
         // default values. The exception is that, for TIMESTAMP and DATETIME columns, you can specify the
         // CURRENT_TIMESTAMP function as the default, without enclosing parentheses.
         // https://dev.mysql.com/doc/refman/8.0/en/data-type-defaults.html#data-type-defaults-explicit
-        e is ExpressionWithColumnType<*> && e.columnType is IDateColumnType && e.toString().startsWith("CURRENT_TIMESTAMP") ->
+        is ExpressionWithColumnType<*> if (
+            e.columnType is IDateColumnType && e.toString().startsWith("CURRENT_TIMESTAMP")
+            ) ->
             super.processForDefaultValue(e)
-        e !is LiteralOp<*> && ((currentDialect as? MysqlDialect)?.fullVersion ?: "0") >= "8.0.13" ->
+        !is LiteralOp<*> if ((currentDialect as? MysqlDialect)?.fullVersion ?: "0") >= "8.0.13" ->
             "(${super.processForDefaultValue(e)})"
         else -> super.processForDefaultValue(e)
     }
@@ -167,7 +168,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         val oneOrAll = optional?.lowercase()
         @OptIn(InternalApi::class)
         if (oneOrAll != "one" && oneOrAll != "all") {
-            CoreTransactionManager.currentTransaction().throwUnsupportedException("MySQL requires a single optional argument: 'one' or 'all'")
+            currentTransaction().throwUnsupportedException("MySQL requires a single optional argument: 'one' or 'all'")
         }
         queryBuilder {
             append("JSON_CONTAINS_PATH(", expression, ", ")
@@ -322,7 +323,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
     override fun queryLimitAndOffset(size: Int?, offset: Long, alreadyOrdered: Boolean): String {
         @OptIn(InternalApi::class)
         if (size == null && offset > 0) {
-            CoreTransactionManager.currentTransaction().throwUnsupportedException(
+            currentTransaction().throwUnsupportedException(
                 "${currentDialect.name} doesn't support OFFSET clause without LIMIT"
             )
         }
@@ -340,12 +341,12 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
 open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider.INSTANCE, MysqlFunctionProvider.INSTANCE) {
     @OptIn(InternalApi::class)
     internal val isMysql8: Boolean by lazy {
-        CoreTransactionManager.currentTransaction().db.isVersionCovers(BigDecimal("8.0"))
+        currentTransaction().db.version.covers("8.0")
     }
 
     @OptIn(InternalApi::class)
     internal val fullVersion: String by lazy {
-        CoreTransactionManager.currentTransaction().db.fullVersion
+        currentTransaction().db.fullVersion
     }
 
     override val supportsCreateSequence: Boolean = false
@@ -358,11 +359,17 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider.INSTA
 
     override val supportsSetDefaultReferenceOption: Boolean = false
 
+    @Deprecated(
+        "The parameter was moved to JdbcExposedDatabaseMetadata/R2dbcExposedDatabaseMetadata classes",
+        ReplaceWith("TransactionManager.current().db.supportsSelectForUpdate")
+    )
+    override val supportsSelectForUpdate: Boolean = true
+
     /** Returns `true` if the MySQL database version is greater than or equal to 5.6. */
     @Suppress("MagicNumber")
     open fun isFractionDateTimeSupported(): Boolean {
         @OptIn(InternalApi::class)
-        return CoreTransactionManager.currentTransaction().db.isVersionCovers(5, 6)
+        return currentTransaction().db.version.covers(5, 6)
     }
 
     /** Returns `true` if a MySQL database is being used and its version is greater than or equal to 8.0. */
@@ -393,7 +400,7 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider.INSTA
     }
 
     override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartialOrFunctional: Boolean): String =
-        "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP INDEX ${identifierManager.quoteIfNecessary(indexName)}"
+        "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP INDEX ${identifierManager.cutIfNecessaryAndQuote(indexName)}"
 
     override fun setSchema(schema: Schema): String = "USE ${schema.identifier}"
 

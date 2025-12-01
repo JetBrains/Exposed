@@ -13,6 +13,9 @@ import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcResult
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 
+/**
+ * Represents the execution logic for an underlying SQL statement that also returns a result with data from any modified rows.
+ */
 open class ReturningSuspendExecutable(
     override val statement: ReturningStatement
 ) : SuspendExecutable<ResultApi, ReturningStatement>, Flow<ResultRow> {
@@ -21,7 +24,7 @@ open class ReturningSuspendExecutable(
     override suspend fun collect(collector: FlowCollector<ResultRow>) {
         val fieldIndex = statement.returningExpressions.withIndex()
             .associateBy({ it.value }, { it.index })
-        val rs = TransactionManager.current().exec(this)!!
+        val rs = TransactionManager.current().execQuery(this)
         try {
             rs.mapRows {
                 ResultRow.create(it, fieldIndex)

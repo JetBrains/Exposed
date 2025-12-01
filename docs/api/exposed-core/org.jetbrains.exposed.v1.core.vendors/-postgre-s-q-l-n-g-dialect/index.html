@@ -1,0 +1,754 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>PostgreSQLNGDialect</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
+                    exposed
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">1.0.0-rc-4
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":exposed-core/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":exposed-core/main" data-filter=":exposed-core/main">
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    exposed
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="exposed-core::org.jetbrains.exposed.v1.core.vendors/PostgreSQLNGDialect///PointingToDeclaration//-1435837140">
+  <div class="breadcrumbs"><a href="../../index.html">exposed-core</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.v1.core.vendors</a><span class="delimiter">/</span><span class="current">PostgreSQLNGDialect</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Postgre</span><wbr><span><span>SQLNGDialect</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="index.html">PostgreSQLNGDialect</a> : <a href="../-postgre-s-q-l-dialect/index.html">PostgreSQLDialect</a></div><p class="paragraph">PostgreSQL dialect implementation using the pgjdbc-ng jdbc driver.</p><p class="paragraph">The driver accepts basic URLs in the following format : jdbc:pgsql://localhost:5432/db</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button><button class="section-tab" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION,EXTENSION_PROPERTY,EXTENSION_FUNCTION">Members &amp; Extensions</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="tableheader">Constructors</h2>
+        <div class="table"><a data-name="808994634%2FConstructors%2F-1435837140" anchor-label="PostgreSQLNGDialect" id="808994634%2FConstructors%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-postgre-s-q-l-n-g-dialect.html"><span>Postgre</span><wbr><span><span>SQLNGDialect</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="808994634%2FConstructors%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="TYPE">
+        <h2 class="tableheader">Types</h2>
+        <div class="table"><a data-name="486918986%2FClasslikes%2F-1435837140" anchor-label="Companion" id="486918986%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-companion/index.html"><span><span>Companion</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="486918986%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">object </span><a href="-companion/index.html">Companion</a> : <a href="../-vendor-dialect/-dialect-name-provider/index.html">VendorDialect.DialectNameProvider</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="tableheader">Properties</h2>
+        <div class="table"><a data-name="34257991%2FProperties%2F-1435837140" anchor-label="dataTypeProvider" id="34257991%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-vendor-dialect/data-type-provider.html"><span>data</span><wbr><span>Type</span><wbr><span><span>Provider</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="34257991%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="../-vendor-dialect/data-type-provider.html">dataTypeProvider</a><span class="token operator">: </span><a href="../-data-type-provider/index.html">DataTypeProvider</a></div><div class="brief "><p class="paragraph">Data type provider of this dialect.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1663279018%2FProperties%2F-1435837140" anchor-label="defaultReferenceOption" id="1663279018%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-database-dialect/default-reference-option.html"><span>default</span><wbr><span>Reference</span><wbr><span><span>Option</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1663279018%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../-database-dialect/default-reference-option.html">defaultReferenceOption</a><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-reference-option/index.html">ReferenceOption</a></div><div class="brief "><p class="paragraph">Returns the default reference option for the dialect.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-426942221%2FProperties%2F-1435837140" anchor-label="functionProvider" id="-426942221%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-vendor-dialect/function-provider.html"><span>function</span><wbr><span><span>Provider</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-426942221%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="../-vendor-dialect/function-provider.html">functionProvider</a><span class="token operator">: </span><a href="../-function-provider/index.html">FunctionProvider</a></div><div class="brief "><p class="paragraph">Function provider of this dialect.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-134534969%2FProperties%2F-1435837140" anchor-label="h2Mode" id="-134534969%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-togglable="EXTENSION_PROPERTY" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../h2-mode.html"><span><span>h2Mode</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-134534969%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-database-dialect/index.html">DatabaseDialect</a><span class="token punctuation">.</span><a href="../h2-mode.html">h2Mode</a><span class="token operator">: </span><a href="../-h2-dialect/-h2-compatibility-mode/index.html">H2Dialect.H2CompatibilityMode</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The current H2 database compatibility mode or <code class="lang-kotlin">null</code> if the current database is not H2.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="845103220%2FProperties%2F-1435837140" anchor-label="likePatternSpecialChars" id="845103220%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-database-dialect/like-pattern-special-chars.html"><span>like</span><wbr><span>Pattern</span><wbr><span>Special</span><wbr><span><span>Chars</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="845103220%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../-database-dialect/like-pattern-special-chars.html">likePatternSpecialChars</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-char/index.html">Char</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-char/index.html">Char</a><span class="token operator">?</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a mapping of dialect-specific characters to be escaped when used alongside the LIKE operator.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1724382555%2FProperties%2F-1435837140" anchor-label="name" id="-1724382555%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-postgre-s-q-l-dialect/name.html"><span><span>name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1724382555%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="../-postgre-s-q-l-dialect/name.html">name</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Name of this dialect.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1966343525%2FProperties%2F-1435837140" anchor-label="needsQuotesWhenSymbolsInNames" id="-1966343525%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-database-dialect/needs-quotes-when-symbols-in-names.html"><span>needs</span><wbr><span>Quotes</span><wbr><span>When</span><wbr><span>Symbols</span><wbr><span>In</span><wbr><span><span>Names</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1966343525%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../-database-dialect/needs-quotes-when-symbols-in-names.html">needsQuotesWhenSymbolsInNames</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Returns <code class="lang-kotlin">true</code> if the dialect requires the use of quotes when using symbols in object names, <code class="lang-kotlin">false</code> otherwise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-187206189%2FProperties%2F-1435837140" anchor-label="needsSequenceToAutoInc" id="-187206189%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-database-dialect/needs-sequence-to-auto-inc.html"><span>needs</span><wbr><span>Sequence</span><wbr><span>To</span><wbr><span>Auto</span><wbr><span><span>Inc</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-187206189%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../-database-dialect/needs-sequence-to-auto-inc.html">needsSequenceToAutoInc</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Returns <code class="lang-kotlin">true</code> if the dialect requires the use of a sequence to create an auto-increment column, <code class="lang-kotlin">false</code> otherwise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="778602873%2FProperties%2F-1435837140" anchor-label="requiresAutoCommitOnCreateDrop" id="778602873%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="requires-auto-commit-on-create-drop.html"><span>requires</span><wbr><span>Auto</span><wbr><span>Commit</span><wbr><span>On</span><wbr><span>Create</span><wbr><span><span>Drop</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="778602873%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="requires-auto-commit-on-create-drop.html">requiresAutoCommitOnCreateDrop</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span></div><div class="brief "><p class="paragraph">Returns true if autoCommit should be enabled to create/drop a database.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1781839195%2FProperties%2F-1435837140" anchor-label="sequenceMaxValue" id="1781839195%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-database-dialect/sequence-max-value.html"><span>sequence</span><wbr><span>Max</span><wbr><span><span>Value</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1781839195%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../-database-dialect/sequence-max-value.html">sequenceMaxValue</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a></div><div class="brief "><p class="paragraph">Returns the allowed maximum sequence value for a dialect, as a <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2024971589%2FProperties%2F-1435837140" anchor-label="supportsColumnTypeChange" id="2024971589%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-database-dialect/supports-column-type-change.html"><span>supports</span><wbr><span>Column</span><wbr><span>Type</span><wbr><span><span>Change</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2024971589%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../-database-dialect/supports-column-type-change.html">supportsColumnTypeChange</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Returns whether Exposed currently supports column type change in migrations for this dialect.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1139970472%2FProperties%2F-1435837140" anchor-label="supportsCreateSchema" id="1139970472%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-database-dialect/supports-create-schema.html"><span>supports</span><wbr><span>Create</span><wbr><span><span>Schema</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1139970472%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../-database-dialect/supports-create-schema.html">supportsCreateSchema</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Returns<code class="lang-kotlin">true</code> if the dialect supports schema creation.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-713127800%2FProperties%2F-1435837140" anchor-label="supportsCreateSequence" id="-713127800%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-database-dialect/supports-create-sequence.html"><span>supports</span><wbr><span>Create</span><wbr><span><span>Sequence</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-713127800%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../-database-dialect/supports-create-sequence.html">supportsCreateSequence</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Returns <code class="lang-kotlin">true</code> if the dialect supports the creation of sequences, <code class="lang-kotlin">false</code> otherwise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-873124817%2FProperties%2F-1435837140" anchor-label="supportsDualTableConcept" id="-873124817%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-database-dialect/supports-dual-table-concept.html"><span>supports</span><wbr><span>Dual</span><wbr><span>Table</span><wbr><span><span>Concept</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-873124817%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../-database-dialect/supports-dual-table-concept.html">supportsDualTableConcept</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Returns <code class="lang-kotlin">true</code> if the dialect provides a special dummy DUAL table, accessible by all users.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1300692355%2FProperties%2F-1435837140" anchor-label="supportsIfNotExists" id="1300692355%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-database-dialect/supports-if-not-exists.html"><span>supports</span><wbr><span>If</span><wbr><span>Not</span><wbr><span><span>Exists</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1300692355%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../-database-dialect/supports-if-not-exists.html">supportsIfNotExists</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Returns <code class="lang-kotlin">true</code> if the dialect supports the <code class="lang-kotlin">IF EXISTS</code>/<code class="lang-kotlin">IF NOT EXISTS</code> option when creating, altering or dropping objects, <code class="lang-kotlin">false</code> otherwise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-569457105%2FProperties%2F-1435837140" anchor-label="supportsMultipleGeneratedKeys" id="-569457105%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-vendor-dialect/supports-multiple-generated-keys.html"><span>supports</span><wbr><span>Multiple</span><wbr><span>Generated</span><wbr><span><span>Keys</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-569457105%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="../-vendor-dialect/supports-multiple-generated-keys.html">supportsMultipleGeneratedKeys</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span></div><div class="brief "><p class="paragraph">Returns <code class="lang-kotlin">true</code> if the dialect supports returning multiple generated keys as a result of an insert operation, <code class="lang-kotlin">false</code> otherwise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-433354427%2FProperties%2F-1435837140" anchor-label="supportsOnlyIdentifiersInGeneratedKeys" id="-433354427%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-database-dialect/supports-only-identifiers-in-generated-keys.html"><span>supports</span><wbr><span>Only</span><wbr><span>Identifiers</span><wbr><span>In</span><wbr><span>Generated</span><wbr><span><span>Keys</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-433354427%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../-database-dialect/supports-only-identifiers-in-generated-keys.html">supportsOnlyIdentifiersInGeneratedKeys</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Returns <code class="lang-kotlin">true</code> if the dialect supports only returning generated keys that are identity columns.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-207722947%2FProperties%2F-1435837140" anchor-label="supportsOnUpdate" id="-207722947%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-database-dialect/supports-on-update.html"><span>supports</span><wbr><span>On</span><wbr><span><span>Update</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-207722947%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../-database-dialect/supports-on-update.html">supportsOnUpdate</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Returns <code class="lang-kotlin">true</code> if the dialect supports using the ON UPDATE clause with a foreign key constraint.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1536263697%2FProperties%2F-1435837140" anchor-label="supportsOrderByNullsFirstLast" id="-1536263697%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-postgre-s-q-l-dialect/supports-order-by-nulls-first-last.html"><span>supports</span><wbr><span>Order</span><wbr><span>By</span><wbr><span>Nulls</span><wbr><span>First</span><wbr><span><span>Last</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1536263697%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="../-postgre-s-q-l-dialect/supports-order-by-nulls-first-last.html">supportsOrderByNullsFirstLast</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span></div><div class="brief "><p class="paragraph">Returns <code class="lang-kotlin">true</code> if the dialect provides options to configure how nulls are sorted compared to non-null values.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2074418959%2FProperties%2F-1435837140" anchor-label="supportsRestrictReferenceOption" id="-2074418959%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-database-dialect/supports-restrict-reference-option.html"><span>supports</span><wbr><span>Restrict</span><wbr><span>Reference</span><wbr><span><span>Option</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2074418959%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../-database-dialect/supports-restrict-reference-option.html">supportsRestrictReferenceOption</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Returns <code class="lang-kotlin">true</code> if the dialect supports the RESTRICT action as part of a foreign key constraint clause.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-245641256%2FProperties%2F-1435837140" anchor-label="supportsSelectForUpdate" id="-245641256%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-postgre-s-q-l-dialect/supports-select-for-update.html"><span>supports</span><wbr><span>Select</span><wbr><span>For</span><wbr><span><span>Update</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-245641256%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="../-postgre-s-q-l-dialect/supports-select-for-update.html"><strike>supportsSelectForUpdate</strike></a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span></div><div class="brief "><p class="paragraph">Returns <code class="lang-kotlin">true</code> if the dialect supports <code class="lang-kotlin">SELECT FOR UPDATE</code> statements, <code class="lang-kotlin">false</code> otherwise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1957901477%2FProperties%2F-1435837140" anchor-label="supportsSequenceAsGeneratedKeys" id="1957901477%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-database-dialect/supports-sequence-as-generated-keys.html"><span>supports</span><wbr><span>Sequence</span><wbr><span>As</span><wbr><span>Generated</span><wbr><span><span>Keys</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1957901477%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../-database-dialect/supports-sequence-as-generated-keys.html">supportsSequenceAsGeneratedKeys</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Returns <code class="lang-kotlin">true</code> if the dialect supports returning generated keys obtained from a sequence.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1470081204%2FProperties%2F-1435837140" anchor-label="supportsSetDefaultReferenceOption" id="1470081204%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-database-dialect/supports-set-default-reference-option.html"><span>supports</span><wbr><span>Set</span><wbr><span>Default</span><wbr><span>Reference</span><wbr><span><span>Option</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1470081204%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../-database-dialect/supports-set-default-reference-option.html">supportsSetDefaultReferenceOption</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Returns <code class="lang-kotlin">true</code> if the dialect supports the SET DEFAULT action as part of a foreign key constraint clause.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="181029440%2FProperties%2F-1435837140" anchor-label="supportsSubqueryUnions" id="181029440%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-postgre-s-q-l-dialect/supports-subquery-unions.html"><span>supports</span><wbr><span>Subquery</span><wbr><span><span>Unions</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="181029440%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="../-postgre-s-q-l-dialect/supports-subquery-unions.html">supportsSubqueryUnions</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span></div><div class="brief "><p class="paragraph">Returns <code class="lang-kotlin">true</code> if the dialect supports subqueries within a UNION/EXCEPT/INTERSECT statement.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1668717432%2FProperties%2F-1435837140" anchor-label="supportsTernaryAffectedRowValues" id="1668717432%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-database-dialect/supports-ternary-affected-row-values.html"><span>supports</span><wbr><span>Ternary</span><wbr><span>Affected</span><wbr><span>Row</span><wbr><span><span>Values</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1668717432%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../-database-dialect/supports-ternary-affected-row-values.html">supportsTernaryAffectedRowValues</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Returns <code class="lang-kotlin">true</code> if the dialect supports an upsert operation returning an affected-row value of 0, 1, or 2.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-238276262%2FProperties%2F-1435837140" anchor-label="supportsWindowFrameGroupsMode" id="-238276262%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-postgre-s-q-l-dialect/supports-window-frame-groups-mode.html"><span>supports</span><wbr><span>Window</span><wbr><span>Frame</span><wbr><span>Groups</span><wbr><span><span>Mode</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-238276262%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="../-postgre-s-q-l-dialect/supports-window-frame-groups-mode.html">supportsWindowFrameGroupsMode</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span></div><div class="brief "><p class="paragraph">Returns <code class="lang-kotlin">true</code> if the dialect supports window function definitions with GROUPS mode in frame clause</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="-1490213451%2FFunctions%2F-1435837140" anchor-label="addPrimaryKey" id="-1490213451%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-vendor-dialect/add-primary-key.html"><span>add</span><wbr><span>Primary</span><wbr><span><span>Key</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1490213451%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-vendor-dialect/add-primary-key.html"><span class="token function">addPrimaryKey</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">table<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span></span><span class="parameter ">pkName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">vararg </span>pkColumns<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Returns the SQL statement that adds a primary key specified <a href="../-database-dialect/add-primary-key.html">pkName</a> to an existing <a href="../-database-dialect/add-primary-key.html">table</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1434373762%2FFunctions%2F-1435837140" anchor-label="areEquivalentColumnTypes" id="1434373762%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-database-dialect/are-equivalent-column-types.html"><span>are</span><wbr><span>Equivalent</span><wbr><span>Column</span><wbr><span><span>Types</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1434373762%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../-database-dialect/are-equivalent-column-types.html"><span class="token function"><strike>areEquivalentColumnTypes</strike></span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">columnMetadataSqlType<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">columnMetadataJdbcType<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">columnType<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Returns whether the <a href="../-database-dialect/are-equivalent-column-types.html">columnMetadataSqlType</a> type and the <a href="../-database-dialect/are-equivalent-column-types.html">columnType</a> are equivalent.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1382474421%2FFunctions%2F-1435837140" anchor-label="createDatabase" id="-1382474421%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-postgre-s-q-l-dialect/create-database.html"><span>create</span><wbr><span><span>Database</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1382474421%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-postgre-s-q-l-dialect/create-database.html"><span class="token function">createDatabase</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">name<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Returns the SQL statement that creates a database with the specified <a href="../-database-dialect/create-database.html">name</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1438491308%2FFunctions%2F-1435837140" anchor-label="createIndex" id="-1438491308%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-vendor-dialect/create-index.html"><span>create</span><wbr><span><span>Index</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1438491308%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-vendor-dialect/create-index.html"><span class="token function">createIndex</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">index<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-index/index.html">Index</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Uniqueness might be required for foreign key constraints.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1211488383%2FFunctions%2F-1435837140" anchor-label="createSchema" id="1211488383%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-database-dialect/create-schema.html"><span>create</span><wbr><span><span>Schema</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1211488383%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../-database-dialect/create-schema.html"><span class="token function">createSchema</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">schema<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-schema/index.html">Schema</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Returns the SQL statement that creates the specified <a href="../-database-dialect/create-schema.html">schema</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-347358914%2FFunctions%2F-1435837140" anchor-label="dropDatabase" id="-347358914%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-postgre-s-q-l-dialect/drop-database.html"><span>drop</span><wbr><span><span>Database</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-347358914%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-postgre-s-q-l-dialect/drop-database.html"><span class="token function">dropDatabase</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">name<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Returns the SQL statement that drops the database with the specified <a href="../-database-dialect/drop-database.html">name</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1373501502%2FFunctions%2F-1435837140" anchor-label="dropIndex" id="-1373501502%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-postgre-s-q-l-dialect/drop-index.html"><span>drop</span><wbr><span><span>Index</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1373501502%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-postgre-s-q-l-dialect/drop-index.html"><span class="token function">dropIndex</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">tableName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">indexName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">isUnique<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter ">isPartialOrFunctional<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Returns the SQL statement that drops the specified <a href="../-database-dialect/drop-index.html">indexName</a> from the specified <a href="../-database-dialect/drop-index.html">tableName</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1623495000%2FFunctions%2F-1435837140" anchor-label="dropSchema" id="1623495000%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-database-dialect/drop-schema.html"><span>drop</span><wbr><span><span>Schema</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1623495000%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../-database-dialect/drop-schema.html"><span class="token function">dropSchema</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">schema<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-schema/index.html">Schema</a><span class="token punctuation">, </span></span><span class="parameter ">cascade<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Returns the SQL statement that drops the specified <a href="../-database-dialect/drop-schema.html">schema</a>, as well as all its objects if <a href="../-database-dialect/drop-schema.html">cascade</a> is <code class="lang-kotlin">true</code>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1656749985%2FFunctions%2F-1435837140" anchor-label="filterCondition" id="1656749985%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-vendor-dialect/filter-condition.html"><span>filter</span><wbr><span><span>Condition</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1656749985%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-vendor-dialect/filter-condition.html"><span class="token function">filterCondition</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">index<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-index/index.html">Index</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1722961853%2FFunctions%2F-1435837140" anchor-label="isAllowedAsColumnDefault" id="-1722961853%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-postgre-s-q-l-dialect/is-allowed-as-column-default.html"><span>is</span><wbr><span>Allowed</span><wbr><span>As</span><wbr><span>Column</span><wbr><span><span>Default</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1722961853%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-postgre-s-q-l-dialect/is-allowed-as-column-default.html"><span class="token function">isAllowedAsColumnDefault</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">e<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-expression/index.html">Expression</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Returns <code class="lang-kotlin">true</code> if the specified <a href="../-database-dialect/is-allowed-as-column-default.html">e</a> is allowed as a default column value in the dialect, <code class="lang-kotlin">false</code> otherwise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2122830864%2FFunctions%2F-1435837140" anchor-label="listDatabases" id="-2122830864%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-postgre-s-q-l-dialect/list-databases.html"><span>list</span><wbr><span><span>Databases</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2122830864%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-postgre-s-q-l-dialect/list-databases.html"><span class="token function">listDatabases</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Returns the SQL query that retrieves a set of existing databases.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2076974322%2FFunctions%2F-1435837140" anchor-label="modifyColumn" id="2076974322%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-database-dialect/modify-column.html"><span>modify</span><wbr><span><span>Column</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2076974322%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../-database-dialect/modify-column.html"><span class="token function">modifyColumn</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">originalColumnData<span class="token operator">: </span><a href="../-column-metadata/index.html">ColumnMetadata</a><span class="token punctuation">, </span></span><span class="parameter ">column<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">columnDiff<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column-diff/index.html">ColumnDiff</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns the SQL statement that modifies the specified <a href="../-database-dialect/modify-column.html">column</a>, using the current <a href="../-database-dialect/modify-column.html">originalColumnData</a> state.</p></div><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-postgre-s-q-l-dialect/modify-column.html"><span class="token function">modifyColumn</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">column<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">columnDiff<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-column-diff/index.html">ColumnDiff</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns the SQL statement that modifies the specified <a href="../-database-dialect/modify-column.html">column</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1376054662%2FFunctions%2F-1435837140" anchor-label="setSchema" id="-1376054662%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-postgre-s-q-l-dialect/set-schema.html"><span>set</span><wbr><span><span>Schema</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1376054662%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-postgre-s-q-l-dialect/set-schema.html"><span class="token function">setSchema</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">schema<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.core/-schema/index.html">Schema</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Returns the SQL statement that sets the current schema to the specified <a href="../-database-dialect/set-schema.html">schema</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2025 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

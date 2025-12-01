@@ -140,11 +140,7 @@ abstract class FunctionProvider {
      * @param pattern Pattern the expression is checked against.
      * @param mode Match mode used to check the expression.
      */
-    open fun <T : String?> Expression<T>.match(pattern: String, mode: MatchMode? = null): Op<Boolean> = with(
-        SqlExpressionBuilder
-    ) {
-        this@match.like(pattern)
-    }
+    open fun <T : String?> Expression<T>.match(pattern: String, mode: MatchMode? = null): Op<Boolean> = this@match.like(pattern)
 
     /**
      * SQL function that performs a pattern match of a given string expression against a given pattern.
@@ -728,7 +724,7 @@ abstract class FunctionProvider {
                 onUpdate.appendTo { (columnToUpdate, updateExpression) ->
                     append("T.${transaction.identity(columnToUpdate)}=")
                     when (updateExpression) {
-                        is QueryParameter<*>, !is Expression<*> -> registerArgument(columnToUpdate.columnType, updateExpression)
+                        !is Expression<*> -> registerArgument(columnToUpdate.columnType, updateExpression)
                         else -> append(updateExpression.toString().replace("$tableIdentifier.", "T."))
                     }
                 }
@@ -759,7 +755,9 @@ abstract class FunctionProvider {
      * @param columnName Name of the column for update.
      * @param queryBuilder Query builder to append the SQL syntax to.
      */
-    open fun insertValue(columnName: String, queryBuilder: QueryBuilder) { queryBuilder { +"S.$columnName" } }
+    open fun insertValue(columnName: String, queryBuilder: QueryBuilder) {
+        queryBuilder { +"S.$columnName" }
+    }
 
     /**
      * Returns the SQL command that deletes one or more rows of a table.
@@ -837,7 +835,7 @@ abstract class FunctionProvider {
     @Deprecated(
         "This function will be removed in future releases.",
         ReplaceWith("queryLimitAndOffset(size, offset, alreadyOrdered)"),
-        DeprecationLevel.ERROR
+        DeprecationLevel.HIDDEN
     )
     open fun queryLimit(size: Int, offset: Long, alreadyOrdered: Boolean): String = queryLimitAndOffset(size, offset, alreadyOrdered)
 
@@ -917,7 +915,7 @@ private fun QueryBuilder.addClausesToMergeStatement(transaction: Transaction, ta
         val defaultValuesStatementSupported = currentDialect !is H2Dialect
         when (clause.action) {
             MergeStatement.ClauseAction.INSERT -> {
-                val nextValExpression = autoIncColumn?.autoIncColumnType?.nextValExpression?.takeIf { autoIncColumn !in clause.arguments.map { it.first } }
+                val nextValExpression = autoIncColumn?.autoIncColumnType?.nextValExpression?.takeIf { autoIncColumn !in clause.arguments.map { (key, _) -> key } }
 
                 val extraArg = if (nextValExpression != null) listOf(autoIncColumn to nextValExpression) else emptyList()
 

@@ -1,12 +1,11 @@
 package org.jetbrains.exposed.v1.tests.demo.sql
 
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.TestDB
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 object Users : Table() {
@@ -25,7 +24,7 @@ object Cities : Table() {
 }
 
 fun main() {
-    Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+    Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
     Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver", user = "root", password = "")
 
     transaction {

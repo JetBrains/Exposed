@@ -2,10 +2,10 @@
 
 package org.jetbrains.exposed.samples.spring.controller
 
-import org.jetbrains.exposed.v1.samples.spring.domain.UserId
-import org.jetbrains.exposed.v1.samples.spring.service.UserCreateRequest
-import org.jetbrains.exposed.v1.samples.spring.service.UserService
-import org.jetbrains.exposed.v1.samples.spring.service.UserUpdateRequest
+import org.jetbrains.exposed.samples.spring.domain.UserId
+import org.jetbrains.exposed.samples.spring.service.UserCreateRequest
+import org.jetbrains.exposed.samples.spring.service.UserService
+import org.jetbrains.exposed.samples.spring.service.UserUpdateRequest
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -46,6 +46,25 @@ class UserController(
         val name: String,
         val age: Int,
     )
+
+    // Read All Users
+    @GetMapping("/")
+    fun findAllUsers(): ResponseEntity<List<UserResponse>> {
+        val users = userService.findAllUsers()
+        val response = users.map { user ->
+            UserResponse(
+                id = user.id.value,
+                name = user.name,
+                age = user.age,
+            )
+        }
+
+        return if (response.isNotEmpty()) {
+            ResponseEntity.ok(response)
+        } else {
+            ResponseEntity.noContent().build()
+        }
+    }
 
     // Create User
     @PostMapping

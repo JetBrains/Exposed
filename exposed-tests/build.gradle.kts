@@ -1,11 +1,18 @@
 import org.gradle.api.tasks.testing.logging.*
+import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") apply true
 }
 
 kotlin {
-    jvmToolchain(8)
+    jvmToolchain(17)
+
+    compilerOptions {
+        optIn.add("kotlin.time.ExperimentalTime")
+    }
 }
 
 repositories {
@@ -16,16 +23,14 @@ dependencies {
     implementation(libs.kotlinx.coroutines)
     implementation(libs.kotlinx.coroutines.debug)
 
-    implementation(kotlin("test-junit"))
-    implementation(libs.junit)
+    implementation(kotlin("test-junit5"))
+    implementation(libs.junit5)
+    testRuntimeOnly(libs.junit.platform.launcher)
 
     implementation(project(":exposed-core"))
     implementation(project(":exposed-jdbc"))
     implementation(project(":exposed-dao"))
-    implementation(project(":exposed-json"))
     implementation(project(":exposed-kotlin-datetime"))
-    implementation(project(":exposed-money"))
-    implementation(project(":exposed-migration"))
 
     implementation(libs.slf4j)
     implementation(libs.log4j.slf4j.impl)
@@ -43,6 +48,16 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
 }
 
+tasks.withType<KotlinCompile>().configureEach {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_1_8)
+    }
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    targetCompatibility = "8"
+}
+
 tasks.withType<Test>().configureEach {
     if (JavaVersion.VERSION_1_8 > JavaVersion.current()) {
         jvmArgs = listOf("-XX:MaxPermSize=256m")
@@ -52,4 +67,6 @@ tasks.withType<Test>().configureEach {
         showStandardStreams = true
         exceptionFormat = TestExceptionFormat.FULL
     }
+
+    useJUnitPlatform()
 }

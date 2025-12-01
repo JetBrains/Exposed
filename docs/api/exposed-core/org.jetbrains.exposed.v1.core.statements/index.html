@@ -1,0 +1,595 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>org.jetbrains.exposed.v1.core.statements</title>
+<link href="../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../styles/style.css" rel="Stylesheet">
+<link href="../../styles/main.css" rel="Stylesheet">
+<link href="../../styles/prism.css" rel="Stylesheet">
+<link href="../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../ui-kit/ui-kit.min.js" defer></script></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../index.html" tabindex="1">
+                    exposed
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">1.0.0-rc-4
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":exposed-core/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":exposed-core/main" data-filter=":exposed-core/main">
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    exposed
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="package" id="content" pageids="exposed-core::org.jetbrains.exposed.v1.core.statements////PointingToDeclaration//-1435837140">
+  <div class="breadcrumbs"><a href="../index.html">exposed-core</a><span class="delimiter">/</span><span class="current">org.jetbrains.exposed.v1.core.statements</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>Package-level</span></span> <span><span>declarations</span></span></h1>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="TYPE">Types</button><button class="section-tab" data-togglable="FUNCTION,EXTENSION_FUNCTION">Functions</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="TYPE">
+        <h2 class="tableheader">Types</h2>
+        <div class="table"><a data-name="-2103031586%2FClasslikes%2F-1435837140" anchor-label="BatchDataInconsistentException" id="-2103031586%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-batch-data-inconsistent-exception/index.html"><span>Batch</span><wbr><span>Data</span><wbr><span>Inconsistent</span><wbr><span><span>Exception</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2103031586%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-batch-data-inconsistent-exception/index.html">BatchDataInconsistentException</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">message<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span> : <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Exception.html">Exception</a></div><div class="brief "><p class="paragraph">An exception thrown when the provided data cannot be validated or processed to prepare a batch statement.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-594469898%2FClasslikes%2F-1435837140" anchor-label="BatchInsertStatement" id="-594469898%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-batch-insert-statement/index.html"><span>Batch</span><wbr><span>Insert</span><wbr><span><span>Statement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-594469898%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-batch-insert-statement/index.html">BatchInsertStatement</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">table<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span></span><span class="parameter ">ignore<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>shouldReturnGeneratedValues<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span></span></span><span class="token punctuation">)</span> : <a href="-insert-statement/index.html">InsertStatement</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../org.jetbrains.exposed.v1.core/-result-row/index.html">ResultRow</a><span class="token operator">&gt;</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Represents the SQL statement that batch inserts new rows into a table.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="555932955%2FClasslikes%2F-1435837140" anchor-label="BatchReplaceStatement" id="555932955%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-batch-replace-statement/index.html"><span>Batch</span><wbr><span>Replace</span><wbr><span><span>Statement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="555932955%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-batch-replace-statement/index.html">BatchReplaceStatement</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">table<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span></span><span class="parameter ">shouldReturnGeneratedValues<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span></span></span><span class="token punctuation">)</span> : <a href="-batch-insert-statement/index.html">BatchInsertStatement</a></div><div class="brief "><p class="paragraph">Represents the SQL statement that either batch inserts new rows into a table, or, if insertions violate unique constraints, first deletes the existing rows before inserting new rows.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1666125318%2FClasslikes%2F-1435837140" anchor-label="BatchUpdateStatement" id="1666125318%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-batch-update-statement/index.html"><span>Batch</span><wbr><span>Update</span><wbr><span><span>Statement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1666125318%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-batch-update-statement/index.html">BatchUpdateStatement</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>table<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core.dao.id/-id-table/index.html">IdTable</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="-update-statement/index.html">UpdateStatement</a></div><div class="brief "><p class="paragraph">Represents the SQL statement that batch updates rows of a table.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2080746260%2FClasslikes%2F-1435837140" anchor-label="BatchUpsertStatement" id="-2080746260%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-batch-upsert-statement/index.html"><span>Batch</span><wbr><span>Upsert</span><wbr><span><span>Statement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2080746260%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-batch-upsert-statement/index.html">BatchUpsertStatement</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">table<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>keys<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>onUpdateExclude<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>where<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">shouldReturnGeneratedValues<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span></span></span><span class="token punctuation">)</span> : <a href="-batch-insert-statement/index.html">BatchInsertStatement</a>, <a href="-upsert-builder/index.html">UpsertBuilder</a></div><div class="brief "><p class="paragraph">Represents the SQL statement that either batch inserts new rows into a table, or updates the existing rows if insertions violate unique constraints.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="148470700%2FClasslikes%2F-1435837140" anchor-label="DeleteStatement" id="148470700%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-delete-statement/index.html"><span>Delete</span><wbr><span><span>Statement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="148470700%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-delete-statement/index.html">DeleteStatement</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>targetsSet<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-column-set/index.html">ColumnSet</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>where<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>isIgnore<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>limit<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>targetTables<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token operator">&gt;</span><span class="token operator"> = </span>emptyList()</span></span><span class="token punctuation">)</span> : <a href="-statement/index.html">Statement</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Represents the SQL statement that deletes one or more rows of a table.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-25686919%2FClasslikes%2F-1435837140" anchor-label="GlobalStatementInterceptor" id="-25686919%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-global-statement-interceptor/index.html"><span>Global</span><wbr><span>Statement</span><wbr><span><span>Interceptor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-25686919%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">interface </span><a href="-global-statement-interceptor/index.html">GlobalStatementInterceptor</a> : <a href="-statement-interceptor/index.html">StatementInterceptor</a></div><div class="brief "><p class="paragraph">Represents a <a href="-statement-interceptor/index.html">StatementInterceptor</a> that is loaded whenever a <a href="../org.jetbrains.exposed.v1.core/-transaction/index.html">Transaction</a> instance is initialized.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1634806442%2FClasslikes%2F-1435837140" anchor-label="InsertSelectStatement" id="-1634806442%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-insert-select-statement/index.html"><span>Insert</span><wbr><span>Select</span><wbr><span><span>Statement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1634806442%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-insert-select-statement/index.html">InsertSelectStatement</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>columns<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>selectQuery<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-abstract-query/index.html">AbstractQuery</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>isIgnore<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span></span></span><span class="token punctuation">)</span> : <a href="-statement/index.html">Statement</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Represents the SQL statement that uses data retrieved from a <a href="../../exposed-core/org.jetbrains.exposed.v1.core.statements/-insert-select-statement/--root--.html">selectQuery</a> to insert new rows into a table.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1796278982%2FClasslikes%2F-1435837140" anchor-label="InsertStatement" id="-1796278982%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-insert-statement/index.html"><span>Insert</span><wbr><span><span>Statement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1796278982%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-insert-statement/index.html">InsertStatement</a><span class="token operator">&lt;</span><a href="-insert-statement/index.html">Key</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>table<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>isIgnore<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span></span></span><span class="token punctuation">)</span> : <a href="-update-builder/index.html">UpdateBuilder</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Represents the SQL statement that inserts a new row into a table.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="394835063%2FClasslikes%2F-1435837140" anchor-label="MergeSelectStatement" id="394835063%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-merge-select-statement/index.html"><span>Merge</span><wbr><span>Select</span><wbr><span><span>Statement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="394835063%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-merge-select-statement/index.html">MergeSelectStatement</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">dest<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span></span><span class="parameter ">selectQuery<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-query-alias/index.html">QueryAlias</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>on<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="-merge-statement/index.html">MergeStatement</a></div><div class="brief "><p class="paragraph">Represents an SQL MERGE statement. It encapsulates the logic to perform conditional updates, insertions, or deletions.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-905772773%2FClasslikes%2F-1435837140" anchor-label="MergeStatement" id="-905772773%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-merge-statement/index.html"><span>Merge</span><wbr><span><span>Statement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-905772773%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-merge-statement/index.html">MergeStatement</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>table<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-table/index.html">Table</a></span></span><span class="token punctuation">)</span> : <a href="-statement/index.html">Statement</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">The base implementation of SQL merge command that is used by statements like <a href="-merge-select-statement/index.html">MergeSelectStatement</a>, <a href="-merge-table-statement/index.html">MergeTableStatement</a></p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="644412983%2FClasslikes%2F-1435837140" anchor-label="MergeTableStatement" id="644412983%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-merge-table-statement/index.html"><span>Merge</span><wbr><span>Table</span><wbr><span><span>Statement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="644412983%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-merge-table-statement/index.html">MergeTableStatement</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">dest<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span></span><span class="parameter ">source<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span></span><span class="parameter ">on<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span> : <a href="-merge-statement/index.html">MergeStatement</a></div><div class="brief "><p class="paragraph">Represents an SQL MERGE statement. It encapsulates the logic to perform conditional updates, insertions, or deletions.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1110409907%2FClasslikes%2F-1435837140" anchor-label="ReplaceSelectStatement" id="1110409907%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-replace-select-statement/index.html"><span>Replace</span><wbr><span>Select</span><wbr><span><span>Statement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1110409907%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-replace-select-statement/index.html">ReplaceSelectStatement</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">columns<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">selectQuery<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-abstract-query/index.html">AbstractQuery</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="-insert-select-statement/index.html">InsertSelectStatement</a></div><div class="brief "><p class="paragraph">Represents the SQL statement that uses data retrieved from a <a href="../../exposed-core/org.jetbrains.exposed.v1.core.statements/-replace-select-statement/--root--.html">selectQuery</a> to either insert a new row into a table, or, if insertion would violate a unique constraint, first delete the existing row before inserting a new row.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1954557015%2FClasslikes%2F-1435837140" anchor-label="ReplaceStatement" id="1954557015%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-replace-statement/index.html"><span>Replace</span><wbr><span><span>Statement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1954557015%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-replace-statement/index.html">ReplaceStatement</a><span class="token operator">&lt;</span><a href="-replace-statement/index.html">Key</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">table<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-table/index.html">Table</a></span></span><span class="token punctuation">)</span> : <a href="-insert-statement/index.html">InsertStatement</a><span class="token operator">&lt;</span><a href="-replace-statement/index.html">Key</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Represents the SQL statement that either inserts a new row into a table, or, if insertion would violate a unique constraint, first deletes the existing row before inserting a new row.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1804184939%2FClasslikes%2F-1435837140" anchor-label="ReturningStatement" id="-1804184939%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-returning-statement/index.html"><span>Returning</span><wbr><span><span>Statement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1804184939%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-returning-statement/index.html">ReturningStatement</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>table<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>returningExpressions<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../org.jetbrains.exposed.v1.core/-expression/index.html">Expression</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>mainStatement<span class="token operator">: </span><a href="-statement/index.html">Statement</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="-statement/index.html">Statement</a><span class="token operator">&lt;</span><a href="../org.jetbrains.exposed.v1.core.statements.api/-result-api/index.html">ResultApi</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Represents the underlying SQL <a href="../../exposed-core/org.jetbrains.exposed.v1.core.statements/-returning-statement/--root--.html">mainStatement</a> that returns a result with data from any modified rows.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1191861539%2FClasslikes%2F-1435837140" anchor-label="SQLServerBatchInsertStatement" id="1191861539%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-s-q-l-server-batch-insert-statement/index.html"><span>SQLServer</span><wbr><span>Batch</span><wbr><span>Insert</span><wbr><span><span>Statement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1191861539%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-s-q-l-server-batch-insert-statement/index.html">SQLServerBatchInsertStatement</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">table<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span></span><span class="parameter ">ignore<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter ">shouldReturnGeneratedValues<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span></span></span><span class="token punctuation">)</span> : <a href="-batch-insert-statement/index.html">BatchInsertStatement</a></div><div class="brief "><p class="paragraph">Represents the SQL statement that batch inserts new rows into a table, specifically for the SQL Server database.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1853485087%2FClasslikes%2F-1435837140" anchor-label="Statement" id="-1853485087%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-statement/index.html"><span><span>Statement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1853485087%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-statement/index.html">Statement</a><span class="token operator">&lt;</span><span class="token keyword">out </span><a href="-statement/index.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>type<span class="token operator">: </span><a href="-statement-type/index.html">StatementType</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>targets<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Base class representing an SQL statement that can be executed.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="586129254%2FClasslikes%2F-1435837140" anchor-label="StatementBuilder" id="586129254%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-statement-builder/index.html"><span>Statement</span><wbr><span><span>Builder</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="586129254%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">interface </span><a href="-statement-builder/index.html">StatementBuilder</a></div><div class="brief "><p class="paragraph">Represents all the DSL methods available when building SQL statements.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1324247086%2FClasslikes%2F-1435837140" anchor-label="StatementContext" id="-1324247086%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-statement-context/index.html"><span>Statement</span><wbr><span><span>Context</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1324247086%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-statement-context/index.html">StatementContext</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>statement<span class="token operator">: </span><a href="-statement/index.html">Statement</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>args<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-iterable/index.html">Iterable</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-pair/index.html">Pair</a><span class="token operator">&lt;</span><a href="../org.jetbrains.exposed.v1.core/-i-column-type/index.html">IColumnType</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Holds information related to a particular <a href="../../exposed-core/org.jetbrains.exposed.v1.core.statements/-statement-context/--root--.html">statement</a> and the <a href="../../exposed-core/org.jetbrains.exposed.v1.core.statements/-statement-context/--root--.html">args</a> needed to prepare it for execution.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="961133826%2FClasslikes%2F-1435837140" anchor-label="StatementGroup" id="961133826%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-statement-group/index.html"><span>Statement</span><wbr><span><span>Group</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="961133826%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">enum </span><a href="-statement-group/index.html">StatementGroup</a> : <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="-statement-group/index.html">StatementGroup</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Represents the groups that are used to classify the purpose of an SQL statement.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-872914916%2FClasslikes%2F-1435837140" anchor-label="StatementInterceptor" id="-872914916%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-statement-interceptor/index.html"><span>Statement</span><wbr><span><span>Interceptor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-872914916%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">interface </span><a href="-statement-interceptor/index.html">StatementInterceptor</a></div><div class="brief "><p class="paragraph">Represents the processes that should be performed during a statement's lifecycle events in a transaction.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1977047484%2FClasslikes%2F-1435837140" anchor-label="StatementResult" id="-1977047484%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-statement-result/index.html"><span>Statement</span><wbr><span><span>Result</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1977047484%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-statement-result/index.html">StatementResult</a></div><div class="brief "><p class="paragraph">Stores the result generated by a database after statement execution and indicates the form of the result.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1276490297%2FClasslikes%2F-1435837140" anchor-label="StatementType" id="-1276490297%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-statement-type/index.html"><span>Statement</span><wbr><span><span>Type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1276490297%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">enum </span><a href="-statement-type/index.html">StatementType</a> : <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="-statement-type/index.html">StatementType</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Possible SQL statement types, most often represented by the leading word in the command syntax.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="888468638%2FClasslikes%2F-1435837140" anchor-label="UpdateBuilder" id="888468638%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-update-builder/index.html"><span>Update</span><wbr><span><span>Builder</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="888468638%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-update-builder/index.html">UpdateBuilder</a><span class="token operator">&lt;</span><span class="token keyword">out </span><a href="-update-builder/index.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">type<span class="token operator">: </span><a href="-statement-type/index.html">StatementType</a><span class="token punctuation">, </span></span><span class="parameter ">targets<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="-statement/index.html">Statement</a><span class="token operator">&lt;</span><a href="-update-builder/index.html">T</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Represents the underlying mapping of columns scheduled for change along with their new values.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="464316234%2FClasslikes%2F-1435837140" anchor-label="UpdateStatement" id="464316234%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-update-statement/index.html"><span>Update</span><wbr><span><span>Statement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="464316234%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-update-statement/index.html">UpdateStatement</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>targetsSet<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-column-set/index.html">ColumnSet</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>limit<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>where<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-update-builder/index.html">UpdateBuilder</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Represents the SQL statement that updates rows of a table.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2056209148%2FClasslikes%2F-1435837140" anchor-label="UpsertBuilder" id="-2056209148%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-upsert-builder/index.html"><span>Upsert</span><wbr><span><span>Builder</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2056209148%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">interface </span><a href="-upsert-builder/index.html">UpsertBuilder</a></div><div class="brief "><p class="paragraph">Common interface for building SQL statements that either insert a new row into a table, or update the existing row if insertion would violate a unique constraint.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1760423630%2FClasslikes%2F-1435837140" anchor-label="UpsertSqlExpressionBuilder" id="1760423630%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-upsert-sql-expression-builder/index.html"><span>Upsert</span><wbr><span>Sql</span><wbr><span>Expression</span><wbr><span><span>Builder</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1760423630%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">object </span><a href="-upsert-sql-expression-builder/index.html"><strike>UpsertSqlExpressionBuilder</strike></a> : <a href="../org.jetbrains.exposed.v1.core/-i-sql-expression-builder/index.html">ISqlExpressionBuilder</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1012411952%2FClasslikes%2F-1435837140" anchor-label="UpsertStatement" id="1012411952%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-upsert-statement/index.html"><span>Upsert</span><wbr><span><span>Statement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1012411952%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-upsert-statement/index.html">UpsertStatement</a><span class="token operator">&lt;</span><a href="-upsert-statement/index.html">Key</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">table<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>keys<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>onUpdateExclude<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>where<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span> : <a href="-insert-statement/index.html">InsertStatement</a><span class="token operator">&lt;</span><a href="-upsert-statement/index.html">Key</a><span class="token operator">&gt; </span>, <a href="-upsert-builder/index.html">UpsertBuilder</a></div><div class="brief "><p class="paragraph">Represents the SQL statement that either inserts a new row into a table, or updates the existing row if insertion would violate a unique constraint.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="-1930430964%2FFunctions%2F-1435837140" anchor-label="buildStatement" id="-1930430964%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="build-statement.html"><span>build</span><wbr><span><span>Statement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1930430964%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="build-statement.html">S</a><span class="token operator">&gt; </span><a href="build-statement.html"><span class="token function">buildStatement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">body<span class="token operator">: </span><a href="-statement-builder/index.html">StatementBuilder</a><span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="build-statement.html">S</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="build-statement.html">S</a></div><div class="brief "><p class="paragraph">Builder block for generating instances representing SQl statements, without the statement being sent to the database for execution.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2122073108%2FFunctions%2F-1435837140" anchor-label="expandArgs" id="-2122073108%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="expand-args.html"><span>expand</span><wbr><span><span>Args</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2122073108%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="-statement-context/index.html">StatementContext</a><span class="token punctuation">.</span><a href="expand-args.html"><span class="token function">expandArgs</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">transaction<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-transaction/index.html">Transaction</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Returns the string representation of <a href="-statement-context/index.html">this</a> context's <a href="-statement/index.html">Statement</a> with its argument values included directly instead of parameter placeholders.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1070547237%2FFunctions%2F-1435837140" anchor-label="insertValue" id="-1070547237%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="insert-value.html"><span>insert</span><wbr><span><span>Value</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1070547237%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="insert-value.html">T</a><span class="token operator">&gt; </span><a href="insert-value.html"><span class="token function">insertValue</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">column<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="insert-value.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="insert-value.html">T</a><span class="token operator">&gt;</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2025 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

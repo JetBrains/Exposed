@@ -1,15 +1,15 @@
 package org.jetbrains.exposed.v1.tests.shared.dml
 
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greater
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.plus
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.times
 import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.plus
 import org.jetbrains.exposed.v1.core.stringLiteral
+import org.jetbrains.exposed.v1.core.times
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.tests.TestDB
@@ -17,13 +17,13 @@ import org.jetbrains.exposed.v1.tests.TestDB.ORACLE
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class MergeTableTest : MergeBaseTest() {
 
-    private fun SqlExpressionBuilder.defaultOnCondition() = Source.key eq Dest.key
+    private fun defaultOnCondition() = Source.key eq Dest.key
 
     @Test
     fun testInsert() {

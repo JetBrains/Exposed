@@ -7,6 +7,7 @@ import org.jetbrains.exposed.v1.core.FieldSet
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.QueryBuilder
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.r2dbc.Query
@@ -23,7 +24,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.getString
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertContains
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -37,7 +38,7 @@ class ColumnDefinitionTests : R2dbcDatabaseTestsBase() {
             val amount = integer("amount").withDefinition("COMMENT", stringLiteral(comment))
         }
 
-        val columnCommentSupportedDB = TestDB.ALL_H2 + TestDB.ALL_MYSQL_MARIADB
+        val columnCommentSupportedDB = TestDB.ALL_H2_V2 + TestDB.ALL_MYSQL_MARIADB
 
         withTables(excludeSettings = TestDB.ALL - columnCommentSupportedDB, tester) { testDb ->
             assertTrue { org.jetbrains.exposed.v1.r2dbc.SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
@@ -171,7 +172,7 @@ class ColumnDefinitionTests : R2dbcDatabaseTestsBase() {
 
         fun FieldSet.selectImplicitAll(): Query = ImplicitQuery(this, null)
 
-        val invisibilitySupportedDB = TestDB.ALL_H2 + TestDB.ALL_MARIADB + TestDB.MYSQL_V8 + TestDB.ORACLE
+        val invisibilitySupportedDB = TestDB.ALL_H2_V2 + TestDB.ALL_MARIADB + TestDB.MYSQL_V8 + TestDB.ORACLE
 
         withTables(excludeSettings = TestDB.ALL - invisibilitySupportedDB, tester) { testDb ->
             if (testDb == TestDB.MYSQL_V8 || testDb == TestDB.ORACLE) {

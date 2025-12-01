@@ -1,3 +1,7 @@
+import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     kotlin("jvm")
 
@@ -9,12 +13,27 @@ repositories {
 }
 
 kotlin {
-    jvmToolchain(8)
+    jvmToolchain(17)
+
+    compilerOptions {
+        optIn.add("kotlin.time.ExperimentalTime")
+    }
 }
 
 dependencies {
     api(kotlin("stdlib"))
     api(kotlin("reflect"))
     api(libs.kotlinx.coroutines)
+    api(libs.kotlinx.jvm.datetime)
     api(libs.slf4j)
+}
+
+tasks.withType<KotlinCompile>().configureEach {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_1_8)
+    }
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    targetCompatibility = "8"
 }

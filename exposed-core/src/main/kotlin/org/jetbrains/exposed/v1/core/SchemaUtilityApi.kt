@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.v1.core
 
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.asLiteral
 import org.jetbrains.exposed.v1.core.vendors.*
 import java.math.BigDecimal
 
@@ -8,43 +7,24 @@ import java.math.BigDecimal
  * Base class representing helper functions necessary for creating, altering, and dropping database schema objects.
  */
 abstract class SchemaUtilityApi {
-    // TODO make companion object with public string fields
-    @InternalApi
-    protected val columnsLogMessage = "Extracting table columns"
-
-    @InternalApi
-    protected val primaryKeysLogMessage = "Extracting primary keys"
-
-    @InternalApi
-    protected val constraintsLogMessage = "Extracting column constraints"
-
-    @InternalApi
-    protected val createTablesLogMessage = "Preparing create tables statements"
-
-    @InternalApi
-    protected val executeCreateTablesLogMessage = "Executing create tables statements"
-
-    @InternalApi
-    protected val createSequencesLogMessage = "Preparing create sequences statements"
-
-    @InternalApi
-    protected val alterTablesLogMessage = "Preparing alter tables statements"
-
-    @InternalApi
-    protected val executeAlterTablesLogMessage = "Executing alter tables statements"
-
-    @InternalApi
-    protected val mappingConsistenceLogMessage = "Checking mapping consistence"
-
-    /** Returns this list of tables sorted according to the targets of their foreign key constraints, if any exist. */
+    /**
+     * Returns this list of tables sorted according to the targets of their foreign key constraints, if any exist.
+     * @suppress
+     */
     @InternalApi
     protected fun Iterable<Table>.sortByReferences(): List<Table> = TableDepthGraph(this).sorted()
 
-    /** Whether any table from this list has a sequence of foreign key constraints that cycle back to them. */
+    /**
+     * Whether any table from this list has a sequence of foreign key constraints that cycle back to them.
+     * @suppress
+     */
     @InternalApi
     protected fun List<Table>.hasCycle(): Boolean = TableDepthGraph(this).hasCycle()
 
-    /** Returns DDL for [table] without a sequence as a Pair of CREATE (includes its indexes) and ALTER statements. */
+    /**
+     * Returns DDL for [table] without a sequence as a Pair of CREATE (includes its indexes) and ALTER statements.
+     * @suppress
+     */
     @InternalApi
     protected fun tableDdlWithoutExistingSequence(
         table: Table,
@@ -62,7 +42,10 @@ abstract class SchemaUtilityApi {
         return Pair(ddlWithoutExistingSequence.first + indicesDDL, ddlWithoutExistingSequence.second)
     }
 
-    /** Returns the SQL statements that create this [ForeignKeyConstraint]. */
+    /**
+     * Returns the SQL statements that create this [ForeignKeyConstraint].
+     * @suppress
+     */
     @InternalApi
     protected fun ForeignKeyConstraint.createDdl(): List<String> = with(this) {
         val allFromColumnsBelongsToTheSameTable = from.all { it.table == fromTable }
@@ -79,14 +62,19 @@ abstract class SchemaUtilityApi {
         return createStatement()
     }
 
-    /** Adds CREATE/ALTER statements for all table columns that don't exist in the database, to [destination]. */
+    /**
+     * Adds CREATE/ALTER statements for all table columns that don't exist in the database, to [destination].
+     * @suppress
+     */
     @InternalApi
     protected fun <C : MutableCollection<String>> Table.mapMissingColumnStatementsTo(
         destination: C,
         existingColumns: List<ColumnMetadata>,
         existingPrimaryKey: PrimaryKeyMetadata?,
-        alterTableAddColumnSupported: Boolean
+        alterTableAddColumnSupported: Boolean,
+        isIncorrectType: (columnMetadata: ColumnMetadata, column: Column<*>) -> Boolean
     ): C {
+        val isSqlite = currentDialect is SQLiteDialect
         // create columns
         val existingTableColumns = columns.mapNotNull { column ->
             val existingColumn = existingColumns.find { column.nameUnquoted().equals(it.name, true) }
@@ -101,17 +89,28 @@ abstract class SchemaUtilityApi {
             }.forEach { destination.addAll(it.createStatement()) }
             // sync existing columns
             existingTableColumns
-                .mapColumnDiffs()
+                .mapColumnDiffs(isIncorrectType)
                 .flatMapTo(destination) { (col, changedState) ->
-                    col.modifyStatements(changedState)
+                    if (isSqlite && changedState.caseSensitiveName) {
+                        col.modifyStatements(existingTableColumns[col], changedState)
+                    } else {
+                        col.modifyStatements(changedState)
+                    }
                 }
-            // add missing primary key
-            primaryKeyDdl(missingTableColumns, existingPrimaryKey)?.let { destination.add(it) }
+            // While SQLite does allow some ALTER TABLE syntax, ADD PRIMARY KEY is still not supported.
+            // PrimaryKey statement builder would return empty string at lowest level (not null), so this avoids it being added.
+            if (!isSqlite) {
+                // add missing primary key
+                primaryKeyDdl(missingTableColumns, existingPrimaryKey)?.let { destination.add(it) }
+            }
         }
         return destination
     }
 
-    /** Adds CREATE/ALTER/DROP statements for all foreign key constraints that don't exist in the database, to [destination]. */
+    /**
+     * Adds CREATE/ALTER/DROP statements for all foreign key constraints that don't exist in the database, to [destination].
+     * @suppress
+     */
     @InternalApi
     protected fun <C : MutableCollection<String>> mapMissingConstraintsTo(
         destination: C,
@@ -140,6 +139,7 @@ abstract class SchemaUtilityApi {
     /**
      * Filters all table indices and returns those that are defined on a table with more than one index.
      * If [withLogs] is `true`, DROP statements for these indices will also be logged.
+     * @suppress
      */
     @InternalApi
     protected fun Map<Table, List<Index>>.filterAndLogExcessIndices(withLogs: Boolean): List<Index> {
@@ -172,6 +172,7 @@ abstract class SchemaUtilityApi {
     /**
      * Filters all table foreign keys and returns those that are defined on a table with more than one of this constraint.
      * If [withLogs] is `true`, DROP statements for these constraints will also be logged.
+     * @suppress
      */
     @InternalApi
     protected fun Map<Pair<Table, LinkedHashSet<Column<*>>>, List<ForeignKeyConstraint>>.filterAndLogExcessConstraints(
@@ -209,6 +210,7 @@ abstract class SchemaUtilityApi {
      *
      * @return Pair of CREATE statements for missing indices and, if [withDropIndices] is `true`, DROP statements ofr
      * unmapped indices; if [withDropIndices] is `false`, the second value will be an empty list.
+     * @suppress
      */
     @InternalApi
     protected fun Map<Table, List<Index>>.filterAndLogMissingAndUnmappedIndices(
@@ -272,7 +274,10 @@ abstract class SchemaUtilityApi {
         return Pair(toCreate.toList(), toDrop.toList())
     }
 
-    /** If [withLogs] is `true`, this logs every item in this collection, prefixed by [mainMessage]. */
+    /**
+     * If [withLogs] is `true`, this logs every item in this collection, prefixed by [mainMessage].
+     * @suppress
+     */
     @InternalApi
     protected fun <T> Collection<T>.log(mainMessage: String, withLogs: Boolean) {
         if (withLogs && isNotEmpty()) {
@@ -280,7 +285,30 @@ abstract class SchemaUtilityApi {
         }
     }
 
-    private fun Map<Column<*>, ColumnMetadata>.mapColumnDiffs(): Map<Column<*>, ColumnDiff> {
+    companion object {
+        const val COLUMNS_LOG_MESSAGE = "Extracting table columns"
+
+        const val PRIMARY_KEYS_LOG_MESSAGE = "Extracting primary keys"
+
+        const val CONSTRAINTS_LOG_MESSAGE = "Extracting column constraints"
+
+        const val CREATE_TABLES_LOG_MESSAGE = "Preparing create tables statements"
+
+        const val EXECUTE_CREATE_TABLES_LOG_MESSAGE = "Executing create tables statements"
+
+        const val CREATE_SEQUENCES_LOG_MESSAGE = "Preparing create sequences statements"
+
+        const val ALTER_TABLES_LOG_MESSAGE = "Preparing alter tables statements"
+
+        const val EXECUTE_ALTER_TABLES_LOG_MESSAGE = "Executing alter tables statements"
+
+        const val MAPPING_CONSISTENCE_LOG_MESSAGE = "Checking mapping consistence"
+    }
+
+    @OptIn(InternalApi::class)
+    private fun Map<Column<*>, ColumnMetadata>.mapColumnDiffs(
+        isColumnTypeIncorrect: (columnMetadata: ColumnMetadata, column: Column<*>) -> Boolean
+    ): Map<Column<*>, ColumnDiff> {
         val dialect = currentDialect
         return mapValues { (col, existingCol) ->
             val columnType = col.columnType
@@ -290,10 +318,24 @@ abstract class SchemaUtilityApi {
             } else {
                 columnType.nullable
             }
-            val incorrectType = if (currentDialect.supportsColumnTypeChange) isIncorrectType(existingCol, col) else false
-            val incorrectNullability = existingCol.nullable != colNullable
+            val incorrectType = if (currentDialect.supportsColumnTypeChange) {
+                isColumnTypeIncorrect(existingCol, col)
+            } else {
+                false
+            }
+            // SQLite INTEGER PRIMARY KEY AUTOINCREMENT columns are technically still nullable on db-side
+            val incorrectNullability = existingCol.nullable != colNullable &&
+                (
+                    dialect !is SQLiteDialect ||
+                        columnType.sqlType() != dialect.dataTypeProvider.integerAutoincType()
+                    )
             val incorrectAutoInc = isIncorrectAutoInc(existingCol, col)
-            val incorrectDefaults = isIncorrectDefault(dialect, existingCol, col, columnDbDefaultIsAllowed)
+            // 'isDatabaseGenerated' property means that the column has generation of the value on the database side,
+            // and it could be default value, trigger or something else,
+            // but we don't specify the default value on the table object.
+            // So it could be better to avoid checking for changes in defaults for such columns, because in the most part
+            // of cases we would try to remove existing (in database, but not in table object) default value
+            val incorrectDefaults = if (col.isDatabaseGenerated) false else isIncorrectDefault(dialect, existingCol, col, columnDbDefaultIsAllowed)
             val incorrectCaseSensitiveName = existingCol.name.inProperCase() != col.nameUnquoted().inProperCase()
             val incorrectSizeOrScale = if (incorrectType) false else isIncorrectSizeOrScale(existingCol, columnType)
             ColumnDiff(
@@ -305,10 +347,6 @@ abstract class SchemaUtilityApi {
                 incorrectSizeOrScale
             )
         }.filterValues { it.hasDifferences() }
-    }
-
-    private fun isIncorrectType(columnMetadata: ColumnMetadata, column: Column<*>): Boolean {
-        return !currentDialect.areEquivalentColumnTypes(columnMetadata.sqlType, columnMetadata.jdbcType, column.columnType.sqlType())
     }
 
     private fun isIncorrectAutoInc(existingColumn: ColumnMetadata, column: Column<*>): Boolean {
@@ -360,9 +398,9 @@ abstract class SchemaUtilityApi {
                             is TextColumnType -> "'$value'::text"
                             else -> dataTypeProvider.processForDefaultValue(exp)
                         }
-                        this is OracleDialect || h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> when {
-                            column.columnType is VarCharColumnType && value == "" -> "NULL"
-                            column.columnType is TextColumnType && value == "" -> "NULL"
+                        this is OracleDialect || h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> when (column.columnType) {
+                            is VarCharColumnType if value == "" -> "NULL"
+                            is TextColumnType if value == "" -> "NULL"
                             else -> value
                         }
                         else -> value
@@ -390,26 +428,26 @@ abstract class SchemaUtilityApi {
                         this is PostgreSQLDialect && value < 0 -> "'${dataTypeProvider.processForDefaultValue(exp)}'::integer"
                         else -> dataTypeProvider.processForDefaultValue(exp)
                     }
-                    is Long -> when {
-                        this is SQLServerDialect && (value < 0 || value > Int.MAX_VALUE.toLong()) ->
+                    is Long -> when (this) {
+                        is SQLServerDialect if (value < 0 || value > Int.MAX_VALUE.toLong()) ->
                             "${dataTypeProvider.processForDefaultValue(exp)}."
-                        this is PostgreSQLDialect && (value < 0 || value > Int.MAX_VALUE.toLong()) ->
+                        is PostgreSQLDialect if (value < 0 || value > Int.MAX_VALUE.toLong()) ->
                             "'${dataTypeProvider.processForDefaultValue(exp)}'::bigint"
                         else -> dataTypeProvider.processForDefaultValue(exp)
                     }
-                    is UInt -> when {
-                        this is SQLServerDialect && value > Int.MAX_VALUE.toUInt() -> "${dataTypeProvider.processForDefaultValue(exp)}."
-                        this is PostgreSQLDialect && value > Int.MAX_VALUE.toUInt() -> "'${dataTypeProvider.processForDefaultValue(exp)}'::bigint"
+                    is UInt -> when (this) {
+                        is SQLServerDialect if value > Int.MAX_VALUE.toUInt() -> "${dataTypeProvider.processForDefaultValue(exp)}."
+                        is PostgreSQLDialect if value > Int.MAX_VALUE.toUInt() -> "'${dataTypeProvider.processForDefaultValue(exp)}'::bigint"
                         else -> dataTypeProvider.processForDefaultValue(exp)
                     }
-                    is ULong -> when {
-                        this is SQLServerDialect && value > Int.MAX_VALUE.toULong() -> "${dataTypeProvider.processForDefaultValue(exp)}."
-                        this is PostgreSQLDialect && value > Int.MAX_VALUE.toULong() -> "'${dataTypeProvider.processForDefaultValue(exp)}'::bigint"
+                    is ULong -> when (this) {
+                        is SQLServerDialect if value > Int.MAX_VALUE.toULong() -> "${dataTypeProvider.processForDefaultValue(exp)}."
+                        is PostgreSQLDialect if value > Int.MAX_VALUE.toULong() -> "'${dataTypeProvider.processForDefaultValue(exp)}'::bigint"
                         else -> dataTypeProvider.processForDefaultValue(exp)
                     }
                     else -> {
-                        when {
-                            column.columnType is JsonColumnMarker -> {
+                        when (column.columnType) {
+                            is JsonColumnMarker -> {
                                 val processed = dataTypeProvider.processForDefaultValue(exp)
                                 when (this) {
                                     is PostgreSQLDialect -> {
@@ -427,7 +465,7 @@ abstract class SchemaUtilityApi {
                                     }
                                 }
                             }
-                            column.columnType is ArrayColumnType<*, *> && this is PostgreSQLDialect -> {
+                            is ArrayColumnType<*, *> if this is PostgreSQLDialect -> {
                                 (value as List<*>)
                                     .takeIf { it.isNotEmpty() }
                                     ?.run {
@@ -443,7 +481,7 @@ abstract class SchemaUtilityApi {
                                         "ARRAY$processed"
                                     } ?: dataTypeProvider.processForDefaultValue(exp)
                             }
-                            column.columnType is IDateColumnType -> {
+                            is IDateColumnType -> {
                                 val processed = dataTypeProvider.processForDefaultValue(exp)
                                 if (processed.startsWith('\'') && processed.endsWith('\'')) {
                                     processed.trim('\'')
@@ -482,7 +520,15 @@ abstract class SchemaUtilityApi {
         if (columnMeta.size == null) return false
         val dialect = currentDialect
         return when (columnType) {
-            is DecimalColumnType -> columnType.precision != columnMeta.size || columnType.scale != columnMeta.scale
+            is DecimalColumnType -> {
+                // SQLite-JDBC driver returns COLUMN_SIZE that is sum of precision and scale
+                val adjustedColumnSize = if (dialect is SQLiteDialect && columnMeta.scale != null) {
+                    columnMeta.size - columnMeta.scale
+                } else {
+                    columnMeta.size
+                }
+                columnType.precision != adjustedColumnSize || columnType.scale != columnMeta.scale
+            }
             is CharColumnType -> columnType.colLength != columnMeta.size
             is VarCharColumnType -> columnType.colLength != columnMeta.size
             is BinaryColumnType -> if (dialect is PostgreSQLDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.PostgreSQL) {
@@ -503,7 +549,10 @@ abstract class SchemaUtilityApi {
         return currentDialect.addPrimaryKey(this, missingPKName, pkColumns = missingPK.columns)
     }
 
-    /** Runs the provided [block] and returns the result. If [withLogs] is `true`, logs the time taken in milliseconds. */
+    /**
+     * Runs the provided [block] and returns the result. If [withLogs] is `true`, logs the time taken in milliseconds.
+     * @suppress
+     */
     @InternalApi
     protected inline fun <R> logTimeSpent(message: String, withLogs: Boolean, block: () -> R): R {
         return if (withLogs) {
@@ -515,80 +564,18 @@ abstract class SchemaUtilityApi {
             block()
         }
     }
-
-    // TODO extract tp separate file & move this top-level internal class
-    private class TableDepthGraph(val tables: Iterable<Table>) {
-        val graph = fetchAllTables().let { tables ->
-            if (tables.isEmpty()) {
-                emptyMap()
-            } else {
-                tables.associateWith { t ->
-                    t.foreignKeys.map { it.targetTable }
-                }
-            }
-        }
-
-        private fun fetchAllTables(): HashSet<Table> {
-            val result = HashSet<Table>()
-            fun parseTable(table: Table) {
-                if (result.add(table)) {
-                    table.foreignKeys.map { it.targetTable }.forEach(::parseTable)
-                }
-            }
-            tables.forEach(::parseTable)
-            return result
-        }
-
-        fun sorted(): List<Table> {
-            if (!tables.iterator().hasNext()) return emptyList()
-            val visited = mutableSetOf<Table>()
-            val result = arrayListOf<Table>()
-            fun traverse(table: Table) {
-                if (table !in visited) {
-                    visited += table
-                    graph.getValue(table).forEach { t ->
-                        if (t !in visited) {
-                            traverse(t)
-                        }
-                    }
-                    result += table
-                }
-            }
-            tables.forEach(::traverse)
-            return result
-        }
-
-        fun hasCycle(): Boolean {
-            if (!tables.iterator().hasNext()) return false
-            val visited = mutableSetOf<Table>()
-            val recursion = mutableSetOf<Table>()
-            val sortedTables = sorted()
-            fun traverse(table: Table): Boolean {
-                if (table in recursion) return true
-                if (table in visited) return false
-                recursion += table
-                visited += table
-                return if (graph[table]!!.any { traverse(it) }) {
-                    true
-                } else {
-                    recursion -= table
-                    false
-                }
-            }
-            return sortedTables.any { traverse(it) }
-        }
-    }
 }
 
 /**
  * Utility functions that assist with creating, altering, and dropping table objects.
  *
  * None of the functions rely directly on the underlying driver.
+ * @suppress
  */
 @InternalApi
 object TableUtils : SchemaUtilityApi() {
     /** Checks whether any of the [tables] have a sequence of foreign key constraints that cycle back to them. */
-    internal fun checkCycle(vararg tables: Table) = tables.toList().hasCycle()
+    internal fun checkCycle(vararg tables: Table) = tables.asList().hasCycle()
 
     /** Returns a list of [tables] sorted according to the targets of their foreign key constraints, if any exist. */
     fun sortTablesByReferences(tables: Iterable<Table>): List<Table> = tables.sortByReferences()

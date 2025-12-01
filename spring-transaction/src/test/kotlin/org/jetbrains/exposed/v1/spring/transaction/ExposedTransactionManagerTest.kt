@@ -8,8 +8,10 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.test.annotation.Commit
 import org.springframework.test.annotation.Repeat
 import org.springframework.transaction.IllegalTransactionStateException
@@ -19,8 +21,6 @@ import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import java.sql.SQLTimeoutException
 import java.util.*
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlin.test.fail
@@ -37,7 +37,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         }
     }
 
-    @BeforeTest
+    @BeforeEach
     fun beforeTest() {
         transactionManager.execute {
             SchemaUtils.create(T1)
@@ -76,7 +76,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
             }
             assertEquals(rnd, T1.selectAll().single()[T1.c1])
 
-            transactionManager.execute {
+            this@ExposedTransactionManagerTest.transactionManager.execute {
                 T1.insertRandom()
                 assertEquals(2, T1.selectAll().count())
             }
@@ -331,7 +331,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         }
     }
 
-    @AfterTest
+    @AfterEach
     fun afterTest() {
         transactionManager.execute {
             SchemaUtils.drop(T1)

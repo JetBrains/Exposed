@@ -2,8 +2,10 @@ package org.jetbrains.exposed.v1.jdbc.statements.jdbc
 
 import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.Sequence
+import org.jetbrains.exposed.v1.core.statements.api.ExposedMetadataUtils
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
+import org.jetbrains.exposed.v1.core.utils.CachableMapWithDefault
+import org.jetbrains.exposed.v1.core.utils.CacheWithDefault
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect.H2CompatibilityMode
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -11,10 +13,10 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcExposedDatabaseMetadata
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import java.math.BigDecimal
+import java.sql.Connection
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
 import java.sql.SQLException
-import java.sql.Types
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -58,16 +60,16 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
     override val databaseDialectMode: String? by lazy {
         val dialect = currentDialect
-        if (dialect !is H2Dialect) null
+        if (dialect !is H2Dialect) return@lazy null
 
         val (settingNameField, settingValueField) = when ((dialect as H2Dialect).majorVersion) {
-            H2Dialect.H2MajorVersion.One -> "NAME" to "VALUE"
             H2Dialect.H2MajorVersion.Two -> "SETTING_NAME" to "SETTING_VALUE"
+            else -> error("Unsupported H2 version")
         }
 
         @Language("H2")
         val modeQuery = "SELECT $settingValueField FROM INFORMATION_SCHEMA.SETTINGS WHERE $settingNameField = 'MODE'"
-        TransactionManager.current().exec(modeQuery) { rs ->
+        metadata.connection.executeSQL(modeQuery) { rs ->
             rs.iterate { getString(settingValueField) }
         }?.firstOrNull()
     }
@@ -88,8 +90,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return when (currentDialect) {
             is SQLiteDialect -> {
                 try {
-                    val transaction = TransactionManager.current()
-                    transaction.exec("""SELECT sqlite_compileoption_used("ENABLE_UPDATE_DELETE_LIMIT");""") { rs ->
+                    metadata.connection.executeSQL("""SELECT sqlite_compileoption_used("ENABLE_UPDATE_DELETE_LIMIT");""") { rs ->
                         rs.next()
                         rs.getBoolean(1)
                     } == true
@@ -128,7 +129,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         currentSchema = null
     }
 
-    override val tableNames: Map<String, List<String>>
+    override val tableNames: CacheWithDefault<String, List<String>>
         @OptIn(InternalApi::class)
         get() = CachableMapWithDefault(default = { schemeName ->
             tableNamesFor(schemeName)
@@ -166,26 +167,33 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return schemas.map { identifierManager.inProperCase(it) }
     }
 
-    override fun tableNamesByCurrentSchema(tableNamesCache: Map<String, List<String>>?): SchemaMetadata {
-        val tablesInSchema = (tableNamesCache ?: tableNames).getValue(currentSchema!!)
+    override fun tableNamesByCurrentSchema(tableNamesCache: CacheWithDefault<String, List<String>>?): SchemaMetadata {
+        val tablesInSchema = tableNamesCache?.get(currentSchema!!) ?: tableNames.get(currentSchema!!)
         return SchemaMetadata(currentSchema!!, tablesInSchema)
     }
 
-    private fun ResultSet.extractColumns(tableName: String): List<ColumnMetadata> {
+    @OptIn(InternalApi::class)
+    private fun JdbcResult.extractColumns(tableName: String): List<ColumnMetadata> {
         val prefetchedColumnTypes = fetchAllColumnTypes(tableName)
         val result = mutableListOf<ColumnMetadata>()
         while (next()) {
-            result.add(asColumnMetadata(prefetchedColumnTypes))
+            with(ExposedMetadataUtils) {
+                result.add(asColumnMetadata(prefetchedColumnTypes))
+            }
         }
         return result
     }
 
-    /** Returns a map of all the columns' names mapped to their type. */
+    /**
+     * Returns a map of all the columns' names mapped to their type.
+     *
+     * Currently, only H2Dialect will actually return a result.
+     */
     private fun fetchAllColumnTypes(tableName: String): Map<String, String> {
         if (currentDialect !is H2Dialect) return emptyMap()
 
         val map = mutableMapOf<String, String>()
-        TransactionManager.current().exec("SHOW COLUMNS FROM $tableName") { rs ->
+        metadata.connection.executeSQL("SHOW COLUMNS FROM $tableName") { rs ->
             while (rs.next()) {
                 val field = rs.getString("FIELD")
                 val type = rs.getString("TYPE").uppercase()
@@ -203,48 +211,17 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         for ((schema, schemaTables) in tablesBySchema.entries) {
             for (table in schemaTables) {
                 val catalog = if (!useSchemaInsteadOfDatabase || schema == currentSchema!!) databaseName else schema
-                val rs = metadata.getColumns(catalog, schema, table.nameInDatabaseCaseUnquoted(), "%")
+                val rs = JdbcResult(
+                    metadata.getColumns(catalog, schema, table.nameInDatabaseCaseUnquoted(), "%")
+                )
                 val columns = rs.extractColumns(tableName = table.nameInDatabaseCase())
                 check(columns.isNotEmpty())
                 result[table] = columns
-                rs.close()
+                rs.result.close()
             }
         }
 
         return result
-    }
-
-    // All H2 V1 databases are excluded because Exposed will be dropping support for it soon
-    @OptIn(InternalApi::class)
-    private fun getColumnType(resultSet: ResultSet, prefetchedColumnTypes: Map<String, String>): String {
-        if (currentDialect !is H2Dialect) {
-            return ""
-        }
-
-        val columnName = resultSet.getString("COLUMN_NAME")
-        val columnType = prefetchedColumnTypes[columnName] ?: resultSet.getString("TYPE_NAME").uppercase()
-        val dataType = resultSet.getInt("DATA_TYPE")
-        return if (dataType == Types.ARRAY) {
-            val baseType = columnType.substringBefore(" ARRAY")
-            normalizedColumnType(baseType) + columnType.replaceBefore(" ARRAY", "")
-        } else {
-            normalizedColumnType(columnType)
-        }
-    }
-
-    @OptIn(InternalApi::class)
-    private fun ResultSet.asColumnMetadata(prefetchedColumnTypes: Map<String, String> = emptyMap()): ColumnMetadata {
-        @OptIn(InternalApi::class)
-        val defaultDbValue = getString("COLUMN_DEF")?.let { sanitizedDefault(it) }
-        val autoIncrement = getString("IS_AUTOINCREMENT") == "YES"
-        val type = getInt("DATA_TYPE")
-        val name = getString("COLUMN_NAME")
-        val nullable = getBoolean("NULLABLE")
-        val size = getInt("COLUMN_SIZE").takeIf { it != 0 }
-        val scale = getInt("DECIMAL_DIGITS").takeIf { it != 0 }
-        val sqlType = getColumnType(this, prefetchedColumnTypes)
-
-        return ColumnMetadata(name, type, sqlType, nullable, size, scale, autoIncrement, defaultDbValue?.takeIf { !autoIncrement })
     }
 
     private val existingIndicesCache = HashMap<Table, List<Index>>()
@@ -321,7 +298,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         tables.forEach { table ->
             val transaction = TransactionManager.current()
             val checkConstraints = mutableListOf<CheckConstraint>()
-            transaction.exec(
+            metadata.connection.executeSQL(
                 """
                     SELECT tc.CONSTRAINT_NAME, cc.CHECK_CLAUSE
                     FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
@@ -347,6 +324,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     }
 
     override fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> {
+        val isSqlite = currentDialect is SQLiteDialect
         return tables.associateWith { table ->
             val (catalog, tableSchema) = tableCatalogAndSchema(table)
             metadata.getPrimaryKeys(catalog, tableSchema, table.nameInDatabaseCaseUnquoted()).let { rs ->
@@ -357,7 +335,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                     columnNames += rs.getString("COLUMN_NAME")
                 }
                 rs.close()
-                if (pkName.isEmpty()) null else PrimaryKeyMetadata(pkName, columnNames)
+                // SQLite is the only supported database that does not assign a name to an unnamed primary key constraint.
+                // So it is possible for the result set to have rows with primary key columns etc., but empty PK_NAME field
+                if (pkName.isEmpty() && (!isSqlite || columnNames.isEmpty())) null else PrimaryKeyMetadata(pkName, columnNames)
             }
         }
     }
@@ -365,10 +345,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     override fun existingSequences(vararg tables: Table): Map<Table, List<Sequence>> {
         if (currentDialect !is PostgreSQLDialect) return emptyMap()
 
-        val transaction = TransactionManager.current()
         return tables.associateWith { table ->
             val (_, tableSchema) = tableCatalogAndSchema(table)
-            transaction.exec(
+            metadata.connection.executeSQL(
                 """
                     SELECT seq_details.sequence_name,
                     seq_details.start,
@@ -422,16 +401,15 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     @Suppress("MagicNumber")
     override fun sequences(): List<String> {
         val dialect = currentDialect
-        val transaction = TransactionManager.current()
         val fieldName = "SEQUENCE_NAME"
         return when (dialect) {
-            is OracleDialect -> transaction.exec("SELECT $fieldName FROM USER_SEQUENCES") { rs ->
+            is OracleDialect -> metadata.connection.executeSQL("SELECT $fieldName FROM USER_SEQUENCES") { rs ->
                 rs.iterate {
                     val seqName = getString(fieldName)
                     if (identifierManager.isDotPrefixedAndUnquoted(seqName)) "\"$seqName\"" else seqName
                 }
             }
-            is H2Dialect -> transaction.exec("SELECT $fieldName FROM INFORMATION_SCHEMA.SEQUENCES") { rs ->
+            is H2Dialect -> metadata.connection.executeSQL("SELECT $fieldName FROM INFORMATION_SCHEMA.SEQUENCES") { rs ->
                 rs.iterate {
                     val seqName = getString(fieldName)
                     if (dialect.h2Mode == H2CompatibilityMode.Oracle && identifierManager.isDotPrefixedAndUnquoted(seqName)) {
@@ -441,7 +419,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                     }
                 }
             }
-            is SQLServerDialect -> transaction.exec("SELECT name AS $fieldName FROM sys.sequences") { rs ->
+            is SQLServerDialect -> metadata.connection.executeSQL("SELECT name AS $fieldName FROM sys.sequences") { rs ->
                 rs.iterate {
                     getString(fieldName)
                 }
@@ -459,11 +437,10 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val dialect = currentDialect
 
         return if (dialect is MysqlDialect) {
-            val transaction = TransactionManager.current()
             val inTableList = allTables.keys.joinToString("','", prefix = " ku.TABLE_NAME IN ('", postfix = "')")
             val tableSchema = "'${tables.mapNotNull { it.schemaName }.toSet().singleOrNull() ?: currentSchema}'"
             val constraintsToLoad = HashMap<String, MutableMap<String, ForeignKeyConstraint>>()
-            transaction.exec(
+            metadata.connection.executeSQL(
                 """
                     SELECT
                       rc.CONSTRAINT_NAME AS FK_NAME,
@@ -542,7 +519,6 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         )
     }
 
-    @OptIn(InternalApi::class)
     override fun resolveReferenceOption(refOption: String): ReferenceOption? {
         val dialect = currentDialect
 
@@ -604,5 +580,19 @@ private fun <T> ResultSet.iterate(body: ResultSet.() -> T): List<T> {
         result.add(body())
     }
     close()
+    return result
+}
+
+private fun <T : Any> Connection.executeSQL(
+    sqlQuery: String,
+    transform: (ResultSet) -> T?
+): T? {
+    if (sqlQuery.isEmpty()) return null
+
+    val stmt = createStatement()
+    val rs = stmt.executeQuery(sqlQuery)
+    val result = transform(rs)
+    if (!rs.isClosed) rs.close()
+    stmt.close()
     return result
 }

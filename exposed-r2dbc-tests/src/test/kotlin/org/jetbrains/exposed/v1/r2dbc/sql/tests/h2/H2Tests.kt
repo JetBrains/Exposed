@@ -4,13 +4,14 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.core.avg
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
-import org.jetbrains.exposed.v1.r2dbc.batchInsert
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
+import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.replace
 import org.jetbrains.exposed.v1.r2dbc.select
@@ -19,11 +20,12 @@ import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.v1.r2dbc.tests.getString
-import org.jetbrains.exposed.v1.r2dbc.tests.inProperCase
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
+import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.transactionManager
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertNotEquals
@@ -39,13 +41,10 @@ class H2Tests : R2dbcDatabaseTestsBase() {
                     it.getString(1)
                 }?.first()
 
-                assertTrue(systemTestName == "h2_v2" || systemTestName == "h2_v1")
+                assertTrue(systemTestName == "h2_v2")
                 if (systemTestName == "h2_v2") {
                     assertNotEquals("2.1.214", version)
                     assertEquals("2", version?.first()?.toString())
-                }
-                if (systemTestName == "h2_v1") {
-                    assertEquals("1", version?.first()?.toString())
                 }
             }
         }
@@ -78,21 +77,21 @@ class H2Tests : R2dbcDatabaseTestsBase() {
     @Test
     fun closeAndUnregister() {
         withDb(TestDB.H2_V2) { testDB ->
-            val originalManager = org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.manager
+            val originalManager = TransactionManager.manager
             val db = requireNotNull(testDB.db) { "testDB.db cannot be null" }
             try {
-                @OptIn(InternalApi::class)
-                CoreTransactionManager.registerDatabaseManager(db, WrappedTransactionManager(db.transactionManager))
+                TransactionManager.registerManager(db, WrappedTransactionManager(db.transactionManager))
                 Executors.newSingleThreadExecutor().apply {
-                    submit { org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.closeAndUnregister(db) }
+                    submit { TransactionManager.closeAndUnregister(db) }
                         .get(1, TimeUnit.SECONDS)
                 }.shutdown()
             } finally {
-                org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.registerManager(db, originalManager)
+                TransactionManager.registerManager(db, originalManager)
             }
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun addAutoPrimaryKey() {
         val tableName = "Foo"
@@ -103,7 +102,7 @@ class H2Tests : R2dbcDatabaseTestsBase() {
 
         withDb(listOf(TestDB.H2_V2, TestDB.H2_V2_MYSQL)) {
             try {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(initialTable)
+                SchemaUtils.createMissingTablesAndColumns(initialTable)
                 assertEquals(
                     "ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()}",
                     t.id.ddl.first()
@@ -113,28 +112,29 @@ class H2Tests : R2dbcDatabaseTestsBase() {
                     t.id.ddl[1]
                 )
                 assertEquals(1, currentDialectMetadataTest.tableColumns(t)[t]!!.size)
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(t)
+                SchemaUtils.createMissingTablesAndColumns(t)
                 assertEquals(2, currentDialectMetadataTest.tableColumns(t)[t]!!.size)
             } finally {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(t)
+                SchemaUtils.drop(t)
             }
         }
     }
 
     @Test
-    fun testH2V1WithBigDecimalFunctionThatReturnsShort() {
-        val testTable = object : Table("test_table") {
-            val number = short("number")
+    fun testH2UUIDConversionWithBinary16ColumnType() {
+        val testTable = object : UUIDTable("test_table") {
         }
 
-        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_H2, testTable) {
-            testTable.batchInsert(listOf<Short>(2, 4, 6, 8, 10)) { n ->
-                this[testTable.number] = n
-            }
+        withDb(TestDB.ALL_H2_V2) {
+            exec("CREATE TABLE test_table (id BINARY(16) NOT NULL, CONSTRAINT PK_TEST_TABLE PRIMARY KEY (id))")
 
-            val average = testTable.number.avg()
-            val result = testTable.select(average).single()[average]
-            assertEquals("6.00".toBigDecimal(), result)
+            val uuid = UUID.randomUUID()
+
+            testTable.insert { it[testTable.id] = uuid }
+
+            val actualId = testTable.select(testTable.id).single()[testTable.id].value
+
+            assertEquals(uuid, actualId)
         }
     }
 

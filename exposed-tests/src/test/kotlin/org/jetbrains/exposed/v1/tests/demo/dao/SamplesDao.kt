@@ -3,14 +3,14 @@ package org.jetbrains.exposed.v1.tests.demo.dao
 import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
-import org.jetbrains.exposed.v1.jdbc.addLogger
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.TestDB
-import org.junit.Assume
+import org.junit.jupiter.api.Assumptions
 import kotlin.test.Test
 
 object Users : IntIdTable() {
@@ -39,7 +39,7 @@ class City(id: EntityID<Int>) : IntEntity(id) {
 }
 
 fun main() {
-    Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+    Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
     Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver", user = "root", password = "")
 
     transaction {

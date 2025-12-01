@@ -7,7 +7,7 @@ import org.jetbrains.exposed.v1.core.ColumnWithTransform
 /**
  * Binary column for storing encrypted binary strings of a specific [length], using the provided [encryptor].
  *
- * @sample org.jetbrains.exposed.crypt.encryptedBinary
+ * @sample org.jetbrains.exposed.v1.crypt.encryptedBinary
  */
 class EncryptedBinaryColumnType(
     private val encryptor: Encryptor,

@@ -4,17 +4,23 @@ package org.jetbrains.exposed.v1.core
  * Represents differences between a column definition and database metadata for the existing column.
  */
 data class ColumnDiff(
-    /** Whether there is a mismatch between nullability of the existing column and the defined column. */
+    /** Whether there is a mismatch between the nullability of the existing column and that the defined column. */
     val nullability: Boolean,
-    /** Whether there is a mismatch between type of the existing column and the defined column. */
+    /** Whether there is a mismatch between the type of the existing column and that of the defined column. */
     val type: Boolean,
-    /** Whether there is a mismatch between auto-increment status of the existing column and the defined column. */
+    /** Whether there is a mismatch between the auto-increment status of the existing column and that of the defined column. */
     val autoInc: Boolean,
-    /** Whether the default value of the existing column matches that of the defined column. */
+    /** Whether there is a mismatch between the default value of the existing column and that of the defined column. */
     val defaults: Boolean,
-    /** Whether the existing column identifier matches that of the defined column and has the correct casing. */
+    /**
+     * Whether there is a mismatch between the identifier of the existing column and that of the defined column,
+     * both for the string value itself and for the casing.
+     */
     val caseSensitiveName: Boolean,
-    /** Whether the size and scale of the existing column, if applicable, match those of the defined column. */
+    /**
+     * Whether there is a mismatch between the size and scale of the existing column, if applicable,
+     * and those values of the defined column.
+     */
     val sizeAndScale: Boolean,
 ) {
     /** Returns `true` if there is a difference between the column definition and the existing column in the database. */

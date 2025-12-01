@@ -14,7 +14,7 @@
         </description>
 
         <spotlight>
-            <a href="Getting-Started-with-Exposed.topic" type="learn"
+            <a href="Get-Started-with-Exposed.topic" type="learn"
                summary="Learn how to create and query tables in Kotlin with Exposed DSL API">
                 Get Started with Exposed
             </a>
@@ -44,7 +44,7 @@
             <a href="Contributing.md" summary="Learn how to contribute to Exposed">
                 Contributing to Exposed
             </a>
-            <a href="Migration-Guide.md" summary="Check how to update to the latest Exposed version">
+            <a href="Migration-Guide-1-0-0.md" summary="Check how to update to the latest Exposed version">
                 Migration Guide
             </a>
         </secondary>

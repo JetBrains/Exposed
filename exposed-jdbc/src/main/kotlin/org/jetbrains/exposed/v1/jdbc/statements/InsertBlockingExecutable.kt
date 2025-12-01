@@ -4,15 +4,17 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.InsertStatement
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
 import org.jetbrains.exposed.v1.jdbc.statements.jdbc.JdbcResult
-import org.jetbrains.exposed.v1.jdbc.statements.jdbc.inProperCase
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import java.sql.ResultSet
 import java.sql.SQLException
 
-// TODO KDocs should be added
+/**
+ * Represents the execution logic for an SQL statement that inserts a new row into a table.
+ */
 open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
     override val statement: S
 ) : BlockingExecutable<Int, S> {
@@ -44,9 +46,11 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
         columnsGeneratedOnDB().isNotEmpty() && currentDialect is PostgreSQLDialect ->
             transaction.connection.prepareStatement(sql, true)
 
-        autoIncColumns.isNotEmpty() ->
+        autoIncColumns.isNotEmpty() -> {
             // http://viralpatel.net/blogs/oracle-java-jdbc-get-primary-key-insert-sql/
+            @OptIn(InternalApi::class)
             transaction.connection.prepareStatement(sql, autoIncColumns.map { it.name.inProperCase() }.toTypedArray())
+        }
 
         else -> transaction.connection.prepareStatement(sql, false)
     }

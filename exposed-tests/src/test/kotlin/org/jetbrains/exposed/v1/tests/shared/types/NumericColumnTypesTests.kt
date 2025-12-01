@@ -1,4 +1,5 @@
 package org.jetbrains.exposed.v1.tests.shared.types
+
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.functions.math.RoundFunction
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
@@ -11,7 +12,7 @@ import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 class NumericColumnTypesTests : DatabaseTestsBase() {

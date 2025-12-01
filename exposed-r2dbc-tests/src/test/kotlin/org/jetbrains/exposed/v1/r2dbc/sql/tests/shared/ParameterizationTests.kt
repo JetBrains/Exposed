@@ -3,17 +3,17 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.v1.core.BooleanColumnType
 import org.jetbrains.exposed.v1.core.IntegerColumnType
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.VarCharColumnType
 import org.jetbrains.exposed.v1.core.statements.StatementType
-import org.jetbrains.exposed.v1.r2dbc.addLogger
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
-import org.jetbrains.exposed.v1.r2dbc.tests.inProperCase
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -41,6 +41,7 @@ class ParameterizationTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testSingleParametersWithMultipleStatements() {
         withTables(excludeSettings = multipleStatementsNotSupported, TempTable) {
@@ -72,6 +73,7 @@ class ParameterizationTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testMultipleParametersWithMultipleStatements() {
         val tester = object : Table("tester") {

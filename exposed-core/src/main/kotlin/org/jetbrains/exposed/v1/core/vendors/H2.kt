@@ -2,7 +2,7 @@ package org.jetbrains.exposed.v1.core.vendors
 
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.StatementType
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.exceptions.throwUnsupportedException
 import java.sql.Types
 import java.util.*
@@ -14,7 +14,18 @@ internal object H2DataTypeProvider : DataTypeProvider() {
 
     override fun uuidToDB(value: UUID): Any = value
 
-    override fun dateTimeType(): String = "DATETIME(9)"
+    override fun dateTimeType(): String {
+        @Suppress("MagicNumber")
+        @OptIn(InternalApi::class)
+        val breakingVersion = Version(2, 4, 240)
+
+        @OptIn(InternalApi::class)
+        val currentVersion = Version.from(
+            currentTransaction().db.fullVersion.substringBefore('(').trim()
+        )
+
+        return if (currentVersion.covers(breakingVersion)) timestampType() else "DATETIME(9)"
+    }
 
     override fun timestampType(): String = "TIMESTAMP(9)"
 
@@ -31,11 +42,11 @@ internal object H2FunctionProvider : FunctionProvider() {
 
     override fun nextVal(seq: Sequence, builder: QueryBuilder) =
         @OptIn(InternalApi::class)
-        when ((CoreTransactionManager.currentTransaction().db.dialect as H2Dialect).majorVersion) {
-            H2Dialect.H2MajorVersion.One -> super.nextVal(seq, builder)
+        when ((currentTransaction().db.dialect as H2Dialect).majorVersion) {
             H2Dialect.H2MajorVersion.Two -> builder {
                 append("NEXT VALUE FOR ${seq.identifier}")
             }
+            else -> error("Unsupported H2 version")
         }
 
     override fun <T> arraySlice(expression: Expression<T>, lower: Int?, upper: Int?, queryBuilder: QueryBuilder) {
@@ -200,25 +211,41 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     override fun toString(): String = "H2Dialect[$dialectName, $h2Mode]"
 
+    /** Represents the major version number x.0.0 of the H2 Database. */
     enum class H2MajorVersion {
-        One, Two
+        @Deprecated(
+            message = "This H2 database version is no longer supported and will be removed in release 1.0.0.",
+            level = DeprecationLevel.ERROR
+        )
+        One,
+
+        /** H2 database version 2.0.0+. */
+        Two,
     }
 
     @OptIn(InternalApi::class)
     internal val version by lazy {
-        exactH2Version(CoreTransactionManager.currentTransaction())
+        exactH2Version(currentTransaction())
     }
 
+    /**
+     * Returns the [H2MajorVersion] for the current H2 database being used.
+     *
+     * @throws IllegalStateException If the major version is not 2.x.x.
+     */
     val majorVersion: H2MajorVersion by lazy {
         when {
-            version.startsWith("1.") -> H2MajorVersion.One
             version.startsWith("2.") -> H2MajorVersion.Two
             else -> error("Unsupported H2 version: $version")
         }
     }
 
-    /** Indicates whether the H2 Database Engine version is greater than or equal to 2.0. */
-    val isSecondVersion get() = majorVersion == H2MajorVersion.Two
+    /**
+     * Indicates whether the H2 Database Engine version is greater than or equal to 2.0.
+     *
+     * @throws IllegalStateException If the major version is not 2.x.x.
+     */
+    val isSecondVersion: Boolean get() = majorVersion == H2MajorVersion.Two
 
     private fun exactH2Version(transaction: Transaction): String = transaction.db.version.toString()
 
@@ -267,7 +294,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     /** The H2 database compatibility mode retrieved from metadata. */
     val h2Mode: H2CompatibilityMode? by lazy {
         @OptIn(InternalApi::class)
-        val modeValue = CoreTransactionManager.currentTransaction().db.dialectMode
+        val modeValue = currentTransaction().db.dialectMode
         when {
             modeValue == null -> null
             modeValue.equals("MySQL", ignoreCase = true) -> H2CompatibilityMode.MySQL
@@ -303,13 +330,19 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     override val supportsDualTableConcept: Boolean by lazy { resolveDelegatedDialect()?.supportsDualTableConcept ?: super.supportsDualTableConcept }
     override val supportsOrderByNullsFirstLast: Boolean by lazy { resolveDelegatedDialect()?.supportsOrderByNullsFirstLast ?: super.supportsOrderByNullsFirstLast }
     override val supportsWindowFrameGroupsMode: Boolean by lazy { resolveDelegatedDialect()?.supportsWindowFrameGroupsMode ?: super.supportsWindowFrameGroupsMode }
-    override val supportsColumnTypeChange: Boolean get() = isSecondVersion
+    override val supportsColumnTypeChange: Boolean get() = true
+
+    @Deprecated(
+        "The parameter was moved to JdbcExposedDatabaseMetadata/R2dbcExposedDatabaseMetadata classes",
+        ReplaceWith("TransactionManager.current().db.supportsSelectForUpdate")
+    )
+    override val supportsSelectForUpdate: Boolean get() = true
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
     override fun createIndex(index: Index): String {
         if (
-            (majorVersion == H2MajorVersion.One || h2Mode == H2CompatibilityMode.Oracle) &&
+            h2Mode == H2CompatibilityMode.Oracle &&
             index.columns.any { it.columnType is TextColumnType }
         ) {
             exposedLogger.warn("Index on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created on CLOB in H2")
@@ -330,16 +363,26 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
         return super.createIndex(index)
     }
 
-    override fun createDatabase(name: String) = "CREATE SCHEMA IF NOT EXISTS ${name.inProperCase()}"
+    override fun createDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "CREATE SCHEMA IF NOT EXISTS ${name.inProperCase()}"
+    }
 
     override fun listDatabases(): String = "SHOW SCHEMAS"
 
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> =
         super.modifyColumn(column, columnDiff).map { it.replace("MODIFY COLUMN", "ALTER COLUMN") }
 
-    override fun dropDatabase(name: String) = "DROP SCHEMA IF EXISTS ${name.inProperCase()}"
+    override fun dropDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "DROP SCHEMA IF EXISTS ${name.inProperCase()}"
+    }
 
     @Suppress("CyclomaticComplexMethod")
+    @Deprecated(
+        "This method was moved to ExposedDatabaseMetadata and should not be used anymore from here.",
+        ReplaceWith("currentDialectMetadata.areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataJdbcType, columnType)")
+    )
     override fun areEquivalentColumnTypes(columnMetadataSqlType: String, columnMetadataJdbcType: Int, columnType: String): Boolean {
         if (super.areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataJdbcType, columnType)) {
             return true

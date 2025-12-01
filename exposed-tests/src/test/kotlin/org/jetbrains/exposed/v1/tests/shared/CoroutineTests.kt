@@ -1,10 +1,11 @@
 package org.jetbrains.exposed.v1.tests.shared
 
 import kotlinx.coroutines.*
-import kotlinx.coroutines.debug.junit4.CoroutinesTimeout
+import kotlinx.coroutines.debug.junit5.CoroutinesTimeout
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
@@ -15,10 +16,9 @@ import org.jetbrains.exposed.v1.jdbc.transactions.experimental.suspendedTransact
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.withSuspendTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.RepeatableTest
 import org.jetbrains.exposed.v1.tests.TestDB
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.RepeatedTest
+import org.junit.jupiter.api.Test
 import java.sql.Connection
 import java.util.concurrent.Executors
 import kotlin.test.assertNotNull
@@ -35,12 +35,8 @@ class CoroutineTests : DatabaseTestsBase() {
         val id = integer("id").uniqueIndex()
     }
 
-    @Rule
-    @JvmField
-    val timeout = CoroutinesTimeout.seconds(60)
-
-    @Test
-    @RepeatableTest(10)
+    @RepeatedTest(10)
+    @CoroutinesTimeout(60000)
     fun suspendedTx() {
         withTables(Testing) {
             val mainJob = GlobalScope.async(singleThreadDispatcher) {
@@ -68,8 +64,8 @@ class CoroutineTests : DatabaseTestsBase() {
         }
     }
 
-    @Test
-    @RepeatableTest(10)
+    @RepeatedTest(10)
+    @CoroutinesTimeout(60000)
     fun testSuspendTransactionWithRepetition() {
         withTables(TestingUnique) {
             val (originalId, updatedId) = 1 to 99
@@ -113,8 +109,8 @@ class CoroutineTests : DatabaseTestsBase() {
         }
     }
 
-    @Test
-    @RepeatableTest(10)
+    @RepeatedTest(10)
+    @CoroutinesTimeout(60000)
     fun suspendTxAsync() {
         withTables(Testing) {
             val job = GlobalScope.async {
@@ -149,8 +145,8 @@ class CoroutineTests : DatabaseTestsBase() {
         }
     }
 
-    @Test
-    @RepeatableTest(10)
+    @RepeatedTest(10)
+    @CoroutinesTimeout(60000)
     fun testSuspendTransactionAsyncWithRepetition() {
         withTables(excludeSettings = listOf(TestDB.SQLITE), TestingUnique) {
             val (originalId, updatedId) = 1 to 99
@@ -189,8 +185,8 @@ class CoroutineTests : DatabaseTestsBase() {
         }
     }
 
-    @Test
-    @RepeatableTest(10)
+    @RepeatedTest(10)
+    @CoroutinesTimeout(60000)
     fun nestedSuspendTxTest() {
         suspend fun insertTesting(db: Database) = newSuspendedTransaction(db = db) {
             Testing.insert {}
@@ -228,8 +224,8 @@ class CoroutineTests : DatabaseTestsBase() {
         }
     }
 
-    @Test
-    @RepeatableTest(10)
+    @RepeatedTest(10)
+    @CoroutinesTimeout(60000)
     fun nestedSuspendAsyncTxTest() {
         withTables(listOf(TestDB.H2_V2, TestDB.H2_V2_MYSQL, TestDB.SQLITE), Testing) {
             val mainJob = GlobalScope.async {
@@ -261,8 +257,8 @@ class CoroutineTests : DatabaseTestsBase() {
         }
     }
 
-    @Test
-    @RepeatableTest(10)
+    @RepeatedTest(10)
+    @CoroutinesTimeout(60000)
     fun awaitAllTest() {
         withTables(listOf(TestDB.SQLITE), Testing) {
             val mainJob = GlobalScope.async {
@@ -283,8 +279,8 @@ class CoroutineTests : DatabaseTestsBase() {
         }
     }
 
-    @Test
-    @RepeatableTest(10)
+    @RepeatedTest(10)
+    @CoroutinesTimeout(60000)
     fun suspendedAndNormalTransactions() {
         withTables(Testing) {
             val db = this.db
@@ -324,6 +320,7 @@ class CoroutineTests : DatabaseTestsBase() {
     }
 
     @Test
+    @CoroutinesTimeout(60000)
     fun testCoroutinesWithExceptionWithin() {
         withTables(Testing) {
             val id = Testing.insertAndGetId {}

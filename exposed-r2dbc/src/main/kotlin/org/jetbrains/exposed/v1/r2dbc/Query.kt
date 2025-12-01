@@ -3,20 +3,17 @@ package org.jetbrains.exposed.v1.r2dbc
 import io.r2dbc.spi.R2dbcException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greater
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.less
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
-import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.r2dbc.statements.SuspendExecutable
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcResult
-import org.jetbrains.exposed.v1.r2dbc.statements.api.rowsCount
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 
 /** Class representing an SQL `SELECT` statement on which query clauses can be built. */
@@ -43,7 +40,7 @@ open class Query(
 
     override fun forUpdate(option: ForUpdateOption): Query {
         @OptIn(InternalApi::class)
-        this.forUpdate = if (option is ForUpdateOption.NoForUpdateOption || currentDialect.supportsSelectForUpdate) {
+        this.forUpdate = if (option is ForUpdateOption.NoForUpdateOption || transaction.db.supportsSelectForUpdate) {
             option
         } else {
             null
@@ -95,7 +92,7 @@ open class Query(
      *
      * @param body Builder for the new column set defined using `select()`, with the current [set]'s `source`
      * property used as the receiver and the current [set] as an argument.
-     * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.AdjustQueryTests.testAdjustQuerySlice
+     * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.AdjustQueryTests.testAdjustQuerySlice
      */
     inline fun adjustSelect(body: ColumnSet.(FieldSet) -> Query): Query = apply { set = set.source.body(set).set }
 
@@ -104,7 +101,7 @@ open class Query(
      * while preserving its `fields` property.
      *
      * @param body Builder for the new column set, with the previous column set value as the receiver.
-     * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryColumnSet
+     * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryColumnSet
      */
     inline fun adjustColumnSet(body: ColumnSet.() -> ColumnSet): Query {
         return adjustSelect { oldSlice -> body().select(oldSlice.fields) }
@@ -114,21 +111,21 @@ open class Query(
      * Changes the [where] field of this query.
      *
      * @param body Builder for the new `WHERE` condition, with the previous value used as the receiver.
-     * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryWhere
+     * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryWhere
      */
     fun adjustWhere(body: Op<Boolean>?.() -> Op<Boolean>): Query = apply { where = where.body() }
 
     /**
      * Appends a `WHERE` clause with the specified [predicate] to this `SELECT` query.
      *
-     * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.SelectTests.testSelect
+     * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.SelectTests.testSelect
      */
-    fun where(predicate: SqlExpressionBuilder.() -> Op<Boolean>): Query = where(SqlExpressionBuilder.predicate())
+    fun where(predicate: () -> Op<Boolean>): Query = where(predicate())
 
     /**
      * Appends a `WHERE` clause with the specified [predicate] to this `SELECT` query.
      *
-     * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.ExistsTests.testExists01
+     * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.ExistsTests.testExists01
      */
     fun where(predicate: Op<Boolean>): Query {
         where?.let {
@@ -144,11 +141,17 @@ open class Query(
      *
      * This query's [FieldSet] will be ordered by the first auto-increment column.
      *
+     * **Note:** There is a possibility that the final batched sub-collection emitted may be empty, as the flow of results
+     * cannot be pre-checked before being yielded. Whether the amount of results retrieved is less than the provided batch
+     * size will not be determined until the batch is consumed on the user-end, which means the amount of results in a
+     * batch may be zero.
+     *
      * @param batchSize Size of each sub-collection to return.
      * @param sortOrder Order in which the results should be retrieved.
      * @return Retrieved results as a collection of batched [ResultRow] sub-collections.
-     * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.FetchBatchedResultsTests.testFetchBatchedResultsWithWhereAndSetBatchSize
+     * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.FetchBatchedResultsTests.testFetchBatchedResultsWithWhereAndSetBatchSize
      */
+    @Suppress("UNCHECKED_CAST")
     fun fetchBatchedResults(batchSize: Int = 1000, sortOrder: SortOrder = SortOrder.ASC): Flow<Flow<ResultRow>> {
         require(batchSize > 0) { "Batch size should be greater than 0." }
         require(limit == null) { "A manual `LIMIT` clause should not be set. By default, `batchSize` will be used." }
@@ -227,7 +230,7 @@ open class Query(
     /**
      * Returns the number of results retrieved after query execution.
      *
-     * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.InsertSelectTests.testInsertSelect02
+     * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.InsertSelectTests.testInsertSelect02
      */
     override suspend fun count(): Long {
         return if (distinct || distinctOn != null || groupedByColumns.isNotEmpty() || limit != null || offset > 0) {
@@ -258,7 +261,7 @@ open class Query(
         } else {
             try {
                 count = true
-                val rs = transaction.exec(this) as R2dbcResult
+                val rs = transaction.execQuery(this)
                 rs.mapRows { (it.getObject(1) as? Number)?.toLong() }.single()
                     ?: error("The query did not return a single count result. Please check the SQL logs.")
             } catch (cause: R2dbcException) {
@@ -272,17 +275,14 @@ open class Query(
     /**
      * Returns whether any results were retrieved by query execution.
      *
-     * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.SelectTests.testSizedIterable
+     * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.SelectTests.testSizedIterable
      */
     override suspend fun empty(): Boolean {
         val oldLimit = limit
         try {
             if (!isForUpdate()) limit = 1
-            val rs = transaction.exec(this) as R2dbcResult
-            // TODO could we avoid reading all the lines from the result for checking emptyness
-            // TODO can we send a query to ask if this query has results in DB without fetching actual results
-            // TODO probably something like `explain` query
-            return rs.rowsCount() == 0
+            val rs = transaction.execQuery(this)
+            return rs.mapRows { }.firstOrNull() == null
         } catch (cause: R2dbcException) {
             throw ExposedR2dbcException(cause, this.getContexts(), TransactionManager.current())
         } finally {
@@ -313,7 +313,7 @@ open class Query(
             .mapIndexed { index, expression -> expression to index }
             .toMap()
         val tx = TransactionManager.current()
-        val rs = tx.exec(queryToExecute)!! as R2dbcResult
+        val rs = tx.execQuery(queryToExecute)
 
         try {
             rs.mapRows {
@@ -331,7 +331,7 @@ open class Query(
             val threshold = transaction.db.config.logTooMuchResultSetsThreshold
             if (threshold > 0 && threshold < transaction.openResultRowsCount) {
                 val message =
-                    "Current opened result sets size ${transaction.openResultRowsCount} exceeds $threshold threshold for transaction ${transaction.id} "
+                    "Current opened result sets size ${transaction.openResultRowsCount} exceeds $threshold threshold for transaction ${transaction.transactionId} "
                 val stackTrace = Exception(message).stackTraceToString()
                 exposedLogger.error(stackTrace)
             }
@@ -344,8 +344,8 @@ open class Query(
  * Mutate Query instance and add `andPart` to having condition with `and` operator.
  * @return same Query instance which was provided as a receiver.
  */
-fun Query.andHaving(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHaving {
-    val expr = Op.build { andPart() }
+fun Query.andHaving(andPart: () -> Op<Boolean>) = adjustHaving {
+    val expr = andPart()
     if (this == null) expr else this and expr
 }
 
@@ -353,8 +353,8 @@ fun Query.andHaving(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHav
  * Mutate Query instance and add `orPart` to having condition with `or` operator.
  * @return same Query instance which was provided as a receiver.
  */
-fun Query.orHaving(orPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHaving {
-    val expr = Op.build { orPart() }
+fun Query.orHaving(orPart: () -> Op<Boolean>) = adjustHaving {
+    val expr = orPart()
     if (this == null) expr else this or expr
 }
 
@@ -362,8 +362,8 @@ fun Query.orHaving(orPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHavin
  * Mutate Query instance and add `andPart` to where condition with `and` operator.
  * @return same Query instance which was provided as a receiver.
  */
-fun Query.andWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
-    val expr = Op.build { andPart() }
+fun Query.andWhere(andPart: () -> Op<Boolean>) = adjustWhere {
+    val expr = andPart()
     if (this == null) expr else this and expr
 }
 
@@ -371,7 +371,7 @@ fun Query.andWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWher
  * Mutate Query instance and add `orPart` to where condition with `or` operator.
  * @return same Query instance which was provided as a receiver.
  */
-fun Query.orWhere(orPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
-    val expr = Op.build { orPart() }
+fun Query.orWhere(orPart: () -> Op<Boolean>) = adjustWhere {
+    val expr = orPart()
     if (this == null) expr else this or expr
 }

@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.v1.tests.shared.dml
 
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.longLiteral
 import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.core.trim
@@ -10,13 +12,13 @@ import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.test.assertContentEquals
 
 class ReplaceTests : DatabaseTestsBase() {
 
-    private val replaceNotSupported = TestDB.ALL - TestDB.ALL_MYSQL_LIKE - TestDB.SQLITE + TestDB.ALL_H2_V1
+    private val replaceNotSupported = TestDB.ALL - TestDB.ALL_MYSQL_LIKE - TestDB.SQLITE
 
     private object NewAuth : Table("new_auth") {
         val username = varchar("username", 16)

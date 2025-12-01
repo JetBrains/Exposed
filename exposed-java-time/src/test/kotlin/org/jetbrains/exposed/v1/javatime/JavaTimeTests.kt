@@ -9,17 +9,12 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.between
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.json.extract
 import org.jetbrains.exposed.v1.json.jsonb
-import org.jetbrains.exposed.v1.migration.MigrationUtils
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
@@ -27,8 +22,8 @@ import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Assert.fail
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.fail
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.*
@@ -128,7 +123,7 @@ class JavaTimeTests : DatabaseTestsBase() {
             val tsn = timestamp("tsn").nullable()
         }
 
-        val now = Instant.now()
+        val now = Instant.now().asJdk8()
 
         withTables(testTable) {
             testTable.insert {
@@ -332,7 +327,7 @@ class JavaTimeTests : DatabaseTestsBase() {
             val modified = jsonb<ModifierData>("modified", Json.Default)
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2 + TestDB.SQLITE + TestDB.SQLSERVER + TestDB.ORACLE, tester) {
+        withTables(excludeSettings = TestDB.ALL_H2_V2 + TestDB.SQLSERVER + TestDB.ORACLE, tester) { testDb ->
             val dateTimeNow = LocalDateTime.now()
             tester.insert {
                 it[created] = dateTimeNow.minusYears(1)
@@ -356,8 +351,17 @@ class JavaTimeTests : DatabaseTestsBase() {
             } else {
                 tester.modified.extract<LocalDateTime>("${prefix}timestamp")
             }
-            val modifiedBeforeCreation = tester.selectAll().where { dateModified less tester.created }.single()
-            assertEquals(2, modifiedBeforeCreation[tester.modified].userId)
+            // SQLite requires JSON() function to convert JSONB binary format to readable text format
+            val modifiedColumn = if (testDb == TestDB.SQLITE) {
+                tester.modified.function("JSON")
+            } else {
+                tester.modified
+            }
+            val modifiedBeforeCreation = tester
+                .select(tester.created, modifiedColumn)
+                .where { dateModified less tester.created }
+                .single()
+            assertEquals(2, modifiedBeforeCreation[modifiedColumn]?.userId)
         }
     }
 
@@ -455,7 +459,7 @@ class JavaTimeTests : DatabaseTestsBase() {
             val timestampWithTimeZone = timestampWithTimeZone("timestamptz-column")
         }
 
-        withTables(excludeSettings = timestampWithTimeZoneUnsupportedDB + TestDB.ALL_H2_V1, testTable) { testDb ->
+        withTables(excludeSettings = timestampWithTimeZoneUnsupportedDB, testTable) { testDb ->
             // UTC time zone
             java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
             assertEquals("UTC", ZoneId.systemDefault().id)
@@ -521,7 +525,7 @@ class JavaTimeTests : DatabaseTestsBase() {
     fun testCurrentDateTimeFunction() {
         val fakeTestTable = object : IntIdTable("fakeTable") {}
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, fakeTestTable) {
+        withTables(fakeTestTable) {
             fun currentDbDateTime(): LocalDateTime {
                 return fakeTestTable.select(CurrentDateTime).first()[CurrentDateTime]
             }
@@ -535,7 +539,7 @@ class JavaTimeTests : DatabaseTestsBase() {
     @Test
     fun testDateTimeAsArray() {
         val defaultDates = listOf(today)
-        val defaultDateTimes = listOf(LocalDateTime.now())
+        val defaultDateTimes = listOf(LocalDateTime.now().asJdk8())
         val tester = object : Table("array_tester") {
             val dates = array("dates", JavaLocalDateColumnType()).default(defaultDates)
             val datetimes = array("datetimes", JavaLocalDateTimeColumnType()).default(defaultDateTimes)
@@ -591,28 +595,18 @@ class JavaTimeTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testCurrentDateAsDefaultExpression() {
-        val testTable = object : LongIdTable("test_table") {
-            val date: Column<LocalDate> = date("date").index().defaultExpression(CurrentDate)
-        }
-        withTables(testTable) {
-            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(testTable)
-            assertTrue(statements.isEmpty())
-        }
-    }
-
-    @Test
     fun testTimestampAlwaysSavedInUTC() {
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Africa/Cairo"))
+
         val tester = object : Table("tester") {
             val timestamp_col = timestamp("timestamp_col")
         }
 
         withTables(tester) {
             // Cairo time zone
-            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Africa/Cairo"))
             assertEquals("Africa/Cairo", ZoneId.systemDefault().id)
 
-            val instant = Instant.now()
+            val instant = Instant.now().asJdk8()
 
             tester.insert {
                 it[timestamp_col] = instant
@@ -622,6 +616,42 @@ class JavaTimeTests : DatabaseTestsBase() {
                 instant,
                 tester.selectAll().single()[tester.timestamp_col]
             )
+        }
+    }
+
+    @Test
+    fun testInsertAndReadWithNonUtcTimezone() {
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Africa/Cairo"))
+
+        val tester = object : Table("testInsertAndReadWithNonUtcTimezone") {
+            val ts = timestamp("ts")
+        }
+
+        val testerText = object : Table("testInsertAndReadWithNonUtcTimezone") {
+            val ts = text("ts")
+        }
+
+        withTables(tester) {
+            val now = Instant.now().asJdk8()
+
+            tester.insert {
+                it[tester.ts] = now
+            }
+
+            // It gives HH:MM:SS format in local time zone
+            val nowTimeString = now.atZone(ZoneId.systemDefault()).toLocalTime().toString().trim('0')
+
+            // This check validates that the value on database has local time (instead of UTC)
+            // It should prevent from the case when we convert value to UTC on insert, and back from UTC to local on reading
+            testerText.selectAll().first()[testerText.ts].let { valueAsText ->
+                kotlin.test.assertTrue(
+                    valueAsText.contains(nowTimeString),
+                    "Timestamp as text from database must contain the time in local time zone. Timestamp: $valueAsText, timeString: $nowTimeString"
+                )
+            }
+
+            val valueFromDb = tester.selectAll().first()[tester.ts]
+            assertEquals(now, valueFromDb)
         }
     }
 }

@@ -8,12 +8,7 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
-import org.jetbrains.exposed.v1.core.vendors.H2Dialect
-import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.core.vendors.OracleDialect
-import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
-import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
-import org.jetbrains.exposed.v1.core.vendors.h2Mode
+import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.datetime.*
 import org.jetbrains.exposed.v1.r2dbc.*
 import org.jetbrains.exposed.v1.r2dbc.tests.*
@@ -21,18 +16,20 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 import kotlin.time.DurationUnit
+import kotlin.time.Instant
 import kotlin.time.toDuration
 
 /** Forces [Instant] precision to be reduced to millisecond-level, for JDK8 test compatibility. */
-internal fun Clock.System.nowAsJdk8(): Instant = Instant.fromEpochMilliseconds(this.now().toEpochMilliseconds())
+internal fun Clock.nowAsJdk8(): Instant = Instant.fromEpochMilliseconds(this.now().toEpochMilliseconds())
 
 internal fun now(): LocalDateTime = Clock.System.nowAsJdk8().toLocalDateTime(TimeZone.currentSystemDefault())
 
@@ -119,7 +116,9 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
+    @Suppress("LongMethod")
     fun testDefaults01() {
         val currentDT = CurrentDateTime
         val nowExpression = object : Expression<LocalDateTime>() {
@@ -139,6 +138,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
         val dLiteral = dateLiteral(dateConstValue)
         val dtLiteral = dateTimeLiteral(dateTimeConstValue)
         val tsConstValue = instConstValue.plus(42.toDuration(DurationUnit.SECONDS))
+        val xTsLiteral = timestampLiteral(tsConstValue.toDeprecatedInstant())
         val tsLiteral = timestampLiteral(tsConstValue)
         val durConstValue = tsConstValue.toEpochMilliseconds().toDuration((DurationUnit.MILLISECONDS))
         val durLiteral = durationLiteral(durConstValue)
@@ -154,12 +154,14 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
             val t2 = datetime("t2").defaultExpression(nowExpression)
             val t3 = datetime("t3").defaultExpression(dtLiteral)
             val t4 = date("t4").default(dateConstValue)
-            val t5 = timestamp("t5").default(tsConstValue)
-            val t6 = timestamp("t6").defaultExpression(tsLiteral)
+            val t5 = xTimestamp("t5").default(tsConstValue.toDeprecatedInstant())
+            val t6 = xTimestamp("t6").defaultExpression(xTsLiteral)
             val t7 = duration("t7").default(durConstValue)
             val t8 = duration("t8").defaultExpression(durLiteral)
             val t9 = time("t9").default(tmConstValue)
             val t10 = time("t10").defaultExpression(tLiteral)
+            val t11 = timestamp("t11").default(tsConstValue)
+            val t12 = timestamp("t12").defaultExpression(tsLiteral)
         }
 
         fun Expression<*>.itOrNull() = when {
@@ -194,7 +196,9 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
                 "${"t7".inProperCase()} $longType${testTable.t7.constraintNamePart()} ${durLiteral.itOrNull()}, " +
                 "${"t8".inProperCase()} $longType${testTable.t8.constraintNamePart()} ${durLiteral.itOrNull()}, " +
                 "${"t9".inProperCase()} $timeType${testTable.t9.constraintNamePart()} ${tLiteral.itOrNull()}, " +
-                "${"t10".inProperCase()} $timeType${testTable.t10.constraintNamePart()} ${tLiteral.itOrNull()}" +
+                "${"t10".inProperCase()} $timeType${testTable.t10.constraintNamePart()} ${tLiteral.itOrNull()}, " +
+                "${"t11".inProperCase()} $timestampType${testTable.t11.constraintNamePart()} ${tsLiteral.itOrNull()}, " +
+                "${"t12".inProperCase()} $timestampType${testTable.t12.constraintNamePart()} ${tsLiteral.itOrNull()}" +
                 when (testDb) {
                     TestDB.ORACLE ->
                         ", CONSTRAINT chk_t_signed_integer_id CHECK (${"id".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
@@ -220,12 +224,14 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
             assertEquals('X', row1[testTable.c])
             assertEquals(dateTimeConstValue, row1[testTable.t3])
             assertEquals(dateConstValue, row1[testTable.t4])
-            assertEquals(tsConstValue, row1[testTable.t5])
-            assertEquals(tsConstValue, row1[testTable.t6])
+            assertEquals(tsConstValue.toDeprecatedInstant(), row1[testTable.t5])
+            assertEquals(tsConstValue.toDeprecatedInstant(), row1[testTable.t6])
             assertEquals(durConstValue, row1[testTable.t7])
             assertEquals(durConstValue, row1[testTable.t8])
             assertEquals(tmConstValue, row1[testTable.t9])
             assertEquals(tmConstValue, row1[testTable.t10])
+            assertEquals(tsConstValue, row1[testTable.t11])
+            assertEquals(tsConstValue, row1[testTable.t12])
         }
     }
 
@@ -315,6 +321,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
             val name = text("name")
             val defaultDate = date("default_date").defaultExpression(CurrentDate)
             val defaultDateTime = datetime("default_date_time").defaultExpression(CurrentDateTime)
+            val xDefaultTimeStamp = xTimestamp("x_default_time_stamp").defaultExpression(XCurrentTimestamp)
             val defaultTimeStamp = timestamp("default_time_stamp").defaultExpression(CurrentTimestamp)
         }
 
@@ -325,6 +332,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testTimestampWithTimeZoneDefaults() {
         // UTC time zone
@@ -467,10 +475,10 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
         val instant = Instant.parse("2023-05-04T05:04:00.700Z") // In UTC
 
         val tester = object : Table("tester") {
+            val xTimestampWithDefault = xTimestamp("xTimestampWithDefault").default(instant.toDeprecatedInstant())
+            val xTimestampWithDefaultExpression = xTimestamp("xTimestampWithDefaultExpression").defaultExpression(XCurrentTimestamp)
             val timestampWithDefault = timestamp("timestampWithDefault").default(instant)
-            val timestampWithDefaultExpression = timestamp("timestampWithDefaultExpression").defaultExpression(
-                CurrentTimestamp
-            )
+            val timestampWithDefaultExpression = timestamp("timestampWithDefaultExpression").defaultExpression(CurrentTimestamp)
         }
 
         withTables(tester) {
@@ -496,6 +504,32 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
     }
 
     @Test
+    fun testColumnOnUpdateXCurrentTimestamp() {
+        val tester = object : Table("tester") {
+            val amount = integer("amount")
+            val xCreated = xTimestamp("created").defaultExpression(XCurrentTimestamp).withDefinition("ON UPDATE", XCurrentTimestamp)
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE.toSet(), tester) {
+            assertTrue { SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
+
+            tester.insert {
+                it[amount] = 999
+            }
+            val generatedTS = tester.select(tester.xCreated).single()[tester.xCreated]
+
+            Thread.sleep(1000)
+
+            tester.update {
+                it[amount] = 111
+            }
+
+            val updatedResult = tester.selectAll().where { tester.xCreated greater generatedTS }.single()
+            assertTrue { updatedResult[tester.xCreated] > generatedTS }
+        }
+    }
+
+    @Test
     fun testColumnOnUpdateCurrentTimestamp() {
         val tester = object : Table("tester") {
             val amount = integer("amount")
@@ -503,7 +537,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
         }
 
         withTables(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE.toSet(), tester) {
-            assertTrue { org.jetbrains.exposed.v1.r2dbc.SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
+            assertTrue { SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
 
             tester.insert {
                 it[amount] = 999

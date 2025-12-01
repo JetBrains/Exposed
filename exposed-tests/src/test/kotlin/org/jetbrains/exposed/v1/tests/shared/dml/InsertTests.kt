@@ -2,32 +2,31 @@ package org.jetbrains.exposed.v1.tests.shared.dml
 
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.isNull
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.datetime.CurrentTimestamp
+import org.jetbrains.exposed.v1.datetime.XCurrentTimestamp
 import org.jetbrains.exposed.v1.datetime.timestamp
+import org.jetbrains.exposed.v1.datetime.xTimestamp
 import org.jetbrains.exposed.v1.jdbc.*
-import org.jetbrains.exposed.v1.jdbc.statements.BatchInsertBlockingExecutable
+import org.jetbrains.exposed.v1.jdbc.statements.toExecutable
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentTestDB
-import org.jetbrains.exposed.v1.tests.inProperCase
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.entities.EntityTests
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import java.sql.SQLException
 import java.util.*
 import kotlin.test.assertEquals
@@ -405,7 +404,7 @@ class InsertTests : DatabaseTestsBase() {
         }
         val emojis = "\uD83D\uDC68\uD83C\uDFFF\u200D\uD83D\uDC69\uD83C\uDFFF\u200D\uD83D\uDC67\uD83C\uDFFF\u200D\uD83D\uDC66\uD83C\uDFFF"
 
-        withTables(excludeSettings = TestDB.ALL_H2 + TestDB.SQLSERVER, table) { testDb ->
+        withTables(excludeSettings = TestDB.ALL_H2_V2 + TestDB.SQLSERVER, table) { testDb ->
             if (testDb == TestDB.MYSQL_V5) {
                 exec("ALTER TABLE ${table.nameInDatabaseCase()} DEFAULT CHARSET utf8mb4, MODIFY emoji VARCHAR(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;")
             }
@@ -506,12 +505,12 @@ class InsertTests : DatabaseTestsBase() {
             TestDB.SQLITE,
             TestDB.MYSQL_V5.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
         )
-        Assume.assumeTrue(dbToTest.isNotEmpty())
+        Assumptions.assumeTrue(dbToTest.isNotEmpty())
         dbToTest.forEach { db ->
             try {
                 try {
                     withDb(db) {
-                        org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(testTable)
+                        SchemaUtils.create(testTable)
                         testTable.insert { it[foo] = 1 }
                         testTable.insert { it[foo] = 0 }
                     }
@@ -524,7 +523,7 @@ class InsertTests : DatabaseTestsBase() {
                 }
             } finally {
                 withDb(db) {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testTable)
+                    SchemaUtils.drop(testTable)
                 }
             }
         }
@@ -539,12 +538,12 @@ class InsertTests : DatabaseTestsBase() {
             TestDB.SQLITE,
             TestDB.MYSQL_V5.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
         )
-        Assume.assumeTrue(dbToTest.isNotEmpty())
+        Assumptions.assumeTrue(dbToTest.isNotEmpty())
         dbToTest.forEach { db ->
             try {
                 try {
                     withDb(db) {
-                        org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(testTable)
+                        SchemaUtils.create(testTable)
                     }
                     runBlocking {
                         newSuspendedTransaction(db = db.db) {
@@ -562,7 +561,7 @@ class InsertTests : DatabaseTestsBase() {
                 }
             } finally {
                 withDb(db) {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testTable)
+                    SchemaUtils.drop(testTable)
                 }
             }
         }
@@ -633,9 +632,7 @@ class InsertTests : DatabaseTestsBase() {
         withTables(excludeSettings = insertIgnoreUnsupportedDB, tab) {
             tab.insert { it[id] = "foo" }
 
-            val executable = BatchInsertBlockingExecutable(
-                BatchInsertOnConflictDoNothing(tab)
-            )
+            val executable = BatchInsertOnConflictDoNothing(tab).toExecutable()
             val numInserted = executable.run {
                 statement.addBatch()
                 statement[tab.id] = "foo"
@@ -650,9 +647,10 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testInsertIntoNullableGeneratedColumn() {
-        withDb(excludeSettings = TestDB.ALL_H2_V1) { testDb ->
+        withDb { testDb ->
             val generatedTable = object : IntIdTable("generated_table") {
                 val amount = integer("amount").nullable()
                 val computedAmount = integer("computed_amount").nullable().databaseGenerated().apply {
@@ -727,6 +725,19 @@ class InsertTests : DatabaseTestsBase() {
             }.single()
             assertEquals("custom-id-value", result1[tester.id].value)
             assertEquals("custom-id-value", result1[tester.customId])
+        }
+    }
+
+    @Test
+    fun testXInsertReturnsValuesFromDefaultExpression() {
+        val tester = object : Table() {
+            val xDefaultDate = xTimestamp(name = "default_date").defaultExpression(XCurrentTimestamp)
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, tester) {
+            val entry = tester.insert {}
+
+            assertNotNull(entry[tester.xDefaultDate])
         }
     }
 

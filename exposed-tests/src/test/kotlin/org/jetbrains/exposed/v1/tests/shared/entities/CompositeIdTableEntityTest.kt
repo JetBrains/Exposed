@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.v1.tests.shared.entities
 
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -18,7 +17,7 @@ import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.sql.Connection
 import java.util.*
 import kotlin.test.assertIs
@@ -256,7 +255,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
             }
             val found2 = Publisher.find { Publishers.isbn eq isbn }.single()
             assertEquals(p2.id, found2.id)
-            val expectedNextVal1 = if (currentTestDB in TestDB.ALL_MYSQL_LIKE || currentTestDB == TestDB.H2_V1) 579 else 1
+            val expectedNextVal1 = if (currentTestDB in TestDB.ALL_MYSQL_LIKE) 579 else 1
             assertEquals(expectedNextVal1, found2.id.value[Publishers.pubId].value)
         }
     }
@@ -300,7 +299,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
             val id2: EntityID<CompositeID> = Publishers.insertAndGetId {
                 it[name] = "Publisher B"
             }
-            val expectedNextVal1 = if (currentTestDB in TestDB.ALL_MYSQL_LIKE || currentTestDB == TestDB.H2_V1) 726 else 1
+            val expectedNextVal1 = if (currentTestDB in TestDB.ALL_MYSQL_LIKE) 726 else 1
             assertEquals(expectedNextVal1, id2.value[Publishers.pubId].value)
 
             // insert as composite ID
@@ -342,7 +341,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 }
                 it[name] = "Publisher C"
             }
-            val expectedNextVal2 = if (currentTestDB in TestDB.ALL_MYSQL_LIKE || currentTestDB == TestDB.H2_V1) 1002 else 2
+            val expectedNextVal2 = if (currentTestDB in TestDB.ALL_MYSQL_LIKE) 1002 else 2
             assertEquals(expectedNextVal2, id6.value[Publishers.pubId].value)
         }
     }
@@ -542,16 +541,16 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 it[Towns.name] = "Town A"
             }
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 Town.new(id) {
                     population = 1000
                 }
             }
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 val town = Town[id]
                 town.population = 2000
             }
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 val town = Town[id]
                 assertEquals(2000, town.population)
             }
@@ -678,7 +677,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 // preload referencedOn - child to single parent
                 Author.find { Authors.id eq authorA.id }.first().load(Author::publisher)
@@ -687,7 +686,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 assertEquals(publisherA.id, Publisher.testCache(foundAuthor.readCompositeIDValues(Publishers))?.id)
             }
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 // preload optionalReferencedOn - child to single parent?
                 Office.all().with(Office::publisher)
@@ -735,7 +734,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 // preload backReferencedOn - parent to single child
                 val cache = TransactionManager.current().entityCache
@@ -744,7 +743,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 assertEqualLists(listOf(reviewA.id), result)
             }
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 // preload optionalBackReferencedOn - parent to single child?
                 val cache = TransactionManager.current().entityCache
@@ -786,7 +785,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 // preload referrersOn - parent to multiple children
                 val cache = TransactionManager.current().entityCache
@@ -795,7 +794,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 assertEqualLists(listOf(authorA.id, authorB.id), result)
             }
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 // preload optionalReferrersOn - parent to multiple children?
                 val cache = TransactionManager.current().entityCache

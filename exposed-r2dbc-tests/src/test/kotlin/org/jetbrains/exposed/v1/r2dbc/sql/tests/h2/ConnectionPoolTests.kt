@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.h2
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
@@ -12,8 +13,8 @@ import org.jetbrains.exposed.v1.r2dbc.tests.LogDbInTestName
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 
 class ConnectionPoolTests : LogDbInTestName() {
     private val maximumPoolSize = 10
@@ -24,21 +25,25 @@ class ConnectionPoolTests : LogDbInTestName() {
 
     @Test
     fun testSuspendTransactionsExceedingPoolSize() = runTest {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
-        suspendTransaction(db = h2PoolDB1) {
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        suspendTransaction(h2PoolDB1) {
             SchemaUtils.create(TestTable)
         }
 
         val exceedsPoolSize = (maximumPoolSize * 2 + 1).coerceAtMost(50)
         repeat(exceedsPoolSize) { i ->
-            org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction {
-                delay(100)
+            launch {
+                suspendTransaction {
+                    delay(100)
 //                TestEntity.new { testValue = "test$it" }
-                TestTable.insert { it[TestTable.testValue] = "test$i" }
+                    TestTable.insert { it[TestTable.testValue] = "test$i" }
+                }
             }
+            // otherwise runTest skips delays
+            testScheduler.advanceUntilIdle()
         }
 
-        suspendTransaction(db = h2PoolDB1) {
+        suspendTransaction(h2PoolDB1) {
 //            assertEquals(exceedsPoolSize, TestEntity.all().toList().count())
             assertEquals(exceedsPoolSize, TestTable.selectAll().toList().count())
 

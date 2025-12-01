@@ -5,6 +5,10 @@ package org.jetbrains.exposed.v1.javatime
 import org.jetbrains.exposed.v1.core.Cast
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.isNotNull
+import org.jetbrains.exposed.v1.core.isNull
+import org.jetbrains.exposed.v1.core.neq
 import org.jetbrains.exposed.v1.core.substring
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -14,7 +18,7 @@ import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.MiscTable
 import org.jetbrains.exposed.v1.tests.shared.checkInsert
 import org.jetbrains.exposed.v1.tests.shared.checkRow
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Duration
 import java.time.Instant
@@ -49,7 +53,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val date = today
         val time = LocalTime.now()
         val dateTime = LocalDateTime.now()
-        val timestamp = Instant.now()
+        val timestamp = Instant.now().asJdk8()
         val duration = Duration.ofMinutes(1)
 
         withTables(tbl) {
@@ -86,7 +90,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val date = today
         val time = LocalTime.now()
         val dateTime = LocalDateTime.now()
-        val timestamp = Instant.now()
+        val timestamp = Instant.now().asJdk8()
         val duration = Duration.ofMinutes(1)
 
         withTables(tbl) {
@@ -135,7 +139,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val date = today
         val time = LocalTime.now()
         val dateTime = LocalDateTime.now()
-        val timestamp = Instant.now()
+        val timestamp = Instant.now().asJdk8()
         val duration = Duration.ofMinutes(1)
 
         withTables(tbl) {
@@ -187,7 +191,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val date = today
         val time = LocalTime.now()
         val dateTime = LocalDateTime.now()
-        val timestamp = Instant.now()
+        val timestamp = Instant.now().asJdk8()
         val duration = Duration.ofMinutes(1)
 
         withTables(tbl) {
@@ -223,7 +227,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val date = today
         val time = LocalTime.now()
         val dateTime = LocalDateTime.now()
-        val timestamp = Instant.now()
+        val timestamp = Instant.now().asJdk8()
         val duration = Duration.ofMinutes(1)
 
         withTables(tbl) {
@@ -264,7 +268,7 @@ class MiscTableTest : DatabaseTestsBase() {
             val date = today
             val time = LocalTime.now()
             val dateTime = LocalDateTime.now()
-            val timestamp = Instant.now()
+            val timestamp = Instant.now().asJdk8()
             val duration = Duration.ofMinutes(1)
             val sTest = "test"
             val dec = BigDecimal("239.42")
@@ -705,7 +709,7 @@ class MiscTableTest : DatabaseTestsBase() {
             val date = today
             val time = LocalTime.now()
             val dateTime = LocalDateTime.now()
-            val timestamp = Instant.now()
+            val timestamp = Instant.now().asJdk8()
             val duration = Duration.ofMinutes(1)
             val sTest = "test"
             val eOne = MiscTable.E.ONE
@@ -1072,7 +1076,7 @@ class MiscTableTest : DatabaseTestsBase() {
             val eOne = MiscTable.E.ONE
             val sTest = "test"
             val dec = BigDecimal("239.42")
-            val timestamp = Instant.now()
+            val timestamp = Instant.now().asJdk8()
             val duration = Duration.ofMinutes(1)
             tbl.insert {
                 it[by] = 13
@@ -1161,7 +1165,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val date = today
         val time = LocalTime.now()
         val dateTime = LocalDateTime.now()
-        val timestamp = Instant.now()
+        val timestamp = Instant.now().asJdk8()
         val duration = Duration.ofMinutes(1)
         val eOne = MiscTable.E.ONE
         val dec = BigDecimal("239.42")

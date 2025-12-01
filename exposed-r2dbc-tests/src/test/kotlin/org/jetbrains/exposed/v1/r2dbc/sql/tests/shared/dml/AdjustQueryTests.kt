@@ -13,7 +13,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.forEach
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
@@ -129,9 +129,7 @@ class AdjustQueryTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testAdjustQueryHaving() {
         withCitiesAndUsers { cities, users, _ ->
-            val predicateHaving = Op.build {
-                DMLTestsData.Users.id.count().eq<Number, Long, Int>(DMLTestsData.Cities.id.max())
-            }
+            val predicateHaving = DMLTestsData.Users.id.count().eq<Number, Long, Int>(DMLTestsData.Cities.id.max())
 
             val queryAdjusted = (cities innerJoin users)
                 .select(cities.name)
@@ -153,9 +151,7 @@ class AdjustQueryTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testQueryAndHaving() {
         withCitiesAndUsers { cities, users, _ ->
-            val predicateHaving = Op.build {
-                DMLTestsData.Users.id.count().eq<Number, Long, Int>(DMLTestsData.Cities.id.max())
-            }
+            val predicateHaving = DMLTestsData.Users.id.count().eq<Number, Long, Int>(DMLTestsData.Cities.id.max())
 
             val queryAdjusted = (cities innerJoin users)
                 .select(cities.name)
@@ -179,9 +175,7 @@ class AdjustQueryTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testQueryOrHaving() {
         withCitiesAndUsers { cities, users, _ ->
-            val predicateHaving = Op.build {
-                DMLTestsData.Users.id.count().eq<Number, Long, Int>(DMLTestsData.Cities.id.max())
-            }
+            val predicateHaving = DMLTestsData.Users.id.count().eq<Number, Long, Int>(DMLTestsData.Cities.id.max())
 
             val queryAdjusted = (cities innerJoin users)
                 .select(cities.name)
@@ -202,10 +196,10 @@ class AdjustQueryTests : R2dbcDatabaseTestsBase() {
         }
     }
 
-    private val predicate = Op.build {
-        val nameCheck = (DMLTestsData.Users.id eq "andrey") or (DMLTestsData.Users.name eq "Sergey")
-        val cityCheck = DMLTestsData.Users.cityId eq DMLTestsData.Cities.id
-        nameCheck and cityCheck
+    private val predicate = run {
+        val nameCheck1 = (DMLTestsData.Users.id eq "andrey") or (DMLTestsData.Users.name eq "Sergey")
+        val cityCheck1 = DMLTestsData.Users.cityId eq DMLTestsData.Cities.id
+        nameCheck1 and cityCheck1
     }
 
     private suspend fun assertQueryResultValid(query: Query) {

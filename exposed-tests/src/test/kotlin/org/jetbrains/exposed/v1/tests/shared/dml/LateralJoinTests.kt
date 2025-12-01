@@ -3,6 +3,7 @@ package org.jetbrains.exposed.v1.tests.shared.dml
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.joinQuery
 import org.jetbrains.exposed.v1.core.lastQueryAlias
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
@@ -13,7 +14,7 @@ import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class LateralJoinTests : DatabaseTestsBase() {
     // lateral join is also supported by MySql8 database, but at the current moment there is no related configuration

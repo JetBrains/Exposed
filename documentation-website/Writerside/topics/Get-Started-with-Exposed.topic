@@ -1,0 +1,515 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       id="Get-Started-with-Exposed" title="Get started with Exposed, an ORM framework for Kotlin">
+    <show-structure for="chapter,procedure" depth="2"/>
+    <var name="project_name" value="exposed-kotlin-app"/>
+    <tldr>
+        <var name="example_name" value="get-started-with-exposed"/>
+        <include from="lib.topic" element-id="code_example"/>
+    </tldr>
+    <web-summary>
+        In this tutorial, you’ll learn how to create and query a table in Kotlin with Exposed's DSL API.
+    </web-summary>
+    <link-summary>
+        Learn how to create and query tables in Kotlin with Exposed's DSL API.
+    </link-summary>
+    <p>
+        In this tutorial, you’ll learn how to use Exposed’s Domain-Specific Language (DSL) API to store and retrieve
+        data in a relational database by building a simple console application.
+    </p>
+    <p>
+        By the end of this tutorial, you’ll be able to do the following:
+    </p>
+    <list>
+        <li>Configure database connections using an in-memory database.</li>
+        <li>Define database tables using Exposed’s DSL.</li>
+        <li>Perform basic CRUD (Create, Read, Update, and Delete) operations on the database.</li>
+    </list>
+    <chapter title="Prerequisites" id="prerequisites">
+        <p>
+            Before starting this tutorial, ensure that you have the following installed on your machine:
+        </p>
+        <list>
+            <li>
+                The latest
+                <a href="https://gradle.org/install/?_gl=1*h4crdf*_gcl_au*MTQ5NTIyNjcyMy4xNzE3MDc4MDIz*_ga*MTYzNzI5NzkyLjE2OTk4OTg3MTE.*_ga_7W7NC6YNPT*MTcxOTQwNjQyMS4xOC4xLjE3MTk0MDc2NzUuMzUuMC4w">Gradle</a>
+                distribution.
+            </li>
+            <li>A <a href="https://www.oracle.com/java/technologies/downloads/">Java Development Kit (JDK)</a>, version 8 or higher.</li>
+            <li>An integrated development environment (IDE), such as <a href="https://www.jetbrains.com/idea/">
+                IntelliJ IDEA Ultimate
+            </a>.  <p>
+                We recommend that you install
+                <a href="https://www.jetbrains.com/idea/">
+                    IntelliJ IDEA Ultimate
+                </a>
+                which comes with built-in
+                <a href="https://www.jetbrains.com/pages/intellij-idea-databases/">
+                    database tools
+                </a>
+                and the
+                <a href="https://plugins.jetbrains.com/plugin/24367-exposed">
+                    Exposed plugin
+                </a>
+                for code completion and inspections. However, you can use another IDE of your choice.
+            </p></li>
+        </list>
+
+    </chapter>
+    <chapter title="Create a new project" id="create-new-project">
+        First, you will need a basic Kotlin project setup to build upon. You can
+        <resource src="init-kotlin-gradle-app.zip">download a pre-initialized project</resource> or follow the steps
+        below to generate a new project with Gradle.
+        <procedure id="create-new-project-procedure">
+            <step>
+                <p>In a terminal window, navigate to the destination where you want to create your project and run
+                    the following commands to create a new folder and change directory into it:
+                </p>
+                <code-block lang="console" prompt="$" show-white-spaces="false">
+                    mkdir %project_name%
+                    cd %project_name%
+                </code-block>
+            </step>
+            <step>
+                <p>Run the <code>gradle init</code> task to initialize a new Gradle project:</p>
+                <code-block lang="console" prompt="$">
+                    gradle init
+                </code-block>
+                <p>
+                    When prompted, select the following options:
+                </p>
+                <list>
+                    <li><code>1: Application</code> project type.</li>
+                    <li><code>2: Kotlin</code> implementation language.</li>
+                </list>
+                <p>
+                    For the other questions, press enter to use the default values.
+                    The output will look like the following:
+                </p>
+                <code-block lang="console" noinject="true">
+                    Select type of build to generate:
+                        1: Application
+                        2: Library
+                        3: Gradle plugin
+                        4: Basic (build structure only)
+                    Enter selection (default: Application) [1..4]
+                    Select implementation language:
+                        1: Java
+                        2: Kotlin
+                        3: Groovy
+                        4: Scala
+                        5: C++
+                        6: Swift
+                    Enter selection (default: Java) [1..6] 2
+                    Enter target Java version (min: 7, default: 21):
+                    Project name (default: exposed-kotlin-app):
+                    Select application structure:
+                        1: Single application project
+                        2: Application and library project
+                    Enter selection (default: Single application project) [1..2]
+                    Select build script DSL:
+                        1: Kotlin
+                        2: Groovy
+                    Enter selection (default: Kotlin) [1..2]
+                    Select test framework:
+                        1: kotlin.test
+                        2: JUnit Jupiter
+                    Enter selection (default: kotlin.test) [1..2]
+                    Generate build using new APIs and behavior (some features may change in the next minor release)? (default: no) [yes, no]
+                    > Task :init
+                    To learn more about Gradle by exploring our Samples at https://docs.gradle.org/8.8/samples/sample_building_kotlin_applications.html
+                    BUILD SUCCESSFUL in 28s
+                    1 actionable task: 1 executed
+                </code-block>
+            </step>
+            <step>
+                <p>
+                    Once the project has been initialized, open the project folder in your IDE.
+                    To open the project in IntelliJ IDEA, use the following command:
+                </p>
+                <code-block lang="shell">
+                    idea .
+                </code-block>
+            </step>
+        </procedure>
+    </chapter>
+    <chapter title="Add dependencies" id="add-dependencies">
+        <p>
+            Before you start using Exposed, you need to add dependencies to your project.
+        </p>
+        <procedure id="add-dependencies-procedure">
+            <step>
+                <p>
+                    Navigate to the
+                    <path>gradle/libs.versions.toml</path>
+                    file and define the Exposed and H2 version and artifacts:
+                </p>
+                <code-block lang="kotlin" noinject="true">
+                [versions]
+                //...
+                exposed = "%exposed_version%"
+                h2 = "%h2_db_version%"
+
+                [libraries]
+                //...
+                exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
+                exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
+                h2 = { module = "com.h2database:h2", version.ref = "h2" }
+                </code-block>
+                <list>
+                    <li>
+                        The <code>exposed-core</code> module provides the foundational components and abstractions
+                        needed to work with databases in a type-safe manner and includes the DSL API.
+                    </li>
+                    <li>
+                        The <code>exposed-jdbc</code> module is an extension of the <code>exposed-core</code> module
+                        that adds support for Java Database Connectivity (JDBC).
+                    </li>
+                </list>
+            </step>
+            <step>
+                <p>
+                    Navigate to the
+                    <path>app/build.gradle.kts</path>
+                    file and add the Exposed and H2 database modules into the <code>dependencies</code> block:
+                </p>
+                <code-block lang="kotlin">
+                    dependencies {
+                        //...
+                        implementation(libs.exposed.core)
+                        implementation(libs.exposed.jdbc)
+                        implementation(libs.h2)
+                        //...
+                    }
+                </code-block>
+            </step>
+            <step>
+                <include from="lib.topic" element-id="intellij_idea_load_gradle_changes"/>
+            </step>
+        </procedure>
+    </chapter>
+    <chapter title="Configure a database connection" id="configure-db-connection">
+        <p>
+            Whenever you access a database using Exposed, you start by obtaining a connection and creating a transaction.
+            To configure the database connection, use the <code>Database.connect()</code> function.
+        </p>
+        <procedure id="config-db-connection-procedure">
+            <step>
+                <p>
+                    Navigate to
+                    <path>app/src/main/kotlin/org/example/</path>
+                    and open the
+                    <path>
+                        App.kt
+                    </path>
+                    file.
+                </p>
+            </step>
+            <step>
+                <p>
+                    Replace the contents of the
+                    <path>
+                    App.kt
+                    </path>
+                    file with the following implementation:
+                </p>
+                <code-block lang="kotlin"
+                            src="get-started-with-exposed/src/main/kotlin/org/example/App.kt"
+                            include-lines="4-5,8,16-18,59"
+                />
+                <p>
+                    The <code>Database.connect()</code> function creates an instance of a class that represents
+                    the database and takes two or more parameters. In this case, the connection URL and the driver.
+                </p>
+                <list>
+                    <li>
+                        <code>jdbc:h2:mem:test</code> is the database URL to connect to:
+                        <list>
+                            <li>
+                                <code>jdbc</code> specifies that this is a JDBC connection.
+                            </li>
+                            <li>
+                                <code>h2</code> indicates that the database is an H2 database.
+                            </li>
+                            <li>
+                                <code>mem</code> specifies that the database is in-memory, meaning the data will only
+                                exist in memory and will be lost when the application stops.
+                            </li>
+                            <li>
+                                <code>test</code> is the name of the database.
+                            </li>
+                        </list>
+                    </li>
+                    <li>
+                        <code>org.h2.Driver</code> specifies the H2 JDBC driver to be used for establishing the connection.
+                    </li>
+                </list>
+                <note>
+                    Note that invoking <code>Database.connect()</code> only configures the connection settings,
+                    but it does not immediately establish a connection with the database. The actual connection
+                    to the database will be established later when a database operation is performed.
+                </note>
+                <note>
+                    By default, Exposed automatically registers the database connection. You can change
+                    this behavior by setting the <code>connectionAutoRegistration</code> parameter
+                    when calling <code>Database.connect()</code>.
+                </note>
+            </step>
+        </procedure>
+        <p>
+            With this, you've added Exposed to your Kotlin project and configured a database connection.
+            You're now ready to define your data model and engage with the database using Exposed's DSL.
+        </p>
+    </chapter>
+    <chapter title="Define a table object" id="define-table-object">
+        <p>
+            In Exposed, a database table is represented by an object inherited from the <code>Table</code> class.
+            To define the table object, follow the steps below.
+        </p>
+        <procedure id="define-table-object-procedure">
+            <step>
+                In the
+                <path>
+                    app/src/main/kotlin/org/example/
+                </path>
+                folder, create a new
+                <path>
+                    Task.kt
+                </path>
+                file.
+            </step>
+            <step>
+                <p>Open <path>Task.kt</path> and add the following table definition:</p>
+                <code-block lang="kotlin"
+                            src="get-started-with-exposed/src/main/kotlin/org/example/Task.kt"
+                />
+                <p>
+                    In the <code>Table</code> constructor, passing the name <code>tasks</code> configures a custom
+                    name for the table. Keep in mind that if no custom name is specified, Exposed will generate
+                    one from the class name, which might lead to unexpected results.
+                </p>
+                <p>Within the <code>Tasks</code> object, the following columns are defined:</p>
+                <list>
+                    <li>
+                        <code>id</code> of type <code>Int</code> is defined with the <code>integer()</code> method.
+                        The <code>autoIncrement()</code> function indicates that this column will be
+                        an auto-incrementing integer, typically used for primary keys.
+                    </li>
+                    <li>
+                        <code>title</code> and <code>description</code> of type <code>String</code> are defined
+                        with the <code>varchar()</code> method.
+                    </li>
+                    <li>
+                        <code>isCompleted</code> of type <code>Boolean</code> is defined with the
+                        <code> bool()</code> method. Using the <code>default()</code> function, you configure the
+                        default value to <code>false</code>.
+                    </li>
+                </list>
+                <p>
+                    At this point, you have defined a table with columns, which essentially creates the
+                    blueprint for the <code>Tasks</code> table.
+                </p>
+                <p>
+                    To now create and populate the table within the database, you need to open a transaction.
+                </p>
+            </step>
+        </procedure>
+    </chapter>
+    <chapter title="Create and query a table" id="create-and-query-table">
+        <p>
+            With Exposed’s DSL API, you can interact with a database using a type-safe syntax similar to SQL.
+            Before you start executing database operations, you must open a
+            <emphasis>transaction</emphasis>.
+        </p>
+        <p id="transaction-definition">
+            A <a href="Transactions.md">transaction</a> is represented by an instance of the <code>Transaction</code> class, within which you
+            can define and manipulate data using its lambda function. Exposed will automatically manage the opening
+            and closing of the transaction in the background, ensuring seamless operation.
+        </p>
+        <procedure id="create-and-query-table-procedure">
+            <step>
+                <p>
+                    Navigate back to the
+                    <path>App.kt</path>
+                    file and add the following transaction function:
+                </p>
+                <code-block lang="kotlin"
+                            src="get-started-with-exposed/src/main/kotlin/org/example/App.kt"
+                            include-lines="4-20,26-44,57-59"
+                />
+                <p>Let's break down the code and go over each section.</p>
+                <p>
+                    First, you create the tasks table using the <code>create()</code> method from <code>SchemaUtils</code>.
+                    The <code>SchemaUtils</code> object holds utility methods for creating, altering, and
+                    dropping database objects.
+                </p>
+                <p>
+                    Once the table has been created, you use the <code>Table</code> extension method <code>insert()</code>
+                    to add two new Task records.</p>
+                <code-block lang="kotlin"
+                            src="get-started-with-exposed/src/main/kotlin/org/example/App.kt"
+                            include-lines="28-37"
+                />
+                <p>
+                    Within the <code>insert</code> block, you set the values for
+                    each column by using the <code>it</code> parameter. Exposed will translate the functions
+                    into the following SQL queries:
+                </p>
+                <code-block lang="sql" noinject="true">
+                    INSERT INTO TASKS (COMPLETED, DESCRIPTION, "name") VALUES (FALSE, 'Go through the Get started with Exposed tutorial', 'Learn Exposed')
+
+                    INSERT INTO TASKS (COMPLETED, DESCRIPTION, "name") VALUES (TRUE, 'Read the first two chapters of The Hobbit', 'Read The Hobbit')
+                </code-block>
+                <p>
+                    Because the <code>insert()</code> function returns an <code>InsertStatement</code>, by using
+                    the <code>get()</code> method after the <code>insert</code> operation you retrieve the
+                    autoincremented <code>id</code> value of the newly added row.
+                </p>
+                <p>
+                    With the <code>select()</code> extension function you then create a query to count the number
+                    of rows and to retrieve the <code>isCompleted</code> value for each row in the table.
+                </p>
+                <code-block lang="kotlin"
+                            src="get-started-with-exposed/src/main/kotlin/org/example/App.kt"
+                            include-lines="41-43"
+                />
+                <p>
+                    Using <code>groupBy()</code> groups the results of the query by the <code>isCompleted</code>
+                    column, which means it will aggregate the rows based on whether they are completed or not.
+                    The expected SQL query looks like this:
+                </p>
+                <code-block lang="sql" noinject="true">
+                    SELECT COUNT(TASKS.ID), TASKS.COMPLETED FROM TASKS GROUP BY TASKS.COMPLETED
+                </code-block>
+                <p>
+                    It is important to note that the query will not be executed until you call a function that
+                    iterates through the result, such as <code>forEach()</code>. In this example, for each group
+                    we print out the <code>isCompleted</code> status and the corresponding count of tasks.
+                </p>
+            </step>
+        </procedure>
+        <p>
+            Before you test the code, it would be handy to be able to inspect the SQL statements
+            and queries Exposed sends to the database. For this, you need to add a logger.
+        </p>
+    </chapter>
+    <chapter title="Enable logging" id="enable-logging">
+        <p>
+            At the beginning of your transaction block, add the following line to enable SQL query logging:
+        </p>
+        <code-block lang="kotlin"
+                    src="get-started-with-exposed/src/main/kotlin/org/example/App.kt"
+                    include-lines="20-24,58"
+        />
+    </chapter>
+    <chapter title="Run the application" id="run-in-intellij-idea">
+        <include from="lib.topic" element-id="intellij_idea_start_application"/>
+        <p>
+            The application will start in the <control>Run</control> tool window at the
+            bottom of the IDE. There you will be able to see the SQL logs along with the printed results:
+        </p>
+        <code-block lang="shell">
+            SQL: SELECT VALUE FROM INFORMATION_SCHEMA.SETTINGS WHERE NAME = 'MODE'
+            SQL: CREATE TABLE IF NOT EXISTS TASKS (ID INT AUTO_INCREMENT NOT NULL, "name" VARCHAR(128) NOT NULL, DESCRIPTION VARCHAR(128) NOT NULL, COMPLETED BOOLEAN DEFAULT FALSE NOT NULL)
+            SQL: INSERT INTO TASKS (COMPLETED, DESCRIPTION, "name") VALUES (FALSE, 'Go through the Get started with Exposed tutorial', 'Learn Exposed')
+            SQL: INSERT INTO TASKS (COMPLETED, DESCRIPTION, "name") VALUES (TRUE, 'Read the first two chapters of The Hobbit', 'Read The Hobbit')
+            Created new tasks with ids 1 and 2.
+            SQL: SELECT COUNT(TASKS.ID), TASKS.COMPLETED FROM TASKS GROUP BY TASKS.COMPLETED
+            false: 1
+            true: 1
+
+            Process finished with exit code 0
+        </code-block>
+    </chapter>
+    <chapter title="Update and delete a task" id="update-and-delete-task">
+        <p>Let’s extend the app’s functionality by updating and deleting the same task.</p>
+        <procedure id="update-and-delete-task-procedure">
+            <step>
+                <p>In the same <code>transaction()</code> function, add the following code to your implementation:</p>
+                <code-block lang="kotlin"
+                            src="get-started-with-exposed/src/main/kotlin/org/example/App.kt"
+                            include-lines="20,24,44-58"
+                />
+                <p>Here's the breakdown:</p>
+                <p>
+                    In the <code>Tasks.update()</code> function, you specify the condition to find the task
+                    with <code>id</code> equal to the one of the previously inserted task. If the condition is met,
+                    the <code>isCompleted</code> field of the found task is set to <code>true</code>.
+                </p>
+                <code-block lang="kotlin"
+                            src="get-started-with-exposed/src/main/kotlin/org/example/App.kt"
+                            include-lines="46-49"
+                />
+                <p>
+                    Unlike the <code>insert()</code> function, <code>update()</code> returns the number of updated rows.
+                    To then retrieve the updated task, you use the <code>select()</code> function
+                    with the <code>where</code> condition to only select the tasks with <code>id</code>
+                    equal to <code>taskId</code>.
+                </p>
+                <code-block lang="kotlin"
+                            src="get-started-with-exposed/src/main/kotlin/org/example/App.kt"
+                            include-symbol="updatedTask"
+                />
+                <p>
+                    Using the <code>single()</code> extension function
+                    initiates the statement and retrieves the first result found.
+                </p>
+                <p>
+                    The <code>deleteWhere()</code> function, on the other hand, deletes the task with the specified condition.
+                </p>
+                <code-block lang="kotlin"
+                            src="get-started-with-exposed/src/main/kotlin/org/example/App.kt"
+                            include-lines="55"
+                />
+                <p>
+                    Similarly to <code>update()</code>, it returns the number of rows that have been deleted.
+                </p>
+            </step>
+            <step>
+                <include from="lib.topic" element-id="intellij_idea_restart_application"/>
+                <p>You should now see the following result:</p>
+                <code-block lang="console">
+                    SQL: SELECT VALUE FROM INFORMATION_SCHEMA.SETTINGS WHERE NAME = 'MODE'
+                    SQL: CREATE TABLE IF NOT EXISTS TASKS (ID INT AUTO_INCREMENT NOT NULL, "name" VARCHAR(128) NOT NULL, DESCRIPTION VARCHAR(128) NOT NULL, COMPLETED BOOLEAN DEFAULT FALSE NOT NULL)
+                    SQL: INSERT INTO TASKS (COMPLETED, DESCRIPTION, "name") VALUES (FALSE, 'Go through the Get started with Exposed tutorial', 'Learn Exposed')
+                    SQL: INSERT INTO TASKS (COMPLETED, DESCRIPTION, "name") VALUES (TRUE, 'Read the first two chapters of The Hobbit', 'Read The Hobbit')
+                    Created new tasks with ids 1 and 2.
+                    SQL: SELECT COUNT(TASKS.ID), TASKS.COMPLETED FROM TASKS GROUP BY TASKS.COMPLETED
+                    false: 1
+                    true: 1
+                    SQL: UPDATE TASKS SET COMPLETED=TRUE WHERE TASKS.ID = 1
+                    SQL: SELECT TASKS.COMPLETED FROM TASKS WHERE TASKS.ID = 1
+                    Updated task details: Tasks.completed=true
+                    SQL: DELETE FROM TASKS WHERE TASKS.ID = 2
+                    SQL: SELECT TASKS.ID, TASKS."name", TASKS.DESCRIPTION, TASKS.COMPLETED FROM TASKS
+                    Remaining tasks: [Tasks.id=1, Tasks.name=Learn Exposed, Tasks.description=Go through the Get started with Exposed tutorial, Tasks.completed=true]
+
+                    Process finished with exit code 0
+                </code-block>
+            </step>
+        </procedure>
+        <tip id="second-transaction-behaviour-tip">
+            It might be useful to know that if a second <code>transaction</code> is opened after the first one,
+            you will find that the table and its data has been lost
+            even though the app hasn't stopped. This is <a href="https://www.h2database.com/html/features.html#in_memory_databases">
+            expected behavior in H2 databases</a> when managing connections and transactions.
+            <p>
+                To keep the database open, add <code>;DB_CLOSE_DELAY=-1</code> to the database URL:
+            </p>
+            <code-block lang="kotlin">
+                Database.connect("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver")
+            </code-block>
+        </tip>
+    </chapter>
+
+    <chapter title="Next steps" id="next-steps">
+
+        <p>
+            Great job! You have now implemented a simple console application that uses Exposed to fetch and modify
+            task data from an in-memory database. Now that you’ve covered the basics, you are ready to
+            <a href="DSL-CRUD-operations.topic">dive deep into the DSL API</a>.
+        </p>
+    </chapter>
+</topic>

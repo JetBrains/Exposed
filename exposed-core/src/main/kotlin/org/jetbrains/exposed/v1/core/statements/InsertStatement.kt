@@ -10,7 +10,6 @@ import kotlin.properties.Delegates
  * @param isIgnore Whether to ignore errors or not.
  * **Note** [isIgnore] is not supported by all vendors. Please check the documentation.
  */
-@Suppress("ForbiddenComment", "AnnotationSpacing")
 open class InsertStatement<Key : Any>(
     val table: Table,
     val isIgnore: Boolean = false
@@ -47,7 +46,6 @@ open class InsertStatement<Key : Any>(
      * retrieved from the database or if the column cannot be found in the row.
      */
     fun <T> getOrNull(column: Column<T>): T? = resultedValues?.firstOrNull()?.getOrNull(column)
-    // TODO: log issue about unifying process result method for jdbc and r2dbc
 
     @OptIn(InternalApi::class)
     @Suppress("NestedBlockDepth")
@@ -56,7 +54,7 @@ open class InsertStatement<Key : Any>(
             "It's recommended to avoid including all default and nullable values in insert statements, " +
             "as these values can often be generated automatically by the database. " +
             "There are no usages of that function inside Exposed. Saved as deprecated for back compatability",
-        level = DeprecationLevel.WARNING
+        level = DeprecationLevel.ERROR
     )
     protected open fun valuesAndDefaults(values: Map<Column<*>, Any?> = this.values): Map<Column<*>, Any?> {
         val result = values.toMutableMap()
@@ -78,7 +76,7 @@ open class InsertStatement<Key : Any>(
         "This function has been obsolete since version 0.57.0, " +
             "following the removal of default values from insert statements. " +
             "It's safe to remove any overrides of this function from your code.",
-        level = DeprecationLevel.WARNING
+        level = DeprecationLevel.ERROR
     )
     protected open fun isColumnValuePreferredFromResultSet(column: Column<*>, value: Any?): Boolean {
         return column.columnType.isAutoInc || value is NextVal<*>
@@ -139,6 +137,7 @@ open class InsertStatement<Key : Any>(
     /**
      * Returns the list of columns with default values that can not be taken locally.
      * It is the columns defined with `defaultExpression()`, `databaseGenerated()`
+     * @suppress
      */
     @InternalApi
     fun columnsWithDatabaseDefaults() = targets

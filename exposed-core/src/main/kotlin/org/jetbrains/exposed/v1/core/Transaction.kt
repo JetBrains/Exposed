@@ -35,7 +35,7 @@ open class UserDataHolder {
     fun <T : Any> getOrCreate(key: Key<T>, init: () -> T): T = userdata.getOrPut(key, init) as T
 }
 
-/** Class representing a unit block of work that is performed on a database. */
+/** Base class representing a unit block of work that is performed on a database. */
 abstract class Transaction : UserDataHolder(), TransactionInterface {
     /** The current number of statements executed in this transaction. */
     var statementCount: Int = 0
@@ -44,22 +44,25 @@ abstract class Transaction : UserDataHolder(), TransactionInterface {
     var duration: Long = 0
 
     /** The threshold in milliseconds for query execution to exceed before logging a warning. */
-    // TODO fix unused assignment (getter needs to check field if mutable)
-    // TODO add unit tests
     var warnLongQueriesDuration: Long? = null
-        get() = db.config.warnLongQueriesDuration
+        get() = field ?: db.config.warnLongQueriesDuration
 
     /** Whether tracked values like [statementCount] and [duration] should be stored in [statementStats] for debugging. */
     var debug = false
 
     /**
-     * The number of seconds the JDBC driver should wait for a statement to execute in [Transaction] transaction before timing out.
-     * Note Not all JDBC drivers implement this limit. Please check the driver documentation.
+     * The number of seconds the driver should wait for a statement to execute in a transaction before timing out.
+     * Note that not all drivers implement this limit. For more information, refer to the relevant driver documentation.
      */
     var queryTimeout: Int? = null
 
     /** The unique ID for this transaction. */
-    val id by lazy { UUID.randomUUID().toString() }
+    val transactionId by lazy { UUID.randomUUID().toString() }
+
+    /** The unique ID for this transaction. */
+    @Deprecated("Use transactionId instead", ReplaceWith("transactionId"))
+    val id: String
+        get() = transactionId
 
     /**
      * A [StringBuilder] containing string representations of previously executed statements
@@ -78,15 +81,19 @@ abstract class Transaction : UserDataHolder(), TransactionInterface {
     val statementStats by lazy { hashMapOf<String, Pair<Int, Long>>() }
 
     /** Returns the string identifier of a [table], based on its [Table.tableName] and [Table.alias], if applicable. */
-    fun identity(table: Table): String =
-        (table as? Alias<*>)?.let { "${identity(it.delegate)} ${db.identifierManager.quoteIfNecessary(it.alias)}" }
-            ?: db.identifierManager.quoteIfNecessary(table.tableName.inProperCase())
+    fun identity(table: Table): String = (table as? Alias<*>)
+        ?.let { "${identity(it.delegate)} ${db.identifierManager.quoteIfNecessary(it.alias)}" }
+        ?: db.identifierManager.quoteIfNecessary(
+            @OptIn(InternalApi::class)
+            table.tableName.inProperCase()
+        )
 
     /** Returns the complete string identifier of a [column], based on its [Table.tableName] and [Column.name]. */
     fun fullIdentity(column: Column<*>): String = QueryBuilder(false).also {
         fullIdentity(column, it)
     }.toString()
 
+    @OptIn(InternalApi::class)
     internal fun fullIdentity(column: Column<*>, queryBuilder: QueryBuilder) = queryBuilder {
         if (column.table is Alias<*>) {
             append(db.identifierManager.quoteIfNecessary(column.table.alias))
@@ -99,4 +106,11 @@ abstract class Transaction : UserDataHolder(), TransactionInterface {
 
     /** Returns the string identifier of a [column], based on its [Column.name]. */
     fun identity(column: Column<*>): String = db.identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(column.name)
+
+    /** Adds one or more [SqlLogger]s to this [Transaction]. */
+    open fun addLogger(vararg logger: SqlLogger): CompositeSqlLogger {
+        return CompositeSqlLogger().apply {
+            logger.forEach { this.addLogger(it) }
+        }
+    }
 }

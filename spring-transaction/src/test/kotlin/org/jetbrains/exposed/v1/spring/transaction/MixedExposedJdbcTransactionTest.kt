@@ -4,8 +4,7 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.junit.Assert.assertThrows
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.stereotype.Service
@@ -15,6 +14,7 @@ import java.util.UUID
 import javax.sql.DataSource
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
+import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class MixedExposedJdbcTransactionTest : SpringTransactionTestBase() {

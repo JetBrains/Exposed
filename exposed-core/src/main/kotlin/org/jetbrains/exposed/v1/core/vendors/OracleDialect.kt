@@ -6,7 +6,7 @@ import org.jetbrains.exposed.v1.core.statements.MergeStatement.ClauseAction.DELE
 import org.jetbrains.exposed.v1.core.statements.MergeStatement.ClauseAction.INSERT
 import org.jetbrains.exposed.v1.core.statements.MergeStatement.ClauseAction.UPDATE
 import org.jetbrains.exposed.v1.core.statements.StatementType
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.exceptions.throwUnsupportedException
 import java.util.*
 
@@ -132,7 +132,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ): Unit = queryBuilder {
         @OptIn(InternalApi::class)
-        val tr = CoreTransactionManager.currentTransaction()
+        val tr = currentTransaction()
         if (expr.distinct) tr.throwUnsupportedException("Oracle doesn't support DISTINCT in LISTAGG")
         if (expr.orderBy.size > 1) {
             tr.throwUnsupportedException("Oracle supports only single column in ORDER BY clause in LISTAGG")
@@ -209,7 +209,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
     ) {
         @OptIn(InternalApi::class)
         if (path.size > 1) {
-            CoreTransactionManager.currentTransaction().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
+            currentTransaction().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
         }
         queryBuilder {
             append(if (toScalar) "JSON_VALUE" else "JSON_QUERY")
@@ -228,7 +228,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
     ) {
         @OptIn(InternalApi::class)
         if (path.size > 1) {
-            CoreTransactionManager.currentTransaction().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
+            currentTransaction().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
         }
         queryBuilder {
             append("JSON_EXISTS(", expression, ", ")
@@ -268,19 +268,11 @@ internal object OracleFunctionProvider : FunctionProvider() {
             expression to ((expression as? ExpressionWithColumnType<*>)?.alias("c$index") ?: expression.alias("c$index"))
         }.toMap()
 
-        // TODO check if it could be replaced with buildStatement
-        // TODO The old version:
-        // TODO val subQuery = targets.select(columnsToSelect.values.toList())
-        // TODO        where?.let {
-        // TODO            subQuery.adjustWhere { it }
-        // TODO        }
-        // TODO        subQuery.prepareSQL(this)
-        // TODO        +") x"
         +"SELECT "
         columnsToSelect.values.appendTo { +it }
         +" FROM "
         @OptIn(InternalApi::class)
-        targets.describe(CoreTransactionManager.currentTransaction(), this)
+        targets.describe(currentTransaction(), this)
         where?.let {
             +" WHERE "
             +it
@@ -362,13 +354,12 @@ internal object OracleFunctionProvider : FunctionProvider() {
             )
         targets.checkJoinTypes(StatementType.DELETE)
 
-        // TODO the same as above
         @OptIn(InternalApi::class)
         return with(QueryBuilder(true)) {
             +"DELETE (SELECT "
             tableToDelete.columns.appendTo { +it }
             +" FROM "
-            targets.describe(CoreTransactionManager.currentTransaction(), this)
+            targets.describe(currentTransaction(), this)
             where?.let {
                 +" WHERE "
                 +it
@@ -446,13 +437,19 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
     override val supportsOnUpdate: Boolean = false
     override val supportsSetDefaultReferenceOption: Boolean = false
 
+    @Deprecated(
+        "The parameter was moved to JdbcExposedDatabaseMetadata/R2dbcExposedDatabaseMetadata classes",
+        ReplaceWith("TransactionManager.current().db.supportsSelectForUpdate")
+    )
+    override val supportsSelectForUpdate: Boolean = true
+
     // Preventing the deletion of a parent row if a child row references it is the default behaviour in Oracle.
     override val supportsRestrictReferenceOption: Boolean = false
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
     override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartialOrFunctional: Boolean): String {
-        return "DROP INDEX ${identifierManager.quoteIfNecessary(indexName)}"
+        return "DROP INDEX ${identifierManager.cutIfNecessaryAndQuote(indexName)}"
     }
 
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> {
@@ -469,7 +466,10 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
         }
     }
 
-    override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
+    override fun createDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "CREATE DATABASE ${name.inProperCase()}"
+    }
 
     override fun listDatabases(): String = error("This operation is not supported by Oracle dialect")
 

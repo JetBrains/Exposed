@@ -9,6 +9,9 @@ import kotlin.reflect.KClass
  * Mapper for primitive types (Int, Long, Float, Double, etc.).
  */
 class PrimitiveTypeMapper : TypeMapper {
+    @Suppress("MagicNumber")
+    override val priority = 0.3
+
     override val columnTypes: List<KClass<out IColumnType<*>>>
         get() = listOf(
             ByteColumnType::class,
@@ -24,13 +27,14 @@ class PrimitiveTypeMapper : TypeMapper {
             DecimalColumnType::class,
             BooleanColumnType::class,
             CharacterColumnType::class,
-            UUIDColumnType::class
+            UUIDColumnType::class,
+            StringColumnType::class,
         )
 
     override fun setValue(
         statement: Statement,
         dialect: DatabaseDialect,
-        mapperRegistry: TypeMapperRegistry,
+        typeMapping: R2dbcTypeMapping,
         columnType: IColumnType<*>,
         value: Any?,
         index: Int

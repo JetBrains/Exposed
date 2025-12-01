@@ -2,14 +2,14 @@
 
 package org.jetbrains.exposed.samples.spring.service
 
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.deleteWhere
-import org.jetbrains.exposed.v1.insertAndGetId
-import org.jetbrains.exposed.v1.samples.spring.domain.User
-import org.jetbrains.exposed.v1.samples.spring.domain.UserEntity
-import org.jetbrains.exposed.v1.samples.spring.domain.UserId
-import org.jetbrains.exposed.v1.selectAll
-import org.jetbrains.exposed.v1.update
+import org.jetbrains.exposed.samples.spring.domain.User
+import org.jetbrains.exposed.samples.spring.domain.UserEntity
+import org.jetbrains.exposed.samples.spring.domain.UserId
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
@@ -21,6 +21,17 @@ class UserService {
     fun findUserById(id: UserId): User? {
         // Use Exposed dsl without `transaction { }`
         return UserEntity.selectAll().where { UserEntity.id eq id.value }.firstOrNull()?.let {
+            User(
+                id = UserId(it[UserEntity.id].value),
+                name = it[UserEntity.name],
+                age = it[UserEntity.age],
+            )
+        }
+    }
+
+    // read all users
+    fun findAllUsers(): List<User> {
+        return UserEntity.selectAll().map {
             User(
                 id = UserId(it[UserEntity.id].value),
                 name = it[UserEntity.name],

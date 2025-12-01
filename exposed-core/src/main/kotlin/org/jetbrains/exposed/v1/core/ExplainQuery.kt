@@ -35,12 +35,13 @@ class ExplainResultRow(
 ) {
     override fun toString(): String = fieldIndex.entries.joinToString { "${it.key}=${data[it.value]}" }
 
+    @Suppress("SwallowedException")
     companion object {
-        /** Creates an [ExplainResultRow] storing all fields in [fieldIndex] with their values retrieved from a [ResultSet]. */
+        /** Creates an [ExplainResultRow] storing all fields in [fieldIndex] with their values retrieved from a [RowApi]. */
         fun create(rs: RowApi, fieldIndex: Map<String, Int>): ExplainResultRow {
             val fieldValues = arrayOfNulls<Any?>(fieldIndex.size)
             fieldIndex.values.forEach { index ->
-                fieldValues[index] = rs.getObject(index + 1)
+                fieldValues[index] = rs.getObject(index + 1, null, TextColumnType())
             }
             return ExplainResultRow(fieldIndex, fieldValues)
         }

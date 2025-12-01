@@ -4,7 +4,7 @@ val flywayVersion: String by project
 
 plugins {
     id("application")
-    kotlin("jvm") version "2.0.0"
+    kotlin("jvm") version "2.2.0"
 }
 
 group = "org.jetbrains.exposed.samples.migration"
@@ -21,7 +21,8 @@ repositories {
 dependencies {
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
-    implementation("org.jetbrains.exposed:exposed-migration:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-migration-core:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-migration-jdbc:$exposedVersion")
 
     implementation("com.h2database:h2:$h2Version")
 

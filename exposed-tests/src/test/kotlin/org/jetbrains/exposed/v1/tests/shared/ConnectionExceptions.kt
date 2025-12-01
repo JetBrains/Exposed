@@ -1,12 +1,10 @@
 package org.jetbrains.exposed.v1.tests.shared
 
 import org.jetbrains.exposed.v1.jdbc.Database
-import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.TestDB
-import org.junit.After
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
@@ -63,13 +61,13 @@ class ConnectionExceptions {
     }
 
     private fun `_transaction repetition works even if rollback throws exception`(connectionDecorator: (Connection) -> ConnectionSpy) {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         Class.forName(TestDB.H2_V2.driver).getDeclaredConstructor().newInstance()
 
         val wrappingDataSource = WrappingDataSource(TestDB.H2_V2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
         try {
-            transaction(Connection.TRANSACTION_SERIALIZABLE, db = db) {
+            transaction(db = db, transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 5
                 this.exec("BROKEN_SQL_THAT_CAUSES_EXCEPTION()")
             }
@@ -99,13 +97,13 @@ class ConnectionExceptions {
     }
 
     private fun `_transaction repetition works when commit throws exception`(connectionDecorator: (Connection) -> ConnectionSpy) {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         Class.forName(TestDB.H2_V2.driver).getDeclaredConstructor().newInstance()
 
         val wrappingDataSource = WrappingDataSource(TestDB.H2_V2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
         try {
-            transaction(Connection.TRANSACTION_SERIALIZABLE, db = db) {
+            transaction(db = db, transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 5
                 this.exec("SELECT 1;")
             }
@@ -125,13 +123,13 @@ class ConnectionExceptions {
     }
 
     private fun `_transaction throws exception if all commits throws exception`(connectionDecorator: (Connection) -> ConnectionSpy) {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         Class.forName(TestDB.H2_V2.driver).getDeclaredConstructor().newInstance()
 
         val wrappingDataSource = WrappingDataSource(TestDB.H2_V2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
         try {
-            transaction(Connection.TRANSACTION_SERIALIZABLE, db = db) {
+            transaction(db = db, transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 5
                 this.exec("SELECT 1;")
             }
@@ -179,10 +177,5 @@ class ConnectionExceptions {
     @Test
     fun `transaction throws exception if all commits and close throws exception`() {
         `_transaction throws exception if all commits throws exception`(::ExceptionOnCommitCloseConnection)
-    }
-
-    @After
-    fun teardown() {
-        TransactionManager.resetCurrent(null)
     }
 }

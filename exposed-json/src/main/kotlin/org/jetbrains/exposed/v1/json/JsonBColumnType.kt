@@ -6,6 +6,7 @@ import kotlinx.serialization.serializer
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 
 /**
@@ -24,6 +25,19 @@ class JsonBColumnType<T : Any>(
     override fun sqlType(): String = when (currentDialect) {
         is H2Dialect -> (currentDialect as H2Dialect).originalDataTypeProvider.jsonBType()
         else -> currentDialect.dataTypeProvider.jsonBType()
+    }
+
+    override fun parameterMarker(value: T?): String = if (currentDialect is SQLiteDialect) {
+        "JSONB(?)"
+    } else {
+        super.parameterMarker(value)
+    }
+
+    override fun nonNullValueAsDefaultString(value: T): String {
+        return when (currentDialect) {
+            is SQLiteDialect -> "(JSONB(${nonNullValueToString(value)}))"
+            else -> super.nonNullValueAsDefaultString(value)
+        }
     }
 }
 
@@ -52,7 +66,7 @@ fun <T : Any> Table.jsonb(
  * @param jsonConfig Configured instance of the `Json` class
  * @param kSerializer Serializer responsible for the representation of a serial form of type [T].
  * Defaults to a generic serializer for type [T]
- * @sample org.jetbrains.exposed.v1.sql.json.JsonBColumnTests.testLoggerWithJsonBCollections
+ * @sample org.jetbrains.exposed.v1.json.JsonBColumnTests.testLoggerWithJsonBCollections
  */
 inline fun <reified T : Any> Table.jsonb(
     name: String,

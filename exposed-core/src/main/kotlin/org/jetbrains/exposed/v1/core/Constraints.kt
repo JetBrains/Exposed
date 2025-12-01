@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.v1.core
 
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
@@ -67,7 +67,10 @@ data class ForeignKeyConstraint(
 
     @OptIn(InternalApi::class)
     private val tx: Transaction
-        get() = CoreTransactionManager.currentTransaction()
+        get() = currentTransaction()
+
+    private val DatabaseDialect.cannotAlterForeignKeyConstraint: Boolean
+        get() = this is SQLiteDialect
 
     /** The columns of the referenced parent table. */
     val target: LinkedHashSet<Column<*>> = LinkedHashSet(references.values)
@@ -127,18 +130,22 @@ data class ForeignKeyConstraint(
             append("FOREIGN KEY ($fromColumns) REFERENCES $targetTableName($targetColumns)")
 
             if (deleteRule != ReferenceOption.NO_ACTION) {
-                if (deleteRule == ReferenceOption.RESTRICT && !currentDialect.supportsRestrictReferenceOption) {
-                    exposedLogger.warn(
-                        "${currentDialect.name} doesn't support FOREIGN KEY with RESTRICT reference option with ON DELETE clause. " +
-                            "Please check your $fromTableName table."
-                    )
-                } else if (deleteRule == ReferenceOption.SET_DEFAULT && !currentDialect.supportsSetDefaultReferenceOption) {
-                    exposedLogger.warn(
-                        "${currentDialect.name} doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
-                            "Please check your $fromTableName table."
-                    )
-                } else {
-                    append(" ON DELETE $deleteRule")
+                when (deleteRule) {
+                    ReferenceOption.RESTRICT if !currentDialect.supportsRestrictReferenceOption -> {
+                        exposedLogger.warn(
+                            "${currentDialect.name} doesn't support FOREIGN KEY with RESTRICT reference option with ON DELETE clause. " +
+                                "Please check your $fromTableName table."
+                        )
+                    }
+                    ReferenceOption.SET_DEFAULT if !currentDialect.supportsSetDefaultReferenceOption -> {
+                        exposedLogger.warn(
+                            "${currentDialect.name} doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
+                                "Please check your $fromTableName table."
+                        )
+                    }
+                    else -> {
+                        append(" ON DELETE $deleteRule")
+                    }
                 }
             }
 
@@ -161,16 +168,28 @@ data class ForeignKeyConstraint(
             }
         }
 
-    override fun createStatement(): List<String> = listOf("ALTER TABLE $fromTableName ADD $foreignKeyPart")
+    override fun createStatement(): List<String> {
+        return if (currentDialect.cannotAlterForeignKeyConstraint) {
+            exposedLogger.warn("ALTER TABLE ADD CONSTRAINT is not supported by ${currentDialect.name}")
+            listOf()
+        } else {
+            listOf("ALTER TABLE $fromTableName ADD $foreignKeyPart")
+        }
+    }
 
     override fun modifyStatement(): List<String> = dropStatement() + createStatement()
 
     override fun dropStatement(): List<String> {
-        val constraintType = when (currentDialect) {
-            is MysqlDialect -> "FOREIGN KEY"
-            else -> "CONSTRAINT"
+        return if (currentDialect.cannotAlterForeignKeyConstraint) {
+            exposedLogger.warn("ALTER TABLE DROP CONSTRAINT is not supported by ${currentDialect.name}")
+            listOf()
+        } else {
+            val constraintType = when (currentDialect) {
+                is MysqlDialect -> "FOREIGN KEY"
+                else -> "CONSTRAINT"
+            }
+            listOf("ALTER TABLE $fromTableName DROP $constraintType $fkName")
         }
-        return listOf("ALTER TABLE $fromTableName DROP $constraintType $fkName")
     }
 
     /** Returns the parent table column that is referenced by the [from] column in the child table. */
@@ -224,7 +243,7 @@ data class CheckConstraint(
         fun from(table: Table, name: String, op: Op<Boolean>): CheckConstraint {
             require(name.isNotBlank()) { "Check constraint name cannot be blank" }
             @OptIn(InternalApi::class)
-            val tr = CoreTransactionManager.currentTransaction()
+            val tr = currentTransaction()
             val identifierManager = tr.db.identifierManager
             val tableName = tr.identity(table)
             val checkOpSQL = op.toString().replace("$tableName.", "")
@@ -234,7 +253,7 @@ data class CheckConstraint(
 }
 
 /** A conditional expression used as a filter when creating a partial index. */
-typealias FilterCondition = (SqlExpressionBuilder.() -> Op<Boolean>)?
+typealias FilterCondition = (() -> Op<Boolean>)?
 
 /**
  * Represents an index.
@@ -260,6 +279,7 @@ data class Index(
 
     /** Name of the index. */
     val indexName: String
+        @OptIn(InternalApi::class)
         get() = customName ?: buildString {
             append(table.nameInDatabaseCaseUnquoted())
             append('_')

@@ -1,42 +1,9 @@
-<!DOCTYPE html SYSTEM "about:legacy-compat">
-<html lang="en-US" data-preset="contrast" data-primary-color="#307FFF"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta charset="UTF-8"><meta name="robots" content="noindex"><meta name="built-on" content="2025-01-15T14:46:39.882396277"><title>Working with Sequence | Exposed</title><script type="application/json" id="virtual-toc-data">[{"id":"define-a-sequence","level":0,"title":"Define a sequence","anchor":"#define-a-sequence"},{"id":"create-a-sequence","level":0,"title":"Create a sequence","anchor":"#create-a-sequence"},{"id":"drop-a-sequence","level":0,"title":"Drop a sequence","anchor":"#drop-a-sequence"},{"id":"access-next-value","level":0,"title":"Access the next value","anchor":"#access-next-value"}]</script><script type="application/json" id="topic-shortcuts"></script><link href="https://resources.jetbrains.com/writerside/apidoc/6.10.0-b267/app.css" rel="stylesheet"><link rel="icon" type="image/svg" sizes="16x16" href="images/exposed-logo.svg"><meta name="image" content=""><!-- Open Graph --><meta property="og:title" content="Working with Sequence | Exposed"><meta property="og:description" content=""><meta property="og:image" content=""><meta property="og:site_name" content="Exposed Help"><meta property="og:type" content="website"><meta property="og:locale" content="en_US"><meta property="og:url" content="writerside-documentation/docs/0.58.0/working-with-sequence.html"><!-- End Open Graph --><!-- Twitter Card --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:site" content=""><meta name="twitter:title" content="Working with Sequence | Exposed"><meta name="twitter:description" content=""><meta name="twitter:creator" content=""><meta name="twitter:image:src" content=""><!-- End Twitter Card --><!-- Schema.org WebPage --><script type="application/ld+json">{
-    "@context": "http://schema.org",
-    "@type": "WebPage",
-    "@id": "writerside-documentation/docs/0.58.0/working-with-sequence.html#webpage",
-    "url": "writerside-documentation/docs/0.58.0/working-with-sequence.html",
-    "name": "Working with Sequence | Exposed",
-    "description": "",
-    "image": "",
-    "inLanguage":"en-US"
-}</script><!-- End Schema.org --><!-- Schema.org WebSite --><script type="application/ld+json">{
-    "@type": "WebSite",
-    "@id": "writerside-documentation/docs/#website",
-    "url": "writerside-documentation/docs/",
-    "name": "Exposed Help"
-}</script><!-- End Schema.org --></head><body data-id="Working-with-Sequence" data-main-title="Working with Sequence" data-article-props="{&quot;seeAlsoStyle&quot;:&quot;links&quot;}" data-template="article" data-breadcrumbs="Deep Dive into DSL"><div class="wrapper"><main class="panel _main"><header class="panel__header"><div class="container"><h3>Exposed 0.58.0 Help</h3><div class="panel-trigger"></div></div></header><section class="panel__content"><div class="container"><article class="article" data-shortcut-switcher="inactive"><h1 data-toc="Working-with-Sequence" id="Working-with-Sequence.topic">Working with Sequence</h1><p id="-pfqg2k_2">A sequence is a database object that automatically generates integer values in sequential order. It is particularly useful in generating unique identifiers and primary keys.</p><section class="chapter"><h2 id="define-a-sequence" data-toc="define-a-sequence">Define a sequence</h2><p>To define a sequence in Exposed, use the <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-sequence/index.html" id="-pfqg2k_3" data-external="true" rel="noopener noreferrer"><code class="code" id="-pfqg2k_4">Sequence</code></a> class: </p><div class="code-block" data-lang="kotlin">
-            val myseq = Sequence(&quot;my_sequence&quot;) // my_sequence is the sequence name.
-        </div><p id="-pfqg2k_6">Several parameters can be specified to control the properties of the sequence:</p><div class="code-block" data-lang="kotlin">
-            private val myseq = Sequence(
-                name = &quot;my_sequence&quot;,
-                startWith = 4,
-                incrementBy = 2,
-                minValue = 1,
-                maxValue = 10,
-                cycle = true,
-                cache = 20
-            )
-        </div></section><section class="chapter"><h2 id="create-a-sequence" data-toc="create-a-sequence">Create a sequence</h2><p>To create a sequence, use the <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-schema-utils/create-sequence.html" id="-pfqg2k_8" data-external="true" rel="noopener noreferrer"><code class="code" id="-pfqg2k_9">.createSequence()</code></a> method provided by <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-schema-utils/index.html" id="-pfqg2k_10" data-external="true" rel="noopener noreferrer"><code class="code" id="-pfqg2k_11">SchemaUtils</code></a>: </p><div class="code-block" data-lang="kotlin">
-            SchemaUtils.createSequence(myseq)
-        </div></section><section class="chapter"><h2 id="drop-a-sequence" data-toc="drop-a-sequence">Drop a sequence</h2><p>To drop a sequence, use the <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-schema-utils/drop-sequence.html" id="-pfqg2k_13" data-external="true" rel="noopener noreferrer"><code class="code" id="-pfqg2k_14">.dropSequence()</code></a> method provided by <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-schema-utils/index.html" id="-pfqg2k_15" data-external="true" rel="noopener noreferrer"><code class="code" id="-pfqg2k_16">SchemaUtils</code></a>: </p><div class="code-block" data-lang="kotlin">
-            SchemaUtils.dropSequence(myseq)
-        </div></section><section class="chapter"><h2 id="access-next-value" data-toc="access-next-value">Access the next value</h2><p id="-pfqg2k_18">You can access the next value in a sequence by using the <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/next-int-val.html" id="-pfqg2k_19" data-external="true" rel="noopener noreferrer"><code class="code" id="-pfqg2k_20">.nextIntVal()</code></a> function:</p><div class="code-block" data-lang="kotlin">
-            val nextVal = myseq.nextIntVal()
-            val id = StarWarsFilms.insertAndGetId {
-                it[id] = nextVal
-                it[name] = &quot;The Last Jedi&quot;
-                it[sequelId] = 8
-                it[director] = &quot;Rian Johnson&quot;
-            }
-        </div><div class="code-block" data-lang="kotlin">
-            val firstValue = StarWarsFilms.select(nextVal).single()[nextVal]
-        </div></section><div class="last-modified">Last modified: 14 January 2025</div><div data-feedback-placeholder="true"></div><div class="navigation-links _bottom"><a href="dsl-crud-operations.html" class="navigation-links__prev">CRUD operations</a><a href="dsl-querying-data.html" class="navigation-links__next">Querying data</a></div></article><div id="disqus_thread"></div></div></section></main></div><script src="https://resources.jetbrains.com/writerside/apidoc/6.10.0-b267/app.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="en-US">
+<meta charset="utf-8">
+<title>You will be redirected shortly</title>
+<meta http-equiv="refresh" content="0; url=https://www.jetbrains.com/help/exposed/working-with-sequence.html">
+<h1>Redirecting&hellip;</h1>
+<a href="https://www.jetbrains.com/help/exposed/working-with-sequence.html">Click here if you are not redirected.</a>
+<script>location = "https://www.jetbrains.com/help/exposed/working-with-sequence.html"</script>
+</html>

@@ -5,14 +5,14 @@ import org.jetbrains.exposed.v1.core.EntityIDColumnType
 import org.jetbrains.exposed.v1.core.EqOp
 import org.jetbrains.exposed.v1.core.Expression
 import org.jetbrains.exposed.v1.core.SortOrder
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.inList
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.wrap
 import org.jetbrains.exposed.v1.core.compoundAnd
 import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.wrap
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import kotlin.properties.ReadOnlyProperty
@@ -191,7 +191,7 @@ open class Referrers<ParentID : Any, in Parent : Entity<ParentID>, ChildID : Any
     infix fun orderBy(expression: Expression<*>) = orderBy(listOf(expression to SortOrder.ASC))
 
     /** Modifies this reference to sort entities based on multiple columns as specified in [order]. **/
-    fun orderBy(vararg order: Pair<Expression<*>, SortOrder>) = orderBy(order.toList())
+    fun orderBy(vararg order: Pair<Expression<*>, SortOrder>) = orderBy(order.asList())
 }
 
 /**
@@ -205,7 +205,7 @@ open class Referrers<ParentID : Any, in Parent : Entity<ParentID>, ChildID : Any
 @Deprecated(
     message = "The OptionalReferrers class is a complete duplicate of the Referrers class; therefore, the latter should be used instead.",
     replaceWith = ReplaceWith("Referrers"),
-    level = DeprecationLevel.ERROR
+    level = DeprecationLevel.HIDDEN
 )
 class OptionalReferrers<ParentID : Any, in Parent : Entity<ParentID>, ChildID : Any, out Child : Entity<ChildID>, REF>(
     reference: Column<REF?>,
@@ -377,7 +377,7 @@ private fun <ID : Any> List<Entity<ID>>.preloadRelations(
     }
 
     if (directRelations.isNotEmpty() && relations.size != directRelations.size) {
-        val remainingRelations = relations.toList() - directRelations
+        val remainingRelations = relations.asList() - directRelations
         directRelations.map { relationProperty ->
             val relationsToLoad = this.flatMap {
                 when (val relation = (relationProperty as KProperty1<Entity<*>, *>).get(it)) {
@@ -404,7 +404,7 @@ private fun <ID : Any> List<Entity<ID>>.preloadRelations(
  * **See also:** [Eager Loading](https://github.com/JetBrains/Exposed/wiki/DAO#eager-loading)
  *
  * @param relations The reference fields of the entities, as [KProperty]s, which should be loaded.
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.preloadRelationAtDepth
+ * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.preloadRelationAtDepth
  */
 fun <SRCID : Any, SRC : Entity<SRCID>, REF : Entity<*>, L : Iterable<SRC>> L.with(vararg relations: KProperty1<out REF, Any?>): L {
     toList().apply {
@@ -423,7 +423,7 @@ fun <SRCID : Any, SRC : Entity<SRCID>, REF : Entity<*>, L : Iterable<SRC>> L.wit
  * **See also:** [Eager Loading](https://github.com/JetBrains/Exposed/wiki/DAO#eager-loading)
  *
  * @param relations The reference fields of this entity, as [KProperty]s, which should be loaded.
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.preloadOptionalReferencesOnAnEntity
+ * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.preloadOptionalReferencesOnAnEntity
  */
 fun <SRCID : Any, SRC : Entity<SRCID>> SRC.load(vararg relations: KProperty1<out Entity<*>, Any?>): SRC = apply {
     listOf(this).with(*relations)

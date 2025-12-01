@@ -4,14 +4,19 @@
     <sitemap priority="0.35" change-frequency="monthly"/>
     <variables>
         <web-root>https://www.jetbrains.com/help</web-root>
-        <header-logo>exposed-logo-white.svg</header-logo>
+        <header-logo>exposed-icon.svg</header-logo>
         <website-title>%instance% Documentation</website-title>
         <algolia-id>MMA5Z3JT91</algolia-id>
         <algolia-index>prod_exposed</algolia-index>
         <algolia-api-key>119a138f76e4c043bcbb9f0c16119094</algolia-api-key>
         <custom-favicons>
-            exposed-logo.svg
+            exposed-icon.svg
         </custom-favicons>
+        <analytics-head-script-file>google-search.html</analytics-head-script-file>
+        <feedback-url>https://forms-service.jetbrains.com/feedback</feedback-url>
+        <feedback-enabled>true</feedback-enabled>
+        <feedback-widget>true</feedback-widget>
+        <primary-color>iris</primary-color>
     </variables>
     <build-profile instance="hi">
         <variables>

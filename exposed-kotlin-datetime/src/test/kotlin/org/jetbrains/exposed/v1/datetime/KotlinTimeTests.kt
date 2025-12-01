@@ -4,17 +4,12 @@ import kotlinx.datetime.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.between
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.json.extract
 import org.jetbrains.exposed.v1.json.jsonb
-import org.jetbrains.exposed.v1.migration.MigrationUtils
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
@@ -22,15 +17,17 @@ import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Assert.fail
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.fail
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import kotlin.test.assertEquals
+import kotlin.time.Clock
 import kotlin.time.Duration
+import kotlin.time.Instant
 
 class KotlinTimeTests : DatabaseTestsBase() {
 
@@ -46,16 +43,22 @@ class KotlinTimeTests : DatabaseTestsBase() {
                 it[local_time] = now
             }
 
-            val insertedYear = CitiesTime.select(CitiesTime.local_time.year()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.year()]
-            val insertedMonth = CitiesTime.select(CitiesTime.local_time.month()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.month()]
-            val insertedDay = CitiesTime.select(CitiesTime.local_time.day()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.day()]
-            val insertedHour = CitiesTime.select(CitiesTime.local_time.hour()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.hour()]
-            val insertedMinute = CitiesTime.select(CitiesTime.local_time.minute()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.minute()]
-            val insertedSecond = CitiesTime.select(CitiesTime.local_time.second()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.second()]
+            val insertedYear = CitiesTime.select(CitiesTime.local_time.year()).where { CitiesTime.id.eq(cityID) }
+                .single()[CitiesTime.local_time.year()]
+            val insertedMonth = CitiesTime.select(CitiesTime.local_time.month()).where { CitiesTime.id.eq(cityID) }
+                .single()[CitiesTime.local_time.month()]
+            val insertedDay = CitiesTime.select(CitiesTime.local_time.day()).where { CitiesTime.id.eq(cityID) }
+                .single()[CitiesTime.local_time.day()]
+            val insertedHour = CitiesTime.select(CitiesTime.local_time.hour()).where { CitiesTime.id.eq(cityID) }
+                .single()[CitiesTime.local_time.hour()]
+            val insertedMinute = CitiesTime.select(CitiesTime.local_time.minute()).where { CitiesTime.id.eq(cityID) }
+                .single()[CitiesTime.local_time.minute()]
+            val insertedSecond = CitiesTime.select(CitiesTime.local_time.second()).where { CitiesTime.id.eq(cityID) }
+                .single()[CitiesTime.local_time.second()]
 
             assertEquals(now.year, insertedYear)
-            assertEquals(now.month.value, insertedMonth)
-            assertEquals(now.dayOfMonth, insertedDay)
+            assertEquals(now.month.number, insertedMonth)
+            assertEquals(now.day, insertedDay)
             assertEquals(now.hour, insertedHour)
             assertEquals(now.minute, insertedMinute)
             assertEquals(now.second, insertedSecond)
@@ -83,8 +86,8 @@ class KotlinTimeTests : DatabaseTestsBase() {
 
                 val now = now()
                 assertEquals(now.year, result[year])
-                assertEquals(now.monthNumber, result[month])
-                assertEquals(now.dayOfMonth, result[day])
+                assertEquals(now.month.number, result[month])
+                assertEquals(now.day, result[day])
                 assertEquals(now.hour, result[hour])
                 assertEquals(now.minute, result[minute])
             } finally {
@@ -121,17 +124,38 @@ class KotlinTimeTests : DatabaseTestsBase() {
     @Test
     fun `test selecting Instant using expressions`() {
         val testTable = object : Table() {
+            val xTs = xTimestamp("xts")
+            val xTsn = xTimestamp("xtsn").nullable()
+
             val ts = timestamp("ts")
             val tsn = timestamp("tsn").nullable()
         }
 
-        val now = Clock.System.now()
+        val now = Clock.System.now().asJdk8()
 
         withTables(testTable) {
             testTable.insert {
+                it[xTs] = now.toDeprecatedInstant()
+                it[xTsn] = now.toDeprecatedInstant()
                 it[ts] = now
                 it[tsn] = now
             }
+
+            val xMaxTsExpr = testTable.xTs.max()
+            val xMaxTimestamp = testTable.select(xMaxTsExpr).single()[xMaxTsExpr]
+            assertEqualDateTime(now.toDeprecatedInstant(), xMaxTimestamp)
+
+            val xMinTsExpr = testTable.xTs.min()
+            val xMinTimestamp = testTable.select(xMinTsExpr).single()[xMinTsExpr]
+            assertEqualDateTime(now.toDeprecatedInstant(), xMinTimestamp)
+
+            val xMaxTsnExpr = testTable.xTsn.max()
+            val xMaxNullableTimestamp = testTable.select(xMaxTsnExpr).single()[xMaxTsnExpr]
+            assertEqualDateTime(now.toDeprecatedInstant(), xMaxNullableTimestamp)
+
+            val xMinTsnExpr = testTable.xTsn.min()
+            val xMinNullableTimestamp = testTable.select(xMinTsnExpr).single()[xMinTsnExpr]
+            assertEqualDateTime(now.toDeprecatedInstant(), xMinNullableTimestamp)
 
             val maxTsExpr = testTable.ts.max()
             val maxTimestamp = testTable.select(maxTsExpr).single()[maxTsExpr]
@@ -172,8 +196,8 @@ class KotlinTimeTests : DatabaseTestsBase() {
 
                 val result1 = testTable.select(year, month, day).single()
                 assertEquals(today.year, result1[year])
-                assertEquals(today.monthNumber, result1[month])
-                assertEquals(today.dayOfMonth, result1[day])
+                assertEquals(today.month.number, result1[month])
+                assertEquals(today.day, result1[day])
 
                 val lastDayOfMonth = CustomDateFunction(
                     "date",
@@ -182,7 +206,7 @@ class KotlinTimeTests : DatabaseTestsBase() {
                     stringLiteral("+1 month"),
                     stringLiteral("-1 day")
                 )
-                val nextMonth = LocalDate(today.year, today.monthNumber, 1).plus(1, DateTimeUnit.MONTH)
+                val nextMonth = LocalDate(today.year, today.month.number, 1).plus(1, DateTimeUnit.MONTH)
                 val expectedLastDayOfMonth = nextMonth.minus(1, DateTimeUnit.DAY)
 
                 val result2 = testTable.select(lastDayOfMonth).single()
@@ -268,7 +292,8 @@ class KotlinTimeTests : DatabaseTestsBase() {
             assertEquals(1, sameDateResult.size)
             assertEquals(mayTheFourth, sameDateResult.single()[testTable.deleted])
 
-            val sameMonthResult = testTable.selectAll().where { testTable.created.month() eq testTable.deleted.month() }.toList()
+            val sameMonthResult =
+                testTable.selectAll().where { testTable.created.month() eq testTable.deleted.month() }.toList()
             assertEquals(2, sameMonthResult.size)
 
             val year2023 = if (currentDialectTest is PostgreSQLDialect) {
@@ -303,7 +328,8 @@ class KotlinTimeTests : DatabaseTestsBase() {
             }
 
             // these DB take the nanosecond value 871_130_789 and round up to default precision (e.g. in Oracle: 871_131)
-            val requiresExplicitDTCast = listOf(TestDB.ORACLE, TestDB.H2_V2_ORACLE, TestDB.H2_V2_PSQL, TestDB.H2_V2_SQLSERVER)
+            val requiresExplicitDTCast =
+                listOf(TestDB.ORACLE, TestDB.H2_V2_ORACLE, TestDB.H2_V2_PSQL, TestDB.H2_V2_SQLSERVER)
             val dateTime = when (testDb) {
                 in requiresExplicitDTCast -> Cast(dateTimeParam(mayTheFourthDT), KotlinLocalDateTimeColumnType())
                 else -> dateTimeParam(mayTheFourthDT)
@@ -311,10 +337,12 @@ class KotlinTimeTests : DatabaseTestsBase() {
             val createdMayFourth = testTableDT.selectAll().where { testTableDT.created eq dateTime }.count()
             assertEquals(2, createdMayFourth)
 
-            val modifiedAtSameDT = testTableDT.selectAll().where { testTableDT.modified eq testTableDT.created }.single()
+            val modifiedAtSameDT =
+                testTableDT.selectAll().where { testTableDT.modified eq testTableDT.created }.single()
             assertEquals(id1, modifiedAtSameDT[testTableDT.id])
 
-            val modifiedAtLaterDT = testTableDT.selectAll().where { testTableDT.modified greater testTableDT.created }.single()
+            val modifiedAtLaterDT =
+                testTableDT.selectAll().where { testTableDT.modified greater testTableDT.created }.single()
             assertEquals(id2, modifiedAtLaterDT[testTableDT.id])
         }
     }
@@ -326,7 +354,7 @@ class KotlinTimeTests : DatabaseTestsBase() {
             val modified = jsonb<ModifierData>("modified", Json.Default)
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2 + TestDB.SQLITE + TestDB.SQLSERVER + TestDB.ORACLE, tester) {
+        withTables(excludeSettings = TestDB.ALL_H2_V2 + TestDB.SQLSERVER + TestDB.ORACLE, tester) { testDb ->
             val dateTimeNow = now()
             tester.insert {
                 it[created] = dateTimeNow.date.minus(1, DateTimeUnit.YEAR).atTime(0, 0, 0)
@@ -343,8 +371,18 @@ class KotlinTimeTests : DatabaseTestsBase() {
             val modifiedAsString = tester.modified.extract<String>("${prefix}timestamp")
             val allModifiedAsString = tester.select(modifiedAsString)
             assertTrue(allModifiedAsString.all { it[modifiedAsString] == dateTimeNow.toString() })
-            // value extracted as json, with implicit LocalDateTime serializer() performing conversions
-            val modifiedAsJson = tester.modified.extract<LocalDateTime>("${prefix}timestamp", toScalar = false)
+
+            val modifiedAsJson = if (testDb == TestDB.SQLITE) {
+                // It is well documented that SQLite extract returns "the dequoted text for a JSON string value",
+                // which is not compatible with the KSerializer for LocalDateTime (decoder expects quotations).
+                // So a type cast ensures the serializer works as expected.
+                tester.modified
+                    .extract<LocalDateTime>("${prefix}timestamp", toScalar = false)
+                    .castTo(KotlinLocalDateTimeColumnType())
+            } else {
+                // value extracted as json, with implicit LocalDateTime serializer() performing conversions
+                tester.modified.extract<LocalDateTime>("${prefix}timestamp", toScalar = false)
+            }
             val allModifiedAsJson = tester.select(modifiedAsJson)
             assertTrue(allModifiedAsJson.all { it[modifiedAsJson] == dateTimeNow })
 
@@ -354,8 +392,17 @@ class KotlinTimeTests : DatabaseTestsBase() {
             } else {
                 tester.modified.extract<LocalDateTime>("${prefix}timestamp")
             }
-            val modifiedBeforeCreation = tester.selectAll().where { dateModified less tester.created }.single()
-            assertEquals(2, modifiedBeforeCreation[tester.modified].userId)
+            // SQLite requires JSON() function to convert JSONB binary format to readable text format
+            val modifiedColumn = if (testDb == TestDB.SQLITE) {
+                tester.modified.function("JSON")
+            } else {
+                tester.modified
+            }
+            val modifiedBeforeCreation = tester
+                .select(tester.created, modifiedColumn)
+                .where { dateModified less tester.created }
+                .single()
+            assertEquals(2, modifiedBeforeCreation[modifiedColumn]?.userId)
         }
     }
 
@@ -453,7 +500,7 @@ class KotlinTimeTests : DatabaseTestsBase() {
             val timestampWithTimeZone = timestampWithTimeZone("timestamptz-column")
         }
 
-        withTables(excludeSettings = timestampWithTimeZoneUnsupportedDB + TestDB.ALL_H2_V1, testTable) { testDb ->
+        withTables(excludeSettings = timestampWithTimeZoneUnsupportedDB, testTable) { testDb ->
             // UTC time zone
             java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
             assertEquals("UTC", ZoneId.systemDefault().id)
@@ -475,6 +522,7 @@ class KotlinTimeTests : DatabaseTestsBase() {
                     TestDB.MYSQL_V8, TestDB.SQLSERVER,
                     in TestDB.ALL_ORACLE_LIKE,
                     in TestDB.ALL_POSTGRES_LIKE -> OffsetDateTime.parse("2023-05-04T05:04:01.123123+00:00")
+
                     else -> now
                 }.toLocalTime().toKotlinLocalTime()
             assertEquals(
@@ -525,7 +573,7 @@ class KotlinTimeTests : DatabaseTestsBase() {
     fun testCurrentDateTimeFunction() {
         val fakeTestTable = object : IntIdTable("fakeTable") {}
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, fakeTestTable) {
+        withTables(fakeTestTable) {
             fun currentDbDateTime(): LocalDateTime {
                 return fakeTestTable.select(CurrentDateTime).first()[CurrentDateTime]
             }
@@ -609,28 +657,43 @@ class KotlinTimeTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testCurrentDateAsDefaultExpression() {
-        val testTable = object : LongIdTable("test_table") {
-            val date: Column<LocalDate> = date("date").index().defaultExpression(CurrentDate)
+    fun testXTimestampAlwaysSavedInUTC() {
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Africa/Cairo"))
+
+        val tester = object : Table("tester") {
+            val x_timestamp_col = xTimestamp("timestamp_col")
         }
-        withTables(testTable) {
-            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(testTable)
-            assertTrue(statements.isEmpty())
+
+        withTables(tester) {
+            // Cairo time zone
+            assertEquals("Africa/Cairo", ZoneId.systemDefault().id)
+
+            val instant = Clock.System.now().asJdk8()
+
+            tester.insert {
+                it[x_timestamp_col] = instant.toDeprecatedInstant()
+            }
+
+            assertEqualDateTime(
+                instant.toDeprecatedInstant(),
+                tester.selectAll().single()[tester.x_timestamp_col]
+            )
         }
     }
 
     @Test
     fun testTimestampAlwaysSavedInUTC() {
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Africa/Cairo"))
+
         val tester = object : Table("tester") {
             val timestamp_col = timestamp("timestamp_col")
         }
 
         withTables(tester) {
             // Cairo time zone
-            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Africa/Cairo"))
             assertEquals("Africa/Cairo", ZoneId.systemDefault().id)
 
-            val instant = Clock.System.now()
+            val instant = Clock.System.now().asJdk8()
 
             tester.insert {
                 it[timestamp_col] = instant
@@ -640,6 +703,42 @@ class KotlinTimeTests : DatabaseTestsBase() {
                 instant,
                 tester.selectAll().single()[tester.timestamp_col]
             )
+        }
+    }
+
+    @Test
+    fun testInsertAndReadWithNonUtcTimezone() {
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Africa/Cairo"))
+
+        val tester = object : Table("testInsertAndReadWithNonUtcTimezone") {
+            val ts = timestamp("ts")
+        }
+
+        val testerText = object : Table("testInsertAndReadWithNonUtcTimezone") {
+            val ts = text("ts")
+        }
+
+        withTables(tester) {
+            val now = Clock.System.now().asJdk8()
+
+            tester.insert {
+                it[tester.ts] = now
+            }
+
+            // It gives HH:MM:SS format in local time zone
+            val nowTimeString = now.toLocalDateTime(TimeZone.currentSystemDefault()).time.toString().trim('0')
+
+            // This check validates that the value on database has local time (instead of UTC)
+            // It should prevent from the case when we convert value to UTC on insert, and back from UTC to local on reading
+            testerText.selectAll().first()[testerText.ts].let { valueAsText ->
+                kotlin.test.assertTrue(
+                    valueAsText.contains(nowTimeString),
+                    "Timestamp as text from database must contain the time in local time zone. Timestamp: $valueAsText, timeString: $nowTimeString"
+                )
+            }
+
+            val valueFromDb = tester.selectAll().first()[tester.ts]
+            assertEquals(now, valueFromDb)
         }
     }
 }
@@ -655,6 +754,7 @@ fun <T> assertEqualDateTime(d1: T?, d2: T?) {
                 assertEqualFractionalPart(d1.nanosecond, d2.nanosecond)
             }
         }
+
         d1 is LocalDateTime && d2 is LocalDateTime -> {
             assertEquals(
                 d1.toJavaLocalDateTime().toEpochSecond(ZoneOffset.UTC),
@@ -663,14 +763,25 @@ fun <T> assertEqualDateTime(d1: T?, d2: T?) {
             )
             assertEqualFractionalPart(d1.nanosecond, d2.nanosecond)
         }
+
         d1 is Instant && d2 is Instant -> {
             assertEquals(d1.epochSeconds, d2.epochSeconds, "Failed on epoch seconds ${currentDialectTest.name}")
             assertEqualFractionalPart(d1.nanosecondsOfSecond, d2.nanosecondsOfSecond)
         }
+
+        d1 is kotlinx.datetime.Instant && d2 is kotlinx.datetime.Instant -> {
+            assertEquals(d1.epochSeconds, d2.epochSeconds, "Failed on epoch seconds ${currentDialectTest.name}")
+            assertEqualFractionalPart(d1.nanosecondsOfSecond, d2.nanosecondsOfSecond)
+        }
+
         d1 is OffsetDateTime && d2 is OffsetDateTime -> {
-            assertEqualDateTime(d1.toLocalDateTime().toKotlinLocalDateTime(), d2.toLocalDateTime().toKotlinLocalDateTime())
+            assertEqualDateTime(
+                d1.toLocalDateTime().toKotlinLocalDateTime(),
+                d2.toLocalDateTime().toKotlinLocalDateTime()
+            )
             assertEquals(d1.offset, d2.offset)
         }
+
         else -> assertEquals(d1, d2, "Failed on ${currentDialectTest.name}")
     }
 }
@@ -685,19 +796,23 @@ private fun assertEqualFractionalPart(nano1: Int, nano2: Int) {
         // microseconds
         is MariaDBDialect ->
             assertEquals(floorToMicro(nano1), floorToMicro(nano2), "Failed on microseconds $db")
+
         is H2Dialect, is PostgreSQLDialect, is MysqlDialect -> {
             when ((dialect as? MysqlDialect)?.isFractionDateTimeSupported()) {
                 null, true -> {
                     assertEquals(roundToMicro(nano1), roundToMicro(nano2), "Failed on microseconds $db")
                 }
+
                 else -> {} // don't compare fractional part
             }
         }
         // milliseconds
         is OracleDialect ->
             assertEquals(roundToMilli(nano1), roundToMilli(nano2), "Failed on milliseconds $db")
+
         is SQLiteDialect ->
             assertEquals(floorToMilli(nano1), floorToMilli(nano2), "Failed on milliseconds $db")
+
         else -> fail("Unknown dialect $db")
     }
 }
@@ -729,3 +844,20 @@ object CitiesTime : IntIdTable("CitiesTime") {
 
 @Serializable
 data class ModifierData(val userId: Int, val timestamp: LocalDateTime)
+
+// The following were introduced for jdk17 compatibility:
+// EXPOSED-920: https://youtrack.jetbrains.com/issue/EXPOSED-920/Refactor-java-time-and-kotlin-datetime-tests-for-JDK-compatibility
+
+/** Forces [LocalTime] precision to be reduced to millisecond-level, for JDK8 test compatibility. */
+internal fun LocalTime.asJdk8(): LocalTime =
+    LocalTime.fromNanosecondOfDay(toNanosecondOfDay().let { it - it % DateTimeUnit.MILLISECOND.nanoseconds })
+
+/** Forces [LocalDateTime] precision to be reduced to millisecond-level, for JDK8 test compatibility. */
+internal fun LocalDateTime.asJdk8(): LocalDateTime = LocalDateTime(date, time.asJdk8())
+
+/** Forces [Instant] precision to be reduced to millisecond-level, for JDK8 test compatibility. */
+internal fun Instant.asJdk8(): Instant {
+    val original = toLocalDateTime(TimeZone.currentSystemDefault())
+    val converted = LocalDateTime(original.date, original.time.asJdk8())
+    return converted.toInstant(TimeZone.currentSystemDefault())
+}
