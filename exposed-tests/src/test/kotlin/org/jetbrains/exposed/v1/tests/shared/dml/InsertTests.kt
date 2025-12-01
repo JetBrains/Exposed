@@ -500,7 +500,6 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Tag(MISSING_R2DBC_TEST)
     @Tag(NOT_APPLICABLE_TO_R2DBC)
     @Test
     fun testRollbackOnConstraintExceptionWithNormalTransactions() {

@@ -12,7 +12,6 @@ import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.NO_R2DBC_SUPPORT
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.junit.jupiter.api.Assumptions
@@ -35,7 +34,6 @@ class TransactionIsolationTest : DatabaseTestsBase() {
     }
 
     // R2DBC driver (pool or connection factory) do not support setting transaction isolation for all future transactions
-    @Tag(MISSING_R2DBC_TEST)
     @Tag(NO_R2DBC_SUPPORT)
     @Test
     fun testTransactionIsolationWithHikariDataSource() {
@@ -76,7 +74,6 @@ class TransactionIsolationTest : DatabaseTestsBase() {
     }
 
     // R2DBC driver (pool or connection factory) do not support setting transaction isolation for all future transactions
-    @Tag(MISSING_R2DBC_TEST)
     @Tag(NO_R2DBC_SUPPORT)
     @Test
     fun testTransactionIsolationWithHikariAndDatabaseConfig() {

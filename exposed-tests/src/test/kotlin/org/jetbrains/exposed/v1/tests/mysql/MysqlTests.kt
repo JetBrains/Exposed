@@ -17,7 +17,6 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.NO_R2DBC_SUPPORT
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
@@ -44,7 +43,6 @@ class MysqlTests : DatabaseTestsBase() {
     }
 
     // rewriteBatchedStatements property: https://github.com/asyncer-io/r2dbc-mysql/issues/136
-    @Tag(MISSING_R2DBC_TEST)
     @Tag(NO_R2DBC_SUPPORT)
     @Test
     fun testBatchInsertWithRewriteBatchedStatementsOn() {

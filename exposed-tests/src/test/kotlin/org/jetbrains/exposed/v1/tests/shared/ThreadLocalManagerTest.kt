@@ -13,7 +13,6 @@ import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.dml.DMLTestsData
@@ -28,7 +27,6 @@ import kotlin.test.fail
 
 // equivalent to exposed-r2dbc-tests/ReadOnlyTests.kt
 class ThreadLocalManagerTest : DatabaseTestsBase() {
-    @Tag(MISSING_R2DBC_TEST)
     @Tag(NOT_APPLICABLE_TO_R2DBC)
     @Test
     fun testReconnection() {
@@ -55,7 +53,6 @@ class ThreadLocalManagerTest : DatabaseTestsBase() {
         assertEquals(secondThreadTm, db2.transactionManager)
     }
 
-    @Tag(MISSING_R2DBC_TEST)
     @Tag(NOT_APPLICABLE_TO_R2DBC)
     @Test
     fun testReadOnly() {

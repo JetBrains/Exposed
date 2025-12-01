@@ -15,7 +15,6 @@ import org.jetbrains.exposed.v1.jdbc.statements.toExecutable
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.NO_R2DBC_SUPPORT
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.dml.withCitiesAndUsers
@@ -71,7 +70,6 @@ class TransactionExecTests : DatabaseTestsBase() {
     }
 
     // r2dbc-mysql does NOT support allowMultiQueries option: https://github.com/asyncer-io/r2dbc-mysql/issues/291
-    @Tag(MISSING_R2DBC_TEST)
     @Tag(NO_R2DBC_SUPPORT)
     @Test
     fun testExecWithMultiStatementQueryUsingMySQL() {

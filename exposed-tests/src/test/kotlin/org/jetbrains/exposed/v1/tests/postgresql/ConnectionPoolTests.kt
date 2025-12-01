@@ -21,7 +21,6 @@ import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.tests.LogDbInTestName
-import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
@@ -131,7 +130,6 @@ class ConnectionPoolTests : LogDbInTestName() {
     }
 
     // readOnly cannot be set from pool driver/connection, only afterward in beginTransaction()
-    @Tag(MISSING_R2DBC_TEST)
     @Tag(NOT_APPLICABLE_TO_R2DBC)
     @Test
     fun testReadOnlyModeWithHikariAndPostgres() {
@@ -160,7 +158,6 @@ class ConnectionPoolTests : LogDbInTestName() {
     }
 
     // readOnly cannot be set from pool driver/connection, only afterward in beginTransaction()
-    @Tag(MISSING_R2DBC_TEST)
     @Tag(NOT_APPLICABLE_TO_R2DBC)
     @Test
     fun testSuspendedReadOnlyModeWithHikariAndPostgres() = runTest {
