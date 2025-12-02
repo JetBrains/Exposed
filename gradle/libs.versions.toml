@@ -20,7 +20,7 @@ oracle = "23.26.0.0.0"
 postgre = "42.7.8"
 postgreNG = "0.8.9"
 sqlite3 = "3.50.2.0"
-sqlserver = "9.4.1.jre11"
+sqlserver = "13.2.1.jre11"
 
 r2dbc-spi = "1.0.0.RELEASE"
 r2dbc-pool = "1.0.2.RELEASE"

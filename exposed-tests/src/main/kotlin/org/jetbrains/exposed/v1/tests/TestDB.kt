@@ -112,7 +112,7 @@ enum class TestDB(
     }),
     SQLSERVER(
         {
-            "jdbc:sqlserver://127.0.0.1:3005"
+            "jdbc:sqlserver://127.0.0.1:3005;encrypt=false;"
         },
         "com.microsoft.sqlserver.jdbc.SQLServerDriver",
         "SA",

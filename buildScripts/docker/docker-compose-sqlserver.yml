@@ -2,14 +2,14 @@ services:
     sqlserver:
         container_name: SQLServer
         restart: always
-        image: mcr.microsoft.com/azure-sql-edge:2.0.0
+        image: mcr.microsoft.com/mssql/server:2025-RC1-ubuntu-24.04
         platform: linux/amd64
         ports:
             - "3005:1433"
         environment:
-            ACCEPT_EULA: "1"
+            ACCEPT_EULA: "Y"
             user: root
-            SA_PASSWORD: "Exposed_password_1!"
+            MSSQL_SA_PASSWORD: "Exposed_password_1!"
             MSSQL_PID: "Developer"
             MSSQL_AGENT_ENABLED: "true"
             MSSQL_TCP_PORT: "1433"
