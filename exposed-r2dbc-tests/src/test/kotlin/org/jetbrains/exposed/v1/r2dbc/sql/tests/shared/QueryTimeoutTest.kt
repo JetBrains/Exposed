@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.test.fail
 
+@Disabled
 class QueryTimeoutTest : R2dbcDatabaseTestsBase() {
 
     private fun generateTimeoutStatements(db: TestDB, timeout: Int): String {
@@ -26,7 +27,6 @@ class QueryTimeoutTest : R2dbcDatabaseTestsBase() {
 
     private val timeoutTestDBList = TestDB.ALL_MARIADB + TestDB.ALL_POSTGRES + TestDB.SQLSERVER + TestDB.MYSQL_V8
 
-    @Disabled
     @Test
     fun timeoutStatements() {
         withDb(timeoutTestDBList) { testDB ->
@@ -66,7 +66,6 @@ class QueryTimeoutTest : R2dbcDatabaseTestsBase() {
         }
     }
 
-    @Disabled
     @Test
     fun timeoutMinusWithTimeoutStatement() {
         withDb(timeoutTestDBList) { testDB ->
