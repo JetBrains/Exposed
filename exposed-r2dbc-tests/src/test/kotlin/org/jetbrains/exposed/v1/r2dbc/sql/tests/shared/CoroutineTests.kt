@@ -111,7 +111,7 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
                 updateJob.join()
 
                 val result = withContext(Dispatchers.Default) {
-                    suspendTransaction(db = db) { TestingUnique.selectAll().count() }
+                    inTopLevelSuspendTransaction(db = db) { TestingUnique.selectAll().count() }
                 }
                 kotlin.test.assertEquals(2, result, "Failing at end of mainJob")
             }
@@ -213,7 +213,7 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
     @RepeatedTest(10)
     @CoroutinesTimeout(60000)
     fun nestedSuspendTxTest() {
-        suspend fun insertTesting(db: R2dbcDatabase) = suspendTransaction(db = db) {
+        suspend fun insertTesting(db: R2dbcDatabase) = inTopLevelSuspendTransaction(db = db) {
             Testing.insert {}
         }
         withTables(Testing) {
@@ -263,7 +263,7 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
                         commit()
                         (1..10).map {
                             async {
-                                suspendTransaction {
+                                inTopLevelSuspendTransaction {
                                     Testing.selectAll().toList()
                                 }
                             }
