@@ -113,44 +113,8 @@ class ConnectionPoolTests : LogDbInTestName() {
 
         TransactionManager.closeAndUnregister(poolPGManual)
     }
-
-    // NOTE: NO RELEVANCE
-    // there is no connection option for read only, only afterwards from beginTransaction()
-//    @Test
-//    fun testReadOnlyModeWithHikariAndPostgres() = runTest {
-//        Assume.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
-//
-//        // read only mode should be set directly by pool
-//        suspendTransaction(db = poolPG) {
-//            assertTrue(getReadOnlyMode())
-//
-//            // table cannot be created in read-only mode
-//            expectException<ExposedR2dbcException> {
-//                SchemaUtils.create(TestTable)
-//            }
-//        }
-//
-//        // transaction setting should override hikari config
-//        suspendTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, readOnly = false, db = poolPG) {
-//            Assert.assertFalse(getReadOnlyMode())
-//
-//            // table can now be created and dropped
-//            SchemaUtils.create(TestTable)
-//            SchemaUtils.drop(TestTable)
-//        }
-//
-//        TransactionManager.closeAndUnregister(poolPG)
-//    }
 }
 
 private val TestTable = object : IntIdTable("POOL_TESTER") {
     val amount = integer("amount")
 }
-
-// private suspend fun R2dbcTransaction.getReadOnlyMode(): Boolean {
-//    val mode = exec("SHOW transaction_read_only;") {
-//        it.getBoolean(1)
-//    }?.single()
-//    assertNotNull(mode)
-//    return mode == true
-// }

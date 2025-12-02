@@ -9,15 +9,22 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
-import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.statements.api.ExposedConnection
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.suspendedTransactionAsync
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.withSuspendTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
+import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.junit.jupiter.api.RepeatedTest
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.sql.Connection
 import java.util.concurrent.Executors
@@ -279,6 +286,7 @@ class CoroutineTests : DatabaseTestsBase() {
         }
     }
 
+    @Tag(NOT_APPLICABLE_TO_R2DBC)
     @RepeatedTest(10)
     @CoroutinesTimeout(60000)
     fun suspendedAndNormalTransactions() {
@@ -319,6 +327,7 @@ class CoroutineTests : DatabaseTestsBase() {
         companion object : IntEntityClass<TestingEntity>(Testing)
     }
 
+    @Tag(MISSING_R2DBC_TEST)
     @Test
     @CoroutinesTimeout(60000)
     fun testCoroutinesWithExceptionWithin() {
@@ -336,7 +345,7 @@ class CoroutineTests : DatabaseTestsBase() {
 
             while (!mainJob.isCompleted) Thread.sleep(100)
             assertNotNull(connection)
-            assertTrue(connection!!.isClosed)
+            assertTrue(connection.isClosed)
             assertTrue(mainJob.getCompletionExceptionOrNull() is ExposedSQLException)
             assertEquals(1, Testing.selectAll().count())
         }

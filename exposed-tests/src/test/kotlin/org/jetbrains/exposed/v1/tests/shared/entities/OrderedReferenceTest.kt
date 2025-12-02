@@ -9,11 +9,14 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
+@Tag(MISSING_R2DBC_TEST)
 class OrderedReferenceTest : DatabaseTestsBase() {
     object Users : IntIdTable()
 

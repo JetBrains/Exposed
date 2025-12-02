@@ -10,10 +10,13 @@ import org.jetbrains.exposed.v1.dao.flushCache
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
 
+@Tag(MISSING_R2DBC_TEST)
 class NonAutoIncEntities : DatabaseTestsBase() {
 
     abstract class BaseNonAutoIncTable(name: String) : IdTable<Int>(name) {

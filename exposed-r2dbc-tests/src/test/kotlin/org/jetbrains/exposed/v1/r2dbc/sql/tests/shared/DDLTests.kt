@@ -34,7 +34,6 @@ import java.util.*
 import kotlin.test.assertNotNull
 import kotlin.test.expect
 
-// NOTE: 1 DAO TEST REMOVED
 @Suppress("LargeClass")
 class DDLTests : R2dbcDatabaseTestsBase() {
     @Test

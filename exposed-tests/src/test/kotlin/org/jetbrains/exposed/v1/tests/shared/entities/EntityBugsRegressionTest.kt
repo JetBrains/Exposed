@@ -16,12 +16,15 @@ import org.jetbrains.exposed.v1.dao.LongEntityClass
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
+@Tag(MISSING_R2DBC_TEST)
 class `Table id not in Record Test issue 1341` : DatabaseTestsBase() {
 
     object NamesTable : IdTable<Int>("names_table") {

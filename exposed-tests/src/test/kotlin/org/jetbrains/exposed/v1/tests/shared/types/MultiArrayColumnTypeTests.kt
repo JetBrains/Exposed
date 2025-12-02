@@ -7,9 +7,11 @@ import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.NO_R2DBC_SUPPORT
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import kotlin.test.assertNull
 
@@ -19,6 +21,7 @@ private inline fun <reified T : Any> Table.array3(name: String, maximumCardinali
 private inline fun <reified T : Any> Table.array2(name: String, maximumCardinality: List<Int>? = null): Column<List<List<T>>> =
     array<T, List<List<T>>>(name, maximumCardinality, dimensions = 2)
 
+@Tag(NO_R2DBC_SUPPORT)
 class MultiArrayColumnTypeTests : DatabaseTestsBase() {
 
     private val multiArrayTypeUnsupportedDb = TestDB.ALL - TestDB.ALL_POSTGRES.toSet()

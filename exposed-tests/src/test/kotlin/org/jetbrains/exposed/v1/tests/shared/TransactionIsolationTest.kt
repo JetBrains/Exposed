@@ -2,15 +2,20 @@ package org.jetbrains.exposed.v1.tests.shared
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelSuspendTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.NO_R2DBC_SUPPORT
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.sql.Connection
 import kotlin.test.assertNotNull
@@ -28,6 +33,8 @@ class TransactionIsolationTest : DatabaseTestsBase() {
         }
     }
 
+    // R2DBC driver (pool or connection factory) do not support setting transaction isolation for all future transactions
+    @Tag(NO_R2DBC_SUPPORT)
     @Test
     fun testTransactionIsolationWithHikariDataSource() {
         Assumptions.assumeTrue(transactionIsolationSupportDb.containsAll(TestDB.enabledDialects()))
@@ -41,23 +48,23 @@ class TransactionIsolationTest : DatabaseTestsBase() {
 
         transaction(db) {
             // transaction manager should use database default since no level is provided other than hikari
-            assertEquals(Database.getDefaultIsolationLevel(db), manager?.defaultIsolationLevel)
+            assertEquals(Database.getDefaultIsolationLevel(db), manager.defaultIsolationLevel)
 
             // database level should be set by hikari dataSource
             assertTransactionIsolationLevel(dialect, Connection.TRANSACTION_REPEATABLE_READ)
             // after first connection, transaction manager should use hikari level by default
-            assertEquals(Connection.TRANSACTION_REPEATABLE_READ, manager?.defaultIsolationLevel)
+            assertEquals(Connection.TRANSACTION_REPEATABLE_READ, manager.defaultIsolationLevel)
         }
 
         transaction(transactionIsolation = Connection.TRANSACTION_READ_COMMITTED, db = db) {
-            assertEquals(Connection.TRANSACTION_REPEATABLE_READ, manager?.defaultIsolationLevel)
+            assertEquals(Connection.TRANSACTION_REPEATABLE_READ, manager.defaultIsolationLevel)
 
             // database level should be set by transaction-specific setting
             assertTransactionIsolationLevel(dialect, Connection.TRANSACTION_READ_COMMITTED)
         }
 
         transaction(db) {
-            assertEquals(Connection.TRANSACTION_REPEATABLE_READ, manager?.defaultIsolationLevel)
+            assertEquals(Connection.TRANSACTION_REPEATABLE_READ, manager.defaultIsolationLevel)
 
             // database level should be set by hikari dataSource
             assertTransactionIsolationLevel(dialect, Connection.TRANSACTION_REPEATABLE_READ)
@@ -66,6 +73,8 @@ class TransactionIsolationTest : DatabaseTestsBase() {
         TransactionManager.closeAndUnregister(db)
     }
 
+    // R2DBC driver (pool or connection factory) do not support setting transaction isolation for all future transactions
+    @Tag(NO_R2DBC_SUPPORT)
     @Test
     fun testTransactionIsolationWithHikariAndDatabaseConfig() {
         Assumptions.assumeTrue(transactionIsolationSupportDb.containsAll(TestDB.enabledDialects()))
@@ -102,6 +111,67 @@ class TransactionIsolationTest : DatabaseTestsBase() {
         }
 
         TransactionManager.closeAndUnregister(db)
+    }
+
+    @Test
+    fun testTransactionIsolationSetOnDatabaseConfig() {
+        Assumptions.assumeTrue(transactionIsolationSupportDb.containsAll(TestDB.enabledDialects()))
+
+        val db = dialect.connect { defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED }
+
+        transaction {
+            // transaction manager should default to use DatabaseConfig level
+            assertEquals(Connection.TRANSACTION_READ_COMMITTED, transactionManager.defaultIsolationLevel)
+
+            // database level should be set by DatabaseConfig
+            assertTransactionIsolationLevel(dialect, Connection.TRANSACTION_READ_COMMITTED)
+        }
+
+        transaction(transactionIsolation = Connection.TRANSACTION_REPEATABLE_READ, db = db) {
+            // transaction manager should default to use DatabaseConfig level
+            assertEquals(Connection.TRANSACTION_READ_COMMITTED, transactionManager.defaultIsolationLevel)
+
+            // database level should be set by transaction-specific setting
+            assertTransactionIsolationLevel(dialect, Connection.TRANSACTION_REPEATABLE_READ)
+        }
+
+        runBlocking {
+            suspendTransaction(transactionIsolation = Connection.TRANSACTION_REPEATABLE_READ, db = db) {
+                // transaction manager should default to use DatabaseConfig level
+                assertEquals(Connection.TRANSACTION_READ_COMMITTED, transactionManager.defaultIsolationLevel)
+
+                // database level should be set by transaction-specific setting
+                assertTransactionIsolationLevel(dialect, Connection.TRANSACTION_REPEATABLE_READ)
+            }
+        }
+    }
+
+    @Test
+    fun testTransactionIsolationSetOnTransaction() {
+        withDb(excludeSettings = TestDB.ALL - transactionIsolationSupportDb) {
+            inTopLevelTransaction {
+                // transaction manager should use database default since no level is configured
+                assertEquals(Database.getDefaultIsolationLevel(db), transactionManager.defaultIsolationLevel)
+            }
+
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_READ_COMMITTED, db = db) {
+                // transaction manager should use database default since no level is configured
+                assertEquals(Database.getDefaultIsolationLevel(db), transactionManager.defaultIsolationLevel)
+
+                // database level should be set by transaction-specific setting
+                assertTransactionIsolationLevel(dialect, Connection.TRANSACTION_READ_COMMITTED)
+            }
+
+            runBlocking {
+                inTopLevelSuspendTransaction(transactionIsolation = Connection.TRANSACTION_READ_COMMITTED, db = db) {
+                    // transaction manager should use database default since no level is configured
+                    assertEquals(Database.getDefaultIsolationLevel(db), transactionManager.defaultIsolationLevel)
+
+                    // database level should be set by transaction-specific setting
+                    assertTransactionIsolationLevel(dialect, Connection.TRANSACTION_READ_COMMITTED)
+                }
+            }
+        }
     }
 
     private fun setupHikariConfig(dialect: TestDB, isolation: String): HikariConfig {

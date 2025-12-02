@@ -19,9 +19,11 @@ import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.test.assertNotNull
@@ -1036,6 +1038,7 @@ class DDLTests : DatabaseTestsBase() {
     }
 
     // https://github.com/JetBrains/Exposed/issues/112
+    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testDropTableFlushesCache() {
         class Keyword(id: EntityID<Int>) : IntEntity(id) {
