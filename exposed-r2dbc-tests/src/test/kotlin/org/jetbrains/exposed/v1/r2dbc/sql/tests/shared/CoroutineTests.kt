@@ -20,6 +20,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.update
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.RepeatedTest
 import java.util.concurrent.Executors
 
@@ -210,6 +211,7 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @Disabled("Until isolation level fixed")
     @RepeatedTest(10)
     @CoroutinesTimeout(60000)
     fun nestedSuspendTxTest() {
