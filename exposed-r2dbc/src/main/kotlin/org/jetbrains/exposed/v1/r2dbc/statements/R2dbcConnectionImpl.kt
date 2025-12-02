@@ -29,9 +29,11 @@ import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedDatabaseMetadat
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcSavepoint
 import org.jetbrains.exposed.v1.r2dbc.statements.api.getBoolean
 import org.jetbrains.exposed.v1.r2dbc.statements.api.getString
+import org.jetbrains.exposed.v1.r2dbc.transactions.R2dbcTransactionDefinition
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.MetadataProvider
 import org.reactivestreams.Publisher
+import java.time.Duration
 import java.util.*
 
 /**
@@ -81,6 +83,12 @@ class R2dbcConnectionImpl(
 
     override suspend fun setTransactionIsolation(value: IsolationLevel) {
         withConnection { setTransactionIsolationLevel(value).awaitFirstOrNull() }
+    }
+
+    private var transactionDefinition: R2dbcTransactionDefinition? = null
+
+    override fun setTransactionDefinition(isolationLevel: IsolationLevel?, readOnly: Boolean, statementTimeout: Int?) {
+        transactionDefinition = R2dbcTransactionDefinition(isolationLevel, readOnly, statementTimeout)
     }
 
     override suspend fun commit() {
@@ -217,10 +225,16 @@ class R2dbcConnectionImpl(
 
     private suspend fun <T> withConnection(body: suspend Connection.() -> T): T {
         val acquiredConnection = localConnectionLock.withLock {
-            localConnection ?: connection.awaitLast().also {
+            localConnection ?: connection.awaitLast().also { cx ->
+                transactionDefinition?.statementTimeout?.let {
+                    cx.setStatementTimeout(Duration.ofSeconds(it.toLong())).awaitFirstOrNull()
+                }
                 // this starts an explicit transaction with autoCommit mode off
-                it.beginTransaction().awaitFirstOrNull()
-                localConnection = it
+                transactionDefinition
+                    ?.let { cx.beginTransaction(it).awaitFirstOrNull() }
+                    ?: cx.beginTransaction().awaitFirstOrNull()
+                localConnection = cx
+                transactionDefinition = null
             }
         }
         return acquiredConnection.body()

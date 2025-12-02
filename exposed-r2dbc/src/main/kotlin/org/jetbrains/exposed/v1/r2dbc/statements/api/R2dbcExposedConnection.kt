@@ -37,6 +37,12 @@ interface R2dbcExposedConnection<OriginalConnection : Any> {
     /** Sets the transaction isolation level of the connection. */
     suspend fun setTransactionIsolation(value: IsolationLevel)
 
+    fun setTransactionDefinition(
+        isolationLevel: IsolationLevel?,
+        readOnly: Boolean,
+        statementTimeout: Int?,
+    )
+
     /** Saves all changes since the last commit or rollback operation. */
     suspend fun commit()
 
@@ -81,4 +87,5 @@ interface R2dbcExposedConnection<OriginalConnection : Any> {
 
     /** Reverts all changes since the specified [savepoint] was set. */
     suspend fun rollback(savepoint: ExposedSavepoint)
+
 }
