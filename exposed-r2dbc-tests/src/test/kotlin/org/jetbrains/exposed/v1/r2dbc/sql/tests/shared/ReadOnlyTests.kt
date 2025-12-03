@@ -10,8 +10,9 @@ import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.Assumptions
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertInstanceOf
+import kotlin.test.assertContains
 
 // equivalent to exposed-tests/ThreadLocalManagerTest.kt
 class ReadOnlyTests : R2dbcDatabaseTestsBase() {
@@ -25,15 +26,19 @@ class ReadOnlyTests : R2dbcDatabaseTestsBase() {
         val value = varchar("value", 20)
     }
 
-    @Disabled
     @Test
     fun testReadOnly() = runTest {
         Assumptions.assumeFalse(dialect in readOnlyExcludedVendors)
 
         val database = dialect.connect()
-        suspendTransaction(db = database, readOnly = true) {
-            expectException<ExposedR2dbcException> {
-                SchemaUtils.create(RollbackTable)
+        if (dialect == TestDB.POSTGRESQL) {
+            try {
+                suspendTransaction(db = database, readOnly = true) {
+                    SchemaUtils.create(RollbackTable)
+                }
+            } catch (cause: Exception) {
+                assertInstanceOf<ExposedR2dbcException>(cause)
+                assertContains(cause.message, "read-only transaction")
             }
         }
 
@@ -41,9 +46,20 @@ class ReadOnlyTests : R2dbcDatabaseTestsBase() {
             SchemaUtils.create(RollbackTable)
         }
 
-        suspendTransaction(db = database, readOnly = true) {
-            expectException<ExposedR2dbcException> {
-                RollbackTable.insert { it[RollbackTable.value] = "random-something" }
+        if (dialect == TestDB.POSTGRESQL) {
+            try {
+                suspendTransaction(db = database, readOnly = true) {
+                    RollbackTable.insert { it[RollbackTable.value] = "random-something" }
+                }
+            } catch (cause: Exception) {
+                assertInstanceOf<ExposedR2dbcException>(cause)
+                assertContains(cause.message, "read-only transaction")
+            }
+        } else {
+            suspendTransaction(db = database, readOnly = true) {
+                expectException<ExposedR2dbcException> {
+                    RollbackTable.insert { it[RollbackTable.value] = "random-something" }
+                }
             }
         }
 

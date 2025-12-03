@@ -232,9 +232,10 @@ class TransactionManager(
                 try {
                     setupTxConnection?.invoke(this, this@R2dbcLocalTransaction) ?: run {
                         setTransactionDefinition(
-                            this@R2dbcLocalTransaction.transactionIsolation,
-                            this@R2dbcLocalTransaction.readOnly,
-                            0
+                            R2dbcTransactionDefinition(
+                                this@R2dbcLocalTransaction.transactionIsolation,
+                                this@R2dbcLocalTransaction.readOnly,
+                            )
                         )
                     }
                 } catch (e: Exception) {

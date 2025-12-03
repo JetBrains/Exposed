@@ -7,8 +7,11 @@ import org.jetbrains.exposed.v1.core.exposedLogger
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.INCOMPLETE_R2DBC_TEST
+import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.postgresql.util.PSQLException
 import java.sql.SQLException
@@ -35,6 +38,7 @@ class QueryTimeoutTest : DatabaseTestsBase() {
     // that expects that all the versions of the Driver have the same package.
     private val timeoutTestDBList = TestDB.ALL_MARIADB + TestDB.ALL_POSTGRES + TestDB.SQLSERVER + TestDB.MYSQL_V8
 
+    @Tag(INCOMPLETE_R2DBC_TEST)
     @Test
     fun timeoutStatements() {
         withDb(timeoutTestDBList) { testDB ->
@@ -76,6 +80,8 @@ class QueryTimeoutTest : DatabaseTestsBase() {
         }
     }
 
+    // Value of -1 is not a valid timeout for any R2DBC drivers
+    @Tag(NOT_APPLICABLE_TO_R2DBC)
     @Test
     fun timeoutMinusWithTimeoutStatement() {
         withDb(timeoutTestDBList) { testDB ->

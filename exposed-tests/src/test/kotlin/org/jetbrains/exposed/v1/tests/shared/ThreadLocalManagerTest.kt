@@ -13,6 +13,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.INCOMPLETE_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.dml.DMLTestsData
@@ -66,6 +67,7 @@ class ThreadLocalManagerTest : DatabaseTestsBase() {
         }
     }
 
+    @Tag(INCOMPLETE_R2DBC_TEST)
     @Test
     fun testSuspendedReadOnly() = runTest {
         Assumptions.assumeFalse(dialect in READ_ONLY_EXCLUDED_VENDORS)

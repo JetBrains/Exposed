@@ -5,6 +5,7 @@ import io.r2dbc.spi.IsolationLevel
 import io.r2dbc.spi.Row
 import io.r2dbc.spi.RowMetadata
 import io.r2dbc.spi.Statement
+import io.r2dbc.spi.TransactionDefinition
 import io.r2dbc.spi.ValidationDepth
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
@@ -32,8 +33,9 @@ import org.jetbrains.exposed.v1.r2dbc.statements.api.getString
 import org.jetbrains.exposed.v1.r2dbc.transactions.R2dbcTransactionDefinition
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.MetadataProvider
+import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.MySQLMetadata
+import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.OracleMetadata
 import org.reactivestreams.Publisher
-import java.time.Duration
 import java.util.*
 
 /**
@@ -87,8 +89,8 @@ class R2dbcConnectionImpl(
 
     private var transactionDefinition: R2dbcTransactionDefinition? = null
 
-    override fun setTransactionDefinition(isolationLevel: IsolationLevel?, readOnly: Boolean, statementTimeout: Int?) {
-        transactionDefinition = R2dbcTransactionDefinition(isolationLevel, readOnly, statementTimeout)
+    override fun setTransactionDefinition(definition: TransactionDefinition) {
+        transactionDefinition = definition as R2dbcTransactionDefinition
     }
 
     override suspend fun commit() {
@@ -226,13 +228,26 @@ class R2dbcConnectionImpl(
     private suspend fun <T> withConnection(body: suspend Connection.() -> T): T {
         val acquiredConnection = localConnectionLock.withLock {
             localConnection ?: connection.awaitLast().also { cx ->
-                transactionDefinition?.statementTimeout?.let {
-                    cx.setStatementTimeout(Duration.ofSeconds(it.toLong())).awaitFirstOrNull()
-                }
-                // this starts an explicit transaction with autoCommit mode off
+                // beginTransaction() starts an explicit transaction with autoCommit mode off
                 transactionDefinition
-                    ?.let { cx.beginTransaction(it).awaitFirstOrNull() }
+                    ?.let {
+                        when (metadataProvider) {
+                            is OracleMetadata if it.readOnly != null -> {
+                                // Oracle does not allow both isolation level + mutability to be set implicitly together;
+                                // instead it requires a specific order, with transaction isolation always set first.
+                                cx.beginTransaction(it.toOracleDefinition()).awaitFirstOrNull()
+                                cx.executeSQL(metadataProvider.setReadOnlyMode(it.readOnly))
+                            }
+                            is MySQLMetadata if it.isolationLevel != null -> {
+                                // MySQL/MariaDB driver would set level only on next-next transaction, not the 1 about to start
+                                cx.executeSQL(metadataProvider.setCurrentTransactionIsolation(it.isolationLevel))
+                                cx.beginTransaction(it).awaitFirstOrNull()
+                            }
+                            else -> cx.beginTransaction(it).awaitFirstOrNull()
+                        }
+                    }
                     ?: cx.beginTransaction().awaitFirstOrNull()
+
                 localConnection = cx
                 transactionDefinition = null
             }
