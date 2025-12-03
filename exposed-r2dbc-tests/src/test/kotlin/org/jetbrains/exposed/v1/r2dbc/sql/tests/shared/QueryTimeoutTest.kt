@@ -13,8 +13,8 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assumptions
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import kotlin.test.assertTrue
 
 class QueryTimeoutTest : R2dbcDatabaseTestsBase() {
 
@@ -44,7 +44,7 @@ class QueryTimeoutTest : R2dbcDatabaseTestsBase() {
                     Assertions.fail("Should have thrown a timeout or cancelled statement exception")
                 }
             } catch (cause: ExposedR2dbcException) {
-                kotlin.test.assertTrue(cause.cause is R2dbcNonTransientResourceException)
+                assertTrue(cause.cause is R2dbcNonTransientResourceException)
             }
             TransactionManager.closeAndUnregister(db)
         } else {
@@ -82,7 +82,6 @@ class QueryTimeoutTest : R2dbcDatabaseTestsBase() {
         }
     }
 
-    @Disabled("MariaDB fails on TC with empty log")
     @Test
     fun testLongQueryThrowsWarning() {
         val logCaptor = LogCaptor.forName(exposedLogger.name)
@@ -99,10 +98,9 @@ class QueryTimeoutTest : R2dbcDatabaseTestsBase() {
             } catch (cause: ExposedR2dbcException) {
                 assertTrue(cause.cause is R2dbcTimeoutException)
             }
-
-            assertTrue(logCaptor.warnLogs.single().contains("Long query"))
         }
 
+        assertTrue(logCaptor.warnLogs.single().contains("Long query"))
         logCaptor.clearLogs()
         logCaptor.close()
     }
