@@ -33,8 +33,9 @@ class QueryTimeoutTest : R2dbcDatabaseTestsBase() {
         Assumptions.assumeTrue(dialect in timeoutTestDBList)
 
         if (dialect == TestDB.POSTGRESQL) {
+            val db = dialect.connect { defaultMaxAttempts = 1 }
             try {
-                suspendTransaction(dialect.connect { defaultMaxAttempts = 1 }) {
+                suspendTransaction(db = db) {
                     this.queryTimeout = 3
                     TransactionManager.current().exec(
                         generateTimeoutStatements(dialect, 5)
@@ -44,6 +45,7 @@ class QueryTimeoutTest : R2dbcDatabaseTestsBase() {
             } catch (cause: ExposedR2dbcException) {
                 kotlin.test.assertTrue(cause.cause is R2dbcNonTransientResourceException)
             }
+            TransactionManager.closeAndUnregister(db)
         } else {
             withDb { testDB ->
                 this.queryTimeout = 3
@@ -81,9 +83,9 @@ class QueryTimeoutTest : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testLongQueryThrowsWarning() {
-        val logCaptor = LogCaptor.forName(exposedLogger.name)
-
         withDb(timeoutTestDBList) { testDB ->
+            val logCaptor = LogCaptor.forName(exposedLogger.name)
+
             this.warnLongQueriesDuration = 2
 
             assertTrue(logCaptor.warnLogs.isEmpty())
@@ -97,9 +99,9 @@ class QueryTimeoutTest : R2dbcDatabaseTestsBase() {
             }
 
             assertTrue(logCaptor.warnLogs.single().contains("Long query"))
-        }
 
-        logCaptor.clearLogs()
-        logCaptor.close()
+            logCaptor.clearLogs()
+            logCaptor.close()
+        }
     }
 }
