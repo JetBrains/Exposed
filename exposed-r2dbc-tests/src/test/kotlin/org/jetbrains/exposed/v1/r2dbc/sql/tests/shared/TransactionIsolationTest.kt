@@ -13,14 +13,12 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.Assumptions
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
 
 class TransactionIsolationTest : R2dbcDatabaseTestsBase() {
     private val transactionIsolationSupportDb = TestDB.ALL_MARIADB + TestDB.MYSQL_V5 + TestDB.POSTGRESQL + TestDB.SQLSERVER
 
-    @Disabled
     @Test
     fun testWhatTransactionIsolationWasApplied() {
         withDb {
@@ -31,8 +29,6 @@ class TransactionIsolationTest : R2dbcDatabaseTestsBase() {
         }
     }
 
-    // MariaDB 'Transaction characteristics can't be changed while a transaction is in progress'
-    @Disabled
     @Test
     fun testTransactionIsolationSetOnDatabaseConfig() = runTest {
         Assumptions.assumeTrue(transactionIsolationSupportDb.containsAll(TestDB.enabledDialects()))

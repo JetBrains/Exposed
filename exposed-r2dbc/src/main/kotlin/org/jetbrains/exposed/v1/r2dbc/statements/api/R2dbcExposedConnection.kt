@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.r2dbc.statements.api
 
 import io.r2dbc.spi.IsolationLevel
+import io.r2dbc.spi.TransactionDefinition
 import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
 import org.jetbrains.exposed.v1.r2dbc.statements.R2dbcPreparedStatementImpl
 
@@ -37,11 +38,8 @@ interface R2dbcExposedConnection<OriginalConnection : Any> {
     /** Sets the transaction isolation level of the connection. */
     suspend fun setTransactionIsolation(value: IsolationLevel)
 
-    fun setTransactionDefinition(
-        isolationLevel: IsolationLevel?,
-        readOnly: Boolean,
-        statementTimeout: Int?,
-    )
+    /** Sets specific transaction properties to be used together when starting a transaction explicitly. */
+    fun setTransactionDefinition(definition: TransactionDefinition)
 
     /** Saves all changes since the last commit or rollback operation. */
     suspend fun commit()
@@ -87,5 +85,4 @@ interface R2dbcExposedConnection<OriginalConnection : Any> {
 
     /** Reverts all changes since the specified [savepoint] was set. */
     suspend fun rollback(savepoint: ExposedSavepoint)
-
 }
