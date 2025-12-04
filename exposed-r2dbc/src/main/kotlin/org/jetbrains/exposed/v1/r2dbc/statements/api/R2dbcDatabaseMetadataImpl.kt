@@ -48,7 +48,10 @@ class R2dbcDatabaseMetadataImpl(
             "PostgreSQL" -> PostgreSQLDialect.dialectName
             "Oracle" -> OracleDialect.dialectName
             else -> {
-                if (dbProductName.startsWith("Microsoft Azure SQL ")) {
+                if (
+                    dbProductName.startsWith("Microsoft Azure SQL ") ||
+                    dbProductName.startsWith("Microsoft SQL Server ")
+                ) {
                     SQLServerDialect.dialectName
                 } else {
                     error("Unsupported driver $dbProductName detected")
