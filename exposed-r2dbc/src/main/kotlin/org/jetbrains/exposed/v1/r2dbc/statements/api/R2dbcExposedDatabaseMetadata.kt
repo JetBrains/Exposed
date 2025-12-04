@@ -41,7 +41,11 @@ abstract class R2dbcExposedDatabaseMetadata(database: String) : ExposedDatabaseM
     /**  The minor version number of the database. */
     abstract fun getMinorVersion(): Int
 
-    /** The name of the database based on the name of the underlying R2DBC driver. */
+    /**
+     * The name of the database based on the name of the underlying R2DBC driver.
+     *
+     * @throws IllegalStateException If the driver returns a string value without a `VendorDialect` mapping.
+     */
     abstract fun getDatabaseDialectName(): String
 
     /** The name of the mode of the database. This is currently applicable only to H2 databases. */
