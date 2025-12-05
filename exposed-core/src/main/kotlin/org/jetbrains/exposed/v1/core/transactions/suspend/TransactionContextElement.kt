@@ -33,8 +33,10 @@ class TransactionContextElement(
      */
     override fun updateThreadContext(context: CoroutineContext): Transaction? {
         val previousTransaction = ThreadLocalTransactionsStack.getTransactionOrNull()
+        if (previousTransaction?.transactionId == transaction.transactionId) return null
+
         ThreadLocalTransactionsStack.pushTransaction(transaction)
-        return previousTransaction
+        return transaction
     }
 
     /**
@@ -42,9 +44,11 @@ class TransactionContextElement(
      * Pops the transaction from the thread-local stack and validates it matches the expected transaction.
      *
      * @param context The coroutine context.
-     * @param oldState The previous transaction state that was returned by [updateThreadContext].
+     * @param oldState The transaction that was added to the stack and was returned by [updateThreadContext].
      */
     override fun restoreThreadContext(context: CoroutineContext, oldState: Transaction?) {
+        if (oldState == null) return
+
         // Check if stack is empty - this can happen if withThreadLocalTransaction already popped it
         val currentTransaction = ThreadLocalTransactionsStack.getTransactionOrNull()
         if (currentTransaction == null) {
