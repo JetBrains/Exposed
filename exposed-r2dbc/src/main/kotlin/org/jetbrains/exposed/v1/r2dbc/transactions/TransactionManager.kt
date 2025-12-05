@@ -231,10 +231,12 @@ class TransactionManager(
                 @Suppress("TooGenericExceptionCaught")
                 try {
                     setupTxConnection?.invoke(this, this@R2dbcLocalTransaction) ?: run {
-                        this@R2dbcLocalTransaction.transactionIsolation?.let { setTransactionIsolation(it) }
-                        setReadOnly(this@R2dbcLocalTransaction.readOnly)
-                        // potentially redundant if R2dbcConnectionImpl calls beginTransaction(), which disables autoCommit
-                        setAutoCommit(false)
+                        setTransactionDefinition(
+                            R2dbcTransactionDefinition(
+                                this@R2dbcLocalTransaction.transactionIsolation,
+                                this@R2dbcLocalTransaction.readOnly,
+                            )
+                        )
                     }
                 } catch (e: Exception) {
                     try {

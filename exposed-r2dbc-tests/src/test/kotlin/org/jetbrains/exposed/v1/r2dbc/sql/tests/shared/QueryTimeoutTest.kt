@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared
 
 import io.r2dbc.spi.R2dbcNonTransientResourceException
 import io.r2dbc.spi.R2dbcTimeoutException
+import kotlinx.coroutines.test.runTest
 import nl.altindag.log.LogCaptor
 import org.jetbrains.exposed.v1.core.exposedLogger
 import org.jetbrains.exposed.v1.r2dbc.ExposedR2dbcException
@@ -9,16 +10,18 @@ import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import kotlin.test.fail
+import kotlin.test.assertTrue
 
-@Disabled
 class QueryTimeoutTest : R2dbcDatabaseTestsBase() {
 
     private fun generateTimeoutStatements(db: TestDB, timeout: Int): String {
         return when (db) {
-            in TestDB.ALL_MYSQL_MARIADB -> "SELECT SLEEP($timeout) = 0;"
+            in TestDB.ALL_MYSQL_MARIADB -> "SELECT 1 = 0 WHERE SLEEP($timeout);"
             in TestDB.ALL_POSTGRES -> "SELECT pg_sleep($timeout);"
             TestDB.SQLSERVER -> "WAITFOR DELAY '00:00:$timeout';"
             else -> throw NotImplementedError()
@@ -28,19 +31,33 @@ class QueryTimeoutTest : R2dbcDatabaseTestsBase() {
     private val timeoutTestDBList = TestDB.ALL_MARIADB + TestDB.ALL_POSTGRES + TestDB.SQLSERVER + TestDB.MYSQL_V8
 
     @Test
-    fun timeoutStatements() {
-        withDb(timeoutTestDBList) { testDB ->
-            this.queryTimeout = 3
+    fun timeoutStatements() = runTest {
+        Assumptions.assumeTrue(dialect in timeoutTestDBList)
+
+        if (dialect == TestDB.POSTGRESQL) {
+            val db = dialect.connect { defaultMaxAttempts = 1 }
             try {
-                TransactionManager.current().exec(
-                    generateTimeoutStatements(testDB, 5)
-                )
-                fail("Should have thrown a timeout or cancelled statement exception")
+                suspendTransaction(db = db) {
+                    this.queryTimeout = 3
+                    TransactionManager.current().exec(
+                        generateTimeoutStatements(dialect, 5)
+                    )
+                    Assertions.fail("Should have thrown a timeout or cancelled statement exception")
+                }
             } catch (cause: ExposedR2dbcException) {
-                when (testDB) {
-                    // PostgreSQL throws a regular PgSQLException with a cancelled statement message
-                    TestDB.POSTGRESQL -> assertTrue(cause.cause is R2dbcNonTransientResourceException)
-                    else -> assertTrue(cause.cause is R2dbcTimeoutException)
+                assertTrue(cause.cause is R2dbcNonTransientResourceException)
+            }
+            TransactionManager.closeAndUnregister(db)
+        } else {
+            withDb { testDB ->
+                this.queryTimeout = 3
+                try {
+                    TransactionManager.current().exec(
+                        generateTimeoutStatements(testDB, 5)
+                    )
+                    Assertions.fail("Should have thrown a timeout or cancelled statement exception")
+                } catch (cause: ExposedR2dbcException) {
+                    assertTrue(cause.cause is R2dbcTimeoutException)
                 }
             }
         }
@@ -66,21 +83,7 @@ class QueryTimeoutTest : R2dbcDatabaseTestsBase() {
         }
     }
 
-    @Test
-    fun timeoutMinusWithTimeoutStatement() {
-        withDb(timeoutTestDBList) { testDB ->
-            this.queryTimeout = -1
-            try {
-                TransactionManager.current().exec(
-                    generateTimeoutStatements(testDB, 1)
-                )
-                fail("Should have thrown a timeout or cancelled statement exception")
-            } catch (cause: ExposedR2dbcException) {
-                assertTrue(cause.cause is R2dbcTimeoutException)
-            }
-        }
-    }
-
+    @Disabled("MariaDB v2 fails on TC with empty log list")
     @Test
     fun testLongQueryThrowsWarning() {
         val logCaptor = LogCaptor.forName(exposedLogger.name)

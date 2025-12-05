@@ -745,6 +745,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/statements/R2dbcConnectionImpl
 	public fun setCatalog (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun setReadOnly (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun setSavepoint (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun setTransactionDefinition (Lio/r2dbc/spi/TransactionDefinition;)V
 	public fun setTransactionIsolation (Lio/r2dbc/spi/IsolationLevel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
@@ -900,6 +901,7 @@ public abstract interface class org/jetbrains/exposed/v1/r2dbc/statements/api/R2
 	public abstract fun setCatalog (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun setReadOnly (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun setSavepoint (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun setTransactionDefinition (Lio/r2dbc/spi/TransactionDefinition;)V
 	public abstract fun setTransactionIsolation (Lio/r2dbc/spi/IsolationLevel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 

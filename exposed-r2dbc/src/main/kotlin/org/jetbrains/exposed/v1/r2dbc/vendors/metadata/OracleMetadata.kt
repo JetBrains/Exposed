@@ -75,9 +75,9 @@ internal class OracleMetadata : MetadataProvider(OraclePropertyProvider, OracleT
 
     override fun setReadOnlyMode(value: Boolean): String {
         return if (value) {
-            "SET TRANSACTION READ WRITE"
-        } else {
             "SET TRANSACTION READ ONLY"
+        } else {
+            "SET TRANSACTION READ WRITE"
         }
     }
 
