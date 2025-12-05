@@ -125,8 +125,6 @@ class SpringTransactionManager(
                 addLogger(StdOutSqlLogger)
             }
         }
-        @OptIn(InternalApi::class)
-        ThreadLocalTransactionsStack.pushTransaction(newTransaction)
 
         // Spring JDBC transaction
         @Suppress("TooGenericExceptionCaught")
@@ -146,6 +144,9 @@ class SpringTransactionManager(
             trxObject.connectionHolder = null
             throw CannotCreateTransactionException("Could not open JDBC Connection for transaction", ex)
         }
+
+        @OptIn(InternalApi::class)
+        ThreadLocalTransactionsStack.pushTransaction(newTransaction)
     }
 
     override fun doCommit(status: DefaultTransactionStatus) {
