@@ -50,8 +50,15 @@ Tests are organized by database and dialect. Each module has database-specific t
 #### Quick test with H2 (no Docker required)
 ```bash
 ./gradlew test_h2_v2                              # All modules with H2
+./gradlew :exposed-tests:test_h2_v2               # JDBC Tests with H2
+./gradlew :exposed-r2dbc-tests:test_h2_v2         # R2DBC Tests with H2
+```
+
+#### Test with Postgres
+```bash
 ./gradlew test_postgres                           # All modules with Postgres
-./gradlew :exposed-tests:test_h2_v2               # Single module
+./gradlew :exposed-tests:test_postgres            # JDBC Tests with Postgres
+./gradlew :exposed-r2dbc-tests:test_postgres      # R2DBC Tests with Postgres
 ```
 
 #### Test with specific database (requires Docker)
@@ -202,7 +209,7 @@ Database-specific behavior is in `exposed-core/src/main/kotlin/org/jetbrains/exp
 2. Add factory method to `Table` class
 3. Add dialect-specific SQL type mapping in `DataTypeProvider` implementations
 4. Add tests in `exposed-tests` covering multiple databases
-5Add tests in `exposed-r2dbc-tests` covering multiple databases
+5. Add tests in `exposed-r2dbc-tests` covering multiple databases
 
 ### Working with migrations
 - Migration modules use serialization to track schema state
@@ -233,7 +240,7 @@ Database-specific behavior is in `exposed-core/src/main/kotlin/org/jetbrains/exp
 - Run `./gradlew apiCheck` before committing public API changes
 - Binary compatibility is critical - breaking changes require major version bump
 - Use `@InternalApi` annotation for internal implementation details
-- Document breaking changes in CHANGELOG.md under "Breaking changes:" section
+- Document breaking changes in BREAKING_CHANGES.md under "Breaking changes" section
 
 ## Code Style and Conventions
 
