@@ -110,8 +110,8 @@ open class Referrers<ParentID : Any, in Parent : Entity<ParentID>, ChildID : Any
     val cache: Boolean,
     references: Map<Column<*>, Column<*>>? = null
 ) : ReadOnlyProperty<Parent, SizedIterable<Child>> {
-    /** The list of columns and their [SortOrder] for ordering referred entities in one-to-many relationship. */
-    private val orderByExpressions: MutableList<Pair<Expression<*>, SortOrder>> = mutableListOf()
+    /** The set of columns and their [SortOrder] for ordering referred entities in one-to-many relationship. */
+    private val orderByExpressions = linkedSetOf<Pair<Expression<*>, SortOrder>>()
 
     val allReferences = references ?: run {
         reference.referee ?: error("Column $reference is not a reference")

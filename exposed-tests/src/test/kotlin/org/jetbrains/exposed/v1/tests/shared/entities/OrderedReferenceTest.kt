@@ -1,10 +1,14 @@
 package org.jetbrains.exposed.v1.tests.shared.entities
 
 import org.jetbrains.exposed.v1.core.SortOrder.DESC
+import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.statements.StatementContext
+import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
+import org.jetbrains.exposed.v1.dao.entityCache
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
@@ -15,6 +19,8 @@ import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNotNull
+import kotlin.math.max
 
 @Tag(MISSING_R2DBC_TEST)
 class OrderedReferenceTest : DatabaseTestsBase() {
@@ -61,6 +67,50 @@ class OrderedReferenceTest : DatabaseTestsBase() {
             }
             unsortedRatingValues.sorted().zip(user.nullableRatings).forEach { (value, rating) ->
                 assertEquals(value, rating.value)
+            }
+        }
+    }
+
+    @Test
+    fun testNoDuplicatedOrderByPartsInQuery() {
+        // This interceptor counts duplicated ORDER BY parts in the sql sent to database.
+        // We want to be sure that DAO doesn't create duplicated parts.
+        val interceptor = object : StatementInterceptor {
+            var maxDuplicates = 0
+            override fun beforeExecution(transaction: Transaction, context: StatementContext) {
+                val duplicatedPartsAmount = context.statement.prepareSQL(transaction)
+                    // Get all the parts from order by section
+                    .lowercase()
+                    .substringAfter("order by")
+                    .split(",")
+                    .map { it.trim() }
+                    // Count the occurrences of each part and take maximum
+                    .groupBy { it }
+                    .mapValues { (_, list) -> list.size }
+                    .maxByOrNull { it.value }
+                    ?.value ?: 0
+
+                maxDuplicates = max(maxDuplicates, duplicatedPartsAmount)
+            }
+        }
+
+        withOrderedReferenceTestTables {
+            registerInterceptor(interceptor)
+            // `orderBy` on references in DAO Entity classes could collect duplicated parts.
+            // That method is executed on every access to the field, so every query has
+            // one more duplicated part
+            // It's mentioned in the original issue
+            // 'EXPOSED-950 Order by clause is repeated hundredfold'
+            repeat(5) {
+                val user = UserDefaultOrder.all().first()
+                entityCache.clear()
+
+                // This sections needs only to force DAO fetch the data to execute SQL queries
+                user.ratings.forEach { rating ->
+                    assertNotNull(rating.value)
+                }
+
+                assertEquals(1, interceptor.maxDuplicates)
             }
         }
     }
