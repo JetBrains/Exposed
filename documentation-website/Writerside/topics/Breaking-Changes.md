@@ -1,5 +1,14 @@
 # Breaking Changes
 
+## 1.0.0-rc-5
+
+* The interface `R2dbcPreparedStatementApi` no longer holds the unused methods `closeIfPossible()` or `cancel()`
+  as there are no relevant matching methods available for `io.r2dbc.spi.Statement`, in the same way as there are for
+  JDBC's `java.sql.PreparedStatement`. Any resource cleanup logic that may have been implemented via these methods can
+  still be implemented by `GlobalStatementInterceptor.afterStatementPrepared()`.
+* `R2dbcTransaction.closeExecutedStatements()` has been renamed to `.clearExecutedStatements()` to better relay it's actual
+  behavior. It no longer invokes the now-removed method `R2dbcPreparedStatementApi.closeIfPossible()` & no longer suspends.
+
 ## 1.0.0-rc-4
 
 * If H2 version 2.4.240+ is detected, `datetime()` column type will now map to type `TIMESTAMP(9)` in the following modes:

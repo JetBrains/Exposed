@@ -315,11 +315,9 @@ open class R2dbcTransaction(
     internal suspend fun execQuery(query: SuspendExecutable<ResultApi, *>): R2dbcResult = execQuery(query) { it }
         ?: error("A R2dbcResult was expected, but a result was not retrieved from the database")
 
-    /** Closes all previously executed statements and resets or releases any used database and/or driver resources. */
-    suspend fun closeExecutedStatements() {
-        executedStatements.forEach {
-            it.closeIfPossible()
-        }
+    /** Clears all previously executed statements and resets or releases any used database and/or driver resources. */
+    fun clearExecutedStatements() {
+        // no Statement.close() in R2DBC
         openResultRowsCount = 0
         executedStatements.clear()
     }
