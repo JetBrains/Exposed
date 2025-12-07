@@ -1,0 +1,31 @@
+public class org/jetbrains/exposed/v1/spring/boot/r2dbc/DatabaseInitializer : org/springframework/boot/ApplicationRunner, org/springframework/core/Ordered {
+	public static final field Companion Lorg/jetbrains/exposed/v1/spring/boot/r2dbc/DatabaseInitializer$Companion;
+	public static final field DATABASE_INITIALIZER_ORDER I
+	public field springReactiveTransactionManager Lorg/jetbrains/exposed/v1/spring/reactive/transaction/SpringReactiveTransactionManager;
+	public fun <init> (Lorg/springframework/context/ApplicationContext;Ljava/util/List;)V
+	public fun getOrder ()I
+	public final fun getSpringReactiveTransactionManager ()Lorg/jetbrains/exposed/v1/spring/reactive/transaction/SpringReactiveTransactionManager;
+	public fun run (Lorg/springframework/boot/ApplicationArguments;)V
+	public final fun setSpringReactiveTransactionManager (Lorg/jetbrains/exposed/v1/spring/reactive/transaction/SpringReactiveTransactionManager;)V
+}
+
+public final class org/jetbrains/exposed/v1/spring/boot/r2dbc/DatabaseInitializer$Companion {
+}
+
+public final class org/jetbrains/exposed/v1/spring/boot/r2dbc/DatabaseInitializerKt {
+	public static final fun discoverExposedTables (Lorg/springframework/context/ApplicationContext;Ljava/util/List;)Ljava/util/List;
+}
+
+public final class org/jetbrains/exposed/v1/spring/boot/r2dbc/ExposedAotContribution : org/springframework/beans/factory/aot/BeanFactoryInitializationAotProcessor {
+	public fun <init> ()V
+	public fun processAheadOfTime (Lorg/springframework/beans/factory/config/ConfigurableListableBeanFactory;)Lorg/springframework/beans/factory/aot/BeanFactoryInitializationAotContribution;
+}
+
+public class org/jetbrains/exposed/v1/spring/boot/r2dbc/autoconfigure/ExposedAutoConfiguration {
+	public fun <init> (Lorg/springframework/context/ApplicationContext;)V
+	public fun databaseConfig ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Builder;
+	public fun databaseInitializer ()Lorg/jetbrains/exposed/v1/spring/boot/r2dbc/DatabaseInitializer;
+	public fun exposedSpringReactiveTransactionAttributeSource ()Lorg/jetbrains/exposed/v1/spring/reactive/transaction/ExposedSpringReactiveTransactionAttributeSource;
+	public fun springReactiveTransactionManager (Lio/r2dbc/spi/ConnectionFactory;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Builder;)Lorg/jetbrains/exposed/v1/spring/reactive/transaction/SpringReactiveTransactionManager;
+}
+

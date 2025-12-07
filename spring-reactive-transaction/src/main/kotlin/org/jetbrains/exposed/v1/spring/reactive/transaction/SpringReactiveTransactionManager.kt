@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono
  *
  * @param connectionFactory The [ConnectionFactory] entry point for an R2DBC driver when getting a connection.
  * @param databaseConfig The configuration that defines custom properties to be used with connections.
- * At minimum, a configuration must be provided that specifies `DatabaseConfig.explicitDialect`.
+ * At minimum, a configuration must be provided that specifies `R2dbcDatabaseConfig.explicitDialect`.
  * @property showSql Whether transaction queries should be logged. Defaults to `false`.
  */
 class SpringReactiveTransactionManager(

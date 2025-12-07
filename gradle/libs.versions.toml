@@ -34,6 +34,7 @@ sqlserver-r2dbc = "1.0.3.RELEASE"
 springFramework = "6.2.14"
 springFramework7 = "7.0.1"
 springBoot = "3.5.8"
+springBoot4 = "4.0.0"
 
 spring-security-crypto = "6.2.1"
 joda-time = "2.14.0"
@@ -70,9 +71,11 @@ javax-money = { group = "javax.money", name = "money-api", version.ref = "javax-
 moneta = { group = "org.javamoney", name = "moneta", version.ref = "moneta" }
 
 spring-boot-starter-jdbc = { group = "org.springframework.boot", name = "spring-boot-starter-jdbc", version.ref = "springBoot" }
+spring-boot-starter-r2dbc = { group = "org.springframework.boot", name = "spring-boot-starter-r2dbc", version.ref = "springBoot4" }
 spring-boot-autoconfigure = { group = "org.springframework.boot", name = "spring-boot-autoconfigure", version.ref = "springBoot" }
 spring-boot-configuration-processor = { group = "org.springframework.boot", name = "spring-boot-configuration-processor", version.ref = "springBoot" }
 spring-boot-starter-test = { group = "org.springframework.boot", name = "spring-boot-starter-test", version.ref = "springBoot" }
+spring-boot-starter-r2dbc-test = { group = "org.springframework.boot", name = "spring-boot-starter-r2dbc-test", version.ref = "springBoot4" }
 spring-boot-starter-webflux = { group = "org.springframework.boot", name = "spring-boot-starter-webflux", version.ref = "springBoot" }
 spring-jdbc = { group = "org.springframework", name = "spring-jdbc", version.ref = "springFramework" }
 spring-r2dbc = { group = "org.springframework", name = "spring-r2dbc", version.ref = "springFramework7" }
