@@ -32,6 +32,7 @@ postgresql-r2dbc = "1.1.1.RELEASE"
 sqlserver-r2dbc = "1.0.3.RELEASE"
 
 springFramework = "6.2.14"
+springFramework7 = "7.0.1"
 springBoot = "3.5.8"
 
 spring-security-crypto = "6.2.1"
@@ -74,9 +75,11 @@ spring-boot-configuration-processor = { group = "org.springframework.boot", name
 spring-boot-starter-test = { group = "org.springframework.boot", name = "spring-boot-starter-test", version.ref = "springBoot" }
 spring-boot-starter-webflux = { group = "org.springframework.boot", name = "spring-boot-starter-webflux", version.ref = "springBoot" }
 spring-jdbc = { group = "org.springframework", name = "spring-jdbc", version.ref = "springFramework" }
-spring-r2dbc = { group = "org.springframework", name = "spring-r2dbc", version.ref = "springFramework" }
-spring-context = { group = "org.springframework", name = "spring-context", version.ref = "springFramework" }
-spring-test = { group = "org.springframework", name = "spring-test", version.ref = "springFramework" }
+spring-r2dbc = { group = "org.springframework", name = "spring-r2dbc", version.ref = "springFramework7" }
+spring-context-spring6 = { group = "org.springframework", name = "spring-context", version.ref = "springFramework" }
+spring-context-spring7 = { group = "org.springframework", name = "spring-context", version.ref = "springFramework7" }
+spring-test-spring6 = { group = "org.springframework", name = "spring-test", version.ref = "springFramework" }
+spring-test-spring7 = { group = "org.springframework", name = "spring-test", version.ref = "springFramework7" }
 
 h2 = { group = "com.h2database", name = "h2", version.ref = "h2_v2" }
 

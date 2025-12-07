@@ -36,6 +36,7 @@ dependencies {
     dokka(projects.exposed.exposedR2dbc)
     dokka(projects.exposed.exposedSpringBootStarter)
     dokka(projects.exposed.springTransaction)
+    dokka(projects.exposed.springReactiveTransaction)
 
     // Kover aggregated coverage dependencies
     // Include all source modules for coverage aggregation

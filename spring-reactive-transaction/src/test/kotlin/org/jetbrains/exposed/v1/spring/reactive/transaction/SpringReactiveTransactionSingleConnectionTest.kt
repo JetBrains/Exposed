@@ -13,7 +13,7 @@ import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean
@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.assertEquals
+import kotlin.text.ifEmpty
 
 class SpringReactiveTransactionSingleConnectionTest {
     object T1 : Table() {
@@ -42,19 +43,31 @@ class SpringReactiveTransactionSingleConnectionTest {
         transactionManager.execute {
             SchemaUtils.create(T1)
         }
+
         // TODO - this should not be done, but transaction is not being popped on original thread after coroutine switches thread
+        ThreadLocalTransactionsStack.threadTransactions()
+            ?.joinToString(separator = "\n", prefix = "\n!!! ORPHAN transactions:\n") { "--> $it" }
+            ?.ifEmpty { "NO transactions to clear up :)" }
+            ?.also { println(it) }
         ThreadLocalTransactionsStack.threadTransactions()?.clear()
+        println("\n-----------STARTING TEST-----------")
     }
 
     @OptIn(InternalApi::class)
     @AfterTest
     fun afterTest() = runTest {
+        println("\n-----------FINISHED TEST-----------")
         transactionManager.execute {
             SchemaUtils.drop(T1)
         }
-        // TODO - this should not be done, but transaction is not being popped on original thread after coroutine switches thread
-        ThreadLocalTransactionsStack.threadTransactions()?.clear()
         singleConnectionH2TestContainer.close()
+
+        // TODO - this should not be done, but transaction is not being popped on original thread after coroutine switches thread
+        ThreadLocalTransactionsStack.threadTransactions()
+            ?.joinToString(separator = "\n", prefix = "\n!!! ORPHAN transactions:\n") { "--> $it" }
+            ?.ifEmpty { "NO transactions to clear up :)" }
+            ?.also { println(it) }
+        ThreadLocalTransactionsStack.threadTransactions()?.clear()
     }
 
     @Test

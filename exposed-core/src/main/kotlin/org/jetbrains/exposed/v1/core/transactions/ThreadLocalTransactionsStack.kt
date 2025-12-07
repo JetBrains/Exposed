@@ -31,6 +31,7 @@ object ThreadLocalTransactionsStack {
      */
     fun pushTransaction(transaction: Transaction) {
         transactions.getOrSet { Stack() }.push(transaction)
+        println("!!! PUSHING --> $transaction")
     }
 
     /**
@@ -46,6 +47,7 @@ object ThreadLocalTransactionsStack {
         val stack = transactions.get()
         require(stack != null && stack.isNotEmpty()) { "No transaction to pop" }
         val result = stack.pop()
+        println("!!! POPPING --> $result")
 
         if (stack.isEmpty()) {
             // Remove the ThreadLocal entirely when stack is empty.

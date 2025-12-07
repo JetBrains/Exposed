@@ -311,8 +311,8 @@ public class org/jetbrains/exposed/v1/r2dbc/R2dbcTransaction : org/jetbrains/exp
 	public static final field Companion Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction$Companion;
 	public fun <init> (Lorg/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionInterface;)V
 	public final fun addLogger ([Lorg/jetbrains/exposed/v1/core/SqlLogger;)Lorg/jetbrains/exposed/v1/core/CompositeSqlLogger;
+	public final fun clearExecutedStatements ()V
 	public fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public final fun closeExecutedStatements ()V
 	public fun commit (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun connection (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun exec (Ljava/lang/String;Ljava/lang/Iterable;Lorg/jetbrains/exposed/v1/core/statements/StatementType;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

@@ -6,14 +6,13 @@ import io.r2dbc.spi.R2dbcException
 import kotlinx.coroutines.reactor.mono
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.StdOutSqlLogger
-import org.jetbrains.exposed.v1.core.exposedLogger
 import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.core.transactions.currentTransactionOrNull
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
-import org.jetbrains.exposed.v1.r2dbc.asContext
 import org.jetbrains.exposed.v1.r2dbc.transactions.transactionManager
+import org.jetbrains.exposed.v1.r2dbc.withTransactionContext
 import org.springframework.r2dbc.UncategorizedR2dbcException
 import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.TransactionSystemException
@@ -21,8 +20,6 @@ import org.springframework.transaction.reactive.AbstractReactiveTransactionManag
 import org.springframework.transaction.reactive.GenericReactiveTransaction
 import org.springframework.transaction.reactive.TransactionSynchronizationManager
 import reactor.core.publisher.Mono
-import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.EmptyCoroutineContext
 
 /**
  * Transaction Manager implementation that builds on top of Spring's standard reactive transaction workflow.
@@ -46,7 +43,24 @@ class SpringReactiveTransactionManager(
     override fun doGetTransaction(
         synchronizationManager: TransactionSynchronizationManager
     ): Any {
-        return ExposedTransactionObject(database = database)
+        println("\ndoGetTransaction [Thread - ${Thread.currentThread().name}]:")
+
+        val holder = ExposedTransactionObject(database = database)
+        val outer = holder.getCurrentTransaction()
+        println("\twith THIS -> NOT YET DEFINED")
+        println("\t\twith OUTER -> $outer")
+
+        // Only clears up leftovers between transactions, to prevent invalid re-use;
+        // Will not be able to clean the final active transaction
+        if (outer != null && synchronizationManager.getResource(database) == null) {
+            println("!!! FOUND ORPHAN transaction:")
+
+            @OptIn(InternalApi::class)
+            ThreadLocalTransactionsStack.popTransaction()
+        }
+
+        println()
+        return holder
     }
 
     override fun doSuspend(
@@ -54,22 +68,23 @@ class SpringReactiveTransactionManager(
         transaction: Any
     ): Mono<in Any> {
         return Mono.defer {
+            println("doSuspend [Thread - ${Thread.currentThread().name}]:")
+
             val trxObject = transaction as ExposedTransactionObject
 
+            val currentTransaction = trxObject.getCurrentTransaction()
+            println("\tSUSPENDING THIS... $currentTransaction")
+            println("\t\twith OUTER -> ${currentTransaction?.outerTransaction}")
             val holder = SuspendedObject(
-                transaction = trxObject.getCurrentTransaction() ?: error("No transaction to suspend"),
+                transaction = currentTransaction ?: error("No transaction to suspend"),
             ).apply {
+                synchronizationManager.unbindResourceAndPrint()
+
                 @OptIn(InternalApi::class)
                 ThreadLocalTransactionsStack.popTransaction()
-
-                try {
-                    synchronizationManager.unbindResource(database)
-                } catch (e: IllegalStateException) {
-                    println(e.message)
-                    // do nothing
-                }
             }
 
+            println()
             Mono.just(holder)
         }
     }
@@ -78,36 +93,46 @@ class SpringReactiveTransactionManager(
         synchronizationManager: TransactionSynchronizationManager,
         transaction: Any?,
         suspendedResources: Any
-    ): Mono<Void?> {
+    ): Mono<Void> {
         return Mono.defer {
+            println("doResume [Thread - ${Thread.currentThread().name}]:")
+
             val suspendedObject = suspendedResources as SuspendedObject
 
+            val suspendedTransaction = suspendedObject.transaction
+            println("\tRESUMING THIS... $suspendedTransaction")
+            println("\t\twith OUTER -> ${suspendedTransaction.outerTransaction}")
+
+            synchronizationManager.bindResourceAndPrint(suspendedTransaction)
+
             @OptIn(InternalApi::class)
-            ThreadLocalTransactionsStack.pushTransaction(suspendedObject.transaction)
+            ThreadLocalTransactionsStack.pushTransaction(suspendedTransaction)
 
-            try {
-                @OptIn(InternalApi::class)
-                synchronizationManager.bindResource(database, suspendedObject.transaction.asContext())
-            } catch (_: IllegalStateException) {
-                // do nothing
-            }
-
+            println()
             Mono.empty()
         }
     }
 
     override fun isExistingTransaction(transaction: Any): Boolean {
+        println("isExistingTransaction [Thread - ${Thread.currentThread().name}]:")
         val trxObject = transaction as ExposedTransactionObject
 
-        return trxObject.getCurrentTransaction() != null
+        val currentTransaction = trxObject.getCurrentTransaction()
+        println("\twith THIS -> $currentTransaction")
+        println("\t\twith OUTER -> ${currentTransaction?.outerTransaction}")
+
+        println()
+        return currentTransaction != null
     }
 
     override fun doBegin(
         synchronizationManager: TransactionSynchronizationManager,
         transaction: Any,
         definition: TransactionDefinition
-    ): Mono<Void?> {
+    ): Mono<Void> {
         return Mono.defer {
+            println("doBegin [Thread - ${Thread.currentThread().name}]:")
+
             val trxObject = transaction as ExposedTransactionObject
 
             @OptIn(InternalApi::class)
@@ -117,6 +142,8 @@ class SpringReactiveTransactionManager(
             } else {
                 null
             }
+            println("\twith THIS -> NOT YET DEFINED")
+            println("\t\twith OUTER -> $outerTransactionToUse")
 
             val newTransaction = trxObject.database.transactionManager.newTransaction(
                 isolation = definition.isolationLevel.resolveIsolationLevel(),
@@ -131,27 +158,23 @@ class SpringReactiveTransactionManager(
                     addLogger(StdOutSqlLogger)
                 }
             }
+            println("\tSTARTING THIS... $newTransaction")
+            println("\t\twith OUTER -> ${newTransaction.outerTransaction}")
+
+            trxObject.isNewConnection = newTransaction.outerTransaction == null
+            if (trxObject.isNewConnection) {
+                synchronizationManager.bindResourceAndPrint(newTransaction)
+            } else if (trxObject.isNestedTransactionAllowed) {
+                // otherwise a PROPAGATION_NESTED transaction would incorrectly have the context of its outer
+                // transaction used when doCommit() or doRollback() is invoked
+                synchronizationManager.unbindResourceAndPrint()
+                synchronizationManager.bindResourceAndPrint(newTransaction)
+            }
 
             @OptIn(InternalApi::class)
             ThreadLocalTransactionsStack.pushTransaction(newTransaction)
 
-            trxObject.isNewConnection = outerTransactionToUse == null
-            // TODO - Improve conditional check. Adding it makes some PROPAGATED_NESTED tests fail while others pass
-//            if (trxObject.isNewConnection) {
-//                try {
-//                    @OptIn(InternalApi::class)
-//                    synchronizationManager.bindResource(database, newTransaction.asContext())
-//                } catch (_: IllegalStateException) {
-//                    // do nothing
-//                }
-//            }
-            try {
-                @OptIn(InternalApi::class)
-                synchronizationManager.bindResource(database, newTransaction.asContext())
-            } catch (_: IllegalStateException) {
-                // do nothing
-            }
-
+            println()
             Mono.just(newTransaction)
         }.then()
     }
@@ -159,86 +182,122 @@ class SpringReactiveTransactionManager(
     override fun doCommit(
         synchronizationManager: TransactionSynchronizationManager,
         status: GenericReactiveTransaction
-    ): Mono<Void?> {
-        return mono(synchronizationManager.getStoredContext()) {
+    ): Mono<Void> {
+        return Mono.defer {
+            println("doCommit [Thread - ${Thread.currentThread().name}]:")
+
             val trxObject = status.transaction as ExposedTransactionObject
 
-            trxObject.commit()
+            mono {
+                @OptIn(InternalApi::class)
+                withTransactionContext(synchronizationManager.getResourceOrThrow()) {
+                    trxObject.commit()
+                }
 
-            null
+                null
+            }
         }
     }
 
     override fun doRollback(
         synchronizationManager: TransactionSynchronizationManager,
         status: GenericReactiveTransaction
-    ): Mono<Void?> {
-        return mono(synchronizationManager.getStoredContext()) {
+    ): Mono<Void> {
+        return Mono.defer {
+            println("doRollback [Thread - ${Thread.currentThread().name}]:")
+
             val trxObject = status.transaction as ExposedTransactionObject
 
-            trxObject.rollback()
+            mono {
+                @OptIn(InternalApi::class)
+                withTransactionContext(synchronizationManager.getResourceOrThrow()) {
+                    trxObject.rollback()
+                }
 
-            null
+                null
+            }
         }
     }
 
     override fun doCleanupAfterCompletion(
         synchronizationManager: TransactionSynchronizationManager,
         transaction: Any
-    ): Mono<Void?> {
+    ): Mono<Void> {
         return Mono.defer {
+            println("\ndoCleanupAfterCompletion [Thread - ${Thread.currentThread().name}]:")
+
             val trxObject = transaction as ExposedTransactionObject
 
-            trxObject.cleanUpTransactionIfIsPossible {
-                closeStatements(it)
-
+            mono {
                 @OptIn(InternalApi::class)
-                ThreadLocalTransactionsStack.popTransaction()
+                withTransactionContext(synchronizationManager.getResourceOrThrow()) {
+                    val completedTransaction = trxObject.getCurrentTransaction()
+                    println("\twith THIS -> $completedTransaction")
+                    println("\t\twith OUTER -> ${completedTransaction?.outerTransaction}")
 
-                val contextToUse = synchronizationManager.getStoredContext()
-                // TODO - Improve conditional check. Removing it makes some PROPAGATED_NESTED tests fail while others pass
-                if (trxObject.isNewConnection) {
-                    try {
-                        synchronizationManager.unbindResource(database)
-                    } catch (_: IllegalStateException) {
-                        // do nothing
-                    }
+                    completedTransaction
+                        ?.let {
+                            clearStatements(it)
+
+                            if (trxObject.isNewConnection) {
+                                synchronizationManager.unbindResourceAndPrint()
+                            } else if (trxObject.isNestedTransactionAllowed) {
+                                // otherwise a PROPAGATION_NESTED transaction would incorrectly have the context of its
+                                // now closed inner transaction used when doCommit() or doRollback() is later invoked
+                                synchronizationManager.unbindResourceAndPrint()
+                                it.outerTransaction?.let { outer ->
+                                    synchronizationManager.bindResourceAndPrint(outer)
+                                }
+                            }
+
+                            it.close()
+                        }
                 }
 
-                mono(contextToUse) {
-                    it.close()
-
-                    null
-                }
+                null
             }
         }
     }
 
-    private fun TransactionSynchronizationManager.getStoredContext(): CoroutineContext {
-        return this.getResource(database) as? CoroutineContext ?: EmptyCoroutineContext
-    }
-
-    private fun closeStatements(transaction: R2dbcTransaction) {
+    private fun clearStatements(transaction: R2dbcTransaction) {
+        println("!!! CLEARING statements...")
         val currentStatement = transaction.currentStatement
-        @Suppress("TooGenericExceptionCaught")
-        try {
-            currentStatement?.let {
-                // No Statement.close() in R2DBC
-                transaction.currentStatement = null
-            }
-            transaction.closeExecutedStatements()
-        } catch (error: Exception) {
-            exposedLogger.warn("Statements close failed", error)
+        currentStatement?.let {
+            // No Statement.close() in R2DBC
+            transaction.currentStatement = null
         }
+        transaction.clearExecutedStatements()
     }
 
     override fun doSetRollbackOnly(
         synchronizationManager: TransactionSynchronizationManager,
         status: GenericReactiveTransaction
-    ): Mono<Void?> {
-        val trxObject = status.transaction as ExposedTransactionObject
+    ): Mono<Void> {
+        return Mono.defer {
+            println("doSetRollbackOnly [Thread - ${Thread.currentThread().name}]:")
 
-        return trxObject.setRollbackOnly()
+            val trxObject = status.transaction as ExposedTransactionObject
+
+            val currentTransaction = trxObject.getCurrentTransaction()
+            println("\twith THIS -> $currentTransaction")
+            println("\t\twith OUTER -> ${currentTransaction?.outerTransaction}")
+
+            trxObject.setRollbackOnly()
+        }
+    }
+
+    private fun TransactionSynchronizationManager.bindResourceAndPrint(transaction: R2dbcTransaction) {
+        this.bindResource(database, transaction)
+        println("!!! BINDING --> $transaction")
+    }
+
+    private fun TransactionSynchronizationManager.unbindResourceAndPrint() {
+        val previousBinding = this.unbindResource(database) as R2dbcTransaction
+        println("!!! UNBINDING --> $previousBinding")
+    }
+
+    private fun TransactionSynchronizationManager.getResourceOrThrow(): R2dbcTransaction {
+        return this.getResource(database) as? R2dbcTransaction ?: error("No transaction value bound to the current context")
     }
 
     private data class SuspendedObject(
@@ -250,17 +309,18 @@ class SpringReactiveTransactionManager(
     ) {
         private var isRollback: Boolean = false
 
+        val isNestedTransactionAllowed = database.config.useNestedTransactions
         var isNewConnection: Boolean = false
-
-        fun cleanUpTransactionIfIsPossible(block: (transaction: R2dbcTransaction) -> Mono<Void?>): Mono<Void?> {
-            val currentTransaction = getCurrentTransaction()
-            return currentTransaction?.let { block(it) } ?: Mono.empty()
-        }
 
         @Suppress("TooGenericExceptionCaught")
         suspend fun commit() {
+            println("\ttrxObject.commit [Thread - ${Thread.currentThread().name}]:")
+            val currentTransaction = getCurrentTransaction()
+            println("\t\twith THIS -> $currentTransaction")
+            println("\t\t\twith OUTER -> ${currentTransaction?.outerTransaction}\n")
+
             try {
-                getCurrentTransaction()?.commit()
+                currentTransaction?.commit()
             } catch (error: R2dbcException) {
                 throw UncategorizedR2dbcException(error.message.orEmpty(), null, error)
             } catch (error: Exception) {
@@ -270,8 +330,13 @@ class SpringReactiveTransactionManager(
 
         @Suppress("TooGenericExceptionCaught")
         suspend fun rollback() {
+            println("\ttrxObject.rollback [Thread - ${Thread.currentThread().name}]:")
+            val currentTransaction = getCurrentTransaction()
+            println("\t\twith THIS -> $currentTransaction")
+            println("\t\t\twith OUTER -> ${currentTransaction?.outerTransaction}\n")
+
             try {
-                getCurrentTransaction()?.rollback()
+                currentTransaction?.rollback()
             } catch (error: R2dbcException) {
                 throw UncategorizedR2dbcException(error.message.orEmpty(), null, error)
             } catch (error: Exception) {
@@ -284,12 +349,11 @@ class SpringReactiveTransactionManager(
             return ThreadLocalTransactionsStack.getTransactionOrNull(database) as R2dbcTransaction?
         }
 
-        fun setRollbackOnly(): Mono<Void?> {
-            return Mono.defer {
-                isRollback = true
+        fun setRollbackOnly(): Mono<Void> {
+            isRollback = true
 
-                Mono.empty()
-            }
+            println()
+            return Mono.empty()
         }
     }
 }

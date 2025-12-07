@@ -37,15 +37,15 @@ class ConnectionSpy(private val connection: Connection) : Connection by connecti
         callOrder.add("close")
         closeCallCount++
 
-        Mono.empty()
-    }
+        Mono.empty<Void>()
+    } as Publisher<Void?>
 
     override fun setAutoCommit(p0: Boolean): Publisher<Void?> = Mono.defer {
         callOrder.add("setAutoCommit")
         mockAutoCommit = p0
 
-        Mono.empty()
-    }
+        Mono.empty<Void>()
+    } as Publisher<Void?>
 
     override fun isAutoCommit(): Boolean = mockAutoCommit
 
@@ -54,31 +54,31 @@ class ConnectionSpy(private val connection: Connection) : Connection by connecti
         commitCallCount++
         mockCommit()
 
-        Mono.empty()
-    }
+        Mono.empty<Void>()
+    } as Publisher<Void?>
 
     override fun rollbackTransaction(): Publisher<Void?> = Mono.defer {
         callOrder.add("rollback")
         rollbackCallCount++
         mockRollback()
 
-        Mono.empty()
-    }
+        Mono.empty<Void>()
+    } as Publisher<Void?>
 
     override fun rollbackTransactionToSavepoint(p0: String): Publisher<Void?> = Mono.defer {
         callOrder.add("rollback")
         rollbackCallCount++
         mockRollback()
 
-        Mono.empty()
-    }
+        Mono.empty<Void>()
+    } as Publisher<Void?>
 
     override fun releaseSavepoint(p0: String): Publisher<Void?> = Mono.defer {
         callOrder.add("releaseSavepoint")
         releaseSavepointCallCount++
 
-        Mono.empty()
-    }
+        Mono.empty<Void>()
+    } as Publisher<Void?>
 
     override fun getTransactionIsolationLevel(): IsolationLevel = mockTransactionIsolation
 }

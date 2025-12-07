@@ -7,15 +7,15 @@ import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
-import org.junit.FixMethodOrder
-import org.junit.runner.RunWith
-import org.junit.runners.MethodSorters
+import org.junit.jupiter.api.MethodOrderer
+import org.junit.jupiter.api.TestMethodOrder
+import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
+import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.transaction.ReactiveTransaction
 import org.springframework.transaction.ReactiveTransactionManager
 import org.springframework.transaction.TransactionDefinition
@@ -43,9 +43,9 @@ open class TestConfig : TransactionManagementConfigurer {
     )
 }
 
-@RunWith(SpringJUnit4ClassRunner::class)
+@ExtendWith(SpringExtension::class)
 @ContextConfiguration(classes = [TestConfig::class])
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.MethodName::class)
 @Suppress("UnnecessaryAbstractClass")
 abstract class SpringReactiveTransactionTestBase {
 
@@ -66,11 +66,14 @@ abstract class SpringReactiveTransactionTestBase {
      */
     fun runTestWithMockTransactional(
         propagationBehavior: Int = TransactionDefinition.PROPAGATION_REQUIRED,
+        isolationLevel: Int = TransactionDefinition.ISOLATION_DEFAULT,
         testBody: suspend TestScope.(ReactiveTransaction) -> Unit
     ) {
         if (transactionManager !is SpringReactiveTransactionManager) error("Wrong txManager instance: ${this.javaClass.name}")
 
-        val trxDef = DefaultTransactionDefinition(propagationBehavior)
+        val trxDef = DefaultTransactionDefinition(propagationBehavior).apply {
+            this.isolationLevel = isolationLevel
+        }
 
         runTest {
             val trxOp = TransactionalOperator.create(transactionManager, trxDef)

@@ -14,7 +14,7 @@ import org.jetbrains.exposed.v1.r2dbc.deleteAll
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -34,15 +34,27 @@ class SpringReactiveTransactionRollbackTest {
     fun beforeTest() = runTest {
         val testRollback = container.getBean(TestRollback::class.java)
         testRollback.init()
+
         // TODO - this should not be done, but transaction is not being popped on original thread after coroutine switches thread
+        ThreadLocalTransactionsStack.threadTransactions()
+            ?.joinToString(separator = "\n", prefix = "\n!!! ORPHAN transactions:\n") { "--> $it" }
+            ?.ifEmpty { "NO transactions to clear up :)" }
+            ?.also { println(it) }
         ThreadLocalTransactionsStack.threadTransactions()?.clear()
+        println("\n-----------STARTING TEST-----------")
     }
 
     @OptIn(InternalApi::class)
     @AfterTest
     fun afterTest() {
+        println("\n-----------FINISHED TEST-----------")
         container.close()
+
         // TODO - this should not be done, but transaction is not being popped on original thread after coroutine switches thread
+        ThreadLocalTransactionsStack.threadTransactions()
+            ?.joinToString(separator = "\n", prefix = "\n!!! ORPHAN transactions:\n") { "--> $it" }
+            ?.ifEmpty { "NO transactions to clear up :)" }
+            ?.also { println(it) }
         ThreadLocalTransactionsStack.threadTransactions()?.clear()
     }
 

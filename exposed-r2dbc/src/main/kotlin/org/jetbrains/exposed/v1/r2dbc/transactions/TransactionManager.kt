@@ -256,34 +256,47 @@ class TransactionManager(
         private var savepoint: ExposedSavepoint? = null
 
         override suspend fun commit() {
+            println("\tTransaction.commit [Thread - ${Thread.currentThread().name}]:")
+            print("!!! COMMITING ")
             if (connectionLazy.isInitialized()) {
                 if (!useSavePoints) {
+                    println("connection entirely...\n")
                     connection().commit()
                 } else {
+                    println("by doing nothing...\n")
                     // do nothing in nested. close() will commit everything and release savepoint.
                 }
             }
         }
 
         override suspend fun rollback() {
+            println("\tTransaction.rollback [Thread - ${Thread.currentThread().name}]:")
+            print("!!! ROLLING BACK ")
             if (connectionLazy.isInitialized() && !connection().isClosed()) {
                 if (useSavePoints && savepoint != null) {
+                    println("to savepoint...\n")
                     connection().rollback(savepoint!!)
                     savepoint = connection().setSavepoint(savepointName)
                 } else {
+                    println("connection entirely...\n")
                     connection().rollback()
                 }
             }
         }
 
         override suspend fun close() {
+            println("\tTransaction.close [Thread - ${Thread.currentThread().name}]:")
+            print("!!! CLOSING ")
             if (!useSavePoints) {
+                println("connection entirely...\n")
                 if (connectionLazy.isInitialized()) connection().close()
             } else {
                 savepoint?.let {
+                    println("by releasing savepoint...\n")
                     connection().releaseSavepoint(it)
                     savepoint = null
                 }
+                    ?: println("by doing nothing...\n")
             }
         }
 

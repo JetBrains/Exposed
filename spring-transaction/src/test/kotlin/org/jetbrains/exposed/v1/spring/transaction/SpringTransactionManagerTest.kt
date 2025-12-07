@@ -2,9 +2,11 @@ package org.jetbrains.exposed.v1.spring.transaction
 
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy
 import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy
@@ -149,6 +151,9 @@ class SpringTransactionManagerTest {
         assertEquals(1, con1.closeCallCount)
     }
 
+    // LazyConnectionDataSourceProxy has no R2DBC equivalent
+    // https://github.com/spring-projects/spring-framework/issues/33897
+    @Tag(NOT_APPLICABLE_TO_R2DBC)
     @Test
     fun `transaction commit with lazy connection data source proxy`() {
         val lazyDs = LazyConnectionDataSourceProxy(ds1)
@@ -158,6 +163,9 @@ class SpringTransactionManagerTest {
         assertEquals(1, con1.closeCallCount)
     }
 
+    // LazyConnectionDataSourceProxy has no R2DBC equivalent
+    // https://github.com/spring-projects/spring-framework/issues/33897
+    @Tag(NOT_APPLICABLE_TO_R2DBC)
     @Test
     fun `transaction rollback with lazy connection data source proxy`() {
         val lazyDs = LazyConnectionDataSourceProxy(ds1)
@@ -202,6 +210,9 @@ class SpringTransactionManagerTest {
         assertTrue(con1.closeCallCount > 0)
     }
 
+    // Rollback following commit failure was purposefully removed from Spring R2DBC
+    // https://github.com/spring-projects/spring-framework/pull/27572
+    @Tag(NOT_APPLICABLE_TO_R2DBC)
     @Test
     fun `transaction exception on commit and rollback on commit failure`() {
         con1.mockCommit = { throw SQLException("Commit failure") }

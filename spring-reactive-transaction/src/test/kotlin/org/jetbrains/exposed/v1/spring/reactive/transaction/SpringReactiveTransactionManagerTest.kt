@@ -1,16 +1,15 @@
 package org.jetbrains.exposed.v1.spring.reactive.transaction
 
 import io.r2dbc.spi.ConnectionFactory
-import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
-import org.junit.BeforeClass
-import org.junit.Ignore
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
 import org.springframework.r2dbc.connection.TransactionAwareConnectionFactoryProxy
 import org.springframework.transaction.IllegalTransactionStateException
 import org.springframework.transaction.ReactiveTransaction
@@ -34,7 +33,7 @@ class SpringReactiveTransactionManagerTest {
         val cf2 = ConnectionFactorySpy(::ConnectionSpy)
         lateinit var con2: ConnectionSpy
 
-        @BeforeClass
+        @BeforeAll
         @JvmStatic
         fun init() = runTest {
             con1 = cf1.getCon() as ConnectionSpy
@@ -49,17 +48,27 @@ class SpringReactiveTransactionManagerTest {
         con2.clearMock()
 
         // TODO - this should not be done, but transactions are not being popped on original thread after coroutine switches thread
+        ThreadLocalTransactionsStack.threadTransactions()
+            ?.joinToString(separator = "\n", prefix = "\n!!! ORPHAN transactions:\n") { "--> $it" }
+            ?.ifEmpty { "NO transactions to clear up :)" }
+            ?.also { println(it) }
         ThreadLocalTransactionsStack.threadTransactions()?.clear()
+        println("\n-----------STARTING TEST-----------")
     }
 
     @OptIn(InternalApi::class)
     @AfterTest
     fun afterTest() {
+        println("\n-----------FINISHED TEST-----------")
         while (TransactionManager.defaultDatabase != null) {
             TransactionManager.defaultDatabase?.let { TransactionManager.closeAndUnregister(it) }
         }
 
-        // TODO - this should not be done, but transactions are not being popped on original thread after coroutine switches thread
+        // TODO - this should not be done, but transaction is not being popped on original thread after coroutine switches thread
+        ThreadLocalTransactionsStack.threadTransactions()
+            ?.joinToString(separator = "\n", prefix = "\n!!! ORPHAN transactions:\n") { "--> $it" }
+            ?.ifEmpty { "NO transactions to clear up :)" }
+            ?.also { println(it) }
         ThreadLocalTransactionsStack.threadTransactions()?.clear()
     }
 
@@ -177,34 +186,6 @@ class SpringReactiveTransactionManagerTest {
         assertEquals(1, con1.closeCallCount)
     }
 
-    // LazyConnectionDataSourceProxy has no R2DBC equivalent support
-    // https://github.com/spring-projects/spring-framework/issues/33897
-//    @Test
-//    fun `transaction commit with lazy connection data source proxy`() = runTest {
-//        val lazyDs = LazyConnectionDataSourceProxy(cf1)
-//        val tm = SpringReactiveTransactionManager(lazyDs)
-//        tm.executeAssert()
-//
-//        assertEquals(1, con1.closeCallCount)
-//    }
-
-    // LazyConnectionDataSourceProxy has no R2DBC equivalent support
-    // https://github.com/spring-projects/spring-framework/issues/33897
-//    @Test
-//    fun `transaction rollback with lazy connection data source proxy`() = runTest {
-//        val lazyDs = LazyConnectionDataSourceProxy(cf1)
-//        val tm = SpringReactiveTransactionManager(lazyDs)
-//        val ex = RuntimeException("Application exception")
-//        try {
-//            tm.executeAssert {
-//                throw ex
-//            }
-//        } catch (e: Exception) {
-//            assertEquals(ex, e)
-//        }
-//        assertEquals(1, con1.closeCallCount)
-//    }
-
     @Test
     fun `transaction commit with transaction aware connection factory proxy`() = runTest {
         val transactionAwareCf = TransactionAwareConnectionFactoryProxy(cf1)
@@ -235,25 +216,6 @@ class SpringReactiveTransactionManagerTest {
         assertTrue(con1.closeCallCount > 0)
     }
 
-    // It seems that rollback following commit failure was purposefully removed from Spring R2DBC
-    // https://github.com/spring-projects/spring-framework/pull/27572
-    @Ignore
-    @Test
-    fun `transaction exception on commit and rollback on commit failure`() = runTest {
-        con1.mockCommit = { throw SQLException("Commit failure") }
-
-        val tm = getDefaultManager(cf1)
-//        tm.isRollbackOnCommitFailure = true // there is no RxTM equivalent
-        assertFailsWith<TransactionSystemException> {
-            tm.executeAssert()
-        }
-
-        assertTrue(con1.verifyCallOrder("setAutoCommit", "commit", "rollback", "close"))
-        assertEquals(1, con1.commitCallCount)
-        assertEquals(1, con1.rollbackCallCount)
-        assertEquals(1, con1.closeCallCount)
-    }
-
     @Test
     fun `transaction with exception on rollback`() = runTest {
         con1.mockRollback = { throw SQLException("Rollback failure") }
@@ -272,8 +234,6 @@ class SpringReactiveTransactionManagerTest {
         assertEquals(1, con1.closeCallCount)
     }
 
-    // TODO - Improve conditional check in doBegin() and doCleanupAfterCompletion() for resource binding/unbinding
-    @Ignore
     @Test
     fun `nested transaction with commit`() = runTest {
         val tm = getDefaultManager(cf1, R2dbcDatabaseConfig { useNestedTransactions = true })
@@ -288,8 +248,6 @@ class SpringReactiveTransactionManagerTest {
         assertEquals(1, con1.closeCallCount)
     }
 
-    // TODO - Same issue as above
-    @Ignore
     @Test
     fun `nested transaction with rollback`() = runTest {
         val tm = getDefaultManager(cf1, R2dbcDatabaseConfig { useNestedTransactions = true })
