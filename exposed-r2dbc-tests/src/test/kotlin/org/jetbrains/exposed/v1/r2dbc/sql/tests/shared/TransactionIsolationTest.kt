@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared
 
 import io.r2dbc.spi.IsolationLevel
+import io.r2dbc.spi.Option
+import io.r2dbc.spi.TransactionDefinition
 import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
@@ -35,7 +37,7 @@ class TransactionIsolationTest : R2dbcDatabaseTestsBase() {
 
         val db = dialect.connect { defaultR2dbcIsolationLevel = IsolationLevel.READ_COMMITTED }
 
-        suspendTransaction {
+        suspendTransaction(db = db) {
             // transaction manager should default to use DatabaseConfig level
             assertEquals(IsolationLevel.READ_COMMITTED, transactionManager.defaultIsolationLevel)
 
@@ -67,6 +69,40 @@ class TransactionIsolationTest : R2dbcDatabaseTestsBase() {
                 // database level should be set by transaction-specific setting
                 assertTransactionIsolationLevel(dialect, IsolationLevel.READ_COMMITTED)
             }
+        }
+    }
+
+    private class CustomTestTransactionDefinition : TransactionDefinition {
+        override fun <T : Any?> getAttribute(option: Option<T?>): T? {
+            return when (option) {
+                TransactionDefinition.ISOLATION_LEVEL -> IsolationLevel.REPEATABLE_READ as T
+                else -> null
+            }
+        }
+    }
+
+    @Test
+    fun testTransactionIsolationSetByManualDefinition() = runTest {
+        Assumptions.assumeTrue(transactionIsolationSupportDb.containsAll(TestDB.enabledDialects()))
+
+        val db = dialect.connect { defaultR2dbcIsolationLevel = IsolationLevel.READ_COMMITTED }
+
+        suspendTransaction(db = db) {
+            // transaction manager should default to use DatabaseConfig level
+            assertEquals(IsolationLevel.READ_COMMITTED, transactionManager.defaultIsolationLevel)
+
+            this.connection().setTransactionDefinition(CustomTestTransactionDefinition())
+
+            // database level should be set by the value in CustomTestTransactionDefinition
+            assertTransactionIsolationLevel(dialect, IsolationLevel.REPEATABLE_READ)
+        }
+
+        suspendTransaction(db = db) {
+            // overrides any Exposed parameter setting & forces beginTransaction() to be called with no definition
+            this.connection().setTransactionDefinition(null)
+
+            // database level should be set by the database's own defaults
+            assertTransactionIsolationLevel(dialect, R2dbcDatabase.getDefaultIsolationLevel(db))
         }
     }
 

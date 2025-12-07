@@ -38,8 +38,14 @@ interface R2dbcExposedConnection<OriginalConnection : Any> {
     /** Sets the transaction isolation level of the connection. */
     suspend fun setTransactionIsolation(value: IsolationLevel)
 
-    /** Sets specific transaction properties to be used together when starting a transaction explicitly. */
-    fun setTransactionDefinition(definition: TransactionDefinition)
+    /**
+     * Sets specific transaction properties to be used together when starting a transaction explicitly.
+     * Passing a `null` argument will force `beginTransaction()` to be invoked without any transaction definition.
+     *
+     * **Note:** This method should be called from within a transaction block at the start, before any operations
+     * that trigger may trigger connection retrieval & usage.
+     */
+    fun setTransactionDefinition(definition: TransactionDefinition?)
 
     /** Saves all changes since the last commit or rollback operation. */
     suspend fun commit()

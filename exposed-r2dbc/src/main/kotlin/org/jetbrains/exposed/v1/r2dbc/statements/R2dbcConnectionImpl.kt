@@ -87,10 +87,10 @@ class R2dbcConnectionImpl(
         withConnection { setTransactionIsolationLevel(value).awaitFirstOrNull() }
     }
 
-    private var transactionDefinition: R2dbcTransactionDefinition? = null
+    private var transactionDefinition: TransactionDefinition? = null
 
-    override fun setTransactionDefinition(definition: TransactionDefinition) {
-        transactionDefinition = definition as R2dbcTransactionDefinition
+    override fun setTransactionDefinition(definition: TransactionDefinition?) {
+        transactionDefinition = definition
     }
 
     override suspend fun commit() {
@@ -112,6 +112,7 @@ class R2dbcConnectionImpl(
     override suspend fun close() {
         withConnection { close().awaitFirstOrNull() }
         localConnection = null
+        transactionDefinition = null
     }
 
     override suspend fun prepareStatement(
@@ -230,20 +231,20 @@ class R2dbcConnectionImpl(
             localConnection ?: connection.awaitLast().also { cx ->
                 // beginTransaction() starts an explicit transaction with autoCommit mode off
                 transactionDefinition
-                    ?.let {
-                        when (metadataProvider) {
-                            is OracleMetadata if it.readOnly != null -> {
+                    ?.let { originalDefinition ->
+                        when (val definition = originalDefinition as? R2dbcTransactionDefinition) {
+                            is R2dbcTransactionDefinition if metadataProvider is OracleMetadata && definition.readOnly != null -> {
                                 // Oracle does not allow both isolation level + mutability to be set implicitly together;
                                 // instead it requires a specific order, with transaction isolation always set first.
-                                cx.beginTransaction(it.toOracleDefinition()).awaitFirstOrNull()
-                                cx.executeSQL(metadataProvider.setReadOnlyMode(it.readOnly))
+                                cx.beginTransaction(definition.toOracleDefinition()).awaitFirstOrNull()
+                                cx.executeSQL(metadataProvider.setReadOnlyMode(definition.readOnly))
                             }
-                            is MySQLMetadata if it.isolationLevel != null -> {
+                            is R2dbcTransactionDefinition if metadataProvider is MySQLMetadata && definition.isolationLevel != null -> {
                                 // MySQL/MariaDB driver would set level only on next-next transaction, not the 1 about to start
-                                cx.executeSQL(metadataProvider.setCurrentTransactionIsolation(it.isolationLevel))
-                                cx.beginTransaction(it).awaitFirstOrNull()
+                                cx.executeSQL(metadataProvider.setCurrentTransactionIsolation(definition.isolationLevel))
+                                cx.beginTransaction(definition).awaitFirstOrNull()
                             }
-                            else -> cx.beginTransaction(it).awaitFirstOrNull()
+                            else -> cx.beginTransaction(originalDefinition).awaitFirstOrNull()
                         }
                     }
                     ?: cx.beginTransaction().awaitFirstOrNull()
