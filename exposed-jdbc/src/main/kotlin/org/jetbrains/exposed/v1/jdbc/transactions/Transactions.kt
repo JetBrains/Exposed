@@ -180,7 +180,9 @@ fun <T> inTopLevelTransaction(
 
     while (true) {
         val transaction = database.transactionManager.newTransaction(
-            transactionIsolation ?: database.transactionManager.defaultIsolationLevel, readOnly ?: database.transactionManager.defaultReadOnly, outerTransaction
+            transactionIsolation ?: database.transactionManager.defaultIsolationLevel,
+            readOnly ?: database.transactionManager.defaultReadOnly,
+            outerTransaction
         )
 
         try {
@@ -324,7 +326,9 @@ suspend fun <T> inTopLevelSuspendTransaction(
 
     while (true) {
         val transaction = database.transactionManager.newTransaction(
-            transactionIsolation ?: database.transactionManager.defaultIsolationLevel, readOnly ?: database.transactionManager.defaultReadOnly, outerTransaction
+            transactionIsolation ?: database.transactionManager.defaultIsolationLevel,
+            readOnly ?: database.transactionManager.defaultReadOnly,
+            outerTransaction
         )
 
         try {

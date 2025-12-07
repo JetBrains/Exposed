@@ -114,7 +114,11 @@ suspend fun <T> suspendTransaction(
     val outer = databaseToUse.transactionManager.getCurrentContextTransaction()
 
     return if (outer != null) {
-        val transaction = outer.transactionManager.newTransaction(transactionIsolation, readOnly, outer)
+        val transaction = outer.transactionManager.newTransaction(
+            transactionIsolation ?: outer.transactionManager.defaultIsolationLevel,
+            readOnly ?: outer.transactionManager.defaultReadOnly,
+            outer
+        )
 
         @OptIn(InternalApi::class)
         withTransactionContext(transaction) {
@@ -172,7 +176,11 @@ suspend fun <T> inTopLevelSuspendTransaction(
     val database = resolveR2dbcDatabaseOrThrow(db)
 
     while (true) {
-        val transaction = database.transactionManager.newTransaction(transactionIsolation, readOnly, outerTransaction)
+        val transaction = database.transactionManager.newTransaction(
+            transactionIsolation ?: database.transactionManager.defaultIsolationLevel,
+            readOnly ?: database.transactionManager.defaultReadOnly,
+            outerTransaction
+        )
 
         try {
             @OptIn(InternalApi::class)

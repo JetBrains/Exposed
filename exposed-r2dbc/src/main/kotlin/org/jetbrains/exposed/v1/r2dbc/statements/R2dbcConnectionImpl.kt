@@ -5,6 +5,7 @@ import io.r2dbc.spi.IsolationLevel
 import io.r2dbc.spi.Row
 import io.r2dbc.spi.RowMetadata
 import io.r2dbc.spi.Statement
+import io.r2dbc.spi.TransactionDefinition
 import io.r2dbc.spi.ValidationDepth
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
@@ -29,8 +30,11 @@ import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedDatabaseMetadat
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcSavepoint
 import org.jetbrains.exposed.v1.r2dbc.statements.api.getBoolean
 import org.jetbrains.exposed.v1.r2dbc.statements.api.getString
+import org.jetbrains.exposed.v1.r2dbc.transactions.R2dbcTransactionDefinition
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.MetadataProvider
+import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.MySQLMetadata
+import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.OracleMetadata
 import org.reactivestreams.Publisher
 import java.util.*
 
@@ -83,6 +87,12 @@ class R2dbcConnectionImpl(
         withConnection { setTransactionIsolationLevel(value).awaitFirstOrNull() }
     }
 
+    private var transactionDefinition: TransactionDefinition? = null
+
+    override fun setTransactionDefinition(definition: TransactionDefinition?) {
+        transactionDefinition = definition
+    }
+
     override suspend fun commit() {
         withConnection {
             // this has side effect of enabling auto-commit ON, which may cause unexpected rollback behavior
@@ -102,6 +112,7 @@ class R2dbcConnectionImpl(
     override suspend fun close() {
         withConnection { close().awaitFirstOrNull() }
         localConnection = null
+        transactionDefinition = null
     }
 
     override suspend fun prepareStatement(
@@ -217,10 +228,29 @@ class R2dbcConnectionImpl(
 
     private suspend fun <T> withConnection(body: suspend Connection.() -> T): T {
         val acquiredConnection = localConnectionLock.withLock {
-            localConnection ?: connection.awaitLast().also {
-                // this starts an explicit transaction with autoCommit mode off
-                it.beginTransaction().awaitFirstOrNull()
-                localConnection = it
+            localConnection ?: connection.awaitLast().also { cx ->
+                // beginTransaction() starts an explicit transaction with autoCommit mode off
+                transactionDefinition
+                    ?.let { originalDefinition ->
+                        when (val definition = originalDefinition as? R2dbcTransactionDefinition) {
+                            is R2dbcTransactionDefinition if metadataProvider is OracleMetadata && definition.readOnly != null -> {
+                                // Oracle does not allow both isolation level + mutability to be set implicitly together;
+                                // instead it requires a specific order, with transaction isolation always set first.
+                                cx.beginTransaction(definition.toOracleDefinition()).awaitFirstOrNull()
+                                cx.executeSQL(metadataProvider.setReadOnlyMode(definition.readOnly))
+                            }
+                            is R2dbcTransactionDefinition if metadataProvider is MySQLMetadata && definition.isolationLevel != null -> {
+                                // MySQL/MariaDB driver would set level only on next-next transaction, not the 1 about to start
+                                cx.executeSQL(metadataProvider.setCurrentTransactionIsolation(definition.isolationLevel))
+                                cx.beginTransaction(definition).awaitFirstOrNull()
+                            }
+                            else -> cx.beginTransaction(originalDefinition).awaitFirstOrNull()
+                        }
+                    }
+                    ?: cx.beginTransaction().awaitFirstOrNull()
+
+                localConnection = cx
+                transactionDefinition = null
             }
         }
         return acquiredConnection.body()

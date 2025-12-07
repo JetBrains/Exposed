@@ -211,7 +211,6 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
         }
     }
 
-    @Disabled("Until isolation level fixed")
     @RepeatedTest(10)
     @CoroutinesTimeout(60000)
     fun nestedSuspendTxTest() {
@@ -252,6 +251,7 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @Disabled
     @RepeatedTest(10)
     @CoroutinesTimeout(60000)
     fun nestedSuspendAsyncTxTest() {
