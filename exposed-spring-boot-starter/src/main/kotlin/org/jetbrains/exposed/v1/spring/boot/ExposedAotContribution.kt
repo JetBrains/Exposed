@@ -3,12 +3,18 @@ package org.jetbrains.exposed.v1.spring.boot
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.statements.Statement
+import org.jetbrains.exposed.v1.core.statements.StatementBuilder
+import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
 import org.jetbrains.exposed.v1.core.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.v1.core.statements.api.RowApi
 import org.jetbrains.exposed.v1.core.transactions.TransactionStore
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.Query
 import org.jetbrains.exposed.v1.jdbc.SizedIterable
+import org.jetbrains.exposed.v1.jdbc.statements.BlockingExecutable
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.spring.transaction.SpringTransactionManager
 import org.springframework.aot.hint.MemberCategory
@@ -65,11 +71,13 @@ class ExposedAotContribution : BeanFactoryInitializationAotProcessor {
 
     private fun RuntimeHints.registerReflectionHints(vararg memberCategories: MemberCategory) {
         listOf(
+            DatabaseApi::class,
             Database::class,
             DatabaseConfig::class,
             TransactionManager::class,
             SpringTransactionManager::class,
             Transaction::class,
+            JdbcTransaction::class,
             TransactionStore::class,
             Table::class,
             DdlAware::class,
@@ -83,15 +91,23 @@ class ExposedAotContribution : BeanFactoryInitializationAotProcessor {
             CustomEnumerationColumnType::class,
             Expression::class,
             ExpressionWithColumnType::class,
+            IExpressionAlias::class,
+            ExpressionWithColumnTypeAlias::class,
             Op::class,
             Op.Companion::class,
             ForeignKeyConstraint::class,
             CheckConstraint::class,
             Index::class,
             PreparedStatementApi::class,
+            StatementInterceptor::class,
             Statement::class,
+            StatementBuilder::class,
+            BlockingExecutable::class,
             QueryBuilder::class,
+            Query::class,
             SizedIterable::class,
+            ResultRow::class,
+            RowApi::class,
             Entity::class,
             EntityClass::class,
             EntityID::class,
