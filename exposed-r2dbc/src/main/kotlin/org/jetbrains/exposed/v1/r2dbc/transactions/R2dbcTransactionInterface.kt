@@ -29,12 +29,12 @@ interface R2dbcTransactionInterface : TransactionInterface {
 }
 
 /**
- * The [TransactionManager] instance that is associated with this [R2dbcDatabase].
+ * The [R2dbcTransactionManager] instance that is associated with this [R2dbcDatabase].
  *
  * @throws IllegalStateException if no transaction manager is registered for the given database.
  */
 @Suppress("TooGenericExceptionThrown")
-val R2dbcDatabase.transactionManager: TransactionManager
+val R2dbcDatabase.transactionManager: R2dbcTransactionManager
     get() = TransactionManager.managerFor(this)
 
 @Suppress("TooGenericExceptionCaught")

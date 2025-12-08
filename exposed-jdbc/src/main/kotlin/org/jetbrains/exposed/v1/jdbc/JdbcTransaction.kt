@@ -19,7 +19,8 @@ import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
 import org.jetbrains.exposed.v1.jdbc.statements.executeIn
 import org.jetbrains.exposed.v1.jdbc.statements.jdbc.JdbcResult
 import org.jetbrains.exposed.v1.jdbc.transactions.JdbcTransactionInterface
-import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.JdbcTransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.createTransactionContext
 import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import java.sql.ResultSet
 import java.util.*
@@ -31,7 +32,7 @@ open class JdbcTransaction(
 ) : Transaction(), JdbcTransactionInterface by transactionImpl {
     final override val db: Database = transactionImpl.db
 
-    override val transactionManager: TransactionManager
+    override val transactionManager: JdbcTransactionManager
         get() = db.transactionManager
 
     /**

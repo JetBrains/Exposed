@@ -5,10 +5,10 @@ import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Version
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
-import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.jdbc.statements.api.ExposedConnection
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcExposedDatabaseMetadata
+import org.jetbrains.exposed.v1.jdbc.transactions.JdbcTransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.vendors.*
 import java.sql.Connection
@@ -172,7 +172,7 @@ class Database private constructor(
             connectionAutoRegistration: DatabaseConnectionAutoRegistration,
             getNewConnection: () -> Connection,
             setupConnection: (Connection) -> Unit = {},
-            manager: (Database) -> TransactionManagerApi = { TransactionManager(it) }
+            manager: (Database) -> JdbcTransactionManager = { TransactionManager(it) }
         ): Database {
             return Database(explicitVendor, config ?: DatabaseConfig.invoke()) {
                 connectionAutoRegistration(getNewConnection().apply { setupConnection(this) })
@@ -199,7 +199,7 @@ class Database private constructor(
             setupConnection: (Connection) -> Unit = {},
             databaseConfig: DatabaseConfig? = null,
             connectionAutoRegistration: DatabaseConnectionAutoRegistration = connectionInstanceImpl,
-            manager: (Database) -> TransactionManagerApi = { TransactionManager(it) }
+            manager: (Database) -> JdbcTransactionManager = { TransactionManager(it) }
         ): Database {
             return doConnect(
                 explicitVendor = null,
@@ -229,7 +229,7 @@ class Database private constructor(
             getNewConnection: () -> Connection,
             databaseConfig: DatabaseConfig? = null,
             connectionAutoRegistration: DatabaseConnectionAutoRegistration = connectionInstanceImpl,
-            manager: (Database) -> TransactionManagerApi = { TransactionManager(it) }
+            manager: (Database) -> JdbcTransactionManager = { TransactionManager(it) }
         ): Database {
             return doConnect(
                 explicitVendor = null,
@@ -266,7 +266,7 @@ class Database private constructor(
             setupConnection: (Connection) -> Unit = {},
             databaseConfig: DatabaseConfig? = null,
             connectionAutoRegistration: DatabaseConnectionAutoRegistration = connectionInstanceImpl,
-            manager: (Database) -> TransactionManagerApi = { TransactionManager(it) }
+            manager: (Database) -> JdbcTransactionManager = { TransactionManager(it) }
         ): Database {
             Class.forName(driver).getDeclaredConstructor().newInstance()
             val dialectName = getDialectName(url) ?: error("Can't resolve dialect for connection: $url")
