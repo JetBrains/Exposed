@@ -271,10 +271,6 @@ internal fun IsolationLevel.asInt(): Int = isolationLevelMapping.getOrElse(this)
     error("Unsupported IsolationLevel as Int: ${this.asSql()}")
 }
 
-internal fun Int.asIsolationLevel(): IsolationLevel = isolationLevelMapping.entries
-    .firstOrNull { it.value == this }?.key
-    ?: error("Unsupported Int as IsolationLevel: $this")
-
 internal suspend fun Connection.executeSQL(sqlQuery: String) {
     if (sqlQuery.isEmpty()) return
 
