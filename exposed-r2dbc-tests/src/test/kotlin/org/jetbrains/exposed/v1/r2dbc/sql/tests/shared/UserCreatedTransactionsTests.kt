@@ -127,7 +127,7 @@ class UserCreatedTransactionsTests : R2dbcDatabaseTestsBase() {
 
     @OptIn(InternalApi::class)
     @Test
-    fun testCloseExecutedStatements() {
+    fun testClearExecutedStatements() {
         withConnection(dialect) { db, testDb ->
             val tx = TransactionManager.currentOrNew()
 
@@ -144,7 +144,7 @@ class UserCreatedTransactionsTests : R2dbcDatabaseTestsBase() {
             assertEquals(1, result?.size)
             assertEquals(100, result?.get(0))
 
-            tx.closeExecutedStatements()
+            tx.clearExecutedStatements()
 
             tx.close()
         }

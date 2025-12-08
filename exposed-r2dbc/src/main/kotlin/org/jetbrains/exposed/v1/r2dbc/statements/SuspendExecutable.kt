@@ -150,7 +150,7 @@ internal suspend fun <T, S : Statement<T>> SuspendExecutable<T, S>.executeIn(
         if (isNotLastItemInTheBatch && (contexts.size > 1 || isAlwaysBatch)) statement.addBatch()
     }
     if (!transaction.db.supportsMultipleResultSets) {
-        transaction.closeExecutedStatements()
+        transaction.clearExecutedStatements()
     }
 
     transaction.currentStatement = statement

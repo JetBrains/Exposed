@@ -112,6 +112,8 @@ suspend fun <T> suspendTransaction(
 ): T {
     val databaseToUse = resolveR2dbcDatabaseOrThrow(db)
     val outer = databaseToUse.transactionManager.getCurrentContextTransaction()
+//    @OptIn(InternalApi::class)
+//    val outer = ThreadLocalTransactionsStack.getTransactionOrNull(databaseToUse) as? R2dbcTransaction
 
     return if (outer != null) {
         val transaction = outer.transactionManager.newTransaction(
@@ -270,10 +272,10 @@ internal suspend fun closeStatementsAndConnection(transaction: R2dbcTransaction)
     @Suppress("TooGenericExceptionCaught")
     try {
         currentStatement?.let {
-            it.closeIfPossible()
+            // no Statement.close() in R2DBC
             transaction.currentStatement = null
         }
-        transaction.closeExecutedStatements()
+        transaction.clearExecutedStatements()
     } catch (cause: Exception) {
         exposedLogger.warn("Statements close failed", cause)
     }
