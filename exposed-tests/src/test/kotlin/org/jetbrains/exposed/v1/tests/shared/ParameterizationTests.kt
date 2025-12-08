@@ -26,7 +26,7 @@ class ParameterizationTests : DatabaseTestsBase() {
     }
 
     private val supportMultipleStatements by lazy {
-        TestDB.ALL_MARIADB + TestDB.SQLSERVER + TestDB.ALL_MYSQL + TestDB.POSTGRESQL
+        TestDB.ALL_MYSQL + TestDB.MARIADB + TestDB.SQLSERVER + TestDB.POSTGRESQL
     }
 
     @Test
@@ -166,7 +166,7 @@ class ParameterizationTests : DatabaseTestsBase() {
     private fun urlExtra(testDB: TestDB): String {
         return when (testDB) {
             in TestDB.ALL_MYSQL -> "&allowMultiQueries=true"
-            in TestDB.ALL_MARIADB -> "?&allowMultiQueries=true"
+            TestDB.MARIADB -> "?&allowMultiQueries=true"
             else -> ""
         }
     }

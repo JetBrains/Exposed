@@ -37,7 +37,7 @@ import kotlin.time.Instant
 
 class KotlinTimeTests : R2dbcDatabaseTestsBase() {
 
-    private val timestampWithTimeZoneUnsupportedDB = TestDB.ALL_MARIADB + TestDB.MYSQL_V5
+    private val timestampWithTimeZoneUnsupportedDB = setOf(TestDB.MARIADB, TestDB.MYSQL_V5)
 
     @Test
     fun kotlinTimeFunctions() {

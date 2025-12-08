@@ -28,7 +28,7 @@ class QueryTimeoutTest : R2dbcDatabaseTestsBase() {
         }
     }
 
-    private val timeoutTestDBList = TestDB.ALL_MARIADB + TestDB.ALL_POSTGRES + TestDB.SQLSERVER + TestDB.MYSQL_V8
+    private val timeoutTestDBList = TestDB.ALL_POSTGRES + TestDB.MARIADB + TestDB.SQLSERVER + TestDB.MYSQL_V8
 
     @Test
     fun timeoutStatements() = runTest {

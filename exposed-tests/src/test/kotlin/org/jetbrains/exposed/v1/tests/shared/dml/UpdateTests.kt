@@ -86,7 +86,7 @@ class UpdateTests : DatabaseTestsBase() {
 
     @Test
     fun testUpdateWithJoinAndLimit() {
-        val supportsUpdateWithJoinAndLimit = TestDB.ALL_MARIADB + TestDB.ORACLE + TestDB.SQLSERVER
+        val supportsUpdateWithJoinAndLimit = setOf(TestDB.MARIADB, TestDB.ORACLE, TestDB.SQLSERVER)
         withCitiesAndUsers(exclude = TestDB.ALL - supportsUpdateWithJoinAndLimit) { _, users, userData ->
             val join = users.innerJoin(userData)
 

@@ -50,7 +50,7 @@ class SchemaTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun `create and set schema tests`() {
-        withDb(excludeSettings = TestDB.ALL_MYSQL + TestDB.ALL_MARIADB) {
+        withDb(excludeSettings = TestDB.ALL_MYSQL + TestDB.MARIADB) {
             if (currentDialect.supportsCreateSchema) {
                 val schema = when (currentDialect) {
                     is SQLServerDialect -> {

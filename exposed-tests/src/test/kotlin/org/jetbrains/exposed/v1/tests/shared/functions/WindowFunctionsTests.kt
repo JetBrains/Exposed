@@ -19,7 +19,7 @@ class WindowFunctionsTests : DatabaseTestsBase() {
     private val supportsNthValueFunction = TestDB.ALL - TestDB.SQLSERVER
     private val supportsExpressionsInWindowFunctionArguments = TestDB.ALL - TestDB.ALL_MYSQL
     private val supportsExpressionsInWindowFrameClause = TestDB.ALL - TestDB.ALL_MYSQL_MARIADB - TestDB.SQLSERVER
-    private val supportsDefaultValueInLeadLagFunctions = TestDB.ALL - TestDB.ALL_MARIADB
+    private val supportsDefaultValueInLeadLagFunctions = TestDB.ALL - TestDB.MARIADB
     private val supportsRangeModeWithOffsetFrameBound = TestDB.ALL - TestDB.SQLSERVER
 
     @Suppress("LongMethod")

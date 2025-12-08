@@ -44,7 +44,7 @@ class JodaTimeTests : DatabaseTestsBase() {
         DateTimeZone.setDefault(DateTimeZone.UTC)
     }
 
-    private val timestampWithTimeZoneUnsupportedDB = TestDB.ALL_MARIADB + TestDB.MYSQL_V5
+    private val timestampWithTimeZoneUnsupportedDB = setOf(TestDB.MARIADB, TestDB.MYSQL_V5)
 
     @Test
     fun jodaTimeFunctions() {

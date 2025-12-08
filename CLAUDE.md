@@ -73,7 +73,7 @@ Tests are organized by database and dialect. Each module has database-specific t
 # Run tests
 ./gradlew :exposed-tests:test_postgres
 ./gradlew :exposed-tests:test_mysql_v8
-./gradlew :exposed-tests:test_mariadb_v3
+./gradlew :exposed-tests:test_mariadb
 
 # Stop containers
 ./gradlew postgresComposeDownForced
@@ -89,7 +89,7 @@ Tests are organized by database and dialect. Each module has database-specific t
 - `test_h2_v2`, `test_h2_v2_mysql`, `test_h2_v2_psql`, etc. (H2 with different dialect emulations)
 - `test_sqlite`
 - `test_mysql_v5`, `test_mysql_v8`
-- `test_mariadb_v2`, `test_mariadb_v3`
+- `test_mariadb`
 - `test_postgres`, `test_postgresng`
 - `test_oracle`
 - `test_sqlserver`

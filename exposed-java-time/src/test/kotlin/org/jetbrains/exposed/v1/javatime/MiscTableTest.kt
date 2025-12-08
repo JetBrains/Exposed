@@ -1171,7 +1171,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val duration = Duration.ofMinutes(1)
         val eOne = MiscTable.E.ONE
         val dec = BigDecimal("239.42")
-        withTables(excludeSettings = TestDB.ALL_MYSQL + TestDB.ALL_MARIADB, tables = arrayOf(tbl)) {
+        withTables(excludeSettings = TestDB.ALL_MYSQL + TestDB.MARIADB, tables = arrayOf(tbl)) {
             tbl.insert {
                 it[by] = 13
                 it[sm] = -10

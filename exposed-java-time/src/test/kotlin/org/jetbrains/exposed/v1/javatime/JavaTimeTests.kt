@@ -34,7 +34,7 @@ import kotlin.test.assertEquals
 @Disabled("temporarily so PRs can actually be tested")
 class JavaTimeTests : DatabaseTestsBase() {
 
-    private val timestampWithTimeZoneUnsupportedDB = TestDB.ALL_MARIADB + TestDB.MYSQL_V5
+    private val timestampWithTimeZoneUnsupportedDB = setOf(TestDB.MARIADB, TestDB.MYSQL_V5)
 
     @Test
     fun javaTimeFunctions() {

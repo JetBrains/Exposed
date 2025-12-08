@@ -12,8 +12,7 @@ slf4j = "2.0.9"
 log4j2 = "2.24.3"
 
 h2_v2 = "2.4.240"
-mariaDB_v2 = "2.7.9"
-mariaDB_v3 = "3.3.1"
+mariaDB = "3.5.6"
 mysql51 = "5.1.49"
 mysql80 = "8.0.33"
 oracle = "23.26.0.0.0"
@@ -89,8 +88,7 @@ mysql = { group = "mysql", name = "mysql-connector-java", version.ref = "mysql80
 pgjdbc-ng = { group = "com.impossibl.pgjdbc-ng", name = "pgjdbc-ng", version.ref = "postgreNG" }
 postgre = { group = "org.postgresql", name = "postgresql", version.ref = "postgre" }
 sqlite-jdbc = { group = "org.xerial", name = "sqlite-jdbc", version.ref = "sqlite3" }
-maria-db2 = { group = "org.mariadb.jdbc", name = "mariadb-java-client", version.ref = "mariaDB_v2" }
-maria-db3 = { group = "org.mariadb.jdbc", name = "mariadb-java-client", version.ref = "mariaDB_v3" }
+mariadb = { group = "org.mariadb.jdbc", name = "mariadb-java-client", version.ref = "mariaDB" }
 oracle = { group = "com.oracle.database.jdbc", name = "ojdbc11", version.ref = "oracle" }
 mssql = { group = "com.microsoft.sqlserver", name = "mssql-jdbc", version.ref = "sqlserver" }
 

@@ -613,7 +613,7 @@ class CreateTableTests : DatabaseTestsBase() {
     @OptIn(InternalApi::class)
     @Test
     fun createTableWithOnDeleteSetDefault() {
-        withDb(excludeSettings = TestDB.ALL_MYSQL + TestDB.ALL_MARIADB + listOf(TestDB.ORACLE)) { testDb ->
+        withDb(excludeSettings = TestDB.ALL_MYSQL + TestDB.MARIADB + listOf(TestDB.ORACLE)) { testDb ->
             val expected = listOf(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${this.identity(Item)} (" +
                     "${Item.columns.joinToString { it.descriptionDdl(false) }}," +

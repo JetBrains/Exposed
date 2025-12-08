@@ -36,7 +36,7 @@ class QueryTimeoutTest : DatabaseTestsBase() {
     // Looks like it tries to load class from the V8 version of driver.
     // Probably it happens because of driver mapping configuration in org.jetbrains.exposed.v1.sql.Database::driverMapping
     // that expects that all the versions of the Driver have the same package.
-    private val timeoutTestDBList = TestDB.ALL_MARIADB + TestDB.ALL_POSTGRES + TestDB.SQLSERVER + TestDB.MYSQL_V8
+    private val timeoutTestDBList = TestDB.ALL_POSTGRES + TestDB.MARIADB + TestDB.SQLSERVER + TestDB.MYSQL_V8
 
     @Tag(INCOMPLETE_R2DBC_TEST)
     @Test
@@ -98,7 +98,7 @@ class QueryTimeoutTest : DatabaseTestsBase() {
                     // MySQL, POSTGRESQLNG throws a regular SQLException with a minus timeout value
                     in (TestDB.ALL_MYSQL + TestDB.POSTGRESQLNG) -> assertTrue(cause.cause is SQLException)
                     // MariaDB throws a regular SQLSyntaxErrorException with a minus timeout value
-                    in TestDB.ALL_MARIADB -> assertTrue(cause.cause is SQLSyntaxErrorException)
+                    TestDB.MARIADB -> assertTrue(cause.cause is SQLSyntaxErrorException)
                     // SqlServer throws a regular SQLServerException with a minus timeout value
                     TestDB.SQLSERVER -> assertTrue(cause.cause is SQLServerException)
                     else -> throw NotImplementedError()
