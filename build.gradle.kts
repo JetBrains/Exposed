@@ -38,6 +38,7 @@ dependencies {
     dokka(projects.exposed.exposedSpringBoot4Starter)
     dokka(projects.exposed.springTransaction)
     dokka(projects.exposed.spring7Transaction)
+    dokka(projects.exposed.springReactiveTransaction)
 
     // Kover aggregated coverage dependencies
     // Include all source modules for coverage aggregation
@@ -47,6 +48,7 @@ dependencies {
     kover(project(":exposed-java-time"))
     kover(project(":spring-transaction"))
     kover(project(":spring7-transaction"))
+    kover(project(":spring-reactive-transaction"))
     kover(project(":exposed-spring-boot-starter"))
     kover(project(":exposed-spring-boot4-starter"))
     kover(project(":exposed-jdbc"))
