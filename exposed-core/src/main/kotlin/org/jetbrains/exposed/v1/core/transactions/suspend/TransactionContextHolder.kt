@@ -6,9 +6,7 @@ import kotlin.coroutines.CoroutineContext
 
 /**
  * A context holder that associates a `Transaction` with a specific `CoroutineContext`.
- * @suppress
  */
-@InternalApi
 interface TransactionContextHolder : CoroutineContext.Element {
     val transaction: Transaction?
 }

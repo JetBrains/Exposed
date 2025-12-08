@@ -9,12 +9,12 @@ import org.jetbrains.exposed.v1.core.DatabaseApi
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Version
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
-import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.r2dbc.statements.R2dbcConnectionImpl
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedConnection
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedDatabaseMetadata
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcLocalMetadataImpl
+import org.jetbrains.exposed.v1.r2dbc.transactions.R2dbcTransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.vendors.*
 import java.util.concurrent.ConcurrentHashMap
@@ -157,7 +157,7 @@ class R2dbcDatabase private constructor(
 
         @OptIn(InternalApi::class)
         private fun doConnect(
-            manager: (R2dbcDatabase) -> TransactionManagerApi = { TransactionManager(it) },
+            manager: (R2dbcDatabase) -> R2dbcTransactionManager = { TransactionManager(it) },
             connectionFactory: ConnectionFactory?,
             config: R2dbcDatabaseConfig,
         ): R2dbcDatabase {
@@ -190,7 +190,7 @@ class R2dbcDatabase private constructor(
          * provided to [databaseConfig].
          */
         fun connect(
-            manager: (R2dbcDatabase) -> TransactionManagerApi = { TransactionManager(it) },
+            manager: (R2dbcDatabase) -> R2dbcTransactionManager = { TransactionManager(it) },
             databaseConfig: R2dbcDatabaseConfig.Builder.() -> Unit = {}
         ): R2dbcDatabase = doConnect(manager, null, R2dbcDatabaseConfig(databaseConfig).build())
 
@@ -206,7 +206,7 @@ class R2dbcDatabase private constructor(
          * provided to [databaseConfig].
          */
         fun connect(
-            manager: (R2dbcDatabase) -> TransactionManagerApi = { TransactionManager(it) },
+            manager: (R2dbcDatabase) -> R2dbcTransactionManager = { TransactionManager(it) },
             databaseConfig: R2dbcDatabaseConfig.Builder = R2dbcDatabaseConfig.Builder()
         ): R2dbcDatabase = doConnect(manager, null, databaseConfig.build())
 
@@ -226,7 +226,7 @@ class R2dbcDatabase private constructor(
         fun connect(
             connectionFactory: ConnectionFactory,
             databaseConfig: R2dbcDatabaseConfig.Builder,
-            manager: (R2dbcDatabase) -> TransactionManagerApi = { TransactionManager(it) }
+            manager: (R2dbcDatabase) -> R2dbcTransactionManager = { TransactionManager(it) }
         ): R2dbcDatabase = doConnect(manager, connectionFactory, databaseConfig.build())
 
         /**
@@ -249,7 +249,7 @@ class R2dbcDatabase private constructor(
             driver: String = getDriver(url),
             user: String = "",
             password: String = "",
-            manager: (R2dbcDatabase) -> TransactionManagerApi = { TransactionManager(it) },
+            manager: (R2dbcDatabase) -> R2dbcTransactionManager = { TransactionManager(it) },
             databaseConfig: R2dbcDatabaseConfig.Builder = R2dbcDatabaseConfig.Builder(),
         ): R2dbcDatabase {
             databaseConfig.setUrl(url)
@@ -276,7 +276,7 @@ class R2dbcDatabase private constructor(
          */
         fun connect(
             databaseConfig: R2dbcDatabaseConfig,
-            manager: (R2dbcDatabase) -> TransactionManagerApi = { TransactionManager(it) }
+            manager: (R2dbcDatabase) -> R2dbcTransactionManager = { TransactionManager(it) }
         ): R2dbcDatabase = doConnect(
             manager = manager,
             connectionFactory = null,

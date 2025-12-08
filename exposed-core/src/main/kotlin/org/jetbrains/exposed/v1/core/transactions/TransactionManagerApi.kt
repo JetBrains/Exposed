@@ -1,7 +1,5 @@
 package org.jetbrains.exposed.v1.core.transactions
 
-import org.jetbrains.exposed.v1.core.Transaction
-
 /**
  * Represents the manager registered to a database, which is responsible for creating new transactions
  * and storing data related to the database and its transactions.
@@ -18,7 +16,4 @@ interface TransactionManagerApi {
 
     /** The default maximum number of milliseconds to wait before retrying a transaction if an exception is thrown. */
     var defaultMaxRetryDelay: Long
-
-    /** Returns the current [Transaction] of the transaction manager, or `null` if none exists. */
-    fun currentOrNull(): Transaction?
 }

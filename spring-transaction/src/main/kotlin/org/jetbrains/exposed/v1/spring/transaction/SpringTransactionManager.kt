@@ -10,6 +10,7 @@ import org.jetbrains.exposed.v1.core.transactions.transactionScope
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.currentOrNull
 import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.springframework.jdbc.datasource.ConnectionHandle
 import org.springframework.jdbc.datasource.ConnectionHolder
@@ -247,7 +248,7 @@ class SpringTransactionManager(
         @OptIn(InternalApi::class)
         fun getCurrentTransaction(): JdbcTransaction? {
             // Get the transaction for this specific database from the stack
-            return ThreadLocalTransactionsStack.getTransactionOrNull(database) as JdbcTransaction?
+            return database.transactionManager.currentOrNull()
         }
 
         fun setRollbackOnly() {

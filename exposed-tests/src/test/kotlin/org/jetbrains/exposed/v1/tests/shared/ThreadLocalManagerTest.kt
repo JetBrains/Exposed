@@ -7,7 +7,7 @@ import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.JdbcTransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -33,7 +33,7 @@ class ThreadLocalManagerTest : DatabaseTestsBase() {
     fun testReconnection() {
         Assumptions.assumeTrue(TestDB.MYSQL_V5 in TestDB.enabledDialects())
 
-        var secondThreadTm: TransactionManager? = null
+        var secondThreadTm: JdbcTransactionManager? = null
         val db1 = TestDB.MYSQL_V5.connect()
         lateinit var db2: Database
 

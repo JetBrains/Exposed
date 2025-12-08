@@ -3843,7 +3843,6 @@ public abstract interface class org/jetbrains/exposed/v1/core/transactions/Trans
 }
 
 public abstract interface class org/jetbrains/exposed/v1/core/transactions/TransactionManagerApi {
-	public abstract fun currentOrNull ()Lorg/jetbrains/exposed/v1/core/Transaction;
 	public abstract fun getDefaultMaxAttempts ()I
 	public abstract fun getDefaultMaxRetryDelay ()J
 	public abstract fun getDefaultMinRetryDelay ()J

@@ -113,7 +113,7 @@ fun <T> transaction(
     val database = resolveDatabaseOrThrow(db)
 
     @OptIn(InternalApi::class)
-    val outer = ThreadLocalTransactionsStack.getTransactionOrNull(database) as? JdbcTransaction
+    val outer = database.transactionManager.currentOrNull()
 
     return if (outer != null) {
         val transaction = outer.transactionManager.newTransaction(
@@ -260,6 +260,7 @@ suspend fun <T> suspendTransaction(
     statement: suspend JdbcTransaction.() -> T
 ): T {
     val databaseToUse = resolveDatabaseOrThrow(db)
+
     val outer = databaseToUse.transactionManager.getCurrentContextTransaction()
 
     return if (outer != null) {
