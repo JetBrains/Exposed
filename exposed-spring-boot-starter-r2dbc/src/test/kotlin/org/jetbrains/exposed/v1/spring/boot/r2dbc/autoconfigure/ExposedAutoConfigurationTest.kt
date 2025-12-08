@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.v1.spring.boot.r2dbc.autoconfigure
 
+import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.spring.boot.r2dbc.Application
@@ -21,6 +23,8 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import org.springframework.context.annotation.Bean
+import org.springframework.test.context.event.annotation.AfterTestMethod
+import org.springframework.test.context.event.annotation.BeforeTestMethod
 import org.springframework.transaction.interceptor.TransactionAttributeSource
 
 @SpringBootTest(
@@ -40,6 +44,28 @@ open class ExposedAutoConfigurationTest {
 
     @Autowired
     private var transactionAttributeSource: TransactionAttributeSource? = null
+
+    @OptIn(InternalApi::class)
+    @BeforeTestMethod
+    fun beforeTest() {
+        // TODO - this should not be done, but transactions are not being popped on original thread after coroutine switches thread
+        ThreadLocalTransactionsStack.threadTransactions()
+            ?.joinToString(separator = "\n", prefix = "\n!!! ORPHAN transactions:\n") { "--> $it" }
+            ?.ifEmpty { "NO transactions to clear up :)" }
+            ?.also { println(it) }
+        ThreadLocalTransactionsStack.threadTransactions()?.clear()
+    }
+
+    @OptIn(InternalApi::class)
+    @AfterTestMethod
+    fun afterTest() {
+        // TODO - this should not be done, but transactions are not being popped on original thread after coroutine switches thread
+        ThreadLocalTransactionsStack.threadTransactions()
+            ?.joinToString(separator = "\n", prefix = "\n!!! ORPHAN transactions:\n") { "--> $it" }
+            ?.ifEmpty { "NO transactions to clear up :)" }
+            ?.also { println(it) }
+        ThreadLocalTransactionsStack.threadTransactions()?.clear()
+    }
 
     @Test
     fun `should initialize the database connection`() {

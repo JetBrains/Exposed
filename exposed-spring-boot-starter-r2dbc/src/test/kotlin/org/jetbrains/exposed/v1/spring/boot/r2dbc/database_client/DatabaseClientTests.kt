@@ -7,12 +7,16 @@ import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.junit.jupiter.api.*
+import org.junit.jupiter.api.MethodOrderer
+import org.junit.jupiter.api.Order
+import org.junit.jupiter.api.RepeatedTest
+import org.junit.jupiter.api.TestMethodOrder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.event.annotation.AfterTestMethod
 import org.springframework.test.context.event.annotation.BeforeTestClass
-import kotlin.text.ifEmpty
+import org.springframework.test.context.event.annotation.BeforeTestMethod
 
 @SpringBootApplication
 open class DatabaseClientApplication
@@ -20,7 +24,7 @@ open class DatabaseClientApplication
 @SpringBootTest(
     classes = [DatabaseClientApplication::class],
     properties = [
-        "spring.r2dbc.url=r2dbc:h2:mem:///test;DB_CLOSE_DELAY=-1;",
+        "spring.r2dbc.url=r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1;",
         "spring.exposed.generate-ddl=true"
     ]
 )
@@ -36,8 +40,19 @@ class DatabaseClientTests {
     }
 
     @OptIn(InternalApi::class)
-    @BeforeEach
+    @BeforeTestMethod
     fun beforeTest() {
+        // TODO - this should not be done, but transactions are not being popped on original thread after coroutine switches thread
+        ThreadLocalTransactionsStack.threadTransactions()
+            ?.joinToString(separator = "\n", prefix = "\n!!! ORPHAN transactions:\n") { "--> $it" }
+            ?.ifEmpty { "NO transactions to clear up :)" }
+            ?.also { println(it) }
+        ThreadLocalTransactionsStack.threadTransactions()?.clear()
+    }
+
+    @OptIn(InternalApi::class)
+    @AfterTestMethod
+    fun afterTest() {
         // TODO - this should not be done, but transactions are not being popped on original thread after coroutine switches thread
         ThreadLocalTransactionsStack.threadTransactions()
             ?.joinToString(separator = "\n", prefix = "\n!!! ORPHAN transactions:\n") { "--> $it" }

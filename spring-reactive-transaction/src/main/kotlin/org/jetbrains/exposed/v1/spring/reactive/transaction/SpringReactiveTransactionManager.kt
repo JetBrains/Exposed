@@ -273,7 +273,7 @@ class SpringReactiveTransactionManager(
         synchronizationManager: TransactionSynchronizationManager,
         status: GenericReactiveTransaction
     ): Mono<Void> {
-        return Mono.defer {
+        return Mono.fromRunnable {
             println("doSetRollbackOnly [Thread - ${Thread.currentThread().name}]:")
 
             val trxObject = status.transaction as ExposedTransactionObject
@@ -349,11 +349,8 @@ class SpringReactiveTransactionManager(
             return ThreadLocalTransactionsStack.getTransactionOrNull(database) as R2dbcTransaction?
         }
 
-        fun setRollbackOnly(): Mono<Void> {
+        fun setRollbackOnly() {
             isRollback = true
-
-            println()
-            return Mono.empty()
         }
     }
 }

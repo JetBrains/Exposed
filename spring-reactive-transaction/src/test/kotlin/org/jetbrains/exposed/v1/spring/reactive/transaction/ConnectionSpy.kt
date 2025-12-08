@@ -40,9 +40,9 @@ class ConnectionSpy(private val connection: Connection) : Connection by connecti
         Mono.empty<Void>()
     } as Publisher<Void?>
 
-    override fun setAutoCommit(p0: Boolean): Publisher<Void?> = Mono.defer {
+    override fun beginTransaction(): Publisher<Void?> = Mono.defer {
         callOrder.add("setAutoCommit")
-        mockAutoCommit = p0
+        mockAutoCommit = false
 
         Mono.empty<Void>()
     } as Publisher<Void?>

@@ -301,7 +301,6 @@ open class ExposedTransactionManagerTest : SpringReactiveTransactionTestBase() {
         }
     }
 
-    // TODO - Should be fixed by PR #2679
     @Disabled
     @RepeatedTest(5)
     //    @Transactional(isolation = Isolation.READ_COMMITTED) // see [runTestWithMockTransactional]
