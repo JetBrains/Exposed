@@ -16,7 +16,7 @@ internal open class MySQLPropertyProvider : PropertyProvider() {
         get() = true
 
     override val extraNameCharacters: String
-        get() = "#@"
+        get() = "$"
 
     override val defaultTransactionIsolation: IsolationLevel
         get() = if (isMySQL6Plus) {

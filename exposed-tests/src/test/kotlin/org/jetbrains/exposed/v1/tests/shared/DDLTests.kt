@@ -178,7 +178,9 @@ class DDLTests : DatabaseTestsBase() {
     fun unnamedTableWithQuotesSQL() {
         withTables(excludeSettings = listOf(TestDB.SQLITE), tables = arrayOf(unnamedTable)) { testDb ->
             val q = db.identifierManager.quoteString
-            val tableName = if (currentDialectTest.needsQuotesWhenSymbolsInNames) {
+            val shouldBeQuoted = currentDialectTest.needsQuotesWhenSymbolsInNames &&
+                db.identifierManager.needQuotes("unnamedTable$1")
+            val tableName = if (shouldBeQuoted) {
                 "$q${"unnamedTable$1".inProperCase()}$q"
             } else {
                 "unnamedTable$1".inProperCase()

@@ -15,7 +15,7 @@ h2_v2 = "2.4.240"
 mariaDB_v2 = "2.7.9"
 mariaDB_v3 = "3.3.1"
 mysql51 = "5.1.49"
-mysql80 = "8.0.33"
+mysql80 = "8.4.0"
 oracle = "23.26.0.0.0"
 postgre = "42.7.8"
 postgreNG = "0.8.9"
@@ -85,7 +85,7 @@ log4j-core = { group = "org.apache.logging.log4j", name = "log4j-core", version.
 hikariCP = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikariCP" }
 
 mysql51 = { group = "mysql", name = "mysql-connector-java", version.ref = "mysql51" }
-mysql = { group = "mysql", name = "mysql-connector-java", version.ref = "mysql80" }
+mysql = { group = "com.mysql", name = "mysql-connector-j", version.ref = "mysql80" }
 pgjdbc-ng = { group = "com.impossibl.pgjdbc-ng", name = "pgjdbc-ng", version.ref = "postgreNG" }
 postgre = { group = "org.postgresql", name = "postgresql", version.ref = "postgre" }
 sqlite-jdbc = { group = "org.xerial", name = "sqlite-jdbc", version.ref = "sqlite3" }

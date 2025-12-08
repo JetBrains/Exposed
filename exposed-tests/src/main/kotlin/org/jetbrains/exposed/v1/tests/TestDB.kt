@@ -65,7 +65,8 @@ enum class TestDB(
                 "?useSSL=false" +
                 "&characterEncoding=UTF-8" +
                 "&zeroDateTimeBehavior=convertToNull" +
-                "&allowPublicKeyRetrieval=true"
+                "&allowPublicKeyRetrieval=true" +
+                "&yearIsDateType=false"
         },
         driver = "com.mysql.cj.jdbc.Driver"
     ),
