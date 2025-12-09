@@ -38,17 +38,16 @@ class SpringTransactionManagerTest {
 
     @BeforeEach
     fun beforeTest() {
-        databaseBeforeTestStart = TransactionManager.defaultDatabase
+        databaseBeforeTestStart = TransactionManager.primaryDatabase
         con1.clearMock()
         con2.clearMock()
     }
 
     @AfterEach
     fun afterTest() {
-        while (TransactionManager.defaultDatabase != databaseBeforeTestStart) {
-            TransactionManager.defaultDatabase?.let { TransactionManager.closeAndUnregister(it) }
+        while (TransactionManager.primaryDatabase != databaseBeforeTestStart) {
+            TransactionManager.primaryDatabase?.let { TransactionManager.closeAndUnregister(it) }
         }
-        databaseBeforeTestStart = null
     }
 
     @Test
