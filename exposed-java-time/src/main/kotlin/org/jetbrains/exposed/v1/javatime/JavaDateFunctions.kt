@@ -163,7 +163,13 @@ fun <T : Temporal?> Expression<T>.date(): Date<T> = Date(this)
 /** Returns the time from this temporal expression. */
 fun <T : Temporal?> Expression<T>.time(): Time<T> = Time(this)
 
-/** Returns the year from this temporal expression, as an integer. */
+/**
+ * Returns the year from this datetime expression, as an integer.
+ *
+ * **Note:** Some JDBC drivers, like for MySQL, may return a `Date` type for this SQL function,
+ * following the format `YYYY-01-01`. To avoid unexpected exceptions in this case, the MySQL connector property
+ * `yearIsDateType` should be set to `false`. Please check the documentation.
+ */
 fun <T : Temporal?> Expression<T>.year(): Year<T> = Year(this)
 
 /** Returns the month from this temporal expression, as an integer between 1 and 12 inclusive. */

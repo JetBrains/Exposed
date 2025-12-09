@@ -139,7 +139,13 @@ fun <T : DateTime?> Expression<T>.date() = Date(this)
 /** Returns the time from this datetime expression. */
 fun <T : DateTime?> Expression<T>.time() = Time(this)
 
-/** Returns the year from this datetime expression, as an integer. */
+/**
+ * Returns the year from this datetime expression, as an integer.
+ *
+ * **Note:** Some JDBC drivers, like for MySQL, may return a `Date` type for this SQL function,
+ * following the format `YYYY-01-01`. To avoid unexpected exceptions in this case, the MySQL connector property
+ * `yearIsDateType` should be set to `false`. Please check the documentation.
+ */
 fun <T : DateTime?> Expression<T>.year() = Year(this)
 
 /** Returns the month from this datetime expression, as an integer between 1 and 12 inclusive. */
