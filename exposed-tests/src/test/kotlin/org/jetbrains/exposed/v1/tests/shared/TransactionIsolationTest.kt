@@ -21,7 +21,7 @@ import java.sql.Connection
 import kotlin.test.assertNotNull
 
 class TransactionIsolationTest : DatabaseTestsBase() {
-    private val transactionIsolationSupportDb = TestDB.ALL_MARIADB + TestDB.MYSQL_V5 + TestDB.POSTGRESQL + TestDB.SQLSERVER
+    private val transactionIsolationSupportDb = setOf(TestDB.MARIADB, TestDB.MYSQL_V5, TestDB.POSTGRESQL, TestDB.SQLSERVER)
 
     @Test
     fun testWhatTransactionIsolationWasApplied() {

@@ -138,21 +138,12 @@ subprojects {
         }
     }
 
-    testDb("mariadb_v2") {
+    testDb("mariadb") {
         dialects("MARIADB")
         container = "mariadb"
         port = 3000
         dependencies {
-            dependency(rootProject.libs.maria.db2)
-        }
-    }
-
-    testDb("mariadb_v3") {
-        dialects("MARIADB")
-        container = "mariadb"
-        port = 3000
-        dependencies {
-            dependency(rootProject.libs.maria.db3)
+            dependency(rootProject.libs.mariadb)
         }
     }
 

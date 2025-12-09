@@ -11,13 +11,14 @@ import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import kotlin.collections.plus
 
 val TEST_DEFAULT_DATE_TIME = LocalDateTime(2000, 1, 1, 0, 0, 0, 0)
 
 abstract class MergeBaseTest : R2dbcDatabaseTestsBase() {
     protected fun allDbExcept(includeSettings: Collection<TestDB>) = TestDB.ALL - includeSettings.toSet()
 
-    protected val defaultExcludeSettings = TestDB.ALL_MARIADB + TestDB.ALL_MYSQL
+    protected val defaultExcludeSettings = TestDB.ALL_MYSQL + TestDB.MARIADB
 
     protected fun withMergeTestTables(
         excludeSettings: Collection<TestDB> = emptyList(),

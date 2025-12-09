@@ -680,7 +680,7 @@ class InsertTests : DatabaseTestsBase() {
 
                 when (testDb) {
                     // MariaDB does not support GENERATED ALWAYS AS with any null constraint definition
-                    in TestDB.ALL_MARIADB -> {
+                    TestDB.MARIADB -> {
                         exec("${createStatement.trimIndent()} $computedName $computedType GENERATED ALWAYS AS ($computation) STORED)")
                     }
                     // SQL SERVER only supports the AS variant if column_type is not defined

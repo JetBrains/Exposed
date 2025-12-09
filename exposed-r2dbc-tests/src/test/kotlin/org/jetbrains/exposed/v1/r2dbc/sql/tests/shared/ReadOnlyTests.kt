@@ -20,7 +20,7 @@ class ReadOnlyTests : R2dbcDatabaseTestsBase() {
     // MSSQL silently ignores the call;
     // H2 has very limited functionality
     private val readOnlyExcludedVendors =
-        TestDB.ALL_H2_V2 + TestDB.ALL_MARIADB + listOf(TestDB.SQLSERVER, TestDB.ORACLE)
+        TestDB.ALL_H2_V2 + TestDB.MARIADB + listOf(TestDB.SQLSERVER, TestDB.ORACLE)
 
     object RollbackTable : IntIdTable("rollbackTable") {
         val value = varchar("value", 20)

@@ -218,7 +218,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             override val primaryKey = PrimaryKey(name)
         }
 
-        withTables(excludeSettings = TestDB.ALL_MYSQL + TestDB.ALL_MARIADB + TestDB.ALL_ORACLE_LIKE, tables = arrayOf(testTable)) {
+        withTables(excludeSettings = TestDB.ALL_MYSQL + TestDB.MARIADB + TestDB.ALL_ORACLE_LIKE, tables = arrayOf(testTable)) {
             val varCharType = currentDialectTest.dataTypeProvider.varcharType(42)
             assertEquals(
                 "CREATE TABLE " +
@@ -517,7 +517,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
 
         withDb { testDb ->
-            val functionsNotSupported = testDb in TestDB.ALL_MARIADB + TestDB.ALL_H2_V2 + TestDB.SQLSERVER + TestDB.MYSQL_V5
+            val functionsNotSupported = testDb in TestDB.ALL_H2_V2 + TestDB.MARIADB + TestDB.SQLSERVER + TestDB.MYSQL_V5
 
             val tableProperName = tester.tableName.inProperCase()
             val priceColumnName = tester.price.nameInDatabaseCase()

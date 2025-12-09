@@ -32,7 +32,7 @@ class UUIDColumnTypeTests : R2dbcDatabaseTestsBase() {
         val tester = object : Table("test_uuid") {
             val id = uuid("id")
         }
-        withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MARIADB, configure = { sqlLogger = StdOutSqlLogger }) {
+        withDb(excludeSettings = TestDB.ALL - TestDB.MARIADB, configure = { sqlLogger = StdOutSqlLogger }) {
             try {
                 // From the version 10.7 MariaDB has own 'UUID' column type, that does not work with the current column type.
                 // Even if we generate on DDL type 'BINARY(16)' we could support native UUID for IO operations.

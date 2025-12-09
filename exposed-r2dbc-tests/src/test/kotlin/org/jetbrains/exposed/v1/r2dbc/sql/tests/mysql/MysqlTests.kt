@@ -24,7 +24,6 @@ import org.jetbrains.exposed.v1.r2dbc.update
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import kotlin.test.expect
 
 class MysqlTests : R2dbcDatabaseTestsBase() {
     @Test
@@ -113,16 +112,9 @@ class MysqlTests : R2dbcDatabaseTestsBase() {
             val queryWithHint = tester
                 .select(sleepNSeconds)
                 .comment("+ MAX_EXECUTION_TIME(1000) ", AbstractQuery.CommentPosition.AFTER_SELECT)
-            if (testDb in TestDB.ALL_MYSQL) {
-                // Query execution was interrupted, max statement execution time exceeded
-                expectException<ExposedR2dbcException> {
-                    queryWithHint.single()
-                }
-            } else {
-                // MariaDB has much fewer optimizer hint options and, like any other db, will just ignore the comment
-                expect(0) {
-                    queryWithHint.single()[sleepNSeconds]
-                }
+            // Query execution was interrupted, max statement execution time exceeded
+            expectException<ExposedR2dbcException> {
+                queryWithHint.single()
             }
         }
     }
