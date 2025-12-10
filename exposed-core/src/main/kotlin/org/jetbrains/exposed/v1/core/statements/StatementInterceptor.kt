@@ -27,21 +27,35 @@ interface StatementInterceptor {
     /** Performs steps after an [executedStatement], from the provided [contexts], is complete in [transaction]. */
     fun afterExecution(transaction: Transaction, contexts: List<StatementContext>, executedStatement: PreparedStatementApi) {}
 
-    /** Performs steps before a [transaction] is committed. */
+    /**
+     * Performs steps before a [transaction] is committed.
+     *
+     * Additionally, this is called right after `keepUserDataInTransactionStoreOnCommit()`, which has defined the required
+     * information that must not be lost.
+     */
     fun beforeCommit(transaction: Transaction) {}
 
-    /** Performs steps after a [transaction] is committed. */
+    /**
+     * Performs steps after a [transaction] is committed.
+     *
+     * At the point when this is called, the [transaction] has had restored any required information held from before
+     * the transaction was committed.
+     */
     fun afterCommit(transaction: Transaction) {}
 
     /** Performs steps before a rollback operation is issued on a [transaction]. */
     fun beforeRollback(transaction: Transaction) {}
 
-    /** Performs steps after a rollback operation is issued on a [transaction]. */
+    /**
+     * Performs steps after a rollback operation is issued on a [transaction].
+     *
+     * Any information stored in the [transaction]'s `userData` will be cleared directly after this method is called.
+     */
     fun afterRollback(transaction: Transaction) {}
 
     /**
      * Returns a mapping of [userData] that ensures required information is not lost from the transaction scope
-     * once the transaction is committed.
+     * once the transaction is committed. This function will be called directly ahead of the call to `beforeCommit()`.
      */
     fun keepUserDataInTransactionStoreOnCommit(userData: Map<Key<*>, Any?>): Map<Key<*>, Any?> = emptyMap()
 }

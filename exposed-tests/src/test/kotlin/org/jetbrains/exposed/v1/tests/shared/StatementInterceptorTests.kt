@@ -1,12 +1,7 @@
 package org.jetbrains.exposed.v1.tests.shared
 
 import nl.altindag.log.LogCaptor
-import org.jetbrains.exposed.v1.core.SqlLogger
-import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.core.Transaction
-import org.jetbrains.exposed.v1.core.count
-import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.core.exposedLogger
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.StatementContext
 import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
 import org.jetbrains.exposed.v1.core.statements.StatementType
@@ -15,6 +10,7 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
@@ -50,6 +46,26 @@ private class RollbackCheckInterceptor(
     companion object {
         const val ROLLBACK_CHECK = "Querying state post-rollback : "
     }
+}
+
+private class CommitDataInterceptor : StatementInterceptor {
+    val debugStatsState = Key<DebugStats>()
+    var preCommitCount = 0
+    var postCommitCount = 0
+
+    override fun beforeCommit(transaction: Transaction) {
+        preCommitCount += transaction.getUserData(debugStatsState)?.count ?: 0
+    }
+
+    override fun afterCommit(transaction: Transaction) {
+        postCommitCount += transaction.getUserData(debugStatsState)?.count ?: 0
+    }
+
+    override fun keepUserDataInTransactionStoreOnCommit(userData: Map<Key<*>, Any?>): Map<Key<*>, Any?> {
+        return userData.filterValues { it is DebugStats }
+    }
+
+    data class DebugStats(val count: Int)
 }
 
 class StatementInterceptorTests : DatabaseTestsBase() {
@@ -277,5 +293,49 @@ class StatementInterceptorTests : DatabaseTestsBase() {
 
         logCaptor.clearLogs()
         logCaptor.close()
+    }
+
+    @Test
+    fun testTransactionDataRestoredAfterCommit() {
+        // Can't use withDB() etc because CurrentTestDBInterceptor competes & filters out our user data
+        Assumptions.assumeTrue { TestDB.H2_V2 in TestDB.enabledDialects() }
+        val db = TestDB.H2_V2.connect()
+        val count = 5
+
+        transaction(db) {
+            debug = true
+
+            val testCommitInterceptor = CommitDataInterceptor()
+
+            registerInterceptor(testCommitInterceptor).also {
+                assertTrue(it)
+            }
+
+            repeat(count) {
+                exec("SELECT 1;")
+            }
+
+            // add to transaction's userData that should be held & restored across commits
+            val expectedPreCommitCount = this.getOrCreate(testCommitInterceptor.debugStatsState) {
+                CommitDataInterceptor.DebugStats(statementStats.values.sumOf { it.first }) // number of statements executed so far
+            }.count
+            assertEquals(count, expectedPreCommitCount)
+            assertEquals(count, this.getUserData(testCommitInterceptor.debugStatsState)?.count)
+
+            commit().also { statementStats.clear() }
+
+            // restored userData is available directly inside the transaction in question
+            assertEquals(count, this.getUserData(testCommitInterceptor.debugStatsState)?.count)
+
+            assertEquals(count, testCommitInterceptor.preCommitCount)
+            // interceptor afterCommit() should also have access to restored userData
+            assertEquals(count, testCommitInterceptor.postCommitCount)
+
+            unregisterInterceptor(testCommitInterceptor).also {
+                assertTrue(it)
+            }
+        }
+
+        TransactionManager.closeAndUnregister(db)
     }
 }
