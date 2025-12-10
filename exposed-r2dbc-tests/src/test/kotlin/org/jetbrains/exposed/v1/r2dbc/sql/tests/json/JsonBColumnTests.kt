@@ -12,6 +12,8 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
+import org.jetbrains.exposed.v1.json.JsonBColumnType
+import org.jetbrains.exposed.v1.json.castToJson
 import org.jetbrains.exposed.v1.json.contains
 import org.jetbrains.exposed.v1.json.exists
 import org.jetbrains.exposed.v1.json.extract
@@ -22,6 +24,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.junit.jupiter.api.Test
@@ -42,6 +45,16 @@ class JsonBColumnTests : R2dbcDatabaseTestsBase() {
 
             val newResult = tester.selectAll().where { tester.id eq newId }.singleOrNull()
             assertEquals(newData, newResult?.get(tester.jsonBColumn))
+
+            val insertedData = tester.insert {
+                it[jsonBColumn] = newData
+            } get tester.jsonBColumn
+            assertEquals(newData, insertedData)
+
+            val returnedValues = tester.insert {
+                it[jsonBColumn] = newData
+            }.resultedValues?.singleOrNull()
+            assertEquals(newData, returnedValues?.get(tester.jsonBColumn))
         }
     }
 
@@ -95,6 +108,30 @@ class JsonBColumnTests : R2dbcDatabaseTestsBase() {
 
             val result = tester.select(tester.id).where { tooManyLogins }.singleOrNull()
             assertEquals(newId, result?.get(tester.id))
+        }
+    }
+
+    @Test
+    fun testSelectWithAlias() {
+        // MariaDB does not allow casting to JSON: https://mariadb.com/docs/server/reference/sql-functions/string-functions/cast
+        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.MARIADB) { tester, _, data1, _ ->
+            val originalAlias = tester.jsonBColumn.alias("og")
+            val castAlias = tester.jsonBColumn.castToJson().alias("cast_og")
+            val result1 = tester.select(originalAlias, castAlias).singleOrNull()
+            assertEquals(data1, result1?.get(originalAlias))
+            assertEquals(data1, result1?.get(castAlias))
+
+            val newData = DataHolder(User("Pro", "Alpha"), 999, true, "A")
+            val newId = tester.insertAndGetId {
+                it[jsonBColumn] = newData
+            }
+
+            val tableAlias = tester.alias("tt")
+
+            val result2 = tableAlias.selectAll()
+                .where { tableAlias[tester.id] eq newId and tableAlias[tester.jsonBColumn].isNotNull() }
+                .singleOrNull()
+            assertEquals(newData, result2?.get(tableAlias[tester.jsonBColumn]))
         }
     }
 
@@ -341,6 +378,64 @@ class JsonBColumnTests : R2dbcDatabaseTestsBase() {
 
             val nestedKeyResult = tester.selectAll().where { tester.jsonBColumn keyExists "name" }.toList()
             kotlin.test.assertTrue { nestedKeyResult.isEmpty() }
+        }
+    }
+
+    @Test
+    fun testJsonCast() {
+        val tester = object : Table("cast_tester") {
+            val user = jsonb<User>("user", Json.Default)
+            val admin = jsonb<User>("admin", Json.Default).nullable()
+            val numbers = jsonb<IntArray>("numbers", Json.Default)
+        }
+
+        // MariaDB does not allow casting to JSON: https://mariadb.com/docs/server/reference/sql-functions/string-functions/cast
+        withTables(excludeSettings = binaryJsonNotSupportedDB + TestDB.MARIADB, tester) {
+            val newUser = User("Pro", "Alpha")
+            val newNumbers = intArrayOf(1, 2, 3, 4, 5)
+            tester.insert {
+                it[tester.user] = newUser
+                it[tester.admin] = null
+                it[tester.numbers] = newNumbers
+            }
+
+            // These will be automatically cast to the JSON version of their original type, like JsonColumnType<User>
+            val userAsJson = tester.user.castToJson()
+            val adminAsJson = tester.admin.castToJson()
+            val numbersAsJson = tester.numbers.castToJson()
+            val result = tester.select(userAsJson, adminAsJson, numbersAsJson).single()
+
+            assertEquals(newUser, result[userAsJson])
+            assertNull(result[adminAsJson])
+            assertContentEquals(newNumbers, result[numbersAsJson])
+        }
+    }
+
+    @Test
+    fun testJsonbCastToJsonFormatFlag() {
+        val tester = object : Table("flag_tester") {
+            // true is the default setting
+            val withFlag = jsonb<User>("with_flag", Json.Default, castToJsonFormat = true)
+            val withoutFlag = jsonb<User>("without_flag", Json.Default, castToJsonFormat = false)
+        }
+
+        withTables(excludeSettings = binaryJsonNotSupportedDB, tester) { testDb ->
+            // all db should switch both flags off
+            val actualWithFlag = (tester.withFlag.columnType as JsonBColumnType).needsBinaryFormatCast
+            assertFalse(actualWithFlag)
+            val actualWithoutFlag = (tester.withoutFlag.columnType as JsonBColumnType).needsBinaryFormatCast
+            assertFalse(actualWithoutFlag)
+
+            val user = User("Pro", "Alpha")
+            tester.insert {
+                it[tester.withFlag] = user
+                it[tester.withoutFlag] = user
+            }
+            val result = tester.selectAll().single()
+
+            // all db should read successfully as flag always ignored (except with SQLite which has no R2DBC)
+            assertEquals(user, result[tester.withFlag])
+            assertEquals(user, result[tester.withoutFlag])
         }
     }
 }

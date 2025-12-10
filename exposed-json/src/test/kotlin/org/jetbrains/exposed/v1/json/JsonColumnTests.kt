@@ -462,4 +462,29 @@ class JsonColumnTests : DatabaseTestsBase() {
             assertEquals(defaultUser, value)
         }
     }
+
+    @Test
+    fun testJsonCast() {
+        val tester = object : IntIdTable("cast_tester") {
+            val info = varchar("info", 32)
+        }
+
+        // MariaDB does not allow casting to JSON: https://mariadb.com/docs/server/reference/sql-functions/string-functions/cast
+        withTables(excludeSettings = setOf(TestDB.MARIADB), tester) { testDb ->
+            val newUser = User("Pro", "Alpha")
+            val newInfo = Json.encodeToString(newUser)
+            tester.insert {
+                it[tester.info] = newInfo
+            }
+
+            // If <User> type wasn't specified, the type would be JsonColumnType<String>, which means the input string
+            // would be treated as a JSON of a single string instead, which is not very useful.
+            // So this allows users to cast supported types, like columns storing valid JSON strings, to JSON of any format.
+            val infoAsJson = tester.info.castToJson<User>()
+            val result = tester.select(tester.info, infoAsJson).single()
+
+            assertEquals(newInfo, result[tester.info])
+            assertEquals(newUser, result[infoAsJson])
+        }
+    }
 }

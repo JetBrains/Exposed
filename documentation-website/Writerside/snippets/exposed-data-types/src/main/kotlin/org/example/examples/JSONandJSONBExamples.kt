@@ -144,9 +144,18 @@ class JSONandJSONBExamples {
      SELECT JSON(tasks.project) ptext FROM tasks
      */
     fun selectJSONBSqlite() {
-        val projectText = TasksTable.project.function("JSON").alias("ptext")
+        val projectText = TasksTable.project.alias("ptext")
         val projects = TasksTable.select(projectText).map { it[projectText] }
         println(projects) // [Project(name=Main, language=Java, active=true)]
+    }
+
+    fun useJsonCast() {
+        ProjectsTable.select(
+            // assumes this column is a JSONB column of type <Project>
+            ProjectsTable.projects.castToJson(),
+            // assumes this column stores valid string input like "{"group":"A","id":"a"}"
+            ProjectsTable.groupId.castToJson<GroupId>()
+        ).toList()
     }
 }
 
@@ -162,4 +171,8 @@ object TasksTable : Table("tasks") {
     val complete = bool("complete").default(false)
     val project = jsonb<Project>("project", Json.Default)
         .default(Project("Main", "Kotlin", true))
+}
+
+object TasksRawTable : Table("tasks_raw") {
+    val project = jsonb<Project>("project", Json.Default, castToJsonFormat = false)
 }

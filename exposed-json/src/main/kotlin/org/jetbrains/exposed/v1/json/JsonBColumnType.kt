@@ -14,13 +14,19 @@ import org.jetbrains.exposed.v1.core.vendors.currentDialect
  *
  * @param serialize Function that encodes an object of type [T] to a JSON String
  * @param deserialize Function that decodes a JSON String to an object of type [T]
+ * @param castToJsonFormat Whether reads from this column should cast retrieved data to a non-binary format.
+ * This value only applies to SQLite databases & will be ignored for all others.
  * @sample jsonb
  */
 class JsonBColumnType<T : Any>(
     serialize: (T) -> String,
-    deserialize: (String) -> T
+    deserialize: (String) -> T,
+    castToJsonFormat: Boolean = false
 ) : JsonColumnType<T>(serialize, deserialize) {
     override val usesBinaryFormat: Boolean = true
+
+    override val needsBinaryFormatCast: Boolean = castToJsonFormat
+        get() = field && currentDialect is SQLiteDialect
 
     override fun sqlType(): String = when (currentDialect) {
         is H2Dialect -> (currentDialect as H2Dialect).originalDataTypeProvider.jsonBType()
@@ -49,13 +55,16 @@ class JsonBColumnType<T : Any>(
  * @param name Name of the column
  * @param serialize Function that encodes an object of type [T] to a JSON String
  * @param deserialize Function that decodes a JSON string to an object of type [T]
+ * @param castToJsonFormat Whether reads from this column should cast retrieved data to a non-binary format.
+ * This value only applies to SQLite databases & will be ignored for all others.
  */
 fun <T : Any> Table.jsonb(
     name: String,
     serialize: (T) -> String,
-    deserialize: (String) -> T
+    deserialize: (String) -> T,
+    castToJsonFormat: Boolean = true
 ): Column<T> =
-    registerColumn(name, JsonBColumnType(serialize, deserialize))
+    registerColumn(name, JsonBColumnType(serialize, deserialize, castToJsonFormat))
 
 /**
  * Creates a column, with the specified [name], for storing JSON data in decomposed binary format.
@@ -66,11 +75,19 @@ fun <T : Any> Table.jsonb(
  * @param jsonConfig Configured instance of the `Json` class
  * @param kSerializer Serializer responsible for the representation of a serial form of type [T].
  * Defaults to a generic serializer for type [T]
+ * @param castToJsonFormat Whether reads from this column should cast retrieved data to a non-binary format.
+ * This value only applies to SQLite databases & will be ignored for all others.
  * @sample org.jetbrains.exposed.v1.json.JsonBColumnTests.testLoggerWithJsonBCollections
  */
 inline fun <reified T : Any> Table.jsonb(
     name: String,
     jsonConfig: Json,
-    kSerializer: KSerializer<T> = serializer<T>()
+    kSerializer: KSerializer<T> = serializer<T>(),
+    castToJsonFormat: Boolean = true
 ): Column<T> =
-    jsonb(name, { jsonConfig.encodeToString(kSerializer, it) }, { jsonConfig.decodeFromString(kSerializer, it) })
+    jsonb(
+        name,
+        { jsonConfig.encodeToString(kSerializer, it) },
+        { jsonConfig.decodeFromString(kSerializer, it) },
+        castToJsonFormat
+    )

@@ -55,6 +55,12 @@ internal object H2FunctionProvider : FunctionProvider() {
         }
     }
 
+    override fun <T> jsonCast(expression: Expression<T>, jsonType: IColumnType<*>, queryBuilder: QueryBuilder) {
+        queryBuilder {
+            append(expression, " FORMAT JSON")
+        }
+    }
+
     override fun insert(
         ignore: Boolean,
         table: Table,

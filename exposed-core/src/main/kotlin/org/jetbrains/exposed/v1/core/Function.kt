@@ -727,3 +727,20 @@ class Cast<T>(
         currentDialect.functionProvider.cast(expr, columnType, queryBuilder)
     }
 }
+
+/**
+ * Represents an SQL function that specifies a casting from one data type to the JSON type, if supported.
+ */
+class CastToJson<T>(
+    /** Returns the expression that will be cast. */
+    val expression: Expression<*>,
+    columnType: IColumnType<T & Any>
+) : Function<T>(columnType) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        val functionProvider = when (val dialect = currentDialect) {
+            is H2Dialect -> H2FunctionProvider
+            else -> dialect.functionProvider
+        }
+        functionProvider.jsonCast(expression, columnType, queryBuilder)
+    }
+}

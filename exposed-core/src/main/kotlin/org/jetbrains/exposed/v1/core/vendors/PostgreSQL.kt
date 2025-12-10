@@ -156,6 +156,12 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         }
     }
 
+    override fun <T> jsonCast(expression: Expression<T>, jsonType: IColumnType<*>, queryBuilder: QueryBuilder) {
+        queryBuilder {
+            append(expression, "::json")
+        }
+    }
+
     override fun <T> jsonExtract(
         expression: Expression<T>,
         vararg path: String,
