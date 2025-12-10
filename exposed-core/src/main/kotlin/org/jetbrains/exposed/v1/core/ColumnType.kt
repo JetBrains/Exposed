@@ -7,15 +7,7 @@ import org.jetbrains.exposed.v1.core.statements.api.ExposedBlob
 import org.jetbrains.exposed.v1.core.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.v1.core.statements.api.RowApi
 import org.jetbrains.exposed.v1.core.transactions.currentTransaction
-import org.jetbrains.exposed.v1.core.vendors.H2Dialect
-import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
-import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.core.vendors.OracleDialect
-import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.v1.core.vendors.PostgreSQLNGDialect
-import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
-import org.jetbrains.exposed.v1.core.vendors.currentDialect
-import org.jetbrains.exposed.v1.core.vendors.h2Mode
+import org.jetbrains.exposed.v1.core.vendors.*
 import java.io.InputStream
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -1411,7 +1403,18 @@ interface IDateColumnType {
  * Marker interface for json/jsonb related column types.
  */
 interface JsonColumnMarker {
+    /** Whether the column type stores data in JSONB format. */
     val usesBinaryFormat: Boolean
+
+    /** Whether the column type needs to retrieve stored data in a format other than binary. */
+    val needsBinaryFormatCast: Boolean
+}
+
+/** Returns whether this column stores JSONB data in a format that requires casting to readable text when querying. */
+internal fun Column<*>.isJsonBColumnForCasting(): Boolean {
+    if (columnType !is JsonColumnMarker) return false
+
+    return columnType.usesBinaryFormat && columnType.needsBinaryFormatCast && currentDialect is SQLiteDialect
 }
 
 /**

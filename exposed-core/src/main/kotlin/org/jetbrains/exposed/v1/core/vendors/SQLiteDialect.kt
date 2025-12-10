@@ -180,6 +180,12 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         currentTransaction().throwUnsupportedException("$UNSUPPORTED_AGGREGATE VAR_SAMP")
     }
 
+    override fun <T> jsonCast(expression: Expression<T>, jsonType: IColumnType<*>, queryBuilder: QueryBuilder) {
+        queryBuilder {
+            append("JSON(", expression, ')')
+        }
+    }
+
     override fun <T> jsonExtract(
         expression: Expression<T>,
         vararg path: String,

@@ -26,7 +26,9 @@ public final class org/jetbrains/exposed/v1/json/Extract : org/jetbrains/exposed
 }
 
 public final class org/jetbrains/exposed/v1/json/JsonBColumnType : org/jetbrains/exposed/v1/json/JsonColumnType {
-	public fun <init> (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
+	public fun <init> (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Z)V
+	public synthetic fun <init> (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getNeedsBinaryFormatCast ()Z
 	public fun getUsesBinaryFormat ()Z
 	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun parameterMarker (Ljava/lang/Object;)Ljava/lang/String;
@@ -34,12 +36,14 @@ public final class org/jetbrains/exposed/v1/json/JsonBColumnType : org/jetbrains
 }
 
 public final class org/jetbrains/exposed/v1/json/JsonBColumnTypeKt {
-	public static final fun jsonb (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/core/Column;
+	public static final fun jsonb (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Z)Lorg/jetbrains/exposed/v1/core/Column;
+	public static synthetic fun jsonb$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ZILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Column;
 }
 
 public class org/jetbrains/exposed/v1/json/JsonColumnType : org/jetbrains/exposed/v1/core/ColumnType, org/jetbrains/exposed/v1/core/JsonColumnMarker {
 	public fun <init> (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
 	public final fun getDeserialize ()Lkotlin/jvm/functions/Function1;
+	public fun getNeedsBinaryFormatCast ()Z
 	public final fun getSerialize ()Lkotlin/jvm/functions/Function1;
 	public fun getUsesBinaryFormat ()Z
 	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
