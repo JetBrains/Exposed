@@ -826,8 +826,12 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * Set [forUpdate] to `true` or `false` depending on whether a locking read should be placed or removed from the
      * search query used. Leave the argument as `null` to use the query without any locking option.
      */
-    fun <SID> warmUpOptReferences(references: List<SID>, refColumn: Column<SID?>, forUpdate: Boolean? = null): List<T> =
-        warmUpReferences(references, refColumn as Column<SID>, forUpdate)
+    fun <SID> warmUpOptReferences(
+        references: List<SID>,
+        refColumn: Column<SID?>,
+        forUpdate: Boolean? = null,
+        orderBy: Array<Pair<Expression<*>, SortOrder>>? = null
+    ): List<T> = warmUpReferences(references, refColumn as Column<SID>, forUpdate, orderBy)
 
     /**
      * Returns a list of retrieved [Entity] instances whose [refColumn] matches any of the id values in [references].
@@ -837,8 +841,15 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * Set [forUpdate] to `true` or `false` depending on whether a locking read should be placed or removed from the
      * search query used. Leave the argument as `null` to use the query without any locking option.
+     *
+     * Set [orderBy] to specify the order in which entities should be sorted.
      */
-    fun <SID> warmUpReferences(references: List<SID>, refColumn: Column<SID>, forUpdate: Boolean? = null): List<T> {
+    fun <SID> warmUpReferences(
+        references: List<SID>,
+        refColumn: Column<SID>,
+        forUpdate: Boolean? = null,
+        orderBy: Array<Pair<Expression<*>, SortOrder>>? = null
+    ): List<T> {
         val parentTable = refColumn.referee?.table as? IdTable<*>
         requireNotNull(parentTable) { "RefColumn should have reference to IdTable" }
         if (references.isEmpty()) return emptyList()
@@ -854,6 +865,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
             }
             if (toLoad.isNotEmpty()) {
                 val findQuery = find { refColumn inList toLoad }
+                    .orderBy(order = orderBy ?: emptyArray())
                 val entities = getEntities(forUpdate, findQuery)
 
                 val result = entities.groupByReference(refColumn = refColumn)
@@ -876,6 +888,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
                 baseQuery.adjustSelect { select(fields + parentTable.id) }
                     .adjustColumnSet { innerJoin(parentTable, { refColumn }, { refColumn.referee!! }) }
             }
+                .orderBy(order = orderBy ?: emptyArray())
 
             val findQuery = wrapRows(finalQuery)
             val entities = getEntities(forUpdate, findQuery).distinct()
@@ -902,7 +915,8 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
         references: List<CompositeID>,
         refColumns: Map<Column<*>, Column<*>>,
         delegateRefColumn: Column<*>,
-        forUpdate: Boolean? = null
+        forUpdate: Boolean? = null,
+        orderBy: Array<Pair<Expression<*>, SortOrder>>? = null
     ): List<T> {
         val parentTable = refColumns.values.firstOrNull()?.table as? CompositeIdTable
         requireNotNull(parentTable) { "RefColumns should have reference to CompositeIdTable" }
@@ -917,6 +931,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
             }
             if (toLoad.isNotEmpty()) {
                 val findQuery = find { refColumns.keys.toList() inList toLoad.map { it.value } }
+                    .orderBy(order = orderBy ?: emptyArray())
                 val entities = getEntities(forUpdate, findQuery)
                 val result = entities.groupByReference<CompositeID>(refColumns = refColumns)
 
@@ -932,6 +947,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
             return distinctRefIds.flatMap { cache.getReferrers<T>(it, delegateRefColumn)?.toList().orEmpty() }
         } else {
             val baseQuery = searchQuery(refColumns.keys.toList() inList distinctRefIds.map { it.value })
+                .orderBy(order = orderBy ?: emptyArray())
             val findQuery = wrapRows(baseQuery)
             val entities = getEntities(forUpdate, findQuery).distinct()
             val result = entities.groupByReference<CompositeID>(refColumns = refColumns)

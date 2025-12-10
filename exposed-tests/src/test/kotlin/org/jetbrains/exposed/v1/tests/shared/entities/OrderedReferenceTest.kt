@@ -9,12 +9,14 @@ import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.dao.entityCache
+import org.jetbrains.exposed.v1.dao.load
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
+import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.junit.jupiter.api.Tag
@@ -200,6 +202,22 @@ class OrderedReferenceTest : DatabaseTestsBase() {
             for (i in 1..<ratings.size) {
                 assertRatingsOrdered(ratings[i], ratings[i - 1])
             }
+        }
+    }
+
+    @Test
+    fun testOrderByWithEagerLoad() {
+        withOrderedReferenceTestTables {
+            // Clearing cache is not critical, just to be sure that there are no caches from
+            //  creating entities step
+            entityCache.clear()
+
+            val user = UserDefaultOrder.all().first().load(UserDefaultOrder::ratings)
+
+            val expected = user.ratings.map { it.value }.sorted()
+            val actual = user.ratings.map { it.value }
+
+            assertEqualLists(expected, actual)
         }
     }
 

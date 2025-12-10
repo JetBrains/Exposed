@@ -171,10 +171,10 @@ public abstract class org/jetbrains/exposed/v1/dao/EntityClass {
 	protected fun warmCache ()Lorg/jetbrains/exposed/v1/dao/EntityCache;
 	public final fun warmUpLinkedReferences (Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Boolean;Z)Ljava/util/List;
 	public static synthetic fun warmUpLinkedReferences$default (Lorg/jetbrains/exposed/v1/dao/EntityClass;Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Boolean;ZILjava/lang/Object;)Ljava/util/List;
-	public final fun warmUpOptReferences (Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Boolean;)Ljava/util/List;
-	public static synthetic fun warmUpOptReferences$default (Lorg/jetbrains/exposed/v1/dao/EntityClass;Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Boolean;ILjava/lang/Object;)Ljava/util/List;
-	public final fun warmUpReferences (Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Boolean;)Ljava/util/List;
-	public static synthetic fun warmUpReferences$default (Lorg/jetbrains/exposed/v1/dao/EntityClass;Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Boolean;ILjava/lang/Object;)Ljava/util/List;
+	public final fun warmUpOptReferences (Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Boolean;[Lkotlin/Pair;)Ljava/util/List;
+	public static synthetic fun warmUpOptReferences$default (Lorg/jetbrains/exposed/v1/dao/EntityClass;Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Boolean;[Lkotlin/Pair;ILjava/lang/Object;)Ljava/util/List;
+	public final fun warmUpReferences (Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Boolean;[Lkotlin/Pair;)Ljava/util/List;
+	public static synthetic fun warmUpReferences$default (Lorg/jetbrains/exposed/v1/dao/EntityClass;Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Boolean;[Lkotlin/Pair;ILjava/lang/Object;)Ljava/util/List;
 	public final fun wrap (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;Lorg/jetbrains/exposed/v1/core/ResultRow;)Lorg/jetbrains/exposed/v1/dao/Entity;
 	public final fun wrapRow (Lorg/jetbrains/exposed/v1/core/ResultRow;)Lorg/jetbrains/exposed/v1/dao/Entity;
 	public final fun wrapRow (Lorg/jetbrains/exposed/v1/core/ResultRow;Lorg/jetbrains/exposed/v1/core/Alias;)Lorg/jetbrains/exposed/v1/dao/Entity;
