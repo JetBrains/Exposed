@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.r2dbc
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.Expression
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -165,6 +166,10 @@ infix fun <T, R> SizedIterable<T>.mapLazy(f: (T) -> R): SizedIterable<R> {
     return object : LazySizedIterable<R> {
         override var loadedResult: List<R>? = null
 
+        suspend fun loadedResult(): List<R> {
+            if (loadedResult == null) loadedResult = source.map { f(it) }.toList()
+            return loadedResult!!
+        }
         override fun limit(count: Int): SizedIterable<R> = source.copy().limit(count).mapLazy(f)
         override fun offset(start: Long): SizedIterable<R> = source.copy().offset(start).mapLazy(f)
         override fun forUpdate(option: ForUpdateOption): SizedIterable<R> = source.copy().forUpdate(option).mapLazy(f)
@@ -175,11 +180,7 @@ infix fun <T, R> SizedIterable<T>.mapLazy(f: (T) -> R): SizedIterable<R> {
         override fun orderBy(vararg order: Pair<Expression<*>, SortOrder>) = source.orderBy(*order).mapLazy(f)
 
         override suspend fun collect(collector: FlowCollector<R>) {
-            if (loadedResult != null) {
-                loadedResult!!.forEach { collector.emit(it) }
-            } else {
-                source.collect { collector.emit(f(it)) }
-            }
+            loadedResult().forEach { collector.emit(it) }
         }
     }
 }
