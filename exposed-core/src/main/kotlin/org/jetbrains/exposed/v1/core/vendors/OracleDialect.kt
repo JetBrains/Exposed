@@ -450,7 +450,7 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
 
     override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartialOrFunctional: Boolean): String {
         return if (isUnique && !isPartialOrFunctional) {
-            "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP CONSTRAINT ${identifierManager.quoteIfNecessary(indexName)}"
+            super.dropIndex(tableName, indexName, isUnique = true, isPartialOrFunctional = false)
         } else {
             "DROP INDEX ${identifierManager.cutIfNecessaryAndQuote(indexName)}"
         }
