@@ -6,6 +6,7 @@ import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.exists
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
@@ -19,55 +20,111 @@ import kotlin.test.expect
 class CreateIndexTests : DatabaseTestsBase() {
 
     @Test
-    fun createStandardIndex() {
+    fun createAndDropStandardIndex() {
         val testTable = object : Table("test_table") {
             val id = integer("id")
             val name = varchar("name", length = 42)
 
             override val primaryKey = PrimaryKey(id)
-            val byName = index("test_table_by_name", false, name)
+            val byName = index("test_table_by_name", isUnique = false, name)
         }
 
         withTables(excludeSettings = listOf(TestDB.H2_V2_MYSQL), tables = arrayOf(testTable)) {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(testTable)
+            SchemaUtils.createMissingTablesAndColumns(testTable)
             assertTrue(testTable.exists())
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testTable)
+
+            val byNameIndex = testTable.indices.single()
+            var indices = getIndicesFromMetadata(testTable)
+            assertEquals(1, indices.filterMatches(byNameIndex).size)
+
+            val dropStatement = byNameIndex.dropStatement().single()
+            exec(dropStatement)
+
+            indices = getIndicesFromMetadata(testTable)
+            assertEquals(0, indices.filterMatches(byNameIndex).size)
         }
     }
 
     @Test
-    fun createHashIndex() {
+    fun createAndDropHashIndex() {
         val testTable = object : Table("test_table") {
             val id = integer("id")
             val name = varchar("name", length = 42)
 
             override val primaryKey = PrimaryKey(id)
-            val byNameHash = index("test_table_by_name", isUnique = false, name, indexType = "HASH")
+            val byNameHash = index("test_table_by_name_hash", isUnique = false, name, indexType = "HASH")
         }
 
         withTables(
-            excludeSettings = listOf(TestDB.H2_V2_MYSQL, TestDB.SQLSERVER, TestDB.ORACLE),
+            excludeSettings = TestDB.ALL_H2_V2 + TestDB.SQLSERVER + TestDB.ORACLE + TestDB.SQLITE,
             tables = arrayOf(testTable)
         ) {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(testTable)
+            SchemaUtils.createMissingTablesAndColumns(testTable)
             assertTrue(testTable.exists())
+
+            val byNameHashIndex = testTable.indices.single()
+            var indices = getIndicesFromMetadata(testTable)
+            assertEquals(1, indices.filterMatches(byNameHashIndex).size)
+
+            val dropStatement = byNameHashIndex.dropStatement().single()
+            exec(dropStatement)
+
+            indices = getIndicesFromMetadata(testTable)
+            assertEquals(0, indices.filterMatches(byNameHashIndex).size)
         }
     }
 
     @Test
-    fun createNonClusteredSQLServerIndex() {
+    fun createAndDropUniqueIndex() {
         val testTable = object : Table("test_table") {
             val id = integer("id")
             val name = varchar("name", length = 42)
 
             override val primaryKey = PrimaryKey(id)
-            val byNameHash = index("test_table_by_name", isUnique = false, name, indexType = "NONCLUSTERED")
+            val byNameUnique = index("test_table_by_name_unique", isUnique = true, name)
+        }
+
+        withTables(excludeSettings = listOf(TestDB.H2_V2_MYSQL), tables = arrayOf(testTable)) {
+            SchemaUtils.createMissingTablesAndColumns(testTable)
+            assertTrue(testTable.exists())
+
+            val byNameUniqueIndex = testTable.indices.single()
+            var indices = getIndicesFromMetadata(testTable)
+            assertEquals(1, indices.filterMatches(byNameUniqueIndex).size)
+
+            val dropStatement = byNameUniqueIndex.dropStatement().single()
+            exec(dropStatement)
+
+            indices = getIndicesFromMetadata(testTable)
+            assertEquals(0, indices.filterMatches(byNameUniqueIndex).size)
+        }
+    }
+
+    @Test
+    fun createAndDropNonClusteredSQLServerIndex() {
+        val testTable = object : Table("test_table") {
+            val id = integer("id")
+            val name = varchar("name", length = 42)
+
+            override val primaryKey = PrimaryKey(id)
+            val byNameNonClustered = index("test_table_by_name_non_clustered", isUnique = false, name, indexType = "NONCLUSTERED")
         }
 
         withDb(TestDB.SQLSERVER) {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(testTable)
+            SchemaUtils.createMissingTablesAndColumns(testTable)
             assertTrue(testTable.exists())
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testTable)
+
+            val byNameNonClustered = testTable.indices.single()
+            var indices = getIndicesFromMetadata(testTable)
+            assertEquals(1, indices.filterMatches(byNameNonClustered).size)
+
+            val dropStatement = byNameNonClustered.dropStatement().single()
+            exec(dropStatement)
+
+            indices = getIndicesFromMetadata(testTable)
+            assertEquals(0, indices.filterMatches(byNameNonClustered).size)
+
+            SchemaUtils.drop(testTable)
         }
     }
 
@@ -84,12 +141,12 @@ class CreateIndexTests : DatabaseTestsBase() {
         val schema1 = Schema("Schema1")
         val schema2 = Schema("Schema2")
         withSchemas(listOf(TestDB.SQLITE, TestDB.SQLSERVER), schema1, schema2) {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.setSchema(schema1)
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(testTable)
+            SchemaUtils.setSchema(schema1)
+            SchemaUtils.createMissingTablesAndColumns(testTable)
             assertEquals(true, testTable.exists())
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.setSchema(schema2)
+            SchemaUtils.setSchema(schema2)
             assertEquals(false, testTable.exists())
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(testTable)
+            SchemaUtils.createMissingTablesAndColumns(testTable)
             assertEquals(true, testTable.exists())
         }
     }
@@ -114,7 +171,7 @@ class CreateIndexTests : DatabaseTestsBase() {
         }
 
         withDb(TestDB.ALL_POSTGRES) {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(partialIndexTable)
+            SchemaUtils.createMissingTablesAndColumns(partialIndexTable)
             assertTrue(partialIndexTable.exists())
 
             // check that indexes are created and contain the proper filtering conditions
@@ -161,8 +218,8 @@ class CreateIndexTests : DatabaseTestsBase() {
 
             execInBatch(listOf(dropUniqueConstraint, dropIndex))
 
-            assertEquals(getIndices(partialIndexTable).size, 1)
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(partialIndexTable)
+            assertEquals(getIndicesFromMetadata(partialIndexTable).size, 1)
+            SchemaUtils.drop(partialIndexTable)
         }
     }
 
@@ -180,10 +237,10 @@ class CreateIndexTests : DatabaseTestsBase() {
         }
 
         withDb(TestDB.ALL_POSTGRES + TestDB.SQLITE + TestDB.SQLSERVER) {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(tester)
+            SchemaUtils.createMissingTablesAndColumns(tester)
             assertTrue(tester.exists())
 
-            val createdStatements = tester.indices.map { org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(it).first() }
+            val createdStatements = tester.indices.map { SchemaUtils.createIndex(it).first() }
             assertEquals(3, createdStatements.size)
             if (currentDialectTest is SQLiteDialect) {
                 assertTrue(createdStatements.all { it.startsWith("CREATE ") })
@@ -194,7 +251,7 @@ class CreateIndexTests : DatabaseTestsBase() {
 
             assertEquals(2, tester.indices.count { it.filterCondition != null })
 
-            var indices = getIndices(tester)
+            var indices = getIndicesFromMetadata(tester)
             assertEquals(3, indices.size)
 
             val uniqueWithPartial = Index(
@@ -207,7 +264,7 @@ class CreateIndexTests : DatabaseTestsBase() {
             val dropStatements = indices.map { it.dropStatement().first() }
             expect(Unit) { execInBatch(dropStatements + uniqueWithPartial) }
 
-            indices = getIndices(tester)
+            indices = getIndicesFromMetadata(tester)
             assertEquals(0, indices.size)
 
             // test for non-unique partial index with type
@@ -223,12 +280,12 @@ class CreateIndexTests : DatabaseTestsBase() {
                 type,
                 tester.name neq "Default"
             )
-            val createdIndex = org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(typedPartialIndex).single()
+            val createdIndex = SchemaUtils.createIndex(typedPartialIndex).single()
             assertTrue(createdIndex.startsWith("CREATE "))
             assertTrue(" WHERE " in createdIndex)
             assertTrue(typedPartialIndex.dropStatement().first().startsWith("DROP INDEX "))
 
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tester)
+            SchemaUtils.drop(tester)
         }
     }
 
@@ -243,7 +300,7 @@ class CreateIndexTests : DatabaseTestsBase() {
         }
 
         withTables(tester) {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns()
+            SchemaUtils.createMissingTablesAndColumns()
             assertTrue(tester.exists())
 
             val expectedIndexCount = when (currentDialectTest) {
@@ -271,16 +328,16 @@ class CreateIndexTests : DatabaseTestsBase() {
 
         val functionsNotSupported = TestDB.ALL_H2_V2 + TestDB.MARIADB + TestDB.SQLSERVER + TestDB.MYSQL_V5
         withTables(excludeSettings = functionsNotSupported, tester) {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns()
+            SchemaUtils.createMissingTablesAndColumns()
             assertTrue(tester.exists())
 
-            var indices = getIndices(tester)
+            var indices = getIndicesFromMetadata(tester)
             assertEquals(3, indices.size)
 
             val dropStatements = indices.map { it.dropStatement().first() }
             expect(Unit) { execInBatch(dropStatements) }
 
-            indices = getIndices(tester)
+            indices = getIndicesFromMetadata(tester)
             assertEquals(0, indices.size)
         }
     }
@@ -304,8 +361,12 @@ class CreateIndexTests : DatabaseTestsBase() {
         }
     }
 
-    private fun JdbcTransaction.getIndices(table: Table): List<Index> {
+    private fun JdbcTransaction.getIndicesFromMetadata(table: Table): List<Index> {
         db.dialectMetadata.resetCaches()
         return currentDialectMetadataTest.existingIndices(table)[table].orEmpty()
+    }
+
+    private fun List<Index>.filterMatches(other: Index): List<Index> = filter {
+        it.indexName == other.indexName || it.onlyNameDiffer(other)
     }
 }
