@@ -32,6 +32,8 @@ import org.jetbrains.exposed.v1.r2dbc.update
 import org.junit.jupiter.api.Test
 import java.util.UUID
 import kotlin.test.assertFails
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class CreateTableTests : R2dbcDatabaseTestsBase() {
     // https://github.com/JetBrains/Exposed/issues/709
@@ -119,6 +121,29 @@ class CreateTableTests : R2dbcDatabaseTestsBase() {
                     ")",
                 testTable.ddl
             )
+        }
+    }
+
+    @Test
+    fun createIdTableWithPrimaryKeyThatHasForeignKeyByEntityID() {
+        val parent = object : IdTable<String>("parent") {
+            override val id = varchar("key", 32).entityId()
+            override val primaryKey = PrimaryKey(id)
+        }
+        val child = object : IdTable<String>("child") {
+            override val id = varchar("key", 32).references(parent.id).entityId()
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withTables(parent, child) {
+            assertTrue(parent.exists())
+            assertTrue(parent.foreignKeys.isEmpty())
+            assertNull(parent.id.foreignKey)
+
+            assertTrue(child.exists())
+            assertFalse(child.foreignKeys.isEmpty())
+            assertNotNull(child.id.foreignKey)
+            assertEquals(parent, child.id.foreignKey?.targetTable)
         }
     }
 
