@@ -449,7 +449,11 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
     override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartialOrFunctional: Boolean): String {
-        return "DROP INDEX ${identifierManager.cutIfNecessaryAndQuote(indexName)}"
+        return if (isUnique && !isPartialOrFunctional) {
+            super.dropIndex(tableName, indexName, isUnique = true, isPartialOrFunctional = false)
+        } else {
+            "DROP INDEX ${identifierManager.cutIfNecessaryAndQuote(indexName)}"
+        }
     }
 
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> {
