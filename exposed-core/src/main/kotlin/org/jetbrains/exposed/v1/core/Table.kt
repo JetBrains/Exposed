@@ -659,6 +659,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             newCol.defaultValueFun = defaultValueFun?.let { { EntityIDFunctionProvider.createEntityID(it(), table as IdTable<T>) } }
             newCol.dbDefaultValue = dbDefaultValue?.let { default -> default as Expression<EntityID<T>> }
             newCol.extraDefinitions = extraDefinitions
+            newCol.foreignKey = foreignKey
         }
         (table as IdTable<T>).addIdColumnInternal(newColumn)
         return replaceColumn(this, newColumn)
