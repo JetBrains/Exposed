@@ -7,20 +7,23 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.entities.EntityTestsData
-import org.junit.After
-import org.junit.Assume
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
 import java.sql.Connection
 import kotlin.properties.Delegates
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
+@Tag(MISSING_R2DBC_TEST)
 class MultiDatabaseEntityTest {
 
     private val db1 by lazy {
@@ -41,11 +44,11 @@ class MultiDatabaseEntityTest {
     }
     private var currentDB: Database? = null
 
-    @Before
+    @BeforeEach
     fun before() {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
-        if (TransactionManager.isInitialized()) {
-            currentDB = TransactionManager.currentOrNull()?.db
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        TransactionManager.currentOrNull()?.let {
+            currentDB = it.db
         }
         transaction(db1) {
             SchemaUtils.create(EntityTestsData.XTable, EntityTestsData.YTable)
@@ -55,10 +58,9 @@ class MultiDatabaseEntityTest {
         }
     }
 
-    @After
+    @AfterEach
     fun after() {
         if (TestDB.H2_V2 in TestDB.enabledDialects()) {
-            TransactionManager.resetCurrent(currentDB?.transactionManager)
             transaction(db1) {
                 SchemaUtils.drop(EntityTestsData.XTable, EntityTestsData.YTable)
             }
@@ -196,7 +198,7 @@ class MultiDatabaseEntityTest {
                 b2Reread.y = null
             }
         }
-        inTopLevelTransaction(Connection.TRANSACTION_READ_COMMITTED, db = db1) {
+        inTopLevelTransaction(db1, Connection.TRANSACTION_READ_COMMITTED) {
             maxAttempts = 1
             assertNull(EntityTestsData.BEntity.testCache(db1b1.id))
             val b1Reread = EntityTestsData.BEntity[db1b1.id]
@@ -206,14 +208,16 @@ class MultiDatabaseEntityTest {
         }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun crossReferencesProhibitedForEntitiesFromDifferentDB() {
-        transaction(db1) {
-            val db1b1 = EntityTestsData.BEntity.new(1) { }
+        Assertions.assertThrows(IllegalStateException::class.java) {
+            transaction(db1) {
+                val db1b1 = EntityTestsData.BEntity.new(1) { }
 
-            transaction(db2) {
-                assertEquals(0L, EntityTestsData.BEntity.count())
-                db1b1.y = EntityTestsData.YEntity.new("2") { }
+                transaction(db2) {
+                    assertEquals(0L, EntityTestsData.BEntity.count())
+                    db1b1.y = EntityTestsData.YEntity.new("2") { }
+                }
             }
         }
     }

@@ -1,22 +1,22 @@
 <!doctype html>
-<html class="no-js">
+<html class="no-js" lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
     <title>org.jetbrains.exposed.v1.core.functions.math</title>
-<link href="../../images/logo-icon.svg" rel="icon" type="image/svg">    <script>var pathToRoot = "../../";</script>
-    <script>document.documentElement.classList.replace("no-js","js");</script>
+<link href="../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
     <script>const storage = localStorage.getItem("dokka-dark-mode")
-    if (storage == null) {
+      if (storage == null) {
         const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
         if (osDarkSchemePreferred === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    } else {
+      } else {
         const savedDarkMode = JSON.parse(storage)
-        if(savedDarkMode === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    }
+      }
     </script>
 <script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
 <script type="text/javascript" src="../../scripts/sourceset_dependencies.js" async></script>
@@ -24,33 +24,31 @@
 <link href="../../styles/main.css" rel="Stylesheet">
 <link href="../../styles/prism.css" rel="Stylesheet">
 <link href="../../styles/logo-styles.css" rel="Stylesheet">
-<link href="../../styles/font-jb-sans-auto.css" rel="Stylesheet">
 <link href="../../ui-kit/ui-kit.min.css" rel="Stylesheet">
-<script type="text/javascript" src="../../scripts/clipboard.js" async></script>
+<script type="text/javascript" src="../../scripts/safe-local-storage_blocking.js"></script>
 <script type="text/javascript" src="../../scripts/navigation-loader.js" async></script>
 <script type="text/javascript" src="../../scripts/platform-content-handler.js" async></script>
 <script type="text/javascript" src="../../scripts/main.js" defer></script>
 <script type="text/javascript" src="../../scripts/prism.js" async></script>
-<script type="text/javascript" src="../../ui-kit/ui-kit.min.js" defer></script>
-<script type="text/javascript" src="../../scripts/symbol-parameters-wrapper_deferred.js" defer></script></head>
+<script type="text/javascript" src="../../ui-kit/ui-kit.min.js" defer></script></head>
 <body>
-    <div class="root">
-    <nav class="navigation theme-dark" id="navigation-wrapper">
-<a class="library-name--link" href="../../index.html">
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../index.html" tabindex="1">
                     exposed
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
-        <div class="library-version" id="library-version">1.0.0-rc-1
+        <div class="library-version" id="library-version">1.0.0-rc-4
         </div>
         <div class="navigation-controls">
-        <div class="filter-section filter-section_loading" id="filter-section">
-                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":exposed-core/main">jvm</button>
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":exposed-core/main">jvm</button>
             <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
                 <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
-                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
-                    <div class="dropdown--header"><span>Platform filter</span>
-                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
                             <i class="ui-kit-icon ui-kit-icon_cross"></i>
                         </button>
                     </div>
@@ -64,32 +62,34 @@
                 </ul>
                 <div class="dropdown--overlay"></div>
             </div>
-        </div>
+        </ul>
             <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
             </button>
             <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
                 API
             </div>
         </div>
-    </nav>
-        <div id="container">
-            <div class="sidebar" id="leftColumn">
-                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
-                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox">
-                        <div class="dropdown--header">
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
                             <span>
                                     exposed
                             </span>
-                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
-                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
-                            </button>
-                        </div>
-                        <div class="sidebar--inner" id="sideMenu"></div>
-                    </ul>
-                    <div class="dropdown--overlay"></div>
-                </div>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
             </div>
-            <div id="main">
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
 <div class="main-content" data-page-type="package" id="content" pageids="exposed-core::org.jetbrains.exposed.v1.core.functions.math////PointingToDeclaration//-1435837140">
   <div class="breadcrumbs"><a href="../index.html">exposed-core</a><span class="delimiter">/</span><span class="current">org.jetbrains.exposed.v1.core.functions.math</span></div>
   <div class="cover ">
@@ -99,9 +99,9 @@
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="TYPE">Types</button></div>
     <div class="tabs-section-body">
       <div data-togglable="TYPE">
-        <h2 class="">Types</h2>
+        <h2 class="tableheader">Types</h2>
         <div class="table"><a data-name="-1102748849%2FClasslikes%2F-1435837140" anchor-label="AbsFunction" id="-1102748849%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-abs-function/index.html"><span>Abs</span><wbr><span><span>Function</span></span></a></div>
@@ -116,7 +116,7 @@
             </div>
           </div>
 <a data-name="-537497269%2FClasslikes%2F-1435837140" anchor-label="ACosFunction" id="-537497269%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-a-cos-function/index.html"><span>ACos</span><wbr><span><span>Function</span></span></a></div>
@@ -125,13 +125,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-a-cos-function/index.html">ACosFunction</a><span class="token operator">&lt;</span><a href="-a-cos-function/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-a-cos-function/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/javase/8/docs/api/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Returns the arc cosine of a number</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-a-cos-function/index.html">ACosFunction</a><span class="token operator">&lt;</span><a href="-a-cos-function/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-a-cos-function/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Returns the arc cosine of a number</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="-1992907750%2FClasslikes%2F-1435837140" anchor-label="ASinFunction" id="-1992907750%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-a-sin-function/index.html"><span>ASin</span><wbr><span><span>Function</span></span></a></div>
@@ -140,13 +140,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-a-sin-function/index.html">ASinFunction</a><span class="token operator">&lt;</span><a href="-a-sin-function/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-a-sin-function/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/javase/8/docs/api/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Returns the arc sine of a number</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-a-sin-function/index.html">ASinFunction</a><span class="token operator">&lt;</span><a href="-a-sin-function/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-a-sin-function/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Returns the arc sine of a number</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="-961552783%2FClasslikes%2F-1435837140" anchor-label="ATanFunction" id="-961552783%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-a-tan-function/index.html"><span>ATan</span><wbr><span><span>Function</span></span></a></div>
@@ -155,13 +155,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-a-tan-function/index.html">ATanFunction</a><span class="token operator">&lt;</span><a href="-a-tan-function/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-a-tan-function/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/javase/8/docs/api/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Returns the arc tangent of a number</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-a-tan-function/index.html">ATanFunction</a><span class="token operator">&lt;</span><a href="-a-tan-function/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-a-tan-function/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Returns the arc tangent of a number</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="1186379876%2FClasslikes%2F-1435837140" anchor-label="CeilingFunction" id="1186379876%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-ceiling-function/index.html"><span>Ceiling</span><wbr><span><span>Function</span></span></a></div>
@@ -176,7 +176,7 @@
             </div>
           </div>
 <a data-name="-540700454%2FClasslikes%2F-1435837140" anchor-label="CosFunction" id="-540700454%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-cos-function/index.html"><span>Cos</span><wbr><span><span>Function</span></span></a></div>
@@ -185,13 +185,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-cos-function/index.html">CosFunction</a><span class="token operator">&lt;</span><a href="-cos-function/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-cos-function/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/javase/8/docs/api/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Returns the cosine of a number</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-cos-function/index.html">CosFunction</a><span class="token operator">&lt;</span><a href="-cos-function/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-cos-function/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Returns the cosine of a number</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="484791545%2FClasslikes%2F-1435837140" anchor-label="CotFunction" id="484791545%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-cot-function/index.html"><span>Cot</span><wbr><span><span>Function</span></span></a></div>
@@ -200,13 +200,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-cot-function/index.html">CotFunction</a><span class="token operator">&lt;</span><a href="-cot-function/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-cot-function/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/javase/8/docs/api/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Returns the cotangent of a number</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-cot-function/index.html">CotFunction</a><span class="token operator">&lt;</span><a href="-cot-function/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-cot-function/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Returns the cotangent of a number</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="-1073744070%2FClasslikes%2F-1435837140" anchor-label="DegreesFunction" id="-1073744070%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-degrees-function/index.html"><span>Degrees</span><wbr><span><span>Function</span></span></a></div>
@@ -215,13 +215,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-degrees-function/index.html">DegreesFunction</a><span class="token operator">&lt;</span><a href="-degrees-function/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-degrees-function/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/javase/8/docs/api/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Convert a radian value into degrees:</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-degrees-function/index.html">DegreesFunction</a><span class="token operator">&lt;</span><a href="-degrees-function/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-degrees-function/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Convert a radian value into degrees:</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="-1367117052%2FClasslikes%2F-1435837140" anchor-label="ExpFunction" id="-1367117052%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-exp-function/index.html"><span>Exp</span><wbr><span><span>Function</span></span></a></div>
@@ -230,13 +230,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-exp-function/index.html">ExpFunction</a><span class="token operator">&lt;</span><a href="-exp-function/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-exp-function/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/javase/8/docs/api/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Returns e raised to the power of a specified number</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-exp-function/index.html">ExpFunction</a><span class="token operator">&lt;</span><a href="-exp-function/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-exp-function/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Returns e raised to the power of a specified number</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="-680713995%2FClasslikes%2F-1435837140" anchor-label="FloorFunction" id="-680713995%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-floor-function/index.html"><span>Floor</span><wbr><span><span>Function</span></span></a></div>
@@ -251,7 +251,7 @@
             </div>
           </div>
 <a data-name="-2099154664%2FClasslikes%2F-1435837140" anchor-label="PiFunction" id="-2099154664%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-pi-function/index.html"><span>Pi</span><wbr><span><span>Function</span></span></a></div>
@@ -260,13 +260,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">object </span><a href="-pi-function/index.html">PiFunction</a> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/javase/8/docs/api/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Returns the value of PI</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">object </span><a href="-pi-function/index.html">PiFunction</a> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Returns the value of PI</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="2099314460%2FClasslikes%2F-1435837140" anchor-label="PowerFunction" id="2099314460%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-power-function/index.html"><span>Power</span><wbr><span><span>Function</span></span></a></div>
@@ -275,13 +275,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-power-function/index.html">PowerFunction</a><span class="token operator">&lt;</span><a href="-power-function/index.html">B</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token punctuation">, </span><a href="-power-function/index.html">E</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">base<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-power-function/index.html">B</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">exponent<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="-power-function/index.html">E</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">precision<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span>MathContext.DECIMAL64.precision<span class="token punctuation">, </span></span><span class="parameter ">scale<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span><span class="token constant">10</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/javase/8/docs/api/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Returns the value of a number raised to the power of another number</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-power-function/index.html">PowerFunction</a><span class="token operator">&lt;</span><a href="-power-function/index.html">B</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token punctuation">, </span><a href="-power-function/index.html">E</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">base<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-power-function/index.html">B</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">exponent<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="-power-function/index.html">E</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">precision<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span>MathContext.DECIMAL64.precision<span class="token punctuation">, </span></span><span class="parameter ">scale<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span><span class="token constant">10</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Returns the value of a number raised to the power of another number</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="1466096975%2FClasslikes%2F-1435837140" anchor-label="RadiansFunction" id="1466096975%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-radians-function/index.html"><span>Radians</span><wbr><span><span>Function</span></span></a></div>
@@ -290,13 +290,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-radians-function/index.html">RadiansFunction</a><span class="token operator">&lt;</span><a href="-radians-function/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-radians-function/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/javase/8/docs/api/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Convert a radian value into degrees:</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-radians-function/index.html">RadiansFunction</a><span class="token operator">&lt;</span><a href="-radians-function/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-radians-function/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Convert a radian value into degrees:</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="-1658205261%2FClasslikes%2F-1435837140" anchor-label="RoundFunction" id="-1658205261%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-round-function/index.html"><span>Round</span><wbr><span><span>Function</span></span></a></div>
@@ -305,13 +305,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-round-function/index.html">RoundFunction</a><span class="token operator">&lt;</span><a href="-round-function/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-round-function/index.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">scale<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/javase/8/docs/api/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Rounds a number to a specified number of decimal places</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-round-function/index.html">RoundFunction</a><span class="token operator">&lt;</span><a href="-round-function/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-round-function/index.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">scale<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Rounds a number to a specified number of decimal places</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="448846804%2FClasslikes%2F-1435837140" anchor-label="SignFunction" id="448846804%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-sign-function/index.html"><span>Sign</span><wbr><span><span>Function</span></span></a></div>
@@ -326,7 +326,7 @@
             </div>
           </div>
 <a data-name="-1996110935%2FClasslikes%2F-1435837140" anchor-label="SinFunction" id="-1996110935%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-sin-function/index.html"><span>Sin</span><wbr><span><span>Function</span></span></a></div>
@@ -335,13 +335,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-sin-function/index.html">SinFunction</a><span class="token operator">&lt;</span><a href="-sin-function/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-sin-function/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/javase/8/docs/api/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Returns the sine of a number</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-sin-function/index.html">SinFunction</a><span class="token operator">&lt;</span><a href="-sin-function/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-sin-function/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Returns the sine of a number</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="-1765182255%2FClasslikes%2F-1435837140" anchor-label="SqrtFunction" id="-1765182255%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-sqrt-function/index.html"><span>Sqrt</span><wbr><span><span>Function</span></span></a></div>
@@ -350,13 +350,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-sqrt-function/index.html">SqrtFunction</a><span class="token operator">&lt;</span><a href="-sqrt-function/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-sqrt-function/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/javase/8/docs/api/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Returns the square root of a number</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-sqrt-function/index.html">SqrtFunction</a><span class="token operator">&lt;</span><a href="-sqrt-function/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-sqrt-function/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Returns the square root of a number</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="-964755968%2FClasslikes%2F-1435837140" anchor-label="TanFunction" id="-964755968%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-tan-function/index.html"><span>Tan</span><wbr><span><span>Function</span></span></a></div>
@@ -365,7 +365,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-tan-function/index.html">TanFunction</a><span class="token operator">&lt;</span><a href="-tan-function/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-tan-function/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/javase/8/docs/api/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Returns the tangent of a number</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-tan-function/index.html">TanFunction</a><span class="token operator">&lt;</span><a href="-tan-function/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expression<span class="token operator">: </span><a href="../org.jetbrains.exposed.v1.core/-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="-tan-function/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core/-custom-function/index.html">CustomFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Returns the tangent of a number</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -376,17 +376,21 @@
   </div>
 </div>
     <div class="footer">
-        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
-        <span>© 2025 Copyright</span>
-        <span class="pull-right">
-            <span>Generated by </span>
-            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
-                <span>dokka</span>
-            </a>
-        </span>
-    </div>
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2025 Copyright</div>
+                </div>
             </div>
         </div>
     </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

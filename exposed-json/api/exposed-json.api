@@ -28,6 +28,8 @@ public final class org/jetbrains/exposed/v1/json/Extract : org/jetbrains/exposed
 public final class org/jetbrains/exposed/v1/json/JsonBColumnType : org/jetbrains/exposed/v1/json/JsonColumnType {
 	public fun <init> (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
 	public fun getUsesBinaryFormat ()Z
+	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun parameterMarker (Ljava/lang/Object;)Ljava/lang/String;
 	public fun sqlType ()Ljava/lang/String;
 }
 

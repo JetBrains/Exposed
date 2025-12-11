@@ -69,8 +69,8 @@ abstract class DatabaseDialectMetadata {
     }
 
     /** Checks if the specified table exists in the database. */
-    @OptIn(InternalApi::class)
     fun tableExists(table: Table): Boolean {
+        @OptIn(InternalApi::class)
         return table.schemaName?.let { schema ->
             getAllTableNamesCache().get(schema.inProperCase()).any {
                 it == table.nameInDatabaseCase()
@@ -85,12 +85,11 @@ abstract class DatabaseDialectMetadata {
         }
     }
 
-    @OptIn(InternalApi::class)
     protected open fun String.metadataMatchesTable(schema: String, table: Table): Boolean {
+        @OptIn(InternalApi::class)
         return when {
             schema.isEmpty() -> this == table.nameInDatabaseCaseUnquoted()
             else -> {
-                @OptIn(InternalApi::class)
                 val sanitizedTableName = table.tableNameWithoutSchemeSanitized
                 val nameInDb = "$schema.$sanitizedTableName".inProperCase()
                 this == nameInDb
@@ -99,15 +98,15 @@ abstract class DatabaseDialectMetadata {
     }
 
     /** Checks if the specified schema exists. */
-    @OptIn(InternalApi::class)
     fun schemaExists(schema: Schema): Boolean {
         val allSchemas = getAllSchemaNamesCache()
+        @OptIn(InternalApi::class)
         return allSchemas.any { it == schema.identifier.inProperCase() }
     }
 
     /** Returns whether the specified sequence exists. */
-    @OptIn(InternalApi::class)
     fun sequenceExists(sequence: Sequence): Boolean {
+        @OptIn(InternalApi::class)
         return sequences().any { it == sequence.identifier.inProperCase() }
     }
 

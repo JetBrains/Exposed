@@ -78,9 +78,9 @@ internal class SQLServerMetadata : MetadataProvider(SQLServerPropertyProvider, S
 
     override fun setReadOnlyMode(value: Boolean): String {
         return if (value) {
-            "ALTER DATABASE CURRENT SET READ_WRITE"
-        } else {
             "ALTER DATABASE CURRENT SET READ_ONLY"
+        } else {
+            "ALTER DATABASE CURRENT SET READ_WRITE"
         }
     }
 

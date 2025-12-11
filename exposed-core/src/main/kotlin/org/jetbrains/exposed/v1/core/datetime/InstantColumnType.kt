@@ -8,7 +8,7 @@ import org.jetbrains.exposed.v1.core.ColumnType
 import org.jetbrains.exposed.v1.core.IDateColumnType
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.statements.api.RowApi
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.core.vendors.*
 import java.sql.Timestamp
 import java.time.ZoneId
@@ -96,16 +96,16 @@ abstract class InstantColumnType<T> : ColumnType<T>(), IDateColumnType {
     }
 
     override fun notNullValueToDB(value: T & Any): Any {
-        val dialect = currentDialect
-
         val localDateTime = toInstant(value).toLocalDateTime(TimeZone.currentSystemDefault())
 
         @OptIn(InternalApi::class)
         @Suppress("MagicNumber")
-        return when {
-            dialect is SQLiteDialect -> ORACLE_SQLITE_TIMESTAMP_FORMAT.format(localDateTime)
-            dialect is MysqlDialect && dialect !is MariaDBDialect &&
-                !CoreTransactionManager.currentTransaction().db.version.covers(8, 0) -> {
+        return when (val dialect = currentDialect) {
+            is SQLiteDialect -> ORACLE_SQLITE_TIMESTAMP_FORMAT.format(localDateTime)
+            is MysqlDialect if (
+                dialect !is MariaDBDialect &&
+                    !currentTransaction().db.version.covers(8, 0)
+                ) -> {
                 if (dialect.isFractionDateTimeSupported()) {
                     MYSQL_TIMESTAMP_FRACTION_FORMAT.format(localDateTime)
                 } else {

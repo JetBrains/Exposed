@@ -16,7 +16,7 @@ val currentDialectMetadataTest: DatabaseDialectMetadata
 
 val currentDialectIfAvailableTest: DatabaseDialect?
     get() =
-        if (TransactionManager.isInitialized() && TransactionManager.currentOrNull() != null) {
+        if (TransactionManager.currentOrNull() != null) {
             currentDialectTest
         } else {
             null
@@ -34,3 +34,15 @@ fun Table.insertAndWait(duration: Long) {
     TransactionManager.current().commit()
     Thread.sleep(duration)
 }
+
+/** Tag for JDBC tests that will require creating a matching R2DBC test, when possible. */
+const val MISSING_R2DBC_TEST = "Test has no R2DBC version"
+
+/** Tag for JDBC tests that already have a matching R2DBC test, but that are still missing some of the original logic. */
+const val INCOMPLETE_R2DBC_TEST = "Test has incomplete R2DBC version"
+
+/** Tag for JDBC tests that will most likely never require a matching R2DBC test, unless the driver's R2DBC SPI changes. */
+const val NO_R2DBC_SUPPORT = "Test subject not supported by R2DBC"
+
+/** Tag for JDBC tests that will most likely never require a matching R2DBC test. */
+const val NOT_APPLICABLE_TO_R2DBC = "Test subject is not relevant to R2DBC"

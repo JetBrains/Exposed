@@ -11,13 +11,15 @@ import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
-import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.tests.INCOMPLETE_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.LogDbInTestName
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
 
 class ConnectionPoolTests : LogDbInTestName() {
     private val hikariDataSource1 by lazy {
@@ -33,9 +35,10 @@ class ConnectionPoolTests : LogDbInTestName() {
         Database.connect(hikariDataSource1)
     }
 
+    @Tag(INCOMPLETE_R2DBC_TEST)
     @Test
     fun testSuspendTransactionsExceedingPoolSize() {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         transaction(db = hikariDB1) {
             SchemaUtils.create(TestTable)
         }
@@ -44,7 +47,7 @@ class ConnectionPoolTests : LogDbInTestName() {
         runBlocking {
             repeat(exceedsPoolSize) {
                 launch {
-                    newSuspendedTransaction {
+                    suspendTransaction {
                         delay(100)
                         TestEntity.new { testValue = "test$it" }
                     }

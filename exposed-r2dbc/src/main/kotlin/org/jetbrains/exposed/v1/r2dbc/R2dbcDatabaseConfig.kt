@@ -3,7 +3,6 @@ package org.jetbrains.exposed.v1.r2dbc
 import io.r2dbc.spi.ConnectionFactoryOptions
 import io.r2dbc.spi.IsolationLevel
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.core.DatabaseConfigImpl
 import org.jetbrains.exposed.v1.core.InternalApi
@@ -18,13 +17,6 @@ import org.jetbrains.exposed.v1.r2dbc.statements.asInt
  * unless an applicable override is specified in an individual transaction block.
  */
 interface R2dbcDatabaseConfig : DatabaseConfig {
-    /**
-     * The [CoroutineDispatcher] to be used when determining the scope of the underlying R2DBC database connection object.
-     *
-     * Default dispatcher is [Dispatchers.IO].
-     */
-    val dispatcher: CoroutineDispatcher
-
     /**
      * The [ConnectionFactoryOptions] state holder that should be associated to a [io.r2dbc.spi.ConnectionFactory]
      * when creating connections.
@@ -65,13 +57,6 @@ interface R2dbcDatabaseConfig : DatabaseConfig {
          * configured, the state object will be constructed by parsing the provided R2DBC connection url string.
          */
         var connectionFactoryOptions: ConnectionFactoryOptions = ConnectionFactoryOptions.builder().build()
-
-        /**
-         * The [CoroutineDispatcher] to be used when determining the scope of the underlying R2DBC database connection object.
-         *
-         * Default dispatcher is [Dispatchers.IO].
-         */
-        var dispatcher: CoroutineDispatcher = Dispatchers.IO
 
         /**
          * Registry storing all built-in [org.jetbrains.exposed.v1.r2dbc.mappers.TypeMapper] classes, as well as any

@@ -19,9 +19,8 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.jetbrains.exposed.v1.r2dbc.transactions.transactionManager
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import kotlin.test.assertContains
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
@@ -89,7 +88,7 @@ class NestedTransactionsTest : R2dbcDatabaseTestsBase() {
             assertNotNull(TransactionManager.currentOrNull())
 
             try {
-                inTopLevelSuspendTransaction(this.transactionIsolation) {
+                inTopLevelSuspendTransaction(transactionIsolation = this.transactionIsolation) {
                     maxAttempts = 1
                     throw IllegalStateException("Should be rethrow")
                 }
@@ -103,7 +102,7 @@ class NestedTransactionsTest : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testNestedTransactionNotCommittedAfterDatabaseFailure() = runTest {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
 
         val fakeSQLString = "BROKEN_SQL_THAT_CAUSES_EXCEPTION"
 
@@ -112,14 +111,14 @@ class NestedTransactionsTest : R2dbcDatabaseTestsBase() {
         }
 
         suspendTransaction(db) {
-            val outerTxId = this.id
+            val outerTxId = this.transactionId
 
             DMLTestsData.Cities.insert { it[name] = "City A" }
             assertEquals(1, DMLTestsData.Cities.selectAll().count())
 
             try {
-                inTopLevelSuspendTransaction(db.transactionManager.defaultIsolationLevel!!, db = db) {
-                    val innerTxId = this.id
+                inTopLevelSuspendTransaction(db) {
+                    val innerTxId = this.transactionId
                     assertNotEquals(outerTxId, innerTxId)
 
                     DMLTestsData.Cities.insert { it[name] = "City B" }
@@ -134,14 +133,14 @@ class NestedTransactionsTest : R2dbcDatabaseTestsBase() {
         assertSingleRecordInNewTransactionAndReset()
 
         suspendTransaction(db) {
-            val outerTxId = this.id
+            val outerTxId = this.transactionId
 
             DMLTestsData.Cities.insert { it[name] = "City A" }
             assertEquals(1, DMLTestsData.Cities.selectAll().count())
 
             try {
                 suspendTransaction(db) {
-                    val innerTxId = this.id
+                    val innerTxId = this.transactionId
                     assertNotEquals(outerTxId, innerTxId)
 
                     DMLTestsData.Cities.insert { it[name] = "City B" }
@@ -162,7 +161,7 @@ class NestedTransactionsTest : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testNestedTransactionNotCommittedAfterException() = runTest {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
 
         val exceptionMessage = "Failure!"
 
@@ -171,14 +170,14 @@ class NestedTransactionsTest : R2dbcDatabaseTestsBase() {
         }
 
         suspendTransaction(db) {
-            val outerTxId = this.id
+            val outerTxId = this.transactionId
 
             DMLTestsData.Cities.insert { it[name] = "City A" }
             assertEquals(1, DMLTestsData.Cities.selectAll().count())
 
             try {
-                inTopLevelSuspendTransaction(db.transactionManager.defaultIsolationLevel!!, db = db) {
-                    val innerTxId = this.id
+                inTopLevelSuspendTransaction(db) {
+                    val innerTxId = this.transactionId
                     assertNotEquals(outerTxId, innerTxId)
 
                     DMLTestsData.Cities.insert { it[name] = "City B" }
@@ -192,14 +191,14 @@ class NestedTransactionsTest : R2dbcDatabaseTestsBase() {
         assertSingleRecordInNewTransactionAndReset()
 
         suspendTransaction(db) {
-            val outerTxId = this.id
+            val outerTxId = this.transactionId
 
             DMLTestsData.Cities.insert { it[name] = "City A" }
             assertEquals(1, DMLTestsData.Cities.selectAll().count())
 
             try {
                 suspendTransaction(db) {
-                    val innerTxId = this.id
+                    val innerTxId = this.transactionId
                     assertNotEquals(outerTxId, innerTxId)
 
                     DMLTestsData.Cities.insert { it[name] = "City B" }

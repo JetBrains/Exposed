@@ -14,6 +14,7 @@ import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.dao.flushCache
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.constraintNamePart
 import org.jetbrains.exposed.v1.tests.currentDialectTest
@@ -23,7 +24,8 @@ import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -35,7 +37,7 @@ import kotlin.time.DurationUnit
 import kotlin.time.Instant
 import kotlin.time.toDuration
 
-fun now() = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+fun now() = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).asJdk8()
 
 private val dbTimestampNow: CustomFunction<OffsetDateTime>
     get() = object : CustomFunction<OffsetDateTime>("now", KotlinOffsetDateTimeColumnType()) {}
@@ -94,6 +96,7 @@ class DefaultsTest : DatabaseTestsBase() {
         assertEquals(defaultValue, returnedDefault, "Expected clientDefault to return $defaultValue, but was $returnedDefault")
     }
 
+    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testDefaultsWithExplicit01() {
         withTables(TableWithDBDefault) {
@@ -114,6 +117,7 @@ class DefaultsTest : DatabaseTestsBase() {
         }
     }
 
+    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testDefaultsWithExplicit02() {
         // MySql 5 is excluded because it does not support `CURRENT_DATE()` as a default value
@@ -135,6 +139,7 @@ class DefaultsTest : DatabaseTestsBase() {
         }
     }
 
+    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testDefaultsInvokedOnlyOncePerEntity() {
         withTables(TableWithDBDefault) {
@@ -432,7 +437,7 @@ class DefaultsTest : DatabaseTestsBase() {
             else -> "NULL"
         }
 
-        withTables(excludeSettings = TestDB.ALL_MARIADB + TestDB.MYSQL_V5, testTable) { testDb ->
+        withTables(excludeSettings = setOf(TestDB.MARIADB, TestDB.MYSQL_V5), testTable) { testDb ->
             val timestampWithTimeZoneType = currentDialectTest.dataTypeProvider.timestampWithTimeZoneType()
 
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
@@ -514,9 +519,8 @@ class DefaultsTest : DatabaseTestsBase() {
             )
         }
 
-        // SQLite does not support ALTER TABLE on a column that has a default value
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
-            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(tester)
+        withTables(tester) {
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -529,24 +533,22 @@ class DefaultsTest : DatabaseTestsBase() {
             val dateWithDefault = date("dateWithDefault").default(date)
         }
 
-        // SQLite does not support ALTER TABLE on a column that has a default value
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
-            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(tester)
+        withTables(tester) {
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
 
     @Test
     fun testTimeDefaultDoesNotTriggerAlterStatement() {
-        val time = Clock.System.now().toLocalDateTime(TimeZone.of("Japan")).time
+        val time = Clock.System.now().toLocalDateTime(TimeZone.of("Japan")).time.asJdk8()
 
         val tester = object : Table("tester") {
             val timeWithDefault = time("timeWithDefault").default(time)
         }
 
-        // SQLite does not support ALTER TABLE on a column that has a default value
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
-            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(tester)
+        withTables(tester) {
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -562,9 +564,8 @@ class DefaultsTest : DatabaseTestsBase() {
             val timestampWithDefaultExpression = timestamp("timestampWithDefaultExpression").defaultExpression(CurrentTimestamp)
         }
 
-        // SQLite does not support ALTER TABLE on a column that has a default value
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
-            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(tester)
+        withTables(tester) {
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -577,11 +578,10 @@ class DefaultsTest : DatabaseTestsBase() {
             val timestampWithTimeZoneWithDefault = timestampWithTimeZone("timestampWithTimeZoneWithDefault").default(offsetDateTime)
         }
 
-        // SQLite does not support ALTER TABLE on a column that has a default value
         // MariaDB does not support TIMESTAMP WITH TIME ZONE column type
-        val unsupportedDatabases = TestDB.ALL_MARIADB + TestDB.SQLITE + TestDB.MYSQL_V5
+        val unsupportedDatabases = setOf(TestDB.MARIADB, TestDB.MYSQL_V5)
         withTables(excludeSettings = unsupportedDatabases, tester) {
-            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(tester)
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -649,6 +649,7 @@ class DefaultsTest : DatabaseTestsBase() {
         var timestamp: OffsetDateTime by DefaultTimestampTable.timestamp
     }
 
+    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testCustomDefaultTimestampFunctionWithEntity() {
         withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES - TestDB.MYSQL_V8 - TestDB.ALL_H2_V2, DefaultTimestampTable) {

@@ -14,9 +14,11 @@ import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.statements.ReturningBlockingExecutable
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
-import org.junit.Test
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
@@ -133,6 +135,7 @@ class ReturningTests : DatabaseTestsBase() {
         }
     }
 
+    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testUpsertReturningWithDAO() {
         withTables(TestDB.ALL - returningSupportedDb, Items) {

@@ -28,13 +28,12 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.test.assertNotNull
 import kotlin.test.expect
 
-// NOTE: 1 DAO TEST REMOVED
 @Suppress("LargeClass")
 class DDLTests : R2dbcDatabaseTestsBase() {
     @Test
@@ -68,7 +67,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
     // flaky test?
     @Test
     fun testKeywordIdentifiersWithOptOut() = runTest {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
 
         val keywords = listOf("Integer", "name")
         val tester = object : Table(keywords[0]) {
@@ -177,7 +176,9 @@ class DDLTests : R2dbcDatabaseTestsBase() {
     fun unnamedTableWithQuotesSQL() {
         withTables(tables = arrayOf(unnamedTable)) { testDb ->
             val q = db.identifierManager.quoteString
-            val tableName = if (currentDialectTest.needsQuotesWhenSymbolsInNames) {
+            val shouldBeQuoted = currentDialectTest.needsQuotesWhenSymbolsInNames &&
+                db.identifierManager.needQuotes("unnamedTable$1")
+            val tableName = if (shouldBeQuoted) {
                 "$q${"unnamedTable$1".inProperCase()}$q"
             } else {
                 "unnamedTable$1".inProperCase()
@@ -219,7 +220,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             override val primaryKey = PrimaryKey(name)
         }
 
-        withTables(excludeSettings = TestDB.ALL_MYSQL + TestDB.ALL_MARIADB + TestDB.ALL_ORACLE_LIKE, tables = arrayOf(testTable)) {
+        withTables(excludeSettings = TestDB.ALL_MYSQL + TestDB.MARIADB + TestDB.ALL_ORACLE_LIKE, tables = arrayOf(testTable)) {
             val varCharType = currentDialectTest.dataTypeProvider.varcharType(42)
             assertEquals(
                 "CREATE TABLE " +
@@ -518,7 +519,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
 
         withDb { testDb ->
-            val functionsNotSupported = testDb in TestDB.ALL_MARIADB + TestDB.ALL_H2_V2 + TestDB.SQLSERVER + TestDB.MYSQL_V5
+            val functionsNotSupported = testDb in TestDB.ALL_H2_V2 + TestDB.MARIADB + TestDB.SQLSERVER + TestDB.MYSQL_V5
 
             val tableProperName = tester.tableName.inProperCase()
             val priceColumnName = tester.price.nameInDatabaseCase()

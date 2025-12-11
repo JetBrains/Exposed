@@ -20,8 +20,10 @@ class Version @InternalApi constructor(val major: Int, val minor: Int, val patch
 
     fun covers(version: BigDecimal): Boolean = covers(from(version))
 
-    @OptIn(InternalApi::class)
-    fun covers(major: Int, minor: Int = 0, patch: Int = 0): Boolean = covers(Version(major, minor, patch))
+    fun covers(major: Int, minor: Int = 0, patch: Int = 0): Boolean {
+        @OptIn(InternalApi::class)
+        return covers(Version(major, minor, patch))
+    }
 
     override fun toString() = "$major.$minor.$patch"
 
@@ -41,13 +43,15 @@ class Version @InternalApi constructor(val major: Int, val minor: Int, val patch
     companion object {
         private val versionRegex = Regex("""^(\d+)(?:\.(\d+))?(?:\.(\d+))?(\D)?(.*)?""")
 
-        @OptIn(InternalApi::class)
         fun from(version: String): Version {
             val matchResult = versionRegex.find(version)
                 ?: throw IllegalArgumentException("Invalid version format: $version")
 
-            val parts = (1..3).map { matchResult.groupValues[it].takeIf { it.isNotEmpty() }?.toInt() ?: 0 }
+            val parts = (1..3).map { part ->
+                matchResult.groupValues[part].takeIf { it.isNotEmpty() }?.toInt() ?: 0
+            }
 
+            @OptIn(InternalApi::class)
             return Version(parts[0], parts[1], parts[2])
         }
 

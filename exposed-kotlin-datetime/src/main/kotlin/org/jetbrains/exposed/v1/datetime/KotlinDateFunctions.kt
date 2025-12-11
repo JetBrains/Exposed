@@ -428,7 +428,13 @@ fun <T : OffsetDateTime?> Expression<T>.time() = Time(this)
 @JvmName("LocalDateYearExt")
 fun <T : LocalDate?> Expression<T>.year() = Year(this)
 
-/** Returns the year from this datetime expression, as an integer. */
+/**
+ * Returns the year from this datetime expression, as an integer.
+ *
+ * **Note:** Some JDBC drivers, like for MySQL, may return a `LocalDate` type for this SQL function,
+ * following the format `YYYY-01-01`. To avoid unexpected exceptions in this case, the MySQL connector property
+ * `yearIsDateType` should be set to `false`. Please check the documentation.
+ */
 @JvmName("LocalDateTimeYearExt")
 fun <T : LocalDateTime?> Expression<T>.year() = Year(this)
 

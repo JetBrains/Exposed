@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.singleOrNull
 import org.jetbrains.exposed.samples.r2dbc.domain.BaseRepository
 import org.jetbrains.exposed.samples.r2dbc.domain.issue.Issues
 import org.jetbrains.exposed.v1.core.JoinType
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.datetime.CurrentTimestamp
 import org.jetbrains.exposed.v1.r2dbc.deleteReturning
 import org.jetbrains.exposed.v1.r2dbc.insertReturning

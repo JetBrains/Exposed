@@ -17,6 +17,8 @@ import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.statements.toExecutable
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
+import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentTestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
@@ -25,8 +27,9 @@ import org.jetbrains.exposed.v1.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.entities.EntityTests
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
 import java.sql.SQLException
 import java.util.*
 import kotlin.test.assertEquals
@@ -381,6 +384,7 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     // https://github.com/JetBrains/Exposed/issues/192
+    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testInsertWithColumnNamedWithKeyword() {
         withTables(OrderedDataTable) {
@@ -496,6 +500,7 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
+    @Tag(NOT_APPLICABLE_TO_R2DBC)
     @Test
     fun testRollbackOnConstraintExceptionWithNormalTransactions() {
         val testTable = object : IntIdTable("TestRollback") {
@@ -505,7 +510,7 @@ class InsertTests : DatabaseTestsBase() {
             TestDB.SQLITE,
             TestDB.MYSQL_V5.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
         )
-        Assume.assumeTrue(dbToTest.isNotEmpty())
+        Assumptions.assumeTrue(dbToTest.isNotEmpty())
         dbToTest.forEach { db ->
             try {
                 try {
@@ -538,7 +543,7 @@ class InsertTests : DatabaseTestsBase() {
             TestDB.SQLITE,
             TestDB.MYSQL_V5.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
         )
-        Assume.assumeTrue(dbToTest.isNotEmpty())
+        Assumptions.assumeTrue(dbToTest.isNotEmpty())
         dbToTest.forEach { db ->
             try {
                 try {
@@ -567,6 +572,7 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
+    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testOptReferenceAllowsNullValues() {
         withTables(EntityTests.Posts) {
@@ -674,7 +680,7 @@ class InsertTests : DatabaseTestsBase() {
 
                 when (testDb) {
                     // MariaDB does not support GENERATED ALWAYS AS with any null constraint definition
-                    in TestDB.ALL_MARIADB -> {
+                    TestDB.MARIADB -> {
                         exec("${createStatement.trimIndent()} $computedName $computedType GENERATED ALWAYS AS ($computation) STORED)")
                     }
                     // SQL SERVER only supports the AS variant if column_type is not defined

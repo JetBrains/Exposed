@@ -24,7 +24,7 @@ import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.test.assertFails
 
@@ -613,7 +613,7 @@ class CreateTableTests : DatabaseTestsBase() {
     @OptIn(InternalApi::class)
     @Test
     fun createTableWithOnDeleteSetDefault() {
-        withDb(excludeSettings = TestDB.ALL_MYSQL + TestDB.ALL_MARIADB + listOf(TestDB.ORACLE)) { testDb ->
+        withDb(excludeSettings = TestDB.ALL_MYSQL + TestDB.MARIADB + listOf(TestDB.ORACLE)) { testDb ->
             val expected = listOf(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${this.identity(Item)} (" +
                     "${Item.columns.joinToString { it.descriptionDdl(false) }}," +

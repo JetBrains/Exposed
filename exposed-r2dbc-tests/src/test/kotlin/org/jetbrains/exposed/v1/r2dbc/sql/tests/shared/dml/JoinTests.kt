@@ -16,7 +16,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.forEach
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertTrue
 
 class JoinTests : R2dbcDatabaseTestsBase() {
@@ -229,5 +229,8 @@ class JoinTests : R2dbcDatabaseTestsBase() {
             assertTrue(logCaptor.warnLogs.isEmpty())
             assertTrue(logCaptor.errorLogs.isEmpty())
         }
+
+        logCaptor.clearLogs()
+        logCaptor.close()
     }
 }

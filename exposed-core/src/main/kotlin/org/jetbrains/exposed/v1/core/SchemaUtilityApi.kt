@@ -74,6 +74,7 @@ abstract class SchemaUtilityApi {
         alterTableAddColumnSupported: Boolean,
         isIncorrectType: (columnMetadata: ColumnMetadata, column: Column<*>) -> Boolean
     ): C {
+        val isSqlite = currentDialect is SQLiteDialect
         // create columns
         val existingTableColumns = columns.mapNotNull { column ->
             val existingColumn = existingColumns.find { column.nameUnquoted().equals(it.name, true) }
@@ -90,10 +91,18 @@ abstract class SchemaUtilityApi {
             existingTableColumns
                 .mapColumnDiffs(isIncorrectType)
                 .flatMapTo(destination) { (col, changedState) ->
-                    col.modifyStatements(changedState)
+                    if (isSqlite && changedState.caseSensitiveName) {
+                        col.modifyStatements(existingTableColumns[col], changedState)
+                    } else {
+                        col.modifyStatements(changedState)
+                    }
                 }
-            // add missing primary key
-            primaryKeyDdl(missingTableColumns, existingPrimaryKey)?.let { destination.add(it) }
+            // While SQLite does allow some ALTER TABLE syntax, ADD PRIMARY KEY is still not supported.
+            // PrimaryKey statement builder would return empty string at lowest level (not null), so this avoids it being added.
+            if (!isSqlite) {
+                // add missing primary key
+                primaryKeyDdl(missingTableColumns, existingPrimaryKey)?.let { destination.add(it) }
+            }
         }
         return destination
     }
@@ -314,7 +323,12 @@ abstract class SchemaUtilityApi {
             } else {
                 false
             }
-            val incorrectNullability = existingCol.nullable != colNullable
+            // SQLite INTEGER PRIMARY KEY AUTOINCREMENT columns are technically still nullable on db-side
+            val incorrectNullability = existingCol.nullable != colNullable &&
+                (
+                    dialect !is SQLiteDialect ||
+                        columnType.sqlType() != dialect.dataTypeProvider.integerAutoincType()
+                    )
             val incorrectAutoInc = isIncorrectAutoInc(existingCol, col)
             // 'isDatabaseGenerated' property means that the column has generation of the value on the database side,
             // and it could be default value, trigger or something else,
@@ -384,9 +398,9 @@ abstract class SchemaUtilityApi {
                             is TextColumnType -> "'$value'::text"
                             else -> dataTypeProvider.processForDefaultValue(exp)
                         }
-                        this is OracleDialect || h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> when {
-                            column.columnType is VarCharColumnType && value == "" -> "NULL"
-                            column.columnType is TextColumnType && value == "" -> "NULL"
+                        this is OracleDialect || h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> when (column.columnType) {
+                            is VarCharColumnType if value == "" -> "NULL"
+                            is TextColumnType if value == "" -> "NULL"
                             else -> value
                         }
                         else -> value
@@ -414,26 +428,26 @@ abstract class SchemaUtilityApi {
                         this is PostgreSQLDialect && value < 0 -> "'${dataTypeProvider.processForDefaultValue(exp)}'::integer"
                         else -> dataTypeProvider.processForDefaultValue(exp)
                     }
-                    is Long -> when {
-                        this is SQLServerDialect && (value < 0 || value > Int.MAX_VALUE.toLong()) ->
+                    is Long -> when (this) {
+                        is SQLServerDialect if (value < 0 || value > Int.MAX_VALUE.toLong()) ->
                             "${dataTypeProvider.processForDefaultValue(exp)}."
-                        this is PostgreSQLDialect && (value < 0 || value > Int.MAX_VALUE.toLong()) ->
+                        is PostgreSQLDialect if (value < 0 || value > Int.MAX_VALUE.toLong()) ->
                             "'${dataTypeProvider.processForDefaultValue(exp)}'::bigint"
                         else -> dataTypeProvider.processForDefaultValue(exp)
                     }
-                    is UInt -> when {
-                        this is SQLServerDialect && value > Int.MAX_VALUE.toUInt() -> "${dataTypeProvider.processForDefaultValue(exp)}."
-                        this is PostgreSQLDialect && value > Int.MAX_VALUE.toUInt() -> "'${dataTypeProvider.processForDefaultValue(exp)}'::bigint"
+                    is UInt -> when (this) {
+                        is SQLServerDialect if value > Int.MAX_VALUE.toUInt() -> "${dataTypeProvider.processForDefaultValue(exp)}."
+                        is PostgreSQLDialect if value > Int.MAX_VALUE.toUInt() -> "'${dataTypeProvider.processForDefaultValue(exp)}'::bigint"
                         else -> dataTypeProvider.processForDefaultValue(exp)
                     }
-                    is ULong -> when {
-                        this is SQLServerDialect && value > Int.MAX_VALUE.toULong() -> "${dataTypeProvider.processForDefaultValue(exp)}."
-                        this is PostgreSQLDialect && value > Int.MAX_VALUE.toULong() -> "'${dataTypeProvider.processForDefaultValue(exp)}'::bigint"
+                    is ULong -> when (this) {
+                        is SQLServerDialect if value > Int.MAX_VALUE.toULong() -> "${dataTypeProvider.processForDefaultValue(exp)}."
+                        is PostgreSQLDialect if value > Int.MAX_VALUE.toULong() -> "'${dataTypeProvider.processForDefaultValue(exp)}'::bigint"
                         else -> dataTypeProvider.processForDefaultValue(exp)
                     }
                     else -> {
-                        when {
-                            column.columnType is JsonColumnMarker -> {
+                        when (column.columnType) {
+                            is JsonColumnMarker -> {
                                 val processed = dataTypeProvider.processForDefaultValue(exp)
                                 when (this) {
                                     is PostgreSQLDialect -> {
@@ -451,7 +465,7 @@ abstract class SchemaUtilityApi {
                                     }
                                 }
                             }
-                            column.columnType is ArrayColumnType<*, *> && this is PostgreSQLDialect -> {
+                            is ArrayColumnType<*, *> if this is PostgreSQLDialect -> {
                                 (value as List<*>)
                                     .takeIf { it.isNotEmpty() }
                                     ?.run {
@@ -467,7 +481,7 @@ abstract class SchemaUtilityApi {
                                         "ARRAY$processed"
                                     } ?: dataTypeProvider.processForDefaultValue(exp)
                             }
-                            column.columnType is IDateColumnType -> {
+                            is IDateColumnType -> {
                                 val processed = dataTypeProvider.processForDefaultValue(exp)
                                 if (processed.startsWith('\'') && processed.endsWith('\'')) {
                                     processed.trim('\'')
@@ -506,7 +520,15 @@ abstract class SchemaUtilityApi {
         if (columnMeta.size == null) return false
         val dialect = currentDialect
         return when (columnType) {
-            is DecimalColumnType -> columnType.precision != columnMeta.size || columnType.scale != columnMeta.scale
+            is DecimalColumnType -> {
+                // SQLite-JDBC driver returns COLUMN_SIZE that is sum of precision and scale
+                val adjustedColumnSize = if (dialect is SQLiteDialect && columnMeta.scale != null) {
+                    columnMeta.size - columnMeta.scale
+                } else {
+                    columnMeta.size
+                }
+                columnType.precision != adjustedColumnSize || columnType.scale != columnMeta.scale
+            }
             is CharColumnType -> columnType.colLength != columnMeta.size
             is VarCharColumnType -> columnType.colLength != columnMeta.size
             is BinaryColumnType -> if (dialect is PostgreSQLDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.PostgreSQL) {
@@ -553,7 +575,7 @@ abstract class SchemaUtilityApi {
 @InternalApi
 object TableUtils : SchemaUtilityApi() {
     /** Checks whether any of the [tables] have a sequence of foreign key constraints that cycle back to them. */
-    internal fun checkCycle(vararg tables: Table) = tables.toList().hasCycle()
+    internal fun checkCycle(vararg tables: Table) = tables.asList().hasCycle()
 
     /** Returns a list of [tables] sorted according to the targets of their foreign key constraints, if any exist. */
     fun sortTablesByReferences(tables: Iterable<Table>): List<Table> = tables.sortByReferences()

@@ -1,4 +1,5 @@
 package org.jetbrains.exposed.v1.tests.shared.entities
+
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.ULongIdTable
@@ -8,9 +9,12 @@ import org.jetbrains.exposed.v1.dao.with
 import org.jetbrains.exposed.v1.jdbc.exists
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
 
+@Tag(MISSING_R2DBC_TEST)
 class ULongIdTableEntityTest : DatabaseTestsBase() {
 
     @Test

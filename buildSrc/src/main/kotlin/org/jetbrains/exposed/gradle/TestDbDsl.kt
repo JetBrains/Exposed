@@ -24,7 +24,9 @@ class TestDb(val name: String) {
 
     internal val dependencies = mutableListOf<String>()
 
-    internal val ignoresSpringTests = name != "h2_v2"
+    internal fun ignoresSpringTests(dialect: String): Boolean {
+        return name != "h2_v2" || dialect != "H2_V2"
+    }
 
     inner class DependencyBlock {
         fun dependency(dependencyNotation: String) {
@@ -97,7 +99,7 @@ private fun Project.createDbTestTaskByDialect(db: TestDb, taskName: String, dial
         systemProperties["exposed.test.dialects"] = dialect
         outputs.cacheIf { false }
 
-        if (db.ignoresSpringTests) {
+        if (db.ignoresSpringTests(dialect)) {
             filter {
                 // exclude all test classes in (spring-transaction, exposed-spring-boot-starter) modules
                 exclude("org/jetbrains/exposed/v1/spring/*", "org/jetbrains/exposed/v1/jdbc-template/*")
@@ -146,8 +148,8 @@ private fun Project.configureCompose(db: TestDb) {
     val startDb = rootProject.tasks.getByName("${db.container}ComposeUp")
     val stopDb = rootProject.tasks.getByName("${db.container}ComposeDownForced")
 
-    val startCompose = rootProject.tasks.findByName("startCompose") ?: rootProject.tasks.create("startCompose")
-    val stopCompose = rootProject.tasks.findByName("stopCompose") ?: rootProject.tasks.create("stopCompose")
+    val startCompose = rootProject.tasks.findByName("startCompose") ?: rootProject.tasks.register("startCompose").get()
+    val stopCompose = rootProject.tasks.findByName("stopCompose") ?: rootProject.tasks.register("stopCompose").get()
 
     startCompose.dependsOn(startDb)
     stopCompose.dependsOn(stopDb)

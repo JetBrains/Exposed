@@ -28,7 +28,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.getInt
 import org.jetbrains.exposed.v1.r2dbc.tests.getString
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -69,30 +69,6 @@ class TransactionExecTests : R2dbcDatabaseTestsBase() {
             testInsertAndSelectInSingleExec(testDb)
         }
     }
-
-    // r2dbc-mysql does NOT support allowMultiQueries option: https://github.com/asyncer-io/r2dbc-mysql/issues/291
-//    @Test
-//    fun testExecWithMultiStatementQueryUsingMySQL() = runTest {
-//        Assume.assumeTrue(TestDB.ALL_MYSQL_MARIADB.containsAll(TestDB.enabledDialects()))
-//
-//        val dialect = TestDB.enabledDialects().first()
-//        val extra = if (dialect in TestDB.ALL_MARIADB) "?" else ""
-//        val db = R2dbcDatabase.connect(
-//            dialect.connection.invoke().plus("$extra&allowMultiQueries=true")
-//        )
-//
-//        suspendTransaction(db = db) {
-//            try {
-//                SchemaUtils.create(ExecTable)
-//
-//                testInsertAndSelectInSingleExec(dialect)
-//            } finally {
-//                SchemaUtils.drop(ExecTable)
-//            }
-//        }
-//
-//        TransactionManager.closeAndUnregister(db)
-//    }
 
     @OptIn(InternalApi::class)
     private suspend fun R2dbcTransaction.testInsertAndSelectInSingleExec(testDb: TestDB) {

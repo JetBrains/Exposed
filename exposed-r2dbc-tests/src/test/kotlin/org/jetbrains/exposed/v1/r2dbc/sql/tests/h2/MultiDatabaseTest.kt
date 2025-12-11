@@ -23,13 +23,12 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.jetbrains.exposed.v1.r2dbc.transactions.transactionManager
-import org.junit.After
-import org.junit.Assume
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import java.util.concurrent.Executors
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class MultiDatabaseTest {
 
@@ -51,17 +50,12 @@ class MultiDatabaseTest {
     }
     private var currentDB: R2dbcDatabase? = null
 
-    @Before
+    @BeforeEach
     fun before() {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
-        if (TransactionManager.isInitialized()) {
-            currentDB = TransactionManager.currentOrNull()?.db
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        TransactionManager.currentOrNull()?.db?.let {
+            currentDB = it
         }
-    }
-
-    @After
-    fun after() {
-        TransactionManager.resetCurrent(currentDB?.transactionManager)
     }
 
     @Test
@@ -188,15 +182,15 @@ class MultiDatabaseTest {
     fun testCoroutinesWithMultiDb() = runTest {
         withContext(Dispatchers.IO) {
             suspendTransaction(db1) {
-                val trOuterId = this.id
+                val trOuterId = this.transactionId
                 SchemaUtils.create(DMLTestsData.Cities)
                 assertTrue(DMLTestsData.Cities.selectAll().empty())
                 DMLTestsData.Cities.insert {
                     it[DMLTestsData.Cities.name] = "city1"
                 }
 
-                inTopLevelSuspendTransaction(db2.transactionManager.defaultIsolationLevel!!, db = db2) {
-                    assertFalse(this.id == trOuterId)
+                inTopLevelSuspendTransaction(db2) {
+                    assertFalse(this.transactionId == trOuterId)
                     assertFalse(DMLTestsData.Cities.exists())
                     SchemaUtils.create(DMLTestsData.Cities)
                     DMLTestsData.Cities.insert {
@@ -209,7 +203,7 @@ class MultiDatabaseTest {
                     assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
 
                     suspendTransaction(db1) {
-                        assertTrue(this.id == trOuterId)
+                        assertTrue(this.transactionId == trOuterId)
                         assertEquals(1L, DMLTestsData.Cities.selectAll().count())
                         DMLTestsData.Cities.insert {
                             it[DMLTestsData.Cities.name] = "city4"
@@ -239,7 +233,8 @@ class MultiDatabaseTest {
     fun `when default database is not explicitly set - should return the latest connection`() {
         db1
         db2
-        assertEquals(TransactionManager.defaultDatabase, db2)
+        assertNull(TransactionManager.defaultDatabase)
+        assertEquals(TransactionManager.primaryDatabase, db2)
     }
 
     @Test
@@ -248,6 +243,7 @@ class MultiDatabaseTest {
         db2
         TransactionManager.defaultDatabase = db1
         assertEquals(TransactionManager.defaultDatabase, db1)
+        assertEquals(TransactionManager.primaryDatabase, db1)
         TransactionManager.defaultDatabase = null
     }
 
@@ -257,7 +253,9 @@ class MultiDatabaseTest {
         db2
         TransactionManager.defaultDatabase = db1
         TransactionManager.closeAndUnregister(db1)
-        assertEquals(TransactionManager.defaultDatabase, db2)
+        // closeAndUnregister() also removes the db from any internal storage, like default if set
+        assertNull(TransactionManager.defaultDatabase)
+        assertEquals(TransactionManager.primaryDatabase, db2)
         TransactionManager.defaultDatabase = null
     }
 

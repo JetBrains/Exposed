@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.migration.r2dbc
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import nl.altindag.log.LogCaptor
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
@@ -22,7 +23,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.properties.Delegates
 import kotlin.test.assertNull
 import org.jetbrains.exposed.v1.datetime.date as kotlinDatetimeDate
@@ -412,5 +413,37 @@ class DatabaseMigrationTests : R2dbcDatabaseTestsBase() {
             val statements = MigrationUtils.statementsRequiredForDatabaseMigration(testTable)
             assertTrue(statements.isEmpty())
         }
+    }
+
+    @Test
+    fun testMetadataRetrievalQueriesAreNotLogged() {
+        val tester = object : IntIdTable("tester") {
+            val amount = integer("amount")
+        }
+
+        val logCaptor = LogCaptor.forName(exposedLogger.name)
+
+        withTables(tester) {
+            logCaptor.setLogLevelToDebug()
+
+            // All R2DBC rely on SQL string + connection execution
+            currentDialectMetadataTest.existingPrimaryKeys(tester)
+            currentDialectMetadataTest.existingIndices(tester)
+            currentDialectMetadataTest.tableColumns(tester)
+            currentDialectMetadataTest.allTablesNames()
+            currentDialectMetadataTest.columnConstraints(tester)
+            connection().metadata { getDatabaseDialectMode() }
+            if (currentDialectTest.supportsColumnTypeChange) {
+                currentDialectMetadataTest.existingCheckConstraints(tester)
+            }
+            currentDialectMetadataTest.sequences()
+            currentDialectMetadataTest.existingSequences(tester)
+
+            assertTrue(logCaptor.debugLogs.isEmpty())
+        }
+
+        logCaptor.resetLogLevel()
+        logCaptor.clearLogs()
+        logCaptor.close()
     }
 }

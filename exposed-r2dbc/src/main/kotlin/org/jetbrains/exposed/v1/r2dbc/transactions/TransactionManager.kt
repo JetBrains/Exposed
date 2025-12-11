@@ -1,27 +1,21 @@
 package org.jetbrains.exposed.v1.r2dbc.transactions
 
 import io.r2dbc.spi.IsolationLevel
-import io.r2dbc.spi.R2dbcException
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.InternalApi
-import org.jetbrains.exposed.v1.core.SqlLogger
 import org.jetbrains.exposed.v1.core.Transaction
-import org.jetbrains.exposed.v1.core.exposedLogger
 import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.DatabasesManagerImpl
+import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
-import org.jetbrains.exposed.v1.r2dbc.ExposedR2dbcException
+import org.jetbrains.exposed.v1.core.transactions.TransactionManagersContainerImpl
+import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextElement
+import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolder
+import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolderImpl
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
-import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedConnection
-import org.jetbrains.exposed.v1.r2dbc.transactions.mtc.MappedTransactionContext
-import java.util.concurrent.ThreadLocalRandom
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -48,16 +42,48 @@ class TransactionManager(
     override var defaultReadOnly: Boolean = db.config.defaultReadOnly
 
     /** A unique key for storing coroutine context elements, as [TransactionContextHolder]. */
+    @OptIn(InternalApi::class)
     private val contextKey = object : CoroutineContext.Key<TransactionContextHolder> {}
 
-    internal suspend fun getCurrentContextTransaction(): R2dbcTransaction? {
-        return currentCoroutineContext()[contextKey]?.transaction
+    /**
+     * Creates a coroutine context for the given transaction.
+     *
+     * @param transaction The transaction for which to create the coroutine context.
+     * @return A [CoroutineContext] containing the transaction holder and context element.
+     * @throws IllegalStateException if the transaction's manager doesn't match this manager.
+     */
+    internal fun createTransactionContext(transaction: Transaction): CoroutineContext {
+        if (transaction.transactionManager != this) {
+            error(
+                "TransactionManager must create transaction context only for own transactions. " +
+                    "Transaction manager of ${db.url} tried to create transaction context for ${transaction.db.url}"
+            )
+        }
+        @OptIn(InternalApi::class)
+        return TransactionContextHolderImpl(transaction, contextKey) + TransactionContextElement(transaction)
     }
 
-    internal suspend fun createTransactionContext(transaction: R2dbcTransaction?): CoroutineContext {
-        val currentTransaction = transaction ?: getCurrentContextTransaction()
-        MappedTransactionContext.setTransaction(currentTransaction)
-        return TransactionContextHolder(currentTransaction, contextKey)
+    /**
+     * Returns the current R2DBC transaction from the coroutine context, or null if none exists.
+     *
+     * This method performs type checking to ensure the transaction in the context is actually
+     * an [R2dbcTransaction]. If a non-R2DBC transaction is found in the context, an error is thrown
+     * to prevent type confusion between JDBC and R2DBC transactions.
+     *
+     * @return The current [R2dbcTransaction] from the coroutine context, or null if no transaction exists
+     * @throws IllegalStateException If the transaction in the context is not an [R2dbcTransaction]
+     */
+    @OptIn(InternalApi::class)
+    internal suspend fun getCurrentContextTransaction(): R2dbcTransaction? {
+        val transaction = currentCoroutineContext()[contextKey]?.transaction
+        return when {
+            transaction == null -> null
+            transaction is R2dbcTransaction -> transaction
+            else -> throw IllegalStateException(
+                "Expected R2dbcTransaction in coroutine context but found ${transaction::class.simpleName}. " +
+                    "This may indicate mixing JDBC and R2DBC transactions incorrectly."
+            )
+        }
     }
 
     override fun toString(): String {
@@ -71,58 +97,60 @@ class TransactionManager(
      * an existing transaction with the database not configured to `useNestedTransactions`.
      */
     fun newTransaction(
-        isolation: IsolationLevel = defaultIsolationLevel!!,
-        readOnly: Boolean = defaultReadOnly,
+        isolation: IsolationLevel? = defaultIsolationLevel,
+        readOnly: Boolean? = defaultReadOnly,
         outerTransaction: R2dbcTransaction? = null
     ): R2dbcTransaction {
         val transaction = outerTransaction?.takeIf { !db.useNestedTransactions }
             ?: R2dbcTransaction(
                 R2dbcLocalTransaction(
                     db = db,
-                    readOnly = outerTransaction?.readOnly ?: readOnly,
+                    readOnly = outerTransaction?.readOnly ?: readOnly ?: false,
                     transactionIsolation = outerTransaction?.transactionIsolation ?: isolation,
                     setupTxConnection = setupTxConnection,
                     outerTransaction = outerTransaction,
                 ),
             )
 
-        return transaction.apply { bindTransactionToThread(this) }
+        return transaction
     }
 
     override fun currentOrNull(): R2dbcTransaction? {
-        return MappedTransactionContext.getTransactionOrNull()
-    }
-
-    override fun bindTransactionToThread(transaction: Transaction?) {
-        if (transaction != null) {
-            MappedTransactionContext.setTransaction(transaction as R2dbcTransaction)
-        } else {
-            MappedTransactionContext.clean()
-        }
+        @OptIn(InternalApi::class)
+        return ThreadLocalTransactionsStack.getTransactionOrNull(db) as R2dbcTransaction?
     }
 
     companion object {
+        @OptIn(InternalApi::class)
+        private val databases = object : DatabasesManagerImpl<R2dbcDatabase>() {}
+
+        @OptIn(InternalApi::class)
+        private val transactionManagers = object : TransactionManagersContainerImpl<R2dbcDatabase>(databases) {
+            override fun transactionClass(): Class<out Transaction> = R2dbcTransaction::class.java
+        }
+
+        /**
+         * The currently active database, which is either the default database or the last instance created.
+         * Returns `null` if no database has been registered.
+         */
+        val primaryDatabase: R2dbcDatabase?
+            get() = databases.getPrimaryDatabase()
+
         /**
          * The database to use by default in all transactions.
          *
-         * **Note** If this value is not set, the last [R2dbcDatabase] instance created will be used.
+         * **Note:** The default database could be null until it is set explicitly.
+         * Use `primaryDatabase` to get the default database if it is set, or the last registered database otherwise.
          */
         var defaultDatabase: R2dbcDatabase?
-            @Synchronized
-            @OptIn(InternalApi::class)
-            get() = CoreTransactionManager.getDefaultDatabaseOrFirst() as? R2dbcDatabase
-
-            @Synchronized
-            @OptIn(InternalApi::class)
-            set(value) {
-                CoreTransactionManager.setDefaultDatabase(value)
-            }
+            get() = databases.getDefaultDatabase()
+            set(value) = databases.setDefaultDatabase(value)
 
         /** Associates the provided [database] with a specific [manager]. */
         @Synchronized
-        fun registerManager(database: R2dbcDatabase, manager: TransactionManager) {
+        fun registerManager(database: R2dbcDatabase, manager: TransactionManagerApi) {
             @OptIn(InternalApi::class)
-            CoreTransactionManager.registerDatabaseManager(database, manager)
+            transactionManagers.registerDatabaseManager(database, manager)
         }
 
         /**
@@ -132,39 +160,14 @@ class TransactionManager(
         @Synchronized
         fun closeAndUnregister(database: R2dbcDatabase) {
             @OptIn(InternalApi::class)
-            CoreTransactionManager.closeAndUnregisterDatabase(database)
+            transactionManagers.closeAndUnregisterDatabase(database)
         }
-
-        /**
-         * Returns the [TransactionManager] instance that is associated with the provided [database],
-         * or `null` if  a manager has not been registered for the [database].
-         *
-         * **Note** If the provided [database] is `null`, this will return the current thread's [TransactionManager]
-         * instance, which may not be initialized if `Database.connect()` was not called at some point previously.
-         */
-        fun managerFor(database: R2dbcDatabase?): TransactionManager? = if (database != null) {
-            @OptIn(InternalApi::class)
-            CoreTransactionManager.getDatabaseManager(database) as? TransactionManager
-        } else {
-            manager
-        }
-
-        /** The current thread's [TransactionManager] instance. */
-        val manager: TransactionManager
-            @OptIn(InternalApi::class)
-            get() = CoreTransactionManager.getCurrentThreadManager() as TransactionManager
-
-        /** Sets the current thread's copy of the [TransactionManager] instance to the specified [manager]. */
-        fun resetCurrent(manager: TransactionManager?) {
-            @OptIn(InternalApi::class)
-            CoreTransactionManager.resetCurrentThreadManager(manager)
-        }
-
-        /** Returns the current [R2dbcTransaction], or creates a new transaction with the provided [isolation] level. */
-        fun currentOrNew(isolation: IsolationLevel): R2dbcTransaction = currentOrNull() ?: manager.newTransaction(isolation)
 
         /** Returns the current [R2dbcTransaction], or `null` if none exists. */
-        fun currentOrNull(): R2dbcTransaction? = manager.currentOrNull()
+        fun currentOrNull(): R2dbcTransaction? {
+            @OptIn(InternalApi::class)
+            return ThreadLocalTransactionsStack.getTransactionIsInstance(R2dbcTransaction::class.java)
+        }
 
         /**
          * Returns the current [R2dbcTransaction].
@@ -173,24 +176,51 @@ class TransactionManager(
          */
         fun current(): R2dbcTransaction = currentOrNull() ?: error("No transaction in context.")
 
-        /** Whether any [TransactionManager] instance has been initialized by a database. */
-        fun isInitialized(): Boolean {
-            @OptIn(InternalApi::class)
-            return CoreTransactionManager.getDefaultDatabaseOrFirst() != null
-        }
+        /**
+         * Returns the [TransactionManager] instance associated with the provided [database].
+         *
+         * @param database Database instance for which to retrieve the transaction manager.
+         * @return The [TransactionManager] associated with the database.
+         * @throws IllegalStateException if no transaction manager is registered for the given database.
+         */
+        fun managerFor(database: R2dbcDatabase): TransactionManager =
+            transactionManagers.getTransactionManager(database)?.let { it as TransactionManager } ?: error("No transaction manager for db $database")
+
+        /**
+         * Returns the [TransactionManager] for the current context.
+         *
+         * This property attempts to resolve the transaction manager in the following order:
+         * 1. From the current transaction, if one exists
+         * 2. From the current database, if one is set
+         *
+         * @throws IllegalStateException if no transaction manager can be found in either the current
+         *         transaction or the current database.
+         */
+        val manager: TransactionManager
+            get() = currentOrNull()?.transactionManager
+                ?: primaryDatabase?.transactionManager
+                ?: error("No transaction manager found")
+
+        /** Returns the current [R2dbcTransaction], or creates a new transaction with the provided [isolation] level. */
+        fun currentOrNew(isolation: IsolationLevel? = null): R2dbcTransaction = currentOrNull()
+            ?: manager.newTransaction(isolation)
     }
 
     private class R2dbcLocalTransaction(
         override val db: R2dbcDatabase,
         private val setupTxConnection:
         ((R2dbcExposedConnection<*>, R2dbcTransactionInterface) -> Unit)?,
-        override val transactionIsolation: IsolationLevel,
+        override val transactionIsolation: IsolationLevel?,
         override val readOnly: Boolean,
         override val outerTransaction: R2dbcTransaction?,
     ) : R2dbcTransactionInterface {
 
+        override val transactionManager: TransactionManagerApi
+            get() = db.transactionManager
+
         private var connectionLazy: R2dbcExposedConnection<*>? = null
 
+        @Suppress("NestedBlockDepth")
         private suspend fun getConnection(): R2dbcExposedConnection<*> = outerTransaction?.connection()
             ?.also {
                 if (useSavePoints) {
@@ -201,10 +231,12 @@ class TransactionManager(
                 @Suppress("TooGenericExceptionCaught")
                 try {
                     setupTxConnection?.invoke(this, this@R2dbcLocalTransaction) ?: run {
-                        setTransactionIsolation(this@R2dbcLocalTransaction.transactionIsolation)
-                        setReadOnly(this@R2dbcLocalTransaction.readOnly)
-                        // potentially redundant if R2dbcConnectionImpl calls beginTransaction(), which disables autoCommit
-                        setAutoCommit(false)
+                        setTransactionDefinition(
+                            R2dbcTransactionDefinition(
+                                this@R2dbcLocalTransaction.transactionIsolation,
+                                this@R2dbcLocalTransaction.readOnly,
+                            )
+                        )
                     }
                 } catch (e: Exception) {
                     try {
@@ -245,17 +277,13 @@ class TransactionManager(
         }
 
         override suspend fun close() {
-            try {
-                if (!useSavePoints) {
-                    if (connectionLazy.isInitialized()) connection().close()
-                } else {
-                    savepoint?.let {
-                        connection().releaseSavepoint(it)
-                        savepoint = null
-                    }
+            if (!useSavePoints) {
+                if (connectionLazy.isInitialized()) connection().close()
+            } else {
+                savepoint?.let {
+                    connection().releaseSavepoint(it)
+                    savepoint = null
                 }
-            } finally {
-                MappedTransactionContext.setTransaction(outerTransaction)
             }
         }
 
@@ -271,301 +299,5 @@ class TransactionManager(
                 }
                 return "Exposed_savepoint_$nestedLevel"
             }
-    }
-}
-
-/**
- * Singleton coroutine context element storing its associated transaction
- * & the unique key for its [TransactionManager.contextKey].
- */
-private data class TransactionContextHolder(
-    val transaction: R2dbcTransaction?,
-    override val key: CoroutineContext.Key<*>
-) : CoroutineContext.Element
-
-@Deprecated(
-    message = "This method overload will be removed in release 1.0.0. It should be replaced with either overload" +
-        "that does not take a `CoroutineContext` as an argument.",
-    level = DeprecationLevel.ERROR
-)
-@Suppress("UnusedParameter")
-suspend fun <T> suspendTransaction(
-    context: CoroutineContext? = null,
-    transactionIsolation: IsolationLevel? = null,
-    readOnly: Boolean? = null,
-    db: R2dbcDatabase? = null,
-    statement: suspend R2dbcTransaction.() -> T
-): T = suspendTransaction(
-    transactionIsolation ?: db.transactionManager.defaultIsolationLevel ?: error("Default transaction isolation not set"),
-    readOnly ?: db.transactionManager.defaultReadOnly,
-    db,
-    statement
-)
-
-@Deprecated(
-    message = "This method overload will be removed in release 1.0.0. It should be replaced with either overload" +
-        "that does not take a `CoroutineContext` as an argument, and that is wrapped with `async { }`.",
-    level = DeprecationLevel.ERROR
-)
-@Suppress("UnusedParameter")
-suspend fun <T> suspendTransactionAsync(
-    context: CoroutineContext? = null,
-    db: R2dbcDatabase? = null,
-    transactionIsolation: IsolationLevel? = null,
-    readOnly: Boolean? = null,
-    statement: suspend R2dbcTransaction.() -> T
-): Deferred<T> = CompletableDeferred(
-    suspendTransaction(
-        transactionIsolation ?: db.transactionManager.defaultIsolationLevel ?: error("Default transaction isolation not set"),
-        readOnly ?: db.transactionManager.defaultReadOnly,
-        db,
-        statement
-    )
-)
-
-/**
- * Creates a transaction then calls the [statement] block with this transaction as its receiver and returns the result.
- *
- * **Note** If the database value [db] is not set, the value used will be either the last [R2dbcDatabase] instance created
- * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
- *
- * @return The final result of the [statement] block.
- */
-suspend fun <T> suspendTransaction(db: R2dbcDatabase? = null, statement: suspend R2dbcTransaction.() -> T): T {
-    val defaultIsolation = db.transactionManager.defaultIsolationLevel
-    require(defaultIsolation != null) { "A default isolation level for this transaction has not been set" }
-
-    return suspendTransaction(
-        defaultIsolation,
-        db.transactionManager.defaultReadOnly,
-        db,
-        statement
-    )
-}
-
-/**
- * Creates a transaction with the specified [transactionIsolation] and [readOnly] settings, then calls
- * the [statement] block with this transaction as its receiver and returns the result.
- *
- * **Note** If the database value [db] is not set, the value used will be either the last [R2dbcDatabase] instance created
- * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
- */
-suspend fun <T> suspendTransaction(
-    transactionIsolation: IsolationLevel,
-    readOnly: Boolean = false,
-    db: R2dbcDatabase? = null,
-    statement: suspend R2dbcTransaction.() -> T
-): T = keepAndRestoreTransactionRefAfterRun(db) {
-    val outer = TransactionManager.currentOrNull()
-
-    if (outer != null && (db == null || outer.db == db)) {
-        val outerManager = outer.db.transactionManager
-
-        val transaction = outerManager.newTransaction(transactionIsolation, readOnly, outer)
-        withTransactionContext(transaction) {
-            @Suppress("TooGenericExceptionCaught")
-            try {
-                transaction.statement().also {
-                    if (outer.db.useNestedTransactions) {
-                        transaction.commit()
-                    }
-                }
-            } catch (cause: R2dbcException) {
-                val currentStatement = transaction.currentStatement
-                transaction.rollbackLoggingException {
-                    exposedLogger.warn(
-                        "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
-                        it
-                    )
-                }
-                throw cause
-            } catch (cause: Throwable) {
-                if (outer.db.useNestedTransactions) {
-                    val currentStatement = transaction.currentStatement
-                    transaction.rollbackLoggingException {
-                        exposedLogger.warn(
-                            "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
-                            it
-                        )
-                    }
-                }
-                throw cause
-            }
-        }
-    } else {
-        db?.transactionManager?.getCurrentContextTransaction()?.let { transaction ->
-            withTransactionContext(transaction) {
-                transaction.statement().also {
-                    if (db.useNestedTransactions) {
-                        transaction.commit()
-                    }
-                }
-            }
-        }
-            ?: inTopLevelSuspendTransaction(
-                transactionIsolation,
-                readOnly,
-                db,
-                null,
-                statement
-            )
-    }
-}
-
-/**
- * Creates a transaction with the specified [transactionIsolation] and [readOnly] settings, then calls
- * the [statement] block with this transaction as its receiver and returns the result.
- *
- * **Note** All changes in this transaction will be committed at the end of the [statement] block, even if
- * it is nested and even if `R2dbcDatabaseConfig.useNestedTransactions` is set to `false`.
- *
- * **Note** If the database value [db] is not set, the value used will be either the last [R2dbcDatabase] instance created
- * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
- *
- * @return The final result of the [statement] block.
- */
-suspend fun <T> inTopLevelSuspendTransaction(
-    transactionIsolation: IsolationLevel,
-    readOnly: Boolean = false,
-    db: R2dbcDatabase? = null,
-    outerTransaction: R2dbcTransaction? = null,
-    statement: suspend R2dbcTransaction.() -> T
-): T {
-    suspend fun run(): T {
-        var attempts = 0
-        var intermediateDelay: Long = 0
-        var retryInterval: Long? = null
-
-        val outerManager = outerTransaction?.db.transactionManager.takeIf { it.currentOrNull() != null }
-
-        while (true) {
-            db?.let { db.transactionManager.let { m -> TransactionManager.resetCurrent(m) } }
-            val transaction = db.transactionManager.newTransaction(transactionIsolation, readOnly, outerTransaction)
-            val context = db.transactionManager.createTransactionContext(transaction)
-
-            @Suppress("TooGenericExceptionCaught")
-            try {
-                val answer: T
-                withContext(context) {
-                    transaction.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
-                    answer = transaction.statement()
-                    transaction.commit()
-                }
-                return answer
-            } catch (cause: R2dbcException) {
-                handleR2dbcException(cause, transaction, attempts)
-                attempts++
-                if (attempts >= transaction.maxAttempts) {
-                    throw cause
-                }
-
-                if (retryInterval == null) {
-                    retryInterval = transaction.getRetryInterval()
-                    intermediateDelay = transaction.minRetryDelay
-                }
-                // set delay value with an exponential backoff time period.
-                val retryDelay = when {
-                    transaction.minRetryDelay < transaction.maxRetryDelay -> {
-                        intermediateDelay += retryInterval * attempts
-                        ThreadLocalRandom.current().nextLong(intermediateDelay, intermediateDelay + retryInterval)
-                    }
-
-                    transaction.minRetryDelay == transaction.maxRetryDelay -> transaction.minRetryDelay
-                    else -> 0
-                }
-                exposedLogger.warn("Wait $retryDelay milliseconds before retrying")
-                try {
-                    delay(retryDelay)
-                } catch (cause: InterruptedException) {
-                    // Do nothing
-                }
-            } catch (cause: Throwable) {
-                val currentStatement = transaction.currentStatement
-                transaction.rollbackLoggingException {
-                    exposedLogger.warn(
-                        "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
-                        it
-                    )
-                }
-                throw cause
-            } finally {
-                TransactionManager.resetCurrent(outerManager)
-                closeStatementsAndConnection(transaction)
-            }
-        }
-    }
-
-    return keepAndRestoreTransactionRefAfterRun(db) {
-        run()
-    }
-}
-
-private suspend fun <T> keepAndRestoreTransactionRefAfterRun(db: R2dbcDatabase? = null, block: suspend () -> T): T {
-    val manager = db.transactionManager
-    val currentTransaction = manager.currentOrNull()
-    return try {
-        block()
-    } finally {
-        manager.bindTransactionToThread(currentTransaction)
-    }
-}
-
-internal suspend fun handleR2dbcException(cause: R2dbcException, transaction: R2dbcTransaction, attempts: Int) {
-    val exposedR2dbcException = cause as? ExposedR2dbcException
-    val queriesToLog = exposedR2dbcException?.causedByQueries()?.joinToString(";\n") ?: "${transaction.currentStatement}"
-    val message = "Transaction attempt #$attempts failed: ${cause.message}. Statement(s): $queriesToLog"
-    exposedR2dbcException?.contexts?.forEach {
-        transaction.interceptors.filterIsInstance<SqlLogger>().forEach { logger ->
-            logger.log(it, transaction)
-        }
-    }
-    exposedLogger.warn(message, cause)
-    transaction.rollbackLoggingException {
-        exposedLogger.warn("Transaction rollback failed: ${it.message}. See previous log line for statement", it)
-    }
-}
-
-internal suspend fun closeStatementsAndConnection(transaction: R2dbcTransaction) {
-    val currentStatement = transaction.currentStatement
-    @Suppress("TooGenericExceptionCaught")
-    try {
-        currentStatement?.let {
-            it.closeIfPossible()
-            transaction.currentStatement = null
-        }
-        transaction.closeExecutedStatements()
-    } catch (cause: Exception) {
-        exposedLogger.warn("Statements close failed", cause)
-    }
-    transaction.closeLoggingException {
-        exposedLogger.warn("Transaction close failed: ${it.message}. Statement: $currentStatement", it)
-    }
-}
-
-/**
- * The method creates context with provided transaction and runs code block within that context.
- *
- * @param transaction The transaction to be used in the context.
- * @param body The code block to be executed in the context.
- * @return The result of executing the code block.
- */
-internal suspend fun <T> withTransactionContext(transaction: R2dbcTransaction, body: suspend () -> T): T {
-    val outerTransaction = transaction.outerTransaction
-
-    val manager = transaction.db.transactionManager
-    val context = manager.createTransactionContext(transaction)
-
-    return try {
-        TransactionManager.resetCurrent(manager)
-        MappedTransactionContext.setTransaction(transaction)
-        withContext(context) {
-            body()
-        }
-    } finally {
-        outerTransaction
-            ?.let { MappedTransactionContext.setTransaction(it) }
-            ?: MappedTransactionContext.clean()
-
-        TransactionManager.resetCurrent(outerTransaction?.db.transactionManager)
     }
 }

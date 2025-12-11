@@ -3,12 +3,15 @@ package org.jetbrains.exposed.v1.tests.shared.entities
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.dml.DMLTestsData
-import org.junit.Test
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+@Tag(MISSING_R2DBC_TEST)
 class SelfReferenceTest {
 
     @Test

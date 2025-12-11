@@ -7,6 +7,7 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.exists
@@ -17,11 +18,11 @@ import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 class SequenceAutoIncrementTests : DatabaseTestsBase() {
-    @Before
+    @BeforeEach
     fun dropAllSequences() {
         withDb {
             if (currentDialectTest.supportsCreateSequence) {
@@ -38,7 +39,7 @@ class SequenceAutoIncrementTests : DatabaseTestsBase() {
 
     @Test
     fun testAddAutoIncrementToExistingColumn() {
-        withTables(excludeSettings = listOf(TestDB.SQLITE), MigrationTestsData.TableWithoutAutoIncrement) { testDb ->
+        withTables(MigrationTestsData.TableWithoutAutoIncrement) { testDb ->
             assertNoStatementsRequiredForMigration(MigrationTestsData.TableWithoutAutoIncrement)
 
             val statements = MigrationUtils.statementsRequiredForDatabaseMigration(MigrationTestsData.TableWithAutoIncrement, withLogs = false)
@@ -59,6 +60,7 @@ class SequenceAutoIncrementTests : DatabaseTestsBase() {
                     assertEquals(1, statements.size)
                     assertEquals(expectedCreateSequenceStatement("test_table_id_seq"), statements[0])
                 }
+                TestDB.SQLITE -> assertEquals(0, statements.size)
                 else -> {
                     assertEquals(1, statements.size)
                     val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
@@ -70,19 +72,23 @@ class SequenceAutoIncrementTests : DatabaseTestsBase() {
 
     @Test
     fun testAddAutoIncrementWithSequenceNameToExistingColumn() {
-        withTables(excludeSettings = listOf(TestDB.SQLITE), MigrationTestsData.TableWithoutAutoIncrement) {
+        withTables(MigrationTestsData.TableWithoutAutoIncrement) {
             assertNoStatementsRequiredForMigration(MigrationTestsData.TableWithoutAutoIncrement)
 
             val statements = MigrationUtils.statementsRequiredForDatabaseMigration(
                 MigrationTestsData.TableWithAutoIncrementSequenceName,
                 withLogs = false
             )
-            assertEquals(1, statements.size)
-            if (currentDialectTest.supportsCreateSequence) {
-                assertEquals(expectedCreateSequenceStatement(MigrationTestsData.SEQUENCE_NAME), statements[0])
+            if (currentDialectTest is SQLiteDialect) {
+                assertEquals(0, statements.size)
             } else {
-                val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
-                assertTrue(statements[0].equals("ALTER TABLE TEST_TABLE $alterColumnWord COLUMN ID BIGINT AUTO_INCREMENT NOT NULL", ignoreCase = true))
+                assertEquals(1, statements.size)
+                if (currentDialectTest.supportsCreateSequence) {
+                    assertEquals(expectedCreateSequenceStatement(MigrationTestsData.SEQUENCE_NAME), statements[0])
+                } else {
+                    val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
+                    assertTrue(statements[0].equals("ALTER TABLE TEST_TABLE $alterColumnWord COLUMN ID BIGINT AUTO_INCREMENT NOT NULL", ignoreCase = true))
+                }
             }
         }
     }
@@ -116,7 +122,7 @@ class SequenceAutoIncrementTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tableWithAutoIncrement) { testDb ->
+        withTables(tableWithAutoIncrement) { testDb ->
             assertNoStatementsRequiredForMigration(tableWithAutoIncrement)
 
             val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tableWithoutAutoIncrement, withLogs = false)
@@ -130,6 +136,7 @@ class SequenceAutoIncrementTests : DatabaseTestsBase() {
                     assertEquals(1, statements.size)
                     assertTrue(statements[0].equals(expectedDropSequenceStatement("test_table_id_seq"), ignoreCase = true))
                 }
+                TestDB.SQLITE -> assertEquals(0, statements.size)
                 else -> {
                     assertEquals(1, statements.size)
                     val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"

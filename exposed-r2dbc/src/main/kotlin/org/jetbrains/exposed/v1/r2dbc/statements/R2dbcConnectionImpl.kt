@@ -5,15 +5,20 @@ import io.r2dbc.spi.IsolationLevel
 import io.r2dbc.spi.Row
 import io.r2dbc.spi.RowMetadata
 import io.r2dbc.spi.Statement
+import io.r2dbc.spi.TransactionDefinition
 import io.r2dbc.spi.ValidationDepth
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitFirstOrNull
+import kotlinx.coroutines.reactive.awaitLast
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactive.collect
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
+import org.jetbrains.exposed.v1.core.transactions.withThreadLocalTransaction
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.OracleDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
@@ -25,7 +30,11 @@ import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedDatabaseMetadat
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcSavepoint
 import org.jetbrains.exposed.v1.r2dbc.statements.api.getBoolean
 import org.jetbrains.exposed.v1.r2dbc.statements.api.getString
+import org.jetbrains.exposed.v1.r2dbc.transactions.R2dbcTransactionDefinition
+import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.MetadataProvider
+import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.MySQLMetadata
+import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.OracleMetadata
 import org.reactivestreams.Publisher
 import java.util.*
 
@@ -78,6 +87,12 @@ class R2dbcConnectionImpl(
         withConnection { setTransactionIsolationLevel(value).awaitFirstOrNull() }
     }
 
+    private var transactionDefinition: TransactionDefinition? = null
+
+    override fun setTransactionDefinition(definition: TransactionDefinition?) {
+        transactionDefinition = definition
+    }
+
     override suspend fun commit() {
         withConnection {
             // this has side effect of enabling auto-commit ON, which may cause unexpected rollback behavior
@@ -97,6 +112,7 @@ class R2dbcConnectionImpl(
     override suspend fun close() {
         withConnection { close().awaitFirstOrNull() }
         localConnection = null
+        transactionDefinition = null
     }
 
     override suspend fun prepareStatement(
@@ -137,9 +153,8 @@ class R2dbcConnectionImpl(
 
             var i = -1
             while (++i < sql.length) {
-                val char = sql[i]
-                when {
-                    char == '?' && quoteStack.isEmpty() -> {
+                when (val char = sql[i]) {
+                    '?' if quoteStack.isEmpty() -> {
                         if (sql.getOrNull(i + 1) == '?') {
                             i++
                             append(sql.substring(lastPos, i))
@@ -149,7 +164,7 @@ class R2dbcConnectionImpl(
                         append("${sql.substring(lastPos, i)}${parameterMarker}${++paramCount}")
                         lastPos = i + 1
                     }
-                    char == '\'' || char == '\"' -> {
+                    '\'', '\"' -> {
                         when {
                             quoteStack.isEmpty() -> quoteStack.push(char)
                             quoteStack.peek() == char -> quoteStack.pop()
@@ -178,7 +193,7 @@ class R2dbcConnectionImpl(
         withConnection {
             val batch = createBatch()
             sqls.forEach { sql -> batch.add(sql) }
-            batch.execute().awaitFirstOrNull()
+            batch.execute().collect { }
         }
     }
 
@@ -208,16 +223,37 @@ class R2dbcConnectionImpl(
         metadataImpl!!.body()
     }
 
+    private val localConnectionLock = Mutex()
     private var localConnection: Connection? = null
 
     private suspend fun <T> withConnection(body: suspend Connection.() -> T): T {
-        if (localConnection == null) {
-            localConnection = connection.awaitFirst().also {
-                // this starts an explicit transaction with autoCommit mode off
-                it.beginTransaction().awaitFirstOrNull()
+        val acquiredConnection = localConnectionLock.withLock {
+            localConnection ?: connection.awaitLast().also { cx ->
+                // beginTransaction() starts an explicit transaction with autoCommit mode off
+                transactionDefinition
+                    ?.let { originalDefinition ->
+                        when (val definition = originalDefinition as? R2dbcTransactionDefinition) {
+                            is R2dbcTransactionDefinition if metadataProvider is OracleMetadata && definition.readOnly != null -> {
+                                // Oracle does not allow both isolation level + mutability to be set implicitly together;
+                                // instead it requires a specific order, with transaction isolation always set first.
+                                cx.beginTransaction(definition.toOracleDefinition()).awaitFirstOrNull()
+                                cx.executeSQL(metadataProvider.setReadOnlyMode(definition.readOnly))
+                            }
+                            is R2dbcTransactionDefinition if metadataProvider is MySQLMetadata && definition.isolationLevel != null -> {
+                                // MySQL/MariaDB driver would set level only on next-next transaction, not the 1 about to start
+                                cx.executeSQL(metadataProvider.setCurrentTransactionIsolation(definition.isolationLevel))
+                                cx.beginTransaction(definition).awaitFirstOrNull()
+                            }
+                            else -> cx.beginTransaction(originalDefinition).awaitFirstOrNull()
+                        }
+                    }
+                    ?: cx.beginTransaction().awaitFirstOrNull()
+
+                localConnection = cx
+                transactionDefinition = null
             }
         }
-        return localConnection!!.body()
+        return acquiredConnection.body()
     }
 }
 
@@ -245,18 +281,25 @@ internal suspend fun Connection.executeSQL(sqlQuery: String) {
     createStatement(sqlQuery).execute().awaitFirstOrNull()
 }
 
+@OptIn(InternalApi::class)
 internal suspend fun <T> Connection.executeSQL(
     sqlQuery: String,
     transform: (Row, RowMetadata) -> T
 ): List<T>? {
     if (sqlQuery.isEmpty()) return null
 
+    val currentTransaction = TransactionManager.current()
+
     return flow {
         createStatement(sqlQuery)
             .execute()
             .collect { row ->
                 row.map { row, metadata ->
-                    transform(row, metadata)
+                    // The current block is run in another thread outside of coroutine,
+                    // so that thread should also get the correct transaction into the thread local variables
+                    withThreadLocalTransaction(currentTransaction) {
+                        transform(row, metadata)
+                    }
                 }.collect { emit(it) }
             }
     }.toList()

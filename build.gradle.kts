@@ -11,6 +11,7 @@ plugins {
 
     alias(libs.plugins.dokka)
     alias(libs.plugins.maven.publish)
+    alias(libs.plugins.kover)
 }
 
 dokka {
@@ -35,6 +36,28 @@ dependencies {
     dokka(projects.exposed.exposedR2dbc)
     dokka(projects.exposed.exposedSpringBootStarter)
     dokka(projects.exposed.springTransaction)
+
+    // Kover aggregated coverage dependencies
+    // Include all source modules for coverage aggregation
+    kover(project(":exposed-core"))
+    kover(project(":exposed-dao"))
+    kover(project(":exposed-jodatime"))
+    kover(project(":exposed-java-time"))
+    kover(project(":spring-transaction"))
+    kover(project(":exposed-spring-boot-starter"))
+    kover(project(":exposed-jdbc"))
+    kover(project(":exposed-money"))
+    kover(project(":exposed-kotlin-datetime"))
+    kover(project(":exposed-crypt"))
+    kover(project(":exposed-json"))
+    kover(project(":exposed-migration-core"))
+    kover(project(":exposed-migration-jdbc"))
+    kover(project(":exposed-migration-r2dbc"))
+    kover(project(":exposed-r2dbc"))
+
+    // Include test modules to ensure their tests are executed and coverage is collected
+    kover(project(":exposed-tests"))
+    kover(project(":exposed-r2dbc-tests"))
 }
 
 repositories {
@@ -43,7 +66,11 @@ repositories {
 }
 
 allprojects {
-    if (this.name != "exposed-tests" && this.name != "exposed-r2dbc-tests" && this != rootProject) {
+    if (this.name != "exposed-tests" &&
+        this.name != "exposed-r2dbc-tests" &&
+        this.name != "exposed-jdbc-r2dbc-tests" &&
+        this != rootProject
+    ) {
         apply(plugin = "com.vanniktech.maven.publish")
         apply(plugin = "signing")
         this@allprojects.mavenPublishing {
@@ -58,7 +85,7 @@ allprojects {
 }
 
 apiValidation {
-    ignoredProjects.addAll(listOf("exposed-tests", "exposed-bom", "exposed-r2dbc-tests"))
+    ignoredProjects.addAll(listOf("exposed-tests", "exposed-bom", "exposed-r2dbc-tests", "exposed-jdbc-r2dbc-tests"))
 }
 
 subprojects {
@@ -73,6 +100,7 @@ subprojects {
     if (name == "exposed-bom") return@subprojects
 
     apply(plugin = rootProject.libs.plugins.jvm.get().pluginId)
+    apply(plugin = rootProject.libs.plugins.kover.get().pluginId)
 
     testDb("h2_v2") {
         withContainer = false
@@ -110,21 +138,12 @@ subprojects {
         }
     }
 
-    testDb("mariadb_v2") {
+    testDb("mariadb") {
         dialects("MARIADB")
         container = "mariadb"
         port = 3000
         dependencies {
-            dependency(rootProject.libs.maria.db2)
-        }
-    }
-
-    testDb("mariadb_v3") {
-        dialects("MARIADB")
-        container = "mariadb"
-        port = 3000
-        dependencies {
-            dependency(rootProject.libs.maria.db3)
+            dependency(rootProject.libs.mariadb)
         }
     }
 
@@ -132,7 +151,7 @@ subprojects {
         port = 3003
         dialects("ORACLE")
         dependencies {
-            dependency(rootProject.libs.oracle19)
+            dependency(rootProject.libs.oracle)
         }
     }
 
@@ -184,4 +203,24 @@ private fun preprocessPrivateGpgKey(key: String): String {
         .replace(prefix, "")
         .replace(suffix, "")
         .replace(" ", "\r\n") + delimiter + suffix
+}
+
+// Configure Kover for aggregated project coverage
+kover {
+    reports {
+        total {
+            // Generate HTML report
+            html {
+                onCheck.set(true)
+            }
+            // Generate XML report for CI/CD integration
+            xml {
+                onCheck.set(true)
+            }
+            // Generate verification report
+            verify {
+                onCheck.set(true)
+            }
+        }
+    }
 }

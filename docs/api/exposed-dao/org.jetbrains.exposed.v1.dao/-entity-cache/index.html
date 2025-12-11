@@ -1,22 +1,22 @@
 <!doctype html>
-<html class="no-js">
+<html class="no-js" lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
     <title>EntityCache</title>
-<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">    <script>var pathToRoot = "../../../";</script>
-    <script>document.documentElement.classList.replace("no-js","js");</script>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
     <script>const storage = localStorage.getItem("dokka-dark-mode")
-    if (storage == null) {
+      if (storage == null) {
         const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
         if (osDarkSchemePreferred === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    } else {
+      } else {
         const savedDarkMode = JSON.parse(storage)
-        if(savedDarkMode === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    }
+      }
     </script>
 <script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
 <script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
@@ -24,33 +24,31 @@
 <link href="../../../styles/main.css" rel="Stylesheet">
 <link href="../../../styles/prism.css" rel="Stylesheet">
 <link href="../../../styles/logo-styles.css" rel="Stylesheet">
-<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
 <link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
-<script type="text/javascript" src="../../../scripts/clipboard.js" async></script>
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
 <script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
 <script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
 <script type="text/javascript" src="../../../scripts/main.js" defer></script>
 <script type="text/javascript" src="../../../scripts/prism.js" async></script>
-<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script>
-<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer></script></head>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script></head>
 <body>
-    <div class="root">
-    <nav class="navigation theme-dark" id="navigation-wrapper">
-<a class="library-name--link" href="../../../index.html">
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
                     exposed
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
-        <div class="library-version" id="library-version">1.0.0-rc-1
+        <div class="library-version" id="library-version">1.0.0-rc-4
         </div>
         <div class="navigation-controls">
-        <div class="filter-section filter-section_loading" id="filter-section">
-                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":exposed-dao/main">jvm</button>
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":exposed-dao/main">jvm</button>
             <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
                 <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
-                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
-                    <div class="dropdown--header"><span>Platform filter</span>
-                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
                             <i class="ui-kit-icon ui-kit-icon_cross"></i>
                         </button>
                     </div>
@@ -64,45 +62,47 @@
                 </ul>
                 <div class="dropdown--overlay"></div>
             </div>
-        </div>
+        </ul>
             <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
             </button>
             <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
                 API
             </div>
         </div>
-    </nav>
-        <div id="container">
-            <div class="sidebar" id="leftColumn">
-                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
-                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox">
-                        <div class="dropdown--header">
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
                             <span>
                                     exposed
                             </span>
-                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
-                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
-                            </button>
-                        </div>
-                        <div class="sidebar--inner" id="sideMenu"></div>
-                    </ul>
-                    <div class="dropdown--overlay"></div>
-                </div>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
             </div>
-            <div id="main">
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
 <div class="main-content" data-page-type="classlike" id="content" pageids="exposed-dao::org.jetbrains.exposed.v1.dao/EntityCache///PointingToDeclaration//185616915">
   <div class="breadcrumbs"><a href="../../index.html">exposed-dao</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.v1.dao</a><span class="delimiter">/</span><span class="current">EntityCache</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Entity</span><wbr><span><span>Cache</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">EntityCache</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">transaction<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-transaction/index.html">Transaction</a></span></span><span class="token punctuation">)</span></div><p class="paragraph">Class responsible for the storage of <a href="../-entity/index.html">Entity</a> instances in a specific <a href="../../../exposed-dao/org.jetbrains.exposed.v1.dao/-entity-cache/transaction.html">transaction</a>.</p></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">EntityCache</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">transaction<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-transaction/index.html">Transaction</a></span></span><span class="token punctuation">)</span></div><p class="paragraph">Class responsible for the storage of <a href="../-entity/index.html">Entity</a> instances in a specific <a href="../../../exposed-dao/org.jetbrains.exposed.v1.dao/-entity-cache/--root--.html">transaction</a>.</p></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
     <div class="tabs-section-body">
       <div data-togglable="CONSTRUCTOR">
-        <h2 class="">Constructors</h2>
+        <h2 class="tableheader">Constructors</h2>
         <div class="table"><a data-name="-482616254%2FConstructors%2F185616915" anchor-label="EntityCache" id="-482616254%2FConstructors%2F185616915" data-filterable-set=":exposed-dao/main"></a>
-          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-entity-cache.html"><span>Entity</span><wbr><span><span>Cache</span></span></a></div>
@@ -119,9 +119,9 @@
         </div>
       </div>
       <div data-togglable="TYPE">
-        <h2 class="">Types</h2>
+        <h2 class="tableheader">Types</h2>
         <div class="table"><a data-name="1938790164%2FClasslikes%2F185616915" anchor-label="Companion" id="1938790164%2FClasslikes%2F185616915" data-filterable-set=":exposed-dao/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-companion/index.html"><span><span>Companion</span></span></a></div>
@@ -138,9 +138,9 @@
         </div>
       </div>
       <div data-togglable="PROPERTY">
-        <h2 class="">Properties</h2>
+        <h2 class="tableheader">Properties</h2>
         <div class="table"><a data-name="-1408197821%2FProperties%2F185616915" anchor-label="data" id="-1408197821%2FProperties%2F185616915" data-filterable-set=":exposed-dao/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="data.html"><span><span>data</span></span></a></div>
@@ -149,13 +149,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="data.html">data</a><span class="token operator">: </span><a href="https://docs.oracle.com/javase/8/docs/api/java/util/LinkedHashMap.html">LinkedHashMap</a><span class="token operator">&lt;</span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-id-table/index.html">IdTable</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-mutable-map/index.html">MutableMap</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><a href="../-entity/index.html">Entity</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">The mapping of <a href="../../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-id-table/index.html">IdTable</a>s to associated <a href="../-entity/index.html">Entity</a> instances (as a mapping of entity id values to entities).</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="data.html">data</a><span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/LinkedHashMap.html">LinkedHashMap</a><span class="token operator">&lt;</span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-id-table/index.html">IdTable</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-mutable-map/index.html">MutableMap</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><a href="../-entity/index.html">Entity</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">The mapping of <a href="../../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-id-table/index.html">IdTable</a>s to associated <a href="../-entity/index.html">Entity</a> instances (as a mapping of entity id values to entities).</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="1175361708%2FProperties%2F185616915" anchor-label="maxEntitiesToStore" id="1175361708%2FProperties%2F185616915" data-filterable-set=":exposed-dao/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="max-entities-to-store.html"><span>max</span><wbr><span>Entities</span><wbr><span>To</span><wbr><span><span>Store</span></span></a></div>
@@ -172,9 +172,9 @@
         </div>
       </div>
       <div data-togglable="FUNCTION">
-        <h2 class="">Functions</h2>
+        <h2 class="tableheader">Functions</h2>
         <div class="table"><a data-name="-827947163%2FFunctions%2F185616915" anchor-label="clear" id="-827947163%2FFunctions%2F185616915" data-filterable-set=":exposed-dao/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="clear.html"><span><span>clear</span></span></a></div>
@@ -189,7 +189,7 @@
             </div>
           </div>
 <a data-name="-891539758%2FFunctions%2F185616915" anchor-label="clearReferrersCache" id="-891539758%2FFunctions%2F185616915" data-filterable-set=":exposed-dao/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="clear-referrers-cache.html"><span>clear</span><wbr><span>Referrers</span><wbr><span><span>Cache</span></span></a></div>
@@ -204,7 +204,7 @@
             </div>
           </div>
 <a data-name="1015527747%2FFunctions%2F185616915" anchor-label="find" id="1015527747%2FFunctions%2F185616915" data-filterable-set=":exposed-dao/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="find.html"><span><span>find</span></span></a></div>
@@ -219,7 +219,7 @@
             </div>
           </div>
 <a data-name="162774921%2FFunctions%2F185616915" anchor-label="findAll" id="162774921%2FFunctions%2F185616915" data-filterable-set=":exposed-dao/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="find-all.html"><span>find</span><wbr><span><span>All</span></span></a></div>
@@ -234,7 +234,7 @@
             </div>
           </div>
 <a data-name="-1925766446%2FFunctions%2F185616915" anchor-label="flush" id="-1925766446%2FFunctions%2F185616915" data-filterable-set=":exposed-dao/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="flush.html"><span><span>flush</span></span></a></div>
@@ -249,7 +249,7 @@
             </div>
           </div>
 <a data-name="2110977583%2FFunctions%2F185616915" anchor-label="getOrPutReferrers" id="2110977583%2FFunctions%2F185616915" data-filterable-set=":exposed-dao/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="get-or-put-referrers.html"><span>get</span><wbr><span>Or</span><wbr><span>Put</span><wbr><span><span>Referrers</span></span></a></div>
@@ -264,7 +264,7 @@
             </div>
           </div>
 <a data-name="538572513%2FFunctions%2F185616915" anchor-label="getReferrers" id="538572513%2FFunctions%2F185616915" data-filterable-set=":exposed-dao/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="get-referrers.html"><span>get</span><wbr><span><span>Referrers</span></span></a></div>
@@ -279,7 +279,7 @@
             </div>
           </div>
 <a data-name="1726474592%2FFunctions%2F185616915" anchor-label="remove" id="1726474592%2FFunctions%2F185616915" data-filterable-set=":exposed-dao/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="remove.html"><span><span>remove</span></span></a></div>
@@ -294,7 +294,7 @@
             </div>
           </div>
 <a data-name="-2006756017%2FFunctions%2F185616915" anchor-label="scheduleInsert" id="-2006756017%2FFunctions%2F185616915" data-filterable-set=":exposed-dao/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="schedule-insert.html"><span>schedule</span><wbr><span><span>Insert</span></span></a></div>
@@ -309,7 +309,7 @@
             </div>
           </div>
 <a data-name="1034862911%2FFunctions%2F185616915" anchor-label="scheduleUpdate" id="1034862911%2FFunctions%2F185616915" data-filterable-set=":exposed-dao/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="schedule-update.html"><span>schedule</span><wbr><span><span>Update</span></span></a></div>
@@ -324,7 +324,7 @@
             </div>
           </div>
 <a data-name="-349204754%2FFunctions%2F185616915" anchor-label="store" id="-349204754%2FFunctions%2F185616915" data-filterable-set=":exposed-dao/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao/main" data-filterable-set=":exposed-dao/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="store.html"><span><span>store</span></span></a></div>
@@ -344,17 +344,21 @@
   </div>
 </div>
     <div class="footer">
-        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
-        <span>© 2025 Copyright</span>
-        <span class="pull-right">
-            <span>Generated by </span>
-            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
-                <span>dokka</span>
-            </a>
-        </span>
-    </div>
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2025 Copyright</div>
+                </div>
             </div>
         </div>
     </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

@@ -26,8 +26,8 @@ If you need to execute a transaction asynchronously or within a coroutine, use a
 
 ## Suspend-based transaction
 
-Use [`suspendTansaction()`](https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc.transactions/suspend-transaction.html)
-to perform non-blocking operations in coroutine-based applications:
+Use [`suspendTransaction()`](https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc.transactions/suspend-transaction.html)
+from `exposed-r2dbc` to perform non-blocking operations in coroutine-based applications:
 
 ```kotlin
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
@@ -36,6 +36,15 @@ suspendTransaction {
     // DSL/DAO operations go here
 }
 ```
+
+For compatibility with JDBC drivers, a [`suspendTransaction()`](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc.transactions/suspend-transaction.html)
+is also available to call suspend functions alongside blocking database operations.
+
+The behavior of both these functions match that of `transaction()`, but with their `statement` parameter accepting suspend functions.
+To pass additional context to either `suspendTransaction()`, wrap it in a coroutine builder function, like
+[`withContext()`](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-context.html)
+or [`async()`](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/async.html).
+
 
 ## Accessing returned values
 
@@ -107,14 +116,18 @@ changes persist to the same database and what cross-database references are proh
 
 ## Setting a default database
 
-A transaction block without parameters uses the default database or the latest _connected_ database.
-
 To set the default database explicitly, use the `TransactionManager.defaultDatabase` property:
 
 ```kotlin
 val db = Database.connect()
 TransactionManager.defaultDatabase = db
 ```
+
+Retrieving this `defaultDatabase` property will return the set value, or `null` if no value was provided.
+
+A transaction block without parameters uses the default database or the latest _connected_ database.
+To retrieve and check the `Database` instance that would be used by a transaction block in this case, get the
+`TransactionManager.primaryDatabase` property.
 
 ## Using nested transactions
 
@@ -178,6 +191,11 @@ block, releasing them on exit.
 
 > Using `SAVEPOINT` may affect performance. For more details, refer to your database documentation.
 
+<note>
+<code>suspendTransaction()</code> from <code>exposed-jdbc</code> uses the same nesting behavior logic as <code>transaction()</code>
+detailed above in this section.
+</note>
+
 ## Using savepoints
 
 To roll back to a specific point without affecting the entire transaction, you can set a savepoint through the
@@ -198,7 +216,7 @@ To manually create a savepoint within a transaction, use the `.setSavepoint()` m
 ## Advanced parameters and usage
 
 For specific functionality, transactions can be created with the additional
-parameters: `transactionIsolation`, `readOnly`, `db`, `maxAttempts`, and `queryTimeout`:
+parameters: `db`, `transactionIsolation`, `readOnly`, `maxAttempts`, and `queryTimeout`:
 
 <tabs group="connectivity">
     <tab id="transaction" title="JDBC" group-key="jdbc">
@@ -229,11 +247,16 @@ parameters: `transactionIsolation`, `readOnly`, `db`, `maxAttempts`, and `queryT
     </tab>
 </tabs>
 
+### `db`
+
+The `db` parameter is optional and is used to select the database where the transaction should be
+settled. This is useful when [working with multiple databases](#working-with-multiple-databases).
+
 ### `transactionIsolation`
 
 The `transactionIsolation` parameter specifies what is supposed to happen when
 multiple transactions execute concurrently on the database. This value is sent to the database where it is taken 
-into account.
+into account. By default, it is set to use the value provided to the database's transaction manager configuration.
 
 The allowed values for JDBC connections are defined in `java.sql.Connection` and
 for R2DBC connections in `io.r2dbc.spi.IsolationLevel`.
@@ -248,19 +271,19 @@ for R2DBC connections in `io.r2dbc.spi.IsolationLevel`.
 : Allows uncommitted changes from one transaction to affect
 a read in another transaction (a "dirty read").
 
-`TRANSACTION_READ_COMMITTED`
+`TRANSACTION_READ_COMMITTED` (default, except for MySql and SQLite)
 : This setting prevents dirty reads from occurring, but still allows non-repeatable
 reads to occur. A _non-repeatable read_ is when a transaction ("Transaction A") reads a row from the database, another
 transaction ("Transaction B") changes the row, and Transaction A reads the row again, resulting in an inconsistency.
 
-`TRANSACTION_REPEATABLE_READ` (default)
+`TRANSACTION_REPEATABLE_READ` (default for MySql)
 : Prevents both dirty and non-repeatable
 reads, but still allows for phantom reads. A _phantom read_ is when a transaction ("Transaction A") selects a list of
 rows through a `WHERE` clause, another transaction ("Transaction B") performs an `INSERT` or `DELETE` with a row that
 satisfies Transaction A's `WHERE` clause, and Transaction A selects using the same WHERE clause again, resulting in an
 inconsistency.
 
-`TRANSACTION_SERIALIZABLE`
+`TRANSACTION_SERIALIZABLE` (default for SQLite)
 : Prevents dirty reads, non-repeatable reads, and phantom reads.
 
 {type="wide"}
@@ -272,12 +295,12 @@ inconsistency.
 : Allows uncommitted changes from one transaction to affect
 a read in another transaction (a "dirty read").
 
-`READ_COMMITTED`
+`READ_COMMITTED` (default, except for MySql)
 : This setting prevents dirty reads from occurring, but still allows non-repeatable
 reads to occur. A _non-repeatable read_ is when a transaction ("Transaction A") reads a row from the database, another
 transaction ("Transaction B") changes the row, and Transaction A reads the row again, resulting in an inconsistency.
 
-`REPEATABLE_READ` (default)
+`REPEATABLE_READ` (default for MySql)
 : Prevents both dirty and non-repeatable
 reads, but still allows for phantom reads. A _phantom read_ is when a transaction ("Transaction A") selects a list of
 rows through a `WHERE` clause, another transaction ("Transaction B") performs an `INSERT` or `DELETE` with a row that
@@ -294,14 +317,9 @@ inconsistency.
 
 ### `readOnly`
 
-The `readOnly` parameter indicates whether any database connection used by the transaction is in read-only mode. It
-is set to `false` by default. This value is not directly used by Exposed, but is
-relayed to the database.
-
-### `db`
-
-The `db` parameter is optional and is used to select the database where the transaction should be
-settled. This is useful when [working with multiple databases](#working-with-multiple-databases).
+The `readOnly` parameter indicates whether any database connection used by the transaction is in read-only mode. By default,
+it is set to use the value provided to the database's transaction manager configuration. This value is not directly used by Exposed,
+but is relayed to the database.
 
 ### `maxAttempts`
 

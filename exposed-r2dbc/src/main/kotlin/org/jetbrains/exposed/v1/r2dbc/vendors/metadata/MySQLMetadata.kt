@@ -16,7 +16,7 @@ internal open class MySQLPropertyProvider : PropertyProvider() {
         get() = true
 
     override val extraNameCharacters: String
-        get() = "#@"
+        get() = "$"
 
     override val defaultTransactionIsolation: IsolationLevel
         get() = if (isMySQL6Plus) {
@@ -90,6 +90,10 @@ internal open class MySQLTypeProvider : SqlTypeProvider() {
 }
 
 internal open class MySQLMetadata : MetadataProvider(MySQLPropertyProvider(), MySQLTypeProvider()) {
+    fun setCurrentTransactionIsolation(isolationLevel: IsolationLevel): String {
+        return "SET SESSION TRANSACTION ISOLATION LEVEL ${isolationLevel.asSql()}"
+    }
+
     override fun getUsername(): String {
         return "SELECT SUBSTRING_INDEX(USER(), '@', 1) AS USER_NAME"
     }

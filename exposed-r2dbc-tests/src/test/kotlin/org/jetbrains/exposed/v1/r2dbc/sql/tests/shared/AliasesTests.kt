@@ -19,14 +19,13 @@ import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-// NOTE: 2 DAO TESTS REMOVED
 class AliasesTests : R2dbcDatabaseTestsBase() {
     @Test
     fun `test_github_issue_379_count_alias_ClassCastException`() {
@@ -315,6 +314,67 @@ class AliasesTests : R2dbcDatabaseTestsBase() {
                 expectedQuery,
                 input.select(sumTotal).prepareSQL(QueryBuilder(false))
             )
+        }
+    }
+
+    @Test
+    fun testExpressionWithColumnTypeAliasCastedToExpression() {
+        val tester = object : IntIdTable("Test") {
+            val weight = integer("weight")
+        }
+
+        val expression = tester.weight.sum()
+        val alias: ExpressionWithColumnTypeAlias<Int?> = expression.alias("task_weight")
+        val query: QueryAlias = tester.select(alias).alias("all_weight")
+
+        fun Expression<*>.toExpressionString() = QueryBuilder(true)
+            .also { this.toQueryBuilder(it) }
+            .toString().lowercase()
+
+        withTables(tester) {
+            assertEquals("all_weight.task_weight", query[alias].toExpressionString())
+            assertEquals("all_weight.task_weight", query[alias as ExpressionWithColumnType<Int?>].toExpressionString())
+            assertEquals("all_weight.task_weight", query[alias as Expression<Int?>].toExpressionString())
+        }
+    }
+
+    @Test
+    fun testExpressionAliasCastedToExpression() {
+        val tester = object : IntIdTable("Test") {
+            val weight = integer("weight")
+        }
+
+        val expression: Expression<Int?> = tester.weight.sum()
+        val alias: ExpressionAlias<Int?> = expression.alias("task_weight")
+        val query: QueryAlias = tester.select(alias).alias("all_weight")
+
+        fun Expression<*>.toExpressionString() = QueryBuilder(true)
+            .also { this.toQueryBuilder(it) }
+            .toString().lowercase()
+
+        withTables(tester) {
+            assertEquals("all_weight.task_weight", query[alias].toExpressionString())
+            assertEquals("all_weight.task_weight", query[alias as Expression<Int?>].toExpressionString())
+        }
+    }
+
+    @Test
+    fun testColumnCastedToExpression() {
+        val tester = object : IntIdTable("Test") {
+            val weight = integer("weight")
+        }
+
+        val column: Column<Int> = tester.weight
+        val query: QueryAlias = tester.select(column).alias("all_weight")
+
+        fun Expression<*>.toExpressionString() = QueryBuilder(true)
+            .also { this.toQueryBuilder(it) }
+            .toString().lowercase()
+
+        withTables(tester) {
+            assertEquals("all_weight.weight", query[column].toExpressionString())
+            assertEquals("all_weight.weight", query[column as ExpressionWithColumnType<Int>].toExpressionString())
+            assertEquals("all_weight.weight", query[column as Expression<Int>].toExpressionString())
         }
     }
 }

@@ -31,7 +31,7 @@ class JodaLocalDateColumnType : LocalDateColumnType<DateTime>() {
         return DateTime(
             value.year,
             value.month.number,
-            value.dayOfMonth,
+            value.day,
             0, 0
         )
     }

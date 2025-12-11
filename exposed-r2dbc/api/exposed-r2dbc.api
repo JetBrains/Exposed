@@ -46,6 +46,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/ExposedR2dbcException : io/r2d
 	public fun <init> (Ljava/lang/Throwable;Ljava/util/List;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;)V
 	public final fun causedByQueries ()Ljava/util/List;
 	public final fun getContexts ()Ljava/util/List;
+	public fun getMessage ()Ljava/lang/String;
 	public final fun getSQLState ()Ljava/lang/String;
 	public final fun getSpecificErrorCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -256,7 +257,6 @@ public abstract interface class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConf
 	public static final field Companion Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Companion;
 	public abstract fun getConnectionFactoryOptions ()Lio/r2dbc/spi/ConnectionFactoryOptions;
 	public abstract fun getDefaultR2dbcIsolationLevel ()Lio/r2dbc/spi/IsolationLevel;
-	public abstract fun getDispatcher ()Lkotlinx/coroutines/CoroutineDispatcher;
 	public abstract fun getTypeMapping ()Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;
 }
 
@@ -267,12 +267,10 @@ public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Builder : 
 	public final fun getConnectionFactoryOptions ()Lio/r2dbc/spi/ConnectionFactoryOptions;
 	public fun getDefaultIsolationLevel ()I
 	public final fun getDefaultR2dbcIsolationLevel ()Lio/r2dbc/spi/IsolationLevel;
-	public final fun getDispatcher ()Lkotlinx/coroutines/CoroutineDispatcher;
 	public final fun getTypeMapping ()Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;
 	public final fun setConnectionFactoryOptions (Lio/r2dbc/spi/ConnectionFactoryOptions;)V
 	public fun setDefaultIsolationLevel (I)V
 	public final fun setDefaultR2dbcIsolationLevel (Lio/r2dbc/spi/IsolationLevel;)V
-	public final fun setDispatcher (Lkotlinx/coroutines/CoroutineDispatcher;)V
 	public final fun setTypeMapping (Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;)V
 	public final fun setUrl (Ljava/lang/String;)V
 }
@@ -328,6 +326,7 @@ public class org/jetbrains/exposed/v1/r2dbc/R2dbcTransaction : org/jetbrains/exp
 	public final fun getCurrentStatement ()Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;
 	public synthetic fun getDb ()Lorg/jetbrains/exposed/v1/core/DatabaseApi;
 	public final fun getDb ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
+	public final fun getDefaultLogger ()Lorg/jetbrains/exposed/v1/core/CompositeSqlLogger;
 	public final fun getMaxAttempts ()I
 	public final fun getMaxRetryDelay ()J
 	public final fun getMinRetryDelay ()J
@@ -335,17 +334,25 @@ public class org/jetbrains/exposed/v1/r2dbc/R2dbcTransaction : org/jetbrains/exp
 	public fun getOuterTransaction ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
 	public fun getReadOnly ()Z
 	public fun getTransactionIsolation ()Lio/r2dbc/spi/IsolationLevel;
+	public synthetic fun getTransactionManager ()Lorg/jetbrains/exposed/v1/core/transactions/TransactionManagerApi;
+	public fun getTransactionManager ()Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager;
 	public final fun registerInterceptor (Lorg/jetbrains/exposed/v1/core/statements/StatementInterceptor;)Z
+	public final fun registerInterceptor (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor;)Z
 	public fun rollback (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun setCurrentStatement (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;)V
 	public final fun setMaxAttempts (I)V
 	public final fun setMaxRetryDelay (J)V
 	public final fun setMinRetryDelay (J)V
 	public final fun unregisterInterceptor (Lorg/jetbrains/exposed/v1/core/statements/StatementInterceptor;)Z
+	public final fun unregisterInterceptor (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor;)Z
 }
 
 public final class org/jetbrains/exposed/v1/r2dbc/R2dbcTransaction$Companion {
 	public final fun getGlobalInterceptors ()Ljava/util/ArrayList;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/R2dbcTransactionKt {
+	public static final fun withTransactionContext (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/v1/r2dbc/SchemaUtils : org/jetbrains/exposed/v1/core/SchemaUtilityApi {
@@ -449,9 +456,10 @@ public abstract interface class org/jetbrains/exposed/v1/r2dbc/SizedIterable : k
 	public abstract fun copy ()Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
 	public abstract fun count (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun empty (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun forUpdate (Lorg/jetbrains/exposed/v1/core/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public fun forUpdate (Lorg/jetbrains/exposed/v1/core/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public static synthetic fun forUpdate$default (Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;Lorg/jetbrains/exposed/v1/core/vendors/ForUpdateOption;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
 	public abstract fun limit (I)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
-	public abstract fun notForUpdate ()Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public fun notForUpdate ()Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
 	public abstract fun offset (J)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
 	public abstract fun orderBy ([Lkotlin/Pair;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
 }
@@ -603,11 +611,11 @@ public abstract interface class org/jetbrains/exposed/v1/r2dbc/mappers/R2dbcType
 }
 
 public abstract interface class org/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper {
-	public abstract fun getColumnTypes ()Ljava/util/List;
-	public abstract fun getDialects ()Ljava/util/List;
-	public abstract fun getPriority ()D
-	public abstract fun getValue (Lio/r2dbc/spi/Row;Ljava/lang/Class;ILorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/core/IColumnType;)Lorg/jetbrains/exposed/v1/r2dbc/mappers/ValueContainer;
-	public abstract fun setValue (Lio/r2dbc/spi/Statement;Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;Lorg/jetbrains/exposed/v1/core/IColumnType;Ljava/lang/Object;I)Z
+	public fun getColumnTypes ()Ljava/util/List;
+	public fun getDialects ()Ljava/util/List;
+	public fun getPriority ()D
+	public fun getValue (Lio/r2dbc/spi/Row;Ljava/lang/Class;ILorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/core/IColumnType;)Lorg/jetbrains/exposed/v1/r2dbc/mappers/ValueContainer;
+	public fun setValue (Lio/r2dbc/spi/Statement;Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;Lorg/jetbrains/exposed/v1/core/IColumnType;Ljava/lang/Object;I)Z
 }
 
 public final class org/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper$DefaultImpls {
@@ -668,6 +676,20 @@ public class org/jetbrains/exposed/v1/r2dbc/statements/DeleteSuspendExecutable :
 	public fun prepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
+public abstract interface class org/jetbrains/exposed/v1/r2dbc/statements/GlobalSuspendStatementInterceptor : org/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor {
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/statements/GlobalSuspendStatementInterceptor$DefaultImpls {
+	public static fun afterCommit (Lorg/jetbrains/exposed/v1/r2dbc/statements/GlobalSuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun afterExecution (Lorg/jetbrains/exposed/v1/r2dbc/statements/GlobalSuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/util/List;Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun afterRollback (Lorg/jetbrains/exposed/v1/r2dbc/statements/GlobalSuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun afterStatementPrepared (Lorg/jetbrains/exposed/v1/r2dbc/statements/GlobalSuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun beforeCommit (Lorg/jetbrains/exposed/v1/r2dbc/statements/GlobalSuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun beforeExecution (Lorg/jetbrains/exposed/v1/r2dbc/statements/GlobalSuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lorg/jetbrains/exposed/v1/core/statements/StatementContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun beforeRollback (Lorg/jetbrains/exposed/v1/r2dbc/statements/GlobalSuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun keepUserDataInTransactionStoreOnCommit (Lorg/jetbrains/exposed/v1/r2dbc/statements/GlobalSuspendStatementInterceptor;Ljava/util/Map;)Ljava/util/Map;
+}
+
 public class org/jetbrains/exposed/v1/r2dbc/statements/InsertSelectSuspendExecutable : org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/InsertSelectStatement;)V
 	public fun execute (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -723,6 +745,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/statements/R2dbcConnectionImpl
 	public fun setCatalog (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun setReadOnly (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun setSavepoint (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun setTransactionDefinition (Lio/r2dbc/spi/TransactionDefinition;)V
 	public fun setTransactionIsolation (Lio/r2dbc/spi/IsolationLevel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
@@ -772,11 +795,11 @@ public class org/jetbrains/exposed/v1/r2dbc/statements/SQLServerBatchInsertSuspe
 }
 
 public abstract interface class org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable {
-	public abstract fun execute (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun execute (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun executeInternal (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
-	public abstract fun isAlwaysBatch ()Z
-	public abstract fun prepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun isAlwaysBatch ()Z
+	public fun prepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable$DefaultImpls {
@@ -787,6 +810,28 @@ public final class org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable$D
 
 public final class org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutableKt {
 	public static final fun toExecutable (Lorg/jetbrains/exposed/v1/core/statements/Statement;)Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable;
+}
+
+public abstract interface class org/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor {
+	public fun afterCommit (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun afterExecution (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/util/List;Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun afterRollback (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun afterStatementPrepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun beforeCommit (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun beforeExecution (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lorg/jetbrains/exposed/v1/core/statements/StatementContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun beforeRollback (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun keepUserDataInTransactionStoreOnCommit (Ljava/util/Map;)Ljava/util/Map;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor$DefaultImpls {
+	public static fun afterCommit (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun afterExecution (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/util/List;Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun afterRollback (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun afterStatementPrepared (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun beforeCommit (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun beforeExecution (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lorg/jetbrains/exposed/v1/core/statements/StatementContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun beforeRollback (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun keepUserDataInTransactionStoreOnCommit (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendStatementInterceptor;Ljava/util/Map;)Ljava/util/Map;
 }
 
 public class org/jetbrains/exposed/v1/r2dbc/statements/UpdateSuspendExecutable : org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable {
@@ -856,6 +901,7 @@ public abstract interface class org/jetbrains/exposed/v1/r2dbc/statements/api/R2
 	public abstract fun setCatalog (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun setReadOnly (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun setSavepoint (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun setTransactionDefinition (Lio/r2dbc/spi/TransactionDefinition;)V
 	public abstract fun setTransactionIsolation (Lio/r2dbc/spi/IsolationLevel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
@@ -989,7 +1035,6 @@ public final class org/jetbrains/exposed/v1/r2dbc/transactions/TransactionManage
 	public static final field Companion Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager$Companion;
 	public fun <init> (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lkotlin/jvm/functions/Function2;)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun bindTransactionToThread (Lorg/jetbrains/exposed/v1/core/Transaction;)V
 	public synthetic fun currentOrNull ()Lorg/jetbrains/exposed/v1/core/Transaction;
 	public fun currentOrNull ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
 	public final fun getDefaultIsolationLevel ()Lio/r2dbc/spi/IsolationLevel;
@@ -997,8 +1042,8 @@ public final class org/jetbrains/exposed/v1/r2dbc/transactions/TransactionManage
 	public fun getDefaultMaxRetryDelay ()J
 	public fun getDefaultMinRetryDelay ()J
 	public fun getDefaultReadOnly ()Z
-	public final fun newTransaction (Lio/r2dbc/spi/IsolationLevel;ZLorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
-	public static synthetic fun newTransaction$default (Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager;Lio/r2dbc/spi/IsolationLevel;ZLorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
+	public final fun newTransaction (Lio/r2dbc/spi/IsolationLevel;Ljava/lang/Boolean;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
+	public static synthetic fun newTransaction$default (Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager;Lio/r2dbc/spi/IsolationLevel;Ljava/lang/Boolean;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
 	public final fun setDefaultIsolationLevel (Lio/r2dbc/spi/IsolationLevel;)V
 	public fun setDefaultMaxAttempts (I)V
 	public fun setDefaultMaxRetryDelay (J)V
@@ -1011,27 +1056,21 @@ public final class org/jetbrains/exposed/v1/r2dbc/transactions/TransactionManage
 	public final fun closeAndUnregister (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;)V
 	public final fun current ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
 	public final fun currentOrNew (Lio/r2dbc/spi/IsolationLevel;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
+	public static synthetic fun currentOrNew$default (Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager$Companion;Lio/r2dbc/spi/IsolationLevel;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
 	public final fun currentOrNull ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
 	public final fun getDefaultDatabase ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
 	public final fun getManager ()Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager;
-	public final fun isInitialized ()Z
+	public final fun getPrimaryDatabase ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
 	public final fun managerFor (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;)Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager;
-	public final fun registerManager (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager;)V
-	public final fun resetCurrent (Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager;)V
+	public final fun registerManager (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lorg/jetbrains/exposed/v1/core/transactions/TransactionManagerApi;)V
 	public final fun setDefaultDatabase (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;)V
 }
 
-public final class org/jetbrains/exposed/v1/r2dbc/transactions/TransactionManagerKt {
-	public static final fun inTopLevelSuspendTransaction (Lio/r2dbc/spi/IsolationLevel;ZLorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun inTopLevelSuspendTransaction$default (Lio/r2dbc/spi/IsolationLevel;ZLorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static final fun suspendTransaction (Lio/r2dbc/spi/IsolationLevel;ZLorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static final fun suspendTransaction (Lkotlin/coroutines/CoroutineContext;Lio/r2dbc/spi/IsolationLevel;Ljava/lang/Boolean;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static final fun suspendTransaction (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun suspendTransaction$default (Lio/r2dbc/spi/IsolationLevel;ZLorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static synthetic fun suspendTransaction$default (Lkotlin/coroutines/CoroutineContext;Lio/r2dbc/spi/IsolationLevel;Ljava/lang/Boolean;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static synthetic fun suspendTransaction$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static final fun suspendTransactionAsync (Lkotlin/coroutines/CoroutineContext;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lio/r2dbc/spi/IsolationLevel;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun suspendTransactionAsync$default (Lkotlin/coroutines/CoroutineContext;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lio/r2dbc/spi/IsolationLevel;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+public final class org/jetbrains/exposed/v1/r2dbc/transactions/TransactionsKt {
+	public static final fun inTopLevelSuspendTransaction (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lio/r2dbc/spi/IsolationLevel;Ljava/lang/Boolean;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun inTopLevelSuspendTransaction$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lio/r2dbc/spi/IsolationLevel;Ljava/lang/Boolean;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun suspendTransaction (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lio/r2dbc/spi/IsolationLevel;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun suspendTransaction$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lio/r2dbc/spi/IsolationLevel;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 
 public abstract class org/jetbrains/exposed/v1/r2dbc/vendors/DatabaseDialectMetadata {

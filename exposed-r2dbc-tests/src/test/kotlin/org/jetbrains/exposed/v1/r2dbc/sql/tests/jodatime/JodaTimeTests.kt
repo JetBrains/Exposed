@@ -40,7 +40,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.LocalTime
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 class JodaTimeTests : R2dbcDatabaseTestsBase() {
@@ -48,7 +48,7 @@ class JodaTimeTests : R2dbcDatabaseTestsBase() {
         DateTimeZone.setDefault(DateTimeZone.UTC)
     }
 
-    private val timestampWithTimeZoneUnsupportedDB = TestDB.ALL_MARIADB + TestDB.MYSQL_V5
+    private val timestampWithTimeZoneUnsupportedDB = setOf(TestDB.MARIADB, TestDB.MYSQL_V5)
 
     @Test
     fun jodaTimeFunctions() {

@@ -76,15 +76,99 @@
                         <code>jsonb()</code>
                     </a>
                 </title>
-                <p>Maps to database <code>JSONB</code>. Used for storing JSON data in binary format (supported by
-                    PostgreSQL).</p>
+                <p>Maps to database <code>JSONB</code>. Used for storing JSON data in binary format.</p>
                 <p>Database-specific mappings:</p>
                 <list>
                     <li>MySQL and H2: Maps to <code>JSON</code></li>
-                    <li>SQLite and Oracle: Not supported</li>
+                    <li>SQLite: Maps to <code>BLOB</code> from version 3.45.0.0+; otherwise, not supported</li>
+                    <li>Oracle: Not supported</li>
                 </list>
             </def>
         </deflist>
+        <chapter title="SQLite and JSONB" id="sqlite">
+            <p>
+                Storing JSON strings as JSONB binary format is supported in SQLite starting from version 3.45.0.0. To
+                facilitate this, any JSON value set to a <code>.jsonb()</code> column will be automatically wrapped by
+                the SQL function <code>JSONB()</code>. This applies to values set in DDL default clauses:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="30-31,152,161-165"
+            />
+            <code-block lang="sql"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="156-159"
+            />
+            <p>
+                And to values set in DML operations:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="136-138"
+            />
+            <code-block lang="sql"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="132-133"
+            />
+            <p>
+                This means that attempting to read the value directly as it is stored in the column will throw a
+                decode exception due to the non-readable JSONB binary format. SQLite provides the SQL function <code>JSON()</code>
+                when it is required to read the stored value in a text format:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="147-149"
+            />
+            <code-block lang="sql"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="144"
+            />
+            <p>
+                If you want to use SQLite with JSONB via the DAO approach, some adjustments will be required on the entity
+                in order to make sure that the read value is always in a text format:
+            </p>
+            <code-block lang="kotlin">
+                object TasksTable : IntIdTable("tasks") {
+                    // ...
+                    val project = jsonb&lt;Project&gt;("project", Json.Default)
+                    val projectAsJson = CustomFunction("JSON", project.columnType, project)
+                }
+
+                class TaskEntity(id: EntityID&lt;Int&gt;) : IntEntity(id) {
+                    private var projectAsBinary by TasksTable.project
+
+                    var project: Project
+                        get() = readValues.getOrNull(TasksTable.projectAsJson) ?: projectAsBinary
+                        set(value) { projectAsBinary = value }
+
+                    companion object : IntEntityClass&lt;TaskEntity&gt;(TasksTable) {
+                        override fun searchQuery(op: Op&lt;Boolean&gt;): Query {
+                            return super.searchQuery(op).adjustSelectedProject()
+                        }
+
+                        override fun all(): SizedIterable&lt;TaskEntity&gt; {
+                            return wrapRows(TasksTable.selectAll().notForUpdate().adjustSelectedProject())
+                        }
+
+                        private fun Query.adjustSelectedProject(): Query = adjustSelect { original ->
+                            select(original.fields - TasksTable.project + TasksTable.projectAsJson)
+                        }
+                    }
+                }
+            </code-block>
+            <p>
+                In the example above, the traditional entity property delegate is made private while a custom <code>project</code>
+                field is given a custom getter that always attempts to read the result of the custom <code>JSON()</code>
+                from a query. This read logic falls back to the standard delegate result in the event the entity is being
+                read directly from the cache.
+            </p>
+            <p>
+                The low-level methods that may be invoked by queries like <code>TaskEntity.all()</code> are then given overrides
+                that always replace the original column with the function expression. With this implementation, a <code>TaskEntity</code>
+                can be created, updated, and queried as normal and any JSON value set to its <code>project</code> field will
+                be stored in the binary format and retrieved in text format.
+            </p>
+        </chapter>
     </chapter>
     <chapter title="JSON functions" id="json-functions">
 

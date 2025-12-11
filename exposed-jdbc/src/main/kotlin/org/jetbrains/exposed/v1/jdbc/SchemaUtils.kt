@@ -4,8 +4,10 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils.withDataBaseLock
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.vendors.currentDialectMetadata
 
@@ -21,14 +23,14 @@ object SchemaUtils : SchemaUtilityApi() {
     /** Checks whether any of the [tables] have a sequence of foreign key constraints that cycle back to them. */
     fun checkCycle(vararg tables: Table): Boolean {
         @OptIn(InternalApi::class)
-        return tables.toList().hasCycle()
+        return tables.asList().hasCycle()
     }
 
     /** Returns the SQL statements that create all [tables] that do not already exist. */
     fun createStatements(vararg tables: Table): List<String> {
         if (tables.isEmpty()) return emptyList()
 
-        val toCreate = sortTablesByReferences(tables.toList()).filterNot { it.exists() }
+        val toCreate = sortTablesByReferences(tables.asList()).filterNot { it.exists() }
         val alters = arrayListOf<String>()
 
         @OptIn(InternalApi::class)
@@ -115,8 +117,10 @@ object SchemaUtils : SchemaUtilityApi() {
             )
         }
 
+        // While SQLite does allow some ALTER TABLE syntax, ADD/DROP CONSTRAINT is still not supported.
+        // ForeignKeyConstraint statement builders would return empty list at lowest level, but this avoids metadata check entirely.
         @OptIn(InternalApi::class)
-        if (dbSupportsAlterTableWithAddColumn) {
+        if (dbSupportsAlterTableWithAddColumn && currentDialect !is SQLiteDialect) {
             val existingColumnConstraints = logTimeSpent(CONSTRAINTS_LOG_MESSAGE, withLogs) {
                 currentDialectMetadata.columnConstraints(*tables)
             }
@@ -441,7 +445,7 @@ object SchemaUtils : SchemaUtilityApi() {
     fun drop(vararg tables: Table, inBatch: Boolean = false) {
         if (tables.isEmpty()) return
         with(TransactionManager.current()) {
-            var tablesForDeletion = sortTablesByReferences(tables.toList()).reversed().filter { it in tables }
+            var tablesForDeletion = sortTablesByReferences(tables.asList()).reversed().filter { it in tables }
             if (!currentDialect.supportsIfNotExists) {
                 tablesForDeletion = tablesForDeletion.filter { it.exists() }
             }

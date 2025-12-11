@@ -317,9 +317,9 @@ fun <T : Any, E : EntityID<T>?> Column<E>.between(from: T, to: T): Between =
     Between(this, wrap(EntityID(from, this.idTable())), wrap(EntityID(to, this.idTable())))
 
 /** Returns `true` if this expression is null, `false` otherwise. */
-fun <T> Expression<T>.isNull(): Op<Boolean> = when {
-    this is Column<*> && isEntityIdentifier() -> table.mapIdOperator(::IsNullOp)
-    this is QueryParameter && compositeValue != null -> {
+fun <T> Expression<T>.isNull(): Op<Boolean> = when (this) {
+    is Column<*> if isEntityIdentifier() -> table.mapIdOperator(::IsNullOp)
+    is QueryParameter if compositeValue != null -> {
         val table = compositeValue.values.keys.first().table
         table.mapIdOperator(::IsNullOp)
     }
@@ -330,9 +330,9 @@ fun <T> Expression<T>.isNull(): Op<Boolean> = when {
 fun <T : String?> Expression<T>.isNullOrEmpty(): Op<Boolean> = IsNullOp(this).or { this@isNullOrEmpty.charLength() eq 0 }
 
 /** Returns `true` if this expression is not null, `false` otherwise. */
-fun <T> Expression<T>.isNotNull(): Op<Boolean> = when {
-    this is Column<*> && isEntityIdentifier() -> table.mapIdOperator(::IsNotNullOp)
-    this is QueryParameter && compositeValue != null -> {
+fun <T> Expression<T>.isNotNull(): Op<Boolean> = when (this) {
+    is Column<*> if isEntityIdentifier() -> table.mapIdOperator(::IsNotNullOp)
+    is QueryParameter if compositeValue != null -> {
         val table = compositeValue.values.keys.first().table
         table.mapIdOperator(::IsNotNullOp)
     }
@@ -658,13 +658,15 @@ fun <T> anyFrom(subQuery: AbstractQuery<*>): Op<T> = AllAnyFromSubQueryOp(true, 
  * **Note** If [delegateType] is left `null`, the base column type associated with storing elements of type [T] will be
  * resolved according to the internal mapping of the element's type in [resolveColumnType].
  *
+ * @param array Converted to a list view backed by the original array to improve performance. Do not mutate the array after passing to this function; if mutation is needed, convert using [Array.toList] instead.
+ *
  * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
  */
 inline fun <reified T : Any> anyFrom(array: Array<T>, delegateType: ColumnType<T>? = null): Op<T> {
     // emptyArray() without type info generates ARRAY[]
     @OptIn(InternalApi::class)
     val columnType = delegateType ?: resolveColumnType(T::class, if (array.isEmpty()) TextColumnType() else null)
-    return AllAnyFromArrayOp(true, array.toList(), columnType)
+    return AllAnyFromArrayOp(true, array.asList(), columnType)
 }
 
 /**
@@ -697,13 +699,15 @@ fun <T> allFrom(subQuery: AbstractQuery<*>): Op<T> = AllAnyFromSubQueryOp(false,
  * **Note** If [delegateType] is left `null`, the base column type associated with storing elements of type [T] will be
  * resolved according to the internal mapping of the element's type in [resolveColumnType].
  *
+ * @param array Converted to a list view backed by the original array to improve performance. Do not mutate the array after passing to this function; if mutation is needed, convert using [Array.toList] instead.
+ *
  * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
  */
 inline fun <reified T : Any> allFrom(array: Array<T>, delegateType: ColumnType<T>? = null): Op<T> {
     // emptyArray() without type info generates ARRAY[]
     @OptIn(InternalApi::class)
     val columnType = delegateType ?: resolveColumnType(T::class, if (array.isEmpty()) TextColumnType() else null)
-    return AllAnyFromArrayOp(false, array.toList(), columnType)
+    return AllAnyFromArrayOp(false, array.asList(), columnType)
 }
 
 /**

@@ -125,4 +125,41 @@ class JSONandJSONBExamples {
             )
         }
     }
+
+    /*
+     Generated SQL:
+
+     INSERT INTO tasks (project)
+     VALUES (JSONB('{"name":"Main","language":"Java","active":true}'))
+     */
+    fun insertJSONBSqlite() {
+        TasksTable.insert {
+            it[project] = Project("Main", "Java", true)
+        }
+    }
+
+    /*
+     Generated SQL:
+
+     SELECT JSON(tasks.project) ptext FROM tasks
+     */
+    fun selectJSONBSqlite() {
+        val projectText = TasksTable.project.function("JSON").alias("ptext")
+        val projects = TasksTable.select(projectText).map { it[projectText] }
+        println(projects) // [Project(name=Main, language=Java, active=true)]
+    }
+}
+
+/*
+ Generated SQL:
+
+ CREATE TABLE IF NOT EXISTS tasks (
+    complete BOOLEAN DEFAULT 0 NOT NULL,
+    project BLOB DEFAULT (JSONB('{"name":"Main","language":"Kotlin","active":true}')) NOT NULL
+ )
+ */
+object TasksTable : Table("tasks") {
+    val complete = bool("complete").default(false)
+    val project = jsonb<Project>("project", Json.Default)
+        .default(Project("Main", "Kotlin", true))
 }

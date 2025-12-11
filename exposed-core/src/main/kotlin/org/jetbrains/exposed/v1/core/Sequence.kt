@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.v1.core
 
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 
@@ -28,7 +28,7 @@ class Sequence(
     /** This name of this sequence in proper database casing. */
     val identifier: String
         @OptIn(InternalApi::class)
-        get() = CoreTransactionManager.currentTransaction().db.identifierManager.cutIfNecessaryAndQuote(name)
+        get() = currentTransaction().db.identifierManager.cutIfNecessaryAndQuote(name)
 
     override fun toString(): String = "Sequence(identifier=$identifier)"
 

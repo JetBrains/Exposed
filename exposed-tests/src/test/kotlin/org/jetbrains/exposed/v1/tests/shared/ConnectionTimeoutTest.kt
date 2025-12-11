@@ -3,9 +3,10 @@ package org.jetbrains.exposed.v1.tests.shared
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.sql.Connection
 import java.sql.SQLTransientException
 import kotlin.test.assertEquals
@@ -31,7 +32,7 @@ class ConnectionTimeoutTest : DatabaseTestsBase() {
         val db = Database.connect(datasource = datasource)
 
         try {
-            transaction(Connection.TRANSACTION_SERIALIZABLE, db = db) {
+            transaction(db = db, transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 42
                 exec("SELECT 1;")
                 // NO OP
@@ -40,6 +41,8 @@ class ConnectionTimeoutTest : DatabaseTestsBase() {
         } catch (e: ExposedSQLException) {
             assertTrue(e.cause is GetConnectException)
             assertEquals(42, datasource.connectCount)
+        } finally {
+            TransactionManager.closeAndUnregister(db)
         }
     }
 
@@ -56,7 +59,7 @@ class ConnectionTimeoutTest : DatabaseTestsBase() {
 
         try {
             // transaction block should use default DatabaseConfig values when no property is set
-            transaction(Connection.TRANSACTION_SERIALIZABLE, db = db) {
+            transaction(db = db, transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 exec("SELECT 1;")
             }
             fail("Should have thrown ${GetConnectException::class.simpleName}")
@@ -68,13 +71,15 @@ class ConnectionTimeoutTest : DatabaseTestsBase() {
 
         try {
             // property set in transaction block should override default DatabaseConfig
-            transaction(Connection.TRANSACTION_SERIALIZABLE, db = db) {
+            transaction(db = db, transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 25
                 exec("SELECT 1;")
             }
             fail("Should have thrown ${GetConnectException::class.simpleName}")
         } catch (cause: ExposedSQLException) {
             assertEquals(25, datasource.connectCount)
+        } finally {
+            TransactionManager.closeAndUnregister(db)
         }
     }
 }

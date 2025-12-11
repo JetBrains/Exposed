@@ -1,13 +1,20 @@
 package org.jetbrains.exposed.v1.tests.shared
 
+import org.jetbrains.exposed.v1.core.StdOutSqlLogger
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.jdbc.name
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import java.sql.Types
+import kotlin.test.assertContains
 
 class ConnectionTests : DatabaseTestsBase() {
 
@@ -108,6 +115,27 @@ class ConnectionTests : DatabaseTestsBase() {
                     }
                 )
             }
+        }
+    }
+
+    @Test
+    fun testAddingLoggerDoesNotCauseNoTransactionInContext() {
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        TestDB.H2_V2.connect()
+
+        val tester = object : Table("tester") {
+            val amount = integer("amount")
+        }
+
+        try {
+            transaction {
+                // the logger is left in to test that it does not throw 'no transaction in context'
+                addLogger(StdOutSqlLogger)
+                tester.selectAll().toList()
+            }
+        } catch (cause: Exception) {
+            assertTrue(cause.message != null)
+            assertContains(cause.message!!, "Table \"TESTER\" not found")
         }
     }
 }

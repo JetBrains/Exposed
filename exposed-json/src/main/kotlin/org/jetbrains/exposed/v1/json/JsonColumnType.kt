@@ -37,13 +37,15 @@ open class JsonColumnType<T : Any>(
         }
     }
 
-    override fun parameterMarker(value: T?): String = if (currentDialect is H2Dialect && value != null) {
-        "? FORMAT JSON"
-    } else if (currentDialect is PostgreSQLDialect && value != null) {
-        val castType = if (usesBinaryFormat) "jsonb" else "json"
-        "?::$castType"
-    } else {
-        super.parameterMarker(value)
+    override fun parameterMarker(value: T?): String = when (currentDialect) {
+        is H2Dialect if value != null -> "? FORMAT JSON"
+        is PostgreSQLDialect -> {
+            val castType = if (usesBinaryFormat) "jsonb" else "json"
+            "?::$castType"
+        }
+        else -> {
+            super.parameterMarker(value)
+        }
     }
 
     override fun notNullValueToDB(value: T): Any = serialize(value)

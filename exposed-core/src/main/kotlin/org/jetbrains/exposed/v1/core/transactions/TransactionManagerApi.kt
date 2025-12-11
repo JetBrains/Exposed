@@ -19,9 +19,6 @@ interface TransactionManagerApi {
     /** The default maximum number of milliseconds to wait before retrying a transaction if an exception is thrown. */
     var defaultMaxRetryDelay: Long
 
-    /** Returns the current [Transaction], or `null` if none exists. */
+    /** Returns the current [Transaction] of the transaction manager, or `null` if none exists. */
     fun currentOrNull(): Transaction?
-
-    /** Sets the current thread's copy of the manager's thread-local variable to the specified [transaction]. */
-    fun bindTransactionToThread(transaction: Transaction?)
 }

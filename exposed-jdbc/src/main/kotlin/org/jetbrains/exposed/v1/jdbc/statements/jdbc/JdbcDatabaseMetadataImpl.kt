@@ -13,6 +13,7 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcExposedDatabaseMetadata
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import java.math.BigDecimal
+import java.sql.Connection
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
 import java.sql.SQLException
@@ -33,7 +34,6 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     override val databaseDialectName: String by lazyMetadata {
         when (driverName) {
             "MySQL-AB JDBC Driver", "MySQL Connector/J", "MySQL Connector Java" -> MysqlDialect.dialectName
-
             "MariaDB Connector/J" -> MariaDBDialect.dialectName
             "SQLite JDBC" -> SQLiteDialect.dialectName
             "H2 JDBC Driver" -> H2Dialect.dialectName
@@ -59,7 +59,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
     override val databaseDialectMode: String? by lazy {
         val dialect = currentDialect
-        if (dialect !is H2Dialect) null
+        if (dialect !is H2Dialect) return@lazy null
 
         val (settingNameField, settingValueField) = when ((dialect as H2Dialect).majorVersion) {
             H2Dialect.H2MajorVersion.Two -> "SETTING_NAME" to "SETTING_VALUE"
@@ -68,7 +68,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
         @Language("H2")
         val modeQuery = "SELECT $settingValueField FROM INFORMATION_SCHEMA.SETTINGS WHERE $settingNameField = 'MODE'"
-        TransactionManager.current().exec(modeQuery) { rs ->
+        metadata.connection.executeSQL(modeQuery) { rs ->
             rs.iterate { getString(settingValueField) }
         }?.firstOrNull()
     }
@@ -89,8 +89,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return when (currentDialect) {
             is SQLiteDialect -> {
                 try {
-                    val transaction = TransactionManager.current()
-                    transaction.exec("""SELECT sqlite_compileoption_used("ENABLE_UPDATE_DELETE_LIMIT");""") { rs ->
+                    metadata.connection.executeSQL("""SELECT sqlite_compileoption_used("ENABLE_UPDATE_DELETE_LIMIT");""") { rs ->
                         rs.next()
                         rs.getBoolean(1)
                     } == true
@@ -193,7 +192,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         if (currentDialect !is H2Dialect) return emptyMap()
 
         val map = mutableMapOf<String, String>()
-        TransactionManager.current().exec("SHOW COLUMNS FROM $tableName") { rs ->
+        metadata.connection.executeSQL("SHOW COLUMNS FROM $tableName") { rs ->
             while (rs.next()) {
                 val field = rs.getString("FIELD")
                 val type = rs.getString("TYPE").uppercase()
@@ -298,7 +297,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         tables.forEach { table ->
             val transaction = TransactionManager.current()
             val checkConstraints = mutableListOf<CheckConstraint>()
-            transaction.exec(
+            metadata.connection.executeSQL(
                 """
                     SELECT tc.CONSTRAINT_NAME, cc.CHECK_CLAUSE
                     FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
@@ -324,6 +323,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     }
 
     override fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> {
+        val isSqlite = currentDialect is SQLiteDialect
         return tables.associateWith { table ->
             val (catalog, tableSchema) = tableCatalogAndSchema(table)
             metadata.getPrimaryKeys(catalog, tableSchema, table.nameInDatabaseCaseUnquoted()).let { rs ->
@@ -334,7 +334,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                     columnNames += rs.getString("COLUMN_NAME")
                 }
                 rs.close()
-                if (pkName.isEmpty()) null else PrimaryKeyMetadata(pkName, columnNames)
+                // SQLite is the only supported database that does not assign a name to an unnamed primary key constraint.
+                // So it is possible for the result set to have rows with primary key columns etc., but empty PK_NAME field
+                if (pkName.isEmpty() && (!isSqlite || columnNames.isEmpty())) null else PrimaryKeyMetadata(pkName, columnNames)
             }
         }
     }
@@ -342,10 +344,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     override fun existingSequences(vararg tables: Table): Map<Table, List<Sequence>> {
         if (currentDialect !is PostgreSQLDialect) return emptyMap()
 
-        val transaction = TransactionManager.current()
         return tables.associateWith { table ->
             val (_, tableSchema) = tableCatalogAndSchema(table)
-            transaction.exec(
+            metadata.connection.executeSQL(
                 """
                     SELECT seq_details.sequence_name,
                     seq_details.start,
@@ -399,16 +400,15 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     @Suppress("MagicNumber")
     override fun sequences(): List<String> {
         val dialect = currentDialect
-        val transaction = TransactionManager.current()
         val fieldName = "SEQUENCE_NAME"
         return when (dialect) {
-            is OracleDialect -> transaction.exec("SELECT $fieldName FROM USER_SEQUENCES") { rs ->
+            is OracleDialect -> metadata.connection.executeSQL("SELECT $fieldName FROM USER_SEQUENCES") { rs ->
                 rs.iterate {
                     val seqName = getString(fieldName)
                     if (identifierManager.isDotPrefixedAndUnquoted(seqName)) "\"$seqName\"" else seqName
                 }
             }
-            is H2Dialect -> transaction.exec("SELECT $fieldName FROM INFORMATION_SCHEMA.SEQUENCES") { rs ->
+            is H2Dialect -> metadata.connection.executeSQL("SELECT $fieldName FROM INFORMATION_SCHEMA.SEQUENCES") { rs ->
                 rs.iterate {
                     val seqName = getString(fieldName)
                     if (dialect.h2Mode == H2CompatibilityMode.Oracle && identifierManager.isDotPrefixedAndUnquoted(seqName)) {
@@ -418,7 +418,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                     }
                 }
             }
-            is SQLServerDialect -> transaction.exec("SELECT name AS $fieldName FROM sys.sequences") { rs ->
+            is SQLServerDialect -> metadata.connection.executeSQL("SELECT name AS $fieldName FROM sys.sequences") { rs ->
                 rs.iterate {
                     getString(fieldName)
                 }
@@ -436,11 +436,10 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val dialect = currentDialect
 
         return if (dialect is MysqlDialect) {
-            val transaction = TransactionManager.current()
             val inTableList = allTables.keys.joinToString("','", prefix = " ku.TABLE_NAME IN ('", postfix = "')")
             val tableSchema = "'${tables.mapNotNull { it.schemaName }.toSet().singleOrNull() ?: currentSchema}'"
             val constraintsToLoad = HashMap<String, MutableMap<String, ForeignKeyConstraint>>()
-            transaction.exec(
+            metadata.connection.executeSQL(
                 """
                     SELECT
                       rc.CONSTRAINT_NAME AS FK_NAME,
@@ -580,5 +579,19 @@ private fun <T> ResultSet.iterate(body: ResultSet.() -> T): List<T> {
         result.add(body())
     }
     close()
+    return result
+}
+
+private fun <T : Any> Connection.executeSQL(
+    sqlQuery: String,
+    transform: (ResultSet) -> T?
+): T? {
+    if (sqlQuery.isEmpty()) return null
+
+    val stmt = createStatement()
+    val rs = stmt.executeQuery(sqlQuery)
+    val result = transform(rs)
+    if (!rs.isClosed) rs.close()
+    stmt.close()
     return result
 }

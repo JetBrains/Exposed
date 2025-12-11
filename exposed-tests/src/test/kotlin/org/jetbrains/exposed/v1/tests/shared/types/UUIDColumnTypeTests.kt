@@ -7,7 +7,7 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class UUIDColumnTypeTests : DatabaseTestsBase() {
@@ -31,7 +31,7 @@ class UUIDColumnTypeTests : DatabaseTestsBase() {
         val tester = object : Table("test_uuid") {
             val id = uuid("id")
         }
-        withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MARIADB, configure = { sqlLogger = StdOutSqlLogger }) {
+        withDb(excludeSettings = TestDB.ALL - TestDB.MARIADB, configure = { sqlLogger = StdOutSqlLogger }) {
             try {
                 // From the version 10.7 MariaDB has own 'UUID' column type, that does not work with the current column type.
                 // Even if we generate on DDL type 'BINARY(16)' we could support native UUID for IO operations.

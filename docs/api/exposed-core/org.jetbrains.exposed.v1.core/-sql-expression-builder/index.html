@@ -1,22 +1,22 @@
 <!doctype html>
-<html class="no-js">
+<html class="no-js" lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
     <title>SqlExpressionBuilder</title>
-<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">    <script>var pathToRoot = "../../../";</script>
-    <script>document.documentElement.classList.replace("no-js","js");</script>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
     <script>const storage = localStorage.getItem("dokka-dark-mode")
-    if (storage == null) {
+      if (storage == null) {
         const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
         if (osDarkSchemePreferred === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    } else {
+      } else {
         const savedDarkMode = JSON.parse(storage)
-        if(savedDarkMode === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    }
+      }
     </script>
 <script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
 <script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
@@ -24,33 +24,31 @@
 <link href="../../../styles/main.css" rel="Stylesheet">
 <link href="../../../styles/prism.css" rel="Stylesheet">
 <link href="../../../styles/logo-styles.css" rel="Stylesheet">
-<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
 <link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
-<script type="text/javascript" src="../../../scripts/clipboard.js" async></script>
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
 <script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
 <script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
 <script type="text/javascript" src="../../../scripts/main.js" defer></script>
 <script type="text/javascript" src="../../../scripts/prism.js" async></script>
-<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script>
-<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer></script></head>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script></head>
 <body>
-    <div class="root">
-    <nav class="navigation theme-dark" id="navigation-wrapper">
-<a class="library-name--link" href="../../../index.html">
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
                     exposed
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
-        <div class="library-version" id="library-version">1.0.0-rc-1
+        <div class="library-version" id="library-version">1.0.0-rc-4
         </div>
         <div class="navigation-controls">
-        <div class="filter-section filter-section_loading" id="filter-section">
-                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":exposed-core/main">jvm</button>
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":exposed-core/main">jvm</button>
             <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
                 <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
-                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
-                    <div class="dropdown--header"><span>Platform filter</span>
-                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
                             <i class="ui-kit-icon ui-kit-icon_cross"></i>
                         </button>
                     </div>
@@ -64,32 +62,34 @@
                 </ul>
                 <div class="dropdown--overlay"></div>
             </div>
-        </div>
+        </ul>
             <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
             </button>
             <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
                 API
             </div>
         </div>
-    </nav>
-        <div id="container">
-            <div class="sidebar" id="leftColumn">
-                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
-                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox">
-                        <div class="dropdown--header">
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
                             <span>
                                     exposed
                             </span>
-                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
-                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
-                            </button>
-                        </div>
-                        <div class="sidebar--inner" id="sideMenu"></div>
-                    </ul>
-                    <div class="dropdown--overlay"></div>
-                </div>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
             </div>
-            <div id="main">
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
 <div class="main-content" data-page-type="classlike" id="content" pageids="exposed-core::org.jetbrains.exposed.v1.core/SqlExpressionBuilder///PointingToDeclaration//-1435837140">
   <div class="breadcrumbs"><a href="../../index.html">exposed-core</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.v1.core</a><span class="delimiter">/</span><span class="current">SqlExpressionBuilder</span></div>
   <div class="cover ">
@@ -100,9 +100,9 @@
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
     <div class="tabs-section-body">
       <div data-togglable="FUNCTION">
-        <h2 class="">Functions</h2>
+        <h2 class="tableheader">Functions</h2>
         <div class="table"><a data-name="49936723%2FFunctions%2F-1435837140" anchor-label="asLiteral" id="49936723%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/as-literal.html"><span>as</span><wbr><span><span>Literal</span></span></a></div>
@@ -117,7 +117,7 @@
             </div>
           </div>
 <a data-name="-1201042170%2FFunctions%2F-1435837140" anchor-label="between" id="-1201042170%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/between.html"><span><span>between</span></span></a></div>
@@ -132,7 +132,7 @@
             </div>
           </div>
 <a data-name="-1833299296%2FFunctions%2F-1435837140" anchor-label="bitwiseAnd" id="-1833299296%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/bitwise-and.html"><span>bitwise</span><wbr><span><span>And</span></span></a></div>
@@ -147,7 +147,7 @@
             </div>
           </div>
 <a data-name="-575981946%2FFunctions%2F-1435837140" anchor-label="bitwiseOr" id="-575981946%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/bitwise-or.html"><span>bitwise</span><wbr><span><span>Or</span></span></a></div>
@@ -162,7 +162,7 @@
             </div>
           </div>
 <a data-name="519142176%2FFunctions%2F-1435837140" anchor-label="bitwiseXor" id="519142176%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/bitwise-xor.html"><span>bitwise</span><wbr><span><span>Xor</span></span></a></div>
@@ -177,7 +177,7 @@
             </div>
           </div>
 <a data-name="455332220%2FFunctions%2F-1435837140" anchor-label="case" id="455332220%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/case.html"><span><span>case</span></span></a></div>
@@ -191,12 +191,12 @@
               </div>
             </div>
           </div>
-<a data-name="-1214668635%2FFunctions%2F-1435837140" anchor-label="coalesce" id="-1214668635%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+<a data-name="-7204623%2FFunctions%2F-1435837140" anchor-label="coalesce" id="-7204623%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/coalesce.html"><span><span>coalesce</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1214668635%2FFunctions%2F-1435837140"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-7204623%2FFunctions%2F-1435837140"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
@@ -206,12 +206,12 @@
               </div>
             </div>
           </div>
-<a data-name="-1330033453%2FFunctions%2F-1435837140" anchor-label="concat" id="-1330033453%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+<a data-name="924615389%2FFunctions%2F-1435837140" anchor-label="concat" id="924615389%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/concat.html"><span><span>concat</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1330033453%2FFunctions%2F-1435837140"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="924615389%2FFunctions%2F-1435837140"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
@@ -222,7 +222,7 @@
             </div>
           </div>
 <a data-name="570920495%2FFunctions%2F-1435837140" anchor-label="cumeDist" id="570920495%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/cume-dist.html"><span>cume</span><wbr><span><span>Dist</span></span></a></div>
@@ -237,7 +237,7 @@
             </div>
           </div>
 <a data-name="-1819956304%2FFunctions%2F-1435837140" anchor-label="denseRank" id="-1819956304%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/dense-rank.html"><span>dense</span><wbr><span><span>Rank</span></span></a></div>
@@ -252,7 +252,7 @@
             </div>
           </div>
 <a data-name="-1343461168%2FFunctions%2F-1435837140" anchor-label="div" id="-1343461168%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/div.html"><span><span>div</span></span></a></div>
@@ -267,7 +267,7 @@
             </div>
           </div>
 <a data-name="1787050896%2FFunctions%2F-1435837140" anchor-label="eq" id="1787050896%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/eq.html"><span><span>eq</span></span></a></div>
@@ -282,7 +282,7 @@
             </div>
           </div>
 <a data-name="-1383481427%2FFunctions%2F-1435837140" anchor-label="eqSubQuery" id="-1383481427%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/eq-sub-query.html"><span>eq</span><wbr><span>Sub</span><wbr><span><span>Query</span></span></a></div>
@@ -297,7 +297,7 @@
             </div>
           </div>
 <a data-name="134946552%2FFunctions%2F-1435837140" anchor-label="firstValue" id="134946552%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/first-value.html"><span>first</span><wbr><span><span>Value</span></span></a></div>
@@ -312,7 +312,7 @@
             </div>
           </div>
 <a data-name="151649952%2FFunctions%2F-1435837140" anchor-label="greater" id="151649952%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/greater.html"><span><span>greater</span></span></a></div>
@@ -327,7 +327,7 @@
             </div>
           </div>
 <a data-name="1909061448%2FFunctions%2F-1435837140" anchor-label="greaterEq" id="1909061448%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/greater-eq.html"><span>greater</span><wbr><span><span>Eq</span></span></a></div>
@@ -342,7 +342,7 @@
             </div>
           </div>
 <a data-name="-1913974133%2FFunctions%2F-1435837140" anchor-label="greaterEqSubQuery" id="-1913974133%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/greater-eq-sub-query.html"><span>greater</span><wbr><span>Eq</span><wbr><span>Sub</span><wbr><span><span>Query</span></span></a></div>
@@ -357,7 +357,7 @@
             </div>
           </div>
 <a data-name="-542389057%2FFunctions%2F-1435837140" anchor-label="greaterSubQuery" id="-542389057%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/greater-sub-query.html"><span>greater</span><wbr><span>Sub</span><wbr><span><span>Query</span></span></a></div>
@@ -372,7 +372,7 @@
             </div>
           </div>
 <a data-name="175844706%2FFunctions%2F-1435837140" anchor-label="hasFlag" id="175844706%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/has-flag.html"><span>has</span><wbr><span><span>Flag</span></span></a></div>
@@ -387,7 +387,7 @@
             </div>
           </div>
 <a data-name="1656561162%2FFunctions%2F-1435837140" anchor-label="inList" id="1656561162%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/in-list.html"><span>in</span><wbr><span><span>List</span></span></a></div>
@@ -402,7 +402,7 @@
             </div>
           </div>
 <a data-name="-498232026%2FFunctions%2F-1435837140" anchor-label="inSubQuery" id="-498232026%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/in-sub-query.html"><span>in</span><wbr><span>Sub</span><wbr><span><span>Query</span></span></a></div>
@@ -417,7 +417,7 @@
             </div>
           </div>
 <a data-name="-146730884%2FFunctions%2F-1435837140" anchor-label="inTable" id="-146730884%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/in-table.html"><span>in</span><wbr><span><span>Table</span></span></a></div>
@@ -432,7 +432,7 @@
             </div>
           </div>
 <a data-name="-1886619374%2FFunctions%2F-1435837140" anchor-label="intToDecimal" id="-1886619374%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/int-to-decimal.html"><span>int</span><wbr><span>To</span><wbr><span><span>Decimal</span></span></a></div>
@@ -441,13 +441,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../-i-sql-expression-builder/int-to-decimal.html"><span class="token function"><strike>intToDecimal</strike></span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-no-op-conversion/index.html">NoOpConversion</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span><a href="https://docs.oracle.com/javase/8/docs/api/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">&gt;</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../-expression-with-column-type/index.html">ExpressionWithColumnType</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../-i-sql-expression-builder/int-to-decimal.html"><span class="token function"><strike>intToDecimal</strike></span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-no-op-conversion/index.html">NoOpConversion</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">&gt;</span></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="-923294653%2FFunctions%2F-1435837140" anchor-label="isDistinctFrom" id="-923294653%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/is-distinct-from.html"><span>is</span><wbr><span>Distinct</span><wbr><span><span>From</span></span></a></div>
@@ -462,7 +462,7 @@
             </div>
           </div>
 <a data-name="-807726100%2FFunctions%2F-1435837140" anchor-label="isNotDistinctFrom" id="-807726100%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/is-not-distinct-from.html"><span>is</span><wbr><span>Not</span><wbr><span>Distinct</span><wbr><span><span>From</span></span></a></div>
@@ -477,7 +477,7 @@
             </div>
           </div>
 <a data-name="-1319466303%2FFunctions%2F-1435837140" anchor-label="isNotNull" id="-1319466303%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/is-not-null.html"><span>is</span><wbr><span>Not</span><wbr><span><span>Null</span></span></a></div>
@@ -492,7 +492,7 @@
             </div>
           </div>
 <a data-name="1079814302%2FFunctions%2F-1435837140" anchor-label="isNull" id="1079814302%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/is-null.html"><span>is</span><wbr><span><span>Null</span></span></a></div>
@@ -507,7 +507,7 @@
             </div>
           </div>
 <a data-name="-89594541%2FFunctions%2F-1435837140" anchor-label="isNullOrEmpty" id="-89594541%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/is-null-or-empty.html"><span>is</span><wbr><span>Null</span><wbr><span>Or</span><wbr><span><span>Empty</span></span></a></div>
@@ -522,7 +522,7 @@
             </div>
           </div>
 <a data-name="1184052231%2FFunctions%2F-1435837140" anchor-label="lag" id="1184052231%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/lag.html"><span><span>lag</span></span></a></div>
@@ -537,7 +537,7 @@
             </div>
           </div>
 <a data-name="99873814%2FFunctions%2F-1435837140" anchor-label="lastValue" id="99873814%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/last-value.html"><span>last</span><wbr><span><span>Value</span></span></a></div>
@@ -552,7 +552,7 @@
             </div>
           </div>
 <a data-name="-1939430719%2FFunctions%2F-1435837140" anchor-label="lead" id="-1939430719%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/lead.html"><span><span>lead</span></span></a></div>
@@ -567,7 +567,7 @@
             </div>
           </div>
 <a data-name="1074298074%2FFunctions%2F-1435837140" anchor-label="less" id="1074298074%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/less.html"><span><span>less</span></span></a></div>
@@ -582,7 +582,7 @@
             </div>
           </div>
 <a data-name="1152948570%2FFunctions%2F-1435837140" anchor-label="lessEq" id="1152948570%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/less-eq.html"><span>less</span><wbr><span><span>Eq</span></span></a></div>
@@ -597,7 +597,7 @@
             </div>
           </div>
 <a data-name="-1305788122%2FFunctions%2F-1435837140" anchor-label="lessEqSubQuery" id="-1305788122%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/less-eq-sub-query.html"><span>less</span><wbr><span>Eq</span><wbr><span>Sub</span><wbr><span><span>Query</span></span></a></div>
@@ -612,7 +612,7 @@
             </div>
           </div>
 <a data-name="-2016614886%2FFunctions%2F-1435837140" anchor-label="lessSubQuery" id="-2016614886%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/less-sub-query.html"><span>less</span><wbr><span>Sub</span><wbr><span><span>Query</span></span></a></div>
@@ -627,7 +627,7 @@
             </div>
           </div>
 <a data-name="-702276200%2FFunctions%2F-1435837140" anchor-label="like" id="-702276200%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/like.html"><span><span>like</span></span></a></div>
@@ -642,7 +642,7 @@
             </div>
           </div>
 <a data-name="1789487510%2FFunctions%2F-1435837140" anchor-label="match" id="1789487510%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/match.html"><span><span>match</span></span></a></div>
@@ -657,7 +657,7 @@
             </div>
           </div>
 <a data-name="350890002%2FFunctions%2F-1435837140" anchor-label="minus" id="350890002%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/minus.html"><span><span>minus</span></span></a></div>
@@ -672,7 +672,7 @@
             </div>
           </div>
 <a data-name="-823368237%2FFunctions%2F-1435837140" anchor-label="mod" id="-823368237%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/mod.html"><span><span>mod</span></span></a></div>
@@ -687,7 +687,7 @@
             </div>
           </div>
 <a data-name="2102886560%2FFunctions%2F-1435837140" anchor-label="neq" id="2102886560%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/neq.html"><span><span>neq</span></span></a></div>
@@ -702,7 +702,7 @@
             </div>
           </div>
 <a data-name="1513891108%2FFunctions%2F-1435837140" anchor-label="notEqSubQuery" id="1513891108%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/not-eq-sub-query.html"><span>not</span><wbr><span>Eq</span><wbr><span>Sub</span><wbr><span><span>Query</span></span></a></div>
@@ -717,7 +717,7 @@
             </div>
           </div>
 <a data-name="1231627801%2FFunctions%2F-1435837140" anchor-label="notInList" id="1231627801%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/not-in-list.html"><span>not</span><wbr><span>In</span><wbr><span><span>List</span></span></a></div>
@@ -732,7 +732,7 @@
             </div>
           </div>
 <a data-name="-1895826787%2FFunctions%2F-1435837140" anchor-label="notInSubQuery" id="-1895826787%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/not-in-sub-query.html"><span>not</span><wbr><span>In</span><wbr><span>Sub</span><wbr><span><span>Query</span></span></a></div>
@@ -747,7 +747,7 @@
             </div>
           </div>
 <a data-name="-1544325645%2FFunctions%2F-1435837140" anchor-label="notInTable" id="-1544325645%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/not-in-table.html"><span>not</span><wbr><span>In</span><wbr><span><span>Table</span></span></a></div>
@@ -762,7 +762,7 @@
             </div>
           </div>
 <a data-name="-1673049880%2FFunctions%2F-1435837140" anchor-label="notLike" id="-1673049880%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/not-like.html"><span>not</span><wbr><span><span>Like</span></span></a></div>
@@ -777,7 +777,7 @@
             </div>
           </div>
 <a data-name="-1284020436%2FFunctions%2F-1435837140" anchor-label="nthValue" id="-1284020436%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/nth-value.html"><span>nth</span><wbr><span><span>Value</span></span></a></div>
@@ -792,7 +792,7 @@
             </div>
           </div>
 <a data-name="294561669%2FFunctions%2F-1435837140" anchor-label="ntile" id="294561669%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/ntile.html"><span><span>ntile</span></span></a></div>
@@ -807,7 +807,7 @@
             </div>
           </div>
 <a data-name="975682762%2FFunctions%2F-1435837140" anchor-label="percentRank" id="975682762%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/percent-rank.html"><span>percent</span><wbr><span><span>Rank</span></span></a></div>
@@ -822,7 +822,7 @@
             </div>
           </div>
 <a data-name="2126318359%2FFunctions%2F-1435837140" anchor-label="plus" id="2126318359%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/plus.html"><span><span>plus</span></span></a></div>
@@ -837,7 +837,7 @@
             </div>
           </div>
 <a data-name="-1243810605%2FFunctions%2F-1435837140" anchor-label="rank" id="-1243810605%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/rank.html"><span><span>rank</span></span></a></div>
@@ -852,7 +852,7 @@
             </div>
           </div>
 <a data-name="-1513506962%2FFunctions%2F-1435837140" anchor-label="regexp" id="-1513506962%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/regexp.html"><span><span>regexp</span></span></a></div>
@@ -867,7 +867,7 @@
             </div>
           </div>
 <a data-name="1367488315%2FFunctions%2F-1435837140" anchor-label="rem" id="1367488315%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/rem.html"><span><span>rem</span></span></a></div>
@@ -882,7 +882,7 @@
             </div>
           </div>
 <a data-name="-102918952%2FFunctions%2F-1435837140" anchor-label="rowNumber" id="-102918952%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/row-number.html"><span>row</span><wbr><span><span>Number</span></span></a></div>
@@ -897,7 +897,7 @@
             </div>
           </div>
 <a data-name="-1458498202%2FFunctions%2F-1435837140" anchor-label="times" id="-1458498202%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/times.html"><span><span>times</span></span></a></div>
@@ -912,7 +912,7 @@
             </div>
           </div>
 <a data-name="-1913649604%2FFunctions%2F-1435837140" anchor-label="wrap" id="-1913649604%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-i-sql-expression-builder/wrap.html"><span><span>wrap</span></span></a></div>
@@ -932,17 +932,21 @@
   </div>
 </div>
     <div class="footer">
-        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
-        <span>© 2025 Copyright</span>
-        <span class="pull-right">
-            <span>Generated by </span>
-            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
-                <span>dokka</span>
-            </a>
-        </span>
-    </div>
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2025 Copyright</div>
+                </div>
             </div>
         </div>
     </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

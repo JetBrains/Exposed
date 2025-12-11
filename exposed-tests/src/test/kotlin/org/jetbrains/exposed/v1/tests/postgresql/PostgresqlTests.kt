@@ -7,20 +7,15 @@ import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption.PostgreSQL
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.RepeatableTestRule
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.v1.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.sql.ResultSet
 import kotlin.test.assertEquals
 
 class PostgresqlTests : DatabaseTestsBase() {
-    @get:Rule
-    val repeatRule = RepeatableTestRule()
-
     private val table = object : IntIdTable() {
         val name = varchar("name", 50)
     }

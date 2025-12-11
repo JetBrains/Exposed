@@ -4,7 +4,9 @@ import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean
@@ -15,8 +17,6 @@ import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import javax.sql.DataSource
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
 import kotlin.test.assertEquals
 
 class SpringTransactionSingleConnectionTest {
@@ -28,7 +28,7 @@ class SpringTransactionSingleConnectionTest {
     val transactionManager = singleConnectionH2TestContainer.getBean(PlatformTransactionManager::class.java)
     val dataSource = singleConnectionH2TestContainer.getBean(DataSource::class.java)
 
-    @BeforeTest
+    @BeforeEach
     fun beforeTest() {
         transactionManager.execute {
             SchemaUtils.create(T1)
@@ -64,7 +64,7 @@ class SpringTransactionSingleConnectionTest {
         }
     }
 
-    @AfterTest
+    @AfterEach
     fun afterTest() {
         transactionManager.execute {
             SchemaUtils.drop(T1)

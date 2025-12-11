@@ -1155,7 +1155,7 @@ abstract class ImmutableCachedEntityClass<ID : Any, out T : Entity<ID>>(
      */
     @Synchronized
     fun expireCache() {
-        if (TransactionManager.isInitialized() && TransactionManager.currentOrNull() != null) {
+        if (TransactionManager.currentOrNull() != null) {
             _cachedValues.remove(TransactionManager.current().db)
         } else {
             _cachedValues.clear()

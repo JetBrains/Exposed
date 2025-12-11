@@ -24,7 +24,7 @@ fun Application.configureDatabases() {
             val id = userService.create(user)
             call.respond(HttpStatusCode.Created, id)
         }
-        // Read user
+        // Read user by id
         get("/users/{id}") {
             val id = call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID")
             val user = userService.read(id)
@@ -33,6 +33,11 @@ fun Application.configureDatabases() {
             } else {
                 call.respond(HttpStatusCode.NotFound)
             }
+        }
+        // Read all users
+        get("/users") {
+            val users = userService.readAll()
+            call.respond(HttpStatusCode.OK, users)
         }
         // Update user
         put("/users/{id}") {

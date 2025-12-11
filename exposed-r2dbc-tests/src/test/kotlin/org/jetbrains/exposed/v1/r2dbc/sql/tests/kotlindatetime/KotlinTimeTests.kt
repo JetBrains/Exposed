@@ -23,8 +23,8 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
-import org.junit.Assert.fail
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.fail
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.OffsetDateTime
@@ -37,7 +37,7 @@ import kotlin.time.Instant
 
 class KotlinTimeTests : R2dbcDatabaseTestsBase() {
 
-    private val timestampWithTimeZoneUnsupportedDB = TestDB.ALL_MARIADB + TestDB.MYSQL_V5
+    private val timestampWithTimeZoneUnsupportedDB = setOf(TestDB.MARIADB, TestDB.MYSQL_V5)
 
     @Test
     fun kotlinTimeFunctions() {
@@ -558,7 +558,7 @@ class KotlinTimeTests : R2dbcDatabaseTestsBase() {
         }
 
         withTables(tester) {
-            val now = Clock.System.now()
+            val now = Clock.System.nowAsJdk8()
 
             tester.insert {
                 it[tester.ts] = now

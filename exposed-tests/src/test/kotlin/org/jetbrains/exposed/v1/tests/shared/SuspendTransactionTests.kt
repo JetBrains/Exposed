@@ -14,7 +14,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.sql.Connection.TRANSACTION_SERIALIZABLE
 import java.util.*
 
@@ -25,6 +25,7 @@ class SuspendTransactionTests : DatabaseTestsBase() {
         val value = integer("value")
     }
 
+    // equivalent to exposed-r2dbc-tests/PostgresqlTests.kt/testClosedSuspendTransaction()
     @Test
     fun testClosedSuspendTransaction() {
         withTables(
@@ -35,7 +36,7 @@ class SuspendTransactionTests : DatabaseTestsBase() {
                 defaultMaxAttempts = 20
             }
         ) {
-            inTopLevelTransaction(TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = TRANSACTION_SERIALIZABLE) {
                 TestConflictTable.insert {
                     it[id] = uuid
                     it[value] = 0
@@ -57,7 +58,7 @@ class SuspendTransactionTests : DatabaseTestsBase() {
     }
 
     private suspend fun runExposedTransaction() {
-        newSuspendedTransaction(Dispatchers.IO, transactionIsolation = TRANSACTION_SERIALIZABLE) {
+        newSuspendedTransaction(null, transactionIsolation = TRANSACTION_SERIALIZABLE) {
             val current = TestConflictTable
                 .selectAll()
                 .where({ TestConflictTable.id eq uuid })

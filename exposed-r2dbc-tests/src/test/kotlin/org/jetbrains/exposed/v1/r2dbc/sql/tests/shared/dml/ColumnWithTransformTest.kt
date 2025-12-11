@@ -6,10 +6,13 @@ import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.ColumnTransformer
 import org.jetbrains.exposed.v1.core.ColumnWithTransform
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.TextColumnType
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.statements.api.RowApi
 import org.jetbrains.exposed.v1.r2dbc.batchInsert
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
@@ -19,7 +22,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.update
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -344,6 +347,44 @@ class ColumnWithTransformTest : R2dbcDatabaseTestsBase() {
             }
 
             assertEquals(2, tester.selectAll().first()[tester.v1].value)
+        }
+    }
+
+    @Test
+    fun testReadObjectPassedToDelegate() {
+        data class DateHolder(val value: String)
+
+        // Prefix is added only on reading the value from the table via `readObject` method
+        // `eagerLoading` is set to true to get String (instead of CLOB) inside `readObject` immediately
+        class TextWithPrefixColumnType(val prefix: String) : TextColumnType(eagerLoading = true) {
+            override fun readObject(rs: RowApi, index: Int): Any {
+                return "${prefix}${super.readObject(rs, index)}"
+            }
+        }
+
+        fun Table.textWithPrefix(name: String, prefix: String): Column<String> =
+            registerColumn(name, TextWithPrefixColumnType(prefix))
+
+        val transformer = object : ColumnTransformer<String, DateHolder> {
+            override fun wrap(value: String): DateHolder = DateHolder(value)
+            override fun unwrap(value: DateHolder): String = value.value
+        }
+
+        val tester = object : Table("tester") {
+            val dateTime = textWithPrefix("text_with_prefix", prefix = "###").transform(transformer)
+        }
+
+        val testValue = "test_value"
+
+        withTables(tester) {
+            val holder = DateHolder(testValue)
+
+            tester.insert {
+                it[dateTime] = holder
+            }
+
+            val result = tester.selectAll().single()[tester.dateTime]
+            assertEquals("###$testValue", result.value)
         }
     }
 }

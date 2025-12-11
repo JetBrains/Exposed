@@ -1,4 +1,5 @@
 package org.jetbrains.exposed.v1.tests.shared.entities
+
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
@@ -13,10 +14,12 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
 import java.sql.Connection
 import java.util.*
 import kotlin.reflect.jvm.isAccessible
@@ -75,6 +78,7 @@ class VString(id: EntityID<Long>) : Entity<Long>(id) {
     companion object : EntityClass<Long, VString>(ViaTestData.StringsTable)
 }
 
+@Tag(MISSING_R2DBC_TEST)
 class ViaTests : DatabaseTestsBase() {
 
     private fun VNumber.testWithBothTables(valuesToSet: List<VString>, body: (ViaTestData.IConnectionTable, List<ResultRow>) -> Unit) {
@@ -361,7 +365,7 @@ class ViaTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 Project.all().with(Project::tasks)
                 val cache = TransactionManager.current().entityCache

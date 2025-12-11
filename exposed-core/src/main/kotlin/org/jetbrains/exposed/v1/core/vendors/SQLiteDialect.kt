@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.v1.core.vendors
 
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.exceptions.throwUnsupportedException
 
 internal object SQLiteDataTypeProvider : DataTypeProvider() {
@@ -15,6 +15,18 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
     override fun dateType(): String = "TEXT"
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
     override fun jsonType(): String = "TEXT"
+
+    override fun jsonBType(): String {
+        @Suppress("MagicNumber")
+        @OptIn(InternalApi::class)
+        val supportedVersion = Version(3, 45, 0)
+
+        @OptIn(InternalApi::class)
+        val currentVersion = Version.from(currentTransaction().db.fullVersion.trim())
+
+        return if (currentVersion.covers(supportedVersion)) blobType() else super.jsonBType()
+    }
+
     override fun hexToDb(hexString: String): String = "X'$hexString'"
 }
 
@@ -34,16 +46,16 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
 
     override fun concat(separator: String, queryBuilder: QueryBuilder, vararg expr: Expression<*>) = queryBuilder {
         if (separator == "") {
-            expr.toList().appendTo(this, separator = " || ") { +it }
+            expr.asList().appendTo(this, separator = " || ") { +it }
         } else {
-            expr.toList().appendTo(this, separator = " || '$separator' || ") { +it }
+            expr.asList().appendTo(this, separator = " || '$separator' || ") { +it }
         }
     }
 
     override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) {
         @OptIn(InternalApi::class)
         if (expr.distinct) {
-            CoreTransactionManager.currentTransaction().throwUnsupportedException("SQLite doesn't support DISTINCT in GROUP_CONCAT function")
+            currentTransaction().throwUnsupportedException("SQLite doesn't support DISTINCT in GROUP_CONCAT function")
         }
         queryBuilder {
             +"GROUP_CONCAT("
@@ -79,7 +91,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ) {
         @OptIn(InternalApi::class)
-        CoreTransactionManager.currentTransaction().throwUnsupportedException("SQLite doesn't provide built in REGEXP expression, use LIKE instead.")
+        currentTransaction().throwUnsupportedException("SQLite doesn't provide built in REGEXP expression, use LIKE instead.")
     }
 
     override fun <T> time(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
@@ -141,7 +153,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ) {
         @OptIn(InternalApi::class)
-        CoreTransactionManager.currentTransaction().throwUnsupportedException("$UNSUPPORTED_AGGREGATE STDDEV_POP")
+        currentTransaction().throwUnsupportedException("$UNSUPPORTED_AGGREGATE STDDEV_POP")
     }
 
     override fun <T> stdDevSamp(
@@ -149,7 +161,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ) {
         @OptIn(InternalApi::class)
-        CoreTransactionManager.currentTransaction().throwUnsupportedException("$UNSUPPORTED_AGGREGATE STDDEV_SAMP")
+        currentTransaction().throwUnsupportedException("$UNSUPPORTED_AGGREGATE STDDEV_SAMP")
     }
 
     override fun <T> varPop(
@@ -157,7 +169,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ) {
         @OptIn(InternalApi::class)
-        CoreTransactionManager.currentTransaction().throwUnsupportedException("$UNSUPPORTED_AGGREGATE VAR_POP")
+        currentTransaction().throwUnsupportedException("$UNSUPPORTED_AGGREGATE VAR_POP")
     }
 
     override fun <T> varSamp(
@@ -165,7 +177,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ) {
         @OptIn(InternalApi::class)
-        CoreTransactionManager.currentTransaction().throwUnsupportedException("$UNSUPPORTED_AGGREGATE VAR_SAMP")
+        currentTransaction().throwUnsupportedException("$UNSUPPORTED_AGGREGATE VAR_SAMP")
     }
 
     override fun <T> jsonExtract(
@@ -188,7 +200,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ) {
         @OptIn(InternalApi::class)
-        val transaction = CoreTransactionManager.currentTransaction()
+        val transaction = currentTransaction()
         if (path.size > 1) {
             transaction.throwUnsupportedException("SQLite does not support multiple JSON path arguments")
         }
@@ -262,7 +274,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
     override fun queryLimitAndOffset(size: Int?, offset: Long, alreadyOrdered: Boolean): String {
         @OptIn(InternalApi::class)
         if (size == null && offset > 0) {
-            CoreTransactionManager.currentTransaction().throwUnsupportedException("SQLite doesn't support OFFSET clause without LIMIT")
+            currentTransaction().throwUnsupportedException("SQLite doesn't support OFFSET clause without LIMIT")
         }
         return super.queryLimitAndOffset(size, offset, alreadyOrdered)
     }
@@ -326,13 +338,38 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
         return "DROP INDEX IF EXISTS ${identifierManager.cutIfNecessaryAndQuote(indexName)}"
     }
 
-    @OptIn(InternalApi::class)
-    override fun createDatabase(name: String) = "ATTACH DATABASE '${name.lowercase()}.db' AS ${name.inProperCase()}"
+    override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> {
+        exposedLogger.warn("Modifying an existing column definition with ALTER TABLE is not supported in SQLite")
+        return emptyList()
+    }
+
+    override fun modifyColumn(originalColumnData: ColumnMetadata, column: Column<*>, columnDiff: ColumnDiff): List<String> {
+        if (columnDiff.hasDifferences() && !columnDiff.caseSensitiveName) {
+            exposedLogger.warn("ALTER TABLE only supports modifying the column name in SQLite")
+            return emptyList()
+        }
+
+        @OptIn(InternalApi::class)
+        val tr = currentTransaction()
+        return listOf("ALTER TABLE ${tr.identity(column.table)} RENAME COLUMN ${originalColumnData.name} TO ${tr.identity(column)}")
+    }
+
+    override fun addPrimaryKey(table: Table, pkName: String?, vararg pkColumns: Column<*>): String {
+        exposedLogger.warn("ALTER TABLE does not support adding a primary key to an existing table in SQLite")
+        return ""
+    }
+
+    override fun createDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "ATTACH DATABASE '${name.lowercase()}.db' AS ${name.inProperCase()}"
+    }
 
     override fun listDatabases(): String = "SELECT name FROM pragma_database_list"
 
-    @OptIn(InternalApi::class)
-    override fun dropDatabase(name: String) = "DETACH DATABASE ${name.inProperCase()}"
+    override fun dropDatabase(name: String): String {
+        @OptIn(InternalApi::class)
+        return "DETACH DATABASE ${name.inProperCase()}"
+    }
 
     companion object : DialectNameProvider("SQLite")
 }

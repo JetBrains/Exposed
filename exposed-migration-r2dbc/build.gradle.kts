@@ -1,3 +1,7 @@
+import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     kotlin("jvm")
 
@@ -10,7 +14,7 @@ repositories {
 }
 
 kotlin {
-    jvmToolchain(11)
+    jvmToolchain(17)
 }
 
 dependencies {
@@ -30,6 +34,23 @@ dependencies {
     testRuntimeOnly(libs.r2dbc.postgresql)
     testRuntimeOnly(libs.r2dbc.sqlserver)
 
-    testImplementation(libs.junit)
-    testImplementation(kotlin("test-junit"))
+    testImplementation(libs.logcaptor)
+    testImplementation(libs.junit5)
+    testRuntimeOnly(libs.junit.platform.launcher)
+    testImplementation(kotlin("test-junit5"))
 }
+
+tasks.withType<KotlinCompile>().configureEach {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_11)
+    }
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    targetCompatibility = "11"
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+

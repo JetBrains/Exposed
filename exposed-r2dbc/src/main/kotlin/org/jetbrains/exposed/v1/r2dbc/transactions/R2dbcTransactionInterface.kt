@@ -13,7 +13,7 @@ interface R2dbcTransactionInterface : TransactionInterface {
     override val outerTransaction: R2dbcTransaction?
 
     /** The transaction isolation level of the transaction, which may differ from the set database level. */
-    val transactionIsolation: IsolationLevel
+    val transactionIsolation: IsolationLevel?
 
     /** Retrieves the database connection used by the transaction. */
     suspend fun connection(): R2dbcExposedConnection<*>
@@ -31,12 +31,11 @@ interface R2dbcTransactionInterface : TransactionInterface {
 /**
  * The [TransactionManager] instance that is associated with this [R2dbcDatabase].
  *
- * @throws [RuntimeException] If a manager has not been registered for the database.
+ * @throws IllegalStateException if no transaction manager is registered for the given database.
  */
 @Suppress("TooGenericExceptionThrown")
-val R2dbcDatabase?.transactionManager: TransactionManager
+val R2dbcDatabase.transactionManager: TransactionManager
     get() = TransactionManager.managerFor(this)
-        ?: throw RuntimeException("Database $this does not have any transaction manager")
 
 @Suppress("TooGenericExceptionCaught")
 internal suspend fun R2dbcTransactionInterface.rollbackLoggingException(log: (Exception) -> Unit) {

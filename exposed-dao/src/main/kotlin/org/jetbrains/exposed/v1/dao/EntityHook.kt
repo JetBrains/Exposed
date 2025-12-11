@@ -3,7 +3,7 @@ package org.jetbrains.exposed.v1.dao
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.currentTransactionOrNull
 import org.jetbrains.exposed.v1.core.transactions.transactionScope
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import java.util.Deque
@@ -82,7 +82,7 @@ fun Transaction.registerChange(
     entityId: EntityID<*>,
     changeType: EntityChangeType
 ) {
-    EntityChange(entityClass, entityId, changeType, id).let {
+    EntityChange(entityClass, entityId, changeType, transactionId).let {
         if (unprocessedEvents.peekLast() != it) {
             unprocessedEvents.addLast(it)
             entityEvents.addLast(it)
@@ -122,7 +122,7 @@ fun <T> withHook(action: (EntityChange) -> Unit, body: () -> T): T {
     try {
         return body().apply {
             @OptIn(InternalApi::class)
-            (CoreTransactionManager.currentTransactionOrNull() as? JdbcTransaction?)?.commit()
+            (currentTransactionOrNull() as? JdbcTransaction?)?.commit()
         }
     } finally {
         EntityHook.unsubscribe(action)

@@ -117,6 +117,7 @@ public class org/jetbrains/exposed/v1/jdbc/JdbcTransaction : org/jetbrains/expos
 	public final fun getCurrentStatement ()Lorg/jetbrains/exposed/v1/jdbc/statements/api/JdbcPreparedStatementApi;
 	public synthetic fun getDb ()Lorg/jetbrains/exposed/v1/core/DatabaseApi;
 	public final fun getDb ()Lorg/jetbrains/exposed/v1/jdbc/Database;
+	public final fun getDefaultLogger ()Lorg/jetbrains/exposed/v1/core/CompositeSqlLogger;
 	public final fun getMaxAttempts ()I
 	public final fun getMaxRetryDelay ()J
 	public final fun getMinRetryDelay ()J
@@ -124,6 +125,8 @@ public class org/jetbrains/exposed/v1/jdbc/JdbcTransaction : org/jetbrains/expos
 	public fun getOuterTransaction ()Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
 	public fun getReadOnly ()Z
 	public fun getTransactionIsolation ()I
+	public synthetic fun getTransactionManager ()Lorg/jetbrains/exposed/v1/core/transactions/TransactionManagerApi;
+	public fun getTransactionManager ()Lorg/jetbrains/exposed/v1/jdbc/transactions/TransactionManager;
 	public final fun registerInterceptor (Lorg/jetbrains/exposed/v1/core/statements/StatementInterceptor;)Z
 	public fun rollback ()V
 	public final fun setCurrentStatement (Lorg/jetbrains/exposed/v1/jdbc/statements/api/JdbcPreparedStatementApi;)V
@@ -135,6 +138,10 @@ public class org/jetbrains/exposed/v1/jdbc/JdbcTransaction : org/jetbrains/expos
 
 public final class org/jetbrains/exposed/v1/jdbc/JdbcTransaction$Companion {
 	public final fun getGlobalInterceptors ()Ljava/util/ArrayList;
+}
+
+public final class org/jetbrains/exposed/v1/jdbc/JdbcTransactionKt {
+	public static final fun withTransactionContext (Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/v1/jdbc/LazySizedCollection : org/jetbrains/exposed/v1/jdbc/SizedIterable {
@@ -397,9 +404,10 @@ public abstract interface class org/jetbrains/exposed/v1/jdbc/SizedIterable : ja
 	public abstract fun copy ()Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
 	public abstract fun count ()J
 	public abstract fun empty ()Z
-	public abstract fun forUpdate (Lorg/jetbrains/exposed/v1/core/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
+	public fun forUpdate (Lorg/jetbrains/exposed/v1/core/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
+	public static synthetic fun forUpdate$default (Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;Lorg/jetbrains/exposed/v1/core/vendors/ForUpdateOption;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
 	public abstract fun limit (I)Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
-	public abstract fun notForUpdate ()Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
+	public fun notForUpdate ()Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
 	public abstract fun offset (J)Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
 	public abstract fun orderBy ([Lkotlin/Pair;)Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
 }
@@ -454,11 +462,11 @@ public class org/jetbrains/exposed/v1/jdbc/statements/BatchUpsertBlockingExecuta
 }
 
 public abstract interface class org/jetbrains/exposed/v1/jdbc/statements/BlockingExecutable {
-	public abstract fun execute (Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;)Ljava/lang/Object;
+	public fun execute (Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;)Ljava/lang/Object;
 	public abstract fun executeInternal (Lorg/jetbrains/exposed/v1/jdbc/statements/api/JdbcPreparedStatementApi;Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;)Ljava/lang/Object;
 	public abstract fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
-	public abstract fun isAlwaysBatch ()Z
-	public abstract fun prepared (Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/jdbc/statements/api/JdbcPreparedStatementApi;
+	public fun isAlwaysBatch ()Z
+	public fun prepared (Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/jdbc/statements/api/JdbcPreparedStatementApi;
 }
 
 public final class org/jetbrains/exposed/v1/jdbc/statements/BlockingExecutable$DefaultImpls {
@@ -766,33 +774,10 @@ public final class org/jetbrains/exposed/v1/jdbc/transactions/JdbcTransactionInt
 	public static final fun getTransactionManager (Lorg/jetbrains/exposed/v1/jdbc/Database;)Lorg/jetbrains/exposed/v1/jdbc/transactions/TransactionManager;
 }
 
-public final class org/jetbrains/exposed/v1/jdbc/transactions/ThreadLocalTransactionManager : org/jetbrains/exposed/v1/core/transactions/TransactionManagerApi {
-	public fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Lkotlin/jvm/functions/Function2;)V
-	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Lkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun bindTransactionToThread (Lorg/jetbrains/exposed/v1/core/Transaction;)V
-	public synthetic fun currentOrNull ()Lorg/jetbrains/exposed/v1/core/Transaction;
-	public fun currentOrNull ()Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
-	public final fun getDefaultIsolationLevel ()I
-	public fun getDefaultMaxAttempts ()I
-	public fun getDefaultMaxRetryDelay ()J
-	public fun getDefaultMinRetryDelay ()J
-	public fun getDefaultReadOnly ()Z
-	public final fun getThreadLocal ()Ljava/lang/ThreadLocal;
-	public final fun newTransaction (IZLorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;)Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
-	public static synthetic fun newTransaction$default (Lorg/jetbrains/exposed/v1/jdbc/transactions/ThreadLocalTransactionManager;IZLorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
-	public final fun setDefaultIsolationLevel (I)V
-	public fun setDefaultMaxAttempts (I)V
-	public fun setDefaultMaxRetryDelay (J)V
-	public fun setDefaultMinRetryDelay (J)V
-	public fun setDefaultReadOnly (Z)V
-	public fun toString ()Ljava/lang/String;
-}
-
 public final class org/jetbrains/exposed/v1/jdbc/transactions/TransactionManager : org/jetbrains/exposed/v1/core/transactions/TransactionManagerApi {
 	public static final field Companion Lorg/jetbrains/exposed/v1/jdbc/transactions/TransactionManager$Companion;
 	public fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Lkotlin/jvm/functions/Function2;)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Lkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun bindTransactionToThread (Lorg/jetbrains/exposed/v1/core/Transaction;)V
 	public synthetic fun currentOrNull ()Lorg/jetbrains/exposed/v1/core/Transaction;
 	public fun currentOrNull ()Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
 	public final fun getDefaultIsolationLevel ()I
@@ -800,7 +785,6 @@ public final class org/jetbrains/exposed/v1/jdbc/transactions/TransactionManager
 	public fun getDefaultMaxRetryDelay ()J
 	public fun getDefaultMinRetryDelay ()J
 	public fun getDefaultReadOnly ()Z
-	public final fun getThreadLocal ()Ljava/lang/ThreadLocal;
 	public final fun newTransaction (IZLorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;)Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
 	public static synthetic fun newTransaction$default (Lorg/jetbrains/exposed/v1/jdbc/transactions/TransactionManager;IZLorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
 	public final fun setDefaultIsolationLevel (I)V
@@ -815,23 +799,25 @@ public final class org/jetbrains/exposed/v1/jdbc/transactions/TransactionManager
 	public final fun closeAndUnregister (Lorg/jetbrains/exposed/v1/jdbc/Database;)V
 	public final fun current ()Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
 	public final fun currentOrNew (I)Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
+	public static synthetic fun currentOrNew$default (Lorg/jetbrains/exposed/v1/jdbc/transactions/TransactionManager$Companion;IILjava/lang/Object;)Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
 	public final fun currentOrNull ()Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
 	public final fun getDefaultDatabase ()Lorg/jetbrains/exposed/v1/jdbc/Database;
 	public final fun getManager ()Lorg/jetbrains/exposed/v1/jdbc/transactions/TransactionManager;
-	public final fun isInitialized ()Z
+	public final fun getPrimaryDatabase ()Lorg/jetbrains/exposed/v1/jdbc/Database;
 	public final fun managerFor (Lorg/jetbrains/exposed/v1/jdbc/Database;)Lorg/jetbrains/exposed/v1/jdbc/transactions/TransactionManager;
 	public final fun registerManager (Lorg/jetbrains/exposed/v1/jdbc/Database;Lorg/jetbrains/exposed/v1/core/transactions/TransactionManagerApi;)V
-	public final fun resetCurrent (Lorg/jetbrains/exposed/v1/jdbc/transactions/TransactionManager;)V
 	public final fun setDefaultDatabase (Lorg/jetbrains/exposed/v1/jdbc/Database;)V
 }
 
-public final class org/jetbrains/exposed/v1/jdbc/transactions/TransactionManagerKt {
-	public static final fun inTopLevelTransaction (IZLorg/jetbrains/exposed/v1/jdbc/Database;Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
-	public static synthetic fun inTopLevelTransaction$default (IZLorg/jetbrains/exposed/v1/jdbc/Database;Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
-	public static final fun transaction (IZLorg/jetbrains/exposed/v1/jdbc/Database;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
-	public static final fun transaction (Lorg/jetbrains/exposed/v1/jdbc/Database;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
-	public static synthetic fun transaction$default (IZLorg/jetbrains/exposed/v1/jdbc/Database;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
-	public static synthetic fun transaction$default (Lorg/jetbrains/exposed/v1/jdbc/Database;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
+public final class org/jetbrains/exposed/v1/jdbc/transactions/TransactionsKt {
+	public static final fun inTopLevelSuspendTransaction (Lorg/jetbrains/exposed/v1/jdbc/Database;Ljava/lang/Integer;Ljava/lang/Boolean;Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun inTopLevelSuspendTransaction$default (Lorg/jetbrains/exposed/v1/jdbc/Database;Ljava/lang/Integer;Ljava/lang/Boolean;Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun inTopLevelTransaction (Lorg/jetbrains/exposed/v1/jdbc/Database;Ljava/lang/Integer;Ljava/lang/Boolean;Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public static synthetic fun inTopLevelTransaction$default (Lorg/jetbrains/exposed/v1/jdbc/Database;Ljava/lang/Integer;Ljava/lang/Boolean;Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun suspendTransaction (Lorg/jetbrains/exposed/v1/jdbc/Database;Ljava/lang/Integer;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun suspendTransaction$default (Lorg/jetbrains/exposed/v1/jdbc/Database;Ljava/lang/Integer;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun transaction (Lorg/jetbrains/exposed/v1/jdbc/Database;Ljava/lang/Integer;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public static synthetic fun transaction$default (Lorg/jetbrains/exposed/v1/jdbc/Database;Ljava/lang/Integer;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/v1/jdbc/transactions/experimental/SuspendedKt {

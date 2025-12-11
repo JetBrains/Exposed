@@ -37,7 +37,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.upsert
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.lang.Integer.parseInt
 import java.util.*
 import kotlin.properties.Delegates

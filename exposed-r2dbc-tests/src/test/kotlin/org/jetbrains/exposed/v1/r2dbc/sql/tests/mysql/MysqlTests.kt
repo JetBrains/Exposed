@@ -1,10 +1,15 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.mysql
 
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
+import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption.MySQL
+import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption.MySQL.ForUpdate
+import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption.MySQL.MODE
 import org.jetbrains.exposed.v1.r2dbc.ExposedR2dbcException
 import org.jetbrains.exposed.v1.r2dbc.Query
 import org.jetbrains.exposed.v1.r2dbc.insert
@@ -16,10 +21,9 @@ import org.jetbrains.exposed.v1.r2dbc.tests.getString
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.jetbrains.exposed.v1.r2dbc.update
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import kotlin.test.expect
 
 class MysqlTests : R2dbcDatabaseTestsBase() {
     @Test
@@ -33,26 +37,6 @@ class MysqlTests : R2dbcDatabaseTestsBase() {
             )
         }
     }
-
-    // NOTE: UNSUPPORTED by r2dbc-mysql
-    // rewriteBatchedStatements property: https://github.com/asyncer-io/r2dbc-mysql/issues/136
-//    @Test
-//    fun testBatchInsertWithRewriteBatchedStatementsOn() {
-//        val mysqlOnly = TestDB.enabledDialects() - TestDB.MYSQL_V8
-//        withTables(excludeSettings = mysqlOnly, DMLTestsData.Cities) {
-//            val mysqlConnection = this.connection.connection as R2dbcConnectionImpl
-//            mysqlConnection.propertySet.getBooleanProperty(PropertyKey.rewriteBatchedStatements).value = true
-//            val cityNames = listOf("FooCity", "BarCity")
-//            val generatedValues = DMLTestsData.Cities.batchInsert(cityNames) { city ->
-//                this[DMLTestsData.Cities.name] = city
-//            }
-//
-//            assertEquals(cityNames.size, generatedValues.size)
-//            generatedValues.forEach {
-//                assertNotNull(it.getOrNull(DMLTestsData.Cities.id))
-//            }
-//        }
-//    }
 
     private class IndexHintQuery(
         val source: Query,
@@ -128,17 +112,48 @@ class MysqlTests : R2dbcDatabaseTestsBase() {
             val queryWithHint = tester
                 .select(sleepNSeconds)
                 .comment("+ MAX_EXECUTION_TIME(1000) ", AbstractQuery.CommentPosition.AFTER_SELECT)
-            if (testDb in TestDB.ALL_MYSQL) {
-                // Query execution was interrupted, max statement execution time exceeded
-                expectException<ExposedR2dbcException> {
-                    queryWithHint.single()
-                }
-            } else {
-                // MariaDB has much fewer optimizer hint options and, like any other db, will just ignore the comment
-                expect(0) {
-                    queryWithHint.single()[sleepNSeconds]
-                }
+            // Query execution was interrupted, max statement execution time exceeded
+            expectException<ExposedR2dbcException> {
+                queryWithHint.single()
             }
+        }
+    }
+
+    @Test
+    fun testForUpdateOptionsSyntax() {
+        val table = object : IntIdTable() {
+            val name = varchar("name", 50)
+        }
+
+        val id = 1
+
+        suspend fun Query.city() = map { it[table.name] }.single()
+
+        suspend fun select(option: ForUpdateOption): String {
+            return table.selectAll().where { table.id eq id }.forUpdate(option).city()
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.MYSQL_V8, table) {
+            val name = "name"
+            table.insert {
+                it[table.id] = id
+                it[table.name] = name
+            }
+            commit()
+
+            val defaultForUpdateRes = table.selectAll().where { table.id eq id }.city()
+            val forUpdateRes = select(option = ForUpdateOption.ForUpdate)
+            val forUpdateOfTableRes = select(ForUpdate(ofTables = arrayOf(table)))
+            val forShareRes = select(MySQL.ForShare)
+            val forShareNoWaitOfTableRes = select(MySQL.ForShare(MODE.NO_WAIT, table))
+            val notForUpdateRes = table.selectAll().where { table.id eq id }.notForUpdate().city()
+
+            assertEquals(name, defaultForUpdateRes)
+            assertEquals(name, forUpdateRes)
+            assertEquals(name, forUpdateOfTableRes)
+            assertEquals(name, forShareRes)
+            assertEquals(name, forShareNoWaitOfTableRes)
+            assertEquals(name, notForUpdateRes)
         }
     }
 }

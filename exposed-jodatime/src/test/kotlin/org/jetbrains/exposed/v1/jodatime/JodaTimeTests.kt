@@ -14,6 +14,7 @@ import org.jetbrains.exposed.v1.core.between
 import org.jetbrains.exposed.v1.core.castTo
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.function
 import org.jetbrains.exposed.v1.core.get
 import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.less
@@ -35,7 +36,7 @@ import org.jetbrains.exposed.v1.tests.shared.expectException
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.LocalTime
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 class JodaTimeTests : DatabaseTestsBase() {
@@ -43,7 +44,7 @@ class JodaTimeTests : DatabaseTestsBase() {
         DateTimeZone.setDefault(DateTimeZone.UTC)
     }
 
-    private val timestampWithTimeZoneUnsupportedDB = TestDB.ALL_MARIADB + TestDB.MYSQL_V5
+    private val timestampWithTimeZoneUnsupportedDB = setOf(TestDB.MARIADB, TestDB.MYSQL_V5)
 
     @Test
     fun jodaTimeFunctions() {
@@ -250,7 +251,7 @@ class JodaTimeTests : DatabaseTestsBase() {
             val modified = jsonb<ModifierData>("modified", Json.Default)
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2_V2 + TestDB.SQLITE + TestDB.SQLSERVER + TestDB.ORACLE, tester) {
+        withTables(excludeSettings = TestDB.ALL_H2_V2 + TestDB.SQLSERVER + TestDB.ORACLE, tester) { testDb ->
             val dateTimeNow = DateTime.now()
             tester.insert {
                 it[created] = dateTimeNow.minusYears(1)
@@ -274,8 +275,17 @@ class JodaTimeTests : DatabaseTestsBase() {
             } else {
                 tester.modified.extract<DateTime>("${prefix}timestamp")
             }
-            val modifiedBeforeCreation = tester.selectAll().where { dateModified less tester.created }.single()
-            assertEquals(2, modifiedBeforeCreation[tester.modified].userId)
+            // SQLite requires JSON() function to convert JSONB binary format to readable text format
+            val modifiedColumn = if (testDb == TestDB.SQLITE) {
+                tester.modified.function("JSON")
+            } else {
+                tester.modified
+            }
+            val modifiedBeforeCreation = tester
+                .select(tester.created, modifiedColumn)
+                .where { dateModified less tester.created }
+                .single()
+            assertEquals(2, modifiedBeforeCreation[modifiedColumn]?.userId)
         }
     }
 

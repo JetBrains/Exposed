@@ -33,10 +33,10 @@ import javax.sql.DataSource
 @EnableTransactionManagement
 open class ExposedAutoConfiguration(private val applicationContext: ApplicationContext) {
 
-    @Value("\${spring.exposed.excluded-packages:}#{T(java.util.Collections).emptyList()}")
+    @Value($$"${spring.exposed.excluded-packages:}#{T(java.util.Collections).emptyList()}")
     private lateinit var excludedPackages: List<String>
 
-    @Value("\${spring.exposed.show-sql:false}")
+    @Value($$"${spring.exposed.show-sql:false}")
     private var showSql: Boolean = false
 
     /**

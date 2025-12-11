@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.v1.tests.shared.dml
 
-import junit.framework.TestCase.assertNull
 import org.jetbrains.exposed.v1.core.Join
 import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.eq
@@ -8,7 +7,6 @@ import org.jetbrains.exposed.v1.core.innerJoin
 import org.jetbrains.exposed.v1.core.joinQuery
 import org.jetbrains.exposed.v1.core.lastQueryAlias
 import org.jetbrains.exposed.v1.core.like
-import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
@@ -19,7 +17,8 @@ import org.jetbrains.exposed.v1.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNull
 import kotlin.test.assertTrue
 import kotlin.test.expect
 
@@ -83,8 +82,7 @@ class DeleteTests : DatabaseTestsBase() {
                 userData.deleteWhere(limit = 1) { userData.value eq 20 }
                 userData.select(userData.user_id, userData.value).where { userData.value eq 20 }.let {
                     assertEquals(1L, it.count())
-                    val expected = if (currentDialectTest is H2Dialect) "smth" else "eugene"
-                    assertEquals(expected, it.single()[userData.user_id])
+                    assertEquals("eugene", it.single()[userData.user_id])
                 }
             }
         }

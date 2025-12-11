@@ -16,7 +16,7 @@ import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.sql.SQLException
 import kotlin.test.assertContains
 import kotlin.test.assertNotNull
@@ -167,7 +167,7 @@ class ColumnDefinitionTests : DatabaseTestsBase() {
 
         fun FieldSet.selectImplicitAll(): Query = ImplicitQuery(this, null)
 
-        val invisibilitySupportedDB = TestDB.ALL_H2_V2 + TestDB.ALL_MARIADB + TestDB.MYSQL_V8 + TestDB.ORACLE
+        val invisibilitySupportedDB = TestDB.ALL_H2_V2 + TestDB.MARIADB + TestDB.MYSQL_V8 + TestDB.ORACLE
 
         withTables(excludeSettings = TestDB.ALL - invisibilitySupportedDB, tester) { testDb ->
             if (testDb == TestDB.MYSQL_V8 || testDb == TestDB.ORACLE) {

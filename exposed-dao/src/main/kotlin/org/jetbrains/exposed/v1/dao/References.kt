@@ -110,8 +110,8 @@ open class Referrers<ParentID : Any, in Parent : Entity<ParentID>, ChildID : Any
     val cache: Boolean,
     references: Map<Column<*>, Column<*>>? = null
 ) : ReadOnlyProperty<Parent, SizedIterable<Child>> {
-    /** The list of columns and their [SortOrder] for ordering referred entities in one-to-many relationship. */
-    private val orderByExpressions: MutableList<Pair<Expression<*>, SortOrder>> = mutableListOf()
+    /** The set of columns and their [SortOrder] for ordering referred entities in one-to-many relationship. */
+    private val orderByExpressions = linkedSetOf<Pair<Expression<*>, SortOrder>>()
 
     val allReferences = references ?: run {
         reference.referee ?: error("Column $reference is not a reference")
@@ -191,7 +191,7 @@ open class Referrers<ParentID : Any, in Parent : Entity<ParentID>, ChildID : Any
     infix fun orderBy(expression: Expression<*>) = orderBy(listOf(expression to SortOrder.ASC))
 
     /** Modifies this reference to sort entities based on multiple columns as specified in [order]. **/
-    fun orderBy(vararg order: Pair<Expression<*>, SortOrder>) = orderBy(order.toList())
+    fun orderBy(vararg order: Pair<Expression<*>, SortOrder>) = orderBy(order.asList())
 }
 
 /**
@@ -377,7 +377,7 @@ private fun <ID : Any> List<Entity<ID>>.preloadRelations(
     }
 
     if (directRelations.isNotEmpty() && relations.size != directRelations.size) {
-        val remainingRelations = relations.toList() - directRelations
+        val remainingRelations = relations.asList() - directRelations
         directRelations.map { relationProperty ->
             val relationsToLoad = this.flatMap {
                 when (val relation = (relationProperty as KProperty1<Entity<*>, *>).get(it)) {

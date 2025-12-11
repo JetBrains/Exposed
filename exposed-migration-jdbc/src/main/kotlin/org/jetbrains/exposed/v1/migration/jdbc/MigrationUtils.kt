@@ -3,6 +3,7 @@ package org.jetbrains.exposed.v1.migration.jdbc
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.exists
@@ -120,7 +121,6 @@ object MigrationUtils : MigrationUtilityApi() {
             ).not()
         }
 
-        @OptIn(InternalApi::class)
         for (table in tables) {
             table.mapMissingColumnStatementsTo(
                 statements,
@@ -131,7 +131,9 @@ object MigrationUtils : MigrationUtilityApi() {
             )
         }
 
-        if (dbSupportsAlterTableWithAddColumn) {
+        // While SQLite does allow some ALTER TABLE syntax, ADD/DROP CONSTRAINT is still not supported.
+        // ForeignKeyConstraint statement builders would return empty list at lowest level, but this avoids metadata check entirely.
+        if (dbSupportsAlterTableWithAddColumn && currentDialect !is SQLiteDialect) {
             val existingColumnConstraints = logTimeSpent(CONSTRAINTS_LOG_MESSAGE, withLogs) {
                 currentDialectMetadata.columnConstraints(*tables)
             }
@@ -189,19 +191,19 @@ object MigrationUtils : MigrationUtilityApi() {
      * @param withLogs Whether to log intermediate steps and execution time. Defaults to `true`
      * @return A list of SQL DROP INDEX statements for unmapped indices
      */
-    @OptIn(InternalApi::class)
     fun dropUnmappedIndices(vararg tables: Table, withLogs: Boolean = true): List<String> {
         if (tables.isEmpty()) return emptyList()
 
         val foreignKeyConstraints = currentDialectMetadata.columnConstraints(*tables).keys
         val existingIndices = currentDialectMetadata.existingIndices(*tables)
 
-        val (_, toDrop) = existingIndices.filterAndLogMissingAndUnmappedIndices(
+        @OptIn(InternalApi::class)
+        val toDrop = existingIndices.filterAndLogMissingAndUnmappedIndices(
             foreignKeyConstraints,
             withDropIndices = true,
             withLogs = withLogs,
             tables = tables
-        )
+        ).second
 
         return toDrop.flatMap {
             it.dropStatement()

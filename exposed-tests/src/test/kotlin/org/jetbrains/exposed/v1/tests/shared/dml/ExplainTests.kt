@@ -19,7 +19,7 @@ import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class ExplainTests : DatabaseTestsBase() {
     private val explainUnsupportedDb = TestDB.ALL_SQLSERVER_LIKE + TestDB.ALL_ORACLE_LIKE

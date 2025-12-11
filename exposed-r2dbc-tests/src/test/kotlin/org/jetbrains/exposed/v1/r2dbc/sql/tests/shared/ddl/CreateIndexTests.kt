@@ -6,6 +6,7 @@ import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
+import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.exists
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
@@ -14,7 +15,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
 import org.jetbrains.exposed.v1.r2dbc.tests.getString
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.expect
 
 class CreateIndexTests : R2dbcDatabaseTestsBase() {
@@ -178,7 +179,7 @@ class CreateIndexTests : R2dbcDatabaseTestsBase() {
         }
 
         withDb(TestDB.ALL_POSTGRES + TestDB.SQLSERVER) {
-            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(tester)
+            SchemaUtils.createMissingTablesAndColumns(tester)
             assertTrue(tester.exists())
 
             val createdStatements = tester.indices.map { org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(it).first() }
@@ -263,7 +264,7 @@ class CreateIndexTests : R2dbcDatabaseTestsBase() {
             }
         }
 
-        val functionsNotSupported = TestDB.ALL_MARIADB + TestDB.ALL_H2_V2 + TestDB.SQLSERVER + TestDB.MYSQL_V5
+        val functionsNotSupported = TestDB.ALL_H2_V2 + TestDB.MARIADB + TestDB.SQLSERVER + TestDB.MYSQL_V5
         withTables(excludeSettings = functionsNotSupported, tester) {
             org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns()
             assertTrue(tester.exists())
@@ -276,6 +277,25 @@ class CreateIndexTests : R2dbcDatabaseTestsBase() {
 
             indices = getIndices(tester)
             assertEquals(0, indices.size)
+        }
+    }
+
+    @Test
+    fun testCreateAndDropIndexWithLongName() {
+        // Long index name
+        val indexName = "index-" + (0..100).joinToString(separator = "-") { "$it" }
+
+        val tester = object : Table("tester") {
+            val value = integer("value").index(indexName)
+        }
+
+        withDb {
+            val createStatement = tester.indices.single().createStatement().single()
+
+            val dropStatement = tester.indices.single().dropStatement().single()
+
+            // Both statements must have either full index name or shortened index name
+            assertEquals(createStatement.contains(indexName), dropStatement.contains(indexName))
         }
     }
 

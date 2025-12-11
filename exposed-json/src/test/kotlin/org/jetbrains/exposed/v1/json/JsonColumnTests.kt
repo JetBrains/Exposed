@@ -14,6 +14,7 @@ import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
@@ -21,7 +22,8 @@ import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -110,6 +112,7 @@ class JsonColumnTests : DatabaseTestsBase() {
         }
     }
 
+    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testDAOFunctionsWithJsonColumn() {
         val dataTable = JsonTestsData.JsonTable
@@ -160,7 +163,7 @@ class JsonColumnTests : DatabaseTestsBase() {
             val result = tester.selectAll().where { userIsInactive }.toList()
             assertEquals(0, result.size)
 
-            val alphaTeamUserAsJson = "{\"user\":${Json.Default.encodeToString(alphaTeamUser)}}"
+            val alphaTeamUserAsJson = "{\"user\":${Json.encodeToString(alphaTeamUser)}}"
             var userIsInAlphaTeam = JsonTestsData.JsonTable.jsonColumn.contains(stringLiteral(alphaTeamUserAsJson))
             assertEquals(1, tester.selectAll().where { userIsInAlphaTeam }.count())
 
@@ -207,9 +210,9 @@ class JsonColumnTests : DatabaseTestsBase() {
                 assertEquals(newId, usersWithMaxLogin.single()[tester.id])
 
                 val (jsonPath, optionalArg) = if (testDialect is OracleDialect) {
-                    "?(@.user.team == \$team)" to "PASSING '$teamA' AS \"team\""
+                    $$"?(@.user.team == $team)" to "PASSING '$teamA' AS \"team\""
                 } else {
-                    ".user.team ? (@ == \$team)" to "{\"team\":\"$teamA\"}"
+                    $$".user.team ? (@ == $team)" to "{\"team\":\"$teamA\"}"
                 }
                 val isOnTeamA = JsonTestsData.JsonTable.jsonColumn.exists(jsonPath, optional = optionalArg)
                 val usersOnTeamA = tester.select(tester.id).where { isOnTeamA }
@@ -370,7 +373,7 @@ class JsonColumnTests : DatabaseTestsBase() {
             val user = json<User>("user", Json.Default).nullable()
         }
 
-        withTables(tester) {
+        withTables(tester) { testDb ->
             val nullId = tester.insertAndGetId {
                 it[user] = null
             }
@@ -383,6 +386,20 @@ class JsonColumnTests : DatabaseTestsBase() {
 
             val result2 = tester.select(tester.user).where { tester.id eq nonNullId }.single()
             assertNotNull(result2[tester.user])
+
+            val batchData = listOf(null, User("B", "Team B"))
+            val batchSql = mutableListOf<String>()
+            tester.batchInsert(batchData) { user ->
+                this[tester.user] = user
+
+                batchSql += this.prepareSQL(this@withTables, prepared = true)
+            }
+            assertEquals(batchData.size, batchSql.size)
+            val expectedMarker = when (testDb) {
+                in TestDB.ALL_POSTGRES -> "?::json"
+                else -> "?"
+            }
+            assertTrue(batchSql.all { it.contains(expectedMarker, ignoreCase = true) })
         }
     }
 

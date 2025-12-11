@@ -5,7 +5,7 @@ import org.jetbrains.exposed.v1.core.doubleLiteral
 import org.jetbrains.exposed.v1.core.functions.math.*
 import org.jetbrains.exposed.v1.core.intLiteral
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 class TrigonometricalFunctionTests : FunctionsTestBase() {

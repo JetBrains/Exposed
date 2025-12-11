@@ -181,7 +181,7 @@ sealed class SetOperation(
             val threshold = transaction.db.config.logTooMuchResultSetsThreshold
             if (threshold > 0 && threshold < transaction.openResultSetsCount) {
                 val message = "Current opened result sets size ${transaction.openResultSetsCount} " +
-                    "exceeds $threshold threshold for transaction ${transaction.id} "
+                    "exceeds $threshold threshold for transaction ${transaction.transactionId} "
                 val stackTrace = Exception(message).stackTraceToString()
                 exposedLogger.error(stackTrace)
             }

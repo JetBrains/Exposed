@@ -15,10 +15,12 @@ import org.jetbrains.exposed.v1.jdbc.statements.toExecutable
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.NO_R2DBC_SUPPORT
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.dml.withCitiesAndUsers
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -67,12 +69,14 @@ class TransactionExecTests : DatabaseTestsBase() {
         }
     }
 
+    // r2dbc-mysql does NOT support allowMultiQueries option: https://github.com/asyncer-io/r2dbc-mysql/issues/291
+    @Tag(NO_R2DBC_SUPPORT)
     @Test
     fun testExecWithMultiStatementQueryUsingMySQL() {
-        Assume.assumeTrue(TestDB.ALL_MYSQL_MARIADB.containsAll(TestDB.enabledDialects()))
+        Assumptions.assumeTrue(TestDB.ALL_MYSQL_MARIADB.containsAll(TestDB.enabledDialects()))
 
         val dialect = TestDB.enabledDialects().first()
-        val extra = if (dialect in TestDB.ALL_MARIADB) "?" else ""
+        val extra = if (dialect == TestDB.MARIADB) "?" else ""
         val db = Database.connect(
             dialect.connection.invoke().plus("$extra&allowMultiQueries=true"),
             dialect.driver,

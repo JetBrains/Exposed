@@ -1,4 +1,5 @@
 package org.jetbrains.exposed.v1.tests.shared.functions
+
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.jdbc.select
@@ -7,7 +8,7 @@ import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.v1.tests.shared.dml.withSales
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -18,7 +19,7 @@ class WindowFunctionsTests : DatabaseTestsBase() {
     private val supportsNthValueFunction = TestDB.ALL - TestDB.SQLSERVER
     private val supportsExpressionsInWindowFunctionArguments = TestDB.ALL - TestDB.ALL_MYSQL
     private val supportsExpressionsInWindowFrameClause = TestDB.ALL - TestDB.ALL_MYSQL_MARIADB - TestDB.SQLSERVER
-    private val supportsDefaultValueInLeadLagFunctions = TestDB.ALL - TestDB.ALL_MARIADB
+    private val supportsDefaultValueInLeadLagFunctions = TestDB.ALL - TestDB.MARIADB
     private val supportsRangeModeWithOffsetFrameBound = TestDB.ALL - TestDB.SQLSERVER
 
     @Suppress("LongMethod")

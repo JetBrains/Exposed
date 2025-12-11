@@ -26,7 +26,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.forEach
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.jetbrains.exposed.v1.r2dbc.update
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertTrue
 
 class UpdateTests : R2dbcDatabaseTestsBase() {
@@ -102,7 +102,7 @@ class UpdateTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testUpdateWithJoinAndLimit() {
-        val supportsUpdateWithJoinAndLimit = TestDB.ALL_MARIADB + TestDB.ORACLE + TestDB.SQLSERVER
+        val supportsUpdateWithJoinAndLimit = setOf(TestDB.MARIADB, TestDB.ORACLE, TestDB.SQLSERVER)
         withCitiesAndUsers(exclude = TestDB.ALL - supportsUpdateWithJoinAndLimit) { _, users, userData ->
             val join = users.innerJoin(userData)
 

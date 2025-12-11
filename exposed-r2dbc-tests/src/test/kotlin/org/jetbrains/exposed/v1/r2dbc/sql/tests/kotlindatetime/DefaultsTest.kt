@@ -16,7 +16,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -354,7 +354,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
             else -> "NULL"
         }
 
-        withTables(excludeSettings = TestDB.ALL_MARIADB + TestDB.MYSQL_V5, testTable) { testDb ->
+        withTables(excludeSettings = setOf(TestDB.MARIADB, TestDB.MYSQL_V5), testTable) { testDb ->
             val timestampWithTimeZoneType = currentDialectTest.dataTypeProvider.timestampWithTimeZoneType()
 
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
@@ -496,7 +496,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
         }
 
         // MariaDB does not support TIMESTAMP WITH TIME ZONE column type
-        val unsupportedDatabases = TestDB.ALL_MARIADB + TestDB.MYSQL_V5
+        val unsupportedDatabases = setOf(TestDB.MARIADB, TestDB.MYSQL_V5)
         withTables(excludeSettings = unsupportedDatabases, tester) {
             val statements = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)

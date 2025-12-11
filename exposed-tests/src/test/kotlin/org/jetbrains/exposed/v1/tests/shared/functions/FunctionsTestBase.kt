@@ -1,4 +1,5 @@
 package org.jetbrains.exposed.v1.tests.shared.functions
+
 import org.jetbrains.exposed.v1.core.Function
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction

@@ -1,3 +1,75 @@
+# 1.0.0-rc-4
+
+Breaking changes:
+* build(deps)!: EXPOSED-918 Bump H2 and H2-R2DBC test driver versions by @bog-walk in https://github.com/JetBrains/Exposed/pull/2654
+* fix!: EXPOSED-870 Schema migration detection not compatible with sqlite-jdbc 3.50.2.0 by @bog-walk in https://github.com/JetBrains/Exposed/pull/2652
+* chore!: Rename field Transaction.id to Transaction.txId by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2602
+
+Infrastructure:
+* gradle-maven-publish-plugin 0.35.0
+* springFramework 6.2.14
+* springBoot 3.5.8
+
+Features:
+* feat: EXPOSED-845 Add read access to default logger in Transaction classes by @bog-walk in https://github.com/JetBrains/Exposed/pull/2657
+* feat: EXPOSED-822 Enable JSONB/BLOB support for SQLite by @bog-walk in https://github.com/JetBrains/Exposed/pull/2659
+
+Bug fixes:
+* fix: EXPOSED-877 Error 'No transaction in context' for select by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2661
+
+Docs:
+* docs: Update defaults for transaction isolation by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2650
+* docs: Fix typos in Transactions.md by @kchung1995 in https://github.com/JetBrains/Exposed/pull/2660
+* docs: EXPOSED-947 Document any minimum setup requirements by @bog-walk in https://github.com/JetBrains/Exposed/pull/2669
+
+# 1.0.0-rc-3
+
+Breaking changes:
+* chore!: EXPOSED-893 Read-only transaction initiation convenience by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2628
+* chore!: Refactoring of JDBC transaction management by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2632
+
+Infrastructure:
+* springFramework 6.2.12
+* springBoot 3.5.7
+* r2dbc-postgresql 1.1.1.RELEASE
+* dokka 2.1.0
+* ojdbc11 23.26.0.0.0
+
+Build:
+* build(deps): [EXPOSED-921] Bump jvmToolchain and set compile jvmTarget by @bog-walk in https://github.com/JetBrains/Exposed/pull/2643
+
+Bug fixes:
+* fix: EXPOSED-880 [PostgreSQL] Fix casting nullable JSON columns by @nicktelford in https://github.com/JetBrains/Exposed/pull/2616
+* fix: Fix R2DBC connection retrieval by @IlyaPechuro in https://github.com/JetBrains/Exposed/pull/2641
+
+Refactoring:
+* refactor: Replace invocations of `Array.toList` with `Array.asList` to slightly reduce some copy overhead by @ShreckYe in https://github.com/JetBrains/Exposed/pull/2637
+
+Docs:
+* docs: EXPOSED-911 Update Exposed logo in docs and README.md by @vnikolova in https://github.com/JetBrains/Exposed/pull/2640
+* docs: Update migration guide & docs with JDBC transaction management changes by @bog-walk in https://github.com/JetBrains/Exposed/pull/2642
+
+# 1.0.0-rc-2
+
+Infrastructure:
+* springFramework 6.2.11
+* springBoot 3.5.6
+* logcaptor 2.12.1
+* r2dbc-mssql 1.0.3.RELEASE
+* org.postgresql:postgresql 42.7.8
+
+Breaking changes:
+* feat!: EXPOSED-882 Add StatementInterceptor that allows suspend operations by @bog-walk in https://github.com/JetBrains/Exposed/pull/2621
+
+Bug fixes:
+* fix: EXPOSED-856 Add support for inserting UUID arrays in R2DBC by @Blad3Mak3r in https://github.com/JetBrains/Exposed/pull/2593
+* fix: Refactoring of switching between coroutines by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2619
+* fix: EXPOSED-886 Changes made to DAO (entity) can be lost on serializable transaction retry by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2627
+
+Docs:
+* docs: fix: EXPOSED-873 Update API links and extension modules table by @vnikolova in https://github.com/JetBrains/Exposed/pull/2612
+* docs: fix: EXPOSED-883 Broken API links in Statement-Interceptors.md by @vnikolova in https://github.com/JetBrains/Exposed/pull/2625
+
 # 1.0.0-rc-1
 
 ## What's Changed
@@ -41,7 +113,6 @@ Build:
 * build: Include api(exposed-jdbc) dependency with exposed-migration by @bog-walk in https://github.com/JetBrains/Exposed/pull/2582
 * build: Include api(exposed-jdbc) dependency with spring-transaction by @bog-walk in https://github.com/JetBrains/Exposed/pull/2581
 
-
 # 1.0.0-beta-5
 
 ## What's Changed
@@ -55,6 +126,7 @@ Breaking changes:
 * Phase out support for H2 version 1.x  by @bog-walk in https://github.com/JetBrains/Exposed/pull/2573
 
 Infrastructure:
+* Kotlin 2.1.0
 * Bump org.jetbrains.kotlinx.binary-compatibility-validator from 0.18.0 to 0.18.1 by @dependabot[bot] in https://github.com/JetBrains/Exposed/pull/2554
 * Bump springFramework from 6.2.8 to 6.2.9 by @dependabot[bot] in https://github.com/JetBrains/Exposed/pull/2560
 * Bump springBoot from 3.5.3 to 3.5.4 by @dependabot[bot] in https://github.com/JetBrains/Exposed/pull/2571
@@ -85,7 +157,6 @@ Bug fixes:
 * @med01-flutter-uki made their first contribution in https://github.com/JetBrains/Exposed/pull/2463
 * @ntkoopman made their first contribution in https://github.com/JetBrains/Exposed/pull/2532
 * @sokomishalov made their first contribution in https://github.com/JetBrains/Exposed/pull/2567
-
 
 # 1.0.0-beta-4
 

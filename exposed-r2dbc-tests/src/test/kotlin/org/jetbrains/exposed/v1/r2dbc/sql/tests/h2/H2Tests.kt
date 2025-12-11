@@ -7,7 +7,6 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
@@ -25,7 +24,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.transactionManager
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -81,8 +80,7 @@ class H2Tests : R2dbcDatabaseTestsBase() {
             val originalManager = TransactionManager.manager
             val db = requireNotNull(testDB.db) { "testDB.db cannot be null" }
             try {
-                @OptIn(InternalApi::class)
-                CoreTransactionManager.registerDatabaseManager(db, WrappedTransactionManager(db.transactionManager))
+                TransactionManager.registerManager(db, WrappedTransactionManager(db.transactionManager))
                 Executors.newSingleThreadExecutor().apply {
                     submit { TransactionManager.closeAndUnregister(db) }
                         .get(1, TimeUnit.SECONDS)

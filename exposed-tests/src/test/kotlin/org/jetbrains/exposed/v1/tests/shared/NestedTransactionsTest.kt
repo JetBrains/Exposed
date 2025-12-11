@@ -9,12 +9,11 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.dml.DMLTestsData
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import java.sql.SQLException
 import kotlin.test.assertContains
 import kotlin.test.assertNotEquals
@@ -74,7 +73,7 @@ class NestedTransactionsTest : DatabaseTestsBase() {
             assertNotNull(TransactionManager.currentOrNull())
 
             try {
-                inTopLevelTransaction(this.transactionIsolation) {
+                inTopLevelTransaction(transactionIsolation = this.transactionIsolation) {
                     maxAttempts = 1
                     throw IllegalStateException("Should be rethrow")
                 }
@@ -88,7 +87,7 @@ class NestedTransactionsTest : DatabaseTestsBase() {
 
     @Test
     fun testNestedTransactionNotCommittedAfterDatabaseFailure() {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
 
         val fakeSQLString = "BROKEN_SQL_THAT_CAUSES_EXCEPTION"
 
@@ -97,14 +96,14 @@ class NestedTransactionsTest : DatabaseTestsBase() {
         }
 
         transaction(db) {
-            val outerTxId = this.id
+            val outerTxId = this.transactionId
 
             DMLTestsData.Cities.insert { it[name] = "City A" }
             assertEquals(1, DMLTestsData.Cities.selectAll().count())
 
             try {
-                inTopLevelTransaction(db.transactionManager.defaultIsolationLevel, db = db) {
-                    val innerTxId = this.id
+                inTopLevelTransaction(db) {
+                    val innerTxId = this.transactionId
                     assertNotEquals(outerTxId, innerTxId)
 
                     DMLTestsData.Cities.insert { it[name] = "City B" }
@@ -119,14 +118,14 @@ class NestedTransactionsTest : DatabaseTestsBase() {
         assertSingleRecordInNewTransactionAndReset()
 
         transaction(db) {
-            val outerTxId = this.id
+            val outerTxId = this.transactionId
 
             DMLTestsData.Cities.insert { it[name] = "City A" }
             assertEquals(1, DMLTestsData.Cities.selectAll().count())
 
             try {
                 transaction(db) {
-                    val innerTxId = this.id
+                    val innerTxId = this.transactionId
                     assertNotEquals(outerTxId, innerTxId)
 
                     DMLTestsData.Cities.insert { it[name] = "City B" }
@@ -147,7 +146,7 @@ class NestedTransactionsTest : DatabaseTestsBase() {
 
     @Test
     fun testNestedTransactionNotCommittedAfterException() {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
 
         val exceptionMessage = "Failure!"
 
@@ -156,14 +155,14 @@ class NestedTransactionsTest : DatabaseTestsBase() {
         }
 
         transaction(db) {
-            val outerTxId = this.id
+            val outerTxId = this.transactionId
 
             DMLTestsData.Cities.insert { it[name] = "City A" }
             assertEquals(1, DMLTestsData.Cities.selectAll().count())
 
             try {
-                inTopLevelTransaction(db.transactionManager.defaultIsolationLevel, db = db) {
-                    val innerTxId = this.id
+                inTopLevelTransaction(db) {
+                    val innerTxId = this.transactionId
                     assertNotEquals(outerTxId, innerTxId)
 
                     DMLTestsData.Cities.insert { it[name] = "City B" }
@@ -177,14 +176,14 @@ class NestedTransactionsTest : DatabaseTestsBase() {
         assertSingleRecordInNewTransactionAndReset()
 
         transaction(db) {
-            val outerTxId = this.id
+            val outerTxId = this.transactionId
 
             DMLTestsData.Cities.insert { it[name] = "City A" }
             assertEquals(1, DMLTestsData.Cities.selectAll().count())
 
             try {
                 transaction(db) {
-                    val innerTxId = this.id
+                    val innerTxId = this.transactionId
                     assertNotEquals(outerTxId, innerTxId)
 
                     DMLTestsData.Cities.insert { it[name] = "City B" }

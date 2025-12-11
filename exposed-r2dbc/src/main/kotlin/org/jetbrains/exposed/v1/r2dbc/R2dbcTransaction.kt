@@ -2,12 +2,17 @@ package org.jetbrains.exposed.v1.r2dbc
 
 import io.r2dbc.spi.R2dbcException
 import io.r2dbc.spi.Row
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.withContext
 import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.v1.core.CompositeSqlLogger
 import org.jetbrains.exposed.v1.core.IColumnType
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Key
 import org.jetbrains.exposed.v1.core.SqlLogger
 import org.jetbrains.exposed.v1.core.Transaction
@@ -19,12 +24,17 @@ import org.jetbrains.exposed.v1.core.statements.StatementResult
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
 import org.jetbrains.exposed.v1.exceptions.LongQueryException
+import org.jetbrains.exposed.v1.r2dbc.statements.GlobalStatementInterceptorWrapper
+import org.jetbrains.exposed.v1.r2dbc.statements.GlobalSuspendStatementInterceptor
+import org.jetbrains.exposed.v1.r2dbc.statements.StatementInterceptorWrapper
 import org.jetbrains.exposed.v1.r2dbc.statements.SuspendExecutable
+import org.jetbrains.exposed.v1.r2dbc.statements.SuspendStatementInterceptor
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcResult
 import org.jetbrains.exposed.v1.r2dbc.statements.api.origin
 import org.jetbrains.exposed.v1.r2dbc.statements.executeIn
 import org.jetbrains.exposed.v1.r2dbc.transactions.R2dbcTransactionInterface
+import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.transactionManager
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -34,6 +44,19 @@ open class R2dbcTransaction(
     private val transactionImpl: R2dbcTransactionInterface
 ) : Transaction(), R2dbcTransactionInterface by transactionImpl {
     final override val db: R2dbcDatabase = transactionImpl.db
+
+    override val transactionManager: TransactionManager
+        get() = db.transactionManager
+
+    /**
+     * A [CompositeSqlLogger] containing any [SqlLogger] instances that are implicitly added to a new transaction.
+     *
+     * By default, this property will store the value passed to `DatabaseConfig.sqlLogger` when `R2dbcDatabase.connect()`
+     * is invoked, wrapped as a [CompositeSqlLogger].
+     * If no value is configured, the default setting is a wrapped `Slf4jSqlDebugLogger`, which only logs SQL strings
+     * if DEBUG level is enabled.
+     */
+    val defaultLogger: CompositeSqlLogger
 
     /**
      * The maximum amount of attempts that will be made to perform this `transaction` block.
@@ -67,44 +90,64 @@ open class R2dbcTransaction(
 
     internal var openResultRowsCount: Int = 0
 
-    internal val interceptors = arrayListOf<StatementInterceptor>()
+    internal val interceptors = arrayListOf<SuspendStatementInterceptor>()
 
     init {
-        addLogger(db.config.sqlLogger)
+        defaultLogger = addLogger(db.config.sqlLogger)
         globalInterceptors // init interceptors
     }
 
     override suspend fun commit() {
-        val dataToStore = HashMap<Key<*>, Any?>()
-        globalInterceptors.forEach {
-            dataToStore.putAll(it.keepUserDataInTransactionStoreOnCommit(userdata))
-            it.beforeCommit(this)
+        @OptIn(InternalApi::class)
+        withTransactionContext(this) {
+            val dataToStore = HashMap<Key<*>, Any?>()
+            globalInterceptors.forEach {
+                dataToStore.putAll(it.keepUserDataInTransactionStoreOnCommit(userdata))
+                it.beforeCommit(this@R2dbcTransaction)
+            }
+            interceptors.forEach {
+                dataToStore.putAll(it.keepUserDataInTransactionStoreOnCommit(userdata))
+                it.beforeCommit(this@R2dbcTransaction)
+            }
+            transactionImpl.commit()
+            userdata.clear()
+            globalInterceptors.forEach { it.afterCommit(this@R2dbcTransaction) }
+            interceptors.forEach { it.afterCommit(this@R2dbcTransaction) }
+            userdata.putAll(dataToStore)
         }
-        interceptors.forEach {
-            dataToStore.putAll(it.keepUserDataInTransactionStoreOnCommit(userdata))
-            it.beforeCommit(this)
-        }
-        transactionImpl.commit()
-        userdata.clear()
-        globalInterceptors.forEach { it.afterCommit(this) }
-        interceptors.forEach { it.afterCommit(this) }
-        userdata.putAll(dataToStore)
     }
 
     override suspend fun rollback() {
-        globalInterceptors.forEach { it.beforeRollback(this) }
-        interceptors.forEach { it.beforeRollback(this) }
-        transactionImpl.rollback()
-        globalInterceptors.forEach { it.afterRollback(this) }
-        interceptors.forEach { it.afterRollback(this) }
-        userdata.clear()
+        @OptIn(InternalApi::class)
+        withTransactionContext(this) {
+            globalInterceptors.forEach { it.beforeRollback(this@R2dbcTransaction) }
+            interceptors.forEach { it.beforeRollback(this@R2dbcTransaction) }
+            transactionImpl.rollback()
+            globalInterceptors.forEach { it.afterRollback(this@R2dbcTransaction) }
+            interceptors.forEach { it.afterRollback(this@R2dbcTransaction) }
+            userdata.clear()
+        }
     }
 
     /** Adds the specified [StatementInterceptor] to act on this transaction. */
-    fun registerInterceptor(interceptor: StatementInterceptor): Boolean = interceptors.add(interceptor)
+    fun registerInterceptor(interceptor: StatementInterceptor): Boolean {
+        val suspendInterceptor = StatementInterceptorWrapper(interceptor)
+        return interceptors.add(suspendInterceptor)
+    }
+
+    /** Adds the specified [SuspendStatementInterceptor] to act on this transaction. */
+    fun registerInterceptor(interceptor: SuspendStatementInterceptor): Boolean = interceptors.add(interceptor)
 
     /** Removes the specified [StatementInterceptor] from acting on this transaction. */
-    fun unregisterInterceptor(interceptor: StatementInterceptor): Boolean = interceptors.remove(interceptor)
+    fun unregisterInterceptor(interceptor: StatementInterceptor): Boolean {
+        val foundInterceptor = interceptors.firstOrNull {
+            it is StatementInterceptorWrapper && it.originalInterceptor == interceptor
+        }
+        return foundInterceptor?.let { interceptors.remove(it) } ?: false
+    }
+
+    /** Removes the specified [SuspendStatementInterceptor] from acting on this transaction. */
+    fun unregisterInterceptor(interceptor: SuspendStatementInterceptor): Boolean = interceptors.remove(interceptor)
 
     @Suppress("MagicNumber")
     private fun describeStatement(delta: Long, stmt: String): String = "[${delta}ms] ${stmt.take(1024)}\n\n"
@@ -206,30 +249,33 @@ open class R2dbcTransaction(
      * are stored for each call in [statementStats].
      */
     suspend fun <T, R> exec(stmt: SuspendExecutable<T, *>, body: suspend Statement<T>.(T) -> R): R? {
-        statementCount++
+        @OptIn(InternalApi::class)
+        return withTransactionContext(this) {
+            statementCount++
 
-        val start = System.nanoTime()
-        val answer = stmt.executeIn(this)
-        val delta = (System.nanoTime() - start).let { TimeUnit.NANOSECONDS.toMillis(it) }
+            val start = System.nanoTime()
+            val answer = stmt.executeIn(this@R2dbcTransaction)
+            val delta = (System.nanoTime() - start).let { TimeUnit.NANOSECONDS.toMillis(it) }
 
-        val lazySQL = lazy(LazyThreadSafetyMode.NONE) {
-            answer.second.map { it.sql(this) }.distinct().joinToString()
-        }
-
-        duration += delta
-
-        if (debug) {
-            statements.append(describeStatement(delta, lazySQL.value))
-            statementStats.getOrPut(lazySQL.value) { 0 to 0L }.let { (count, time) ->
-                statementStats[lazySQL.value] = (count + 1) to (time + delta)
+            val lazySQL = lazy(LazyThreadSafetyMode.NONE) {
+                answer.second.map { it.sql(this@R2dbcTransaction) }.distinct().joinToString()
             }
-        }
 
-        if (delta > (warnLongQueriesDuration ?: Long.MAX_VALUE)) {
-            exposedLogger.warn("Long query: ${describeStatement(delta, lazySQL.value)}", LongQueryException())
-        }
+            duration += delta
 
-        return answer.first?.let { stmt.statement.body(it) }
+            if (debug) {
+                statements.append(describeStatement(delta, lazySQL.value))
+                statementStats.getOrPut(lazySQL.value) { 0 to 0L }.let { (count, time) ->
+                    statementStats[lazySQL.value] = (count + 1) to (time + delta)
+                }
+            }
+
+            if (delta > (warnLongQueriesDuration ?: Long.MAX_VALUE)) {
+                exposedLogger.warn("Long query: ${describeStatement(delta, lazySQL.value)}", LongQueryException())
+            }
+
+            answer.first?.let { stmt.statement.body(it) }
+        }
     }
 
     /**
@@ -291,14 +337,42 @@ open class R2dbcTransaction(
     }
 
     companion object {
-        val globalInterceptors = arrayListOf<GlobalStatementInterceptor>()
+        val globalInterceptors = arrayListOf<GlobalSuspendStatementInterceptor>()
 
         init {
             ServiceLoader.load(
-                GlobalStatementInterceptor::class.java, GlobalStatementInterceptor::class.java.classLoader
+                GlobalSuspendStatementInterceptor::class.java,
+                GlobalSuspendStatementInterceptor::class.java.classLoader
             ).forEach {
                 globalInterceptors.add(it)
             }
+
+            ServiceLoader.load(
+                GlobalStatementInterceptor::class.java,
+                GlobalStatementInterceptor::class.java.classLoader
+            ).forEach {
+                val suspendInterceptor = GlobalStatementInterceptorWrapper(it)
+                globalInterceptors.add(suspendInterceptor)
+            }
         }
     }
+}
+
+private fun R2dbcTransaction.asContext() = transactionManager.createTransactionContext(this)
+
+/**
+ * @suppress
+ */
+@OptIn(ExperimentalStdlibApi::class)
+@InternalApi
+suspend fun <T> withTransactionContext(transaction: R2dbcTransaction, block: suspend CoroutineScope.() -> T): T {
+    val dispatcher = currentCoroutineContext()[CoroutineDispatcher.Key]
+
+    val context = if (dispatcher != null) {
+        transaction.asContext()
+    } else {
+        transaction.asContext() + transaction.db.config.dispatcher
+    }
+
+    return withContext(context, block)
 }

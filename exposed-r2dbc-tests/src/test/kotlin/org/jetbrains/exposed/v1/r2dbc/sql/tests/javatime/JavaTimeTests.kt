@@ -28,18 +28,17 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
-import org.junit.Assert.fail
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.fail
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.*
 import java.time.temporal.Temporal
-import kotlin.collections.first
 import kotlin.test.assertEquals
 
 class JavaTimeTests : R2dbcDatabaseTestsBase() {
 
-    private val timestampWithTimeZoneUnsupportedDB = TestDB.ALL_MARIADB + TestDB.MYSQL_V5
+    private val timestampWithTimeZoneUnsupportedDB = setOf(TestDB.MARIADB, TestDB.MYSQL_V5)
 
     @Test
     fun javaTimeFunctions() {
@@ -484,7 +483,7 @@ class JavaTimeTests : R2dbcDatabaseTestsBase() {
         }
 
         withTables(tester) {
-            val now = Instant.now()
+            val now = Instant.now().asJdk8()
 
             tester.insert {
                 it[tester.ts] = now

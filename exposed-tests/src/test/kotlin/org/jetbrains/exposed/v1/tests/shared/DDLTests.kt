@@ -19,10 +19,12 @@ import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.test.assertNotNull
 import kotlin.test.expect
@@ -60,7 +62,7 @@ class DDLTests : DatabaseTestsBase() {
 
     @Test
     fun testKeywordIdentifiersWithOptOut() {
-        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
 
         val keywords = listOf("Integer", "name")
         val tester = object : Table(keywords[0]) {
@@ -176,7 +178,9 @@ class DDLTests : DatabaseTestsBase() {
     fun unnamedTableWithQuotesSQL() {
         withTables(excludeSettings = listOf(TestDB.SQLITE), tables = arrayOf(unnamedTable)) { testDb ->
             val q = db.identifierManager.quoteString
-            val tableName = if (currentDialectTest.needsQuotesWhenSymbolsInNames) {
+            val shouldBeQuoted = currentDialectTest.needsQuotesWhenSymbolsInNames &&
+                db.identifierManager.needQuotes("unnamedTable$1")
+            val tableName = if (shouldBeQuoted) {
                 "$q${"unnamedTable$1".inProperCase()}$q"
             } else {
                 "unnamedTable$1".inProperCase()
@@ -238,7 +242,7 @@ class DDLTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(name)
         }
 
-        withTables(excludeSettings = TestDB.ALL_MYSQL + TestDB.ALL_MARIADB + TestDB.ALL_ORACLE_LIKE + TestDB.SQLITE, tables = arrayOf(testTable)) {
+        withTables(excludeSettings = TestDB.ALL_MYSQL + TestDB.MARIADB + TestDB.ALL_ORACLE_LIKE + TestDB.SQLITE, tables = arrayOf(testTable)) {
             val varCharType = currentDialectTest.dataTypeProvider.varcharType(42)
             assertEquals(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${"different_column_types".inProperCase()} " +
@@ -598,7 +602,7 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withDb { testDb ->
-            val functionsNotSupported = testDb in TestDB.ALL_MARIADB + TestDB.ALL_H2_V2 + TestDB.SQLSERVER + TestDB.MYSQL_V5
+            val functionsNotSupported = testDb in TestDB.ALL_H2_V2 + TestDB.MARIADB + TestDB.SQLSERVER + TestDB.MYSQL_V5
 
             val tableProperName = tester.tableName.inProperCase()
             val priceColumnName = tester.price.nameInDatabaseCase()
@@ -1036,6 +1040,7 @@ class DDLTests : DatabaseTestsBase() {
     }
 
     // https://github.com/JetBrains/Exposed/issues/112
+    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testDropTableFlushesCache() {
         class Keyword(id: EntityID<Int>) : IntEntity(id) {

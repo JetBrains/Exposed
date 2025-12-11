@@ -1,28 +1,32 @@
 package org.jetbrains.exposed.v1.json
 
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.ArraySerializer
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class JsonBColumnTests : DatabaseTestsBase() {
-    private val binaryJsonNotSupportedDB = listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)
+    private val binaryJsonNotSupportedDB = listOf(TestDB.SQLSERVER, TestDB.ORACLE)
 
     @Test
     fun testInsertAndSelect() {
@@ -32,22 +36,21 @@ class JsonBColumnTests : DatabaseTestsBase() {
                 it[jsonBColumn] = newData
             }
 
-            val newResult = tester.selectAll().where { tester.id eq newId }.singleOrNull()
-            assertEquals(newData, newResult?.get(JsonTestsData.JsonBTable.jsonBColumn))
+            assertJsonBColumnEquals(newData, tester.selectAll().where { tester.id eq newId })
         }
     }
 
     @Test
     fun testUpdate() {
         withJsonBTable(exclude = binaryJsonNotSupportedDB) { tester, _, data1, _ ->
-            assertEquals(data1, tester.selectAll().single()[JsonTestsData.JsonBTable.jsonBColumn])
+            assertJsonBColumnEquals(data1, tester.selectAll())
 
             val updatedData = data1.copy(active = false)
             tester.update {
                 it[jsonBColumn] = updatedData
             }
 
-            assertEquals(updatedData, tester.selectAll().single()[JsonTestsData.JsonBTable.jsonBColumn])
+            assertJsonBColumnEquals(updatedData, tester.selectAll())
         }
     }
 
@@ -90,6 +93,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
         }
     }
 
+    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testDAOFunctionsWithJsonBColumn() {
         val dataTable = JsonTestsData.JsonBTable
@@ -125,7 +129,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonContains() {
-        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V2) { tester, user1, data1, testDb ->
+        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V2 + TestDB.SQLITE) { tester, user1, data1, testDb ->
             val alphaTeamUser = user1.copy(team = "Alpha")
             val newId = tester.insertAndGetId {
                 it[jsonBColumn] = data1.copy(user = alphaTeamUser)
@@ -134,7 +138,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
             val userIsInactive = JsonTestsData.JsonBTable.jsonBColumn.contains("{\"active\":false}")
             assertEquals(0, tester.selectAll().where { userIsInactive }.count())
 
-            val alphaTeamUserAsJson = "{\"user\":${Json.Default.encodeToString(alphaTeamUser)}}"
+            val alphaTeamUserAsJson = "{\"user\":${Json.encodeToString(alphaTeamUser)}}"
             var userIsInAlphaTeam = JsonTestsData.JsonBTable.jsonBColumn.contains(stringLiteral(alphaTeamUserAsJson))
             assertEquals(1, tester.selectAll().where { userIsInAlphaTeam }.count())
 
@@ -175,7 +179,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
                 val usersWithMaxLogin = tester.select(tester.id).where { hasMaxLogins }
                 assertEquals(newId, usersWithMaxLogin.single()[tester.id])
 
-                val (jsonPath, optionalArg) = ".user.team ? (@ == \$team)" to "{\"team\":\"$teamA\"}"
+                val (jsonPath, optionalArg) = $$".user.team ? (@ == $team)" to "{\"team\":\"$teamA\"}"
                 val isOnTeamA = JsonTestsData.JsonBTable.jsonBColumn.exists(jsonPath, optional = optionalArg)
                 val usersOnTeamA = tester.select(tester.id).where { isOnTeamA }
                 assertEquals(newId, usersOnTeamA.single()[tester.id])
@@ -204,7 +208,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonContainsWithArrays() {
-        withJsonBArrays(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V2) { tester, _, tripleId, testDb ->
+        withJsonBArrays(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V2 + TestDB.SQLITE) { tester, _, tripleId, testDb ->
             val hasSmallNumbers = JsonTestsData.JsonBArrays.numbers.contains("[3, 5]")
             assertEquals(tripleId, tester.selectAll().where { hasSmallNumbers }.single()[tester.id])
 
@@ -250,12 +254,38 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
                 defaultTester.insert {}
 
-                defaultTester.selectAll().single().also {
-                    assertEquals(defaultUser.name, it[defaultTester.user1].name)
-                    assertEquals(defaultUser.team, it[defaultTester.user1].team)
+                if (testDb == TestDB.SQLITE) {
+                    // ensure JSON strings (in DDL and DML) are being set properly & inserted as BLOB/JSONB binary format,
+                    // which is returned in the same format, in a non-readable manner that throws JsonDecodingException
+                    expectException<SerializationException> {
+                        defaultTester.select(defaultTester.user1).single().also {
+                            assertEquals(defaultUser.name, it[defaultTester.user1].name)
+                        }
+                    }
+                    expectException<SerializationException> {
+                        defaultTester.select(defaultTester.user2).single().also {
+                            assertEquals(defaultUser.name, it[defaultTester.user2].name)
+                        }
+                    }
 
-                    assertEquals(defaultUser.name, it[defaultTester.user2].name)
-                    assertEquals(defaultUser.team, it[defaultTester.user2].team)
+                    // SQLite requires JSON() function to convert JSONB binary format to readable text format
+                    val user1AsJson = defaultTester.user1.function("JSON").alias("u1")
+                    val user2AsJson = defaultTester.user2.function("JSON").alias("u2")
+                    defaultTester.select(user1AsJson, user2AsJson).single().also {
+                        assertEquals(defaultUser.name, it[user1AsJson]?.name)
+                        assertEquals(defaultUser.team, it[user1AsJson]?.team)
+
+                        assertEquals(defaultUser.name, it[user2AsJson]?.name)
+                        assertEquals(defaultUser.team, it[user2AsJson]?.team)
+                    }
+                } else {
+                    defaultTester.select(defaultTester.user1, defaultTester.user2).single().also {
+                        assertEquals(defaultUser.name, it[defaultTester.user1].name)
+                        assertEquals(defaultUser.team, it[defaultTester.user1].team)
+
+                        assertEquals(defaultUser.name, it[defaultTester.user2].name)
+                        assertEquals(defaultUser.team, it[defaultTester.user2].team)
+                    }
                 }
 
                 SchemaUtils.drop(defaultTester)
@@ -273,7 +303,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
             val intArray = jsonb<IntArray>("int_array", Json.Default)
         }
 
-        withTables(excludeSettings = binaryJsonNotSupportedDB, iterables) {
+        withTables(excludeSettings = binaryJsonNotSupportedDB, iterables) { testDb ->
             // the logger is left in to test that it does not throw ClassCastException on insertion of iterables
             addLogger(StdOutSqlLogger)
 
@@ -288,11 +318,21 @@ class JsonBColumnTests : DatabaseTestsBase() {
                 it[intArray] = integerArray
             }
 
-            val result = iterables.selectAll().single()
-            assertEqualCollections(listOf(user1, user2), result[iterables.userList])
-            assertEqualCollections(integerList, result[iterables.intList])
-            assertContentEquals(arrayOf(user1, user2), result[iterables.userArray])
-            assertContentEquals(integerArray, result[iterables.intArray])
+            if (testDb == TestDB.SQLITE) {
+                val result = iterables.select(
+                    iterables.userList.asJson(), iterables.intList.asJson(), iterables.userArray.asJson(), iterables.intArray.asJson()
+                ).single()
+                assertEqualCollections(listOf(user1, user2), result[iterables.userList.asJson()])
+                assertEqualCollections(integerList, result[iterables.intList.asJson()])
+                assertContentEquals(arrayOf(user1, user2), result[iterables.userArray.asJson()])
+                assertContentEquals(integerArray, result[iterables.intArray.asJson()])
+            } else {
+                val result = iterables.selectAll().single()
+                assertEqualCollections(listOf(user1, user2), result[iterables.userList])
+                assertEqualCollections(integerList, result[iterables.intList])
+                assertContentEquals(arrayOf(user1, user2), result[iterables.userArray])
+                assertContentEquals(integerArray, result[iterables.intArray])
+            }
         }
     }
 
@@ -302,7 +342,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
             val user = jsonb<User>("user", Json.Default).nullable()
         }
 
-        withTables(excludeSettings = binaryJsonNotSupportedDB, tester) {
+        withTables(excludeSettings = binaryJsonNotSupportedDB, tester) { testDb ->
             val nullId = tester.insertAndGetId {
                 it[user] = null
             }
@@ -310,11 +350,26 @@ class JsonBColumnTests : DatabaseTestsBase() {
                 it[user] = User("A", "Team A")
             }
 
-            val result1 = tester.select(tester.user).where { tester.id eq nullId }.single()
-            assertNull(result1[tester.user])
+            val column = if (testDb == TestDB.SQLITE) tester.user.asJson() else tester.user
+            val result1 = tester.select(column).where { tester.id eq nullId }.single()
+            assertNull(result1[column])
 
-            val result2 = tester.select(tester.user).where { tester.id eq nonNullId }.single()
-            assertNotNull(result2[tester.user])
+            val result2 = tester.select(column).where { tester.id eq nonNullId }.single()
+            assertNotNull(result2[column])
+
+            val batchData = listOf(null, User("B", "Team B"))
+            val batchSql = mutableListOf<String>()
+            tester.batchInsert(batchData) { user ->
+                this[tester.user] = user
+
+                batchSql += this.prepareSQL(this@withTables, prepared = true)
+            }
+            assertEquals(batchData.size, batchSql.size)
+            val expectedMarker = when (testDb) {
+                in TestDB.ALL_POSTGRES -> "?::jsonb"
+                else -> "?"
+            }
+            assertTrue(batchSql.all { it.contains(expectedMarker, ignoreCase = true) })
         }
     }
 
@@ -332,9 +387,22 @@ class JsonBColumnTests : DatabaseTestsBase() {
                 it[jsonBColumn] = newData2
             }
 
-            val newResult = tester.selectAll().where { tester.id eq newId }.singleOrNull()
-            assertEquals(newData2, newResult?.get(JsonTestsData.JsonBTable.jsonBColumn))
+            assertJsonBColumnEquals(newData2, tester.selectAll().where { tester.id eq newId })
         }
+    }
+
+    private fun <T> JdbcTransaction.assertJsonBColumnEquals(expected: T, query: Query) {
+        // SQLite requires JSON() function to convert JSONB binary format to readable text format
+        val (adjustedColumn, adjustedQuery) = if (currentDialectTest is SQLiteDialect) {
+            val column = JsonTestsData.JsonBTable.jsonBColumn.asJson()
+            column to query.adjustSelect { oldSelect ->
+                val toKeep = oldSelect.fields - JsonTestsData.JsonBTable.jsonBColumn
+                select(toKeep + column)
+            }
+        } else {
+            JsonTestsData.JsonBTable.jsonBColumn to query
+        }
+        assertEquals(expected, adjustedQuery.singleOrNull()?.get(adjustedColumn))
     }
 
     private class KeyExistsOp(left: Expression<*>, right: Expression<*>) : ComparisonOp(left, right, "??")

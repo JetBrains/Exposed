@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml
 
 import io.r2dbc.spi.R2dbcException
-import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
@@ -28,9 +27,10 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.junit.Assume
-import org.junit.Test
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import java.util.*
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.fail
@@ -489,7 +489,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
         val dbToTest = TestDB.enabledDialects() - setOfNotNull(
             TestDB.MYSQL_V5.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
         )
-        Assume.assumeTrue(dbToTest.isNotEmpty())
+        Assumptions.assumeTrue(dbToTest.isNotEmpty())
         dbToTest.forEach { db ->
             try {
                 try {
@@ -590,7 +590,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
 
                 when (testDb) {
                     // MariaDB does not support GENERATED ALWAYS AS with any null constraint definition
-                    in TestDB.ALL_MARIADB -> {
+                    TestDB.MARIADB -> {
                         exec("${createStatement.trimIndent()} $computedName $computedType GENERATED ALWAYS AS ($computation) STORED)")
                     }
                     // SQL SERVER only supports the AS variant if column_type is not defined

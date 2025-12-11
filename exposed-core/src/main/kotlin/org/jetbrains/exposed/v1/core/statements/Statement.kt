@@ -51,9 +51,8 @@ fun StatementContext.expandArgs(transaction: Transaction): String {
 
         var i = -1
         while (++i < sql.length) {
-            val char = sql[i]
-            when {
-                char == '?' && quoteStack.isEmpty() -> {
+            when (val char = sql[i]) {
+                '?' if quoteStack.isEmpty() -> {
                     if (sql.getOrNull(i + 1) == '?') {
                         i++
                         continue
@@ -63,7 +62,7 @@ fun StatementContext.expandArgs(transaction: Transaction): String {
                     val (col, value) = iterator.next()
                     append((col as IColumnType<Any>).valueToString(value))
                 }
-                char == '\'' || char == '\"' -> {
+                '\'', '\"' -> {
                     when {
                         quoteStack.isEmpty() -> quoteStack.push(char)
                         quoteStack.peek() == char -> quoteStack.pop()

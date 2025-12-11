@@ -74,7 +74,7 @@ enum class TestDB(
         beforeConnection = {
             Locale.setDefault(Locale.ENGLISH)
             val tmp = R2dbcDatabase.connect("r2dbc:oracle://sys%20as%20sysdba:Oracle18@127.0.0.1:3003/FREEPDB1")
-            suspendTransaction(IsolationLevel.READ_COMMITTED, db = tmp) {
+            suspendTransaction(tmp, IsolationLevel.READ_COMMITTED) {
                 maxAttempts = 1
 
                 @Suppress("SwallowedException", "TooGenericExceptionCaught")
@@ -116,8 +116,7 @@ enum class TestDB(
     companion object {
         val ALL_H2_V2 = setOf(H2_V2, H2_V2_MYSQL, H2_V2_PSQL, H2_V2_MARIADB, H2_V2_ORACLE, H2_V2_SQLSERVER)
         val ALL_MYSQL = setOf(MYSQL_V5, MYSQL_V8)
-        val ALL_MARIADB = setOf(MARIADB)
-        val ALL_MYSQL_MARIADB = ALL_MYSQL + ALL_MARIADB
+        val ALL_MYSQL_MARIADB = ALL_MYSQL + MARIADB
         val ALL_MYSQL_LIKE = ALL_MYSQL_MARIADB + setOf(H2_V2_MYSQL, H2_V2_MARIADB)
         val ALL_POSTGRES = setOf(POSTGRESQL)
         val ALL_POSTGRES_LIKE = ALL_POSTGRES + setOf(H2_V2_PSQL)

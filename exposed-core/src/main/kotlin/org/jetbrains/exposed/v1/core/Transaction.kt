@@ -57,7 +57,12 @@ abstract class Transaction : UserDataHolder(), TransactionInterface {
     var queryTimeout: Int? = null
 
     /** The unique ID for this transaction. */
-    val id by lazy { UUID.randomUUID().toString() }
+    val transactionId by lazy { UUID.randomUUID().toString() }
+
+    /** The unique ID for this transaction. */
+    @Deprecated("Use transactionId instead", ReplaceWith("transactionId"))
+    val id: String
+        get() = transactionId
 
     /**
      * A [StringBuilder] containing string representations of previously executed statements
@@ -76,10 +81,12 @@ abstract class Transaction : UserDataHolder(), TransactionInterface {
     val statementStats by lazy { hashMapOf<String, Pair<Int, Long>>() }
 
     /** Returns the string identifier of a [table], based on its [Table.tableName] and [Table.alias], if applicable. */
-    @OptIn(InternalApi::class)
-    fun identity(table: Table): String =
-        (table as? Alias<*>)?.let { "${identity(it.delegate)} ${db.identifierManager.quoteIfNecessary(it.alias)}" }
-            ?: db.identifierManager.quoteIfNecessary(table.tableName.inProperCase())
+    fun identity(table: Table): String = (table as? Alias<*>)
+        ?.let { "${identity(it.delegate)} ${db.identifierManager.quoteIfNecessary(it.alias)}" }
+        ?: db.identifierManager.quoteIfNecessary(
+            @OptIn(InternalApi::class)
+            table.tableName.inProperCase()
+        )
 
     /** Returns the complete string identifier of a [column], based on its [Table.tableName] and [Column.name]. */
     fun fullIdentity(column: Column<*>): String = QueryBuilder(false).also {

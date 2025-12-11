@@ -15,7 +15,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.forEachIndexed
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
 
@@ -408,6 +408,41 @@ class ConditionsTests : R2dbcDatabaseTestsBase() {
             tester.insert { it[name] = "Something" }
 
             assertEquals(2, tester.selectAll().where { tester.name.isNullOrEmpty() }.count())
+        }
+    }
+
+    @Test
+    fun testCaseOperationWithSpecificColumnType() {
+        val tester = object : Table("test") {
+            val id = integer("id")
+            val text = text("text")
+        }
+
+        // As I can see SQLServer and Oracle do not support CASE in condition
+        withTables(excludeSettings = listOf(TestDB.SQLSERVER, TestDB.ORACLE), tester) {
+            tester.insert {
+                it[id] = 1
+                it[text] = "first"
+            }
+            tester.insert {
+                it[id] = 2
+                it[text] = "second"
+            }
+
+            val caseOp = case()
+                .When(
+                    tester.id eq intLiteral(1),
+                    tester.text eq "first",
+                )
+                .Else(tester.text eq "not-second")
+
+            val result = tester
+                .selectAll()
+                .where {
+                    Op.TRUE.and(caseOp)
+                }
+                .first()[tester.text]
+            assertEquals("first", result)
         }
     }
 

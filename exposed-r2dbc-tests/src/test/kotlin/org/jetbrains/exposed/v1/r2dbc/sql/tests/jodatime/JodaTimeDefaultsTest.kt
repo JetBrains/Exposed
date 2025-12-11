@@ -4,7 +4,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
-import org.jetbrains.exposed.v1.*
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.statements.BatchDataInconsistentException
@@ -15,7 +14,6 @@ import org.jetbrains.exposed.v1.r2dbc.batchInsert
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
 import org.jetbrains.exposed.v1.r2dbc.selectAll
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.*
 import org.jetbrains.exposed.v1.r2dbc.tests.*
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
@@ -27,7 +25,7 @@ import org.jetbrains.exposed.v1.r2dbc.update
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.LocalTime
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -308,7 +306,7 @@ class JodaTimeDefaultsTest : R2dbcDatabaseTestsBase() {
             else -> "NULL"
         }
 
-        withTables(excludeSettings = TestDB.ALL_MARIADB + TestDB.MYSQL_V5, testTable) { testDb ->
+        withTables(excludeSettings = setOf(TestDB.MARIADB, TestDB.MYSQL_V5), testTable) { testDb ->
             val timestampWithTimeZoneType = currentDialectTest.dataTypeProvider.timestampWithTimeZoneType()
 
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
@@ -404,7 +402,7 @@ class JodaTimeDefaultsTest : R2dbcDatabaseTestsBase() {
 
         // SQLite does not support ALTER TABLE on a column that has a default value
         // MariaDB does not support TIMESTAMP WITH TIME ZONE column type
-        val unsupportedDatabases = TestDB.ALL_MARIADB + TestDB.MYSQL_V5
+        val unsupportedDatabases = setOf(TestDB.MARIADB, TestDB.MYSQL_V5)
         withTables(excludeSettings = unsupportedDatabases, tester) {
             val statements = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)

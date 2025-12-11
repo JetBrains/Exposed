@@ -22,7 +22,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.checkInsert
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.checkRow
 import org.jetbrains.exposed.v1.r2dbc.update
 import org.joda.time.DateTime
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -362,7 +362,7 @@ class JodaTimeMiscTableTest : R2dbcDatabaseTestsBase() {
         val time = DateTime.now()
         val eOne = MiscTable.E.ONE
         val dec = BigDecimal("239.42")
-        withTables(excludeSettings = TestDB.ALL_MYSQL + TestDB.ALL_MARIADB, tables = arrayOf(tbl)) {
+        withTables(excludeSettings = TestDB.ALL_MYSQL + TestDB.MARIADB, tables = arrayOf(tbl)) {
             tbl.insert {
                 it[by] = 13
                 it[sm] = -10

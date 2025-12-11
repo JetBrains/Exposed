@@ -1,22 +1,22 @@
 <!doctype html>
-<html class="no-js">
+<html class="no-js" lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
     <title>R2dbcTransaction</title>
-<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">    <script>var pathToRoot = "../../../";</script>
-    <script>document.documentElement.classList.replace("no-js","js");</script>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
     <script>const storage = localStorage.getItem("dokka-dark-mode")
-    if (storage == null) {
+      if (storage == null) {
         const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
         if (osDarkSchemePreferred === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    } else {
+      } else {
         const savedDarkMode = JSON.parse(storage)
-        if(savedDarkMode === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    }
+      }
     </script>
 <script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
 <script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
@@ -24,33 +24,31 @@
 <link href="../../../styles/main.css" rel="Stylesheet">
 <link href="../../../styles/prism.css" rel="Stylesheet">
 <link href="../../../styles/logo-styles.css" rel="Stylesheet">
-<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
 <link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
-<script type="text/javascript" src="../../../scripts/clipboard.js" async></script>
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
 <script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
 <script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
 <script type="text/javascript" src="../../../scripts/main.js" defer></script>
 <script type="text/javascript" src="../../../scripts/prism.js" async></script>
-<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script>
-<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer></script></head>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script></head>
 <body>
-    <div class="root">
-    <nav class="navigation theme-dark" id="navigation-wrapper">
-<a class="library-name--link" href="../../../index.html">
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
                     exposed
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
-        <div class="library-version" id="library-version">1.0.0-rc-1
+        <div class="library-version" id="library-version">1.0.0-rc-4
         </div>
         <div class="navigation-controls">
-        <div class="filter-section filter-section_loading" id="filter-section">
-                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":exposed-r2dbc/main">jvm</button>
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":exposed-r2dbc/main">jvm</button>
             <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
                 <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
-                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
-                    <div class="dropdown--header"><span>Platform filter</span>
-                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
                             <i class="ui-kit-icon ui-kit-icon_cross"></i>
                         </button>
                     </div>
@@ -64,32 +62,34 @@
                 </ul>
                 <div class="dropdown--overlay"></div>
             </div>
-        </div>
+        </ul>
             <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
             </button>
             <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
                 API
             </div>
         </div>
-    </nav>
-        <div id="container">
-            <div class="sidebar" id="leftColumn">
-                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
-                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox">
-                        <div class="dropdown--header">
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
                             <span>
                                     exposed
                             </span>
-                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
-                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
-                            </button>
-                        </div>
-                        <div class="sidebar--inner" id="sideMenu"></div>
-                    </ul>
-                    <div class="dropdown--overlay"></div>
-                </div>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
             </div>
-            <div id="main">
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
 <div class="main-content" data-page-type="classlike" id="content" pageids="exposed-r2dbc::org.jetbrains.exposed.v1.r2dbc/R2dbcTransaction///PointingToDeclaration//876859814">
   <div class="breadcrumbs"><a href="../../index.html">exposed-r2dbc</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.v1.r2dbc</a><span class="delimiter">/</span><span class="current">R2dbcTransaction</span></div>
   <div class="cover ">
@@ -100,9 +100,9 @@
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button><button class="section-tab" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION,EXTENSION_PROPERTY,EXTENSION_FUNCTION">Members &amp; Extensions</button></div>
     <div class="tabs-section-body">
       <div data-togglable="CONSTRUCTOR">
-        <h2 class="">Constructors</h2>
+        <h2 class="tableheader">Constructors</h2>
         <div class="table"><a data-name="507498900%2FConstructors%2F876859814" anchor-label="R2dbcTransaction" id="507498900%2FConstructors%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-r2dbc-transaction.html"><span>R2dbc</span><wbr><span><span>Transaction</span></span></a></div>
@@ -119,9 +119,9 @@
         </div>
       </div>
       <div data-togglable="TYPE">
-        <h2 class="">Types</h2>
+        <h2 class="tableheader">Types</h2>
         <div class="table"><a data-name="-801460531%2FClasslikes%2F876859814" anchor-label="Companion" id="-801460531%2FClasslikes%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-companion/index.html"><span><span>Companion</span></span></a></div>
@@ -138,9 +138,9 @@
         </div>
       </div>
       <div data-togglable="PROPERTY">
-        <h2 class="">Properties</h2>
+        <h2 class="tableheader">Properties</h2>
         <div class="table"><a data-name="2049319582%2FProperties%2F876859814" anchor-label="currentStatement" id="2049319582%2FProperties%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="current-statement.html"><span>current</span><wbr><span><span>Statement</span></span></a></div>
@@ -155,7 +155,7 @@
             </div>
           </div>
 <a data-name="1291405142%2FProperties%2F876859814" anchor-label="db" id="1291405142%2FProperties%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="db.html"><span><span>db</span></span></a></div>
@@ -170,7 +170,7 @@
             </div>
           </div>
 <a data-name="870564456%2FProperties%2F876859814" anchor-label="debug" id="870564456%2FProperties%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="index.html#870564456%2FProperties%2F876859814"><span><span>debug</span></span></a></div>
@@ -184,8 +184,23 @@
               </div>
             </div>
           </div>
+<a data-name="1362548469%2FProperties%2F876859814" anchor-label="defaultLogger" id="1362548469%2FProperties%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="default-logger.html"><span>default</span><wbr><span><span>Logger</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1362548469%2FProperties%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="default-logger.html">defaultLogger</a><span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-composite-sql-logger/index.html">CompositeSqlLogger</a></div><div class="brief "><p class="paragraph">A <a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-composite-sql-logger/index.html">CompositeSqlLogger</a> containing any <a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-sql-logger/index.html">SqlLogger</a> instances that are implicitly added to a new transaction.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
 <a data-name="446838347%2FProperties%2F876859814" anchor-label="duration" id="446838347%2FProperties%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="index.html#446838347%2FProperties%2F876859814"><span><span>duration</span></span></a></div>
@@ -200,7 +215,7 @@
             </div>
           </div>
 <a data-name="-1135833564%2FProperties%2F876859814" anchor-label="id" id="-1135833564%2FProperties%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="index.html#-1135833564%2FProperties%2F876859814"><span><span>id</span></span></a></div>
@@ -209,13 +224,13 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="index.html#-1135833564%2FProperties%2F876859814">id</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="index.html#-1135833564%2FProperties%2F876859814"><strike>id</strike></a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="-1407731268%2FProperties%2F876859814" anchor-label="maxAttempts" id="-1407731268%2FProperties%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="max-attempts.html"><span>max</span><wbr><span><span>Attempts</span></span></a></div>
@@ -230,7 +245,7 @@
             </div>
           </div>
 <a data-name="-1179934297%2FProperties%2F876859814" anchor-label="maxRetryDelay" id="-1179934297%2FProperties%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="max-retry-delay.html"><span>max</span><wbr><span>Retry</span><wbr><span><span>Delay</span></span></a></div>
@@ -245,7 +260,7 @@
             </div>
           </div>
 <a data-name="-864941575%2FProperties%2F876859814" anchor-label="minRetryDelay" id="-864941575%2FProperties%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="min-retry-delay.html"><span>min</span><wbr><span>Retry</span><wbr><span><span>Delay</span></span></a></div>
@@ -260,7 +275,7 @@
             </div>
           </div>
 <a data-name="1969173716%2FProperties%2F876859814" anchor-label="outerTransaction" id="1969173716%2FProperties%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="index.html#1969173716%2FProperties%2F876859814"><span>outer</span><wbr><span><span>Transaction</span></span></a></div>
@@ -275,7 +290,7 @@
             </div>
           </div>
 <a data-name="390595334%2FProperties%2F876859814" anchor-label="queryTimeout" id="390595334%2FProperties%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="index.html#390595334%2FProperties%2F876859814"><span>query</span><wbr><span><span>Timeout</span></span></a></div>
@@ -290,7 +305,7 @@
             </div>
           </div>
 <a data-name="-1737320267%2FProperties%2F876859814" anchor-label="readOnly" id="-1737320267%2FProperties%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.r2dbc.transactions/-r2dbc-transaction-interface/index.html#-1737320267%2FProperties%2F876859814"><span>read</span><wbr><span><span>Only</span></span></a></div>
@@ -305,7 +320,7 @@
             </div>
           </div>
 <a data-name="1399786239%2FProperties%2F876859814" anchor-label="statementCount" id="1399786239%2FProperties%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="index.html#1399786239%2FProperties%2F876859814"><span>statement</span><wbr><span><span>Count</span></span></a></div>
@@ -320,7 +335,7 @@
             </div>
           </div>
 <a data-name="-1788315525%2FProperties%2F876859814" anchor-label="statements" id="-1788315525%2FProperties%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="index.html#-1788315525%2FProperties%2F876859814"><span><span>statements</span></span></a></div>
@@ -335,7 +350,7 @@
             </div>
           </div>
 <a data-name="-1300121233%2FProperties%2F876859814" anchor-label="statementStats" id="-1300121233%2FProperties%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="index.html#-1300121233%2FProperties%2F876859814"><span>statement</span><wbr><span><span>Stats</span></span></a></div>
@@ -349,8 +364,23 @@
               </div>
             </div>
           </div>
+<a data-name="-1295533854%2FProperties%2F876859814" anchor-label="transactionId" id="-1295533854%2FProperties%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1295533854%2FProperties%2F876859814"><span>transaction</span><wbr><span><span>Id</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1295533854%2FProperties%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="index.html#-1295533854%2FProperties%2F876859814">transactionId</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
 <a data-name="-767914096%2FProperties%2F876859814" anchor-label="transactionIsolation" id="-767914096%2FProperties%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.r2dbc.transactions/-r2dbc-transaction-interface/transaction-isolation.html"><span>transaction</span><wbr><span><span>Isolation</span></span></a></div>
@@ -359,13 +389,28 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="../../org.jetbrains.exposed.v1.r2dbc.transactions/-r2dbc-transaction-interface/transaction-isolation.html">transactionIsolation</a><span class="token operator">: </span><span data-unresolved-link="io.r2dbc.spi/IsolationLevel///PointingToDeclaration/">IsolationLevel</span></div><div class="brief "><p class="paragraph">The transaction isolation level of the transaction, which may differ from the set database level.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="../../org.jetbrains.exposed.v1.r2dbc.transactions/-r2dbc-transaction-interface/transaction-isolation.html">transactionIsolation</a><span class="token operator">: </span><span data-unresolved-link="io.r2dbc.spi/IsolationLevel///PointingToDeclaration/">IsolationLevel</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The transaction isolation level of the transaction, which may differ from the set database level.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="662976517%2FProperties%2F876859814" anchor-label="transactionManager" id="662976517%2FProperties%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="transaction-manager.html"><span>transaction</span><wbr><span><span>Manager</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="662976517%2FProperties%2F876859814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="transaction-manager.html">transactionManager</a><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.r2dbc.transactions/-transaction-manager/index.html">TransactionManager</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="-1214743485%2FProperties%2F876859814" anchor-label="warnLongQueriesDuration" id="-1214743485%2FProperties%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="index.html#-1214743485%2FProperties%2F876859814"><span>warn</span><wbr><span>Long</span><wbr><span>Queries</span><wbr><span><span>Duration</span></span></a></div>
@@ -382,13 +427,13 @@
         </div>
       </div>
       <div data-togglable="FUNCTION">
-        <h2 class="">Functions</h2>
-        <div class="table"><a data-name="581355475%2FFunctions%2F876859814" anchor-label="addLogger" id="581355475%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="-1348956069%2FFunctions%2F876859814" anchor-label="addLogger" id="-1348956069%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="add-logger.html"><span>add</span><wbr><span><span>Logger</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="581355475%2FFunctions%2F876859814"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1348956069%2FFunctions%2F876859814"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
@@ -399,7 +444,7 @@
             </div>
           </div>
 <a data-name="1502299074%2FFunctions%2F876859814" anchor-label="close" id="1502299074%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.r2dbc.transactions/-r2dbc-transaction-interface/close.html"><span><span>close</span></span></a></div>
@@ -414,7 +459,7 @@
             </div>
           </div>
 <a data-name="828013115%2FFunctions%2F876859814" anchor-label="closeExecutedStatements" id="828013115%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="close-executed-statements.html"><span>close</span><wbr><span>Executed</span><wbr><span><span>Statements</span></span></a></div>
@@ -429,7 +474,7 @@
             </div>
           </div>
 <a data-name="1115011389%2FFunctions%2F876859814" anchor-label="commit" id="1115011389%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="commit.html"><span><span>commit</span></span></a></div>
@@ -444,7 +489,7 @@
             </div>
           </div>
 <a data-name="1220835778%2FFunctions%2F876859814" anchor-label="connection" id="1220835778%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.jetbrains.exposed.v1.r2dbc.transactions/-r2dbc-transaction-interface/connection.html"><span><span>connection</span></span></a></div>
@@ -459,7 +504,7 @@
             </div>
           </div>
 <a data-name="1889916180%2FFunctions%2F876859814" anchor-label="exec" id="1889916180%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="exec.html"><span><span>exec</span></span></a></div>
@@ -474,7 +519,7 @@
             </div>
           </div>
 <a data-name="1354119884%2FFunctions%2F876859814" anchor-label="execInBatch" id="1354119884%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="exec-in-batch.html"><span>exec</span><wbr><span>In</span><wbr><span><span>Batch</span></span></a></div>
@@ -489,7 +534,7 @@
             </div>
           </div>
 <a data-name="-325397589%2FFunctions%2F876859814" anchor-label="execQuery" id="-325397589%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="exec-query.html"><span>exec</span><wbr><span><span>Query</span></span></a></div>
@@ -504,7 +549,7 @@
             </div>
           </div>
 <a data-name="1027353522%2FFunctions%2F876859814" anchor-label="explain" id="1027353522%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../explain.html"><span><span>explain</span></span></a></div>
@@ -519,7 +564,7 @@
             </div>
           </div>
 <a data-name="-643418620%2FFunctions%2F876859814" anchor-label="fullIdentity" id="-643418620%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="index.html#-643418620%2FFunctions%2F876859814"><span>full</span><wbr><span><span>Identity</span></span></a></div>
@@ -534,7 +579,7 @@
             </div>
           </div>
 <a data-name="-1271417938%2FFunctions%2F876859814" anchor-label="getOrCreate" id="-1271417938%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="index.html#-1271417938%2FFunctions%2F876859814"><span>get</span><wbr><span>Or</span><wbr><span><span>Create</span></span></a></div>
@@ -549,7 +594,7 @@
             </div>
           </div>
 <a data-name="-1892232403%2FFunctions%2F876859814" anchor-label="getUserData" id="-1892232403%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="index.html#-1892232403%2FFunctions%2F876859814"><span>get</span><wbr><span>User</span><wbr><span><span>Data</span></span></a></div>
@@ -564,7 +609,7 @@
             </div>
           </div>
 <a data-name="1463996552%2FFunctions%2F876859814" anchor-label="identity" id="1463996552%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="index.html#-1413487275%2FFunctions%2F876859814"><span><span>identity</span></span></a></div>
@@ -579,7 +624,7 @@
             </div>
           </div>
 <a data-name="2020576966%2FFunctions%2F876859814" anchor-label="putUserData" id="2020576966%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="index.html#2020576966%2FFunctions%2F876859814"><span>put</span><wbr><span>User</span><wbr><span><span>Data</span></span></a></div>
@@ -593,23 +638,23 @@
               </div>
             </div>
           </div>
-<a data-name="-167869622%2FFunctions%2F876859814" anchor-label="registerInterceptor" id="-167869622%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+<a data-name="-1524927796%2FFunctions%2F876859814" anchor-label="registerInterceptor" id="-1524927796%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="register-interceptor.html"><span>register</span><wbr><span><span>Interceptor</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-167869622%2FFunctions%2F876859814"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1524927796%2FFunctions%2F876859814"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="register-interceptor.html"><span class="token function">registerInterceptor</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">interceptor<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core.statements/-statement-interceptor/index.html">StatementInterceptor</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Adds the specified <a href="../../../exposed-core/org.jetbrains.exposed.v1.core.statements/-statement-interceptor/index.html">StatementInterceptor</a> to act on this transaction.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="register-interceptor.html"><span class="token function">registerInterceptor</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">interceptor<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core.statements/-statement-interceptor/index.html">StatementInterceptor</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Adds the specified <a href="../../../exposed-core/org.jetbrains.exposed.v1.core.statements/-statement-interceptor/index.html">StatementInterceptor</a> to act on this transaction.</p></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="register-interceptor.html"><span class="token function">registerInterceptor</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">interceptor<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.r2dbc.statements/-suspend-statement-interceptor/index.html">SuspendStatementInterceptor</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Adds the specified <a href="../../org.jetbrains.exposed.v1.r2dbc.statements/-suspend-statement-interceptor/index.html">SuspendStatementInterceptor</a> to act on this transaction.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="1540982589%2FFunctions%2F876859814" anchor-label="removeUserData" id="1540982589%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="index.html#1540982589%2FFunctions%2F876859814"><span>remove</span><wbr><span>User</span><wbr><span><span>Data</span></span></a></div>
@@ -624,7 +669,7 @@
             </div>
           </div>
 <a data-name="-858696080%2FFunctions%2F876859814" anchor-label="rollback" id="-858696080%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="rollback.html"><span><span>rollback</span></span></a></div>
@@ -638,23 +683,23 @@
               </div>
             </div>
           </div>
-<a data-name="-619637999%2FFunctions%2F876859814" anchor-label="unregisterInterceptor" id="-619637999%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+<a data-name="-1554582612%2FFunctions%2F876859814" anchor-label="unregisterInterceptor" id="-1554582612%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="unregister-interceptor.html"><span>unregister</span><wbr><span><span>Interceptor</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-619637999%2FFunctions%2F876859814"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1554582612%2FFunctions%2F876859814"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="unregister-interceptor.html"><span class="token function">unregisterInterceptor</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">interceptor<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core.statements/-statement-interceptor/index.html">StatementInterceptor</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Removes the specified <a href="../../../exposed-core/org.jetbrains.exposed.v1.core.statements/-statement-interceptor/index.html">StatementInterceptor</a> from acting on this transaction.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-r2dbc/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="unregister-interceptor.html"><span class="token function">unregisterInterceptor</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">interceptor<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core.statements/-statement-interceptor/index.html">StatementInterceptor</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Removes the specified <a href="../../../exposed-core/org.jetbrains.exposed.v1.core.statements/-statement-interceptor/index.html">StatementInterceptor</a> from acting on this transaction.</p></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="unregister-interceptor.html"><span class="token function">unregisterInterceptor</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">interceptor<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.r2dbc.statements/-suspend-statement-interceptor/index.html">SuspendStatementInterceptor</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Removes the specified <a href="../../org.jetbrains.exposed.v1.r2dbc.statements/-suspend-statement-interceptor/index.html">SuspendStatementInterceptor</a> from acting on this transaction.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="1605532765%2FFunctions%2F876859814" anchor-label="withDataBaseLock" id="1605532765%2FFunctions%2F876859814" data-filterable-set=":exposed-r2dbc/main"></a>
-          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-r2dbc/main" data-filterable-set=":exposed-r2dbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-schema-utils/with-data-base-lock.html"><span>with</span><wbr><span>Data</span><wbr><span>Base</span><wbr><span><span>Lock</span></span></a></div>
@@ -674,17 +719,21 @@
   </div>
 </div>
     <div class="footer">
-        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
-        <span>© 2025 Copyright</span>
-        <span class="pull-right">
-            <span>Generated by </span>
-            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
-                <span>dokka</span>
-            </a>
-        </span>
-    </div>
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2025 Copyright</div>
+                </div>
             </div>
         </div>
     </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

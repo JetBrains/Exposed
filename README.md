@@ -1,16 +1,17 @@
 <div align="center">
 
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./docs/logo-dark.png" width="315">
-    <img alt="Exposed logo" src="./docs/logo-light.png" width="315">
+    <source media="(prefers-color-scheme: dark)" srcset="./documentation-website/Writerside/images/exposed-text-light.png">
+    <img alt="Exposed logo" src="./documentation-website/Writerside/images/exposed-text-dark.png" width="215">
   </picture>
 
 </div>
-<br><br>
+<br>
 
 <div align="center">
 
 [![JetBrains team project](https://jb.gg/badges/team.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
+[![Kotlin](https://img.shields.io/badge/dynamic/toml?url=https://raw.githubusercontent.com/JetBrains/Exposed/refs/heads/main/gradle/libs.versions.toml&query=%24.versions.kotlin&logo=kotlin&label=kotlin&color=blue)](http://kotlinlang.org)
 [![Slack Channel](https://img.shields.io/badge/chat-exposed-yellow.svg?logo=slack)](https://kotlinlang.slack.com/messages/exposed/)
 [![TC Build status](https://exposed.teamcity.com/app/rest/builds/buildType:id:Exposed_Build/statusIcon.svg)](https://exposed.teamcity.com/viewType.html?buildTypeId=Exposed_Build&guest=1)
 [![Maven Central](https://img.shields.io/maven-central/v/org.jetbrains.exposed/exposed-core?label=maven+central)](https://central.sonatype.com/search?namespace=org.jetbrains.exposed)
@@ -70,6 +71,21 @@ As well as the following extension modules:
 | `exposed-money`               | Extensions to support [`MonetaryAmount`](https://javamoney.github.io/apidocs/java.money/javax/money/MonetaryAmount.html) from the [JavaMoney API](https://javamoney.github.io/) |
 | `exposed-spring-boot-starter` | A starter for [Spring Boot](https://spring.io/projects/spring-boot) to utilize Exposed as the ORM instead of [Hibernate](https://hibernate.org/)                                |
 | `spring-transaction`          | Transaction manager that builds on top of Spring's standard transaction workflow                                                                                                |
+
+### Requirements
+
+Kotlin version 2.1.+
+
+The following module(s) require JDK 17 or newer:
+* `spring-transaction` - depends on Spring Framework 6
+* `exposed-spring-boot-starter` - depends on Spring Boot 3
+* `exposed-crypt` - depends on Spring Security 6
+
+The following module(s) require JDK 11 or newer:
+* `exposed-r2dbc`
+* `exposed-migration-r2dbc`
+
+All other modules have a minimum requirement of JDK 8.
 
 ## Samples using Exposed
 

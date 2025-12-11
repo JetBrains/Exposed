@@ -29,7 +29,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -343,7 +343,7 @@ class JsonColumnTests : R2dbcDatabaseTestsBase() {
             val user = json<User>("user", Json.Default).nullable()
         }
 
-        withTables(tester) {
+        withTables(tester) { testDb ->
             val nullId = tester.insertAndGetId {
                 it[user] = null
             }
@@ -356,6 +356,21 @@ class JsonColumnTests : R2dbcDatabaseTestsBase() {
 
             val result2 = tester.select(tester.user).where { tester.id eq nonNullId }.single()
             assertNotNull(result2[tester.user])
+
+            val batchData = listOf(null, User("B", "Team B"))
+            val batchSql = mutableListOf<String>()
+            // Oracle throws: Batch execution returning generated values is not supported
+            tester.batchInsert(batchData, shouldReturnGeneratedValues = testDb != TestDB.ORACLE) { user ->
+                this[tester.user] = user
+
+                batchSql += this.prepareSQL(this@withTables, prepared = true)
+            }
+            assertEquals(batchData.size, batchSql.size)
+            val expectedMarker = when (testDb) {
+                in TestDB.ALL_POSTGRES -> "?::json"
+                else -> "?"
+            }
+            assertTrue(batchSql.all { it.contains(expectedMarker, ignoreCase = true) })
         }
     }
 

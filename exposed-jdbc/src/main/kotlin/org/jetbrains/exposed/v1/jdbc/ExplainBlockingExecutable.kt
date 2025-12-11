@@ -27,7 +27,7 @@ open class ExplainBlockingExecutable(
         return Iterable { resultIterator }.iterator()
     }
 
-    private inner class ResultIterator(rs: ResultSet) : StatementIterator<String, ExplainResultRow>(rs) {
+    private class ResultIterator(rs: ResultSet) : StatementIterator<String, ExplainResultRow>(rs) {
         override val fieldIndex: Map<String, Int> = List(result.metaData.columnCount) { i ->
             result.metaData.getColumnName(i + 1) to i
         }.toMap()

@@ -6,7 +6,7 @@ import org.jetbrains.exposed.v1.core.intLiteral
 import org.jetbrains.exposed.v1.r2dbc.select
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class DualTableTest : R2dbcDatabaseTestsBase() {
     @Test
