@@ -18,23 +18,25 @@ kotlin {
 
 dependencies {
     api(project(":exposed-core"))
-    api(project(":exposed-jdbc"))
-    api(libs.spring.jdbc)
-    api(libs.spring.context.spring6)
-    implementation(libs.kotlinx.coroutines)
+    api(project(":exposed-r2dbc"))
+    api(libs.spring.r2dbc)
+    api(libs.spring.context.spring7)
+    implementation(libs.kotlinx.coroutines.reactor)
 
-    testImplementation(project(":exposed-dao"))
-    testImplementation(project(":exposed-tests"))
+    testImplementation(project(":exposed-r2dbc-tests"))
     testImplementation(kotlin("test"))
     testImplementation(libs.junit6)
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.kotlinx.coroutines.debug)
-    testImplementation(libs.spring.test.spring6)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.spring.test.spring7)
     testImplementation(libs.slf4j)
     testImplementation(libs.log4j.slf4j.impl)
     testImplementation(libs.log4j.api)
     testImplementation(libs.log4j.core)
-    testImplementation(libs.h2)
+    testImplementation(libs.r2dbc.h2) {
+        exclude(group = "com.h2database", module = "h2")
+    }
 }
 
 tasks.withType<KotlinCompile>().configureEach {
