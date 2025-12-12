@@ -35,6 +35,9 @@ open class TestConfig : TransactionManagementConfigurer {
 
     @Bean
     open fun service(): Service = Service()
+
+    @Bean
+    open fun mixedTransactionService(): MixedTransactionService = MixedTransactionService()
 }
 
 /**
