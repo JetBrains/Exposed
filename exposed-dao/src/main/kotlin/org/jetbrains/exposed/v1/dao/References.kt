@@ -113,6 +113,9 @@ open class Referrers<ParentID : Any, in Parent : Entity<ParentID>, ChildID : Any
     /** The set of columns and their [SortOrder] for ordering referred entities in one-to-many relationship. */
     private val orderByExpressions = linkedSetOf<Pair<Expression<*>, SortOrder>>()
 
+    /** Returns the order by expressions as an array. */
+    internal fun getOrderByExpressions(): Array<Pair<Expression<*>, SortOrder>> = orderByExpressions.toTypedArray()
+
     val allReferences = references ?: run {
         reference.referee ?: error("Column $reference is not a reference")
 
@@ -323,13 +326,14 @@ private fun <ID : Any> List<Entity<ID>>.preloadRelations(
             is Referrers<*, *, *, *, *> -> {
                 (refObject as Referrers<ID, Entity<ID>, *, Entity<*>, Any>).allReferences.let { refColumns ->
                     val delegateRefColumn = refObject.reference
+                    val orderByExpressions = refObject.getOrderByExpressions()
                     if (hasSingleReferenceWithReferee(refColumns)) {
                         val castReferee = delegateRefColumn.referee<Any>()!!
                         val refIds = this.map { entity -> entity.getRefereeId(castReferee, delegateRefColumn) }
-                        refObject.factory.warmUpReferences(refIds, delegateRefColumn)
+                        refObject.factory.warmUpReferences(refIds, delegateRefColumn, null, orderByExpressions)
                     } else {
                         val refIds = this.map { it.getCompositeReferrerId(refColumns) }
-                        refObject.factory.warmUpCompositeIdReferences(refIds, refColumns, delegateRefColumn)
+                        refObject.factory.warmUpCompositeIdReferences(refIds, refColumns, delegateRefColumn, orderBy = orderByExpressions)
                     }
                     storeReferenceCache(delegateRefColumn, prop)
                 }
@@ -348,13 +352,14 @@ private fun <ID : Any> List<Entity<ID>>.preloadRelations(
             is BackReference<*, *, *, *, *> -> {
                 (refObject.delegate as Referrers<ID, Entity<ID>, *, Entity<*>, Any>).allReferences.let { refColumns ->
                     val delegateRefColumn = refObject.delegate.reference
+                    val orderByExpressions = refObject.delegate.getOrderByExpressions()
                     if (hasSingleReferenceWithReferee(refColumns)) {
                         val castReferee = delegateRefColumn.referee<Any>()!!
                         val refIds = this.map { entity -> entity.getRefereeId(castReferee, delegateRefColumn) }
-                        refObject.delegate.factory.warmUpReferences(refIds, delegateRefColumn)
+                        refObject.delegate.factory.warmUpReferences(refIds, delegateRefColumn, null, orderByExpressions)
                     } else {
                         val refIds = this.map { it.getCompositeReferrerId(refColumns) }
-                        refObject.delegate.factory.warmUpCompositeIdReferences(refIds, refColumns, delegateRefColumn)
+                        refObject.delegate.factory.warmUpCompositeIdReferences(refIds, refColumns, delegateRefColumn, orderBy = orderByExpressions)
                     }
                     storeReferenceCache(delegateRefColumn, prop)
                 }
@@ -362,12 +367,13 @@ private fun <ID : Any> List<Entity<ID>>.preloadRelations(
             is OptionalBackReference<*, *, *, *, *> -> {
                 (refObject.delegate as Referrers<ID, Entity<ID>, *, Entity<*>, Any?>).allReferences.let { refColumns ->
                     val delegateRefColumn = refObject.delegate.reference
+                    val orderByExpressions = refObject.delegate.getOrderByExpressions()
                     if (hasSingleReferenceWithReferee(refColumns)) {
                         val refIds = this.map { it.run { delegateRefColumn.referee<Any>()!!.lookup() } }
-                        refObject.delegate.factory.warmUpOptReferences(refIds, delegateRefColumn)
+                        refObject.delegate.factory.warmUpOptReferences(refIds, delegateRefColumn, orderBy = orderByExpressions)
                     } else {
                         val refIds = this.map { it.getCompositeReferrerId(refColumns) }
-                        refObject.delegate.factory.warmUpCompositeIdReferences(refIds, refColumns, delegateRefColumn)
+                        refObject.delegate.factory.warmUpCompositeIdReferences(refIds, refColumns, delegateRefColumn, orderBy = orderByExpressions)
                     }
                     storeReferenceCache(delegateRefColumn, prop)
                 }
