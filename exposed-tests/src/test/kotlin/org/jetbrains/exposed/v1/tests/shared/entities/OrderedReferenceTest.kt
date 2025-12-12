@@ -206,6 +206,7 @@ class OrderedReferenceTest : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testOrderByWithEagerLoad() {
         withOrderedReferenceTestTables {
             // Clearing cache is not critical, just to be sure that there are no caches from

@@ -825,6 +825,8 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * Set [forUpdate] to `true` or `false` depending on whether a locking read should be placed or removed from the
      * search query used. Leave the argument as `null` to use the query without any locking option.
+     *
+     * Set [orderBy] to specify the order in which entities should be sorted.
      */
     fun <SID> warmUpOptReferences(
         references: List<SID>,
