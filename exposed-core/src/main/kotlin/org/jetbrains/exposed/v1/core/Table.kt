@@ -49,6 +49,10 @@ interface FieldSet {
                     (it as? Column<*>)?.isEntityIdentifier() == true && it.table is CompositeIdTable -> {
                         unrolled.addAll(it.table.idColumns)
                     }
+                    (it as? Column<*>)?.isJsonBColumnForCasting() == true -> {
+                        val castExpression = CastToJson(it, it.columnType)
+                        unrolled.add(castExpression)
+                    }
                     else -> unrolled.add(it)
                 }
             }

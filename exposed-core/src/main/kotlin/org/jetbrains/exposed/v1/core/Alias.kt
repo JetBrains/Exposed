@@ -124,6 +124,8 @@ interface IExpressionAlias<T> {
             +"(CASE WHEN "
             append(delegate)
             +" THEN 1 ELSE 0 END)"
+        } else if ((delegate as? Column<*>)?.isJsonBColumnForCasting() == true) {
+            append(CastToJson(delegate, (delegate as Column<*>).columnType))
         } else {
             append(delegate)
         }

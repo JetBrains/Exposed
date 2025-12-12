@@ -26,6 +26,8 @@ open class JsonColumnType<T : Any>(
 ) : ColumnType<T>(), JsonColumnMarker {
     override val usesBinaryFormat: Boolean = false
 
+    override val needsBinaryFormatCast: Boolean = false
+
     override fun sqlType(): String = currentDialect.dataTypeProvider.jsonType()
 
     @Suppress("UNCHECKED_CAST")
