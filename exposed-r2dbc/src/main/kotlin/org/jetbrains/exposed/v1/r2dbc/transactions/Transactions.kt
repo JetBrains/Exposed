@@ -258,10 +258,10 @@ internal suspend fun handleR2dbcException(cause: R2dbcException, transaction: R2
 }
 
 /**
- * Closes all statements and the connection associated with a transaction.
+ * Clears all statements and closes the connection associated with a transaction.
  *
- * This function ensures proper cleanup of resources by closing the current statement,
- * all executed statements, and the transaction connection. Any exceptions during cleanup are logged.
+ * This function ensures proper cleanup of resources by clearing the current statement,
+ * all executed statements, and closing the transaction connection. Any exceptions during cleanup are logged.
  *
  * @param transaction The transaction whose resources should be closed.
  */
@@ -270,10 +270,10 @@ internal suspend fun closeStatementsAndConnection(transaction: R2dbcTransaction)
     @Suppress("TooGenericExceptionCaught")
     try {
         currentStatement?.let {
-            it.closeIfPossible()
+            // no Statement.close() in R2DBC
             transaction.currentStatement = null
         }
-        transaction.closeExecutedStatements()
+        transaction.clearExecutedStatements()
     } catch (cause: Exception) {
         exposedLogger.warn("Statements close failed", cause)
     }

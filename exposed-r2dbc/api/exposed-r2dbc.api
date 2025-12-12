@@ -311,8 +311,8 @@ public class org/jetbrains/exposed/v1/r2dbc/R2dbcTransaction : org/jetbrains/exp
 	public static final field Companion Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction$Companion;
 	public fun <init> (Lorg/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionInterface;)V
 	public final fun addLogger ([Lorg/jetbrains/exposed/v1/core/SqlLogger;)Lorg/jetbrains/exposed/v1/core/CompositeSqlLogger;
+	public final fun clearExecutedStatements ()V
 	public fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public final fun closeExecutedStatements (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun commit (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun connection (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun exec (Ljava/lang/String;Ljava/lang/Iterable;Lorg/jetbrains/exposed/v1/core/statements/StatementType;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -752,8 +752,6 @@ public final class org/jetbrains/exposed/v1/r2dbc/statements/R2dbcConnectionImpl
 public final class org/jetbrains/exposed/v1/r2dbc/statements/R2dbcPreparedStatementImpl : org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi {
 	public fun <init> (Lio/r2dbc/spi/Statement;Lio/r2dbc/spi/Connection;ZLorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;)V
 	public fun addBatch (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun cancel (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun closeIfPossible (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun executeBatch (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun executeMultiple (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun executeQuery (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -969,8 +967,6 @@ public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcLocalMetad
 
 public abstract interface class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi : org/jetbrains/exposed/v1/core/statements/api/PreparedStatementApi {
 	public abstract fun addBatch (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun cancel (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun closeIfPossible (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun executeBatch (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun executeMultiple (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun executeQuery (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
