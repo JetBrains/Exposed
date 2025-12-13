@@ -34,7 +34,8 @@ import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcResult
 import org.jetbrains.exposed.v1.r2dbc.statements.api.origin
 import org.jetbrains.exposed.v1.r2dbc.statements.executeIn
 import org.jetbrains.exposed.v1.r2dbc.transactions.R2dbcTransactionInterface
-import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.r2dbc.transactions.R2dbcTransactionManager
+import org.jetbrains.exposed.v1.r2dbc.transactions.createTransactionContext
 import org.jetbrains.exposed.v1.r2dbc.transactions.transactionManager
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -45,7 +46,7 @@ open class R2dbcTransaction(
 ) : Transaction(), R2dbcTransactionInterface by transactionImpl {
     final override val db: R2dbcDatabase = transactionImpl.db
 
-    override val transactionManager: TransactionManager
+    override val transactionManager: R2dbcTransactionManager
         get() = db.transactionManager
 
     /**

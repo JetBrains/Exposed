@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.v1.r2dbc.transactions
 
 import io.r2dbc.spi.IsolationLevel
-import kotlinx.coroutines.currentCoroutineContext
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
@@ -9,9 +8,7 @@ import org.jetbrains.exposed.v1.core.transactions.DatabasesManagerImpl
 import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagersContainerImpl
-import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextElement
 import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolder
-import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolderImpl
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
@@ -24,82 +21,33 @@ import kotlin.coroutines.CoroutineContext
  * [setupTxConnection] can be provided to override the default configuration of transaction settings when a
  * connection is retrieved from the database.
  */
-class TransactionManager(
-    private val db: R2dbcDatabase,
+open class TransactionManager(
+    override val db: R2dbcDatabase,
     private val setupTxConnection:
     ((R2dbcExposedConnection<*>, R2dbcTransactionInterface) -> Unit)? = null
-) : TransactionManagerApi {
+) : R2dbcTransactionManager {
     override var defaultMaxAttempts: Int = db.config.defaultMaxAttempts
 
     override var defaultMinRetryDelay: Long = db.config.defaultMinRetryDelay
 
     override var defaultMaxRetryDelay: Long = db.config.defaultMaxRetryDelay
 
-    /** The default transaction isolation level. Unless specified, the database-specific level will be used. */
-    var defaultIsolationLevel: IsolationLevel? = (db.config as R2dbcDatabaseConfig).defaultR2dbcIsolationLevel
+    override var defaultIsolationLevel: IsolationLevel? = (db.config as R2dbcDatabaseConfig).defaultR2dbcIsolationLevel
         get() = if (field == null) R2dbcDatabase.getDefaultIsolationLevel(db) else field
 
     override var defaultReadOnly: Boolean = db.config.defaultReadOnly
 
-    /** A unique key for storing coroutine context elements, as [TransactionContextHolder]. */
     @OptIn(InternalApi::class)
-    private val contextKey = object : CoroutineContext.Key<TransactionContextHolder> {}
-
-    /**
-     * Creates a coroutine context for the given transaction.
-     *
-     * @param transaction The transaction for which to create the coroutine context.
-     * @return A [CoroutineContext] containing the transaction holder and context element.
-     * @throws IllegalStateException if the transaction's manager doesn't match this manager.
-     */
-    internal fun createTransactionContext(transaction: Transaction): CoroutineContext {
-        if (transaction.transactionManager != this) {
-            error(
-                "TransactionManager must create transaction context only for own transactions. " +
-                    "Transaction manager of ${db.url} tried to create transaction context for ${transaction.db.url}"
-            )
-        }
-        @OptIn(InternalApi::class)
-        return TransactionContextHolderImpl(transaction, contextKey) + TransactionContextElement(transaction)
-    }
-
-    /**
-     * Returns the current R2DBC transaction from the coroutine context, or null if none exists.
-     *
-     * This method performs type checking to ensure the transaction in the context is actually
-     * an [R2dbcTransaction]. If a non-R2DBC transaction is found in the context, an error is thrown
-     * to prevent type confusion between JDBC and R2DBC transactions.
-     *
-     * @return The current [R2dbcTransaction] from the coroutine context, or null if no transaction exists
-     * @throws IllegalStateException If the transaction in the context is not an [R2dbcTransaction]
-     */
-    @OptIn(InternalApi::class)
-    internal suspend fun getCurrentContextTransaction(): R2dbcTransaction? {
-        val transaction = currentCoroutineContext()[contextKey]?.transaction
-        return when {
-            transaction == null -> null
-            transaction is R2dbcTransaction -> transaction
-            else -> throw IllegalStateException(
-                "Expected R2dbcTransaction in coroutine context but found ${transaction::class.simpleName}. " +
-                    "This may indicate mixing JDBC and R2DBC transactions incorrectly."
-            )
-        }
-    }
+    override val contextKey: CoroutineContext.Key<TransactionContextHolder> = object : CoroutineContext.Key<TransactionContextHolder> {}
 
     override fun toString(): String {
         return "R2dbcTransactionManager[${hashCode()}](db=$db)"
     }
 
-    /**
-     * Returns an [R2dbcTransaction] instance.
-     *
-     * The returned value may be a new transaction, or it may return the [outerTransaction] if called from within
-     * an existing transaction with the database not configured to `useNestedTransactions`.
-     */
-    fun newTransaction(
-        isolation: IsolationLevel? = defaultIsolationLevel,
-        readOnly: Boolean? = defaultReadOnly,
-        outerTransaction: R2dbcTransaction? = null
+    override fun newTransaction(
+        isolation: IsolationLevel?,
+        readOnly: Boolean?,
+        outerTransaction: R2dbcTransaction?
     ): R2dbcTransaction {
         val transaction = outerTransaction?.takeIf { !db.useNestedTransactions }
             ?: R2dbcTransaction(
@@ -113,11 +61,6 @@ class TransactionManager(
             )
 
         return transaction
-    }
-
-    override fun currentOrNull(): R2dbcTransaction? {
-        @OptIn(InternalApi::class)
-        return ThreadLocalTransactionsStack.getTransactionOrNull(db) as R2dbcTransaction?
     }
 
     companion object {
@@ -148,7 +91,7 @@ class TransactionManager(
 
         /** Associates the provided [database] with a specific [manager]. */
         @Synchronized
-        fun registerManager(database: R2dbcDatabase, manager: TransactionManagerApi) {
+        fun registerManager(database: R2dbcDatabase, manager: R2dbcTransactionManager) {
             @OptIn(InternalApi::class)
             transactionManagers.registerDatabaseManager(database, manager)
         }
@@ -177,17 +120,17 @@ class TransactionManager(
         fun current(): R2dbcTransaction = currentOrNull() ?: error("No transaction in context.")
 
         /**
-         * Returns the [TransactionManager] instance associated with the provided [database].
+         * Returns the [R2dbcTransactionManager] instance associated with the provided [database].
          *
          * @param database Database instance for which to retrieve the transaction manager.
-         * @return The [TransactionManager] associated with the database.
+         * @return The [R2dbcTransactionManager] associated with the database.
          * @throws IllegalStateException if no transaction manager is registered for the given database.
          */
-        fun managerFor(database: R2dbcDatabase): TransactionManager =
-            transactionManagers.getTransactionManager(database)?.let { it as TransactionManager } ?: error("No transaction manager for db $database")
+        fun managerFor(database: R2dbcDatabase): R2dbcTransactionManager =
+            transactionManagers.getTransactionManager(database)?.let { it as R2dbcTransactionManager } ?: error("No transaction manager for db $database")
 
         /**
-         * Returns the [TransactionManager] for the current context.
+         * Returns the [R2dbcTransactionManager] for the current context.
          *
          * This property attempts to resolve the transaction manager in the following order:
          * 1. From the current transaction, if one exists
@@ -196,7 +139,7 @@ class TransactionManager(
          * @throws IllegalStateException if no transaction manager can be found in either the current
          *         transaction or the current database.
          */
-        val manager: TransactionManager
+        val manager: R2dbcTransactionManager
             get() = currentOrNull()?.transactionManager
                 ?: primaryDatabase?.transactionManager
                 ?: error("No transaction manager found")
