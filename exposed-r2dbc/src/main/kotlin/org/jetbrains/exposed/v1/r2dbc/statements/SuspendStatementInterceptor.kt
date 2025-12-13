@@ -34,21 +34,35 @@ interface SuspendStatementInterceptor {
         executedStatement: R2dbcPreparedStatementApi
     ) {}
 
-    /** Performs steps before a [transaction] is committed. */
+    /**
+     * Performs steps before a [transaction] is committed.
+     *
+     * Additionally, this is called right after `keepUserDataInTransactionStoreOnCommit()`, which has defined the required
+     * information that must not be lost.
+     */
     suspend fun beforeCommit(transaction: R2dbcTransaction) {}
 
-    /** Performs steps after a [transaction] is committed. */
+    /**
+     * Performs steps after a [transaction] is committed.
+     *
+     * At the point when this is called, the [transaction] has had restored any required information held from before
+     * the transaction was committed.
+     */
     suspend fun afterCommit(transaction: R2dbcTransaction) {}
 
     /** Performs steps before a rollback operation is issued on a [transaction]. */
     suspend fun beforeRollback(transaction: R2dbcTransaction) {}
 
-    /** Performs steps after a rollback operation is issued on a [transaction]. */
+    /**
+     * Performs steps after a rollback operation is issued on a [transaction].
+     *
+     * Any information stored in the [transaction]'s `userData` will be cleared directly after this method is called.
+     */
     suspend fun afterRollback(transaction: R2dbcTransaction) {}
 
     /**
      * Returns a mapping of [userData] that ensures required information is not lost from the transaction scope
-     * once the transaction is committed.
+     * once the transaction is committed. This function will be called directly ahead of the call to `beforeCommit()`.
      */
     fun keepUserDataInTransactionStoreOnCommit(userData: Map<Key<*>, Any?>): Map<Key<*>, Any?> = emptyMap()
 }
