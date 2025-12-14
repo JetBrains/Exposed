@@ -6,6 +6,7 @@ import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.exposedLogger
 import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.core.transactions.currentTransactionOrNull
+import org.jetbrains.exposed.v1.core.transactions.transactionScope
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
@@ -202,6 +203,11 @@ class SpringTransactionManager(
 
     override fun doSetRollbackOnly(status: DefaultTransactionStatus) {
         val trxObject = status.transaction as ExposedTransactionObject
+
+        if (status.isDebug) {
+            exposedLogger.debug("Exposed transaction [${status.transactionName}] set rollback-only")
+        }
+
         trxObject.setRollbackOnly()
     }
 
@@ -210,7 +216,6 @@ class SpringTransactionManager(
         val outerTransaction: JdbcTransaction?,
     ) : SmartTransactionObject {
 
-        private var isRollback: Boolean = false
         var isNewConnectionHolder: Boolean = false
         var connectionHolder: ConnectionHolder? = null
 
@@ -246,10 +251,10 @@ class SpringTransactionManager(
         }
 
         fun setRollbackOnly() {
-            isRollback = true
+            getCurrentTransaction()?.isRollback = true
         }
 
-        override fun isRollbackOnly() = isRollback
+        override fun isRollbackOnly(): Boolean = getCurrentTransaction()?.isRollback ?: false
 
         override fun flush() {
             // Do nothing
@@ -272,3 +277,8 @@ class SpringTransactionManager(
         }
     }
 }
+
+private var JdbcTransaction.isRollback by transactionScope { false }
+
+/** Returns the rollback status of the current [JdbcTransaction]. */
+internal fun JdbcTransaction.isMarkedRollback(): Boolean = isRollback
