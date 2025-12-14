@@ -11,6 +11,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNotNull
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -99,8 +100,8 @@ class SpringTransactionRollbackTest {
                         throw RuntimeException()
                         // isGlobalRollbackOnParticipationFailure == true -> doSetRollbackOnly() -> mark as globalRollBack
                     }
-                } catch (@Suppress("SwallowedException") e: RuntimeException) {
-                    // something...
+                } catch (@Suppress("SwallowedException") _: RuntimeException) {
+                    // Ignore exception
                 }
             } // when outer logicTx commit() -> check globalRollBack mark -> throw UnexpectedRollbackException -> rollback
         }
@@ -115,37 +116,42 @@ class SpringTransactionRollbackTest {
         assertFailsWith<UnexpectedRollbackException> {
             testRollback.transaction { // outer logicTx start
                 val outerTx = TransactionManager.currentOrNull()
-                assertFalse(outerTx!!.isMarkedRollback())
+                assertNotNull(outerTx)
+                assertFalse(outerTx.isMarkedRollback())
 
                 try {
-                    testRollback.transaction { // inner logicTx start
+                    testRollback.transaction { // inner logicTx start; inner == outer
                         val innerTx = TransactionManager.currentOrNull()
-                        assertFalse(innerTx!!.isMarkedRollback())
+                        assertNotNull(innerTx)
+                        assertFalse(innerTx.isMarkedRollback())
 
                         @Suppress("TooGenericExceptionThrown")
                         throw RuntimeException() // mark as globalRollBack
                     }
-                } catch (@Suppress("SwallowedException") e: RuntimeException) {
-                    // something...
+                } catch (@Suppress("SwallowedException") _: RuntimeException) {
+                    // Ignore exception
                 }
 
                 assertTrue(outerTx.isMarkedRollback())
 
-                testRollback.transactionWithRequiresNew { // separate transaction
-                    val innerTx = TransactionManager.currentOrNull()
-                    assertFalse(innerTx!!.isMarkedRollback())
+                testRollback.transactionWithRequiresNew { // separate transaction != outer
+                    val newInnerTx = TransactionManager.currentOrNull()
+                    assertNotNull(newInnerTx)
+                    assertFalse(newInnerTx.isMarkedRollback())
                 }
 
-                testRollback.transaction {
+                testRollback.transaction { // inner == outer, so still marked for rollback
                     val innerTx = TransactionManager.currentOrNull()
-                    assertTrue(innerTx!!.isMarkedRollback())
+                    assertNotNull(innerTx)
+                    assertTrue(innerTx.isMarkedRollback())
                 }
             }
         }
 
-        testRollback.transaction { // other transaction not affected by previous transaction rollback status
+        testRollback.transaction { // new outer transaction not affected by previous transaction rollback status
             val newTx = TransactionManager.currentOrNull()
-            assertFalse(newTx!!.isMarkedRollback())
+            assertNotNull(newTx)
+            assertFalse(newTx.isMarkedRollback())
         }
     }
 
@@ -153,18 +159,18 @@ class SpringTransactionRollbackTest {
     fun `requiresNew should rollback innerTx without affecting outerTx`() {
         val testRollback = container.getBean(TestRollback::class.java)
 
-        testRollback.transaction {
+        testRollback.transaction { // outer logicTx start
             testRollback.insertOriginTable("Tx1")
 
             try {
-                testRollback.transactionWithRequiresNew {
+                testRollback.transactionWithRequiresNew { // outer != this
                     testRollback.insertOriginTable("Tx2")
 
                     @Suppress("TooGenericExceptionThrown")
                     throw RuntimeException()
                 }
-            } catch (@Suppress("SwallowedException") e: RuntimeException) {
-                // something...
+            } catch (@Suppress("SwallowedException") _: RuntimeException) {
+                // Ignore exception
             }
         }
 
@@ -194,7 +200,7 @@ class SpringTransactionRollbackTest {
             testRollback.transaction {
                 testRollback.insertOriginTable("With Tx")
 
-                testRollback.transactionWithSupports {
+                testRollback.transactionWithSupports { // outer == this
                     testRollback.insertOriginTable("Supports Tx")
 
                     @Suppress("TooGenericExceptionThrown")
@@ -222,7 +228,7 @@ class SpringTransactionRollbackTest {
                     @Suppress("TooGenericExceptionThrown")
                     throw RuntimeException() // Since it's non-transactional, it won't be rolled back
                 }
-            } catch (@Suppress("SwallowedException") e: RuntimeException) {
+            } catch (@Suppress("SwallowedException") _: RuntimeException) {
                 // Ignore exception
             }
         }
@@ -236,18 +242,39 @@ class SpringTransactionRollbackTest {
 
         assertFailsWith<IllegalTransactionStateException> {
             testRollback.transactionWithMandatory {
-                testRollback.insertOriginTable("No Parent Tx")
+                testRollback.insertOriginTable("No Parent Tx") // Will trigger roll back
             }
         }
 
         testRollback.transaction {
             testRollback.insertOriginTable("Parent Tx")
-            testRollback.transactionWithMandatory {
+            testRollback.transactionWithMandatory { // outer == this
                 testRollback.insertOriginTable("Mandatory Tx")
             }
         }
 
         assertEquals(2, testRollback.entireTableSize()) // Both records should remain
+
+        assertFailsWith<UnexpectedRollbackException> {
+            testRollback.transaction {
+                testRollback.insertOriginTable("New Parent Tx")
+
+                try {
+                    testRollback.transactionWithMandatory { // outer == this
+                        testRollback.insertOriginTable("New Mandatory Tx")
+
+                        @Suppress("TooGenericExceptionThrown")
+                        throw RuntimeException()
+                    }
+                } catch (@Suppress("SwallowedException") _: RuntimeException) {
+                    // Ignore exception
+                }
+            }
+        }
+
+        val entities = testRollback.selectAll()
+        assertEquals(2, entities.size) // Only original records should remain
+        assertTrue { entities.none { it.name.startsWith("No ") || it.name.startsWith("New ") } }
     }
 
     @Test
@@ -264,8 +291,8 @@ class SpringTransactionRollbackTest {
                     @Suppress("TooGenericExceptionThrown")
                     throw RuntimeException() // Rollback only the inner transaction
                 }
-            } catch (@Suppress("SwallowedException") e: RuntimeException) {
-                // something...
+            } catch (@Suppress("SwallowedException") _: RuntimeException) {
+                // Ignore exception
             }
         }
 
