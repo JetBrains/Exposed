@@ -11,9 +11,9 @@ import java.util.UUID
 
 @Component
 open class BookService(
-    @Qualifier("operations1")
+    @param:Qualifier("operations1")
     private val operations1: TransactionOperations,
-    @Qualifier("operations2")
+    @param:Qualifier("operations2")
     private val operations2: TransactionOperations,
     private val jdbcTemplate: JdbcTemplate
 ) {
