@@ -245,7 +245,6 @@ class SpringTransactionManager(
             }
         }
 
-        @OptIn(InternalApi::class)
         fun getCurrentTransaction(): JdbcTransaction? {
             // Get the transaction for this specific database from the stack
             return database.transactionManager.currentOrNull()

@@ -16,12 +16,12 @@ import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedConnection
 import kotlin.coroutines.CoroutineContext
 
 /**
- * [TransactionManager] implementation registered to the provided database value [db].
+ * [R2dbcTransactionManager] implementation registered to the provided database value [db].
  *
  * [setupTxConnection] can be provided to override the default configuration of transaction settings when a
  * connection is retrieved from the database.
  */
-open class TransactionManager(
+class TransactionManager(
     override val db: R2dbcDatabase,
     private val setupTxConnection:
     ((R2dbcExposedConnection<*>, R2dbcTransactionInterface) -> Unit)? = null

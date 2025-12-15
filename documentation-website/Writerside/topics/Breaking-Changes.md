@@ -23,9 +23,9 @@
     * `R2dbcDatabase.transactionManager` now returns `R2dbcTransactionManager` instead of `TransactionManager`
     * `JdbcTransaction.transactionManager` property type changed to `JdbcTransactionManager`
     * `R2dbcTransaction.transactionManager` property type changed to `R2dbcTransactionManager`
-    * `TransactionManager.manager` now returns `JdbcTransactionManager` instead of `TransactionManager`
-    * `TransactionManager.managerFor()` now returns `JdbcTransactionManager` instead of `TransactionManager`
-    * `TransactionManager.registerManager()` now accepts `JdbcTransactionManager` instead of `TransactionManagerApi`
+    * `TransactionManager.manager` now returns either `JdbcTransactionManager` or `R2dbcTransactionManager` instead of TransactionManager
+    * `TransactionManager.managerFor()` now returns either `JdbcTransactionManager` or `R2dbcTransactionManager` instead of TransactionManager
+    * `TransactionManager.registerManager()` now accepts `JdbcTransactionManager` or `R2dbcTransactionManager` instead of `TransactionManagerApi`
     * `Database.connect()` method's `manager` parameter now expects `(Database) -> JdbcTransactionManager` instead of `(Database) -> TransactionManager`
     * `R2dbcDatabase.connect()` method's `manager` parameter now expects `(R2dbcDatabase) -> R2dbcTransactionManager` instead of `(R2dbcDatabase) -> TransactionManager`
     * `TransactionManagerApi.currentOrNull()` method has been removed from the interface and added as extension functions `JdbcTransactionManager.currentOrNull()` and `R2dbcTransactionManager.currentOrNull()`.
@@ -33,7 +33,10 @@
   If you have custom implementations that extend `TransactionManager`, update them to implement the appropriate interface
   (`JdbcTransactionManager` or `R2dbcTransactionManager`) and ensure the `db` property is implemented. If you're passing custom transaction managers to `connect()`
   or `registerManager()`, ensure the types match the new signatures. Replace any calls to instance method `transactionManager.currentOrNull()`
-  with either the static `TransactionManager.currentOrNull()` or the extension function on the typed manager.
+  with either the static `TransactionManager.currentOrNull()` or the extension function on the typed manager. These changes
+  do not affect the companion object methods like `current()`, `currentOrNull()`, or `closeAndUnregister()`.
+
+## 1.0.0-rc-4
 
 * If H2 version 2.4.240+ is detected, `datetime()` column type will now map to type `TIMESTAMP(9)` in the following modes:
   Regular, MySQL, and MariaDB. For earlier versions, `datetime()` continues to map to the original `DATETIME(9)` type.

@@ -68,7 +68,7 @@ fun R2dbcTransactionManager.createTransactionContext(transaction: Transaction): 
  * @return The current [R2dbcTransaction] from the coroutine context, or null if no transaction exists
  * @throws [IllegalStateException] If the transaction in the context is not an [R2dbcTransaction]
  */
-suspend fun R2dbcTransactionManager.getCurrentContextTransaction(): R2dbcTransaction? {
+internal suspend fun R2dbcTransactionManager.getCurrentContextTransaction(): R2dbcTransaction? {
     val transaction = currentCoroutineContext()[contextKey]?.transaction
     return when {
         transaction == null -> null

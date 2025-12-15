@@ -363,11 +363,90 @@ val tx2: JdbcTransaction = TransactionManager.current()
 
 </compare>
 
-This also means that the type of the `manager` parameter in all `Database.connect()` methods has changed to accept a
-function that still takes a `Database` instance, but instead now returns a `TransactionManagerApi`. The default argument
-for a connection `manager` is no longer `ThreadLocalTransactionManager`, which has now been deprecated. The newly implemented
+#### Driver-specific transaction manager interfaces
+
+To enable users to create custom transaction managers for JDBC or R2DBC operations, new interfaces have been introduced:
+* [`JdbcTransactionManager`](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc.transactions/-jdbc-transaction-manager/index.html) in `exposed-jdbc`
+* [`R2dbcTransactionManager`](https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc.transactions/-r2dbc-transaction-manager/index.html) in `exposed-r2dbc`
+
+Both interfaces extend `TransactionManagerApi` and require implementation of a `db` property that returns the associated database instance (`Database` or `R2dbcDatabase`).
+
+The concrete `TransactionManager` class in each module now implements the respective interface. This means that several API signatures have changed to use the typed managers instead of `TransactionManagerApi`:
+
+<compare first-title="1.0.0-rc-3" second-title="1.0.0-rc-4">
+
+```kotlin
+// JDBC
+val manager: TransactionManagerApi =
+    Database.connect(...).transactionManager
+
+Database.connect(
+    manager = { db: Database ->
+        object : TransactionManagerApi { /* ... */ }
+    }
+)
+
+TransactionManager.registerManager(database, manager)
+
+// Getting manager
+val tm: TransactionManager =
+    TransactionManager.managerFor(database)
+```
+
+```kotlin
+// JDBC
+val manager: JdbcTransactionManager =
+    Database.connect(...).transactionManager
+
+Database.connect(
+    manager = { db: Database ->
+        object : JdbcTransactionManager {
+            override val db = db
+            /* ... */
+        }
+    }
+)
+
+TransactionManager.registerManager(database, manager)
+
+// Getting manager
+val tm: JdbcTransactionManager =
+    TransactionManager.managerFor(database)
+```
+
+</compare>
+
+The default argument for the connection `manager` parameter is no longer `ThreadLocalTransactionManager`, which has now been deprecated. The newly implemented
 [`TransactionManager`](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc.transactions/-transaction-manager/index.html)
 is now passed as the default argument instead.
+
+Additionally, the `currentOrNull()` method has been removed from the `TransactionManagerApi` interface. Instead, it is now available as:
+* An extension function on `JdbcTransactionManager` and `R2dbcTransactionManager`
+* A static method on the `TransactionManager` companion object in both modules
+
+If you were calling `currentOrNull()` on a manager instance, replace it with either the static method or cast your manager to the appropriate typed interface:
+
+<compare first-title="1.0.0-rc-3" second-title="1.0.0-rc-4">
+
+```kotlin
+val manager: TransactionManagerApi =
+    Database.connect(...).transactionManager
+val tx = manager.currentOrNull()
+```
+
+```kotlin
+val manager: JdbcTransactionManager =
+    Database.connect(...).transactionManager
+// Use extension function
+val tx = manager.currentOrNull()
+
+// Or use static method
+val tx2 = TransactionManager.currentOrNull()
+```
+
+</compare>
+
+#### Transaction management changes
 
 As part of the redesign, the underlying database transaction management logic and switching of active transactions has
 been changed to no longer rely on `ThreadLocal`. This means that the property `TransactionManager.threadLocal`, as well as
@@ -376,7 +455,7 @@ the methods `TransactionManagerApi.bindTransactionToThread()` and `TransactionMa
 The association between a `Database` instance and its `TransactionManager` has also been streamlined to ensure a stricter,
 more reliable relationship. For this reason, the following changes have been made:
 * The signature of `TransactionManager.managerFor()` has changed to accept only a non-nullable `database` argument
-  and its return type is a non-nullable `TransactionManager`.
+  and its return type is now a non-nullable `JdbcTransactionManager` (or `R2dbcTransactionManager` for R2DBC).
 * The top-level property `transactionManager` no longer accepts a nullable `Database` as its receiver.
 * `TransactionManager.isInitialized()` has also been removed.
 

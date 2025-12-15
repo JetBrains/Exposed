@@ -1043,10 +1043,9 @@ public final class org/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionM
 public final class org/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionManagerKt {
 	public static final fun createTransactionContext (Lorg/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionManager;Lorg/jetbrains/exposed/v1/core/Transaction;)Lkotlin/coroutines/CoroutineContext;
 	public static final fun currentOrNull (Lorg/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionManager;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
-	public static final fun getCurrentContextTransaction (Lorg/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionManager;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
-public class org/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager : org/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionManager {
+public final class org/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager : org/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionManager {
 	public static final field Companion Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager$Companion;
 	public fun <init> (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lkotlin/jvm/functions/Function2;)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V

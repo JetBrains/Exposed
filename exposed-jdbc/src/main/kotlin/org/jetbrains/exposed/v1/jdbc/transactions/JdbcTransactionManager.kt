@@ -39,8 +39,6 @@ interface JdbcTransactionManager : TransactionManagerApi {
     val contextKey: CoroutineContext.Key<TransactionContextHolder>
 }
 
-/** Default context key for JDBC transaction managers. */
-
 /**
  * Creates a coroutine context for the given transaction.
  *
@@ -69,7 +67,7 @@ fun JdbcTransactionManager.createTransactionContext(transaction: Transaction): C
  * @return The current [JdbcTransaction] from the coroutine context, or null if no transaction exists
  * @throws [IllegalStateException] If the transaction in the context is not a [JdbcTransaction]
  */
-suspend fun JdbcTransactionManager.getCurrentContextTransaction(): JdbcTransaction? {
+internal suspend fun JdbcTransactionManager.getCurrentContextTransaction(): JdbcTransaction? {
     val transaction = currentCoroutineContext()[contextKey]?.transaction
     return when {
         transaction == null -> null

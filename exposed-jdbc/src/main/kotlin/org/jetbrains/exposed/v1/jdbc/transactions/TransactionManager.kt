@@ -14,7 +14,7 @@ import org.jetbrains.exposed.v1.jdbc.statements.api.ExposedConnection
 import kotlin.coroutines.CoroutineContext
 
 /**
- * [TransactionManager] implementation registered to the provided database value [db].
+ * [JdbcTransactionManager] implementation registered to the provided database value [db].
  *
  * [setupTxConnection] can be provided to override the default configuration of transaction settings when a
  * connection is retrieved from the database.

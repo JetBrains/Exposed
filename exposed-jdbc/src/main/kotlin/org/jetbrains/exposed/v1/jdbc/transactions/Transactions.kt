@@ -112,7 +112,6 @@ fun <T> transaction(
 ): T {
     val database = resolveDatabaseOrThrow(db)
 
-    @OptIn(InternalApi::class)
     val outer = database.transactionManager.currentOrNull()
 
     return if (outer != null) {
