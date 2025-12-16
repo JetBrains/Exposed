@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.h2
 
+import io.r2dbc.spi.IsolationLevel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.v1.core.InternalApi
@@ -10,6 +11,7 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
+import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.replace
@@ -138,8 +140,26 @@ class H2Tests : R2dbcDatabaseTestsBase() {
         }
     }
 
-    class WrappedTransactionManager(val transactionManager: R2dbcTransactionManager) :
-        R2dbcTransactionManager by transactionManager
+    class WrappedTransactionManager(private val transactionManager: R2dbcTransactionManager) : R2dbcTransactionManager() {
+        override val db get() = transactionManager.db
+        override var defaultIsolationLevel
+            get() = transactionManager.defaultIsolationLevel
+            set(value) { transactionManager.defaultIsolationLevel = value }
+        override var defaultMaxAttempts
+            get() = transactionManager.defaultMaxAttempts
+            set(value) { transactionManager.defaultMaxAttempts = value }
+        override var defaultMinRetryDelay
+            get() = transactionManager.defaultMinRetryDelay
+            set(value) { transactionManager.defaultMinRetryDelay = value }
+        override var defaultMaxRetryDelay
+            get() = transactionManager.defaultMaxRetryDelay
+            set(value) { transactionManager.defaultMaxRetryDelay = value }
+        override var defaultReadOnly
+            get() = transactionManager.defaultReadOnly
+            set(value) { transactionManager.defaultReadOnly = value }
+        override fun newTransaction(isolation: IsolationLevel?, readOnly: Boolean?, outerTransaction: R2dbcTransaction?) =
+            transactionManager.newTransaction(isolation, readOnly, outerTransaction)
+    }
 
     object Testing : Table("H2_TESTING") {
         val id = integer("id").autoIncrement() // Column<Int>

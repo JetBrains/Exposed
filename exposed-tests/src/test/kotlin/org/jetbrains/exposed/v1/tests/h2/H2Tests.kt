@@ -8,6 +8,7 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.replace
@@ -136,8 +137,26 @@ class H2Tests : DatabaseTestsBase() {
         }
     }
 
-    class WrappedTransactionManager(val transactionManager: JdbcTransactionManager) :
-        JdbcTransactionManager by transactionManager
+    class WrappedTransactionManager(private val transactionManager: JdbcTransactionManager) : JdbcTransactionManager() {
+        override val db get() = transactionManager.db
+        override var defaultIsolationLevel
+            get() = transactionManager.defaultIsolationLevel
+            set(value) { transactionManager.defaultIsolationLevel = value }
+        override var defaultMaxAttempts
+            get() = transactionManager.defaultMaxAttempts
+            set(value) { transactionManager.defaultMaxAttempts = value }
+        override var defaultMinRetryDelay
+            get() = transactionManager.defaultMinRetryDelay
+            set(value) { transactionManager.defaultMinRetryDelay = value }
+        override var defaultMaxRetryDelay
+            get() = transactionManager.defaultMaxRetryDelay
+            set(value) { transactionManager.defaultMaxRetryDelay = value }
+        override var defaultReadOnly
+            get() = transactionManager.defaultReadOnly
+            set(value) { transactionManager.defaultReadOnly = value }
+        override fun newTransaction(isolation: Int, readOnly: Boolean, outerTransaction: JdbcTransaction?) =
+            transactionManager.newTransaction(isolation, readOnly, outerTransaction)
+    }
 
     object Testing : Table("H2_TESTING") {
         val id = integer("id").autoIncrement() // Column<Int>

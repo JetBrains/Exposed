@@ -13,15 +13,17 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import kotlin.coroutines.CoroutineContext
 
 /**
- * Represents the JDBC transaction manager interface, responsible for creating
- * and managing JDBC transactions.
+ * Abstract base class for JDBC transaction managers, responsible for creating and managing JDBC transactions.
+ *
+ * Extend this class to create custom transaction managers. Each instance automatically gets its own
+ * unique coroutine context key for transaction isolation, preventing memory leaks and ensuring proper cleanup.
  */
-interface JdbcTransactionManager : TransactionManagerApi {
+abstract class JdbcTransactionManager : TransactionManagerApi {
     /** The database instance associated with this transaction manager. */
-    val db: Database
+    abstract val db: Database
 
     /** The default transaction isolation level. Unless specified, the database-specific level will be used. */
-    var defaultIsolationLevel: Int
+    abstract var defaultIsolationLevel: Int
 
     /**
      * Returns a [JdbcTransaction] instance.
@@ -29,14 +31,20 @@ interface JdbcTransactionManager : TransactionManagerApi {
      * The returned value may be a new transaction, or it may return the [outerTransaction] if called from within
      * an existing transaction with the database not configured to `useNestedTransactions`.
      */
-    fun newTransaction(
+    abstract fun newTransaction(
         isolation: Int = defaultIsolationLevel,
         readOnly: Boolean = defaultReadOnly,
         outerTransaction: JdbcTransaction? = null
     ): JdbcTransaction
 
-    /** A unique key for storing coroutine context elements, as [TransactionContextHolder]. */
-    val contextKey: CoroutineContext.Key<TransactionContextHolder>
+    /**
+     * Internal context key for this transaction manager instance.
+     * Each manager gets its own unique key automatically.
+     * @suppress
+     */
+    @InternalApi
+    internal val contextKey: CoroutineContext.Key<TransactionContextHolder> =
+        object : CoroutineContext.Key<TransactionContextHolder> {}
 }
 
 /**
@@ -68,6 +76,7 @@ fun JdbcTransactionManager.createTransactionContext(transaction: Transaction): C
  * @throws [IllegalStateException] If the transaction in the context is not a [JdbcTransaction]
  */
 internal suspend fun JdbcTransactionManager.getCurrentContextTransaction(): JdbcTransaction? {
+    @OptIn(InternalApi::class)
     val transaction = currentCoroutineContext()[contextKey]?.transaction
     return when {
         transaction == null -> null

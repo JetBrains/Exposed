@@ -1027,17 +1027,13 @@ public final class org/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionI
 	public static final fun getTransactionManager (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;)Lorg/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionManager;
 }
 
-public abstract interface class org/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionManager : org/jetbrains/exposed/v1/core/transactions/TransactionManagerApi {
-	public abstract fun getContextKey ()Lkotlin/coroutines/CoroutineContext$Key;
+public abstract class org/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionManager : org/jetbrains/exposed/v1/core/transactions/TransactionManagerApi {
+	public fun <init> ()V
 	public abstract fun getDb ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
 	public abstract fun getDefaultIsolationLevel ()Lio/r2dbc/spi/IsolationLevel;
 	public abstract fun newTransaction (Lio/r2dbc/spi/IsolationLevel;Ljava/lang/Boolean;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
 	public static synthetic fun newTransaction$default (Lorg/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionManager;Lio/r2dbc/spi/IsolationLevel;Ljava/lang/Boolean;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
 	public abstract fun setDefaultIsolationLevel (Lio/r2dbc/spi/IsolationLevel;)V
-}
-
-public final class org/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionManager$DefaultImpls {
-	public static synthetic fun newTransaction$default (Lorg/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionManager;Lio/r2dbc/spi/IsolationLevel;Ljava/lang/Boolean;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
 }
 
 public final class org/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionManagerKt {
@@ -1049,7 +1045,6 @@ public final class org/jetbrains/exposed/v1/r2dbc/transactions/TransactionManage
 	public static final field Companion Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager$Companion;
 	public fun <init> (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lkotlin/jvm/functions/Function2;)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun getContextKey ()Lkotlin/coroutines/CoroutineContext$Key;
 	public fun getDb ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
 	public fun getDefaultIsolationLevel ()Lio/r2dbc/spi/IsolationLevel;
 	public fun getDefaultMaxAttempts ()I

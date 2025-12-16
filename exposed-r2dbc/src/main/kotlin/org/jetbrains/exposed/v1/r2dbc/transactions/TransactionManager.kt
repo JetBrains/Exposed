@@ -8,12 +8,10 @@ import org.jetbrains.exposed.v1.core.transactions.DatabasesManagerImpl
 import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagersContainerImpl
-import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolder
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedConnection
-import kotlin.coroutines.CoroutineContext
 
 /**
  * [R2dbcTransactionManager] implementation registered to the provided database value [db].
@@ -25,7 +23,7 @@ class TransactionManager(
     override val db: R2dbcDatabase,
     private val setupTxConnection:
     ((R2dbcExposedConnection<*>, R2dbcTransactionInterface) -> Unit)? = null
-) : R2dbcTransactionManager {
+) : R2dbcTransactionManager() {
     override var defaultMaxAttempts: Int = db.config.defaultMaxAttempts
 
     override var defaultMinRetryDelay: Long = db.config.defaultMinRetryDelay
@@ -36,9 +34,6 @@ class TransactionManager(
         get() = if (field == null) R2dbcDatabase.getDefaultIsolationLevel(db) else field
 
     override var defaultReadOnly: Boolean = db.config.defaultReadOnly
-
-    @OptIn(InternalApi::class)
-    override val contextKey: CoroutineContext.Key<TransactionContextHolder> = object : CoroutineContext.Key<TransactionContextHolder> {}
 
     override fun toString(): String {
         return "R2dbcTransactionManager[${hashCode()}](db=$db)"

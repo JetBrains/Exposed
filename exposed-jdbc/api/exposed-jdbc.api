@@ -774,17 +774,13 @@ public final class org/jetbrains/exposed/v1/jdbc/transactions/JdbcTransactionInt
 	public static final fun getTransactionManager (Lorg/jetbrains/exposed/v1/jdbc/Database;)Lorg/jetbrains/exposed/v1/jdbc/transactions/JdbcTransactionManager;
 }
 
-public abstract interface class org/jetbrains/exposed/v1/jdbc/transactions/JdbcTransactionManager : org/jetbrains/exposed/v1/core/transactions/TransactionManagerApi {
-	public abstract fun getContextKey ()Lkotlin/coroutines/CoroutineContext$Key;
+public abstract class org/jetbrains/exposed/v1/jdbc/transactions/JdbcTransactionManager : org/jetbrains/exposed/v1/core/transactions/TransactionManagerApi {
+	public fun <init> ()V
 	public abstract fun getDb ()Lorg/jetbrains/exposed/v1/jdbc/Database;
 	public abstract fun getDefaultIsolationLevel ()I
 	public abstract fun newTransaction (IZLorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;)Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
 	public static synthetic fun newTransaction$default (Lorg/jetbrains/exposed/v1/jdbc/transactions/JdbcTransactionManager;IZLorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
 	public abstract fun setDefaultIsolationLevel (I)V
-}
-
-public final class org/jetbrains/exposed/v1/jdbc/transactions/JdbcTransactionManager$DefaultImpls {
-	public static synthetic fun newTransaction$default (Lorg/jetbrains/exposed/v1/jdbc/transactions/JdbcTransactionManager;IZLorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
 }
 
 public final class org/jetbrains/exposed/v1/jdbc/transactions/JdbcTransactionManagerKt {
@@ -796,7 +792,6 @@ public final class org/jetbrains/exposed/v1/jdbc/transactions/TransactionManager
 	public static final field Companion Lorg/jetbrains/exposed/v1/jdbc/transactions/TransactionManager$Companion;
 	public fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Lkotlin/jvm/functions/Function2;)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Lkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun getContextKey ()Lkotlin/coroutines/CoroutineContext$Key;
 	public fun getDb ()Lorg/jetbrains/exposed/v1/jdbc/Database;
 	public fun getDefaultIsolationLevel ()I
 	public fun getDefaultMaxAttempts ()I

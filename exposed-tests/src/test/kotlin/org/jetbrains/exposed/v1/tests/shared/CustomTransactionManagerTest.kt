@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.v1.tests.shared
 
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
-import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolder
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.statements.api.ExposedConnection
@@ -13,7 +12,6 @@ import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.junit.jupiter.api.Assumptions
 import java.sql.Connection.TRANSACTION_READ_COMMITTED
-import kotlin.coroutines.CoroutineContext
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -25,7 +23,7 @@ class CustomTransactionManagerTest : DatabaseTestsBase() {
     private class MockTransactionManager(
         override val db: Database,
         private val mockTransaction: JdbcTransaction
-    ) : JdbcTransactionManager {
+    ) : JdbcTransactionManager() {
         var newTransactionCalls = 0
             private set
 
@@ -43,8 +41,6 @@ class CustomTransactionManagerTest : DatabaseTestsBase() {
             newTransactionCalls++
             return mockTransaction
         }
-
-        override val contextKey = object : CoroutineContext.Key<TransactionContextHolder> {}
     }
 
     private fun createMockDatabase(): Database {

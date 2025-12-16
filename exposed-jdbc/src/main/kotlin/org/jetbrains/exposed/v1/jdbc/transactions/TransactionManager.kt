@@ -7,11 +7,9 @@ import org.jetbrains.exposed.v1.core.transactions.DatabasesManagerImpl
 import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagersContainerImpl
-import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolder
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.statements.api.ExposedConnection
-import kotlin.coroutines.CoroutineContext
 
 /**
  * [JdbcTransactionManager] implementation registered to the provided database value [db].
@@ -22,7 +20,7 @@ import kotlin.coroutines.CoroutineContext
 class TransactionManager(
     override val db: Database,
     private val setupTxConnection: ((ExposedConnection<*>, JdbcTransactionInterface) -> Unit)? = null
-) : JdbcTransactionManager {
+) : JdbcTransactionManager() {
     @Volatile
     override var defaultMaxAttempts: Int = db.config.defaultMaxAttempts
 
@@ -65,8 +63,6 @@ class TransactionManager(
     override fun toString(): String {
         return "JdbcTransactionManager[${hashCode()}](db=$db)"
     }
-
-    override val contextKey = object : CoroutineContext.Key<TransactionContextHolder> {}
 
     /**
      * Returns a [JdbcTransaction] instance.
