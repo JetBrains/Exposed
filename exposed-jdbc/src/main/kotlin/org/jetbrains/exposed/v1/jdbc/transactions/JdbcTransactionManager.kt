@@ -13,17 +13,15 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import kotlin.coroutines.CoroutineContext
 
 /**
- * Abstract base class for JDBC transaction managers, responsible for creating and managing JDBC transactions.
- *
- * Extend this class to create custom transaction managers. Each instance automatically gets its own
- * unique coroutine context key for transaction isolation, preventing memory leaks and ensuring proper cleanup.
+ * Represents the JDBC transaction manager interface, responsible for creating
+ * and managing JDBC transactions.
  */
-abstract class JdbcTransactionManager : TransactionManagerApi {
+interface JdbcTransactionManager : TransactionManagerApi {
     /** The database instance associated with this transaction manager. */
-    abstract val db: Database
+    val db: Database
 
     /** The default transaction isolation level. Unless specified, the database-specific level will be used. */
-    abstract var defaultIsolationLevel: Int
+    var defaultIsolationLevel: Int
 
     /**
      * Returns a [JdbcTransaction] instance.
@@ -31,21 +29,21 @@ abstract class JdbcTransactionManager : TransactionManagerApi {
      * The returned value may be a new transaction, or it may return the [outerTransaction] if called from within
      * an existing transaction with the database not configured to `useNestedTransactions`.
      */
-    abstract fun newTransaction(
+    fun newTransaction(
         isolation: Int = defaultIsolationLevel,
         readOnly: Boolean = defaultReadOnly,
         outerTransaction: JdbcTransaction? = null
     ): JdbcTransaction
-
-    /**
-     * Internal context key for this transaction manager instance.
-     * Each manager gets its own unique key automatically.
-     * @suppress
-     */
-    @InternalApi
-    internal val contextKey: CoroutineContext.Key<TransactionContextHolder> =
-        object : CoroutineContext.Key<TransactionContextHolder> {}
 }
+
+/**
+ * Internal extension property to access the context key for a transaction manager.
+ * The context key is stored in the TransactionManager companion object and associated with the manager instance.
+ * @suppress
+ */
+@InternalApi
+internal val JdbcTransactionManager.contextKey: CoroutineContext.Key<TransactionContextHolder>
+    get() = TransactionManager.getContextKey(this)
 
 /**
  * Creates a coroutine context for the given transaction.
@@ -54,7 +52,7 @@ abstract class JdbcTransactionManager : TransactionManagerApi {
  * @return A [CoroutineContext] containing the transaction holder and context element.
  * @throws IllegalStateException if the transaction's manager doesn't match this manager.
  */
-fun JdbcTransactionManager.createTransactionContext(transaction: Transaction): CoroutineContext {
+internal fun JdbcTransactionManager.createTransactionContext(transaction: Transaction): CoroutineContext {
     if (transaction.transactionManager != this) {
         error(
             "TransactionManager must create transaction context only for own transactions. " +

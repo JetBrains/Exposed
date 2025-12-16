@@ -7,9 +7,11 @@ import org.jetbrains.exposed.v1.core.transactions.DatabasesManagerImpl
 import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagersContainerImpl
+import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolder
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.statements.api.ExposedConnection
+import kotlin.coroutines.CoroutineContext
 
 /**
  * [JdbcTransactionManager] implementation registered to the provided database value [db].
@@ -20,7 +22,7 @@ import org.jetbrains.exposed.v1.jdbc.statements.api.ExposedConnection
 class TransactionManager(
     override val db: Database,
     private val setupTxConnection: ((ExposedConnection<*>, JdbcTransactionInterface) -> Unit)? = null
-) : JdbcTransactionManager() {
+) : JdbcTransactionManager {
     @Volatile
     override var defaultMaxAttempts: Int = db.config.defaultMaxAttempts
 
@@ -100,6 +102,23 @@ class TransactionManager(
         }
 
         /**
+         * Storage for coroutine context keys associated with each transaction manager.
+         * Each transaction manager gets a unique context key for transaction isolation.
+         */
+        private val contextKeys =
+            mutableMapOf<JdbcTransactionManager, CoroutineContext.Key<TransactionContextHolder>>()
+
+        /**
+         * Returns the context key for the given transaction manager.
+         * @suppress
+         */
+        @InternalApi
+        fun getContextKey(manager: JdbcTransactionManager): CoroutineContext.Key<TransactionContextHolder> {
+            return contextKeys[manager]
+                ?: error("No context key found for transaction manager $manager. Ensure the transaction manager is registered.")
+        }
+
+        /**
          * The currently active database, which is either the default database or the last instance created.
          * Returns `null` if no database has been registered.
          */
@@ -119,6 +138,7 @@ class TransactionManager(
         /** Associates the provided [database] with a specific [manager]. */
         @Synchronized
         fun registerManager(database: Database, manager: JdbcTransactionManager) {
+            contextKeys[manager] = object : CoroutineContext.Key<TransactionContextHolder> {}
             @OptIn(InternalApi::class)
             transactionManagers.registerDatabaseManager(database, manager)
         }
@@ -129,6 +149,11 @@ class TransactionManager(
          */
         @Synchronized
         fun closeAndUnregister(database: Database) {
+            @OptIn(InternalApi::class)
+            val manager = transactionManagers.getTransactionManager(database)
+            if (manager != null) {
+                contextKeys.remove(manager)
+            }
             @OptIn(InternalApi::class)
             transactionManagers.closeAndUnregisterDatabase(database)
         }

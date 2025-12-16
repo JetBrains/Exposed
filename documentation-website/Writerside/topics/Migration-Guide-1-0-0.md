@@ -373,7 +373,7 @@ Both interfaces extend `TransactionManagerApi` and require implementation of a `
 
 The concrete `TransactionManager` class in each module now implements the respective interface. This means that several API signatures have changed to use the typed managers instead of `TransactionManagerApi`:
 
-<compare first-title="1.0.0-rc-3" second-title="1.0.0-rc-4">
+<compare first-title="0.61.0" second-title="1.0.0">
 
 ```kotlin
 // JDBC
@@ -426,7 +426,7 @@ Additionally, the `currentOrNull()` method has been removed from the `Transactio
 
 If you were calling `currentOrNull()` on a manager instance, replace it with either the static method or cast your manager to the appropriate typed interface:
 
-<compare first-title="1.0.0-rc-3" second-title="1.0.0-rc-4">
+<compare first-title="0.61.0" second-title="1.0.0">
 
 ```kotlin
 val manager: TransactionManagerApi =

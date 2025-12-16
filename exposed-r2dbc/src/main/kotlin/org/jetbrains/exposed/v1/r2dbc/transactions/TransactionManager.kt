@@ -8,10 +8,12 @@ import org.jetbrains.exposed.v1.core.transactions.DatabasesManagerImpl
 import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagersContainerImpl
+import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolder
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedConnection
+import kotlin.coroutines.CoroutineContext
 
 /**
  * [R2dbcTransactionManager] implementation registered to the provided database value [db].
@@ -23,7 +25,7 @@ class TransactionManager(
     override val db: R2dbcDatabase,
     private val setupTxConnection:
     ((R2dbcExposedConnection<*>, R2dbcTransactionInterface) -> Unit)? = null
-) : R2dbcTransactionManager() {
+) : R2dbcTransactionManager {
     override var defaultMaxAttempts: Int = db.config.defaultMaxAttempts
 
     override var defaultMinRetryDelay: Long = db.config.defaultMinRetryDelay
@@ -68,6 +70,23 @@ class TransactionManager(
         }
 
         /**
+         * Storage for coroutine context keys associated with each transaction manager.
+         * Each transaction manager gets a unique context key for transaction isolation.
+         */
+        private val contextKeys =
+            mutableMapOf<R2dbcTransactionManager, CoroutineContext.Key<TransactionContextHolder>>()
+
+        /**
+         * Returns the context key for the given transaction manager.
+         * @suppress
+         */
+        @InternalApi
+        fun getContextKey(manager: R2dbcTransactionManager): CoroutineContext.Key<TransactionContextHolder> {
+            return contextKeys[manager]
+                ?: error("No context key found for transaction manager $manager. Ensure the transaction manager is registered.")
+        }
+
+        /**
          * The currently active database, which is either the default database or the last instance created.
          * Returns `null` if no database has been registered.
          */
@@ -87,6 +106,7 @@ class TransactionManager(
         /** Associates the provided [database] with a specific [manager]. */
         @Synchronized
         fun registerManager(database: R2dbcDatabase, manager: R2dbcTransactionManager) {
+            contextKeys[manager] = object : CoroutineContext.Key<TransactionContextHolder> {}
             @OptIn(InternalApi::class)
             transactionManagers.registerDatabaseManager(database, manager)
         }
@@ -97,6 +117,11 @@ class TransactionManager(
          */
         @Synchronized
         fun closeAndUnregister(database: R2dbcDatabase) {
+            @OptIn(InternalApi::class)
+            val manager = transactionManagers.getTransactionManager(database)
+            if (manager != null) {
+                contextKeys.remove(manager)
+            }
             @OptIn(InternalApi::class)
             transactionManagers.closeAndUnregisterDatabase(database)
         }

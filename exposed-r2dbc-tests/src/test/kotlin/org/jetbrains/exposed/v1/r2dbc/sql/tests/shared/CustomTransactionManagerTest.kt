@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared
 
 import io.r2dbc.spi.IsolationLevel
 import kotlinx.coroutines.test.runTest
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
@@ -24,7 +25,7 @@ class CustomTransactionManagerTest : R2dbcDatabaseTestsBase() {
     private class MockTransactionManager(
         override val db: R2dbcDatabase,
         private val mockTransaction: R2dbcTransaction
-    ) : R2dbcTransactionManager() {
+    ) : R2dbcTransactionManager {
         var newTransactionCalls = 0
             private set
 
@@ -194,6 +195,28 @@ class CustomTransactionManagerTest : R2dbcDatabaseTestsBase() {
             assertEquals(0, rollbackCalls)
         } finally {
             TransactionManager.closeAndUnregister(mockDb)
+        }
+    }
+
+    @Test
+    fun testContextKeyCleanupAfterClosingConnection() = runTest {
+        val mockDb = createMockDatabase()
+        lateinit var customManager: MockTransactionManager
+        val mockTransaction = createMockTransaction(mockDb, { customManager })
+
+        customManager = MockTransactionManager(mockDb, mockTransaction)
+
+        TransactionManager.registerManager(mockDb, customManager)
+
+        @OptIn(InternalApi::class)
+        val keyAfterRegistration = TransactionManager.getContextKey(customManager)
+        assertNotNull(keyAfterRegistration)
+
+        TransactionManager.closeAndUnregister(mockDb)
+
+        @OptIn(InternalApi::class)
+        assertFailsWith<IllegalStateException> {
+            TransactionManager.getContextKey(customManager)
         }
     }
 }

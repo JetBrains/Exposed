@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.v1.tests.shared
 
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
@@ -23,7 +24,7 @@ class CustomTransactionManagerTest : DatabaseTestsBase() {
     private class MockTransactionManager(
         override val db: Database,
         private val mockTransaction: JdbcTransaction
-    ) : JdbcTransactionManager() {
+    ) : JdbcTransactionManager {
         var newTransactionCalls = 0
             private set
 
@@ -191,6 +192,28 @@ class CustomTransactionManagerTest : DatabaseTestsBase() {
             assertEquals(0, rollbackCalls)
         } finally {
             TransactionManager.closeAndUnregister(mockDb)
+        }
+    }
+
+    @Test
+    fun testContextKeyCleanupAfterClosingConnection() {
+        val mockDb = createMockDatabase()
+        lateinit var customManager: MockTransactionManager
+        val mockTransaction = createMockTransaction(mockDb, { customManager })
+
+        customManager = MockTransactionManager(mockDb, mockTransaction)
+
+        TransactionManager.registerManager(mockDb, customManager)
+
+        @OptIn(InternalApi::class)
+        val keyAfterRegistration = TransactionManager.getContextKey(customManager)
+        assertNotNull(keyAfterRegistration)
+
+        TransactionManager.closeAndUnregister(mockDb)
+
+        @OptIn(InternalApi::class)
+        assertFailsWith<IllegalStateException> {
+            TransactionManager.getContextKey(customManager)
         }
     }
 }

@@ -14,17 +14,16 @@ import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import kotlin.coroutines.CoroutineContext
 
 /**
- * Abstract base class for R2DBC transaction managers, responsible for creating and managing R2DBC transactions.
+ * Interface for R2DBC transaction managers, responsible for creating and managing R2DBC transactions.
  *
- * Extend this class to create custom transaction managers. Each instance automatically gets its own
- * unique coroutine context key for transaction isolation, preventing memory leaks and ensuring proper cleanup.
+ * Implement this interface to create custom transaction managers.
  */
-abstract class R2dbcTransactionManager : TransactionManagerApi {
+interface R2dbcTransactionManager : TransactionManagerApi {
     /** The database instance associated with this transaction manager. */
-    abstract val db: R2dbcDatabase
+    val db: R2dbcDatabase
 
     /** The default transaction isolation level. Unless specified, the database-specific level will be used. */
-    abstract var defaultIsolationLevel: IsolationLevel?
+    var defaultIsolationLevel: IsolationLevel?
 
     /**
      * Returns an [R2dbcTransaction] instance.
@@ -32,21 +31,21 @@ abstract class R2dbcTransactionManager : TransactionManagerApi {
      * The returned value may be a new transaction, or it may return the [outerTransaction] if called from within
      * an existing transaction with the database not configured to `useNestedTransactions`.
      */
-    abstract fun newTransaction(
+    fun newTransaction(
         isolation: IsolationLevel? = defaultIsolationLevel,
         readOnly: Boolean? = defaultReadOnly,
         outerTransaction: R2dbcTransaction? = null
     ): R2dbcTransaction
-
-    /**
-     * Internal context key for this transaction manager instance.
-     * Each manager gets its own unique key automatically.
-     * @suppress
-     */
-    @InternalApi
-    internal val contextKey: CoroutineContext.Key<TransactionContextHolder> =
-        object : CoroutineContext.Key<TransactionContextHolder> {}
 }
+
+/**
+ * Internal extension property to access the context key for a transaction manager.
+ * The context key is stored in the TransactionManager companion object and associated with the manager instance.
+ * @suppress
+ */
+@InternalApi
+internal val R2dbcTransactionManager.contextKey: CoroutineContext.Key<TransactionContextHolder>
+    get() = TransactionManager.getContextKey(this)
 
 /**
  * Creates a coroutine context for the given transaction.
@@ -55,7 +54,7 @@ abstract class R2dbcTransactionManager : TransactionManagerApi {
  * @return A [CoroutineContext] containing the transaction holder and context element.
  * @throws IllegalStateException if the transaction's manager doesn't match this manager.
  */
-fun R2dbcTransactionManager.createTransactionContext(transaction: Transaction): CoroutineContext {
+internal fun R2dbcTransactionManager.createTransactionContext(transaction: Transaction): CoroutineContext {
     if (transaction.transactionManager != this) {
         error(
             "TransactionManager must create transaction context only for own transactions. " +

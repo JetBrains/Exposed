@@ -774,8 +774,7 @@ public final class org/jetbrains/exposed/v1/jdbc/transactions/JdbcTransactionInt
 	public static final fun getTransactionManager (Lorg/jetbrains/exposed/v1/jdbc/Database;)Lorg/jetbrains/exposed/v1/jdbc/transactions/JdbcTransactionManager;
 }
 
-public abstract class org/jetbrains/exposed/v1/jdbc/transactions/JdbcTransactionManager : org/jetbrains/exposed/v1/core/transactions/TransactionManagerApi {
-	public fun <init> ()V
+public abstract interface class org/jetbrains/exposed/v1/jdbc/transactions/JdbcTransactionManager : org/jetbrains/exposed/v1/core/transactions/TransactionManagerApi {
 	public abstract fun getDb ()Lorg/jetbrains/exposed/v1/jdbc/Database;
 	public abstract fun getDefaultIsolationLevel ()I
 	public abstract fun newTransaction (IZLorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;)Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
@@ -783,8 +782,11 @@ public abstract class org/jetbrains/exposed/v1/jdbc/transactions/JdbcTransaction
 	public abstract fun setDefaultIsolationLevel (I)V
 }
 
+public final class org/jetbrains/exposed/v1/jdbc/transactions/JdbcTransactionManager$DefaultImpls {
+	public static synthetic fun newTransaction$default (Lorg/jetbrains/exposed/v1/jdbc/transactions/JdbcTransactionManager;IZLorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
+}
+
 public final class org/jetbrains/exposed/v1/jdbc/transactions/JdbcTransactionManagerKt {
-	public static final fun createTransactionContext (Lorg/jetbrains/exposed/v1/jdbc/transactions/JdbcTransactionManager;Lorg/jetbrains/exposed/v1/core/Transaction;)Lkotlin/coroutines/CoroutineContext;
 	public static final fun currentOrNull (Lorg/jetbrains/exposed/v1/jdbc/transactions/JdbcTransactionManager;)Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
 }
 
@@ -813,6 +815,7 @@ public final class org/jetbrains/exposed/v1/jdbc/transactions/TransactionManager
 	public final fun currentOrNew (I)Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
 	public static synthetic fun currentOrNew$default (Lorg/jetbrains/exposed/v1/jdbc/transactions/TransactionManager$Companion;IILjava/lang/Object;)Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
 	public final fun currentOrNull ()Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
+	public final fun getContextKey (Lorg/jetbrains/exposed/v1/jdbc/transactions/JdbcTransactionManager;)Lkotlin/coroutines/CoroutineContext$Key;
 	public final fun getDefaultDatabase ()Lorg/jetbrains/exposed/v1/jdbc/Database;
 	public final fun getManager ()Lorg/jetbrains/exposed/v1/jdbc/transactions/JdbcTransactionManager;
 	public final fun getPrimaryDatabase ()Lorg/jetbrains/exposed/v1/jdbc/Database;
