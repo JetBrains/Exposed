@@ -14,9 +14,6 @@
   In the event that this is done, individual SQLite JSONB columns can still be wrapped to retrieve a more readable format
   by using the new `.castToJson()` function. As part of this change, the `exposed-core` interface `JsonColumnMarker`
   received a new property, `needsBinaryFormatCast`.
-
-## 1.0.0-rc-4
-
 * **Transaction Manager Type Changes**: New interfaces `JdbcTransactionManager` and `R2dbcTransactionManager` have been introduced,
   and several public API return types have been updated accordingly. The following signatures have changed:
     * `Database.transactionManager` now returns `JdbcTransactionManager` instead of `TransactionManager`

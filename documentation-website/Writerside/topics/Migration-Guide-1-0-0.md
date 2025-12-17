@@ -376,33 +376,63 @@ The concrete `TransactionManager` class in each module now implements the respec
 <compare first-title="0.61.0" second-title="1.0.0">
 
 ```kotlin
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.transactions.TransactionManager
+
 // JDBC
-val manager: TransactionManagerApi =
-    Database.connect(...).transactionManager
+val manager: TransactionManager =
+    Database.connect("jdbc:h2:mem:test", "org.h2.Driver")
+        .transactionManager
 
 Database.connect(
+    url = "jdbc:h2:mem:test",
+    driver = "org.h2.Driver",
     manager = { db: Database ->
-        object : TransactionManagerApi { /* ... */ }
+        object : TransactionManager {
+            // defaultIsolationLevel, defaultReadOnly, ...
+            
+            override fun newTransaction(
+                isolation: Int,
+                readOnly: Boolean,
+                outerTransaction: Transaction?
+            ): Transaction { /* ... */ }
+    
+            override fun currentOrNull(): Transaction? { /* ... */ }
+    
+            override fun bindTransactionToThread(transaction: Transaction?) { /* ... */ }
+        }
     }
 )
 
 TransactionManager.registerManager(database, manager)
 
 // Getting manager
-val tm: TransactionManager =
+val tm: TransactionManager? =
     TransactionManager.managerFor(database)
 ```
 
 ```kotlin
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.transactions.JdbcTransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+
 // JDBC
 val manager: JdbcTransactionManager =
-    Database.connect(...).transactionManager
+    Database.connect("jdbc:h2:mem:test", "org.h2.Driver")
+        .transactionManager
 
 Database.connect(
+    url = "jdbc:h2:mem:test",
+    driver = "org.h2.Driver",
     manager = { db: Database ->
         object : JdbcTransactionManager {
             override val db = db
-            /* ... */
+
+            fun newTransaction(
+                isolation: Int = defaultIsolationLevel,
+                readOnly: Boolean = defaultReadOnly,
+                outerTransaction: JdbcTransaction? = null
+            ): JdbcTransaction { /* ... */ }
         }
     }
 )
@@ -429,19 +459,44 @@ If you were calling `currentOrNull()` on a manager instance, replace it with eit
 <compare first-title="0.61.0" second-title="1.0.0">
 
 ```kotlin
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.transactions.TransactionManagerApi
+
 val manager: TransactionManagerApi =
     Database.connect(...).transactionManager
 val tx = manager.currentOrNull()
 ```
 
 ```kotlin
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.transactions.JdbcTransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.currentOrNull
+
 val manager: JdbcTransactionManager =
     Database.connect(...).transactionManager
-// Use extension function
 val tx = manager.currentOrNull()
+```
 
-// Or use static method
-val tx2 = TransactionManager.currentOrNull()
+</compare>
+
+<compare first-title="0.61.0" second-title="1.0.0 (Static Method)">
+
+```kotlin
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.transactions.TransactionManagerApi
+
+val manager: TransactionManagerApi =
+    Database.connect(...).transactionManager
+val tx = manager.currentOrNull()
+```
+
+```kotlin
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+
+Database.connect(...)
+
+val tx = TransactionManager.currentOrNull()
 ```
 
 </compare>
