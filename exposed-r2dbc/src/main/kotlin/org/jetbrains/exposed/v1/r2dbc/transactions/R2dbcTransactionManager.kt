@@ -41,10 +41,9 @@ interface R2dbcTransactionManager : TransactionManagerApi {
 /**
  * Internal extension property to access the context key for a transaction manager.
  * The context key is stored in the TransactionManager companion object and associated with the manager instance.
- * @suppress
  */
-@InternalApi
 internal val R2dbcTransactionManager.contextKey: CoroutineContext.Key<TransactionContextHolder>
+    @OptIn(InternalApi::class)
     get() = TransactionManager.getContextKey(this)
 
 /**
