@@ -50,6 +50,8 @@
   The method `Table.uuid()` now only accepts `kotlin.uuid.Uuid` values. So the extension function `Table.javaUUID()` (from
   the package `org.jetbrains.exposed.v1.core.java`) should be used instead to continue passing `java.util.UUID` values.
   See the [migration guide](https://www.jetbrains.com/help/exposed/migration-guide-1-0-0.html#uuid-column-type-refactor) for full details.
+* `spring-transaction` artifact now relies on Spring Framework 7. Additionally, `exposed-crypt` depends on Spring Security 7.
+  `exposed-spring-boot-starter` has been bumped to Spring Boot 4 and will no longer be compatible with Spring Boot 3.
 
 ## 1.0.0-rc-4
 

@@ -264,6 +264,21 @@ transaction {
 
 </compare>
 
+## Spring dependencies
+
+Prior to version 1.0.0, the Spring-related artifacts had the following dependencies:
+
+* `spring-transaction`: Spring Framework 6
+* `exposed-spring-boot-starter`: Spring Boot 3
+* `exposed-crypt`: Spring Security 6
+
+With version 1.0.0, these artifacts have had their dependency versions bumped to the latest releases with a minimum
+requirement on:
+
+* `spring-transaction`: Spring Framework 7
+* `exposed-spring-boot-starter`: Spring Boot 4
+* `exposed-crypt`: Spring Security 7
+
 ## Transactions
 
 The class `Transaction` remains in `exposed-core` but it is now abstract and all its driver-specific properties and methods
