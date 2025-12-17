@@ -8,6 +8,8 @@
   still be implemented by `GlobalStatementInterceptor.afterStatementPrepared()`.
 * `R2dbcTransaction.closeExecutedStatements()` has been renamed to `.clearExecutedStatements()` to better relay it's actual
   behavior. It no longer invokes the now-removed method `R2dbcPreparedStatementApi.closeIfPossible()` & no longer suspends.
+* `spring-transaction` artifact now relies on Spring Framework 7. Additionally, `exposed-crypt` depends on Spring Security 7.
+  `exposed-spring-boot-starter` has been bumped to Spring Boot 4 and will no longer be compatible with Spring Boot 3.
 
 ## 1.0.0-rc-4
 
