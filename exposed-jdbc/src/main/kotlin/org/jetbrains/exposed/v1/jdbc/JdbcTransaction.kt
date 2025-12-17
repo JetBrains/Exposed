@@ -97,9 +97,9 @@ open class JdbcTransaction(
             }
             transactionImpl.commit()
             userdata.clear()
+            userdata.putAll(dataToStore)
             globalInterceptors.forEach { it.afterCommit(this) }
             interceptors.forEach { it.afterCommit(this) }
-            userdata.putAll(dataToStore)
         }
     }
 

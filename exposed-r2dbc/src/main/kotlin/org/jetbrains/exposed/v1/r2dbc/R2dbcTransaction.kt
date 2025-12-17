@@ -111,9 +111,9 @@ open class R2dbcTransaction(
             }
             transactionImpl.commit()
             userdata.clear()
+            userdata.putAll(dataToStore)
             globalInterceptors.forEach { it.afterCommit(this@R2dbcTransaction) }
             interceptors.forEach { it.afterCommit(this@R2dbcTransaction) }
-            userdata.putAll(dataToStore)
         }
     }
 
