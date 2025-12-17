@@ -162,12 +162,14 @@ open class Orders {
 
     open fun findAll(): List<ResultRow> = Order.selectAll().toList()
 
+    // NOTE: qualifier names must be left in
     open fun findAllWithExposedTrxBlock() = org.jetbrains.exposed.v1.jdbc.transactions.transaction { findAll() }
 
     open fun create() = Order.insertAndGetId {
         it[buyer] = 123
     }.value
 
+    // NOTE: qualifier names must be left in
     open fun createWithExposedTrxBlock() = org.jetbrains.exposed.v1.jdbc.transactions.transaction { create() }
 
     open fun init() {
