@@ -8,6 +8,12 @@
   still be implemented by `GlobalStatementInterceptor.afterStatementPrepared()`.
 * `R2dbcTransaction.closeExecutedStatements()` has been renamed to `.clearExecutedStatements()` to better relay it's actual
   behavior. It no longer invokes the now-removed method `R2dbcPreparedStatementApi.closeIfPossible()` & no longer suspends.
+* When SQLite is used with `jsonb()`, these JSONB columns will now be automatically wrapped in the SQL function `JSON()`
+  when included in the `SELECT` clause of a query. This facilitates easier reading & using the same query across multiple
+  databases, but this auto-wrapping behavior can be disabled by setting the new `jsonb()` parameter `castToJsonFormat=false`.
+  In the event that this is done, individual SQLite JSONB columns can still be wrapped to retrieve a more readable format
+  by using the new `.castToJson()` function. As part of this change, the `exposed-core` interface `JsonColumnMarker`
+  received a new property, `needsBinaryFormatCast`.
 
 ## 1.0.0-rc-4
 

@@ -1,4 +1,4 @@
-@file: Suppress("MatchingDeclarationName")
+@file:Suppress("INVISIBLE_REFERENCE", "MatchingDeclarationName")
 
 package org.jetbrains.exposed.v1.json
 
@@ -7,6 +7,7 @@ import kotlinx.serialization.serializer
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.Function
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
+import kotlin.internal.LowPriorityInOverloadResolution
 
 // Function Classes
 
@@ -53,4 +54,50 @@ inline fun <reified T : Any> ExpressionWithColumnType<*>.extract(
         )
     )
     return Extract(this, path = path, toScalar, this.columnType, columnType)
+}
+
+/**
+ * Specifies a casting of the calling expression's data type to the JSON data type. This is useful when it may be
+ * necessary to cast a JSONB column or expression to JSON, but some dialects also support casting text types as well.
+ *
+ * **Note:** Dialects that do not support a `JSON`-specific constructor will generate a `CAST .. AS json_type` clause.
+ * Some dialects, like MariaDB, do not support casting to JSON. Please check the documentation or consider using
+ * `castTo()` directly.
+ *
+ * @return An expression with a [JsonColumnType] that can handle the same data as the calling expression, but in JSON format.
+ * @see org.jetbrains.exposed.v1.core.castTo
+ */
+@JvmName("castToJsonReceiverType")
+inline fun <reified T : Any, E : T?> ExpressionWithColumnType<E>.castToJson(): CastToJson<E> {
+    @Suppress("UNCHECKED_CAST")
+    val columnType = (
+        columnType as? JsonColumnType<E>
+            ?: JsonColumnType(
+                { Json.encodeToString(serializer<T>(), it) },
+                { Json.decodeFromString(serializer<T>(), it) }
+            )
+        ) as IColumnType<E & Any>
+    return CastToJson(this, columnType)
+}
+
+/**
+ * Specifies a casting of the calling expression's data type to the JSON data type. This is useful when it may be
+ * necessary to cast a type such as text to a JSON type that can be handled by a serializable class on the client-side.
+ *
+ * **Note:** Dialects that do not support a `JSON`-specific constructor will generate a `CAST .. AS json_type` clause.
+ * Some dialects, like MariaDB, do not support casting to JSON. Please check the documentation or consider using
+ * `castTo()` directly.
+ *
+ * @return An expression with a [JsonColumnType] that can handle the type specified by parameter [T] in JSON format.
+ * @see org.jetbrains.exposed.v1.core.castTo
+ */
+@LowPriorityInOverloadResolution
+inline fun <reified T : Any> ExpressionWithColumnType<*>.castToJson(): CastToJson<T> {
+    @Suppress("UNCHECKED_CAST")
+    val columnType = columnType as? JsonColumnType<T>
+        ?: JsonColumnType(
+            { Json.encodeToString(serializer<T>(), it) },
+            { Json.decodeFromString(serializer<T>(), it) }
+        )
+    return CastToJson(this, columnType)
 }

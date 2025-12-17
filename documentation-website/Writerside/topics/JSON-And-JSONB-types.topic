@@ -40,9 +40,9 @@
 
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                    include-lines="5-6,8,13,18-19,29-38" />
+                    include-lines="5-6,7,17,18-19,29-38" />
         <p>
-            Here's how the same <code>Project</code> and <code>Teams</code> would be defined using <a
+            Here's how the same <code>Project</code> and <code>TeamsTable</code> would be defined using <a
             href="https://github.com/FasterXML/jackson">Jackson</a>
             with the <code>jackson-module-kotlin</code> dependency and the full form of <code>json()</code>:
         </p>
@@ -93,11 +93,11 @@
             </p>
             <code-block lang="kotlin"
                         src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                        include-lines="30-31,152,161-165"
+                        include-lines="30-31,161,170-174"
             />
             <code-block lang="sql"
                         src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                        include-lines="156-159"
+                        include-lines="165-168"
             />
             <p>
                 And to values set in DML operations:
@@ -111,9 +111,10 @@
                         include-lines="132-133"
             />
             <p>
-                This means that attempting to read the value directly as it is stored in the column will throw a
+                This means that attempting to read the value directly as it is stored in the column would throw a
                 decode exception due to the non-readable JSONB binary format. SQLite provides the SQL function <code>JSON()</code>
-                when it is required to read the stored value in a text format:
+                when it is required to read the stored value in a text format, which Exposed uses by default whenever the
+                column is included in a <code>SELECT</code> clause:
             </p>
             <code-block lang="kotlin"
                         src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
@@ -124,54 +125,20 @@
                         include-lines="144"
             />
             <p>
-                If you want to use SQLite with JSONB via the DAO approach, some adjustments will be required on the entity
-                in order to make sure that the read value is always in a text format:
+                If this automatic function wrapping in queries is not wanted, it can be toggled off by setting the parameter
+                <code>castToJsonFormat</code> to <code>false</code>. This parameter is ignored if any other databases are detected.
             </p>
-            <code-block lang="kotlin">
-                object TasksTable : IntIdTable("tasks") {
-                    // ...
-                    val project = jsonb&lt;Project&gt;("project", Json.Default)
-                    val projectAsJson = CustomFunction("JSON", project.columnType, project)
-                }
-
-                class TaskEntity(id: EntityID&lt;Int&gt;) : IntEntity(id) {
-                    private var projectAsBinary by TasksTable.project
-
-                    var project: Project
-                        get() = readValues.getOrNull(TasksTable.projectAsJson) ?: projectAsBinary
-                        set(value) { projectAsBinary = value }
-
-                    companion object : IntEntityClass&lt;TaskEntity&gt;(TasksTable) {
-                        override fun searchQuery(op: Op&lt;Boolean&gt;): Query {
-                            return super.searchQuery(op).adjustSelectedProject()
-                        }
-
-                        override fun all(): SizedIterable&lt;TaskEntity&gt; {
-                            return wrapRows(TasksTable.selectAll().notForUpdate().adjustSelectedProject())
-                        }
-
-                        private fun Query.adjustSelectedProject(): Query = adjustSelect { original ->
-                            select(original.fields - TasksTable.project + TasksTable.projectAsJson)
-                        }
-                    }
-                }
-            </code-block>
+            <code-block lang="kotlin"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="175-177"
+            />
             <p>
-                In the example above, the traditional entity property delegate is made private while a custom <code>project</code>
-                field is given a custom getter that always attempts to read the result of the custom <code>JSON()</code>
-                from a query. This read logic falls back to the standard delegate result in the event the entity is being
-                read directly from the cache.
-            </p>
-            <p>
-                The low-level methods that may be invoked by queries like <code>TaskEntity.all()</code> are then given overrides
-                that always replace the original column with the function expression. With this implementation, a <code>TaskEntity</code>
-                can be created, updated, and queried as normal and any JSON value set to its <code>project</code> field will
-                be stored in the binary format and retrieved in text format.
+                The <code>JSON()</code> function can also be applied to individual JSONB columns by using
+                <a href="#json-functions"><code>.castToJson()</code></a>.
             </p>
         </chapter>
     </chapter>
     <chapter title="JSON functions" id="json-functions">
-
         <chapter title="Extract data">
             <p>
                 You can use JSON path strings to extract values as JSON or as a scalar value at a specific
@@ -183,7 +150,7 @@
             </p>
             <code-block lang="kotlin"
                         src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                        include-lines="79-82"
+                        include-lines="79-81"
             />
             <p>
                 Databases that support a path context root <code>$</code> will have this value appended to the generated
@@ -202,7 +169,7 @@
             </p>
             <code-block lang="kotlin"
                         src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                        include-lines="85-87"
+                        include-lines="85-86"
             />
             <p>
                 Depending on the database, filter paths can be provided instead, as well as optional arguments:
@@ -222,15 +189,32 @@
             </p>
             <code-block lang="kotlin"
                         src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                        include-lines="100-102"
+                        include-lines="100-101"
             />
             <p>
                 Depending on the database, you could also provide an optional path:
             </p>
             <code-block lang="kotlin"
                         src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                        include-lines="108-110"
+                        include-lines="108-109"
             />
+        </chapter>
+        <chapter title="Cast data to JSON type">
+            <p>
+                You can cast other supported data types, like text or JSONB, to the JSON data type using the
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.json/cast-to-json.html">
+                    <code>.castToJson()</code>
+                </a>
+                function:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="153-158"
+            />
+            <p>
+                If supported by your database, this function can be used to cast valid JSON strings stored in a text column
+                to the serializable class of your choosing.
+            </p>
         </chapter>
     </chapter>
     <chapter title="JSON arrays" id="json-arrays">

@@ -268,6 +268,12 @@ public final class org/jetbrains/exposed/v1/core/Cast : org/jetbrains/exposed/v1
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 }
 
+public final class org/jetbrains/exposed/v1/core/CastToJson : org/jetbrains/exposed/v1/core/Function {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/IColumnType;)V
+	public final fun getExpression ()Lorg/jetbrains/exposed/v1/core/Expression;
+	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
+}
+
 public class org/jetbrains/exposed/v1/core/CharColumnType : org/jetbrains/exposed/v1/core/StringColumnType {
 	public fun <init> ()V
 	public fun <init> (ILjava/lang/String;)V
@@ -1412,6 +1418,7 @@ public final class org/jetbrains/exposed/v1/core/JoinType : java/lang/Enum {
 }
 
 public abstract interface class org/jetbrains/exposed/v1/core/JsonColumnMarker {
+	public abstract fun getNeedsBinaryFormatCast ()Z
 	public abstract fun getUsesBinaryFormat ()Z
 }
 
@@ -4243,6 +4250,7 @@ public abstract class org/jetbrains/exposed/v1/core/vendors/FunctionProvider {
 	public fun hour (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 	public fun insert (ZLorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/Transaction;)Ljava/lang/String;
 	public fun insertValue (Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
+	public fun jsonCast (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/IColumnType;Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 	public fun jsonContains (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/IColumnType;Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 	public fun jsonExists (Lorg/jetbrains/exposed/v1/core/Expression;[Ljava/lang/String;Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/IColumnType;Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 	public fun jsonExtract (Lorg/jetbrains/exposed/v1/core/Expression;[Ljava/lang/String;ZLorg/jetbrains/exposed/v1/core/IColumnType;Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V

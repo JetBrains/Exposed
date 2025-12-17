@@ -352,6 +352,21 @@ abstract class FunctionProvider {
     // JSON Functions
 
     /**
+     * SQL function that specifies a casting from one data type to the JSON type, if supported.
+     *
+     * @param expression Expression to cast.
+     * @param jsonType The exact JSON column type to cast the expression to.
+     * @param queryBuilder Query builder to append the SQL function to.
+     */
+    open fun <T> jsonCast(
+        expression: Expression<T>,
+        jsonType: IColumnType<*>,
+        queryBuilder: QueryBuilder
+    ) {
+        cast(expression, jsonType, queryBuilder)
+    }
+
+    /**
      * SQL function that extracts data from a JSON object at the specified [path], either as a JSON representation or as a scalar value.
      *
      * @param expression Expression from which to extract JSON subcomponents matched by [path].
