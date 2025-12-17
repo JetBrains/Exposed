@@ -28,11 +28,11 @@ interface JdbcTransactionInterface : TransactionInterface {
 }
 
 /**
- * The [TransactionManager] instance that is associated with this [Database].
+ * The [JdbcTransactionManager] instance that is associated with this [Database].
  *
  * @throws IllegalStateException if no transaction manager is registered for the given database.
  */
-val Database.transactionManager: TransactionManager
+val Database.transactionManager: JdbcTransactionManager
     get() = TransactionManager.managerFor(this)
 
 @Suppress("TooGenericExceptionCaught")

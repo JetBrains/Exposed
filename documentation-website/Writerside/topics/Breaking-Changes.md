@@ -14,6 +14,24 @@
   In the event that this is done, individual SQLite JSONB columns can still be wrapped to retrieve a more readable format
   by using the new `.castToJson()` function. As part of this change, the `exposed-core` interface `JsonColumnMarker`
   received a new property, `needsBinaryFormatCast`.
+* **Transaction Manager Type Changes**: New interfaces `JdbcTransactionManager` and `R2dbcTransactionManager` have been introduced,
+  and several public API return types have been updated accordingly. The following signatures have changed:
+    * `Database.transactionManager` now returns `JdbcTransactionManager` instead of `TransactionManager`
+    * `R2dbcDatabase.transactionManager` now returns `R2dbcTransactionManager` instead of `TransactionManager`
+    * `JdbcTransaction.transactionManager` property type changed to `JdbcTransactionManager`
+    * `R2dbcTransaction.transactionManager` property type changed to `R2dbcTransactionManager`
+    * `TransactionManager.manager` now returns either `JdbcTransactionManager` or `R2dbcTransactionManager` instead of TransactionManager
+    * `TransactionManager.managerFor()` now returns either `JdbcTransactionManager` or `R2dbcTransactionManager` instead of TransactionManager
+    * `TransactionManager.registerManager()` now accepts `JdbcTransactionManager` or `R2dbcTransactionManager` instead of `TransactionManagerApi`
+    * `Database.connect()` method's `manager` parameter now expects `(Database) -> JdbcTransactionManager` instead of `(Database) -> TransactionManager`
+    * `R2dbcDatabase.connect()` method's `manager` parameter now expects `(R2dbcDatabase) -> R2dbcTransactionManager` instead of `(R2dbcDatabase) -> TransactionManager`
+    * `TransactionManagerApi.currentOrNull()` method has been removed from the interface and added as extension functions `JdbcTransactionManager.currentOrNull()` and `R2dbcTransactionManager.currentOrNull()`.
+
+  If you have custom implementations that extend `TransactionManager`, update them to implement the appropriate interface
+  (`JdbcTransactionManager` or `R2dbcTransactionManager`) and ensure the `db` property is implemented. If you're passing custom transaction managers to `connect()`
+  or `registerManager()`, ensure the types match the new signatures. Replace any calls to instance method `transactionManager.currentOrNull()`
+  with either the static `TransactionManager.currentOrNull()` or the extension function on the typed manager. These changes
+  do not affect the companion object methods like `current()`, `currentOrNull()`, or `closeAndUnregister()`.
 
 ## 1.0.0-rc-4
 

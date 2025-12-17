@@ -7,7 +7,6 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
@@ -22,6 +21,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.v1.r2dbc.tests.getString
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
+import org.jetbrains.exposed.v1.r2dbc.transactions.R2dbcTransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.transactionManager
 import org.junit.jupiter.api.Test
@@ -138,8 +138,8 @@ class H2Tests : R2dbcDatabaseTestsBase() {
         }
     }
 
-    class WrappedTransactionManager(val transactionManager: TransactionManagerApi) :
-        TransactionManagerApi by transactionManager
+    class WrappedTransactionManager(val transactionManager: R2dbcTransactionManager) :
+        R2dbcTransactionManager by transactionManager
 
     object Testing : Table("H2_TESTING") {
         val id = integer("id").autoIncrement() // Column<Int>

@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.v1.jdbc.transactions
 
-import kotlinx.coroutines.currentCoroutineContext
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
@@ -8,24 +7,22 @@ import org.jetbrains.exposed.v1.core.transactions.DatabasesManagerImpl
 import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagersContainerImpl
-import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextElement
 import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolder
-import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolderImpl
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.statements.api.ExposedConnection
 import kotlin.coroutines.CoroutineContext
 
 /**
- * [TransactionManager] implementation registered to the provided database value [db].
+ * [JdbcTransactionManager] implementation registered to the provided database value [db].
  *
  * [setupTxConnection] can be provided to override the default configuration of transaction settings when a
  * connection is retrieved from the database.
  */
 class TransactionManager(
-    private val db: Database,
+    override val db: Database,
     private val setupTxConnection: ((ExposedConnection<*>, JdbcTransactionInterface) -> Unit)? = null
-) : TransactionManagerApi {
+) : JdbcTransactionManager {
     @Volatile
     override var defaultMaxAttempts: Int = db.config.defaultMaxAttempts
 
@@ -37,7 +34,7 @@ class TransactionManager(
 
     /** The default transaction isolation level. Unless specified, the database-specific level will be used. */
     @Volatile
-    var defaultIsolationLevel: Int = db.config.defaultIsolationLevel
+    override var defaultIsolationLevel: Int = db.config.defaultIsolationLevel
         get() {
             when {
                 field == -1 -> {
@@ -75,10 +72,10 @@ class TransactionManager(
      * The returned value may be a new transaction, or it may return the [outerTransaction] if called from within
      * an existing transaction with the database not configured to `useNestedTransactions`.
      */
-    fun newTransaction(
-        isolation: Int = defaultIsolationLevel,
-        readOnly: Boolean = defaultReadOnly,
-        outerTransaction: JdbcTransaction? = null
+    override fun newTransaction(
+        isolation: Int,
+        readOnly: Boolean,
+        outerTransaction: JdbcTransaction?
     ): JdbcTransaction {
         val transaction = outerTransaction?.takeIf { !db.useNestedTransactions }
             ?: JdbcTransaction(
@@ -95,56 +92,6 @@ class TransactionManager(
         return transaction
     }
 
-    override fun currentOrNull(): JdbcTransaction? {
-        @OptIn(InternalApi::class)
-        return ThreadLocalTransactionsStack.getTransactionOrNull(db) as JdbcTransaction?
-    }
-
-    /** A unique key for storing coroutine context elements, as [TransactionContextHolder]. */
-    @OptIn(InternalApi::class)
-    private val contextKey = object : CoroutineContext.Key<TransactionContextHolder> {}
-
-    /**
-     * Creates a coroutine context for the given transaction.
-     *
-     * @param transaction The transaction for which to create the coroutine context.
-     * @return A [CoroutineContext] containing the transaction holder and context element.
-     * @throws IllegalStateException if the transaction's manager doesn't match this manager.
-     */
-    @OptIn(InternalApi::class)
-    internal fun createTransactionContext(transaction: Transaction): CoroutineContext {
-        if (transaction.transactionManager != this) {
-            error(
-                "TransactionManager must create transaction context only for own transactions. " +
-                    "Transaction manager of ${db.url} tried to create transaction context for ${transaction.db.url}"
-            )
-        }
-        return TransactionContextHolderImpl(transaction, contextKey) + TransactionContextElement(transaction)
-    }
-
-    /**
-     * Returns the current JDBC transaction from the coroutine context, or null if none exists.
-     *
-     * This method performs type checking to ensure the transaction in the context is actually
-     * a [JdbcTransaction]. If a non-JDBC transaction is found in the context, an error is thrown
-     * to prevent type confusion between JDBC and R2DBC transactions.
-     *
-     * @return The current [JdbcTransaction] from the coroutine context, or null if no transaction exists
-     * @throws [IllegalStateException] If the transaction in the context is not a [JdbcTransaction]
-     */
-    @OptIn(InternalApi::class)
-    internal suspend fun getCurrentContextTransaction(): JdbcTransaction? {
-        val transaction = currentCoroutineContext()[contextKey]?.transaction
-        return when {
-            transaction == null -> null
-            transaction is JdbcTransaction -> transaction
-            else -> error(
-                "Expected JdbcTransaction in coroutine context but found ${transaction::class.simpleName}. " +
-                    "This may indicate mixing JDBC and R2DBC transactions incorrectly."
-            )
-        }
-    }
-
     companion object {
         @OptIn(InternalApi::class)
         private val databases = object : DatabasesManagerImpl<Database>() {}
@@ -152,6 +99,23 @@ class TransactionManager(
         @OptIn(InternalApi::class)
         private val transactionManagers = object : TransactionManagersContainerImpl<Database>(databases) {
             override fun transactionClass(): Class<out Transaction> = JdbcTransaction::class.java
+        }
+
+        /**
+         * Storage for coroutine context keys associated with each transaction manager.
+         * Each transaction manager gets a unique context key for transaction isolation.
+         */
+        private val contextKeys =
+            mutableMapOf<JdbcTransactionManager, CoroutineContext.Key<TransactionContextHolder>>()
+
+        /**
+         * Returns the context key for the given transaction manager.
+         * @suppress
+         */
+        @InternalApi
+        fun getContextKey(manager: JdbcTransactionManager): CoroutineContext.Key<TransactionContextHolder> {
+            return contextKeys[manager]
+                ?: error("No context key found for transaction manager $manager. Ensure the transaction manager is registered.")
         }
 
         /**
@@ -173,7 +137,8 @@ class TransactionManager(
 
         /** Associates the provided [database] with a specific [manager]. */
         @Synchronized
-        fun registerManager(database: Database, manager: TransactionManagerApi) {
+        fun registerManager(database: Database, manager: JdbcTransactionManager) {
+            contextKeys[manager] = object : CoroutineContext.Key<TransactionContextHolder> {}
             @OptIn(InternalApi::class)
             transactionManagers.registerDatabaseManager(database, manager)
         }
@@ -184,6 +149,11 @@ class TransactionManager(
          */
         @Synchronized
         fun closeAndUnregister(database: Database) {
+            @OptIn(InternalApi::class)
+            val manager = transactionManagers.getTransactionManager(database)
+            if (manager != null) {
+                contextKeys.remove(manager)
+            }
             @OptIn(InternalApi::class)
             transactionManagers.closeAndUnregisterDatabase(database)
         }
@@ -203,17 +173,17 @@ class TransactionManager(
             ?: error("No transaction in context.")
 
         /**
-         * Returns the [TransactionManager] instance associated with the provided [database].
+         * Returns the [JdbcTransactionManager] instance associated with the provided [database].
          *
          * @param database Database instance for which to retrieve the transaction manager.
-         * @return The [TransactionManager] associated with the database.
+         * @return The [JdbcTransactionManager] associated with the database.
          * @throws IllegalStateException if no transaction manager is registered for the given database.
          */
-        fun managerFor(database: Database): TransactionManager =
-            transactionManagers.getTransactionManager(database)?.let { it as TransactionManager } ?: error("No transaction manager for db $database")
+        fun managerFor(database: Database): JdbcTransactionManager =
+            transactionManagers.getTransactionManager(database)?.let { it as JdbcTransactionManager } ?: error("No transaction manager for db $database")
 
         /**
-         * Returns the [TransactionManager] for the current context.
+         * Returns the [JdbcTransactionManager] for the current context.
          *
          * This property attempts to resolve the transaction manager in the following order:
          * 1. From the current transaction, if one exists
@@ -222,7 +192,7 @@ class TransactionManager(
          * @throws IllegalStateException if no transaction manager can be found in either the current
          *         transaction or the current database.
          */
-        val manager: TransactionManager
+        val manager: JdbcTransactionManager
             get() = currentOrNull()?.transactionManager
                 ?: primaryDatabase?.transactionManager
                 ?: error("No transaction manager found")
