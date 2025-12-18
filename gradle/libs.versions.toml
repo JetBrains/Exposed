@@ -31,7 +31,7 @@ postgresql-r2dbc = "1.1.1.RELEASE"
 sqlserver-r2dbc = "1.0.3.RELEASE"
 
 springFramework = "6.2.15"
-springBoot = "3.5.8"
+springBoot = "3.5.9"
 
 spring-security-crypto = "6.2.1"
 joda-time = "2.14.0"
