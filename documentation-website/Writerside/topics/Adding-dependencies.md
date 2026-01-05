@@ -7,7 +7,7 @@ In this topic you'll learn what these modules are and how to add module dependen
 
 ## Configure the repository
 
-Exposed modules are available from the Maven Central repository.
+Exposed modules are available from the [Maven Central repository](https://central.sonatype.com/namespace/org.jetbrains.exposed).
 To use them, add the appropriate dependency into your repository mapping:
 
 <tabs>
@@ -30,28 +30,11 @@ To use them, add the appropriate dependency into your repository mapping:
   </tab>
 </tabs>
 
-## Add Exposed dependencies
+## Add dependencies
 
-Exposed consists of multiple modules that we've split into two categories:
-
-- [Core modules](#core-modules)
-- [Extension modules](#extension-modules)
-
-### Core modules
-
-To use Exposed in your application you need the following core modules:
-
-| Module          | Function                                                                                                                                                         |
-|-----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `exposed-core`  | Provides the foundational components and abstractions needed to work with databases in a type-safe manner and includes the Domain-Specific Language (DSL) API    |
-| `exposed-dao`   | (Optional) Allows you to work with the Data Access Object (DAO) API. <br> It is only compatible with `exposed-jdbc` and does not work with `exposed-r2dbc`.</br> |
-| `exposed-jdbc`  | Provides support for Java Database Connectivity (JDBC) with a transport-level implementation based on the Java JDBC API                                          |
-| `exposed-r2dbc` | Provides support for Reactive Relational Database Connectivity (R2DBC)                                                                                           |
-
-> You only need one transport module – either `exposed-jdbc` or `exposed-r2dbc`, not both.
-> {style="note"}
-
-Add the required Exposed modules to your project's dependencies:
+At a minimum, an Exposed application requires the [core module](#core-module) and exactly one
+[transport module](#transport-modules). The examples below show the smallest possible dependency sets for
+common setups:
 
 <tabs>
   <tab title="Kotlin Gradle">
@@ -95,6 +78,45 @@ Add the required Exposed modules to your project's dependencies:
     </code-block>
   </tab>
 </tabs>
+
+## Modules
+
+Exposed consists of multiple modules, grouped into the following categories:
+
+- [Core module](#core-module)
+- [Transport modules](#transport-modules)
+- [Database access module](#database-access-module)
+- [Extension modules](#extension-modules)
+
+### Core module
+
+To use Exposed in your application, you need the following core module:
+
+| Module          | Function                                                                                                                                                         |
+|-----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `exposed-core`  | Provides the foundational components and abstractions needed to work with databases in a type-safe manner and includes the Domain-Specific Language (DSL) API    |
+
+### Transport modules
+
+Transport modules define how Exposed communicates with the database and are mutually exclusive.
+
+| Module          | Function                                                                                                                                                         |
+|-----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `exposed-jdbc`  | Provides support for Java Database Connectivity (JDBC) with a transport-level implementation based on the Java JDBC API                                          |
+| `exposed-r2dbc` | Provides support for Reactive Relational Database Connectivity (R2DBC)                                                                                           |
+
+> You only need one transport module – either `exposed-jdbc` or `exposed-r2dbc`, not both.
+> {style="note"}
+
+### Database access module
+
+Exposed offers an optional database access module that builds on top of `exposed-core` and provides higher-level
+abstractions for working with database data:
+
+| Module          | Function                                                                                                                 |
+|-----------------|--------------------------------------------------------------------------------------------------------------------------|
+| `exposed-dao`   | Provides the Data Access Object (DAO) API. <br> Requires `exposed-jdbc` and is not compatible with `exposed-r2dbc`.</br> |
+
 
 ### Extension modules
 
@@ -154,18 +176,22 @@ adds a JDBC driver for the H2 database:
 
 ## Add a logging dependency
 
-To be able to see logs from `StdOutSqlLogger`, add a logging dependency:
+To be able to see logs from [`StdOutSqlLogger`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-std-out-sql-logger/index.html), add a logging dependency:
 
 <tabs>
   <tab title="Kotlin Gradle">
     <code-block lang="kotlin">
     dependencies {
+        // Minimal logging (no output)
         implementation("org.slf4j:slf4j-nop:%slf4j_version%")
+        // Full-featured logging using Logback
+        implementation("ch.qos.logback:logback-classic:%logback_version%")
     }
     </code-block>
   </tab>
   <tab title="Maven">
     <code-block lang="xml"><![CDATA[
+        <!-- Minimal logging (no output) -->
         <dependencies>
             <dependency>
                 <groupId>org.slf4j</groupId>
@@ -173,13 +199,22 @@ To be able to see logs from `StdOutSqlLogger`, add a logging dependency:
                 <version>%slf4j_version%</version>
             </dependency>
         </dependencies>
+        <!-- Full-featured logging using Logback -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>%logback_version%</version>
+        </dependency>
         ]]>
     </code-block>
   </tab>
   <tab title="Groovy Gradle">
     <code-block lang="groovy">
         dependencies {
+            // Minimal logging (no output)
             implementation("org.slf4j:slf4j-nop:%slf4j_version%")
+            // Full-featured logging using Logback
+            implementation("ch.qos.logback:logback-classic:%logback_version%")
         }
     </code-block>
   </tab>
