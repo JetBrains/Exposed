@@ -27,13 +27,11 @@
         Exposed's flexibility allows you to choose the approach that best suits your project's needs, whether you
         prefer the direct control of SQL with the DSL API or the higher-level abstraction of the DAO API.
     </p>
-    <p>
-        The official mascot of Exposed is the cuttlefish, which is well-known for its outstanding mimicry ability that enables it
-        to blend seamlessly into any environment. Similar to its mascot, Exposed can be used to mimic a variety of
-        database engines, which helps you to build applications without dependencies on any specific database engine
-        and to switch between them with very little or no changes.
-    </p>
     <chapter title="Supported databases" id="supported-databases">
+        <p>
+            Similar to its cuttlefish mascot, which blends seamlessly into any environment, Exposed adapts to different
+            database engines and enables switching between them with little or no code changes.
+        </p>
         Exposed currently supports the following databases:
         <list>
             <li>
