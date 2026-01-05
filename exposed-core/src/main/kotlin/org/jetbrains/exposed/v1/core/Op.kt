@@ -318,7 +318,7 @@ class ModOp<T : Number?, S : Number?, R : Number?>(
 
     companion object {
         @Suppress("UNCHECKED_CAST")
-        private fun <T : Number?, K : EntityID<T>?> originalColumn(expr1: ExpressionWithColumnType<K>): Column<T> {
+        private fun <T : Number, K : EntityID<T>?> originalColumn(expr1: ExpressionWithColumnType<K>): Column<T> {
             return (expr1.columnType as EntityIDColumnType<*>).idColumn as Column<T>
         }
 
