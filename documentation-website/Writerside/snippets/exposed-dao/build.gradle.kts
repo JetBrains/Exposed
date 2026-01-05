@@ -33,7 +33,7 @@ dependencies {
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.dao)
     implementation(libs.exposed.kotlin.datetime)
-    implementation("com.h2database:h2:2.2.224")
+    implementation(libs.h2)
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

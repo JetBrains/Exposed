@@ -7,24 +7,24 @@ junit-jupiter-engine = "5.10.2"
 exposed = "1.0.0-rc-4"
 slf4j = "2.0.16"
 jackson = "2.18.+"
-kotlin = "2.1.0"
+kotlin = "2.2.20"
 flyway = "10.15.0"
 
-h2 = "2.2.224"
-mysql ="8.0.33"
-postgres = "42.7.7"
+h2 = "2.4.240"
+mysql ="8.4.0"
+postgres = "42.7.8"
 postgreNG = "0.8.9"
-mariadb = "3.3.1"
-oracle = "19.24.0.0"
-sqlite = "3.50.1.0"
-sqlserver = "9.4.1.jre8"
+mariadb = "3.5.6"
+oracle = "23.26.0.0.0"
+sqlite = "3.50.2.0"
+sqlserver = "13.2.1.jre11"
 
-h2-r2dbc = "1.0.0.RELEASE"
+h2-r2dbc = "1.1.0.RELEASE"
 mariadb-r2dbc = "1.3.0"
 mysql-r2dbc = "1.4.1"
 oracle-r2dbc = "1.3.0"
-postgresql-r2dbc = "1.0.7.RELEASE"
-sqlserver-r2dbc = "1.0.2.RELEASE"
+postgresql-r2dbc = "1.1.1.RELEASE"
+sqlserver-r2dbc = "1.0.3.RELEASE"
 
 [libraries]
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
@@ -42,7 +42,7 @@ jackson-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin"
 flyway = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
-mysql = { module = "mysql:mysql-connector-java", version.ref = "mysql"}
+mysql = { module = "com.mysql:mysql-connector-j", version.ref = "mysql"}
 postgresql = { group = "org.postgresql", name = "postgresql", version.ref = "postgres" }
 pgjdbc-ng = { group = "com.impossibl.pgjdbc-ng", name = "pgjdbc-ng", version.ref = "postgreNG" }
 sqlite-jdbc = { group = "org.xerial", name = "sqlite-jdbc", version.ref = "sqlite" }

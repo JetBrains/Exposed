@@ -12,13 +12,21 @@ To use them, add the appropriate dependency into your repository mapping:
 
 <tabs>
   <tab title="Kotlin Gradle">
-    <code-block lang="kotlin" src="exposed-modules-kotlin-gradle/build.gradle.kts" include-lines="8-10"/>
+    <code-block lang="kotlin">
+    repositories {
+        mavenCentral()
+    }
+    </code-block>
   </tab>
   <tab title="Maven">
     The Maven Central repository is enabled by default for Maven users.
   </tab>
   <tab title="Groovy Gradle">
-    <code-block lang="groovy" src="exposed-modules-groovy-gradle/build.gradle" include-lines="8-10"/>
+    <code-block lang="groovy">
+    repositories {
+        mavenCentral()
+    }
+    </code-block>
   </tab>
 </tabs>
 
@@ -47,13 +55,44 @@ Add the required Exposed modules to your project's dependencies:
 
 <tabs>
   <tab title="Kotlin Gradle">
-    <code-block lang="kotlin" src="exposed-modules-kotlin-gradle/build.gradle.kts" include-lines="12-15,19"/>
+    <code-block lang="kotlin">
+    dependencies {
+        implementation("org.jetbrains.exposed:exposed-core:%exposed_version%")
+        implementation("org.jetbrains.exposed:exposed-jdbc:%exposed_version%")
+        implementation("org.jetbrains.exposed:exposed-dao:%exposed_version%") // Optional
+    }
+    </code-block>
   </tab>
   <tab title="Maven">
-    <code-block lang="xml" src="exposed-modules-maven/pom.xml" include-lines="68,86-100,111"/>
+    <code-block lang="xml"><![CDATA[
+        <dependencies>
+            <dependency>
+                <groupId>org.jetbrains.exposed</groupId>
+                <artifactId>exposed-core</artifactId>
+                <version>%exposed_version%</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.exposed</groupId>
+                <artifactId>exposed-jdbc</artifactId>
+                <version>%exposed_version%</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.exposed</groupId>
+                <artifactId>exposed-dao</artifactId>
+                <version>%exposed_version%</version>
+            </dependency>
+        </dependencies>
+    ]]>
+    </code-block>
   </tab>
   <tab title="Groovy Gradle">
-    <code-block lang="groovy" src="exposed-modules-groovy-gradle/build.gradle" include-lines="12-15,19"/>
+    <code-block lang="groovy">
+    dependencies {
+        implementation "org.jetbrains.exposed:exposed-core:%exposed_version%"
+        implementation "org.jetbrains.exposed:exposed-jdbc:%exposed_version%"
+        implementation "org.jetbrains.exposed:exposed-dao:%exposed_version%" //optional
+    }
+    </code-block>
   </tab>
 </tabs>
 
@@ -84,13 +123,30 @@ adds a JDBC driver for the H2 database:
 
 <tabs>
   <tab title="Kotlin Gradle">
-    <code-block lang="kotlin" src="exposed-modules-kotlin-gradle/build.gradle.kts" include-lines="12,16,19"/>
+    <code-block lang="kotlin">
+    dependencies {
+        implementation("com.h2database:h2:%h2_db_version%")
+    }
+    </code-block>
   </tab>
   <tab title="Maven">
-    <code-block lang="xml" src="exposed-modules-maven/pom.xml" include-lines="68,101-105,111"/>
+    <code-block lang="xml"><![CDATA[
+    <dependencies>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>2.4.240</version>
+        </dependency>
+    </dependencies>
+    ]]>
+</code-block>
   </tab>
   <tab title="Groovy Gradle">
-    <code-block lang="groovy" src="exposed-modules-groovy-gradle/build.gradle" include-lines="12,16,19"/>
+    <code-block lang="groovy">
+    dependencies {
+        implementation "com.h2database:h2:%h2_db_version%"
+    }
+    </code-block>
   </tab>
 </tabs>
 
@@ -102,13 +158,30 @@ To be able to see logs from `StdOutSqlLogger`, add a logging dependency:
 
 <tabs>
   <tab title="Kotlin Gradle">
-    <code-block lang="kotlin" src="exposed-modules-kotlin-gradle/build.gradle.kts" include-lines="12,17,19"/>
+    <code-block lang="kotlin">
+    dependencies {
+        implementation("org.slf4j:slf4j-nop:%slf4j_version%")
+    }
+    </code-block>
   </tab>
   <tab title="Maven">
-    <code-block lang="xml" src="exposed-modules-maven/pom.xml" include-lines="68,106-111"/>
+    <code-block lang="xml"><![CDATA[
+        <dependencies>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-nop</artifactId>
+                <version>%slf4j_version%</version>
+            </dependency>
+        </dependencies>
+        ]]>
+    </code-block>
   </tab>
   <tab title="Groovy Gradle">
-    <code-block lang="groovy" src="exposed-modules-groovy-gradle/build.gradle" include-lines="12,17,19"/>
+    <code-block lang="groovy">
+        dependencies {
+            implementation("org.slf4j:slf4j-nop:%slf4j_version%")
+        }
+    </code-block>
   </tab>
 </tabs>
 

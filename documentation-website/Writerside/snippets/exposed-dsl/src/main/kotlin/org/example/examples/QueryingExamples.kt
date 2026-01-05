@@ -4,8 +4,14 @@ import org.example.tables.ActorsTable
 import org.example.tables.StarWarsFilmsTable
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.anyFrom
+import org.jetbrains.exposed.v1.core.between
 import org.jetbrains.exposed.v1.core.count
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.innerJoin
+import org.jetbrains.exposed.v1.core.like
+import org.jetbrains.exposed.v1.core.notLike
+import org.jetbrains.exposed.v1.core.regexp
 import org.jetbrains.exposed.v1.jdbc.andWhere
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
