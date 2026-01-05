@@ -1,6 +1,6 @@
-<show-structure for="chapter,procedure" depth="2"/>
+[//]: # (title: Adding dependencies)
 
-# Modules
+<show-structure for="chapter,procedure" depth="2"/>
 
 Exposed is split into specific modules that give you the flexibility to only use the modules you need.
 In this topic you'll learn what these modules are and how to add module dependencies to an existing Gradle/Maven project.
@@ -8,7 +8,7 @@ In this topic you'll learn what these modules are and how to add module dependen
 ## Configure the repository
 
 Exposed modules are available from the Maven Central repository.
-To use them, add the appropriate dependency into your repositories mapping:
+To use them, add the appropriate dependency into your repository mapping:
 
 <tabs>
   <tab title="Kotlin Gradle">
@@ -94,7 +94,7 @@ adds a JDBC driver for the H2 database:
   </tab>
 </tabs>
 
-> For the complete list of supported databases and their corresponding driver dependency, see [](Working-with-Database.md).
+> For the complete list of supported databases and their corresponding driver dependencies, see [](Working-with-Database.md).
 
 ## Add a logging dependency
 

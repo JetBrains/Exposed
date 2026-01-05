@@ -12,7 +12,7 @@
         <toc-element topic="Get-Started-with-Exposed.topic" toc-title="Get started with Exposed" accepts-web-file-names="getting-started-with-exposed.html"/>
         <toc-element topic="Get-started-with-Exposed-DAO.md"/>
     </toc-element>
-    <toc-element topic="Exposed-Modules.md"/>
+    <toc-element topic="Adding-dependencies.md" accepts-web-file-names="exposed-modules.html"/>
     <toc-element toc-title="Databases">
         <toc-element topic="Working-with-Database.md"/>
         <toc-element topic="Working-with-DataSource.md"/>

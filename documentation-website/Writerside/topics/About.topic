@@ -60,7 +60,7 @@
     </chapter>
     <seealso style="cards">
         <category ref="learn-more">
-            <a href="Exposed-Modules.md"/>
+            <a href="Adding-dependencies.md"/>
             <a href="Get-Started-with-Exposed.topic"/>
         </category>
     </seealso>
