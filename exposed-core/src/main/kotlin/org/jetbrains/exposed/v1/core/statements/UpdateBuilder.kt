@@ -77,7 +77,7 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
     }
 
     @JvmName("setWithEntityIdExpression")
-    operator fun <S : Any?, ID : EntityID<S>, E : Expression<S>> set(column: Column<ID>, value: E) {
+    operator fun <S : Any, ID : EntityID<S>, E : Expression<S>> set(column: Column<ID>, value: E) {
         require(column.columnType.nullable || value !is Op.NULL) {
             "Trying to set null to not nullable column $column"
         }
