@@ -25,9 +25,9 @@ dependencies {
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.kotlin.datetime)
-    implementation("com.h2database:h2:2.2.224")
-    implementation("org.xerial:sqlite-jdbc:3.44.1.0")
-    implementation("mysql:mysql-connector-java:8.0.33")
+    implementation(libs.h2)
+    implementation(libs.sqlite.jdbc)
+    implementation(libs.mysql)
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

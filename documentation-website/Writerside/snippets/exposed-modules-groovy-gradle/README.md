@@ -2,7 +2,7 @@
 
 An auto-generated Groovy Gradle project containing the core Exposed dependencies.
 The `build.gradle` file of this project is referenced by line in the
-[Exposed-Modules](../../topics/Exposed-Modules.md) topic.
+[Adding dependencies](../../topics/Adding-dependencies.md) topic.
 
 ## Build
 

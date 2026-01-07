@@ -1,5 +1,9 @@
+val exposed: String by project
+val h2: String by project
+val slf4j: String by project
+
 plugins {
-    kotlin("jvm") version "2.0.20"
+    kotlin("jvm") version "2.2.20"
 }
 
 group = "com.example"
@@ -10,17 +14,20 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.exposed:exposed-core:1.0.0-rc-4")
-    implementation("org.jetbrains.exposed:exposed-jdbc:1.0.0-rc-4")
-    implementation("org.jetbrains.exposed:exposed-dao:1.0.0-rc-4") // Optional
-    implementation("com.h2database:h2:2.2.224")
-    implementation("org.slf4j:slf4j-nop:1.7.30")
+    implementation("org.jetbrains.exposed:exposed-core:$exposed")
+    implementation("org.jetbrains.exposed:exposed-jdbc:$exposed")
+    implementation("org.jetbrains.exposed:exposed-dao:$exposed") // Optional
+    implementation("com.h2database:h2:$h2")
+    implementation("org.slf4j:slf4j-nop:$slf4j")
     testImplementation(kotlin("test"))
 }
 
 tasks.test {
     useJUnitPlatform()
 }
-kotlin {
-    jvmToolchain(17)
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }

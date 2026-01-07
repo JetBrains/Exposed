@@ -1,5 +1,5 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '2.0.20'
+    id 'org.jetbrains.kotlin.jvm' version '2.2.20'
 }
 
 group = 'com.example'
@@ -10,11 +10,11 @@ repositories {
 }
 
 dependencies {
-    implementation "org.jetbrains.exposed:exposed-core:1.0.0-rc-4"
-    implementation "org.jetbrains.exposed:exposed-jdbc:1.0.0-rc-4"
-    implementation "org.jetbrains.exposed:exposed-dao:1.0.0-rc-4" //optional
-    implementation "com.h2database:h2:2.2.224"
-    implementation "org.slf4j:slf4j-nop:1.7.30"
+    implementation "org.jetbrains.exposed:exposed-core:$exposed"
+    implementation "org.jetbrains.exposed:exposed-jdbc:$exposed"
+    implementation "org.jetbrains.exposed:exposed-dao:$exposed" //optional
+    implementation "com.h2database:h2:$h2"
+    implementation "org.slf4j:slf4j-nop:$slf4j"
     testImplementation 'org.jetbrains.kotlin:kotlin-test'
 }
 

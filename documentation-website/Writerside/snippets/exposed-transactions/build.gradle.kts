@@ -25,7 +25,7 @@ dependencies {
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
     implementation(libs.h2)
-    implementation("mysql:mysql-connector-java:8.0.33")
+    implementation(libs.mysql)
     implementation(libs.slf4j)
 }
 

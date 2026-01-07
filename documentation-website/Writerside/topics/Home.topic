@@ -26,7 +26,7 @@
 
         <primary>
             <title>Learn More</title>
-            <a href="Exposed-Modules.md"
+            <a href="Adding-dependencies.md"
                summary="Learn how to configure Exposed in the existing project using Gradle or Maven build systems">
                 Adding Dependencies
             </a>

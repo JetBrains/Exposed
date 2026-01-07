@@ -36,9 +36,11 @@ necessary even if the query is never executed.
 
 ### How do I get a plain SQL query which will be executed?
 
-You can use `Statement.prepareSQL()`, and potentially `buildStatement()`. For more details, see [](DSL-Statement-Builder.md).
+You can use the [`Statement.prepareSQL()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core.statements/-statement/prepare-s-q-l.html)
+function, and potentially the [`buildStatement()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core.statements/build-statement.html)
+function. For more details, see [](DSL-Statement-Builder.md).
 
-### Is it possible to update a field relative to current field value?
+### Is it possible to update a field relative to the current field value?
 
 Yes. You can achieve this by using the `.update()` function with the desired `Expression` or setting the value of the field directly.
 For more information, see [how to update a record](DSL-CRUD-operations.topic#update-record).
@@ -63,8 +65,9 @@ or queries. For more information, see the [alias](DSL-Querying-data.topic#alias)
 
 ### Is it possible to create tables with cyclic (circular) reference?
 
-Yes, it is. To define such tables, you can use the `reference()` or `optReference()` functions to establish foreign key 
-relationships between tables. For more information, see the [](DAO-Relationships.topic) topic.
+Yes, it is. To define such tables, you can use the [`reference()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/reference.html)
+or [`optReference()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/opt-reference.html)
+functions to establish foreign key relationships between tables. For more information, see the [](DAO-Relationships.topic) topic.
 
 ### How can I use a savepoint?
 
