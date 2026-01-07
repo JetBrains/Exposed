@@ -37,7 +37,7 @@ fun <T : LocalDateTime?> Date(expr: Expression<T>): Function<LocalDate> = DateIn
     "Deprecated due to usage of old kotlinx.datetime.Instant. " +
         "The change caused by deprecation of Instant in the kotlinx.datetime " +
         "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
-    replaceWith = ReplaceWith("Date")
+    replaceWith = ReplaceWith("Date(expr)")
 )
 @JvmName("XInstantDateFunction")
 fun <T : xInstant?> Date(expr: Expression<T>): Function<LocalDate> = DateInternal(expr)
@@ -74,7 +74,7 @@ fun <T : LocalDateTime?> Time(expr: Expression<T>): Function<LocalTime> = TimeIn
     "Deprecated due to usage of old kotlinx.datetime.Instant. " +
         "The change caused by deprecation of Instant in the kotlinx.datetime " +
         "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
-    replaceWith = ReplaceWith("Time")
+    replaceWith = ReplaceWith("Time(expr)")
 )
 @JvmName("XInstantTimeFunction")
 fun <T : xInstant?> Time(expr: Expression<T>): Function<LocalTime> = TimeInternal(expr)
@@ -172,7 +172,7 @@ fun <T : LocalDateTime?> Year(expr: Expression<T>): Function<Int> = YearInternal
     "Deprecated due to usage of old kotlinx.datetime.Instant. " +
         "The change caused by deprecation of Instant in the kotlinx.datetime " +
         "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
-    replaceWith = ReplaceWith("Year")
+    replaceWith = ReplaceWith("Year(expr)")
 )
 @JvmName("XInstantYearFunction")
 fun <T : xInstant?> Year(expr: Expression<T>): Function<Int> = YearInternal(expr)
@@ -209,7 +209,7 @@ fun <T : LocalDateTime?> Month(expr: Expression<T>): Function<Int> = MonthIntern
     "Deprecated due to usage of old kotlinx.datetime.Instant. " +
         "The change caused by deprecation of Instant in the kotlinx.datetime " +
         "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
-    replaceWith = ReplaceWith("Month")
+    replaceWith = ReplaceWith("Month(expr)")
 )
 @JvmName("XInstantMonthFunction")
 fun <T : xInstant?> Month(expr: Expression<T>): Function<Int> = MonthInternal(expr)
@@ -246,7 +246,7 @@ fun <T : LocalDateTime?> Day(expr: Expression<T>): Function<Int> = DayInternal(e
     "Deprecated due to usage of old kotlinx.datetime.Instant. " +
         "The change caused by deprecation of Instant in the kotlinx.datetime " +
         "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
-    replaceWith = ReplaceWith("Day")
+    replaceWith = ReplaceWith("Day(expr)")
 )
 @JvmName("XInstantDayFunction")
 fun <T : xInstant?> Day(expr: Expression<T>): Function<Int> = DayInternal(expr)
@@ -283,7 +283,7 @@ fun <T : LocalDateTime?> Hour(expr: Expression<T>): Function<Int> = HourInternal
     "Deprecated due to usage of old kotlinx.datetime.Instant. " +
         "The change caused by deprecation of Instant in the kotlinx.datetime " +
         "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
-    replaceWith = ReplaceWith("Hour")
+    replaceWith = ReplaceWith("Hour(expr)")
 )
 @JvmName("XInstantHourFunction")
 fun <T : xInstant?> Hour(expr: Expression<T>): Function<Int> = HourInternal(expr)
@@ -320,7 +320,7 @@ fun <T : LocalDateTime?> Minute(expr: Expression<T>): Function<Int> = MinuteInte
     "Deprecated due to usage of old kotlinx.datetime.Instant. " +
         "The change caused by deprecation of Instant in the kotlinx.datetime " +
         "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
-    replaceWith = ReplaceWith("Minute")
+    replaceWith = ReplaceWith("Minute(expr)")
 )
 @JvmName("XInstantMinuteFunction")
 fun <T : xInstant?> Minute(expr: Expression<T>): Function<Int> = MinuteInternal(expr)
@@ -357,7 +357,7 @@ fun <T : LocalDateTime?> Second(expr: Expression<T>): Function<Int> = SecondInte
     "Deprecated due to usage of old kotlinx.datetime.Instant. " +
         "The change caused by deprecation of Instant in the kotlinx.datetime " +
         "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
-    replaceWith = ReplaceWith("Second")
+    replaceWith = ReplaceWith("Second(expr)")
 )
 @JvmName("XInstantSecondFunction")
 fun <T : xInstant?> Second(expr: Expression<T>): Function<Int> = SecondInternal(expr)
@@ -603,7 +603,7 @@ fun dateTimeParam(value: LocalDateTime): Expression<LocalDateTime> = QueryParame
     "Deprecated due to usage of old kotlinx.datetime.Instant. " +
         "The change caused by deprecation of Instant in the kotlinx.datetime " +
         "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
-    replaceWith = ReplaceWith("timestampParam")
+    replaceWith = ReplaceWith("timestampParam(value)")
 )
 fun timestampParam(value: xInstant): Expression<xInstant> = QueryParameter(value, XKotlinInstantColumnType.INSTANCE)
 
@@ -631,7 +631,7 @@ fun dateTimeLiteral(value: LocalDateTime): LiteralOp<LocalDateTime> = LiteralOp(
     "Deprecated due to usage of old kotlinx.datetime.Instant. " +
         "The change caused by deprecation of Instant in the kotlinx.datetime " +
         "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
-    replaceWith = ReplaceWith("timestampLiteral")
+    replaceWith = ReplaceWith("timestampLiteral(value)")
 )
 fun timestampLiteral(value: xInstant): LiteralOp<xInstant> = LiteralOp(XKotlinInstantColumnType.INSTANCE, value)
 
@@ -674,7 +674,7 @@ fun CustomDateTimeFunction(functionName: String, vararg params: Expression<*>): 
     "Deprecated due to usage of old kotlinx.datetime.Instant. " +
         "The change caused by deprecation of Instant in the kotlinx.datetime " +
         "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
-    replaceWith = ReplaceWith("CustomTimeStampFunction")
+    replaceWith = ReplaceWith("CustomTimeStampFunction(functionName, params = params)")
 )
 fun XCustomTimeStampFunction(functionName: String, vararg params: Expression<*>): CustomFunction<xInstant?> =
     CustomFunction(functionName, XKotlinInstantColumnType.INSTANCE, *params)
