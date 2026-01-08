@@ -29,7 +29,12 @@ import javax.sql.DataSource
  *
  * @property applicationContext The Spring ApplicationContext container responsible for managing beans.
  */
-@AutoConfiguration(after = [DataSourceAutoConfiguration::class])
+@AutoConfiguration(
+    afterName = [
+        "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration",
+        "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration"
+    ]
+)
 @EnableTransactionManagement
 open class ExposedAutoConfiguration(private val applicationContext: ApplicationContext) {
 
