@@ -2810,32 +2810,32 @@ public abstract class org/jetbrains/exposed/v1/core/dao/id/IdTable : org/jetbrai
 
 public class org/jetbrains/exposed/v1/core/dao/id/IntIdTable : org/jetbrains/exposed/v1/core/dao/id/IdTable {
 	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getId ()Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun getPrimaryKey ()Lorg/jetbrains/exposed/v1/core/Table$PrimaryKey;
 }
 
 public class org/jetbrains/exposed/v1/core/dao/id/LongIdTable : org/jetbrains/exposed/v1/core/dao/id/IdTable {
 	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getId ()Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun getPrimaryKey ()Lorg/jetbrains/exposed/v1/core/Table$PrimaryKey;
 }
 
 public class org/jetbrains/exposed/v1/core/dao/id/UIntIdTable : org/jetbrains/exposed/v1/core/dao/id/IdTable {
 	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getId ()Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun getPrimaryKey ()Lorg/jetbrains/exposed/v1/core/Table$PrimaryKey;
 }
 
 public class org/jetbrains/exposed/v1/core/dao/id/ULongIdTable : org/jetbrains/exposed/v1/core/dao/id/IdTable {
 	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getId ()Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun getPrimaryKey ()Lorg/jetbrains/exposed/v1/core/Table$PrimaryKey;
 }

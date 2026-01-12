@@ -63,10 +63,11 @@ abstract class IdTable<T : Any>(name: String = "") : Table(name) {
  *
  * @param name Table name. By default, this will be resolved from any class name with a "Table" suffix removed (if present).
  * @param columnName Name for the primary key column. By default, "id" is used.
+ * @param sequenceName Optional parameter to provide a name for the auto-incrementing sequence, if supported by the underlying database
  */
-open class IntIdTable(name: String = "", columnName: String = "id") : IdTable<Int>(name) {
+open class IntIdTable(name: String = "", columnName: String = "id", sequenceName: String? = null) : IdTable<Int>(name) {
     /** The identity column of this [IntIdTable], for storing 4-byte integers wrapped as [EntityID] instances. */
-    final override val id: Column<EntityID<Int>> = integer(columnName).autoIncrement().entityId()
+    final override val id: Column<EntityID<Int>> = integer(columnName).autoIncrement(sequenceName).entityId()
     final override val primaryKey = PrimaryKey(id)
 }
 
@@ -75,10 +76,11 @@ open class IntIdTable(name: String = "", columnName: String = "id") : IdTable<In
  *
  * @param name Table name. By default, this will be resolved from any class name with a "Table" suffix removed (if present).
  * @param columnName Name for the primary key column. By default, "id" is used.
+ * @param sequenceName Optional parameter to provide a name for the auto-incrementing sequence, if supported by the underlying database
  */
-open class UIntIdTable(name: String = "", columnName: String = "id") : IdTable<UInt>(name) {
+open class UIntIdTable(name: String = "", columnName: String = "id", sequenceName: String? = null) : IdTable<UInt>(name) {
     /** The identity column of this [IntIdTable], for storing 4-byte unsigned integers wrapped as [EntityID] instances. */
-    final override val id: Column<EntityID<UInt>> = uinteger(columnName).autoIncrement().entityId()
+    final override val id: Column<EntityID<UInt>> = uinteger(columnName).autoIncrement(sequenceName).entityId()
     final override val primaryKey = PrimaryKey(id)
 }
 
@@ -87,10 +89,11 @@ open class UIntIdTable(name: String = "", columnName: String = "id") : IdTable<U
  *
  * @param name Table name. By default, this will be resolved from any class name with a "Table" suffix removed (if present).
  * @param columnName Name for the primary key column. By default, "id" is used.
+ * @param sequenceName Optional parameter to provide a name for the auto-incrementing sequence, if supported by the underlying database
  */
-open class LongIdTable(name: String = "", columnName: String = "id") : IdTable<Long>(name) {
+open class LongIdTable(name: String = "", columnName: String = "id", sequenceName: String? = null) : IdTable<Long>(name) {
     /** The identity column of this [LongIdTable], for storing 8-byte integers wrapped as [EntityID] instances. */
-    final override val id: Column<EntityID<Long>> = long(columnName).autoIncrement().entityId()
+    final override val id: Column<EntityID<Long>> = long(columnName).autoIncrement(sequenceName).entityId()
     final override val primaryKey = PrimaryKey(id)
 }
 
@@ -99,10 +102,11 @@ open class LongIdTable(name: String = "", columnName: String = "id") : IdTable<L
  *
  * @param name Table name. By default, this will be resolved from any class name with a "Table" suffix removed (if present).
  * @param columnName Name for the primary key column. By default, "id" is used.
+ * @param sequenceName Optional parameter to provide a name for the auto-incrementing sequence, if supported by the underlying database
  */
-open class ULongIdTable(name: String = "", columnName: String = "id") : IdTable<ULong>(name) {
+open class ULongIdTable(name: String = "", columnName: String = "id", sequenceName: String? = null) : IdTable<ULong>(name) {
     /** The identity column of this [ULongIdTable], for storing 8-byte unsigned integers wrapped as [EntityID] instances. */
-    final override val id: Column<EntityID<ULong>> = ulong(columnName).autoIncrement().entityId()
+    final override val id: Column<EntityID<ULong>> = ulong(columnName).autoIncrement(sequenceName).entityId()
     final override val primaryKey = PrimaryKey(id)
 }
 
