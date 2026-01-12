@@ -68,6 +68,20 @@
                     include-lines="12-16"
                     id="StarWarsFilmsTable-dao-sql"/>
         <p>
+            If the underlying database supports sequence creation, an argument can be passed to the <code>sequenceName</code>
+            parameter of any compatible <code>IdTable</code>. If the example above is switched to <code>IntIdTable(sequenceName = "id_seq")</code>,
+            the following SQL statements will be generated on table creation:
+        </p>
+        <code-block lang="sql">
+            CREATE SEQUENCE IF NOT EXISTS id_seq
+                START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807;
+            CREATE TABLE IF NOT EXISTS STARWARSFILMS
+            (ID INT PRIMARY KEY,
+             SEQUEL_ID INT NOT NULL,
+             "name" VARCHAR(50) NOT NULL,
+                DIRECTOR VARCHAR(50) NOT NULL);
+        </code-block>
+        <p>
             For more information on defining and configuring tables in Exposed, see <a href="Working-with-Tables.topic"/>.
         </p>
     </chapter>

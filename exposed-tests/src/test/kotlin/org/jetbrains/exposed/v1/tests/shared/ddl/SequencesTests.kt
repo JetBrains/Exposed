@@ -280,6 +280,30 @@ class SequencesTests : DatabaseTestsBase() {
 
     @OptIn(InternalApi::class)
     @Test
+    fun testExistingSequenceForIdTableWithSequenceName() {
+        val sequenceName = "test_id_seq"
+        val idTableWithSeqName = object : IntIdTable("tester_seq", sequenceName = sequenceName) { }
+
+        withDb {
+            if (currentDialectTest.supportsCreateSequence) {
+                try {
+                    SchemaUtils.create(idTableWithSeqName)
+
+                    assertEquals(sequenceName, idTableWithSeqName.sequences.single().name)
+
+                    val sequences = currentDialectMetadataTest.sequences()
+
+                    assertTrue(sequences.isNotEmpty())
+                    assertTrue(sequences.any { it == sequenceName.inProperCase() })
+                } finally {
+                    SchemaUtils.drop(idTableWithSeqName)
+                }
+            }
+        }
+    }
+
+    @OptIn(InternalApi::class)
+    @Test
     fun testExistingSequencesForAutoIncrementWithoutExplicitSequenceName() {
         val tableWithoutExplicitSequenceName = object : IdTable<Long>() {
             override val id: Column<EntityID<Long>> = long("id").autoIncrement().entityId()
