@@ -10,12 +10,12 @@ import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
-import java.util.UUID
 import javax.sql.DataSource
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import java.util.UUID as JavaUUID
 
 class MixedExposedJdbcTransactionTest : SpringTransactionTestBase() {
 
@@ -143,12 +143,12 @@ open class MixedTransactionService {
 
     private fun saveTwoThings(fail: Boolean) {
         CustomerTable.insert {
-            it[id] = UUID.randomUUID()
+            it[id] = JavaUUID.randomUUID()
             it[name] = "Test${nextNameIndex++}"
         }
         client
             .sql("INSERT INTO customer VALUES (:id, :name)")
-            .param("id", UUID.randomUUID())
+            .param("id", JavaUUID.randomUUID())
             .param("name", "Test${nextNameIndex++}")
             .update()
 

@@ -5,7 +5,7 @@ import org.jetbrains.exposed.v1.core.ExpressionWithColumnType
 import org.jetbrains.exposed.v1.core.IColumnType
 import org.jetbrains.exposed.v1.core.QueryBuilder
 import org.jetbrains.exposed.v1.core.ResultRow
-import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.datetime.KotlinLocalDateTimeColumnType
 import org.jetbrains.exposed.v1.datetime.datetime
@@ -16,9 +16,11 @@ import org.jetbrains.exposed.v1.tests.TestDB
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.uuid.ExperimentalUuidApi
 
 class SQLServerDefaultsTest : DatabaseTestsBase() {
 
+    @OptIn(ExperimentalUuidApi::class)
     @Test
     fun testDefaultExpressionsForTemporalTable() {
         fun databaseGeneratedTimestamp() = object : ExpressionWithColumnType<LocalDateTime>() {
@@ -26,7 +28,7 @@ class SQLServerDefaultsTest : DatabaseTestsBase() {
             override val columnType: IColumnType<LocalDateTime> = KotlinLocalDateTimeColumnType()
         }
 
-        val temporalTable = object : UUIDTable("TemporalTable") {
+        val temporalTable = object : UuidTable("TemporalTable") {
             val name = text("name")
             val sysStart = datetime("sysStart").defaultExpression(databaseGeneratedTimestamp())
             val sysEnd = datetime("sysEnd").defaultExpression(databaseGeneratedTimestamp())

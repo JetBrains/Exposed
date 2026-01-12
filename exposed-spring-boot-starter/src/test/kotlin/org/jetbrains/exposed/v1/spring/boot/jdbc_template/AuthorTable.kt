@@ -3,20 +3,22 @@
 package org.jetbrains.exposed.v1.`jdbc-template`
 
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
-import org.jetbrains.exposed.v1.dao.UUIDEntity
-import org.jetbrains.exposed.v1.dao.UUIDEntityClass
-import java.util.UUID
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
+import org.jetbrains.exposed.v1.dao.UuidEntity
+import org.jetbrains.exposed.v1.dao.UuidEntityClass
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
-object AuthorTable : UUIDTable("authors") {
+object AuthorTable : UuidTable("authors") {
     val description = text("description")
 }
 
-object BookTable : UUIDTable("books") {
+object BookTable : UuidTable("books") {
     val description = text("description")
 }
 
-class Book(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<Book>(AuthorTable)
+@OptIn(ExperimentalUuidApi::class)
+class Book(id: EntityID<Uuid>) : UuidEntity(id) {
+    companion object : UuidEntityClass<Book>(AuthorTable)
     var description by AuthorTable.description
 }
