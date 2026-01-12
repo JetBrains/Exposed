@@ -1,24 +1,29 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.types
 
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.singleOrNull
 import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import kotlin.test.assertNotNull
+import kotlin.uuid.Uuid
 
-class UUIDColumnTypeTests : R2dbcDatabaseTestsBase() {
+class UuidColumnTypeTests : R2dbcDatabaseTestsBase() {
     @Test
-    fun insertReadUUID() {
+    fun insertReadUuid() {
         val tester = object : Table("test_uuid") {
             val id = uuid("id")
         }
         withTables(tester, configure = { sqlLogger = StdOutSqlLogger }) {
-            val uuid = UUID.fromString("c128770b-e802-40ba-a85a-58592c80ba58")
+            val uuid = Uuid.parseHexDash("c128770b-e802-40ba-a85a-58592c80ba58")
             tester.insert {
                 it[id] = uuid
             }
@@ -28,7 +33,24 @@ class UUIDColumnTypeTests : R2dbcDatabaseTestsBase() {
     }
 
     @Test
-    fun mariadbOwnUUIDType() {
+    fun testUuidColumnType() {
+        val node = object : IntIdTable("node") {
+            val uuid = uuid("uuid")
+        }
+
+        withTables(node) {
+            val key: Uuid = Uuid.random()
+            val id = node.insertAndGetId { it[uuid] = key }
+            assertNotNull(id)
+            val uidById = node.selectAll().where { node.id eq id }.singleOrNull()?.get(node.uuid)
+            assertEquals(key, uidById)
+            val uidByKey = node.selectAll().where { node.uuid eq key }.singleOrNull()?.get(node.uuid)
+            assertEquals(key, uidByKey)
+        }
+    }
+
+    @Test
+    fun mariadbOwnUuidType() {
         val tester = object : Table("test_uuid") {
             val id = uuid("id")
         }
@@ -38,7 +60,7 @@ class UUIDColumnTypeTests : R2dbcDatabaseTestsBase() {
                 // Even if we generate on DDL type 'BINARY(16)' we could support native UUID for IO operations.
                 exec("CREATE TABLE test_uuid (id UUID NOT NULL)")
 
-                val uuid = UUID.fromString("c128770b-e802-40ba-a85a-58592c80ba58")
+                val uuid = Uuid.parseHexDash("c128770b-e802-40ba-a85a-58592c80ba58")
                 tester.insert {
                     it[id] = uuid
                 }

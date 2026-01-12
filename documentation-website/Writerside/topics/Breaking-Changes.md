@@ -32,6 +32,12 @@
   or `registerManager()`, ensure the types match the new signatures. Replace any calls to instance method `transactionManager.currentOrNull()`
   with either the static `TransactionManager.currentOrNull()` or the extension function on the typed manager. These changes
   do not affect the companion object methods like `current()`, `currentOrNull()`, or `closeAndUnregister()`.
+* Support for `kotlin.uuid.Uuid` has been added, resulting in a name clash between the new and existing column type classes in the packages.
+  The original classes, which accepted `java.util.UUID` values, have been renamed to distinguish them accordingly:
+  `UUIDColumnType` is now `JavaUUIDColumnType`, `UUIDTable` is now `JavaUUIDTable`, `UUIDEntity` is now `JavaUUIDEntity`,
+  and `UUIDEntityClass` is now `JavaUUIDEntityClass`. `Table.uuid()` now only accepts `kotlin.uuid.Uuid` values, so `Table.javaUUID()`
+  should be used instead to continue passing `java.util.UUID` values. See the
+  [migration guide](https://www.jetbrains.com/help/exposed/migration-guide-1-0-0.html#uuid-column-type-refactor) for full details.
 
 ## 1.0.0-rc-4
 

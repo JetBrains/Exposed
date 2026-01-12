@@ -5,14 +5,14 @@ import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.exceptions.throwUnsupportedException
 import java.sql.Types
-import java.util.*
+import java.util.UUID as JavaUUID
 
 internal object H2DataTypeProvider : DataTypeProvider() {
     override fun binaryType(): String = "VARBINARY"
 
     override fun uuidType(): String = "UUID"
 
-    override fun uuidToDB(value: UUID): Any = value
+    override fun uuidToDB(value: JavaUUID): Any = value
 
     override fun dateTimeType(): String {
         @Suppress("MagicNumber")

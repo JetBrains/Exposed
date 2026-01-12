@@ -4,7 +4,7 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.Function
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import java.nio.ByteBuffer
-import java.util.*
+import java.util.UUID as JavaUUID
 
 /**
  * Provides definitions for all the supported SQL data types.
@@ -95,12 +95,12 @@ abstract class DataTypeProvider {
     /** Binary type for storing BLOBs. */
     open fun blobType(): String = "BLOB"
 
-    /** Binary type for storing [UUID]. */
+    /** Binary type for storing either [kotlin.uuid.Uuid] or [java.util.UUID]. */
     open fun uuidType(): String = "BINARY(16)"
 
-    /** Returns a database-compatible object from the specified UUID [value]. */
+    /** Returns a database-compatible object from the specified java.util.UUID [value]. */
     @Suppress("MagicNumber")
-    open fun uuidToDB(value: UUID): Any =
+    open fun uuidToDB(value: JavaUUID): Any =
         ByteBuffer.allocate(16).putLong(value.mostSignificantBits).putLong(value.leastSignificantBits).array()
 
     // Date/Time types

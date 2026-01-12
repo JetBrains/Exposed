@@ -5,7 +5,7 @@ import org.jetbrains.exposed.v1.core.ExpressionWithColumnType
 import org.jetbrains.exposed.v1.core.IColumnType
 import org.jetbrains.exposed.v1.core.QueryBuilder
 import org.jetbrains.exposed.v1.core.ResultRow
-import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.javatime.JavaLocalDateTimeColumnType
 import org.jetbrains.exposed.v1.javatime.datetime
@@ -26,7 +26,7 @@ class SQLServerDefaultsTest : R2dbcDatabaseTestsBase() {
             override val columnType: IColumnType<LocalDateTime> = JavaLocalDateTimeColumnType()
         }
 
-        val temporalTable = object : UUIDTable("TemporalTable") {
+        val temporalTable = object : UuidTable("TemporalTable") {
             val name = text("name")
             val sysStart = datetime("sysStart").defaultExpression(databaseGeneratedTimestamp())
             val sysEnd = datetime("sysEnd").defaultExpression(databaseGeneratedTimestamp())
