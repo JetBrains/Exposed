@@ -1,10 +1,10 @@
 package org.jetbrains.exposed.v1.spring.transaction
 
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.dao.UUIDEntity
-import org.jetbrains.exposed.v1.dao.UUIDEntityClass
+import org.jetbrains.exposed.v1.dao.UuidEntity
+import org.jetbrains.exposed.v1.dao.UuidEntityClass
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -12,27 +12,31 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.annotation.Commit
 import org.springframework.transaction.annotation.Transactional
-import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
-object CustomerTable : UUIDTable(name = "customer") {
+object CustomerTable : UuidTable(name = "customer") {
     val name = varchar(name = "name", length = 255).uniqueIndex()
 }
 
-class CustomerDAO(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<CustomerDAO>(CustomerTable)
+@OptIn(ExperimentalUuidApi::class)
+class CustomerDAO(id: EntityID<Uuid>) : UuidEntity(id) {
+    companion object : UuidEntityClass<CustomerDAO>(CustomerTable)
 
     var name by CustomerTable.name
 }
 
-object OrderTable : UUIDTable(name = "orders") {
+object OrderTable : UuidTable(name = "orders") {
+    @OptIn(ExperimentalUuidApi::class)
     val customer = reference(name = "customer_id", foreign = CustomerTable)
     val product = varchar(name = "product", length = 255)
 }
 
-class OrderDAO(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<OrderDAO>(OrderTable)
+@OptIn(ExperimentalUuidApi::class)
+class OrderDAO(id: EntityID<Uuid>) : UuidEntity(id) {
+    companion object : UuidEntityClass<OrderDAO>(OrderTable)
 
     var customer by CustomerDAO.referencedOn(OrderTable.customer)
     var product by OrderTable.product

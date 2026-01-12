@@ -7,11 +7,11 @@ import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.dao.id.UIntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.ULongIdTable
-import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
-import org.jetbrains.exposed.v1.dao.UUIDEntity
-import org.jetbrains.exposed.v1.dao.UUIDEntityClass
+import org.jetbrains.exposed.v1.dao.UuidEntity
+import org.jetbrains.exposed.v1.dao.UuidEntityClass
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
@@ -25,10 +25,10 @@ import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.uuid.Uuid
 
 class SequencesTests : DatabaseTestsBase() {
     @Test
@@ -412,13 +412,13 @@ class SequencesTests : DatabaseTestsBase() {
         }
     }
 
-    object TesterTable : UUIDTable("Tester") {
+    object TesterTable : UuidTable("Tester") {
         val index = integer("index").autoIncrement()
         val name = text("name")
     }
 
-    class TesterEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-        companion object : UUIDEntityClass<TesterEntity>(TesterTable)
+    class TesterEntity(id: EntityID<Uuid>) : UuidEntity(id) {
+        companion object : UuidEntityClass<TesterEntity>(TesterTable)
 
         var index by TesterTable.index
         var name by TesterTable.name

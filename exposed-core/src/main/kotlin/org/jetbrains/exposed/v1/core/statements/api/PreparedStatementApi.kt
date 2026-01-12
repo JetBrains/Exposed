@@ -90,7 +90,7 @@ interface PreparedStatementApi {
             dialect.dataTypeProvider.doubleType() -> ArrayColumnType<Double, List<Double>>(DoubleColumnType())
             dialect.dataTypeProvider.binaryType() -> ArrayColumnType<ByteArray, List<ByteArray>>(BasicBinaryColumnType())
             dialect.dataTypeProvider.booleanType() -> ArrayColumnType<Boolean, List<Boolean>>(BooleanColumnType())
-            dialect.dataTypeProvider.uuidType() -> ArrayColumnType<UUID, List<UUID>>(UUIDColumnType())
+            dialect.dataTypeProvider.uuidType() -> ArrayColumnType<UUID, List<UUID>>(JavaUUIDColumnType())
             else -> ArrayColumnType<String, List<String>>(VarCharColumnType())
         }
     }

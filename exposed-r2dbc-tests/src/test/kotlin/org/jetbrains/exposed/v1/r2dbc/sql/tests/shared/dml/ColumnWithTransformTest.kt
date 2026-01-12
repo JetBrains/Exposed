@@ -23,10 +23,10 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.update
 import org.junit.jupiter.api.Test
-import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.uuid.Uuid
 
 class ColumnWithTransformTest : R2dbcDatabaseTestsBase() {
 
@@ -198,7 +198,7 @@ class ColumnWithTransformTest : R2dbcDatabaseTestsBase() {
             .default(TransformDataHolder(2))
     }
 
-    private data class CustomId(val id: UUID)
+    private data class CustomId(val id: Uuid)
 
     @Test
     fun testTransformIdColumn() {
@@ -216,7 +216,7 @@ class ColumnWithTransformTest : R2dbcDatabaseTestsBase() {
 
         withTables(tester, referenceTester) {
             tester.insert {
-                it[id] = CustomId(UUID.fromString("00000000-0000-0000-0000-000000000000"))
+                it[id] = CustomId(Uuid.parseHexDash("00000000-0000-0000-0000-000000000000"))
             }
             val transformedId = tester.selectAll().single()[tester.id]
 

@@ -21,10 +21,10 @@ import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.uuid.Uuid
 
 class ColumnWithTransformTest : DatabaseTestsBase() {
 
@@ -237,7 +237,7 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
         }
     }
 
-    private data class CustomId(val id: UUID)
+    private data class CustomId(val id: Uuid)
 
     @Test
     fun testTransformIdColumn() {
@@ -255,7 +255,7 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
 
         withTables(tester, referenceTester) {
             tester.insert {
-                it[id] = CustomId(UUID.fromString("00000000-0000-0000-0000-000000000000"))
+                it[id] = CustomId(Uuid.parseHexDash("00000000-0000-0000-0000-000000000000"))
             }
             val transformedId = tester.selectAll().single()[tester.id]
 

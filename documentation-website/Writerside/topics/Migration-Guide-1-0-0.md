@@ -1176,6 +1176,86 @@ Its property is now of type `ResultApi`.
 
 ## Column types
 
+### UUID column type classes refactored {id = uuid-column-type-refactor}
+
+Version 1.0.0 comes with support for storing `kotlin.uuid.Uuid` values in binary columns via the new `UuidColumnType` class.
+Built-in support for DAO API elements are also available by using `UuidTable` with `UuidEntity` and `UuidEntityClass`. The
+existing `Table.uuid()` method will now only accept values of the type `kotlin.uuid.Uuid`.
+
+In order to avoid name clashes and unresolved errors, the original classes for storing `java.util.UUID` values have all been
+renamed to include the prefix "Java". To continue passing `java.util.UUID` values, your Exposed objects should be renamed
+and your registered columns should be switched to `javaUUID()`:
+
+| 0.61.0                                      | 1.0.0                                                |
+|---------------------------------------------|------------------------------------------------------|
+| `org.jetbrains.exposed.sql.UUIDColumnType`  | `org.jetbrains.exposed.v1.core.JavaUUIDColumnType`   |
+| `org.jetbrains.exposed.dao.id.UUIDTable`    | `org.jetbrains.exposed.v1.core.dao.id.JavaUUIDTable` |
+| `org.jetbrains.exposed.dao.UUIDEntity`      | `org.jetbrains.exposed.v1.dao.JavaUUIDEntity`        |
+| `org.jetbrains.exposed.dao.UUIDEntityClass` | `org.jetbrains.exposed.v1.dao.JavaUUIDEntityClass`   |
+
+While `UuidColumnType` and `JavaUUIDColumnType` accept different UUID types on the client-side, they both map to the same
+data type on the database-side. This means that keeping the use of `Table.uuid()` (or switching to the new `UuidTable`)
+will not trigger the generation of any migration DDL statements.
+
+Assuming the following table and entity objects with version 0.61.0:
+
+```kotlin
+import org.jetbrains.exposed.dao.id.*
+import org.jetbrains.exposed.dao.*
+import java.util.UUID
+
+object TestTable : UUIDTable("tester") {
+    val secondaryId = uuid("secondary_id").uniqueIndex()
+}
+
+class TestEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<TestEntity>(TestTable)
+
+    var secondaryId by TestTable.secondaryId
+}
+```
+
+The following changes should be made depending on which client-side type is required:
+
+<compare first-title="kotlin.uuid.Uuid" second-title="java.util.UUID">
+
+```kotlin
+import org.jetbrains.exposed.v1.core.dao.id.*
+import org.jetbrains.exposed.v1.dao.*
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
+
+object TestTable : UuidTable("tester") {
+    @OptIn(ExperimentalUuidApi::class)
+    val secondaryId = uuid("secondary_id").uniqueIndex()
+}
+
+@OptIn(ExperimentalUuidApi::class)
+class TestEntity(id: EntityID<Uuid>) : UuidEntity(id) {
+    companion object : UuidEntityClass<TestEntity>(TestTable)
+
+    var secondaryId by TestTable.secondaryId
+}
+```
+
+```kotlin
+import org.jetbrains.exposed.v1.core.dao.id.*
+import org.jetbrains.exposed.v1.dao.*
+import java.util.UUID
+
+object TestTable : JavaUUIDTable("tester") {
+    val secondaryId = javaUUID("secondary_id").uniqueIndex()
+}
+
+class TestEntity(id: EntityID<UUID>) : JavaUUIDEntity(id) {
+    companion object : JavaUUIDEntityClass<TestEntity>(TestTable)
+
+    var secondaryId by TestTable.secondaryId
+}
+```
+
+</compare>
+
 ### H2 DATETIME data type
 
 Starting from [H2 version 2.4.240](https://github.com/h2database/h2database/releases/tag/version-2.4.240), `DATETIME(9)` data type is
