@@ -15,8 +15,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
+import java.util.UUID as JavaUUID
 
 class MixedExposedJdbcTransactionTest : SpringTransactionTestBase() {
 
@@ -142,15 +141,14 @@ open class MixedTransactionService {
         return block()
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     private fun saveTwoThings(fail: Boolean) {
         CustomerTable.insert {
-            it[id] = Uuid.random()
+            it[id] = JavaUUID.randomUUID()
             it[name] = "Test${nextNameIndex++}"
         }
         client
             .sql("INSERT INTO customer VALUES (:id, :name)")
-            .param("id", Uuid.random())
+            .param("id", JavaUUID.randomUUID())
             .param("name", "Test${nextNameIndex++}")
             .update()
 
