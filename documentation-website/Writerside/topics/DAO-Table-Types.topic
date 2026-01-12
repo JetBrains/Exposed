@@ -45,9 +45,14 @@
                 <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core.dao.id/-u-long-id-table/index.html"><code>ULongIdTable</code></a></title>
                 <code>ULong</code> ID column
             </def>
-            <def id="UUIDTable">
-                <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core.dao.id/-u-u-i-d-table/index.html"><code>UUIDTable</code></a></title>
-                <code>UUID</code> ID column
+            <def id="UuidTable">
+                <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core.dao.id/-uuid-table/index.html"><code>UuidTable</code></a></title>
+                <code>kotlin.uuid.Uuid</code> ID column
+            </def>
+
+            <def id="JavaUUIDTable">
+                <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core.dao.id/-java-u-u-i-d-table/index.html"><code>JavaUUIDTable</code></a></title>
+                <code>java.util.UUID</code> ID column
             </def>
         </deflist>
         <p>The following example represents a table with custom columns <code>sequel_id</code>, <code>name</code>,

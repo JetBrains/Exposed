@@ -5,7 +5,8 @@ import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.JavaUUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
@@ -25,10 +26,11 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.R2dbcTransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.transactionManager
 import org.junit.jupiter.api.Test
-import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertNotEquals
+import kotlin.uuid.Uuid
+import java.util.UUID as JavaUUID
 
 class H2Tests : R2dbcDatabaseTestsBase() {
     @Test
@@ -122,19 +124,24 @@ class H2Tests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testH2UUIDConversionWithBinary16ColumnType() {
-        val testTable = object : UUIDTable("test_table") {
-        }
+        val testTable = object : UuidTable("test_table") {}
+        val testJavaTable = object : JavaUUIDTable("test_java_table") {}
 
         withDb(TestDB.ALL_H2_V2) {
             exec("CREATE TABLE test_table (id BINARY(16) NOT NULL, CONSTRAINT PK_TEST_TABLE PRIMARY KEY (id))")
+            exec("CREATE TABLE test_java_table (id BINARY(16) NOT NULL, CONSTRAINT PK_TEST_TABLE PRIMARY KEY (id))")
 
-            val uuid = UUID.randomUUID()
+            val uuid = Uuid.random()
+            val javaUUID = JavaUUID.randomUUID()
 
             testTable.insert { it[testTable.id] = uuid }
+            testJavaTable.insert { it[testJavaTable.id] = javaUUID }
 
             val actualId = testTable.select(testTable.id).single()[testTable.id].value
-
             assertEquals(uuid, actualId)
+
+            val actualJavaId = testJavaTable.select(testJavaTable.id).single()[testJavaTable.id].value
+            assertEquals(javaUUID, actualJavaId)
         }
     }
 

@@ -25,10 +25,10 @@ import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.junit.jupiter.api.Test
-import java.util.*
 import kotlin.test.assertFails
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.uuid.Uuid
 
 class CreateTableTests : DatabaseTestsBase() {
     // https://github.com/JetBrains/Exposed/issues/709
@@ -441,7 +441,7 @@ class CreateTableTests : DatabaseTestsBase() {
     fun createTableWithExplicitForeignKeyName2() {
         val fkName = "MyForeignKey2"
         val parent = object : LongIdTable("parent2") {
-            val uniqueId = uuid("uniqueId").clientDefault { UUID.randomUUID() }.uniqueIndex()
+            val uniqueId = uuid("uniqueId").clientDefault { Uuid.random() }.uniqueIndex()
         }
         val child = object : LongIdTable("child2") {
             val parentId = reference(
@@ -512,7 +512,7 @@ class CreateTableTests : DatabaseTestsBase() {
         val fkName = "MyForeignKey4"
         val parent = object : LongIdTable() {
             override val tableName get() = "parent4"
-            val uniqueId = uuid("uniqueId").clientDefault { UUID.randomUUID() }.uniqueIndex()
+            val uniqueId = uuid("uniqueId").clientDefault { Uuid.random() }.uniqueIndex()
         }
         val child = object : LongIdTable("child4") {
             val parentId = optReference(

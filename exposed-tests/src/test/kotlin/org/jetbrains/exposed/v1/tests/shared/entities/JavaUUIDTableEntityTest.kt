@@ -2,9 +2,9 @@ package org.jetbrains.exposed.v1.tests.shared.entities
 
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.core.dao.id.UuidTable
-import org.jetbrains.exposed.v1.dao.UuidEntity
-import org.jetbrains.exposed.v1.dao.UuidEntityClass
+import org.jetbrains.exposed.v1.core.dao.id.JavaUUIDTable
+import org.jetbrains.exposed.v1.dao.JavaUUIDEntity
+import org.jetbrains.exposed.v1.dao.JavaUUIDEntityClass
 import org.jetbrains.exposed.v1.dao.with
 import org.jetbrains.exposed.v1.jdbc.exists
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
@@ -13,92 +13,92 @@ import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import kotlin.uuid.Uuid
+import java.util.UUID as JavaUUID
 
 @Suppress("MemberNameEqualsClassName")
-object UuidTables {
-    object Cities : UuidTable() {
+object JavaUUIDTables {
+    object Cities : JavaUUIDTable() {
         val name = varchar("name", 50)
     }
 
-    class City(id: EntityID<Uuid>) : UuidEntity(id) {
-        companion object : UuidEntityClass<City>(Cities)
+    class City(id: EntityID<JavaUUID>) : JavaUUIDEntity(id) {
+        companion object : JavaUUIDEntityClass<City>(Cities, null, null)
 
         var name by Cities.name
         val towns by Town referrersOn Towns.cityId
     }
 
-    object People : UuidTable() {
+    object People : JavaUUIDTable() {
         val name = varchar("name", 80)
         val cityId = reference("city_id", Cities)
     }
 
-    class Person(id: EntityID<Uuid>) : UuidEntity(id) {
-        companion object : UuidEntityClass<Person>(People)
+    class Person(id: EntityID<JavaUUID>) : JavaUUIDEntity(id) {
+        companion object : JavaUUIDEntityClass<Person>(People)
 
         var name by People.name
         var city by City referencedOn People.cityId
     }
 
-    object Addresses : UuidTable() {
+    object Addresses : JavaUUIDTable() {
         val person = reference("person_id", People)
         val city = reference("city_id", Cities)
         val address = varchar("address", 255)
     }
 
-    class Address(id: EntityID<Uuid>) : UuidEntity(id) {
-        companion object : UuidEntityClass<Address>(Addresses)
+    class Address(id: EntityID<JavaUUID>) : JavaUUIDEntity(id) {
+        companion object : JavaUUIDEntityClass<Address>(Addresses)
 
         var person by Person.referencedOn(Addresses.person)
         var city by City.referencedOn(Addresses.city)
         var address by Addresses.address
     }
 
-    object Towns : UuidTable("towns") {
-        val cityId: Column<Uuid> = uuid("city_id").references(Cities.id)
+    object Towns : JavaUUIDTable("towns") {
+        val cityId: Column<JavaUUID> = javaUUID("city_id").references(Cities.id)
     }
 
-    class Town(id: EntityID<Uuid>) : UuidEntity(id) {
-        companion object : UuidEntityClass<Town>(Towns)
+    class Town(id: EntityID<JavaUUID>) : JavaUUIDEntity(id) {
+        companion object : JavaUUIDEntityClass<Town>(Towns)
 
         var city by City referencedOn Towns.cityId
     }
 }
 
 @Tag(MISSING_R2DBC_TEST)
-class UuidTableEntityTest : DatabaseTestsBase() {
+class JavaUUIDTableEntityTest : DatabaseTestsBase() {
     @Test
     fun `create tables`() {
-        withTables(UuidTables.Cities, UuidTables.People) {
-            assertEquals(true, UuidTables.Cities.exists())
-            assertEquals(true, UuidTables.People.exists())
+        withTables(JavaUUIDTables.Cities, JavaUUIDTables.People) {
+            assertEquals(true, JavaUUIDTables.Cities.exists())
+            assertEquals(true, JavaUUIDTables.People.exists())
         }
     }
 
     @Test
     fun `create records`() {
-        withTables(UuidTables.Cities, UuidTables.People) {
-            val mumbai = UuidTables.City.new { name = "Mumbai" }
-            val pune = UuidTables.City.new { name = "Pune" }
-            UuidTables.Person.new(Uuid.random()) {
+        withTables(JavaUUIDTables.Cities, JavaUUIDTables.People) {
+            val mumbai = JavaUUIDTables.City.new { name = "Mumbai" }
+            val pune = JavaUUIDTables.City.new { name = "Pune" }
+            JavaUUIDTables.Person.new(JavaUUID.randomUUID()) {
                 name = "David D'souza"
                 city = mumbai
             }
-            UuidTables.Person.new(Uuid.random()) {
+            JavaUUIDTables.Person.new(JavaUUID.randomUUID()) {
                 name = "Tushar Mumbaikar"
                 city = mumbai
             }
-            UuidTables.Person.new(Uuid.random()) {
+            JavaUUIDTables.Person.new(JavaUUID.randomUUID()) {
                 name = "Tanu Arora"
                 city = pune
             }
 
-            val allCities = UuidTables.City.all().map { it.name }
+            val allCities = JavaUUIDTables.City.all().map { it.name }
             assertEquals(true, allCities.contains<String>("Mumbai"))
             assertEquals(true, allCities.contains<String>("Pune"))
             assertEquals(false, allCities.contains<String>("Chennai"))
 
-            val allPeople = UuidTables.Person.all().map { Pair(it.name, it.city.name) }
+            val allPeople = JavaUUIDTables.Person.all().map { Pair(it.name, it.city.name) }
             assertEquals(true, allPeople.contains(Pair("David D'souza", "Mumbai")))
             assertEquals(false, allPeople.contains(Pair("David D'souza", "Pune")))
         }
@@ -106,18 +106,18 @@ class UuidTableEntityTest : DatabaseTestsBase() {
 
     @Test
     fun `update and delete records`() {
-        withTables(UuidTables.Cities, UuidTables.People) {
-            val mumbai = UuidTables.City.new(Uuid.random()) { name = "Mumbai" }
-            val pune = UuidTables.City.new(Uuid.random()) { name = "Pune" }
-            UuidTables.Person.new(Uuid.random()) {
+        withTables(JavaUUIDTables.Cities, JavaUUIDTables.People) {
+            val mumbai = JavaUUIDTables.City.new(JavaUUID.randomUUID()) { name = "Mumbai" }
+            val pune = JavaUUIDTables.City.new(JavaUUID.randomUUID()) { name = "Pune" }
+            JavaUUIDTables.Person.new(JavaUUID.randomUUID()) {
                 name = "David D'souza"
                 city = mumbai
             }
-            UuidTables.Person.new(Uuid.random()) {
+            JavaUUIDTables.Person.new(JavaUUID.randomUUID()) {
                 name = "Tushar Mumbaikar"
                 city = mumbai
             }
-            val tanu = UuidTables.Person.new(Uuid.random()) {
+            val tanu = JavaUUIDTables.Person.new(JavaUUID.randomUUID()) {
                 name = "Tanu Arora"
                 city = pune
             }
@@ -125,11 +125,11 @@ class UuidTableEntityTest : DatabaseTestsBase() {
             tanu.delete()
             pune.delete()
 
-            val allCities = UuidTables.City.all().map { it.name }
+            val allCities = JavaUUIDTables.City.all().map { it.name }
             assertEquals(true, allCities.contains<String>("Mumbai"))
             assertEquals(false, allCities.contains<String>("Pune"))
 
-            val allPeople = UuidTables.Person.all().map { Pair(it.name, it.city.name) }
+            val allPeople = JavaUUIDTables.Person.all().map { Pair(it.name, it.city.name) }
             assertEquals(true, allPeople.contains(Pair("David D'souza", "Mumbai")))
             assertEquals(false, allPeople.contains(Pair("Tanu Arora", "Pune")))
         }
@@ -137,22 +137,22 @@ class UuidTableEntityTest : DatabaseTestsBase() {
 
     @Test
     fun `insert with inner table`() {
-        withTables(UuidTables.Addresses, UuidTables.Cities, UuidTables.People) {
-            val city1 = UuidTables.City.new {
+        withTables(JavaUUIDTables.Addresses, JavaUUIDTables.Cities, JavaUUIDTables.People) {
+            val city1 = JavaUUIDTables.City.new {
                 name = "city1"
             }
-            val person1 = UuidTables.Person.new {
+            val person1 = JavaUUIDTables.Person.new {
                 name = "person1"
                 city = city1
             }
 
-            val address1 = UuidTables.Address.new {
+            val address1 = JavaUUIDTables.Address.new {
                 person = person1
                 city = city1
                 address = "address1"
             }
 
-            val address2 = UuidTables.Address.new {
+            val address2 = JavaUUIDTables.Address.new {
                 person = person1
                 city = city1
                 address = "address2"
@@ -167,30 +167,30 @@ class UuidTableEntityTest : DatabaseTestsBase() {
     }
 
     @Test
-    fun testForeignKeyBetweenUuidAndEntityIDColumns() {
-        withTables(UuidTables.Cities, UuidTables.Towns) {
-            val cId = UuidTables.Cities.insertAndGetId {
+    fun testForeignKeyBetweenUUIDAndEntityIDColumns() {
+        withTables(JavaUUIDTables.Cities, JavaUUIDTables.Towns) {
+            val cId = JavaUUIDTables.Cities.insertAndGetId {
                 it[name] = "City A"
             }
-            val tId = UuidTables.Towns.insertAndGetId {
+            val tId = JavaUUIDTables.Towns.insertAndGetId {
                 it[cityId] = cId.value
             }
 
             // lazy loaded referencedOn
-            val town1 = UuidTables.Town.all().single()
+            val town1 = JavaUUIDTables.Town.all().single()
             assertEquals(cId, town1.city.id)
 
             // eager loaded referencedOn
-            val town1WithCity = UuidTables.Town.all().with(UuidTables.Town::city).single()
+            val town1WithCity = JavaUUIDTables.Town.all().with(JavaUUIDTables.Town::city).single()
             assertEquals(cId, town1WithCity.city.id)
 
             // lazy loaded referrersOn
-            val city1 = UuidTables.City.all().single()
+            val city1 = JavaUUIDTables.City.all().single()
             val towns = city1.towns
             assertEquals(cId, towns.first().city.id)
 
             // eager loaded referrersOn
-            val city1WithTowns = UuidTables.City.all().with(UuidTables.City::towns).single()
+            val city1WithTowns = JavaUUIDTables.City.all().with(JavaUUIDTables.City::towns).single()
             assertEquals(tId, city1WithTowns.towns.first().id)
         }
     }

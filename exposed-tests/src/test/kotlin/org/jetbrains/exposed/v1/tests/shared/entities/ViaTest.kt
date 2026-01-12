@@ -6,7 +6,7 @@ import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.dao.*
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.SizedIterable
@@ -21,13 +21,14 @@ import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.sql.Connection
-import java.util.*
+import java.util.Objects
 import kotlin.reflect.jvm.isAccessible
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.uuid.Uuid
 
 object ViaTestData {
-    object NumbersTable : UUIDTable() {
+    object NumbersTable : UuidTable() {
         val number = integer("number")
     }
 
@@ -39,7 +40,7 @@ object ViaTestData {
     }
 
     interface IConnectionTable {
-        val numId: Column<EntityID<UUID>>
+        val numId: Column<EntityID<Uuid>>
         val stringId: Column<EntityID<Long>>
     }
 
@@ -64,12 +65,12 @@ object ViaTestData {
     val allTables: Array<Table> = arrayOf(NumbersTable, StringsTable, ConnectionTable, ConnectionAutoIncTable)
 }
 
-class VNumber(id: EntityID<UUID>) : UUIDEntity(id) {
+class VNumber(id: EntityID<Uuid>) : UuidEntity(id) {
     var number by ViaTestData.NumbersTable.number
     var connectedStrings: SizedIterable<VString> by VString via ViaTestData.ConnectionTable
     var connectedAutoStrings: SizedIterable<VString> by VString via ViaTestData.ConnectionAutoIncTable
 
-    companion object : UUIDEntityClass<VNumber>(ViaTestData.NumbersTable)
+    companion object : UuidEntityClass<VNumber>(ViaTestData.NumbersTable)
 }
 
 class VString(id: EntityID<Long>) : Entity<Long>(id) {

@@ -29,11 +29,12 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
-import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.fail
+import kotlin.uuid.Uuid
+import java.util.UUID as JavaUUID
 
 class InsertTests : R2dbcDatabaseTestsBase() {
 
@@ -199,7 +200,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
     fun testBatchInsertWithSequence() {
         val cities = DMLTestsData.Cities
         withTables(cities) { testDb ->
-            val names = List(25) { UUID.randomUUID().toString() }.asSequence()
+            val names = List(25) { JavaUUID.randomUUID().toString() }.asSequence()
             // Oracle throws: Batch execution returning generated values is not supported
             cities.batchInsert(names, shouldReturnGeneratedValues = testDb != TestDB.ORACLE) { name ->
                 this[cities.name] = name
@@ -467,7 +468,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
     fun testGeneratedKey04() {
         val charIdTable = object : IdTable<String>("charId") {
             override val id = varchar("id", 50)
-                .clientDefault { UUID.randomUUID().toString() }
+                .clientDefault { JavaUUID.randomUUID().toString() }
                 .entityId()
             val foo = integer("foo")
 
@@ -673,16 +674,19 @@ class InsertTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testDatabaseGeneratedUUIDasPrimaryKey() {
-        val randomPGUUID = object : CustomFunction<UUID>("gen_random_uuid", UUIDColumnType()) {}
+        val randomPGUuid = object : CustomFunction<Uuid>("gen_random_uuid", UuidColumnType()) {}
+        val randomPGJavaUUID = object : CustomFunction<JavaUUID>("gen_random_uuid", JavaUUIDColumnType()) {}
 
-        val tester = object : IdTable<UUID>("testTestTest") {
-            override val id = uuid("id").defaultExpression(randomPGUUID).entityId()
+        val tester = object : IdTable<JavaUUID>("testTestTest") {
+            override val id = javaUUID("id").defaultExpression(randomPGJavaUUID).entityId()
+            val secondaryId = uuid("secondary_id").defaultExpression(randomPGUuid)
             override val primaryKey = PrimaryKey(id)
         }
 
         withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, tester) {
             val result = tester.insert {}
             assertNotNull(result[tester.id])
+            assertNotNull(result[tester.secondaryId])
         }
     }
 

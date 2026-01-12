@@ -13,7 +13,7 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption.PostgreSQL
@@ -31,8 +31,8 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.update
 import org.junit.jupiter.api.Test
-import java.util.*
 import kotlin.test.assertEquals
+import kotlin.uuid.Uuid
 
 class PostgresqlTests : R2dbcDatabaseTestsBase() {
     private val table = object : IntIdTable() {
@@ -128,9 +128,9 @@ class PostgresqlTests : R2dbcDatabaseTestsBase() {
         }
     }
 
-    private val uuid = UUID.fromString("b1dd54af-314f-4dac-9b8d-a6eacb825b61")
+    private val uuid = Uuid.parseHexDash("b1dd54af-314f-4dac-9b8d-a6eacb825b61")
 
-    object TestConflictTable : UUIDTable("test_conflict") {
+    object TestConflictTable : UuidTable("test_conflict") {
         val value = integer("value")
     }
 

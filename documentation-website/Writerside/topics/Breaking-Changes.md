@@ -37,6 +37,12 @@
     * `"Wait $retryDelay milliseconds before retrying"` - now logged at DEBUG level during transaction retries
     * SQL exception messages and causes - now logged at DEBUG level when transactions fail
     * `"Transaction rollback failed: ${it.message}. See previous log line for statement"` - now logged at DEBUG level
+* Support for `kotlin.uuid.Uuid` has been added, resulting in a name clash between the new and existing column type classes in the packages.
+  The original classes, which accepted `java.util.UUID` values, have been renamed to distinguish them accordingly:
+  `UUIDColumnType` is now `JavaUUIDColumnType`, `UUIDTable` is now `JavaUUIDTable`, `UUIDEntity` is now `JavaUUIDEntity`,
+  and `UUIDEntityClass` is now `JavaUUIDEntityClass`. `Table.uuid()` now only accepts `kotlin.uuid.Uuid` values, so `Table.javaUUID()`
+  should be used instead to continue passing `java.util.UUID` values. See the
+  [migration guide](https://www.jetbrains.com/help/exposed/migration-guide-1-0-0.html#uuid-column-type-refactor) for full details.
 
 ## 1.0.0-rc-4
 

@@ -2,7 +2,9 @@ package org.jetbrains.exposed.v1.core.dao.id
 
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.wrap
-import java.util.*
+import java.util.ServiceLoader
+import kotlin.uuid.Uuid
+import java.util.UUID as JavaUUID
 
 /** Base class representing a producer of [EntityID] instances.  */
 interface EntityIDFactory {
@@ -111,7 +113,7 @@ open class ULongIdTable(name: String = "", columnName: String = "id", sequenceNa
 }
 
 /**
- * Identity table with a primary key consisting of an auto-generating [UUID] value.
+ * Identity table with a primary key consisting of an auto-generating [kotlin.uuid.Uuid] value.
  *
  * **Note** The specific UUID column type used depends on the database.
  * The stored identity value will be auto-generated on the client side just before insertion of a new row.
@@ -119,9 +121,24 @@ open class ULongIdTable(name: String = "", columnName: String = "id", sequenceNa
  * @param name Table name. By default, this will be resolved from any class name with a "Table" suffix removed (if present).
  * @param columnName Name for the primary key column. By default, "id" is used.
  */
-open class UUIDTable(name: String = "", columnName: String = "id") : IdTable<UUID>(name) {
-    /** The identity column of this [UUIDTable], for storing UUIDs wrapped as [EntityID] instances. */
-    final override val id: Column<EntityID<UUID>> = uuid(columnName).autoGenerate().entityId()
+open class UuidTable(name: String = "", columnName: String = "id") : IdTable<Uuid>(name) {
+    /** The identity column of this [UuidTable], for storing kotlin.uuid.Uuid values wrapped as [EntityID] instances. */
+    final override val id: Column<EntityID<Uuid>> = uuid(columnName).autoGenerate().entityId()
+    final override val primaryKey = PrimaryKey(id)
+}
+
+/**
+ * Identity table with a primary key consisting of an auto-generating [java.util.UUID] value.
+ *
+ * **Note** The specific UUID column type used depends on the database.
+ * The stored identity value will be auto-generated on the client side just before insertion of a new row.
+ *
+ * @param name Table name. By default, this will be resolved from any class name with a "Table" suffix removed (if present).
+ * @param columnName Name for the primary key column. By default, "id" is used.
+ */
+open class JavaUUIDTable(name: String = "", columnName: String = "id") : IdTable<JavaUUID>(name) {
+    /** The identity column of this [JavaUUIDTable], for storing java.util.UUID values wrapped as [EntityID] instances. */
+    final override val id: Column<EntityID<JavaUUID>> = javaUUID(columnName).autoGenerate().entityId()
     final override val primaryKey = PrimaryKey(id)
 }
 
