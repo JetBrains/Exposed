@@ -129,7 +129,7 @@ class H2Tests : R2dbcDatabaseTestsBase() {
 
         withDb(TestDB.ALL_H2_V2) {
             exec("CREATE TABLE test_table (id BINARY(16) NOT NULL, CONSTRAINT PK_TEST_TABLE PRIMARY KEY (id))")
-            exec("CREATE TABLE test_java_table (id BINARY(16) NOT NULL, CONSTRAINT PK_TEST_TABLE PRIMARY KEY (id))")
+            exec("CREATE TABLE test_java_table (id BINARY(16) NOT NULL, CONSTRAINT PK_TEST_JAVA_TABLE PRIMARY KEY (id))")
 
             val uuid = Uuid.random()
             val javaUUID = JavaUUID.randomUUID()
