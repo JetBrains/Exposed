@@ -27,6 +27,7 @@ interface DatabaseConfig {
     val defaultSchema: Schema?
     val logTooMuchResultSetsThreshold: Int
     val preserveKeywordCasing: Boolean
+    val preserveIdentifierCasing: Boolean
 
     /**
      * The [CoroutineDispatcher] to be used when determining the scope of Exposed transaction if
@@ -150,6 +151,32 @@ interface DatabaseConfig {
         var preserveKeywordCasing: Boolean = true
 
         /**
+         * Toggle whether all table and column identifiers should be quoted to preserve their case sensitivity.
+         * When enabled, identifiers will be quoted regardless of their casing, ensuring case-sensitive matching
+         * in databases like PostgreSQL.
+         *
+         * Example usage:
+         * ```kotlin
+         * Database.connect(
+         *     url = "...",
+         *     databaseConfig = DatabaseConfig {
+         *         preserveIdentifierCasing = true
+         *     }
+         * )
+         * ```
+         *
+         * With this flag enabled:
+         * - `Table("MyTable")` will generate `"MyTable"` in SQL (preserving case)
+         * - `integer("UpperCaseColumn")` will generate `"UpperCaseColumn"` in SQL
+         *
+         * Without this flag (default):
+         * - PostgreSQL would fold unquoted identifiers to lowercase: `mytable`, `uppercasecolumn`
+         *
+         * Default is `false`.
+         */
+        var preserveIdentifierCasing: Boolean = false
+
+        /**
          * The [CoroutineDispatcher] to be used when determining the scope of Exposed transaction if
          * It is run in a context with no dispatcher. It could be, for instance, a Ktor route or a standalone Kotlin script.
          *
@@ -206,4 +233,7 @@ open class DatabaseConfigImpl(private val builder: DatabaseConfig.Builder) : Dat
     @OptIn(ExperimentalKeywordApi::class)
     override val preserveKeywordCasing: Boolean
         get() = builder.preserveKeywordCasing
+
+    override val preserveIdentifierCasing: Boolean
+        get() = builder.preserveIdentifierCasing
 }

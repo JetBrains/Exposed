@@ -81,6 +81,10 @@ abstract class IdentifierManagerApi {
         currentTransactionOrNull()?.db?.config?.preserveKeywordCasing == true
     }
 
+    @OptIn(InternalApi::class)
+    private val shouldPreserveIdentifierCasing: Boolean
+        get() = currentTransactionOrNull()?.db?.config?.preserveIdentifierCasing == true
+
     /** Returns whether an SQL token should be wrapped in quotations and caches the returned value. */
     fun needQuotes(identity: String): Boolean {
         return checkedIdentitiesCache.getOrPut(identity.lowercase()) {
@@ -91,19 +95,26 @@ abstract class IdentifierManagerApi {
     private fun String.isAlreadyQuoted() = startsWith(quoteString) && endsWith(quoteString)
 
     /** Returns whether an [identity] should be wrapped in quotations and caches the returned value. */
-    fun shouldQuoteIdentifier(identity: String): Boolean = shouldQuoteIdentifiersCache.getOrPut(identity) {
-        val alreadyQuoted = identity.isAlreadyQuoted()
-        val alreadyLower = identity == identity.lowercase()
-        val alreadyUpper = identity == identity.uppercase()
-        when {
-            alreadyQuoted -> false
-            identity.isAKeyword() && shouldPreserveKeywordCasing -> true
-            supportsMixedIdentifiers -> false
-            alreadyLower && isLowerCaseIdentifiers -> false
-            alreadyUpper && isUpperCaseIdentifiers -> false
-            oracleVersion != OracleVersion.NonOracle -> false
-            supportsMixedQuotedIdentifiers && (!alreadyLower && !alreadyUpper) -> true
-            else -> false
+    fun shouldQuoteIdentifier(identity: String): Boolean {
+        // When preserveIdentifierCasing is enabled, bypass cache to ensure correct behavior
+        if (shouldPreserveIdentifierCasing) {
+            return !identity.isAlreadyQuoted()
+        }
+
+        return shouldQuoteIdentifiersCache.getOrPut(identity) {
+            val alreadyQuoted = identity.isAlreadyQuoted()
+            val alreadyLower = identity == identity.lowercase()
+            val alreadyUpper = identity == identity.uppercase()
+            when {
+                alreadyQuoted -> false
+                identity.isAKeyword() && shouldPreserveKeywordCasing -> true
+                supportsMixedIdentifiers -> false
+                alreadyLower && isLowerCaseIdentifiers -> false
+                alreadyUpper && isUpperCaseIdentifiers -> false
+                oracleVersion != OracleVersion.NonOracle -> false
+                supportsMixedQuotedIdentifiers && (!alreadyLower && !alreadyUpper) -> true
+                else -> false
+            }
         }
     }
 
@@ -111,18 +122,25 @@ abstract class IdentifierManagerApi {
      * Returns an [identity] in a casing appropriate for its identifier status and the database,
      * then caches the returned value.
      */
-    fun inProperCase(identity: String): String = identifiersInProperCaseCache.getOrPut(identity) {
-        val alreadyQuoted = identity.isAlreadyQuoted()
-        when {
-            alreadyQuoted && supportsMixedQuotedIdentifiers -> identity
-            alreadyQuoted && isUpperCaseQuotedIdentifiers -> identity.uppercase()
-            alreadyQuoted && isLowerCaseQuotedIdentifiers -> identity.lowercase()
-            supportsMixedIdentifiers -> identity
-            identity.isAKeyword() && shouldPreserveKeywordCasing -> identity
-            oracleVersion != OracleVersion.NonOracle -> identity.uppercase()
-            isUpperCaseIdentifiers -> identity.uppercase()
-            isLowerCaseIdentifiers -> identity.lowercase()
-            else -> identity
+    fun inProperCase(identity: String): String {
+        // When preserveIdentifierCasing is enabled, bypass cache and preserve original case
+        if (shouldPreserveIdentifierCasing) {
+            return identity
+        }
+
+        return identifiersInProperCaseCache.getOrPut(identity) {
+            val alreadyQuoted = identity.isAlreadyQuoted()
+            when {
+                alreadyQuoted && supportsMixedQuotedIdentifiers -> identity
+                alreadyQuoted && isUpperCaseQuotedIdentifiers -> identity.uppercase()
+                alreadyQuoted && isLowerCaseQuotedIdentifiers -> identity.lowercase()
+                supportsMixedIdentifiers -> identity
+                identity.isAKeyword() && shouldPreserveKeywordCasing -> identity
+                oracleVersion != OracleVersion.NonOracle -> identity.uppercase()
+                isUpperCaseIdentifiers -> identity.uppercase()
+                isLowerCaseIdentifiers -> identity.lowercase()
+                else -> identity
+            }
         }
     }
 
@@ -151,7 +169,13 @@ abstract class IdentifierManagerApi {
     /** Returns an [identity] wrapped in quotations and containing no more than the maximum [identifierLengthLimit]. */
     fun cutIfNecessaryAndQuote(identity: String) = quoteIfNecessary(identity.take(identifierLengthLimit))
 
-    private fun quoteTokenIfNecessary(token: String): String = if (needQuotes(token)) quote(token) else token
+    private fun quoteTokenIfNecessary(token: String): String {
+        if (shouldPreserveIdentifierCasing && !token.isAlreadyQuoted()) {
+            return quote(token)
+        }
+
+        return if (needQuotes(token)) quote(token) else token
+    }
 
     private fun quote(identity: String) = quotedIdentifiersCache.getOrPut(identity) { "$quoteString$identity$quoteString".trim() }
 }

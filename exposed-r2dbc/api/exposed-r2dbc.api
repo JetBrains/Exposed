@@ -296,6 +296,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfigImpl : org/
 	public fun getKeepLoadedReferencesOutOfTransaction ()Z
 	public fun getLogTooMuchResultSetsThreshold ()I
 	public fun getMaxEntitiesToStoreInCachePerEntity ()I
+	public fun getPreserveIdentifierCasing ()Z
 	public fun getPreserveKeywordCasing ()Z
 	public fun getSqlLogger ()Lorg/jetbrains/exposed/v1/core/SqlLogger;
 	public fun getTypeMapping ()Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;
