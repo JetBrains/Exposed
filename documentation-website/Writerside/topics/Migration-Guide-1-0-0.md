@@ -1256,6 +1256,12 @@ class TestEntity(id: EntityID<UUID>) : JavaUUIDEntity(id) {
 
 </compare>
 
+<note>
+At the time of writing, <code>kotlin.uuid.Uuid</code> support in the standard library is experimental. To opt in, either use the
+<code>@OptIn(ExperimentalUuidApi::class)</code> annotation, or add a file-level annotation <code>@file:OptIn(ExperimentalUuidApi::class)</code>,
+or add the compiler option to your <a href="https://kotlinlang.org/docs/opt-in-requirements.html#opt-in-a-module">build file</a>.
+</note>
+
 ### H2 DATETIME data type
 
 Starting from [H2 version 2.4.240](https://github.com/h2database/h2database/releases/tag/version-2.4.240), `DATETIME(9)` data type is
@@ -1271,6 +1277,12 @@ Prior to version 1.0.0, `KotlinInstantColumnType` and `Table.timestamp()` (from 
 were mapped to accept `kotlinx.datetime.Instant` values. These now only accept `kotlin.time.Instant` values.
 This also applies to `CurrentTimestamp`, `CustomTimeStampFunction`, and any provided functions that had the old
 `kotlinx.datetime.Instant` as a type parameter.
+
+<note>
+<code>kotlin.time.Instant</code> support in the standard library is experimental up until Kotlin 2.3. To opt in, either use the
+<code>@OptIn(ExperimentalTime::class)</code> annotation, or add a file-level annotation <code>@file:OptIn(ExperimentalTime::class)</code>,
+or add the compiler option to your <a href="https://kotlinlang.org/docs/opt-in-requirements.html#opt-in-a-module">build file</a>.
+</note>
 
 If `kotlinx.datetime.Instant` is still a requirement, all usages must be replaced with their deprecated variants, prefixed
 with 'X'. For example, `XKotlinInstantColumnType`, `Table.xTimestamp()`, `XCurrentTimestamp`, and `XCustomTimeStampFunction`.
