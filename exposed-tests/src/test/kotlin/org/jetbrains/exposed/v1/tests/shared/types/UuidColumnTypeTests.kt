@@ -65,7 +65,7 @@ class UuidColumnTypeTests : DatabaseTestsBase() {
                 val dbUuid = tester.selectAll().first()[tester.id]
                 assertEquals(uuid, dbUuid)
             } finally {
-                exec("DROP TABLE test_uuid")
+                exec("DROP TABLE IF EXISTS test_uuid")
             }
         }
     }
