@@ -51,14 +51,14 @@ class JavaUUIDColumnTypeTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun mariadbOwnUUIDType() {
-        val tester = object : Table("test_uuid") {
+        val tester = object : Table("test_java_uuid") {
             val id = javaUUID("id")
         }
         withDb(excludeSettings = TestDB.ALL - TestDB.MARIADB, configure = { sqlLogger = StdOutSqlLogger }) {
             try {
                 // From the version 10.7 MariaDB has own 'UUID' column type, that does not work with the current column type.
                 // Even if we generate on DDL type 'BINARY(16)' we could support native UUID for IO operations.
-                exec("CREATE TABLE test_uuid (id UUID NOT NULL)")
+                exec("CREATE TABLE test_java_uuid (id UUID NOT NULL)")
 
                 val uuid = JavaUUID.fromString("c128770b-e802-40ba-a85a-58592c80ba58")
                 tester.insert {
@@ -67,7 +67,7 @@ class JavaUUIDColumnTypeTests : R2dbcDatabaseTestsBase() {
                 val dbUuid = tester.selectAll().first()[tester.id]
                 assertEquals(uuid, dbUuid)
             } finally {
-                exec("DROP TABLE test_uuid")
+                exec("DROP TABLE IF EXISTS test_java_uuid")
             }
         }
     }
