@@ -74,12 +74,12 @@
         </p>
         <code-block lang="sql">
             CREATE SEQUENCE IF NOT EXISTS id_seq
-                START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807;
+            START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807;
             CREATE TABLE IF NOT EXISTS STARWARSFILMS
             (ID INT PRIMARY KEY,
-             SEQUEL_ID INT NOT NULL,
-             "name" VARCHAR(50) NOT NULL,
-                DIRECTOR VARCHAR(50) NOT NULL);
+            SEQUEL_ID INT NOT NULL,
+            "name" VARCHAR(50) NOT NULL,
+            DIRECTOR VARCHAR(50) NOT NULL);
         </code-block>
         <p>
             For more information on defining and configuring tables in Exposed, see <a href="Working-with-Tables.topic"/>.
