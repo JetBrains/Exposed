@@ -6,6 +6,8 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.core.dao.id.UIntIdTable
+import org.jetbrains.exposed.v1.core.dao.id.ULongIdTable
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
@@ -277,22 +279,35 @@ class SequencesTests : R2dbcDatabaseTestsBase() {
     @OptIn(InternalApi::class)
     @Test
     fun testExistingSequenceForIdTableWithSequenceName() {
-        val sequenceName = "test_id_seq"
-        val idTableWithSeqName = object : IntIdTable("tester_seq", sequenceName = sequenceName) { }
+        val intSequenceName = "int_id_seq"
+        val intIdTableWithSeqName = object : IntIdTable("int_tester", sequenceName = intSequenceName) { }
+        val longSequenceName = "long_id_seq"
+        val longIdTableWithSeqName = object : LongIdTable("long_tester", sequenceName = longSequenceName) { }
+        val uintSequenceName = "uint_id_seq"
+        val uintIdTableWithSeqName = object : UIntIdTable("uint_tester", sequenceName = uintSequenceName) { }
+        val ulongSequenceName = "ulong_id_seq"
+        val ulongIdTableWithSeqName = object : ULongIdTable("ulong_tester", sequenceName = ulongSequenceName) { }
+
+        val allIdTables = arrayOf(intIdTableWithSeqName, longIdTableWithSeqName, uintIdTableWithSeqName, ulongIdTableWithSeqName)
+        val allSequences = listOf(intSequenceName, longSequenceName, uintSequenceName, ulongSequenceName)
 
         withDb {
             if (currentDialectTest.supportsCreateSequence) {
                 try {
-                    SchemaUtils.create(idTableWithSeqName)
+                    SchemaUtils.create(tables = allIdTables)
 
-                    assertEquals(sequenceName, idTableWithSeqName.sequences.single().name)
+                    assertEquals(intSequenceName, intIdTableWithSeqName.sequences.single().name)
+                    assertEquals(longSequenceName, longIdTableWithSeqName.sequences.single().name)
+                    assertEquals(uintSequenceName, uintIdTableWithSeqName.sequences.single().name)
+                    assertEquals(ulongSequenceName, ulongIdTableWithSeqName.sequences.single().name)
 
                     val sequences = currentDialectMetadataTest.sequences()
+                    val expectedSequenceNames = allSequences.map { it.inProperCase() }
 
                     assertTrue(sequences.isNotEmpty())
-                    assertTrue(sequences.any { it == sequenceName.inProperCase() })
+                    assertTrue(expectedSequenceNames.all { it in sequences })
                 } finally {
-                    SchemaUtils.drop(idTableWithSeqName)
+                    SchemaUtils.drop(tables = allIdTables)
                 }
             }
         }
