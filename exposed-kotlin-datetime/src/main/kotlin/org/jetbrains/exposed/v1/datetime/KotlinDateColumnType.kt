@@ -165,7 +165,7 @@ fun Table.time(name: String): Column<LocalTime> = registerColumn(name, KotlinLoc
     "Deprecated due to usage of old kotlinx.datetime.Instant. " +
         "The change caused by deprecation of Instant in the kotlinx.datetime " +
         "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
-    replaceWith = ReplaceWith("timestamp")
+    replaceWith = ReplaceWith("timestamp(name)")
 )
 fun Table.xTimestamp(name: String): Column<xInstant> = registerColumn(name, XKotlinInstantColumnType())
 

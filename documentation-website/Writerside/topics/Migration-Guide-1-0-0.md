@@ -11,6 +11,11 @@ to accommodate reactive database access while preserving existing functionality.
 ### Updated imports
 
 All dependencies have been updated to follow the import path pattern of `org.jetbrains.exposed.v1.packageName.*`.
+This introduces two key changes in package naming: unique prefixes for every module and artifact, and an additional `v1` prefix.
+
+The unique prefix on every module makes it easier to differentiate which dependency a particular class, function,
+or other element comes from. This becomes increasingly important as the number of packages grows. The unique `v1` prefix
+for the whole version helps users who have transient dependencies to the `0.x` version of Exposed.
 
 This means that imports from `exposed-core`, for example, which were previously located under `org.jetbrains.exposed.sql.*`,
 are now located under `org.jetbrains.exposed.v1.core.*`. The table below shows example changes:
@@ -191,6 +196,20 @@ the import paths of these Exposed functions, using wildcard imports may lead to 
 if such custom functions are also being used. It is recommended to explicitly import these custom functions in the event
 that renaming is not a feasible option.
 
+## Kotlin version
+
+Version 1.0.0 uses Kotlin 2.2, compared to 0.61.0, which used Kotlin 2.0.
+
+### Datetime minimum requirement
+
+As part of the core refactoring, the 3 available datetime artifacts have been restructured to have their column type classes
+depend on common abstract classes in `exposed-core`. See [datetime class refactorings](#datetime-column-type-refactor)
+for full details if you rely on any of these dependencies.
+
+This new core datetime API relies on [`kotlinx.datetime` features](https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#using-in-your-projects)
+that are only compatible with `kotlin-stdlib` 2.1.20 or higher. Attempting to build with an Exposed datetime artifact using an older
+Kotlin version may lead to `NoClassDefFoundError` and will require bumping the Kotlin version.
+
 ## Migration dependencies
 
 Prior to version 1.0.0, `MigrationUtils` was available with a dependency on the `exposed-migration` artifact.
@@ -290,6 +309,41 @@ fun JdbcTransaction.getVersionString(): String {
         it.getString(alias)
     }
     return result ?: ""
+}
+```
+
+</compare>
+
+### Transaction `id` renamed
+
+The property `Transaction.id` has been renamed to `Transaction.transactionId` to avoid common naming collisions with users' code.
+
+### `addLogger()`
+
+Prior to version 1.0.0, `.addLogger()` was available as an extension function on the original `Transaction` class,
+requiring an import statement for usage.
+
+In version 1.0.0, `addLogger()` remains available, but as a method of the new base `Transaction` class, with final method overrides
+in the respective `JdbcTransaction` and `R2dbcTransaction` classes:
+
+<compare first-title="0.61.0" second-title="1.0.0">
+
+```kotlin
+import org.jetbrains.exposed.sql.StdOutSqlLogger
+import org.jetbrains.exposed.sql.addLogger
+import org.jetbrains.exposed.sql.transactions.transaction
+
+transaction { // this: Transaction
+    addLogger(StdOutSqlLogger)
+}
+```
+
+```kotlin
+import org.jetbrains.exposed.v1.core.StdOutSqlLogger
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+
+transaction { // this: JdbcTransaction
+    addLogger(StdOutSqlLogger)
 }
 ```
 
@@ -446,7 +500,7 @@ val tm: JdbcTransactionManager =
 
 </compare>
 
-The default argument for the connection `manager` parameter is no longer `ThreadLocalTransactionManager`, which has now been deprecated. The newly implemented
+The default argument for the connection `manager` parameter is no longer `ThreadLocalTransactionManager`, which has now been removed. The newly implemented
 [`TransactionManager`](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc.transactions/-transaction-manager/index.html)
 is now passed as the default argument instead.
 
@@ -876,6 +930,12 @@ TableA
 
 </compare>
 
+### `BaseBatchInsertStatement` removed
+
+The abstract class `BaseBatchInsertStatement` has been removed. All its elements have been consolidated into and replaced
+by the single open class `BatchInsertStatement`. Any custom extensions of `BaseBatchInsertStatement` can be safely replaced
+by extending `BatchInsertStatement` instead.
+
 ## Queries
 
 While the `AbstractQuery` class remains in `exposed-core`, its `Query` implementation is now in `exposed-jdbc`, with the
@@ -915,6 +975,46 @@ val queryWithHint = TableA
         content = "+ MAX_EXECUTION_TIME(1000) ",
         position = AbstractQuery.CommentPosition.AFTER_SELECT
     )
+```
+
+</compare>
+
+### `Case` property `value` removed
+
+Prior to version 1.0.0, the `Case` class had a `value` property, against which chained conditions could potentially be compared,
+as long as the expression stored in the property was a boolean type.
+
+This class has now been split into a general `Case` class with no such property,
+and a separate `ValueCase` class that has a `value` property of type `ExpressionWithColumnType`.
+These represent expression builder instances to facilitate the following syntax, respectively:
+`CASE WHEN <condition> THEN <result> END` and `CASE <value0> WHEN <value1> THEN <result> END`.
+
+Any use of the `case(value)` function to start a value-based CASE expression remains unchanged (except for updated import statements),
+as long as the passed argument is of type `ExpressionWithColumnType`.
+Any direct use of the `Case(value)` constructor must be replaced with the `ValueCase(value)` constructor
+or the `case(value)` function:
+
+<compare first-title="0.61.0" second-title="1.0.0">
+
+```kotlin
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
+import org.jetbrains.exposed.sql.kotlin.datetime.CurrentDate
+
+val statusCase = Case(Books.isOverdue)
+    .When(Books.dueDate less CurrentDate, booleanLiteral(true))
+    .Else(booleanLiteral(false))
+    .alias("status_valid")
+```
+
+```kotlin
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.datetime.CurrentDate
+
+val statusCase = ValueCase(Books.isOverdue)
+    .When(Books.dueDate less CurrentDate, booleanLiteral(true))
+    .Else(booleanLiteral(false))
+    .alias("status_valid")
 ```
 
 </compare>
@@ -1074,6 +1174,47 @@ transaction {
 The `Object` type from the `exposed-core` sealed class `StatementResult` no longer has a property of type `java.sql.ResultSet`.
 Its property is now of type `ResultApi`.
 
+## Column types
+
+### H2 DATETIME data type
+
+Starting from [H2 version 2.4.240](https://github.com/h2database/h2database/releases/tag/version-2.4.240), `DATETIME(9)` data type is
+[no longer accepted](https://github.com/h2database/h2database/issues/4285) unless using certain compatibility modes. This was
+the data type that `datetime()` columns were mapped to for the following H2 modes: Regular, MySQL, and MariaDB.
+
+Moving forward, `datetime()` columns for these modes will instead map to `TIMESTAMP(9)` for any `Database` instance using version 2.4.240 or higher.
+Older versions of H2 retain the original data type mapping.
+
+### `exposed-kotlin-datetime` `timestamp()` mapped type
+
+Prior to version 1.0.0, `KotlinInstantColumnType` and `Table.timestamp()` (from `exposed-kotlin-datetime`)
+were mapped to accept `kotlinx.datetime.Instant` values. These now only accept `kotlin.time.Instant` values.
+This also applies to `CurrentTimestamp`, `CustomTimeStampFunction`, and any provided functions that had the old
+`kotlinx.datetime.Instant` as a type parameter.
+
+If `kotlinx.datetime.Instant` is still a requirement, all usages must be replaced with their deprecated variants, prefixed
+with 'X'. For example, `XKotlinInstantColumnType`, `Table.xTimestamp()`, `XCurrentTimestamp`, and `XCustomTimeStampFunction`.
+Function overloads that use `kotlinx.datetime.Instant` as a type parameter are still available, but deprecated.
+
+### Datetime column type classes refactored {id = datetime-column-type-refactor}
+
+The datetime artifacts have been refactored to extend new  abstract column type classes from `exposed-core`. All original column
+type classes in `exposed-java-time` and `exposed-kotlin-datetime` remain unchanged, except that they now extend these base
+core classes.
+
+#### Updated classes in `exposed-jodatime`
+
+In the `exposed-jodatime` artifact, most of the original classes have been split and/or renamed to reflect the new superclasses
+being extended. This primarily affects direct usage of these classes, such as in custom functions.
+The table below shows the class changes:
+
+| 0.61.0                                                               | 1.0.0                                                               |
+|----------------------------------------------------------------------|---------------------------------------------------------------------|
+| `org.jetbrains.exposed.sql.jodatime.DateColumnType(time=false)`      | `org.jetbrains.exposed.v1.jodatime.JodaLocalDateColumnType`         |
+| `org.jetbrains.exposed.sql.jodatime.DateColumnType(time=true)`       | `org.jetbrains.exposed.v1.jodatime.JodaLocalDateTimeColumnType`     |
+| `org.jetbrains.exposed.sql.jodatime.LocalTimeColumnType`             | `org.jetbrains.exposed.v1.jodatime.JodaLocalTimeColumnType`         |
+| `org.jetbrains.exposed.sql.jodatime.DateTimeWithTimeZoneColumnType ` | `org.jetbrains.exposed.v1.jodatime.DateTimeWithTimeZoneColumnType ` |
+
 ## `DatabaseDialect` and `VendorDialect`
 
 Any method from the `exposed-core` interface `DatabaseDialect` that required driver-specific metadata queries has been extracted.
@@ -1135,15 +1276,6 @@ Moving forward, new features will no longer be tested on H2 version 1.x.x, so su
 Depending on the built-in support from these older H2 versions, Exposed API may still mostly be compatible,
 but may now throw syntax or unsupported exceptions when generating certain SQL clauses.
 
-### H2 DATETIME data type
-
-Starting from [H2 version 2.4.240](https://github.com/h2database/h2database/releases/tag/version-2.4.240), `DATETIME(9)` data type is
-[no longer accepted](https://github.com/h2database/h2database/issues/4285) unless using certain compatibility modes. This was
-the data type that `datetime()` columns were mapped to for the following H2 modes: Regular, MySQL, and MariaDB.
-
-Moving forward, `datetime()` columns for these modes will instead map to `TIMESTAMP(9)` for any `Database` instance using version 2.4.240+.
-Older versions of H2 will show no change in the data type mapping.
-
 ### Custom dialects
 
 In the same way as how there are database-specific implementations for further extensibility in `exposed-core`, like `H2Dialect`,
@@ -1154,11 +1286,24 @@ Any custom database dialect implementation can be registered as before via `Data
 an additional call to `Database.registerDialectMetadata()` should be used to ensure that the newly associated metadata implementation
 is also registered.
 
+### `areEquivalentColumnTypes()` deprecated
+
+`DatabaseDialect.areEquivalentColumnTypes()` has been deprecated in favor of a driver-agnostic variant `areEquivalentColumnTypes()`
+found under `org.jetbrains.exposed.v1.core.statements.api.ExposedDatabaseMetadata`.
+Driver-specific variants have been introduced both in `exposed-jdbc` and `exposed-r2dbc` and can be accessed directly via
+calls to `currentDialectMetadata.areEquivalentColumnTypes()`.
+
 ### `resolveRefOptionFromJdbc()` removed
 
 Given the original intention behind this method, `DatabaseDialect.resolveRefOptionFromJdbc()` has been removed and replaced
 by a driver-agnostic variant `resolveReferenceOption()` found under `org.jetbrains.exposed.v1.core.statements.api.ExposedDatabaseMetadata`.
 Driver-specific variants have been introduced both in `exposed-jdbc` and `exposed-r2dbc`.
+
+### Property `supportsSelectForUpdate` deprecated
+
+`DatabaseDialect.supportsSelectForUpdate` has been deprecated in favor of driver-specific `DatabaseApi` properties implemented
+in `exposed-jdbc` and `exposed-r2dbc`. Once a database has been registered for connections, this property can instead
+be accessed directly from it, for example, by using a call to `TransactionManager.current().db.supportsSelectForUpdate`.
 
 ### Property `ENABLE_UPDATE_DELETE_LIMIT` removed
 
