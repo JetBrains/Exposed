@@ -206,7 +206,7 @@ As part of the core refactoring, the 3 available datetime artifacts have been re
 depend on common abstract classes in `exposed-core`. See [datetime class refactorings](#datetime-column-type-refactor)
 for full details if you rely on any of these dependencies.
 
-This new core datetime API relies on `[kotlinx.datetime` features](https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#using-in-your-projects)
+This new core datetime API relies on [`kotlinx.datetime` features](https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#using-in-your-projects)
 that are only compatible with `kotlin-stdlib` 2.1.20 or higher. Attempting to build with an Exposed datetime artifact using an older
 Kotlin version may lead to `NoClassDefFoundError` and will require bumping the Kotlin version.
 
@@ -316,7 +316,7 @@ fun JdbcTransaction.getVersionString(): String {
 
 ### Transaction `id` renamed
 
-The property `Transaction.id` has been renamed to `Transaction.transactionId` to avoid collisions and shadowing with user's code.
+The property `Transaction.id` has been renamed to `Transaction.transactionId` to avoid common naming collisions with users' code.
 
 ### `addLogger()`
 
@@ -1185,18 +1185,15 @@ the data type that `datetime()` columns were mapped to for the following H2 mode
 Moving forward, `datetime()` columns for these modes will instead map to `TIMESTAMP(9)` for any `Database` instance using version 2.4.240 or higher.
 Older versions of H2 retain the original data type mapping.
 
-### `timestamp()` mapped type
+### `exposed-kotlin-datetime` `timestamp()` mapped type
 
-<note>
-This change is only relevant to the <code>exposed-kotlin-datetime</code> artifact.
-</note>
-
-Prior to version 1.0.0, `KotlinInstantColumnType`, and `Table.timestamp(name: String)` were mapped to accept `kotlinx.datetime.Instant`
-values. These now only accept `kotlin.time.Instant` values. This also applies to `CurrentTimestamp`, `CustomTimeStampFunction`,
-and any provided functions that had the old `kotlinx.datetime.Instant` as a type parameter.
+Prior to version 1.0.0, `KotlinInstantColumnType` and `Table.timestamp()` (from `exposed-kotlin-datetime`)
+were mapped to accept `kotlinx.datetime.Instant` values. These now only accept `kotlin.time.Instant` values.
+This also applies to `CurrentTimestamp`, `CustomTimeStampFunction`, and any provided functions that had the old
+`kotlinx.datetime.Instant` as a type parameter.
 
 If `kotlinx.datetime.Instant` is still a requirement, all usages must be replaced with their deprecated variants, prefixed
-with 'X'. For example, `XKotlinInstantColumnType`, `Table.xTimestamp(name: String)`, `XCurrentTimestamp`, and `XCustomTimeStampFunction`.
+with 'X'. For example, `XKotlinInstantColumnType`, `Table.xTimestamp()`, `XCurrentTimestamp`, and `XCustomTimeStampFunction`.
 Function overloads that use `kotlinx.datetime.Instant` as a type parameter are still available, but deprecated.
 
 ### Datetime column type classes refactored {id = datetime-column-type-refactor}
@@ -1205,9 +1202,7 @@ The datetime artifacts have been refactored to extend new  abstract column type 
 type classes in `exposed-java-time` and `exposed-kotlin-datetime` remain unchanged, except that they now extend these base
 core classes.
 
-<note>
-The following change is only relevant to the <code>exposed-jodatime</code> artifact.
-</note>
+#### Updated classes in `exposed-jodatime`
 
 In the `exposed-jodatime` artifact, most of the original classes have been split and/or renamed to reflect the new superclasses
 being extended. This primarily affects direct usage of these classes, such as in custom functions.
