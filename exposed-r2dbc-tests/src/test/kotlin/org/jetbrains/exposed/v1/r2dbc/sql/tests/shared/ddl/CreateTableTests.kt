@@ -30,10 +30,10 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.update
 import org.junit.jupiter.api.Test
-import java.util.UUID
 import kotlin.test.assertFails
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.uuid.Uuid
 
 class CreateTableTests : R2dbcDatabaseTestsBase() {
     // https://github.com/JetBrains/Exposed/issues/709
@@ -445,7 +445,7 @@ class CreateTableTests : R2dbcDatabaseTestsBase() {
     fun createTableWithExplicitForeignKeyName2() {
         val fkName = "MyForeignKey2"
         val parent = object : LongIdTable("parent2") {
-            val uniqueId = uuid("uniqueId").clientDefault { UUID.randomUUID() }.uniqueIndex()
+            val uniqueId = uuid("uniqueId").clientDefault { Uuid.random() }.uniqueIndex()
         }
         val child = object : LongIdTable("child2") {
             val parentId = reference(
@@ -516,7 +516,7 @@ class CreateTableTests : R2dbcDatabaseTestsBase() {
         val fkName = "MyForeignKey4"
         val parent = object : LongIdTable() {
             override val tableName get() = "parent4"
-            val uniqueId = uuid("uniqueId").clientDefault { UUID.randomUUID() }.uniqueIndex()
+            val uniqueId = uuid("uniqueId").clientDefault { Uuid.random() }.uniqueIndex()
         }
         val child = object : LongIdTable("child4") {
             val parentId = optReference(

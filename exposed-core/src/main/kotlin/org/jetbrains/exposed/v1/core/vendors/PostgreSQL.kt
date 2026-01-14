@@ -4,7 +4,7 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.exceptions.throwUnsupportedException
-import java.util.*
+import java.util.UUID as JavaUUID
 
 internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     override fun byteType(): String = "SMALLINT"
@@ -21,7 +21,7 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     }
 
     override fun blobType(): String = "bytea"
-    override fun uuidToDB(value: UUID): Any = value
+    override fun uuidToDB(value: JavaUUID): Any = value
     override fun dateTimeType(): String = "TIMESTAMP"
     override fun jsonBType(): String = "JSONB"
 
