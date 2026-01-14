@@ -607,6 +607,7 @@ public abstract interface class org/jetbrains/exposed/v1/core/DatabaseConfig {
 	public abstract fun getKeepLoadedReferencesOutOfTransaction ()Z
 	public abstract fun getLogTooMuchResultSetsThreshold ()I
 	public abstract fun getMaxEntitiesToStoreInCachePerEntity ()I
+	public abstract fun getPreserveIdentifierCasing ()Z
 	public abstract fun getPreserveKeywordCasing ()Z
 	public abstract fun getSqlLogger ()Lorg/jetbrains/exposed/v1/core/SqlLogger;
 	public abstract fun getUseNestedTransactions ()Z
@@ -627,6 +628,7 @@ public class org/jetbrains/exposed/v1/core/DatabaseConfig$Builder {
 	public final fun getKeepLoadedReferencesOutOfTransaction ()Z
 	public final fun getLogTooMuchResultSetsThreshold ()I
 	public final fun getMaxEntitiesToStoreInCachePerEntity ()I
+	public final fun getPreserveIdentifierCasing ()Z
 	public final fun getPreserveKeywordCasing ()Z
 	public final fun getSqlLogger ()Lorg/jetbrains/exposed/v1/core/SqlLogger;
 	public final fun getUseNestedTransactions ()Z
@@ -643,6 +645,7 @@ public class org/jetbrains/exposed/v1/core/DatabaseConfig$Builder {
 	public final fun setKeepLoadedReferencesOutOfTransaction (Z)V
 	public final fun setLogTooMuchResultSetsThreshold (I)V
 	public final fun setMaxEntitiesToStoreInCachePerEntity (I)V
+	public final fun setPreserveIdentifierCasing (Z)V
 	public final fun setPreserveKeywordCasing (Z)V
 	public final fun setSqlLogger (Lorg/jetbrains/exposed/v1/core/SqlLogger;)V
 	public final fun setUseNestedTransactions (Z)V
@@ -668,6 +671,7 @@ public class org/jetbrains/exposed/v1/core/DatabaseConfigImpl : org/jetbrains/ex
 	public fun getKeepLoadedReferencesOutOfTransaction ()Z
 	public fun getLogTooMuchResultSetsThreshold ()I
 	public fun getMaxEntitiesToStoreInCachePerEntity ()I
+	public fun getPreserveIdentifierCasing ()Z
 	public fun getPreserveKeywordCasing ()Z
 	public fun getSqlLogger ()Lorg/jetbrains/exposed/v1/core/SqlLogger;
 	public fun getUseNestedTransactions ()Z
