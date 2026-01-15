@@ -32,6 +32,11 @@
   or `registerManager()`, ensure the types match the new signatures. Replace any calls to instance method `transactionManager.currentOrNull()`
   with either the static `TransactionManager.currentOrNull()` or the extension function on the typed manager. These changes
   do not affect the companion object methods like `current()`, `currentOrNull()`, or `closeAndUnregister()`.
+* **Transaction Logging Level Changes**: The logging level for transaction retry delays and rollback failures that could be caught on user side has been changed
+  from `WARN` to `DEBUG`. This affects the following log messages in both JDBC and R2DBC transaction handling:
+    * `"Wait $retryDelay milliseconds before retrying"` - now logged at DEBUG level during transaction retries
+    * SQL exception messages and causes - now logged at DEBUG level when transactions fail
+    * `"Transaction rollback failed: ${it.message}. See previous log line for statement"` - now logged at DEBUG level
 
 ## 1.0.0-rc-4
 

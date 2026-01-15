@@ -214,7 +214,7 @@ fun <T> inTopLevelTransaction(
                 transaction.minRetryDelay == transaction.maxRetryDelay -> transaction.minRetryDelay
                 else -> 0
             }
-            exposedLogger.warn("Wait $retryDelay milliseconds before retrying")
+            exposedLogger.debug("Wait $retryDelay milliseconds before retrying")
 
             try {
                 Thread.sleep(retryDelay)
@@ -361,7 +361,7 @@ suspend fun <T> inTopLevelSuspendTransaction(
                 transaction.minRetryDelay == transaction.maxRetryDelay -> transaction.minRetryDelay
                 else -> 0
             }
-            exposedLogger.warn("Wait $retryDelay milliseconds before retrying")
+            exposedLogger.debug("Wait $retryDelay milliseconds before retrying")
 
             try {
                 Thread.sleep(retryDelay)
@@ -400,9 +400,9 @@ internal fun handleSQLException(cause: SQLException, transaction: JdbcTransactio
             logger.log(it, transaction)
         }
     }
-    exposedLogger.warn(message, cause)
+    exposedLogger.debug(message, cause)
     transaction.rollbackLoggingException {
-        exposedLogger.warn("Transaction rollback failed: ${it.message}. See previous log line for statement", it)
+        exposedLogger.debug("Transaction rollback failed: ${it.message}. See previous log line for statement", it)
     }
 }
 
