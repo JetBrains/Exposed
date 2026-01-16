@@ -24,6 +24,7 @@ public class org/jetbrains/exposed/v1/dao/Entity {
 	public final fun getDb ()Lorg/jetbrains/exposed/v1/jdbc/Database;
 	public final fun getId ()Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;
 	public final fun getKlass ()Lorg/jetbrains/exposed/v1/dao/EntityClass;
+	public final fun getLazyFieldValue (Lorg/jetbrains/exposed/v1/core/Column;)Ljava/lang/Object;
 	public final fun getReadValues ()Lorg/jetbrains/exposed/v1/core/ResultRow;
 	public final fun getValue (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/dao/Entity;Lkotlin/reflect/KProperty;)Ljava/lang/Object;
 	public final fun getValue (Lorg/jetbrains/exposed/v1/core/CompositeColumn;Lorg/jetbrains/exposed/v1/dao/Entity;Lkotlin/reflect/KProperty;)Ljava/lang/Object;
@@ -32,6 +33,8 @@ public class org/jetbrains/exposed/v1/dao/Entity {
 	public final fun getValue (Lorg/jetbrains/exposed/v1/dao/Reference;Lorg/jetbrains/exposed/v1/dao/Entity;Lkotlin/reflect/KProperty;)Lorg/jetbrains/exposed/v1/dao/Entity;
 	public final fun getWriteValues ()Ljava/util/LinkedHashMap;
 	public final fun get_readValues ()Lorg/jetbrains/exposed/v1/core/ResultRow;
+	public final fun isLazyFieldCached (Lorg/jetbrains/exposed/v1/core/Column;)Z
+	public final fun lazy (Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/dao/LazyEntityField;
 	public final fun lookup (Lorg/jetbrains/exposed/v1/core/Column;)Ljava/lang/Object;
 	public final fun lookupInReadValues (Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;)Ljava/lang/Object;
 	public fun refresh (Z)V
@@ -42,6 +45,7 @@ public class org/jetbrains/exposed/v1/dao/Entity {
 	public final fun setValue (Lorg/jetbrains/exposed/v1/dao/OptionalReference;Lorg/jetbrains/exposed/v1/dao/Entity;Lkotlin/reflect/KProperty;Lorg/jetbrains/exposed/v1/dao/Entity;)V
 	public final fun setValue (Lorg/jetbrains/exposed/v1/dao/Reference;Lorg/jetbrains/exposed/v1/dao/Entity;Lkotlin/reflect/KProperty;Lorg/jetbrains/exposed/v1/dao/Entity;)V
 	public final fun set_readValues (Lorg/jetbrains/exposed/v1/core/ResultRow;)V
+	public final fun storeLazyFieldValue (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Object;)V
 	public final fun storeWrittenValues ()V
 	public final fun via (Lorg/jetbrains/exposed/v1/dao/EntityClass;Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/dao/InnerTableLink;
 	public final fun via (Lorg/jetbrains/exposed/v1/dao/EntityClass;Lorg/jetbrains/exposed/v1/core/Table;)Lorg/jetbrains/exposed/v1/dao/InnerTableLink;
@@ -260,6 +264,17 @@ public abstract class org/jetbrains/exposed/v1/dao/IntEntityClass : org/jetbrain
 	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Ljava/lang/Class;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
+public final class org/jetbrains/exposed/v1/dao/LazyEntityField {
+	public static final field Companion Lorg/jetbrains/exposed/v1/dao/LazyEntityField$Companion;
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/Column;)V
+	public final fun getColumn ()Lorg/jetbrains/exposed/v1/core/Column;
+	public final fun getValue (Lorg/jetbrains/exposed/v1/dao/Entity;Lkotlin/reflect/KProperty;)Ljava/lang/Object;
+	public final fun setValue (Lorg/jetbrains/exposed/v1/dao/Entity;Lkotlin/reflect/KProperty;Ljava/lang/Object;)V
+}
+
+public final class org/jetbrains/exposed/v1/dao/LazyEntityField$Companion {
+}
+
 public abstract class org/jetbrains/exposed/v1/dao/LongEntity : org/jetbrains/exposed/v1/dao/Entity {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;)V
 }
@@ -364,5 +379,10 @@ public final class org/jetbrains/exposed/v1/dao/exceptions/EntityNotFoundExcepti
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;Lorg/jetbrains/exposed/v1/dao/EntityClass;)V
 	public final fun getEntity ()Lorg/jetbrains/exposed/v1/dao/EntityClass;
 	public final fun getId ()Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;
+}
+
+public final class org/jetbrains/exposed/v1/dao/exceptions/LazyColumnAccessOutsideTransactionException : java/lang/Exception {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/Column;)V
+	public final fun getColumn ()Lorg/jetbrains/exposed/v1/core/Column;
 }
 
