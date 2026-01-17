@@ -87,6 +87,47 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
 
     private val referenceCache by lazy { HashMap<Column<*>, Any?>() }
 
+    /**
+     * Cache for lazy-loaded field values.
+     */
+    private val lazyFieldCache by lazy { HashMap<Column<*>, Any?>() }
+
+    /**
+     * Checks if a lazy field value is cached.
+     *
+     * @param column The column to check
+     * @return `true` if the value is cached, `false` otherwise
+     * @suppress
+     */
+    @InternalApi
+    fun isLazyFieldCached(column: Column<*>): Boolean = column in lazyFieldCache
+
+    /**
+     * Gets a cached lazy field value, or null if not yet loaded.
+     *
+     * @param column The column to get the cached value for
+     * @return The cached value, or null if not cached
+     * @suppress
+     */
+    @InternalApi
+    fun getLazyFieldValue(column: Column<*>): Any? = lazyFieldCache[column]
+
+    /**
+     * Stores a lazy field value in the cache.
+     *
+     * Lazy field values are always cached (regardless of keepLoadedReferencesOutOfTransaction config)
+     * to avoid redundant queries within the same transaction and across transactions.
+     * Use [refresh] to clear the cache and reload fresh values.
+     *
+     * @param column The column to cache the value for
+     * @param value The value to cache
+     * @suppress
+     */
+    @InternalApi
+    fun storeLazyFieldValue(column: Column<*>, value: Any?) {
+        lazyFieldCache[column] = value
+    }
+
     internal fun isNewEntity(): Boolean {
         val cache = TransactionManager.current().entityCache
         return cache.inserts[klass.table]?.contains(this) ?: false
@@ -116,6 +157,7 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
         cache.store(this)
         _readValues = reloaded.readValues
         db = transaction.db
+        lazyFieldCache.clear()
     }
 
     internal fun <T> getReferenceFromCache(ref: Column<*>): T {
@@ -425,9 +467,14 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
 
     /** Transfers initial column-value mappings from [writeValues] to [readValues] and clears the former once complete. */
     fun storeWrittenValues() {
-        // move write values to read values
+        val lazyColumnsForTable = LazyEntityField.lazyColumns[klass.table] ?: emptySet()
         if (_readValues != null) {
             for ((c, v) in writeValues) {
+                // Skip lazy columns from readValues (already cached above)
+                if (c in lazyColumnsForTable) {
+                    continue
+                }
+
                 val unwrappedValue = if (c.columnType is ColumnWithTransform<*, *>) {
                     (c.columnType as ColumnWithTransform<Any, Any>).unwrapRecursive(v)
                 } else {
@@ -470,5 +517,52 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
                 }
             }
         }
+    }
+
+    /**
+     * Marks this column as lazy-loaded in DAO entities.
+     *
+     * Lazy-loaded columns are excluded from the default entity query and loaded on-demand when first accessed.
+     * This is useful for optimizing performance with large BLOB/TEXT columns or rarely accessed data.
+     *
+     * The column is registered in a global registry organized by table, allowing [EntityClass] to efficiently
+     * exclude lazy columns from queries for each specific table.
+     *
+     * @return A [LazyEntityField] wrapper that handles lazy loading behavior
+     *
+     * @sample
+     * ```kotlin
+     * object Articles : IntIdTable("articles") {
+     *     val title = varchar("title", 200)
+     *     val summary = text("summary")
+     *     val content = text("content")        // Large text column
+     *     val rawData = blob("raw_data")       // Large binary column
+     * }
+     *
+     * class Article(id: EntityID<Int>) : IntEntity(id) {
+     *     companion object : IntEntityClass<Article>(Articles)
+     *
+     *     var title by Articles.title
+     *     var summary by Articles.summary
+     *     var content by Articles.content.lazy()  // Loaded on-demand
+     *     var rawData by Articles.rawData.lazy()  // Loaded on-demand
+     * }
+     *
+     * // Usage
+     * transaction {
+     *     val article = Article.findById(1)!!
+     *     // SELECT id, title, summary FROM articles WHERE id = 1
+     *
+     *     println(article.title)    // No extra query
+     *     println(article.summary)  // No extra query
+     *
+     *     println(article.content)  // SELECT content FROM articles WHERE id = 1
+     *     println(article.content)  // Cached - no query
+     * }
+     * ```
+     */
+    fun <T> Column<T>.lazy(): LazyEntityField<T> {
+        LazyEntityField.lazyColumns.getOrPut(this.table) { mutableSetOf() }.add(this)
+        return LazyEntityField(this)
     }
 }

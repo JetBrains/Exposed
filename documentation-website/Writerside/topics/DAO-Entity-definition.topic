@@ -149,6 +149,68 @@
             <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/StarWarsFilmEntity.kt"
                         include-lines="10-13"/>
         </chapter>
+        <chapter id="lazy-fields" title="Lazy fields">
+            <p>
+                By default, all entity properties are loaded immediately when an entity is retrieved from the database.
+                However, for large columns like BLOBs or TEXT fields, or for rarely accessed data, this can negatively
+                impact performance and memory usage.
+            </p>
+            <p>
+                Exposed provides the
+                <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-entity/lazy.html"><code>.lazy()</code></a>
+                modifier to mark columns as lazy-loaded. Lazy fields are:
+            </p>
+            <list>
+                <li>Excluded from the default entity query</li>
+                <li>Loaded on-demand when first accessed</li>
+                <li>Cached after the first access to avoid redundant queries</li>
+            </list>
+            <chapter id="defining-lazy-fields" title="Defining lazy fields">
+                <p>
+                    To mark a property as lazy, apply the <code>.lazy()</code> modifier to the column delegation:
+                </p>
+                <code-block lang="kotlin">
+                    object Articles : IntIdTable("articles") {
+                        val title = varchar("title", 200)
+                        val summary = text("summary")
+                        val content = text("content")           // Large TEXT field
+                        val rawData = blob("raw_data").nullable() // Large BLOB field
+                    }
+
+                    class Article(id: EntityID&lt;Int&gt;) : IntEntity(id) {
+                        companion object : IntEntityClass&lt;Article&gt;(Articles)
+
+                        var title by Articles.title
+                        var summary by Articles.summary
+                        var content by Articles.content.lazy()    // Lazy field
+                        var rawData by Articles.rawData.lazy()    // Lazy field
+                    }
+                </code-block>
+            </chapter>
+            <chapter id="how-lazy-fields-work" title="How lazy fields work">
+                <p>
+                    When you retrieve an entity, Exposed automatically excludes lazy fields from the initial query:
+                </p>
+                <code-block lang="kotlin">
+                    transaction {
+                        // Query: SELECT id, title, summary FROM articles WHERE id = 1
+                        // (content and rawData are NOT included)
+                        val article = Article.findById(1)!!
+
+                        // Access non-lazy fields - no additional query
+                        println(article.title)
+                        println(article.summary)
+
+                        // First access to lazy field triggers a query
+                        // Query: SELECT content FROM articles WHERE id = 1
+                        println(article.content)
+
+                        // Second access uses cached value - no query
+                        println(article.content)
+                    }
+                </code-block>
+            </chapter>
+        </chapter>
         <p>
             Once the entity class is defined, instances of this class allow you to manipulate individual records
             from the corresponding table. For example, by

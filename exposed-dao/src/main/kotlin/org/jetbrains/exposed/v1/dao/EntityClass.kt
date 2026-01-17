@@ -313,7 +313,10 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
     open val dependsOnTables: ColumnSet get() = table
 
     /** The columns that this [EntityClass] depends on when maintaining relations with managed [Entity] instances. */
-    open val dependsOnColumns: List<Column<out Any?>> get() = dependsOnTables.columns
+    open val dependsOnColumns: List<Column<out Any?>> get() {
+        val lazyColumnsForTable = LazyEntityField.lazyColumns[table] ?: emptySet()
+        return dependsOnTables.columns.filter { it !in lazyColumnsForTable }
+    }
 
     /**
      * Returns a [Query] to select all columns in [dependsOnTables] with a WHERE clause that includes
