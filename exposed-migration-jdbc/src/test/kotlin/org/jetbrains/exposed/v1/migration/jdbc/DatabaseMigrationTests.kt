@@ -31,7 +31,7 @@ import org.jetbrains.exposed.v1.datetime.date as kotlinDatetimeDate
 import org.jetbrains.exposed.v1.javatime.date as javatimeDate
 
 class DatabaseMigrationTests : DatabaseTestsBase() {
-    private val columnTypeChangeUnsupportedDb = TestDB.ALL - TestDB.ALL_H2_V2
+    private val columnTypeChangeUnsupportedDb = TestDB.ALL - TestDB.ALL_H2_V2 - TestDB.ALL_POSTGRES
 
     @OptIn(InternalApi::class)
     @Test
@@ -463,5 +463,28 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         logCaptor.resetLogLevel()
         logCaptor.clearLogs()
         logCaptor.close()
+    }
+
+    @Test
+    fun testColumnTypeChangeOnlyGeneratesMigrationStatement() {
+        val originalTable = object : Table("tester") {
+            val data = varchar("data", 50)
+        }
+
+        val modifiedTable = object : Table("tester") {
+            val data = text("data")
+        }
+
+        withDb(excludeSettings = columnTypeChangeUnsupportedDb) {
+            try {
+                SchemaUtils.create(originalTable)
+
+                val statements = MigrationUtils.statementsRequiredForDatabaseMigration(modifiedTable, withLogs = false)
+                assertEquals(1, statements.size)
+                assertTrue(statements.first().contains("ALTER", ignoreCase = true))
+            } finally {
+                SchemaUtils.drop(originalTable)
+            }
+        }
     }
 }
