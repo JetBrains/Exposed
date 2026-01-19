@@ -19,8 +19,8 @@ kotlin {
 dependencies {
     api(project(":exposed-core"))
     api(project(":exposed-jdbc"))
-    api(libs.spring6.jdbc)
-    api(libs.spring6.context)
+    api(libs.spring7.jdbc)
+    api(libs.spring7.context)
     implementation(libs.kotlinx.coroutines)
 
     testImplementation(project(":exposed-dao"))
@@ -29,7 +29,7 @@ dependencies {
     testImplementation(libs.junit6)
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.kotlinx.coroutines.debug)
-    testImplementation(libs.spring6.test)
+    testImplementation(libs.spring7.test)
     testImplementation(libs.slf4j)
     testImplementation(libs.log4j.slf4j.impl)
     testImplementation(libs.log4j.api)

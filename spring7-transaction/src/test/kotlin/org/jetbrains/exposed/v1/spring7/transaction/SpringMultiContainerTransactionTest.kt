@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.v1.spring.transaction
+package org.jetbrains.exposed.v1.spring7.transaction
 
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable

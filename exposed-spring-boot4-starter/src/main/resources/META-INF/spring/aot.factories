@@ -1,0 +1,1 @@
+org.springframework.beans.factory.aot.BeanFactoryInitializationAotProcessor=org.jetbrains.exposed.v1.spring.boot4.ExposedAotContribution

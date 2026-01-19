@@ -1,63 +1,40 @@
-package org.jetbrains.exposed.v1.spring.transaction
+package org.jetbrains.exposed.v1.spring7.transaction
 
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.statements.StatementType
+import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.RepeatedTest
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.test.annotation.Commit
 import org.springframework.transaction.IllegalTransactionStateException
 import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.annotation.Isolation
+import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
-import java.util.Random
-import javax.sql.DataSource
+import java.sql.SQLTimeoutException
+import java.util.*
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
+import kotlin.test.fail
 
-/**
- * Similar to [ExposedTransactionManagerTest] but working with Spring JDBC
- * constructs like [JdbcClient] instead of Exposed APIs to verify that it
- * works like expected.
- */
-open class JdbcExposedTransactionManagerTest : SpringTransactionTestBase() {
+open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
 
     object T1 : Table() {
         val c1 = varchar("c1", Int.MIN_VALUE.toString().length)
     }
 
-    @Autowired
-    private lateinit var dataSource: DataSource
-
-    private val jdbc: JdbcClient by lazy { JdbcClient.create(dataSource) }
-
-    private fun insertRandom() {
-        jdbc.sql(
-            "INSERT INTO ${T1.tableName} VALUES (:value)"
-        ).param(
-            "value", Random().nextInt().toString()
-        ).update()
+    private fun T1.insertRandom() {
+        insert {
+            it[c1] = Random().nextInt().toString()
+        }
     }
-
-    private fun insert(value: String) {
-        jdbc.sql(
-            "INSERT INTO ${T1.tableName} VALUES (:value)"
-        ).param(
-            "value", value
-        ).update()
-    }
-
-    private fun getCount(): Int = jdbc
-        .sql("SELECT count(*) FROM ${T1.tableName}")
-        .query<Int>(Int::class.java).single()
-
-    private fun getSingleValue(): String = jdbc
-        .sql("SELECT * FROM ${T1.tableName}")
-        .query().singleRow()["c1"] as String
 
     @BeforeEach
     fun beforeTest() {
@@ -70,8 +47,8 @@ open class JdbcExposedTransactionManagerTest : SpringTransactionTestBase() {
     @Transactional
     @Commit
     open fun testConnection() {
-        insertRandom()
-        assertEquals(1, getCount())
+        T1.insertRandom()
+        assertEquals(1, T1.selectAll().count())
     }
 
     @RepeatedTest(5)
@@ -79,8 +56,10 @@ open class JdbcExposedTransactionManagerTest : SpringTransactionTestBase() {
     @Commit
     open fun testConnection2() {
         val rnd = Random().nextInt().toString()
-        insert(rnd)
-        assertEquals(rnd, getSingleValue())
+        T1.insert {
+            it[c1] = rnd
+        }
+        assertEquals(rnd, T1.selectAll().single()[T1.c1])
     }
 
     @RepeatedTest(5)
@@ -88,12 +67,14 @@ open class JdbcExposedTransactionManagerTest : SpringTransactionTestBase() {
     open fun testConnectionCombineWithExposedTransaction() {
         transaction {
             val rnd = Random().nextInt().toString()
-            insert(rnd)
-            assertEquals(rnd, getSingleValue())
+            T1.insert {
+                it[c1] = rnd
+            }
+            assertEquals(rnd, T1.selectAll().single()[T1.c1])
 
-            this@JdbcExposedTransactionManagerTest.transactionManager.execute {
-                insertRandom()
-                assertEquals(2, getCount())
+            this@ExposedTransactionManagerTest.transactionManager.execute {
+                T1.insertRandom()
+                assertEquals(2, T1.selectAll().count())
             }
         }
     }
@@ -103,12 +84,14 @@ open class JdbcExposedTransactionManagerTest : SpringTransactionTestBase() {
     @Transactional
     open fun testConnectionCombineWithExposedTransaction2() {
         val rnd = Random().nextInt().toString()
-        insert(rnd)
-        assertEquals(rnd, getSingleValue())
+        T1.insert {
+            it[c1] = rnd
+        }
+        assertEquals(rnd, T1.selectAll().single()[T1.c1])
 
         transaction {
-            insertRandom()
-            assertEquals(2, getCount())
+            T1.insertRandom()
+            assertEquals(2, T1.selectAll().count())
         }
     }
 
@@ -119,13 +102,13 @@ open class JdbcExposedTransactionManagerTest : SpringTransactionTestBase() {
     @RepeatedTest(5)
     @Transactional
     open fun testConnectionWithNestedTransactionCommit() {
-        insertRandom()
-        assertEquals(1, getCount())
+        T1.insertRandom()
+        assertEquals(1, T1.selectAll().count())
         transactionManager.execute(TransactionDefinition.PROPAGATION_NESTED) {
-            insertRandom()
-            assertEquals(2, getCount())
+            T1.insertRandom()
+            assertEquals(2, T1.selectAll().count())
         }
-        assertEquals(2, getCount())
+        assertEquals(2, T1.selectAll().count())
     }
 
     /**
@@ -135,14 +118,14 @@ open class JdbcExposedTransactionManagerTest : SpringTransactionTestBase() {
     @RepeatedTest(5)
     @Transactional
     open fun testConnectionWithNestedTransactionInnerRollback() {
-        insertRandom()
-        assertEquals(1, getCount())
+        T1.insertRandom()
+        assertEquals(1, T1.selectAll().count())
         transactionManager.execute(TransactionDefinition.PROPAGATION_NESTED) { status ->
-            insertRandom()
-            assertEquals(2, getCount())
+            T1.insertRandom()
+            assertEquals(2, T1.selectAll().count())
             status.setRollbackOnly()
         }
-        assertEquals(1, getCount())
+        assertEquals(1, T1.selectAll().count())
     }
 
     /**
@@ -152,19 +135,19 @@ open class JdbcExposedTransactionManagerTest : SpringTransactionTestBase() {
     @RepeatedTest(5)
     fun testConnectionWithNestedTransactionOuterRollback() {
         transactionManager.execute {
-            insertRandom()
-            assertEquals(1, getCount())
+            T1.insertRandom()
+            assertEquals(1, T1.selectAll().count())
             it.setRollbackOnly()
 
             transactionManager.execute(TransactionDefinition.PROPAGATION_NESTED) {
-                insertRandom()
-                assertEquals(2, getCount())
+                T1.insertRandom()
+                assertEquals(2, T1.selectAll().count())
             }
-            assertEquals(2, getCount())
+            assertEquals(2, T1.selectAll().count())
         }
 
         transactionManager.execute {
-            assertEquals(0, getCount())
+            assertEquals(0, T1.selectAll().count())
         }
     }
 
@@ -175,14 +158,14 @@ open class JdbcExposedTransactionManagerTest : SpringTransactionTestBase() {
     @RepeatedTest(5)
     @Transactional
     open fun testConnectionWithRequiresNew() {
-        insertRandom()
-        assertEquals(1, getCount())
+        T1.insertRandom()
+        assertEquals(1, T1.selectAll().count())
         transactionManager.execute(TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
-            assertEquals(0, getCount())
-            insertRandom()
-            assertEquals(1, getCount())
+            assertEquals(0, T1.selectAll().count())
+            T1.insertRandom()
+            assertEquals(1, T1.selectAll().count())
         }
-        assertEquals(2, getCount())
+        assertEquals(2, T1.selectAll().count())
     }
 
     /**
@@ -193,18 +176,30 @@ open class JdbcExposedTransactionManagerTest : SpringTransactionTestBase() {
     @RepeatedTest(5)
     fun testConnectionWithRequiresNewWithInnerTransactionRollback() {
         transactionManager.execute {
-            insertRandom()
-            assertEquals(1, getCount())
+            T1.insertRandom()
+            assertEquals(1, T1.selectAll().count())
             transactionManager.execute(TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
-                insertRandom()
-                assertEquals(1, getCount())
+                T1.insertRandom()
+                assertEquals(1, T1.selectAll().count())
                 it.setRollbackOnly()
             }
-            assertEquals(1, getCount())
+            assertEquals(1, T1.selectAll().count())
         }
 
         transactionManager.execute {
-            assertEquals(1, getCount())
+            assertEquals(1, T1.selectAll().count())
+        }
+    }
+
+    /**
+     * Test for Propagation.NEVER
+     * Execute non-transactionally, throw an exception if a transaction exists.
+     */
+    @RepeatedTest(5)
+    @Transactional(propagation = Propagation.NEVER)
+    open fun testPropagationNever() {
+        assertFailsWith<IllegalStateException> { // Should Be "No transaction exist"
+            T1.insertRandom()
         }
     }
 
@@ -216,9 +211,9 @@ open class JdbcExposedTransactionManagerTest : SpringTransactionTestBase() {
     @Transactional
     open fun testPropagationNeverWithExistingTransaction() {
         assertFailsWith<IllegalTransactionStateException> {
-            insertRandom()
+            T1.insertRandom()
             transactionManager.execute(TransactionDefinition.PROPAGATION_NEVER) {
-                insertRandom()
+                T1.insertRandom()
             }
         }
     }
@@ -230,9 +225,9 @@ open class JdbcExposedTransactionManagerTest : SpringTransactionTestBase() {
     @RepeatedTest(5)
     @Transactional
     open fun testPropagationMandatoryWithTransaction() {
-        insertRandom()
+        T1.insertRandom()
         transactionManager.execute(TransactionDefinition.PROPAGATION_MANDATORY) {
-            insertRandom()
+            T1.insertRandom()
         }
     }
 
@@ -244,7 +239,7 @@ open class JdbcExposedTransactionManagerTest : SpringTransactionTestBase() {
     open fun testPropagationMandatoryWithoutTransaction() {
         assertFailsWith<IllegalTransactionStateException> {
             transactionManager.execute(TransactionDefinition.PROPAGATION_MANDATORY) {
-                insertRandom()
+                T1.insertRandom()
             }
         }
     }
@@ -256,9 +251,9 @@ open class JdbcExposedTransactionManagerTest : SpringTransactionTestBase() {
     @RepeatedTest(5)
     @Transactional
     open fun testPropagationSupportWithTransaction() {
-        insertRandom()
+        T1.insertRandom()
         transactionManager.execute(TransactionDefinition.PROPAGATION_SUPPORTS) {
-            insertRandom()
+            T1.insertRandom()
         }
     }
 
@@ -269,9 +264,10 @@ open class JdbcExposedTransactionManagerTest : SpringTransactionTestBase() {
     @RepeatedTest(5)
     open fun testPropagationSupportWithoutTransaction() {
         transactionManager.execute(TransactionDefinition.PROPAGATION_SUPPORTS) {
-            insertRandom()
+            assertFailsWith<IllegalStateException> { // Should Be "No transaction exist"
+                T1.insertRandom()
+            }
         }
-        assertEquals(1, getCount())
     }
 
     /**
@@ -281,13 +277,40 @@ open class JdbcExposedTransactionManagerTest : SpringTransactionTestBase() {
     @Transactional(isolation = Isolation.READ_COMMITTED)
     open fun testIsolationLevelReadUncommitted() {
         assertTransactionIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED)
-        insertRandom()
-        val count = getCount()
+        T1.insertRandom()
+        val count = T1.selectAll().count()
         transactionManager.execute(TransactionDefinition.PROPAGATION_REQUIRES_NEW, TransactionDefinition.ISOLATION_READ_UNCOMMITTED) {
             assertTransactionIsolationLevel(TransactionDefinition.ISOLATION_READ_UNCOMMITTED)
-            assertEquals(count, getCount())
+            assertEquals(count, T1.selectAll().count())
         }
         assertTransactionIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED)
+    }
+
+    /**
+     * Test for Timeout
+     * Execute with query timeout
+     */
+    @RepeatedTest(5)
+    open fun testTimeout() {
+        transactionManager.execute(timeout = 1) {
+            try {
+                // H2 database doesn't support sql sleep function so use recursive query to simulate long running query
+                TransactionManager.current().exec(
+                    """
+               WITH RECURSIVE T(N) AS (
+               SELECT 1
+               UNION ALL
+               SELECT N+1 FROM T WHERE N<10000000
+               )
+               SELECT * FROM T;
+                    """.trimIndent(),
+                    explicitStatementType = StatementType.SELECT
+                )
+                fail("Should have thrown a timeout exception")
+            } catch (cause: ExposedSQLException) {
+                assertTrue(cause.cause is SQLTimeoutException)
+            }
+        }
     }
 
     @AfterEach

@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.v1.spring.transaction
+package org.jetbrains.exposed.v1.spring7.transaction
 
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils

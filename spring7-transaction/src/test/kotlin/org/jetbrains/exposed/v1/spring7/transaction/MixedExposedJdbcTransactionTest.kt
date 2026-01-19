@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.v1.spring.transaction
+package org.jetbrains.exposed.v1.spring7.transaction
 
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -13,9 +13,9 @@ import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
+import java.util.UUID
 import javax.sql.DataSource
 import kotlin.test.assertEquals
-import java.util.UUID as JavaUUID
 
 class MixedExposedJdbcTransactionTest : SpringTransactionTestBase() {
 
@@ -143,12 +143,12 @@ open class MixedTransactionService {
 
     private fun saveTwoThings(fail: Boolean) {
         CustomerTable.insert {
-            it[id] = JavaUUID.randomUUID()
+            it[id] = UUID.randomUUID()
             it[name] = "Test${nextNameIndex++}"
         }
         client
             .sql("INSERT INTO customer VALUES (:id, :name)")
-            .param("id", JavaUUID.randomUUID())
+            .param("id", UUID.randomUUID())
             .param("name", "Test${nextNameIndex++}")
             .update()
 
