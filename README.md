@@ -77,9 +77,9 @@ As well as the following extension modules:
 Kotlin version 2.1.+
 
 The following module(s) require JDK 17 or newer:
-* `spring-transaction` - depends on Spring Framework 6
-* `exposed-spring-boot-starter` - depends on Spring Boot 3
-* `exposed-crypt` - depends on Spring Security 6
+* `spring-transaction` - depends on Spring Framework 7
+* `exposed-spring-boot-starter` - depends on Spring Boot 4
+* `exposed-crypt` - depends on Spring Security 7
 
 The following module(s) require JDK 11 or newer:
 * `exposed-r2dbc`
