@@ -1176,24 +1176,26 @@ Its property is now of type `ResultApi`.
 
 ## Column types
 
-### UUID column type classes refactored {id = uuid-column-type-refactor}
+### Updated UUID type classes {id = uuid-column-type-refactor}
 
 Version 1.0.0 comes with support for storing `kotlin.uuid.Uuid` values in binary columns via the new `UuidColumnType` class.
 Built-in support for DAO API elements are also available by using `UuidTable` with `UuidEntity` and `UuidEntityClass`. The
 existing `Table.uuid()` method will now only accept values of the type `kotlin.uuid.Uuid`.
 
-In order to avoid name clashes and unresolved errors, the original classes for storing `java.util.UUID` values have all been
-renamed to include the prefix "Java". To continue passing `java.util.UUID` values, your Exposed objects should be renamed
-and your registered columns should be switched to `javaUUID()`:
+In order to avoid name shadowing and unresolved errors, the original classes for storing `java.util.UUID` values have all been
+moved to new `.java.*` packages:
 
-| 0.61.0                                      | 1.0.0                                                |
-|---------------------------------------------|------------------------------------------------------|
-| `org.jetbrains.exposed.sql.UUIDColumnType`  | `org.jetbrains.exposed.v1.core.JavaUUIDColumnType`   |
-| `org.jetbrains.exposed.dao.id.UUIDTable`    | `org.jetbrains.exposed.v1.core.dao.id.JavaUUIDTable` |
-| `org.jetbrains.exposed.dao.UUIDEntity`      | `org.jetbrains.exposed.v1.dao.JavaUUIDEntity`        |
-| `org.jetbrains.exposed.dao.UUIDEntityClass` | `org.jetbrains.exposed.v1.dao.JavaUUIDEntityClass`   |
+| 0.61.0                                      | 1.0.0                                                 |
+|---------------------------------------------|-------------------------------------------------------|
+| `org.jetbrains.exposed.sql.UUIDColumnType`  | `org.jetbrains.exposed.v1.core.java.UUIDColumnType`   |
+| `org.jetbrains.exposed.dao.id.UUIDTable`    | `org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable` |
+| `org.jetbrains.exposed.dao.UUIDEntity`      | `org.jetbrains.exposed.v1.dao.java.UUIDEntity`        |
+| `org.jetbrains.exposed.dao.UUIDEntityClass` | `org.jetbrains.exposed.v1.dao.java.UUIDEntityClass`   |
 
-While `UuidColumnType` and `JavaUUIDColumnType` accept different UUID types on the client-side, they both map to the same
+To continue passing `java.util.UUID` values, your import statements should be updated and any use of `Table.uuid()` should
+be replaced by the extension function `.javaUUID()`, with the addition of `import org.jetbrains.exposed.v1.core.java.javaUUID`.
+
+While `UuidColumnType` and `UUIDColumnType` accept different UUID types on the client-side, they both map to the same
 data type on the database-side. This means that keeping the use of `Table.uuid()` (or switching to the new `UuidTable`)
 will not trigger the generation of any migration DDL statements.
 
@@ -1240,15 +1242,17 @@ class TestEntity(id: EntityID<Uuid>) : UuidEntity(id) {
 
 ```kotlin
 import org.jetbrains.exposed.v1.core.dao.id.*
-import org.jetbrains.exposed.v1.dao.*
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.dao.java.*
 import java.util.UUID
 
-object TestTable : JavaUUIDTable("tester") {
+object TestTable : UUIDTable("tester") {
     val secondaryId = javaUUID("secondary_id").uniqueIndex()
 }
 
-class TestEntity(id: EntityID<UUID>) : JavaUUIDEntity(id) {
-    companion object : JavaUUIDEntityClass<TestEntity>(TestTable)
+class TestEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<TestEntity>(TestTable)
 
     var secondaryId by TestTable.secondaryId
 }

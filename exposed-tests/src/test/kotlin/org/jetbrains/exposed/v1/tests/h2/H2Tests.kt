@@ -3,8 +3,8 @@ package org.jetbrains.exposed.v1.tests.h2
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.core.dao.id.JavaUUIDTable
 import org.jetbrains.exposed.v1.core.dao.id.UuidTable
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
@@ -123,7 +123,7 @@ class H2Tests : DatabaseTestsBase() {
     @Test
     fun testH2UUIDConversionWithBinary16ColumnType() {
         val testTable = object : UuidTable("test_table") {}
-        val testJavaTable = object : JavaUUIDTable("test_java_table") {}
+        val testJavaTable = object : UUIDTable("test_java_table") {}
 
         withDb(TestDB.ALL_H2_V2) {
             exec("CREATE TABLE test_table (id BINARY(16) NOT NULL, CONSTRAINT PK_TEST_TABLE PRIMARY KEY (id))")

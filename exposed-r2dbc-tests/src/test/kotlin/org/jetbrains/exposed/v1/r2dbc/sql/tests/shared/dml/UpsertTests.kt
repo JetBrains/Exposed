@@ -7,11 +7,12 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.concat
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.core.dao.id.JavaUUIDTable
 import org.jetbrains.exposed.v1.core.dao.id.UuidTable
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.intLiteral
+import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.core.minus
@@ -743,7 +744,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testBatchUpsertWithUUIDPrimaryKey() {
-        val tester = object : JavaUUIDTable("batch_upsert_test", "id") {
+        val tester = object : UUIDTable("batch_upsert_test", "id") {
             val key = integer("test_key").uniqueIndex()
             val value = text("test_value")
         }

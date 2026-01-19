@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.core.statements.api
 
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.java.UUIDColumnType
 import java.io.InputStream
 import java.math.BigDecimal
 import java.math.MathContext
@@ -90,7 +91,7 @@ interface PreparedStatementApi {
             dialect.dataTypeProvider.doubleType() -> ArrayColumnType<Double, List<Double>>(DoubleColumnType())
             dialect.dataTypeProvider.binaryType() -> ArrayColumnType<ByteArray, List<ByteArray>>(BasicBinaryColumnType())
             dialect.dataTypeProvider.booleanType() -> ArrayColumnType<Boolean, List<Boolean>>(BooleanColumnType())
-            dialect.dataTypeProvider.uuidType() -> ArrayColumnType<UUID, List<UUID>>(JavaUUIDColumnType())
+            dialect.dataTypeProvider.uuidType() -> ArrayColumnType<UUID, List<UUID>>(UUIDColumnType())
             else -> ArrayColumnType<String, List<String>>(VarCharColumnType())
         }
     }

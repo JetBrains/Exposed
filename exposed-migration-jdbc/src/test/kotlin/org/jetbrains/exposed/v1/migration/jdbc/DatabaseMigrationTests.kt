@@ -5,6 +5,8 @@ import kotlinx.serialization.json.Json
 import nl.altindag.log.LogCaptor
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.*
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
@@ -470,7 +472,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun testMigrationFromJavaUUIDtoKotlinUuid() {
-        val originalTable = object : JavaUUIDTable("tester") {
+        val originalTable = object : UUIDTable("tester") {
             val secondaryId = javaUUID("secondary_id").uniqueIndex()
         }
 

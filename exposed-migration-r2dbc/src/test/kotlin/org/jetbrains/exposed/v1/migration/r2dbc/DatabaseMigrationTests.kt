@@ -7,11 +7,12 @@ import nl.altindag.log.LogCaptor
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.core.dao.id.JavaUUIDTable
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.dao.id.UIntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.ULongIdTable
 import org.jetbrains.exposed.v1.core.dao.id.UuidTable
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.json.jsonb
@@ -459,7 +460,7 @@ class DatabaseMigrationTests : R2dbcDatabaseTestsBase() {
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun testMigrationFromJavaUUIDtoKotlinUuid() {
-        val originalTable = object : JavaUUIDTable("tester") {
+        val originalTable = object : UUIDTable("tester") {
             val secondaryId = javaUUID("secondary_id").uniqueIndex()
         }
 

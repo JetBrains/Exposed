@@ -11,6 +11,8 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.java.UUIDColumnType
+import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.datetime.CurrentTimestamp
@@ -675,7 +677,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testDatabaseGeneratedUUIDasPrimaryKey() {
         val randomPGUuid = object : CustomFunction<Uuid>("gen_random_uuid", UuidColumnType()) {}
-        val randomPGJavaUUID = object : CustomFunction<JavaUUID>("gen_random_uuid", JavaUUIDColumnType()) {}
+        val randomPGJavaUUID = object : CustomFunction<JavaUUID>("gen_random_uuid", UUIDColumnType()) {}
 
         val tester = object : IdTable<JavaUUID>("testTestTest") {
             override val id = javaUUID("id").defaultExpression(randomPGJavaUUID).entityId()

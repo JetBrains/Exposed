@@ -4,6 +4,7 @@ import io.r2dbc.spi.Parameters
 import io.r2dbc.spi.R2dbcType
 import io.r2dbc.spi.Statement
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.java.UUIDColumnType
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import java.time.LocalDate
@@ -116,7 +117,7 @@ class ArrayTypeMapper : TypeMapper {
             is TextColumnType -> (mappedList as List<String>).toTypedArray()
             is DecimalColumnType -> (mappedList as List<java.math.BigDecimal>).toTypedArray()
             is UuidColumnType -> (mappedList as List<kotlin.uuid.Uuid>).toTypedArray()
-            is JavaUUIDColumnType -> (mappedList as List<java.util.UUID>).toTypedArray()
+            is UUIDColumnType -> (mappedList as List<java.util.UUID>).toTypedArray()
             is IDateColumnType -> {
                 // For date/time types, we need to handle them specially
                 // The hasTimePart property tells us whether it's a DATE or DATETIME column
@@ -216,7 +217,7 @@ private fun ArrayColumnType<*, *>.arrayDeclaration(): Class<out Array<out Any>> 
     is DecimalColumnType -> Array<java.math.BigDecimal>::class.java
     is BasicBinaryColumnType, is BlobColumnType -> Array<ByteArray>::class.java
     is UuidColumnType -> Array<kotlin.uuid.Uuid>::class.java
-    is JavaUUIDColumnType -> Array<java.util.UUID>::class.java
+    is UUIDColumnType -> Array<java.util.UUID>::class.java
     is CharacterColumnType -> Array<Char>::class.java
     is BooleanColumnType -> Array<Boolean>::class.java
     is IDateColumnType -> {

@@ -893,9 +893,6 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Creates a binary column, with the specified [name], for storing [kotlin.uuid.Uuid] values. */
     fun uuid(name: String): Column<Uuid> = registerColumn(name, UuidColumnType())
 
-    /** Creates a binary column, with the specified [name], for storing [java.util.UUID] values. */
-    fun javaUUID(name: String): Column<JavaUUID> = registerColumn(name, JavaUUIDColumnType())
-
     // Boolean columns
 
     /** Creates a column, with the specified [name], for storing boolean values. */

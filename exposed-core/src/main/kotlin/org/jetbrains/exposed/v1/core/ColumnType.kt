@@ -3,6 +3,7 @@ package org.jetbrains.exposed.v1.core
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.java.UUIDColumnType
 import org.jetbrains.exposed.v1.core.statements.api.ExposedBlob
 import org.jetbrains.exposed.v1.core.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.v1.core.statements.api.RowApi
@@ -1042,7 +1043,7 @@ class BlobColumnType(
 /**
  * Base binary column for storing types of universally unique identifiers (UUID) as a 128-bit value.
  */
-abstract class BasicUUIDColumnType<T> : ColumnType<T>() {
+abstract class BasicUuidColumnType<T> : ColumnType<T>() {
     /** The dialect's [DataTypeProvider], with all H2 modes returning the regular H2 mode implementation. */
     protected val originalDataTypeProvider: DataTypeProvider
         get() = (currentDialect as? H2Dialect)?.originalDataTypeProvider ?: currentDialect.dataTypeProvider
@@ -1073,7 +1074,7 @@ abstract class BasicUUIDColumnType<T> : ColumnType<T>() {
 /**
  * Binary column for storing [kotlin.uuid.Uuid].
  */
-class UuidColumnType : BasicUUIDColumnType<Uuid>() {
+class UuidColumnType : BasicUuidColumnType<Uuid>() {
     override fun valueFromDB(value: Any): Uuid = when (value) {
         is Uuid -> value
         is JavaUUID -> value.toKotlinUuid()
@@ -1086,24 +1087,6 @@ class UuidColumnType : BasicUUIDColumnType<Uuid>() {
 
     override fun notNullValueToDB(value: Uuid): Any {
         return originalDataTypeProvider.uuidToDB(value.toJavaUuid())
-    }
-}
-
-/**
- * Binary column for storing [java.util.UUID].
- */
-class JavaUUIDColumnType : BasicUUIDColumnType<JavaUUID>() {
-    override fun valueFromDB(value: Any): JavaUUID = when (value) {
-        is JavaUUID -> value
-        is ByteArray -> ByteBuffer.wrap(value).let { b -> JavaUUID(b.long, b.long) }
-        is String if value.isHexAndDashFormat() -> JavaUUID.fromString(value)
-        is String -> ByteBuffer.wrap(value.toByteArray()).let { b -> JavaUUID(b.long, b.long) }
-        is ByteBuffer -> value.let { b -> JavaUUID(b.long, b.long) }
-        else -> error("Unexpected value of type UUID: $value of ${value::class.qualifiedName}")
-    }
-
-    override fun notNullValueToDB(value: JavaUUID): Any {
-        return originalDataTypeProvider.uuidToDB(value)
     }
 }
 
@@ -1397,7 +1380,7 @@ class ArrayColumnType<T, R : List<Any?>>(
             // This cast is needed for array types inside upsert(merge statement), otherwise statement causes "Data conversion error converting" error.
             is ByteColumnType, is UByteColumnType, is BooleanColumnType, is ShortColumnType, is UShortColumnType,
             is IntegerColumnType, is UIntegerColumnType, is LongColumnType, is ULongColumnType, is FloatColumnType,
-            is DoubleColumnType, is StringColumnType, is CharacterColumnType, is BasicBinaryColumnType, is BasicUUIDColumnType ->
+            is DoubleColumnType, is StringColumnType, is CharacterColumnType, is BasicBinaryColumnType, is BasicUuidColumnType ->
                 "cast(? as ${columnType.sqlType()} array)"
             else -> null
         }
@@ -1480,7 +1463,7 @@ fun <T : Any> resolveColumnType(
         ByteArray::class -> BasicBinaryColumnType()
         BigDecimal::class -> DecimalColumnType.INSTANCE
         Uuid::class -> UuidColumnType()
-        JavaUUID::class -> JavaUUIDColumnType()
+        JavaUUID::class -> UUIDColumnType()
         else -> defaultType
     } as? ColumnType<T>
 
