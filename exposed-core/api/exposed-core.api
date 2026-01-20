@@ -170,6 +170,19 @@ public class org/jetbrains/exposed/v1/core/BasicBinaryColumnType : org/jetbrains
 	public fun valueFromDB (Ljava/lang/Object;)[B
 }
 
+public abstract class org/jetbrains/exposed/v1/core/BasicUuidColumnType : org/jetbrains/exposed/v1/core/ColumnType {
+	public static final field Companion Lorg/jetbrains/exposed/v1/core/BasicUuidColumnType$Companion;
+	public fun <init> ()V
+	protected final fun getOriginalDataTypeProvider ()Lorg/jetbrains/exposed/v1/core/vendors/DataTypeProvider;
+	protected final fun isHexAndDashFormat (Ljava/lang/String;)Z
+	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
+	public fun sqlType ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/v1/core/BasicUuidColumnType$Companion {
+}
+
 public final class org/jetbrains/exposed/v1/core/Between : org/jetbrains/exposed/v1/core/Op, org/jetbrains/exposed/v1/core/ComplexExpression, org/jetbrains/exposed/v1/core/Op$OpBoolean {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)V
 	public final fun getExpr ()Lorg/jetbrains/exposed/v1/core/Expression;
@@ -2305,6 +2318,7 @@ public class org/jetbrains/exposed/v1/core/Table : org/jetbrains/exposed/v1/core
 	public static synthetic fun array$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/ColumnType;Ljava/lang/Integer;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Column;
 	public static synthetic fun array$default (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/ColumnType;Ljava/util/List;IILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun autoGenerate (Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/core/Column;
+	public final fun autoGenerateKotlinUuid (Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun autoIncrement (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun autoIncrement (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/Sequence;)Lorg/jetbrains/exposed/v1/core/Column;
 	public static synthetic fun autoIncrement$default (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Column;
@@ -2547,22 +2561,6 @@ public final class org/jetbrains/exposed/v1/core/UShortColumnType : org/jetbrain
 	public fun valueFromDB-BwKQO78 (Ljava/lang/Object;)S
 }
 
-public final class org/jetbrains/exposed/v1/core/UUIDColumnType : org/jetbrains/exposed/v1/core/ColumnType {
-	public static final field Companion Lorg/jetbrains/exposed/v1/core/UUIDColumnType$Companion;
-	public fun <init> ()V
-	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueToString (Ljava/util/UUID;)Ljava/lang/String;
-	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun notNullValueToDB (Ljava/util/UUID;)Ljava/lang/Object;
-	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
-	public fun sqlType ()Ljava/lang/String;
-	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun valueFromDB (Ljava/lang/Object;)Ljava/util/UUID;
-}
-
-public final class org/jetbrains/exposed/v1/core/UUIDColumnType$Companion {
-}
-
 public final class org/jetbrains/exposed/v1/core/UnboundedFollowingWindowFrameBound : org/jetbrains/exposed/v1/core/UnboundedWindowFrameBound, org/jetbrains/exposed/v1/core/CurrentOrFollowing {
 	public fun <init> ()V
 }
@@ -2589,6 +2587,14 @@ public class org/jetbrains/exposed/v1/core/UserDataHolder {
 	protected final fun getUserdata ()Ljava/util/concurrent/ConcurrentHashMap;
 	public final fun putUserData (Lorg/jetbrains/exposed/v1/core/Key;Ljava/lang/Object;)V
 	public final fun removeUserData (Lorg/jetbrains/exposed/v1/core/Key;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/core/UuidColumnType : org/jetbrains/exposed/v1/core/BasicUuidColumnType {
+	public fun <init> ()V
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun notNullValueToDB (Lkotlin/uuid/Uuid;)Ljava/lang/Object;
+	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueFromDB (Ljava/lang/Object;)Lkotlin/uuid/Uuid;
 }
 
 public final class org/jetbrains/exposed/v1/core/ValueCase {
@@ -2844,7 +2850,15 @@ public class org/jetbrains/exposed/v1/core/dao/id/ULongIdTable : org/jetbrains/e
 	public final fun getPrimaryKey ()Lorg/jetbrains/exposed/v1/core/Table$PrimaryKey;
 }
 
-public class org/jetbrains/exposed/v1/core/dao/id/UUIDTable : org/jetbrains/exposed/v1/core/dao/id/IdTable {
+public class org/jetbrains/exposed/v1/core/dao/id/UuidTable : org/jetbrains/exposed/v1/core/dao/id/IdTable {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getId ()Lorg/jetbrains/exposed/v1/core/Column;
+	public final fun getPrimaryKey ()Lorg/jetbrains/exposed/v1/core/Table$PrimaryKey;
+}
+
+public class org/jetbrains/exposed/v1/core/dao/id/java/UUIDTable : org/jetbrains/exposed/v1/core/dao/id/IdTable {
 	public fun <init> ()V
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -3013,6 +3027,18 @@ public final class org/jetbrains/exposed/v1/core/functions/math/SqrtFunction : o
 
 public final class org/jetbrains/exposed/v1/core/functions/math/TanFunction : org/jetbrains/exposed/v1/core/CustomFunction {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)V
+}
+
+public final class org/jetbrains/exposed/v1/core/java/UUIDColumnType : org/jetbrains/exposed/v1/core/BasicUuidColumnType {
+	public fun <init> ()V
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun notNullValueToDB (Ljava/util/UUID;)Ljava/lang/Object;
+	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueFromDB (Ljava/lang/Object;)Ljava/util/UUID;
+}
+
+public final class org/jetbrains/exposed/v1/core/java/UUIDColumnTypeKt {
+	public static final fun javaUUID (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Column;
 }
 
 public final class org/jetbrains/exposed/v1/core/ops/AllAnyFromArrayOp : org/jetbrains/exposed/v1/core/ops/AllAnyFromBaseOp {

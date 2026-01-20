@@ -4,12 +4,14 @@ import io.r2dbc.spi.Parameters
 import io.r2dbc.spi.R2dbcType
 import io.r2dbc.spi.Statement
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.java.UUIDColumnType
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import kotlin.reflect.KClass
+import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Mapper for array types.
@@ -98,6 +100,7 @@ class ArrayTypeMapper : TypeMapper {
         }
 
         // For PostgreSQL, we need to explicitly create arrays of primitive types
+        @OptIn(ExperimentalUuidApi::class)
         return when (columnType.delegate) {
             is BooleanColumnType -> (mappedList as List<Boolean>).toTypedArray()
             is ByteColumnType -> (mappedList as List<Byte>).toTypedArray()
@@ -113,6 +116,7 @@ class ArrayTypeMapper : TypeMapper {
             is BinaryColumnType -> (mappedList as List<ByteArray>).toTypedArray()
             is TextColumnType -> (mappedList as List<String>).toTypedArray()
             is DecimalColumnType -> (mappedList as List<java.math.BigDecimal>).toTypedArray()
+            is UuidColumnType -> (mappedList as List<kotlin.uuid.Uuid>).toTypedArray()
             is UUIDColumnType -> (mappedList as List<java.util.UUID>).toTypedArray()
             is IDateColumnType -> {
                 // For date/time types, we need to handle them specially
@@ -198,6 +202,7 @@ private fun java.sql.Timestamp.toLocalDateTime(): LocalDateTime = toInstant().at
 /**
  * Extension function to get the Java class type for an array column type.
  */
+@OptIn(ExperimentalUuidApi::class)
 private fun ArrayColumnType<*, *>.arrayDeclaration(): Class<out Array<out Any>> = when (delegate) {
     is ByteColumnType -> Array<Byte>::class.java
     is UByteColumnType -> Array<UByte>::class.java
@@ -211,6 +216,7 @@ private fun ArrayColumnType<*, *>.arrayDeclaration(): Class<out Array<out Any>> 
     is DoubleColumnType -> Array<Double>::class.java
     is DecimalColumnType -> Array<java.math.BigDecimal>::class.java
     is BasicBinaryColumnType, is BlobColumnType -> Array<ByteArray>::class.java
+    is UuidColumnType -> Array<kotlin.uuid.Uuid>::class.java
     is UUIDColumnType -> Array<java.util.UUID>::class.java
     is CharacterColumnType -> Array<Char>::class.java
     is BooleanColumnType -> Array<Boolean>::class.java

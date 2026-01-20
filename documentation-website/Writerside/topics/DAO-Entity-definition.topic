@@ -85,15 +85,27 @@
                         value.
                     </p>
                 </def>
-                <def id="UUIDEntity">
+                <def id="UuidEntity">
                     <title>
-                        <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-u-u-i-d-entity/index.html">
+                        <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-uuid-entity/index.html">
+                            <code>UuidEntity</code>
+                        </a>
+                    </title>
+                    <p>
+                        Base class for an entity instance identified by an ID comprised of a wrapped <code>kotlin.uuid.Uuid</code>
+                        value.
+                    </p>
+                </def>
+
+                <def id="JavaUUIDEntity">
+                    <title>
+                        <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao.java/-u-u-i-d-entity/index.html">
                             <code>UUIDEntity</code>
                         </a>
                     </title>
                     <p>
-                        Base class for an entity instance identified by an ID comprised of a wrapped <code>UUID</code>
-                        value.
+                        Base class for an entity instance identified by an ID comprised of a wrapped <code>java.util.UUID</code>
+                        value. Available from the package <code>org.jetbrains.exposed.v1.dao.java</code>.
                     </p>
                 </def>
                 <def id="CompositeEntity">

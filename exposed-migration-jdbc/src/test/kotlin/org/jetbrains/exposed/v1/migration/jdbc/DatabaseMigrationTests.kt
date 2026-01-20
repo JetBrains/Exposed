@@ -4,17 +4,17 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import nl.altindag.log.LogCaptor
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.dao.id.IdTable
-import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
-import org.jetbrains.exposed.v1.core.dao.id.UIntIdTable
-import org.jetbrains.exposed.v1.core.dao.id.ULongIdTable
+import org.jetbrains.exposed.v1.core.dao.id.*
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.exists
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.json.jsonb
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
@@ -27,6 +27,10 @@ import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.junit.jupiter.api.Test
 import kotlin.properties.Delegates
 import kotlin.test.assertNull
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
+import kotlin.uuid.toKotlinUuid
+import java.util.UUID as JavaUUID
 import org.jetbrains.exposed.v1.datetime.date as kotlinDatetimeDate
 import org.jetbrains.exposed.v1.javatime.date as javatimeDate
 
@@ -463,5 +467,42 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         logCaptor.resetLogLevel()
         logCaptor.clearLogs()
         logCaptor.close()
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun testMigrationFromJavaUUIDtoKotlinUuid() {
+        val originalTable = object : UUIDTable("tester") {
+            val secondaryId = javaUUID("secondary_id").uniqueIndex()
+        }
+
+        val updatedTable = object : UuidTable("tester") {
+            val secondaryId = uuid("secondary_id").uniqueIndex()
+        }
+
+        withTables(originalTable) {
+            val idPairs = List(2) { JavaUUID.randomUUID() to JavaUUID.randomUUID() }
+            originalTable.batchInsert(idPairs) {
+                this[originalTable.id] = it.first
+                this[originalTable.secondaryId] = it.second
+            }
+
+            assertEquals(idPairs.size.toLong(), originalTable.selectAll().count())
+
+            // switching to Kotlin UuidColumnType should trigger no change at database level as type mapping is unchanged
+            assertEquals(
+                0,
+                MigrationUtils.statementsRequiredForDatabaseMigration(updatedTable, withLogs = false).size
+            )
+
+            val convertedIdPairs = idPairs.map { it.first.toKotlinUuid() to it.second.toKotlinUuid() }
+            val results = updatedTable.selectAll().map { it[updatedTable.id].value to it[updatedTable.secondaryId] }
+            assertEqualCollections(convertedIdPairs, results)
+
+            updatedTable.insert {
+                it[secondaryId] = Uuid.random()
+            }
+            assertEquals(convertedIdPairs.size + 1L, updatedTable.selectAll().count())
+        }
     }
 }

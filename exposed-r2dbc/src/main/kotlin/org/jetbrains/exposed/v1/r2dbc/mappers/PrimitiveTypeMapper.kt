@@ -2,8 +2,10 @@ package org.jetbrains.exposed.v1.r2dbc.mappers
 
 import io.r2dbc.spi.Statement
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.java.UUIDColumnType
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import kotlin.reflect.KClass
+import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Mapper for primitive types (Int, Long, Float, Double, etc.).
@@ -27,7 +29,7 @@ class PrimitiveTypeMapper : TypeMapper {
             DecimalColumnType::class,
             BooleanColumnType::class,
             CharacterColumnType::class,
-            UUIDColumnType::class,
+            BasicUuidColumnType::class,
             StringColumnType::class,
         )
 
@@ -44,6 +46,7 @@ class PrimitiveTypeMapper : TypeMapper {
             return true
         }
 
+        @OptIn(ExperimentalUuidApi::class)
         val columnValueType = when (columnType) {
             is ByteColumnType -> java.lang.Byte::class.java
             is UByteColumnType -> java.lang.Short::class.java
@@ -56,6 +59,7 @@ class PrimitiveTypeMapper : TypeMapper {
             is FloatColumnType -> java.lang.Float::class.java
             is DoubleColumnType -> java.lang.Double::class.java
             is DecimalColumnType -> java.math.BigDecimal::class.java
+            is UuidColumnType -> kotlin.uuid.Uuid::class.java
             is UUIDColumnType -> java.util.UUID::class.java
             is CharacterColumnType -> java.lang.String::class.java
             is BooleanColumnType -> java.lang.Boolean::class.java

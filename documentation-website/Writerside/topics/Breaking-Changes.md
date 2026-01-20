@@ -37,6 +37,19 @@
     * `"Wait $retryDelay milliseconds before retrying"` - now logged at DEBUG level during transaction retries
     * SQL exception messages and causes - now logged at DEBUG level when transactions fail
     * `"Transaction rollback failed: ${it.message}. See previous log line for statement"` - now logged at DEBUG level
+* Support for `kotlin.uuid.Uuid` has been added, resulting in a name clash between the new and existing column type classes in the packages.
+  The original classes, which accepted `java.util.UUID` values, have been moved to a new package to distinguish them accordingly:
+
+| 1.0.0-rc-4                                       | 1.0.0-rc-5                                            |
+|--------------------------------------------------|-------------------------------------------------------|
+| `org.jetbrains.exposed.v1.core.dao.id.UUIDTable` | `org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable` |
+| `org.jetbrains.exposed.v1.core.UUIDColumnType`   | `org.jetbrains.exposed.v1.core.java.UUIDColumnType`   |
+| `org.jetbrains.exposed.v1.dao.UUIDEntity`        | `org.jetbrains.exposed.v1.dao.java.UUIDEntity`        |
+| `org.jetbrains.exposed.v1.dao.UUIDEntityClass`   | `org.jetbrains.exposed.v1.dao.java.UUIDEntityClass`   |
+
+  The method `Table.uuid()` now only accepts `kotlin.uuid.Uuid` values. So the extension function `Table.javaUUID()` (from
+  the package `org.jetbrains.exposed.v1.core.java`) should be used instead to continue passing `java.util.UUID` values.
+  See the [migration guide](https://www.jetbrains.com/help/exposed/migration-guide-1-0-0.html#uuid-column-type-refactor) for full details.
 
 ## 1.0.0-rc-4
 

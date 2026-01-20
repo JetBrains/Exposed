@@ -5,6 +5,8 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.java.UUIDColumnType
+import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.dao.IntEntity
@@ -31,11 +33,12 @@ import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.sql.SQLException
-import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.fail
+import kotlin.uuid.Uuid
+import java.util.UUID as JavaUUID
 
 class InsertTests : DatabaseTestsBase() {
     @Test
@@ -198,7 +201,7 @@ class InsertTests : DatabaseTestsBase() {
     fun testBatchInsertWithSequence() {
         val cities = DMLTestsData.Cities
         withTables(cities) {
-            val names = List(25) { UUID.randomUUID().toString() }.asSequence()
+            val names = List(25) { JavaUUID.randomUUID().toString() }.asSequence()
             cities.batchInsert(names) { name -> this[cities.name] = name }
 
             val batchesSize = cities.selectAll().count()
@@ -486,7 +489,7 @@ class InsertTests : DatabaseTestsBase() {
     fun testGeneratedKey04() {
         val charIdTable = object : IdTable<String>("charId") {
             override val id = varchar("id", 50)
-                .clientDefault { UUID.randomUUID().toString() }
+                .clientDefault { JavaUUID.randomUUID().toString() }
                 .entityId()
             val foo = integer("foo")
 
@@ -586,7 +589,7 @@ class InsertTests : DatabaseTestsBase() {
             assertNull(inserted1[EntityTests.Posts.category])
 
             val boardId = EntityTests.Boards.insertAndGetId {
-                it[name] = UUID.randomUUID().toString()
+                it[name] = Uuid.random().toString()
             }
             val categoryId = EntityTests.Categories.insert {
                 it[title] = "Category"
@@ -600,7 +603,7 @@ class InsertTests : DatabaseTestsBase() {
 
             EntityTests.Posts.deleteWhere { EntityTests.Posts.id eq id2 }
 
-            val nullableCategoryID: UUID? = categoryId
+            val nullableCategoryID: Uuid? = categoryId
             val nullableBoardId: Int? = boardId.value
             EntityTests.Posts.insertAndGetId {
                 it[board] = Op.nullOp()
@@ -762,16 +765,19 @@ class InsertTests : DatabaseTestsBase() {
 
     @Test
     fun testDatabaseGeneratedUUIDasPrimaryKey() {
-        val randomPGUUID = object : CustomFunction<UUID>("gen_random_uuid", UUIDColumnType()) {}
+        val randomPGUuid = object : CustomFunction<Uuid>("gen_random_uuid", UuidColumnType()) {}
+        val randomPGJavaUUID = object : CustomFunction<JavaUUID>("gen_random_uuid", UUIDColumnType()) {}
 
-        val tester = object : IdTable<UUID>("testTestTest") {
-            override val id = uuid("id").defaultExpression(randomPGUUID).entityId()
+        val tester = object : IdTable<JavaUUID>("testTestTest") {
+            override val id = javaUUID("id").defaultExpression(randomPGJavaUUID).entityId()
+            val secondaryId = uuid("secondary_id").defaultExpression(randomPGUuid)
             override val primaryKey = PrimaryKey(id)
         }
 
         withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, tester) {
             val result = tester.insert {}
             assertNotNull(result[tester.id])
+            assertNotNull(result[tester.secondaryId])
         }
     }
 

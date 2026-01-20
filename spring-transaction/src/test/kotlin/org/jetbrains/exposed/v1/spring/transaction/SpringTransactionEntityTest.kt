@@ -1,10 +1,10 @@
 package org.jetbrains.exposed.v1.spring.transaction
 
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.dao.UUIDEntity
-import org.jetbrains.exposed.v1.dao.UUIDEntityClass
+import org.jetbrains.exposed.v1.dao.java.UUIDEntity
+import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -12,15 +12,15 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.annotation.Commit
 import org.springframework.transaction.annotation.Transactional
-import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import java.util.UUID as JavaUUID
 
 object CustomerTable : UUIDTable(name = "customer") {
     val name = varchar(name = "name", length = 255).uniqueIndex()
 }
 
-class CustomerDAO(id: EntityID<UUID>) : UUIDEntity(id) {
+class CustomerDAO(id: EntityID<JavaUUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<CustomerDAO>(CustomerTable)
 
     var name by CustomerTable.name
@@ -31,7 +31,7 @@ object OrderTable : UUIDTable(name = "orders") {
     val product = varchar(name = "product", length = 255)
 }
 
-class OrderDAO(id: EntityID<UUID>) : UUIDEntity(id) {
+class OrderDAO(id: EntityID<JavaUUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<OrderDAO>(OrderTable)
 
     var customer by CustomerDAO.referencedOn(OrderTable.customer)

@@ -26,7 +26,6 @@ import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.util.*
-import kotlin.test.assertNotNull
 import kotlin.test.expect
 
 @Suppress("LargeClass")
@@ -809,23 +808,6 @@ class DDLTests : DatabaseTestsBase() {
             if (currentDialectTest !is SQLiteDialect) {
                 exec(Table2.table1.foreignKey!!.dropStatement().single())
             }
-        }
-    }
-
-    @Test
-    fun testUUIDColumnType() {
-        val node = object : IntIdTable("node") {
-            val uuid = uuid("uuid")
-        }
-
-        withTables(node) {
-            val key: UUID = UUID.randomUUID()
-            val id = node.insertAndGetId { it[uuid] = key }
-            assertNotNull(id)
-            val uidById = node.selectAll().where { node.id eq id }.singleOrNull()?.get(node.uuid)
-            assertEquals(key, uidById)
-            val uidByKey = node.selectAll().where { node.uuid eq key }.singleOrNull()?.get(node.uuid)
-            assertEquals(key, uidByKey)
         }
     }
 

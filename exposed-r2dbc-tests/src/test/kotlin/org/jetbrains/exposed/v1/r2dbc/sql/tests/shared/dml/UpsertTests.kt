@@ -7,10 +7,12 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.concat
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.intLiteral
+import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.core.minus
@@ -39,11 +41,12 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.upsert
 import org.junit.jupiter.api.Test
 import java.lang.Integer.parseInt
-import java.util.*
 import kotlin.properties.Delegates
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
+import kotlin.uuid.Uuid
+import java.util.UUID as JavaUUID
 
 @Suppress("LargeClass")
 class UpsertTests : R2dbcDatabaseTestsBase() {
@@ -211,7 +214,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testUpsertWithUUIDKeyConflict() {
         val tester = object : Table("tester") {
-            val id = uuid("id").autoGenerate()
+            val id = javaUUID("id").autoGenerate()
             val title = text("title")
 
             override val primaryKey = PrimaryKey(id)
@@ -422,7 +425,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
     fun testUpsertWithUpdateExcludingColumns() {
         val tester = object : Table("tester") {
             val item = varchar("item", 64).uniqueIndex()
-            val code = uuid("code").clientDefault { UUID.randomUUID() }
+            val code = uuid("code").clientDefault { Uuid.random() }
             val gains = integer("gains")
             val losses = integer("losses")
         }
@@ -620,7 +623,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
     fun testBatchUpsertWithSequence() {
         withTables(Words) {
             val amountOfWords = 25
-            val allWords = List(amountOfWords) { UUID.randomUUID().toString() }.asSequence()
+            val allWords = List(amountOfWords) { JavaUUID.randomUUID().toString() }.asSequence()
             Words.batchUpsert(allWords) { word -> this[Words.word] = word }
 
             val batchesSize = Words.selectAll().count()
@@ -713,7 +716,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testUpsertWithUUIDPrimaryKey() {
-        val tester = object : UUIDTable("upsert_test", "id") {
+        val tester = object : UuidTable("upsert_test", "id") {
             val key = integer("test_key").uniqueIndex()
             val value = text("test_value")
         }
@@ -798,7 +801,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testDefaultValuesAndNullableColumnsNotInArguments() {
-        val tester = object : UUIDTable("test_batch_insert_defaults") {
+        val tester = object : UuidTable("test_batch_insert_defaults") {
             val number = integer("number")
             val default = varchar("default", 128).default("default")
             val defaultExpression = varchar("defaultExpression", 128).defaultExpression(stringLiteral("defaultExpression"))
@@ -808,7 +811,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
             val databaseGenerated = integer("databaseGenerated").withDefinition("DEFAULT 1").databaseGenerated()
         }
 
-        val testerWithFakeDefaults = object : UUIDTable("test_batch_insert_defaults") {
+        val testerWithFakeDefaults = object : UuidTable("test_batch_insert_defaults") {
             val number = integer("number")
             val default = varchar("default", 128).default("default-fake")
             val defaultExpression = varchar("defaultExpression", 128).defaultExpression(stringLiteral("defaultExpression-fake"))
@@ -856,11 +859,13 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
             val floatArray = array<Float>("floatArray")
             val doubleArray = array<Double>("doubleArray")
             val charArray = array<Char>("charArray")
-            val uuidArray = array<UUID>("uuidArray")
+            val uuidArray = array<Uuid>("uuidArray")
+            val javaUUIDArray = array<JavaUUID>("javaUUIDArray")
         }
 
         withTables(excludeSettings = TestDB.ALL - TestDB.H2_V2, tester) {
-            val uuidList = listOf(UUID.randomUUID(), UUID.randomUUID())
+            val uuidList = listOf(Uuid.random(), Uuid.random())
+            val javaUUIDList = listOf(JavaUUID.randomUUID(), JavaUUID.randomUUID())
             tester.upsert(tester.key) {
                 it[tester.key] = "key1"
                 it[tester.stringArray] = listOf("a", "b", "c")
@@ -878,6 +883,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
                 it[tester.doubleArray] = listOf(1.1, 2.2)
                 it[tester.charArray] = listOf('a', 'b')
                 it[tester.uuidArray] = uuidList
+                it[tester.javaUUIDArray] = javaUUIDList
             }
 
             val value = tester.selectAll().first()
@@ -896,6 +902,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
             assertEqualLists(listOf(1.1, 2.2), value[tester.doubleArray])
             assertEqualLists(listOf('a', 'b'), value[tester.charArray])
             assertEqualLists(uuidList, value[tester.uuidArray])
+            assertEqualLists(javaUUIDList, value[tester.javaUUIDArray])
         }
     }
 

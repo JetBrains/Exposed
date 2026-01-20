@@ -5,7 +5,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -16,12 +16,12 @@ import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.junit.jupiter.api.Test
 import java.sql.Connection.TRANSACTION_SERIALIZABLE
-import java.util.*
+import kotlin.uuid.Uuid
 
 class SuspendTransactionTests : DatabaseTestsBase() {
-    private val uuid = UUID.fromString("b1dd54af-314f-4dac-9b8d-a6eacb825b61")
+    private val uuid = Uuid.parseHexDash("b1dd54af-314f-4dac-9b8d-a6eacb825b61")
 
-    object TestConflictTable : UUIDTable("test_conflict") {
+    object TestConflictTable : UuidTable("test_conflict") {
         val value = integer("value")
     }
 

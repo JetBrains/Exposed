@@ -4,14 +4,17 @@ import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.datetime.*
 import org.jetbrains.exposed.v1.json.json
 import org.jetbrains.exposed.v1.json.jsonb
 import org.jetbrains.exposed.v1.money.CurrencyColumnType
 import org.jetbrains.exposed.v1.money.currency
 import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
-import java.util.*
 import kotlin.time.ExperimentalTime
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
+import java.util.UUID as JavaUUID
 
 object MigrationTestsData {
     object TableWithoutAutoIncrement : IdTable<Long>("test_table") {
@@ -69,7 +72,10 @@ object MigrationTestsData {
         val binary = binary("binary_col", 123)
         val binary2 = binary("binary_col_2", 456)
         val blob = blob("blob_col")
+
+        @OptIn(ExperimentalUuidApi::class)
         val uuid = uuid("uuid_col")
+        val javaUUID = javaUUID("java_uuid_col")
         val bool = bool("boolean_col")
         val enum1 = enumeration("enum_col_1", TestEnum::class)
         val enum2 = enumeration<TestEnum>("enum_col_2")
@@ -115,7 +121,10 @@ object MigrationTestsData {
         val largeTextArray = array("largeTextArray", LargeTextColumnType(), 110)
         val binaryArray = array("binaryArray", BinaryColumnType(123), 120)
         val blobArray = array("blobArray", BlobColumnType(), 130)
-        val uuidArray = array<UUID>("uuidArray", 140)
+
+        @OptIn(ExperimentalUuidApi::class)
+        val uuidArray = array<Uuid>("uuidArray", 140)
+        val javaUUIDArray = array<JavaUUID>("javaUuidArray", 140)
         val booleanArray = array<Boolean>("booleanArray", 150)
         val currencyArray = array("currencyArray", CurrencyColumnType(), 25)
         val dateArray = array("dateArray", KotlinLocalDateColumnType(), 366)

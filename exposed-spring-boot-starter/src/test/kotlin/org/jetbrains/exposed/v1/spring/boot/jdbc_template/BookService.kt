@@ -7,8 +7,10 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Component
 import org.springframework.transaction.support.TransactionOperations
-import java.util.UUID
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
+@OptIn(ExperimentalUuidApi::class)
 @Component
 open class BookService(
     @Qualifier("operations1")
@@ -23,7 +25,7 @@ open class BookService(
             Book.new { description = "123" }
         }
         operations1.execute {
-            val id = UUID.randomUUID().toString()
+            val id = Uuid.random().toString()
             val query = "insert into authors(id, description) values ('$id', '234234')"
             jdbcTemplate.execute(query)
         }
@@ -31,7 +33,7 @@ open class BookService(
 
     fun testWithSpringTransaction() {
         operations1.execute {
-            val id = UUID.randomUUID().toString()
+            val id = Uuid.random().toString()
             val query = "insert into authors(id, description) values ('$id', '234234')"
             jdbcTemplate.execute(query)
         }
@@ -48,7 +50,7 @@ open class BookService(
             Book.new { description = "1234" }
         }
         operations2.execute {
-            val id = UUID.randomUUID().toString()
+            val id = Uuid.random().toString()
             val query = "insert into authors(id, description) values ('$id', '234234')"
             jdbcTemplate.execute(query)
         }

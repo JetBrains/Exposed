@@ -11,7 +11,6 @@ import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.exceptions.DuplicateColumnException
 import java.math.BigDecimal
-import java.util.*
 import kotlin.internal.LowPriorityInOverloadResolution
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty1
@@ -19,6 +18,8 @@ import kotlin.reflect.KParameter
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
+import kotlin.uuid.Uuid
+import java.util.UUID as JavaUUID
 
 /** Pair of expressions used to match rows from two joined tables. */
 typealias JoinCondition = Pair<Expression<*>, Expression<*>>
@@ -650,7 +651,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * Returns the primary key of the table if present, `null` otherwise.
      *
      * The primary key can be defined explicitly by overriding the property directly or by using one of the predefined
-     * table types like `IntIdTable`, `LongIdTable`, or `UUIDIdTable`.
+     * table types like `IntIdTable`, `LongIdTable`, or `UuidIdTable`.
      */
     open val primaryKey: PrimaryKey? = null
 
@@ -889,8 +890,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     fun blob(name: String, useObjectIdentifier: Boolean = false): Column<ExposedBlob> =
         registerColumn(name, BlobColumnType(useObjectIdentifier))
 
-    /** Creates a binary column, with the specified [name], for storing UUIDs. */
-    fun uuid(name: String): Column<UUID> = registerColumn(name, UUIDColumnType())
+    /** Creates a binary column, with the specified [name], for storing [kotlin.uuid.Uuid] values. */
+    fun uuid(name: String): Column<Uuid> = registerColumn(name, UuidColumnType())
 
     // Boolean columns
 
@@ -1081,8 +1082,12 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         isDatabaseGenerated = true
     }
 
-    /** UUID column will auto generate its value on a client side just before an insert. */
-    fun Column<UUID>.autoGenerate(): Column<UUID> = clientDefault { UUID.randomUUID() }
+    /** [kotlin.uuid.Uuid] column will auto generate its value on the client side just before an insert. */
+    @JvmName("autoGenerateKotlinUuid")
+    fun Column<Uuid>.autoGenerate(): Column<Uuid> = clientDefault { Uuid.random() }
+
+    /** [java.util.UUID] column will auto generate its value on the client side just before an insert. */
+    fun Column<JavaUUID>.autoGenerate(): Column<JavaUUID> = clientDefault { JavaUUID.randomUUID() }
 
     // Column references
 

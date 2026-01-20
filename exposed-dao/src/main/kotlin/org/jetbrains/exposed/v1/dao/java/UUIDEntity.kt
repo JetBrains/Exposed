@@ -1,10 +1,12 @@
-package org.jetbrains.exposed.v1.dao
+package org.jetbrains.exposed.v1.dao.java
 
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
-import java.util.*
+import org.jetbrains.exposed.v1.dao.Entity
+import org.jetbrains.exposed.v1.dao.EntityClass
+import java.util.UUID
 
-/** Base class for an [Entity] instance identified by an [id] comprised of a wrapped `UUID` value. */
+/** Base class for an [Entity] instance identified by an [id] comprised of a wrapped [java.util.UUID] value. */
 abstract class UUIDEntity(id: EntityID<UUID>) : Entity<UUID>(id)
 
 /**
@@ -15,13 +17,11 @@ abstract class UUIDEntity(id: EntityID<UUID>) : Entity<UUID>(id)
  * @param [entityType] The expected [UUIDEntity] type. This can be left `null` if it is the class of type
  * argument [E] provided to this [UUIDEntityClass] instance. If this `UUIDEntityClass` is defined as a companion
  * object of a custom `UUIDEntity` class, the parameter will be set to this immediately enclosing class by default.
- * @sample org.jetbrains.exposed.v1.tests.shared.DDLTests.testDropTableFlushesCache
  * @param [entityCtor] The function invoked to instantiate a [UUIDEntity] using a provided [EntityID] value.
  * If a reference to a specific constructor or a custom function is not passed as an argument, reflection will
  * be used to determine the primary constructor of the associated entity class on first access. If this `UUIDEntityClass`
  * is defined as a companion object of a custom `UUIDEntity` class, the constructor will be set to that of the
  * immediately enclosing class by default.
- * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.testExplicitEntityConstructor
  */
 abstract class UUIDEntityClass<out E : UUIDEntity>(
     table: IdTable<UUID>,

@@ -335,11 +335,11 @@ public abstract class org/jetbrains/exposed/v1/dao/ULongEntityClass : org/jetbra
 	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Ljava/lang/Class;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
-public abstract class org/jetbrains/exposed/v1/dao/UUIDEntity : org/jetbrains/exposed/v1/dao/Entity {
+public abstract class org/jetbrains/exposed/v1/dao/UuidEntity : org/jetbrains/exposed/v1/dao/Entity {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;)V
 }
 
-public abstract class org/jetbrains/exposed/v1/dao/UUIDEntityClass : org/jetbrains/exposed/v1/dao/EntityClass {
+public abstract class org/jetbrains/exposed/v1/dao/UuidEntityClass : org/jetbrains/exposed/v1/dao/EntityClass {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Ljava/lang/Class;Lkotlin/jvm/functions/Function1;)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Ljava/lang/Class;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
@@ -364,5 +364,14 @@ public final class org/jetbrains/exposed/v1/dao/exceptions/EntityNotFoundExcepti
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;Lorg/jetbrains/exposed/v1/dao/EntityClass;)V
 	public final fun getEntity ()Lorg/jetbrains/exposed/v1/dao/EntityClass;
 	public final fun getId ()Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;
+}
+
+public abstract class org/jetbrains/exposed/v1/dao/java/UUIDEntity : org/jetbrains/exposed/v1/dao/Entity {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;)V
+}
+
+public abstract class org/jetbrains/exposed/v1/dao/java/UUIDEntityClass : org/jetbrains/exposed/v1/dao/EntityClass {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Ljava/lang/Class;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Ljava/lang/Class;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
