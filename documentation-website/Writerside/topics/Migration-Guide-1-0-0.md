@@ -1269,7 +1269,7 @@ transaction {
 ### H2 version 1.x.x
 
 Support for H2 versions earlier than 2.0.202 (namely 1.4.200 and earlier) has now been fully phased out. In addition,
-`H2Dialect.H2MajorVersion.One` is now deprecated and `H2Dialect`-specific properties, like `majorVersion` and `isSecondVersion`,
+`H2Dialect.H2MajorVersion.One` is now removed and `H2Dialect`-specific properties, like `majorVersion` and `isSecondVersion`,
 now throw an exception if H2 version 1.x.x is detected.
 
 Moving forward, new features will no longer be tested on H2 version 1.x.x, so support for those versions will not be guaranteed.
@@ -1334,15 +1334,15 @@ With version 1.0.0, these are now only accessible from the new driver-specific i
 | `PreparedStatementApi.addBatch()`            | `JdbcPreparedStatementApi.addBatch()`      |
 | `PreparedStatementApi.cancel()`              | `JdbcPreparedStatementApi.cancel()`        |
 
-#### `set()` deprecated
+#### `set()` removed
 
-The original `operator fun set(index: Int, value: Any)` has been deprecated. It should be replaced by a new variant
+The original `operator fun set(index: Int, value: Any)` has been removed. It should be replaced by a new variant
 that accepts a third argument for the column type associated with the value being bound to the statement.
 This new `set()` method will require an override if the interface is implemented directly.
 
-#### `setArray()` deprecated
+#### `setArray()` removed
 
-The original `setArray(index: Int, type: String, array: Array<*>)` has been deprecated. It should be replaced by a new variant
+The original `setArray(index: Int, type: String, array: Array<*>)` has been removed. It should be replaced by a new variant
 that accepts the actual `ArrayColumnType` associated with the array value being bound to the statement as the second argument,
 instead of a string representation of the type. This new `setArray()` method will require an override if the interface is
 implemented directly.

@@ -847,13 +847,6 @@ abstract class FunctionProvider {
         }
     }
 
-    @Deprecated(
-        "This function will be removed in future releases.",
-        ReplaceWith("queryLimitAndOffset(size, offset, alreadyOrdered)"),
-        DeprecationLevel.HIDDEN
-    )
-    open fun queryLimit(size: Int, offset: Long, alreadyOrdered: Boolean): String = queryLimitAndOffset(size, offset, alreadyOrdered)
-
     /**
      * Returns the SQL command that obtains information about a statement execution plan.
      *

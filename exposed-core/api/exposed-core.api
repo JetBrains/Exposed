@@ -2308,8 +2308,6 @@ public class org/jetbrains/exposed/v1/core/Table : org/jetbrains/exposed/v1/core
 	public final fun autoIncrement (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun autoIncrement (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/Sequence;)Lorg/jetbrains/exposed/v1/core/Column;
 	public static synthetic fun autoIncrement$default (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Column;
-	public final fun autoinc (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Column;
-	public static synthetic fun autoinc$default (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun binary (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun binary (Ljava/lang/String;I)Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun blob (Ljava/lang/String;Z)Lorg/jetbrains/exposed/v1/core/Column;
@@ -3135,13 +3133,11 @@ public class org/jetbrains/exposed/v1/core/statements/BatchUpdateStatement : org
 }
 
 public class org/jetbrains/exposed/v1/core/statements/BatchUpsertStatement : org/jetbrains/exposed/v1/core/statements/BatchInsertStatement, org/jetbrains/exposed/v1/core/statements/UpsertBuilder {
-	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Ljava/util/List;Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Op;Z)V
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Op;Z)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Op;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun arguments ()Ljava/lang/Iterable;
 	public fun arguments ()Ljava/util/List;
 	public final fun getKeys ()[Lorg/jetbrains/exposed/v1/core/Column;
-	public final synthetic fun getOnUpdate ()Ljava/util/List;
 	public final fun getOnUpdateExclude ()Ljava/util/List;
 	public final fun getWhere ()Lorg/jetbrains/exposed/v1/core/Op;
 	public fun insertValue (Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;
@@ -3150,25 +3146,15 @@ public class org/jetbrains/exposed/v1/core/statements/BatchUpsertStatement : org
 }
 
 public class org/jetbrains/exposed/v1/core/statements/DeleteStatement : org/jetbrains/exposed/v1/core/statements/Statement {
-	public static final field Companion Lorg/jetbrains/exposed/v1/core/statements/DeleteStatement$Companion;
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/ColumnSet;Lorg/jetbrains/exposed/v1/core/Op;ZLjava/lang/Integer;Ljava/util/List;)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/ColumnSet;Lorg/jetbrains/exposed/v1/core/Op;ZLjava/lang/Integer;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/Op;ZLjava/lang/Integer;Ljava/lang/Long;)V
 	public fun arguments ()Ljava/lang/Iterable;
 	public final fun getLimit ()Ljava/lang/Integer;
-	public final synthetic fun getOffset ()Ljava/lang/Long;
-	public final synthetic fun getTable ()Lorg/jetbrains/exposed/v1/core/Table;
 	public final fun getTargetTables ()Ljava/util/List;
 	public final fun getTargetsSet ()Lorg/jetbrains/exposed/v1/core/ColumnSet;
 	public final fun getWhere ()Lorg/jetbrains/exposed/v1/core/Op;
 	public final fun isIgnore ()Z
 	public fun prepareSQL (Lorg/jetbrains/exposed/v1/core/Transaction;Z)Ljava/lang/String;
-}
-
-public final class org/jetbrains/exposed/v1/core/statements/DeleteStatement$Companion {
-	public final fun all (Lorg/jetbrains/exposed/v1/core/Transaction;Lorg/jetbrains/exposed/v1/core/Table;)I
-	public final fun where (Lorg/jetbrains/exposed/v1/core/Transaction;Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/Op;ZLjava/lang/Integer;)I
-	public static synthetic fun where$default (Lorg/jetbrains/exposed/v1/core/statements/DeleteStatement$Companion;Lorg/jetbrains/exposed/v1/core/Transaction;Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/Op;ZLjava/lang/Integer;ILjava/lang/Object;)I
 }
 
 public abstract interface class org/jetbrains/exposed/v1/core/statements/GlobalStatementInterceptor : org/jetbrains/exposed/v1/core/statements/StatementInterceptor {
@@ -3209,7 +3195,6 @@ public class org/jetbrains/exposed/v1/core/statements/InsertStatement : org/jetb
 	public final fun getOrNull (Lorg/jetbrains/exposed/v1/core/Column;)Ljava/lang/Object;
 	public final fun getResultedValues ()Ljava/util/List;
 	public final fun getTable ()Lorg/jetbrains/exposed/v1/core/Table;
-	protected fun isColumnValuePreferredFromResultSet (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Object;)Z
 	public final fun isIgnore ()Z
 	public fun prepareSQL (Lorg/jetbrains/exposed/v1/core/Transaction;Z)Ljava/lang/String;
 	public fun setArguments (Ljava/util/List;)V
@@ -3218,8 +3203,6 @@ public class org/jetbrains/exposed/v1/core/statements/InsertStatement : org/jetb
 	protected final fun toSqlString (Ljava/util/List;Z)Ljava/lang/String;
 	protected final fun valuesAndClientDefaults (Ljava/util/Map;)Ljava/util/Map;
 	public static synthetic fun valuesAndClientDefaults$default (Lorg/jetbrains/exposed/v1/core/statements/InsertStatement;Ljava/util/Map;ILjava/lang/Object;)Ljava/util/Map;
-	protected fun valuesAndDefaults (Ljava/util/Map;)Ljava/util/Map;
-	public static synthetic fun valuesAndDefaults$default (Lorg/jetbrains/exposed/v1/core/statements/InsertStatement;Ljava/util/Map;ILjava/lang/Object;)Ljava/util/Map;
 }
 
 public class org/jetbrains/exposed/v1/core/statements/MergeSelectStatement : org/jetbrains/exposed/v1/core/statements/MergeStatement {
@@ -3550,155 +3533,11 @@ public final class org/jetbrains/exposed/v1/core/statements/UpsertBuilder$Defaul
 	public static fun storeUpdateValues (Lorg/jetbrains/exposed/v1/core/statements/UpsertBuilder;Lkotlin/jvm/functions/Function2;)V
 }
 
-public final class org/jetbrains/exposed/v1/core/statements/UpsertSqlExpressionBuilder : org/jetbrains/exposed/v1/core/ISqlExpressionBuilder {
-	public static final field INSTANCE Lorg/jetbrains/exposed/v1/core/statements/UpsertSqlExpressionBuilder;
-	public fun asLiteral (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/LiteralOp;
-	public fun between (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Object;Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Between;
-	public fun between (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Object;Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Between;
-	public fun bitwiseAnd (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/AndBitOp;
-	public fun bitwiseAnd (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/AndBitOp;
-	public fun bitwiseOr (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/OrBitOp;
-	public fun bitwiseOr (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/OrBitOp;
-	public fun bitwiseXor (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/XorBitOp;
-	public fun bitwiseXor (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/XorBitOp;
-	public fun case ()Lorg/jetbrains/exposed/v1/core/Case;
-	public fun case (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/ValueCase;
-	public fun coalesce (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;[Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Coalesce;
-	public fun concat (Ljava/lang/String;Ljava/util/List;)Lorg/jetbrains/exposed/v1/core/Concat;
-	public fun concat ([Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Concat;
-	public fun cumeDist ()Lorg/jetbrains/exposed/v1/core/CumeDist;
-	public fun denseRank ()Lorg/jetbrains/exposed/v1/core/DenseRank;
-	public fun div (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/DivideOp;
-	public fun div (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/DivideOp;
-	public fun eq (Lorg/jetbrains/exposed/v1/core/CompositeColumn;Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Op;
-	public fun eq (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Op;
-	public fun eq (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/Op;
-	public fun eq (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Op;
-	public fun eq (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Op;
-	public fun eqEntityIDValue (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Op;
-	public fun eqSubQuery (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/AbstractQuery;)Lorg/jetbrains/exposed/v1/core/EqSubQueryOp;
-	public fun firstValue (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/FirstValue;
-	public fun greater (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/GreaterOp;
-	public fun greater (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/GreaterOp;
-	public fun greater (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/v1/core/GreaterOp;
-	public fun greater (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/GreaterOp;
-	public fun greaterBetweenEntityIDs (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/GreaterOp;
-	public fun greaterEntityID (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/v1/core/GreaterOp;
-	public fun greaterEq (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/GreaterEqOp;
-	public fun greaterEq (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/GreaterEqOp;
-	public fun greaterEq (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/v1/core/GreaterEqOp;
-	public fun greaterEq (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/GreaterEqOp;
-	public fun greaterEqBetweenEntityIDs (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/GreaterEqOp;
-	public fun greaterEqEntityID (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/v1/core/GreaterEqOp;
-	public fun greaterEqSubQuery (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/AbstractQuery;)Lorg/jetbrains/exposed/v1/core/GreaterEqSubQueryOp;
-	public fun greaterSubQuery (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/AbstractQuery;)Lorg/jetbrains/exposed/v1/core/GreaterSubQueryOp;
-	public fun hasFlag (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/EqOp;
-	public fun hasFlag (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/EqOp;
-	public fun inList (Ljava/util/List;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/v1/core/ops/InListOrNotInListBaseOp;
-	public fun inList (Lkotlin/Pair;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/v1/core/ops/InListOrNotInListBaseOp;
-	public fun inList (Lkotlin/Triple;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/v1/core/ops/InListOrNotInListBaseOp;
-	public fun inList (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/v1/core/ops/InListOrNotInListBaseOp;
-	public fun inListCompositeEntityIds (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/v1/core/ops/InListOrNotInListBaseOp;
-	public fun inListCompositeIDs (Ljava/util/List;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/v1/core/ops/InListOrNotInListBaseOp;
-	public fun inListIds (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/v1/core/ops/InListOrNotInListBaseOp;
-	public fun inSubQuery (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/AbstractQuery;)Lorg/jetbrains/exposed/v1/core/InSubQueryOp;
-	public fun inTable (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Table;)Lorg/jetbrains/exposed/v1/core/ops/InTableOp;
-	public fun intToDecimal (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/NoOpConversion;
-	public fun isDistinctFrom (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/IsDistinctFromOp;
-	public fun isDistinctFrom (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/IsDistinctFromOp;
-	public fun isDistinctFrom (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/v1/core/IsDistinctFromOp;
-	public fun isDistinctFrom (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/IsDistinctFromOp;
-	public fun isDistinctFromEntityID (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/IsDistinctFromOp;
-	public fun isNotDistinctFrom (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/IsNotDistinctFromOp;
-	public fun isNotDistinctFrom (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/IsNotDistinctFromOp;
-	public fun isNotDistinctFrom (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/v1/core/IsNotDistinctFromOp;
-	public fun isNotDistinctFrom (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/IsNotDistinctFromOp;
-	public fun isNotDistinctFromEntityID (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/IsNotDistinctFromOp;
-	public fun isNotNull (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Op;
-	public fun isNull (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Op;
-	public fun isNullOrEmpty (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Op;
-	public fun lag (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/Lag;
-	public fun lastValue (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/LastValue;
-	public fun lead (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/Lead;
-	public fun less (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/LessOp;
-	public fun less (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/LessOp;
-	public fun less (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/v1/core/LessOp;
-	public fun less (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/LessOp;
-	public fun lessBetweenEntityIDs (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/LessOp;
-	public fun lessEntityID (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/v1/core/LessOp;
-	public fun lessEq (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/LessEqOp;
-	public fun lessEq (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/LessEqOp;
-	public fun lessEq (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/v1/core/LessEqOp;
-	public fun lessEq (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/LessEqOp;
-	public fun lessEqBetweenEntityIDs (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/LessEqOp;
-	public fun lessEqEntityID (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/v1/core/LessEqOp;
-	public fun lessEqSubQuery (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/AbstractQuery;)Lorg/jetbrains/exposed/v1/core/LessEqSubQueryOp;
-	public fun lessSubQuery (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/AbstractQuery;)Lorg/jetbrains/exposed/v1/core/LessSubQueryOp;
-	public fun like (Lorg/jetbrains/exposed/v1/core/Expression;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/LikeEscapeOp;
-	public fun like (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/LikeEscapeOp;
-	public fun like (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/LikePattern;)Lorg/jetbrains/exposed/v1/core/LikeEscapeOp;
-	public fun likeWithEntityID (Lorg/jetbrains/exposed/v1/core/Expression;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/LikeEscapeOp;
-	public fun likeWithEntityID (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/LikePattern;)Lorg/jetbrains/exposed/v1/core/LikeEscapeOp;
-	public fun likeWithEntityIDAndExpression (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/LikeEscapeOp;
-	public fun match (Lorg/jetbrains/exposed/v1/core/Expression;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Op;
-	public fun match (Lorg/jetbrains/exposed/v1/core/Expression;Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/vendors/FunctionProvider$MatchMode;)Lorg/jetbrains/exposed/v1/core/Op;
-	public fun minus (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/MinusOp;
-	public fun minus (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/MinusOp;
-	public fun mod (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Number;)Lorg/jetbrains/exposed/v1/core/ModOp;
-	public fun mod (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/ModOp;
-	public fun modWithEntityId (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Number;)Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;
-	public fun modWithEntityId2 (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;
-	public fun modWithEntityId3 (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;
-	public fun neq (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Op;
-	public fun neq (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/Op;
-	public fun neq (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Op;
-	public fun neq (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Op;
-	public fun neqEntityIDValue (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Op;
-	public fun notEqSubQuery (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/AbstractQuery;)Lorg/jetbrains/exposed/v1/core/NotEqSubQueryOp;
-	public fun notInList (Ljava/util/List;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/v1/core/ops/InListOrNotInListBaseOp;
-	public fun notInList (Lkotlin/Pair;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/v1/core/ops/InListOrNotInListBaseOp;
-	public fun notInList (Lkotlin/Triple;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/v1/core/ops/InListOrNotInListBaseOp;
-	public fun notInList (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/v1/core/ops/InListOrNotInListBaseOp;
-	public fun notInListCompositeEntityIds (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/v1/core/ops/InListOrNotInListBaseOp;
-	public fun notInListCompositeIDs (Ljava/util/List;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/v1/core/ops/InListOrNotInListBaseOp;
-	public fun notInListIds (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/v1/core/ops/InListOrNotInListBaseOp;
-	public fun notInSubQuery (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/AbstractQuery;)Lorg/jetbrains/exposed/v1/core/NotInSubQueryOp;
-	public fun notInTable (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Table;)Lorg/jetbrains/exposed/v1/core/ops/InTableOp;
-	public fun notLike (Lorg/jetbrains/exposed/v1/core/Expression;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/LikeEscapeOp;
-	public fun notLike (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/LikeEscapeOp;
-	public fun notLike (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/LikePattern;)Lorg/jetbrains/exposed/v1/core/LikeEscapeOp;
-	public fun notLikeWithEntityID (Lorg/jetbrains/exposed/v1/core/Expression;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/LikeEscapeOp;
-	public fun notLikeWithEntityID (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/LikePattern;)Lorg/jetbrains/exposed/v1/core/LikeEscapeOp;
-	public fun notLikeWithEntityIDAndExpression (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/LikeEscapeOp;
-	public fun nthValue (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/NthValue;
-	public fun ntile (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/Ntile;
-	public fun percentRank ()Lorg/jetbrains/exposed/v1/core/PercentRank;
-	public fun plus (Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Concat;
-	public fun plus (Lorg/jetbrains/exposed/v1/core/Expression;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Concat;
-	public fun plus (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Concat;
-	public fun plus (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/PlusOp;
-	public fun plus (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/PlusOp;
-	public fun rank ()Lorg/jetbrains/exposed/v1/core/Rank;
-	public fun regexp (Lorg/jetbrains/exposed/v1/core/Expression;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/RegexpOp;
-	public fun regexp (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;Z)Lorg/jetbrains/exposed/v1/core/RegexpOp;
-	public fun rem (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Number;)Lorg/jetbrains/exposed/v1/core/ModOp;
-	public fun rem (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/ModOp;
-	public fun remWithEntityId (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Number;)Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;
-	public fun remWithEntityId2 (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;
-	public fun remWithEntityId3 (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;
-	public fun rowNumber ()Lorg/jetbrains/exposed/v1/core/RowNumber;
-	public fun times (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/TimesOp;
-	public fun times (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/TimesOp;
-	public fun wrap (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/QueryParameter;
-}
-
 public class org/jetbrains/exposed/v1/core/statements/UpsertStatement : org/jetbrains/exposed/v1/core/statements/InsertStatement, org/jetbrains/exposed/v1/core/statements/UpsertBuilder {
-	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Ljava/util/List;Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Op;)V
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Op;)V
 	public synthetic fun arguments ()Ljava/lang/Iterable;
 	public fun arguments ()Ljava/util/List;
 	public final fun getKeys ()[Lorg/jetbrains/exposed/v1/core/Column;
-	public final synthetic fun getOnUpdate ()Ljava/util/List;
 	public final fun getOnUpdateExclude ()Ljava/util/List;
 	public final fun getWhere ()Lorg/jetbrains/exposed/v1/core/Op;
 	public fun insertValue (Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;
@@ -3777,10 +3616,7 @@ protected final class org/jetbrains/exposed/v1/core/statements/api/IdentifierMan
 
 public abstract interface class org/jetbrains/exposed/v1/core/statements/api/PreparedStatementApi {
 	public fun fillParameters (Ljava/lang/Iterable;)I
-	public fun getArrayColumnType (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/ArrayColumnType;
-	public fun set (ILjava/lang/Object;)V
 	public abstract fun set (ILjava/lang/Object;Lorg/jetbrains/exposed/v1/core/IColumnType;)V
-	public abstract fun setArray (ILjava/lang/String;[Ljava/lang/Object;)V
 	public abstract fun setArray (ILorg/jetbrains/exposed/v1/core/ArrayColumnType;[Ljava/lang/Object;)V
 	public abstract fun setInputStream (ILjava/io/InputStream;Z)V
 	public abstract fun setNull (ILorg/jetbrains/exposed/v1/core/IColumnType;)V
@@ -3788,8 +3624,6 @@ public abstract interface class org/jetbrains/exposed/v1/core/statements/api/Pre
 
 public final class org/jetbrains/exposed/v1/core/statements/api/PreparedStatementApi$DefaultImpls {
 	public static fun fillParameters (Lorg/jetbrains/exposed/v1/core/statements/api/PreparedStatementApi;Ljava/lang/Iterable;)I
-	public static fun getArrayColumnType (Lorg/jetbrains/exposed/v1/core/statements/api/PreparedStatementApi;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/ArrayColumnType;
-	public static fun set (Lorg/jetbrains/exposed/v1/core/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
 }
 
 public abstract interface class org/jetbrains/exposed/v1/core/statements/api/ResultApi : java/lang/AutoCloseable {
@@ -4265,7 +4099,6 @@ public abstract class org/jetbrains/exposed/v1/core/vendors/FunctionProvider {
 	public fun minute (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 	public fun month (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 	public fun nextVal (Lorg/jetbrains/exposed/v1/core/Sequence;Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
-	public synthetic fun queryLimit (IJZ)Ljava/lang/String;
 	public fun queryLimitAndOffset (Ljava/lang/Integer;JZ)Ljava/lang/String;
 	public fun random (Ljava/lang/Integer;)Ljava/lang/String;
 	public fun regexp (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;ZLorg/jetbrains/exposed/v1/core/QueryBuilder;)V
@@ -4343,7 +4176,6 @@ public final class org/jetbrains/exposed/v1/core/vendors/H2Dialect$H2Compatibili
 }
 
 public final class org/jetbrains/exposed/v1/core/vendors/H2Dialect$H2MajorVersion : java/lang/Enum {
-	public static final field One Lorg/jetbrains/exposed/v1/core/vendors/H2Dialect$H2MajorVersion;
 	public static final field Two Lorg/jetbrains/exposed/v1/core/vendors/H2Dialect$H2MajorVersion;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/vendors/H2Dialect$H2MajorVersion;

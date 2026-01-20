@@ -21,25 +21,6 @@ open class UpsertStatement<Key : Any>(
     val onUpdateExclude: List<Column<*>>?,
     val where: Op<Boolean>?
 ) : InsertStatement<Key>(table), UpsertBuilder {
-    @Deprecated(
-        "This constructor with `onUpdate` that takes a List may be removed in future releases.",
-        level = DeprecationLevel.HIDDEN
-    )
-    constructor(
-        table: Table,
-        vararg keys: Column<*>,
-        onUpdate: List<Pair<Column<*>, Expression<*>>>?,
-        onUpdateExclude: List<Column<*>>?,
-        where: Op<Boolean>?
-    ) : this(table, keys = keys, onUpdateExclude, where) {
-        onUpdate?.let {
-            updateValues.putAll(it)
-        }
-    }
-
-    @Deprecated("This property will be removed in future releases.", level = DeprecationLevel.HIDDEN)
-    var onUpdate: List<Pair<Column<*>, Expression<*>>>? = null
-        private set
 
     internal val updateValues: MutableMap<Column<*>, Any?> = LinkedHashMap()
 
@@ -155,15 +136,5 @@ internal class InsertValue<T>(
         functionProvider.insertValue(transaction.identity(column), queryBuilder)
     }
 }
-
-@Deprecated(
-    message = "This builder interface will continue to be phased out following release 1.0.0. " +
-        "All expression builder methods previously restricted to this interface have also been deprecated in favor of " +
-        "equivalent top-level functions, making implementations of this interface useless as a receiver in any scope. " +
-        "It will no longer be necessary to import each individual method when used outside a scoped block, " +
-        "and on demand imports will now be possible via 'import org.jetbrains.exposed.v1.core.*', if required.",
-    level = DeprecationLevel.ERROR
-)
-object UpsertSqlExpressionBuilder : ISqlExpressionBuilder
 
 fun <T> insertValue(column: Column<T>): ExpressionWithColumnType<T> = InsertValue(column, column.columnType)

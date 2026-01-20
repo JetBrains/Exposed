@@ -1035,14 +1035,6 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     fun <N : Any> Column<N>.autoIncrement(sequence: Sequence): Column<N> =
         cloneWithAutoInc(sequence).also { replaceColumn(this, it) }
 
-    @Deprecated(
-        message = "This function will be removed in future releases.",
-        replaceWith = ReplaceWith("autoIncrement(idSeqName)"),
-        level = DeprecationLevel.ERROR
-    )
-    fun <N : Any> Column<EntityID<N>>.autoinc(idSeqName: String? = null): Column<EntityID<N>> =
-        cloneWithAutoInc(idSeqName).also { replaceColumn(this, it) }
-
     /** Sets the default value for this column in the database side. */
     fun <T> Column<T>.default(defaultValue: T): Column<T> = apply {
         dbDefaultValue = asLiteral(defaultValue)
