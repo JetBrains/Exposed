@@ -4442,6 +4442,7 @@ public class org/jetbrains/exposed/v1/core/vendors/PostgreSQLDialect : org/jetbr
 	public fun dropIndex (Ljava/lang/String;Ljava/lang/String;ZZ)Ljava/lang/String;
 	public fun getName ()Ljava/lang/String;
 	public fun getRequiresAutoCommitOnCreateDrop ()Z
+	public fun getSupportsColumnTypeChange ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z
 	public fun getSupportsSelectForUpdate ()Z
 	public fun getSupportsSubqueryUnions ()Z
