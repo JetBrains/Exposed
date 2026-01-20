@@ -2,9 +2,10 @@ package org.jetbrains.exposed.v1.tests.shared.entities
 
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.core.dao.id.JavaUUIDTable
-import org.jetbrains.exposed.v1.dao.JavaUUIDEntity
-import org.jetbrains.exposed.v1.dao.JavaUUIDEntityClass
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.dao.java.UUIDEntity
+import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import org.jetbrains.exposed.v1.dao.with
 import org.jetbrains.exposed.v1.jdbc.exists
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
@@ -17,49 +18,49 @@ import java.util.UUID as JavaUUID
 
 @Suppress("MemberNameEqualsClassName")
 object JavaUUIDTables {
-    object Cities : JavaUUIDTable() {
+    object Cities : UUIDTable() {
         val name = varchar("name", 50)
     }
 
-    class City(id: EntityID<JavaUUID>) : JavaUUIDEntity(id) {
-        companion object : JavaUUIDEntityClass<City>(Cities, null, null)
+    class City(id: EntityID<JavaUUID>) : UUIDEntity(id) {
+        companion object : UUIDEntityClass<City>(Cities, null, null)
 
         var name by Cities.name
         val towns by Town referrersOn Towns.cityId
     }
 
-    object People : JavaUUIDTable() {
+    object People : UUIDTable() {
         val name = varchar("name", 80)
         val cityId = reference("city_id", Cities)
     }
 
-    class Person(id: EntityID<JavaUUID>) : JavaUUIDEntity(id) {
-        companion object : JavaUUIDEntityClass<Person>(People)
+    class Person(id: EntityID<JavaUUID>) : UUIDEntity(id) {
+        companion object : UUIDEntityClass<Person>(People)
 
         var name by People.name
         var city by City referencedOn People.cityId
     }
 
-    object Addresses : JavaUUIDTable() {
+    object Addresses : UUIDTable() {
         val person = reference("person_id", People)
         val city = reference("city_id", Cities)
         val address = varchar("address", 255)
     }
 
-    class Address(id: EntityID<JavaUUID>) : JavaUUIDEntity(id) {
-        companion object : JavaUUIDEntityClass<Address>(Addresses)
+    class Address(id: EntityID<JavaUUID>) : UUIDEntity(id) {
+        companion object : UUIDEntityClass<Address>(Addresses)
 
         var person by Person.referencedOn(Addresses.person)
         var city by City.referencedOn(Addresses.city)
         var address by Addresses.address
     }
 
-    object Towns : JavaUUIDTable("towns") {
+    object Towns : UUIDTable("towns") {
         val cityId: Column<JavaUUID> = javaUUID("city_id").references(Cities.id)
     }
 
-    class Town(id: EntityID<JavaUUID>) : JavaUUIDEntity(id) {
-        companion object : JavaUUIDEntityClass<Town>(Towns)
+    class Town(id: EntityID<JavaUUID>) : UUIDEntity(id) {
+        companion object : UUIDEntityClass<Town>(Towns)
 
         var city by City referencedOn Towns.cityId
     }
