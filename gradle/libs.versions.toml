@@ -42,7 +42,7 @@ javax-money = "1.1"
 moneta = "1.4.5"
 hikariCP = "7.0.2"
 logcaptor = "2.12.2"
-maven-publish = "0.35.0"
+maven-publish = "0.36.0"
 
 [libraries]
 jvm = { group = "org.jetbrains.kotlin.jvm", name = "org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }
