@@ -1183,11 +1183,6 @@ interface ISqlExpressionBuilder {
         } as IdTable<T>
 }
 
-@Suppress("ForbiddenComment")
-// TODO: Pick a single way to write "SQL" and use it across the board for 1.0
-// TODO check Kotlin style guide
-// TODO Decide what to do when it comes at the end : "PostgreSQLDialect" vs "PostgresqlDialect" or "PostgreSqlDialect"
-
 @Deprecated(
     message = "This builder object will continue to be phased out following release 1.0.0. " +
         "All expression builder methods previously restricted to this object have also been deprecated in favor of " +

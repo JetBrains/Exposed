@@ -284,11 +284,6 @@ public final class org/jetbrains/exposed/v1/dao/OptionalReference {
 	public final fun getReference ()Lorg/jetbrains/exposed/v1/core/Column;
 }
 
-public final class org/jetbrains/exposed/v1/dao/OptionalReferrers : org/jetbrains/exposed/v1/dao/Referrers {
-	public fun <init> (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/dao/EntityClass;ZLjava/util/Map;)V
-	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/dao/EntityClass;ZLjava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-}
-
 public final class org/jetbrains/exposed/v1/dao/Reference {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/dao/EntityClass;Ljava/util/Map;)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/dao/EntityClass;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V

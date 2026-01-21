@@ -47,41 +47,6 @@ open class InsertStatement<Key : Any>(
      */
     fun <T> getOrNull(column: Column<T>): T? = resultedValues?.firstOrNull()?.getOrNull(column)
 
-    @OptIn(InternalApi::class)
-    @Suppress("NestedBlockDepth")
-    @Deprecated(
-        "This function is used in derived classes to build a list of arguments. " +
-            "It's recommended to avoid including all default and nullable values in insert statements, " +
-            "as these values can often be generated automatically by the database. " +
-            "There are no usages of that function inside Exposed. Saved as deprecated for back compatability",
-        level = DeprecationLevel.ERROR
-    )
-    protected open fun valuesAndDefaults(values: Map<Column<*>, Any?> = this.values): Map<Column<*>, Any?> {
-        val result = values.toMutableMap()
-        targets.forEach { table ->
-            table.columns.forEach { column ->
-                if ((column.dbDefaultValue != null || column.defaultValueFun != null) && column !in values.keys) {
-                    val value = when {
-                        column.defaultValueFun != null -> column.defaultValueFun!!()
-                        else -> DefaultValueMarker
-                    }
-                    result[column] = value
-                }
-            }
-        }
-        return result
-    }
-
-    @Deprecated(
-        "This function has been obsolete since version 0.57.0, " +
-            "following the removal of default values from insert statements. " +
-            "It's safe to remove any overrides of this function from your code.",
-        level = DeprecationLevel.ERROR
-    )
-    protected open fun isColumnValuePreferredFromResultSet(column: Column<*>, value: Any?): Boolean {
-        return column.columnType.isAutoInc || value is NextVal<*>
-    }
-
     protected fun clientDefaultColumns() = targets
         // The current check for existing client side without db side default value
         .flatMap { it.columns.filter { column -> column.dbDefaultValue == null && column.defaultValueFun != null } }

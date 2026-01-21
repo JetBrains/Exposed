@@ -95,21 +95,6 @@ suspend fun Table.deleteAll(): Int {
     return DeleteSuspendExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
-@Deprecated(
-    "This `deleteReturning()` with a nullable `where` parameter will be removed in future releases. Please leave a comment on " +
-        "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-494/Inline-DSL-statement-and-query-functions) " +
-        "with a use-case if a nullable condition cannot be replaced with the new `deleteReturning()` overloads.",
-    ReplaceWith("deleteReturning(returning)"),
-    DeprecationLevel.ERROR
-)
-@JvmName("deleteReturningNullableParam")
-fun <T : Table> T.deleteReturning(
-    returning: List<Expression<*>> = columns,
-    where: (() -> Op<Boolean>)? = null
-): ReturningSuspendExecutable {
-    return where?.let { deleteReturning(returning, it) } ?: deleteReturning(returning)
-}
-
 /**
  * Represents the SQL statement that deletes rows in a table and returns specified data from the deleted rows.
  *
@@ -140,26 +125,6 @@ fun <T : Table> T.deleteReturning(
 ): ReturningSuspendExecutable {
     val stmt = buildStatement { deleteReturning(returning) }
     return ReturningSuspendExecutable(stmt)
-}
-
-@Deprecated(
-    "This `Join.delete()` with a nullable `where` parameter will be removed in future releases. Please leave a comment on " +
-        "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-494/Inline-DSL-statement-and-query-functions) " +
-        "with a use-case if a nullable condition cannot be replaced with the new `Join.delete()` overloads.",
-    ReplaceWith("delete(targetTable, targetTables = targetTables, ignore, limit)"),
-    DeprecationLevel.ERROR
-)
-@JvmName("deleteJoinNullableParam")
-suspend fun Join.delete(
-    targetTable: Table,
-    vararg targetTables: Table,
-    ignore: Boolean = false,
-    limit: Int? = null,
-    where: (() -> Op<Boolean>)? = null
-): Int {
-    return where?.let {
-        delete(targetTable, targetTables = targetTables, ignore, limit, it)
-    } ?: delete(targetTable, targetTables = targetTables, ignore, limit)
 }
 
 /**
@@ -505,18 +470,6 @@ private suspend fun <E, S1 : BatchInsertStatement, S2 : BatchInsertSuspendExecut
     return result
 }
 
-@Deprecated(
-    "This `update()` with a nullable `where` parameter will be removed in future releases. Please leave a comment on " +
-        "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-494/Inline-DSL-statement-and-query-functions) " +
-        "with a use-case if a nullable condition cannot be replaced with the new `update()` overloads.",
-    ReplaceWith("update(limit = limit) { body.invoke() }"),
-    DeprecationLevel.ERROR
-)
-@JvmName("updateNullableParam")
-suspend fun <T : Table> T.update(where: (() -> Op<Boolean>)? = null, limit: Int? = null, body: T.(UpdateStatement) -> Unit): Int {
-    return where?.let { update(it, limit, body) } ?: update(limit, body)
-}
-
 /**
  * Represents the SQL statement that updates rows of a table.
  *
@@ -555,18 +508,6 @@ suspend fun <T : Table> T.update(
     return UpdateSuspendExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
-@Deprecated(
-    "This `Join.update()` with a nullable `where` parameter will be removed in future releases. Please leave a comment on " +
-        "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-494/Inline-DSL-statement-and-query-functions) " +
-        "with a use-case if a nullable condition cannot be replaced with the new `Join.update()` overloads.",
-    ReplaceWith("update(limit = limit) { body.invoke() }"),
-    DeprecationLevel.ERROR
-)
-@JvmName("updateJoinNullableParam")
-suspend fun Join.update(where: (() -> Op<Boolean>)? = null, limit: Int? = null, body: (UpdateStatement) -> Unit): Int {
-    return where?.let { update(it, limit, body) } ?: update(limit, body)
-}
-
 /**
  * Represents the SQL statement that updates rows of a join relation.
  *
@@ -597,22 +538,6 @@ suspend fun Join.update(
 ): Int {
     val stmt = buildStatement { update(null, limit, body) }
     return UpdateSuspendExecutable(stmt).execute(TransactionManager.current()) ?: 0
-}
-
-@Deprecated(
-    "This `updateReturning()` with a nullable `where` parameter will be removed in future releases. Please leave a comment on " +
-        "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-494/Inline-DSL-statement-and-query-functions) " +
-        "with a use-case if a nullable condition cannot be replaced with the new `updateReturning()` overloads.",
-    ReplaceWith("updateReturning(returning) { body.invoke() }"),
-    DeprecationLevel.ERROR
-)
-@JvmName("updateReturningNullableParam")
-fun <T : Table> T.updateReturning(
-    returning: List<Expression<*>> = columns,
-    where: (() -> Op<Boolean>)? = null,
-    body: T.(UpdateStatement) -> Unit
-): ReturningSuspendExecutable {
-    return where?.let { updateReturning(returning, it, body) } ?: updateReturning(returning, body)
 }
 
 /**
@@ -791,22 +716,6 @@ private suspend fun <T : Table, E> T.batchUpsert(
         batchUpsert(onUpdateList, onUpdate, onUpdateExclude, where, shouldReturnGeneratedValues, keys = keys, body)
     }
     BatchUpsertSuspendExecutable(stmt)
-}
-
-@Deprecated(
-    "This `mergeFrom()` with a nullable `on` parameter will be removed in future releases. Please leave a comment on " +
-        "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-494/Inline-DSL-statement-and-query-functions) " +
-        "with a use-case if a nullable condition cannot be replaced with the new `mergeFrom()` overloads.",
-    ReplaceWith("mergeFrom(source) { body.invoke() }"),
-    DeprecationLevel.ERROR
-)
-@JvmName("mergeFromNullableParam")
-suspend fun <D : Table, S : Table> D.mergeFrom(
-    source: S,
-    on: (() -> Op<Boolean>)? = null,
-    body: MergeTableStatement.() -> Unit
-): MergeTableStatement {
-    return on?.let { mergeFrom(source, it, body) } ?: mergeFrom(source, body)
 }
 
 /**

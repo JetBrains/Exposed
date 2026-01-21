@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.v1.core.statements
 
 import org.jetbrains.exposed.v1.core.Column
-import org.jetbrains.exposed.v1.core.Expression
 import org.jetbrains.exposed.v1.core.IColumnType
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.Table
@@ -28,26 +27,6 @@ open class BatchUpsertStatement(
     val where: Op<Boolean>?,
     shouldReturnGeneratedValues: Boolean = true
 ) : BatchInsertStatement(table, ignore = false, shouldReturnGeneratedValues), UpsertBuilder {
-    @Deprecated(
-        "This constructor with `onUpdate` that takes a List may be removed in future releases.",
-        level = DeprecationLevel.HIDDEN
-    )
-    constructor(
-        table: Table,
-        vararg keys: Column<*>,
-        onUpdate: List<Pair<Column<*>, Expression<*>>>?,
-        onUpdateExclude: List<Column<*>>?,
-        where: Op<Boolean>?,
-        shouldReturnGeneratedValues: Boolean
-    ) : this(table, keys = keys, onUpdateExclude, where, shouldReturnGeneratedValues) {
-        onUpdate?.let {
-            updateValues.putAll(it)
-        }
-    }
-
-    @Deprecated("This property will be removed in future releases.", level = DeprecationLevel.HIDDEN)
-    var onUpdate: List<Pair<Column<*>, Expression<*>>>? = null
-        private set
 
     internal val updateValues: MutableMap<Column<*>, Any?> = LinkedHashMap()
 

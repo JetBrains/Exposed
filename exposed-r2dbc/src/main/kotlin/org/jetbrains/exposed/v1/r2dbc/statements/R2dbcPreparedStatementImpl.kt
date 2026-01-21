@@ -8,8 +8,6 @@ import org.jetbrains.exposed.v1.core.ArrayColumnType
 import org.jetbrains.exposed.v1.core.BinaryColumnType
 import org.jetbrains.exposed.v1.core.BlobColumnType
 import org.jetbrains.exposed.v1.core.IColumnType
-import org.jetbrains.exposed.v1.core.InternalApi
-import org.jetbrains.exposed.v1.core.VarCharColumnType
 import org.jetbrains.exposed.v1.core.statements.StatementResult
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import org.jetbrains.exposed.v1.r2dbc.mappers.R2dbcTypeMapping
@@ -81,15 +79,6 @@ class R2dbcPreparedStatementImpl(
 //        }
     }
 
-    @Deprecated(
-        message = "This operator function will be removed in future releases. " +
-            "Replace with the method `set(index, value, this)` that accepts a third argument for the IColumnType of the parameter value being bound.",
-        level = DeprecationLevel.ERROR
-    )
-    override fun set(index: Int, value: Any) {
-        set(index, value, VarCharColumnType())
-    }
-
     override fun set(index: Int, value: Any, columnType: IColumnType<*>) {
         // Try to use the type mappers first
         if (typeMapping.setValue(statement, currentDialect, columnType, value, index)) {
@@ -115,16 +104,6 @@ class R2dbcPreparedStatementImpl(
         }
 
         throw IllegalArgumentException("Unsupported InputStream for column type: ${columnType::class.qualifiedName}")
-    }
-
-    @Deprecated(
-        message = "This function will be removed in future releases. " +
-            "Replace with the method `setArray(index, this, array)` that accepts an ArrayColumnType as the second argument instead of a string type representation.",
-        level = DeprecationLevel.ERROR
-    )
-    override fun setArray(index: Int, type: String, array: Array<*>) {
-        @OptIn(InternalApi::class)
-        setArray(index, getArrayColumnType(type), array)
     }
 
     override fun setArray(index: Int, type: ArrayColumnType<*, *>, array: Array<*>) {
