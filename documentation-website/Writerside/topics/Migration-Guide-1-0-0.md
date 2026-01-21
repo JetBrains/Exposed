@@ -264,6 +264,63 @@ transaction {
 
 </compare>
 
+## Spring dependencies
+
+Version 1.0.0 maintains compatibility with Spring Framework 6 and Spring Boot 3 via the original `exposed-spring-boot-starter`
+artifact (and its `spring-transaction` dependency).
+
+In order to migrate to Spring Framework 7 and Spring Boot 4, this dependency should be replaced with the new versioned artifact,
+`exposed-spring-boot4-starter`:
+
+<compare first-title="0.61.0" second-title="1.0.0">
+
+```kotlin
+dependencies {
+    // ...
+    implementation("org.jetbrains.exposed:exposed-spring-boot-starter:0.61.0")
+}
+```
+
+```kotlin
+dependencies {
+    // Only if migrating from Spring Boot 3 to Spring Boot 4
+    implementation("org.jetbrains.exposed:exposed-spring-boot4-starter:1.0.0")
+}
+```
+
+</compare>
+
+This means that the import path of the provided Spring Boot 4 compatible classes has also been updated to follow the pattern
+of the other [package changes](#updated-imports):
+
+<compare first-title="0.61.0" second-title="1.0.0">
+
+```kotlin
+import org.jetbrains.exposed.v1.spring.boot.autoconfigure.ExposedAutoConfiguration
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration
+import org.springframework.boot.autoconfigure.SpringBootApplication
+
+@SpringBootApplication
+@ImportAutoConfiguration(ExposedAutoConfiguration::class)
+class SpringApplication
+```
+
+```kotlin
+// Only if migrating from Spring 6 to Spring 7
+import org.jetbrains.exposed.v1.spring.boot4.autoconfigure.ExposedAutoConfiguration
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration
+import org.springframework.boot.autoconfigure.SpringBootApplication
+
+@SpringBootApplication
+@ImportAutoConfiguration(ExposedAutoConfiguration::class)
+class SpringApplication
+```
+
+</compare>
+
+If migrating to Spring Framework 7 and using Exposed's `SpringTransactionManager` directly, a dependency on the `spring-transaction`
+artifact should be replaced with the new versioned `spring7-transaction` dependency.
+
 ## Transactions
 
 The class `Transaction` remains in `exposed-core` but it is now abstract and all its driver-specific properties and methods
