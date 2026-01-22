@@ -180,7 +180,7 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
             @Suppress("SwallowedException")
             try {
                 this?.findColumn(col.name)?.let { col to it }
-            } catch (e: SQLException) {
+            } catch (_: SQLException) {
                 null
             }
         }
