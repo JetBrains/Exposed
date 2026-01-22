@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.v1.core.statements.api
 
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.java.UUIDColumnType
 import java.io.InputStream
 
 /** Represents a precompiled SQL statement. */
