@@ -1,7 +1,7 @@
 [versions]
 kotlin-version = "2.2.0"
 ktor-version = "3.3.2"
-exposed-version = "1.0.0-rc-4"
+exposed-version = "1.0.0"
 postgresql-r2dbc-version = "1.1.1.RELEASE"
 logback-version = "1.5.21"
 
