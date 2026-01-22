@@ -35,7 +35,9 @@ dependencies {
     dokka(projects.exposed.exposedMoney)
     dokka(projects.exposed.exposedR2dbc)
     dokka(projects.exposed.exposedSpringBootStarter)
+    dokka(projects.exposed.exposedSpringBoot4Starter)
     dokka(projects.exposed.springTransaction)
+    dokka(projects.exposed.spring7Transaction)
 
     // Kover aggregated coverage dependencies
     // Include all source modules for coverage aggregation
@@ -44,7 +46,9 @@ dependencies {
     kover(project(":exposed-jodatime"))
     kover(project(":exposed-java-time"))
     kover(project(":spring-transaction"))
+    kover(project(":spring7-transaction"))
     kover(project(":exposed-spring-boot-starter"))
+    kover(project(":exposed-spring-boot4-starter"))
     kover(project(":exposed-jdbc"))
     kover(project(":exposed-money"))
     kover(project(":exposed-kotlin-datetime"))
