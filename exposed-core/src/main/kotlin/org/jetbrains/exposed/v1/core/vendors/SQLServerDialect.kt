@@ -8,7 +8,7 @@ import org.jetbrains.exposed.v1.core.statements.MergeStatement.ClauseAction.UPDA
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.exceptions.throwUnsupportedException
-import java.util.*
+import java.util.UUID as JavaUUID
 
 internal object SQLServerDataTypeProvider : DataTypeProvider() {
     override fun byteType(): String = if (currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.SQLServer) {
@@ -35,7 +35,7 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
 
     override fun blobType(): String = "VARBINARY(MAX)"
     override fun uuidType(): String = "uniqueidentifier"
-    override fun uuidToDB(value: UUID): Any = value.toString()
+    override fun uuidToDB(value: JavaUUID): Any = value.toString()
     override fun dateTimeType(): String = "DATETIME2"
     override fun timestampWithTimeZoneType(): String =
         if (currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.SQLServer) {

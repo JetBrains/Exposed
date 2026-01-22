@@ -5,14 +5,14 @@ import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.exceptions.throwUnsupportedException
 import java.sql.Types
-import java.util.*
+import java.util.UUID as JavaUUID
 
 internal object H2DataTypeProvider : DataTypeProvider() {
     override fun binaryType(): String = "VARBINARY"
 
     override fun uuidType(): String = "UUID"
 
-    override fun uuidToDB(value: UUID): Any = value
+    override fun uuidToDB(value: JavaUUID): Any = value
 
     override fun dateTimeType(): String {
         @Suppress("MagicNumber")
@@ -219,12 +219,6 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     /** Represents the major version number x.0.0 of the H2 Database. */
     enum class H2MajorVersion {
-        @Deprecated(
-            message = "This H2 database version is no longer supported and will be removed in release 1.0.0.",
-            level = DeprecationLevel.ERROR
-        )
-        One,
-
         /** H2 database version 2.0.0+. */
         Two,
     }

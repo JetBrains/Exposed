@@ -58,19 +58,21 @@ see the full [guide on modules](https://www.jetbrains.com/help/exposed/exposed-m
 
 As well as the following extension modules:
 
-| Module                        | Function                                                                                                                                                                        |
-|-------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `exposed-crypt`               | Provides additional column types to store encrypted data in the database and encode/decode it on the client-side                                                                |
-| `exposed-java-time`           | Date-time extensions based on the [Java 8 Time API](https://docs.oracle.com/javase/8/docs/api/java/time/package-summary.html)                                                   |
-| `exposed-jodatime`            | Date-time extensions based on the [Joda-Time](https://www.joda.org/joda-time/) library                                                                                          |
-| `exposed-json`                | JSON and JSONB data type extensions                                                                                                                                             |
-| `exposed-kotlin-datetime`     | Date-time extensions based on the [`kotlinx-datetime`](https://kotlinlang.org/api/kotlinx-datetime/) library                                                                    |
-| `exposed-migration-core`      | Provides core common functionality for database schema migrations                                                                                                               |
-| `exposed-migration-jdbc`      | Provides utilities to support database schema migrations, with a reliance on a JDBC driver                                                                                      |
-| `exposed-migration-r2dbc`     | Provides utilities to support database schema migrations, with a reliance on a R2DBC driver                                                                                     |
-| `exposed-money`               | Extensions to support [`MonetaryAmount`](https://javamoney.github.io/apidocs/java.money/javax/money/MonetaryAmount.html) from the [JavaMoney API](https://javamoney.github.io/) |
-| `exposed-spring-boot-starter` | A starter for [Spring Boot](https://spring.io/projects/spring-boot) to utilize Exposed as the ORM instead of [Hibernate](https://hibernate.org/)                                |
-| `spring-transaction`          | Transaction manager that builds on top of Spring's standard transaction workflow                                                                                                |
+| Module                         | Function                                                                                                                                                                        |
+|--------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `exposed-crypt`                | Provides additional column types to store encrypted data in the database and encode/decode it on the client-side                                                                |
+| `exposed-java-time`            | Date-time extensions based on the [Java 8 Time API](https://docs.oracle.com/javase/8/docs/api/java/time/package-summary.html)                                                   |
+| `exposed-jodatime`             | Date-time extensions based on the [Joda-Time](https://www.joda.org/joda-time/) library                                                                                          |
+| `exposed-json`                 | JSON and JSONB data type extensions                                                                                                                                             |
+| `exposed-kotlin-datetime`      | Date-time extensions based on the [`kotlinx-datetime`](https://kotlinlang.org/api/kotlinx-datetime/) library                                                                    |
+| `exposed-migration-core`       | Provides core common functionality for database schema migrations                                                                                                               |
+| `exposed-migration-jdbc`       | Provides utilities to support database schema migrations, with a reliance on a JDBC driver                                                                                      |
+| `exposed-migration-r2dbc`      | Provides utilities to support database schema migrations, with a reliance on a R2DBC driver                                                                                     |
+| `exposed-money`                | Extensions to support [`MonetaryAmount`](https://javamoney.github.io/apidocs/java.money/javax/money/MonetaryAmount.html) from the [JavaMoney API](https://javamoney.github.io/) |
+| `exposed-spring-boot-starter`  | A starter for [Spring Boot 3](https://spring.io/projects/spring-boot) to utilize Exposed as the ORM                                                                             |
+| `exposed-spring-boot4-starter` | A starter for [Spring Boot 4](https://spring.io/projects/spring-boot) to utilize Exposed as the ORM                                                                             |
+| `spring-transaction`           | Transaction manager that builds on top of the standard transaction workflow from Spring Framework 6                                                                             |
+| `spring7-transaction`          | Transaction manager that builds on top of the standard transaction workflow from Spring Framework 7                                                                             |
 
 ### Requirements
 
@@ -78,8 +80,10 @@ Kotlin version 2.1.+
 
 The following module(s) require JDK 17 or newer:
 * `spring-transaction` - depends on Spring Framework 6
+* `spring7-transaction` - depends on Spring Framework 7
 * `exposed-spring-boot-starter` - depends on Spring Boot 3
-* `exposed-crypt` - depends on Spring Security 6
+* `exposed-spring-boot4-starter` - depends on Spring Boot 4
+* `exposed-crypt` - depends on Spring Security 7
 
 The following module(s) require JDK 11 or newer:
 * `exposed-r2dbc`

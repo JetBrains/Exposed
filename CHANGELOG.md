@@ -1,3 +1,56 @@
+# 1.0.0
+
+Breaking changes:
+* chore!: Remove unused R2dbcPreparedStatementApi methods by @bog-walk in https://github.com/JetBrains/Exposed/pull/2683
+* fix!: EXPOSED-956 Enable auto-wrapping of SQLite JSONB columns by JSON() when querying by @bog-walk in https://github.com/JetBrains/Exposed/pull/2689
+* fix!: Exposed-889 ClassCast is wrong for TransactionManager by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2688
+* feat!: EXPOSED-507 Support kotlin.uuid.Uuid as a column type by @bog-walk in https://github.com/JetBrains/Exposed/pull/2706
+
+Features:
+* feat: EXPOSED-657 Support regular spring JDBC transactions in the Exposed SpringTransactionManager by @bystam in https://github.com/JetBrains/Exposed/pull/2675
+* feat: EXPOSED-968 Update _IdTable classes to accept sequence name by @zackman0010 in https://github.com/JetBrains/Exposed/pull/2701
+* feat: Add starter module with Spring Boot 4 support by @bog-walk in https://github.com/JetBrains/Exposed/pull/2717
+
+Deprecations:
+* deprecate: Raise deprecation level of API elements by @bog-walk in https://github.com/JetBrains/Exposed/pull/2718
+
+Infrastructure:
+* Kotlin 2.2.20
+* SQL Server 17.x
+* MariaDB Connector 3.5.6
+* MySQL Connector 8.4.0
+* kover 0.9.4
+* springFramework 6.2.15
+* postgresql 42.7.9
+* r2dbc-mssql 1.0.4.RELEASE
+* logcaptor 2.12.2
+
+Tests:
+* test: EXPOSED-941 Bump to JUnit 5 in all test suites & JUnit 6 where possible by @bog-walk in https://github.com/JetBrains/Exposed/pull/2668
+* test: Add tests missing across jdbc and r2dbc testing suites & add tags by @bog-walk in https://github.com/JetBrains/Exposed/pull/2673
+
+Docs:
+* docs: Update sample projects with latest versions by @bog-walk in https://github.com/JetBrains/Exposed/pull/2671
+* docs: Add dynamic toml badge for Kotlin version to README by @bog-walk in https://github.com/JetBrains/Exposed/pull/2672
+* docs: EXPOSED-929 Update top-level documentation topics by @vnikolova in https://github.com/JetBrains/Exposed/pull/2700
+* docs: Add missing migration guide sections by @bog-walk in https://github.com/JetBrains/Exposed/pull/2702
+* docs: typo mxml -> xml in README.md docs by @devch37 in https://github.com/JetBrains/Exposed/pull/2714
+
+Bug fixes:
+* fix: Unsupported driver exception with unmapped R2DBC driver by @bog-walk in https://github.com/JetBrains/Exposed/pull/2676
+* fix: thread local stack duplications by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2680
+* fix: R2dbcTransaction parameters should be defined at beginTransaction() by @bog-walk in https://github.com/JetBrains/Exposed/pull/2679
+* fix: Exposed-950 Order by clause is repeated hundredfold by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2682
+* fix: Update collect implementation in LazySizedCollection and mapLazy of r2dbc by @tronto20 in https://github.com/JetBrains/Exposed/pull/2615
+* fix: Foreign key is lost when using entityId() with reference column by @mole828 in https://github.com/JetBrains/Exposed/pull/2466
+* fix: EXPOSED-698 Fix dropIndex() for Oracle and H2 Dialects by @Avi18971911 in https://github.com/JetBrains/Exposed/pull/2399
+* fix: Exposed-829 Eager loading relationships with an orderBy by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2693
+* fix: EXPOSED-754 Fix global rollback mark not set on unchecked exception in spring transaction by @zbqmgldjfh in https://github.com/JetBrains/Exposed/pull/2453
+* fix: EXPOSED-952 Update ExposedAotContribution runtime reflection hints with new API classes by @bog-walk in https://github.com/JetBrains/Exposed/pull/2684
+* fix: EXPOSED-951 Restored transaction userData not accessible to afterCommit() interceptor by @bog-walk in https://github.com/JetBrains/Exposed/pull/2690
+* fix: Postgres column names are case sensitive (uppercase / lowercase) by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2709
+* fix: Exception is printed even when exception is caught #547 by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2707
+
 # 1.0.0-rc-4
 
 Breaking changes:

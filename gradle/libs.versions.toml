@@ -16,7 +16,7 @@ mariaDB = "3.5.6"
 mysql51 = "5.1.49"
 mysql80 = "8.4.0"
 oracle = "23.26.0.0.0"
-postgre = "42.7.8"
+postgre = "42.7.9"
 postgreNG = "0.8.9"
 sqlite3 = "3.50.2.0"
 sqlserver = "13.2.1.jre11"
@@ -28,12 +28,14 @@ mariadb-r2dbc = "1.3.0"
 mysql-r2dbc = "1.4.1"
 oracle-r2dbc = "1.3.0"
 postgresql-r2dbc = "1.1.1.RELEASE"
-sqlserver-r2dbc = "1.0.3.RELEASE"
+sqlserver-r2dbc = "1.0.4.RELEASE"
 
-springFramework = "6.2.15"
-springBoot = "3.5.8"
+springFramework6 = "6.2.15"
+springFramework7 = "7.0.1"
+springBoot3 = "3.5.8"
+springBoot4 = "4.0.0"
 
-spring-security-crypto = "6.2.1"
+spring-security-crypto = "7.0.0"
 joda-time = "2.14.0"
 junit5 = "5.14.1"
 junit6 = "6.0.1"
@@ -41,7 +43,7 @@ kotlinx-datetime = "0.7.1-0.6.x-compat"
 javax-money = "1.1"
 moneta = "1.4.5"
 hikariCP = "7.0.2"
-logcaptor = "2.12.1"
+logcaptor = "2.12.2"
 maven-publish = "0.35.0"
 
 [libraries]
@@ -69,14 +71,22 @@ junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform
 javax-money = { group = "javax.money", name = "money-api", version.ref = "javax-money" }
 moneta = { group = "org.javamoney", name = "moneta", version.ref = "moneta" }
 
-spring-boot-starter-jdbc = { group = "org.springframework.boot", name = "spring-boot-starter-jdbc", version.ref = "springBoot" }
-spring-boot-autoconfigure = { group = "org.springframework.boot", name = "spring-boot-autoconfigure", version.ref = "springBoot" }
-spring-boot-configuration-processor = { group = "org.springframework.boot", name = "spring-boot-configuration-processor", version.ref = "springBoot" }
-spring-boot-starter-test = { group = "org.springframework.boot", name = "spring-boot-starter-test", version.ref = "springBoot" }
-spring-boot-starter-webflux = { group = "org.springframework.boot", name = "spring-boot-starter-webflux", version.ref = "springBoot" }
-spring-jdbc = { group = "org.springframework", name = "spring-jdbc", version.ref = "springFramework" }
-spring-context = { group = "org.springframework", name = "spring-context", version.ref = "springFramework" }
-spring-test = { group = "org.springframework", name = "spring-test", version.ref = "springFramework" }
+spring-boot3-starter-jdbc = { group = "org.springframework.boot", name = "spring-boot-starter-jdbc", version.ref = "springBoot3" }
+spring-boot3-autoconfigure = { group = "org.springframework.boot", name = "spring-boot-autoconfigure", version.ref = "springBoot3" }
+spring-boot3-configuration-processor = { group = "org.springframework.boot", name = "spring-boot-configuration-processor", version.ref = "springBoot3" }
+spring-boot3-starter-test = { group = "org.springframework.boot", name = "spring-boot-starter-test", version.ref = "springBoot3" }
+spring-boot3-starter-webflux = { group = "org.springframework.boot", name = "spring-boot-starter-webflux", version.ref = "springBoot3" }
+spring-boot4-starter-jdbc = { group = "org.springframework.boot", name = "spring-boot-starter-jdbc", version.ref = "springBoot4" }
+spring-boot4-autoconfigure = { group = "org.springframework.boot", name = "spring-boot-autoconfigure", version.ref = "springBoot4" }
+spring-boot4-configuration-processor = { group = "org.springframework.boot", name = "spring-boot-configuration-processor", version.ref = "springBoot4" }
+spring-boot4-starter-test = { group = "org.springframework.boot", name = "spring-boot-starter-test", version.ref = "springBoot4" }
+spring-boot4-starter-webflux = { group = "org.springframework.boot", name = "spring-boot-starter-webflux", version.ref = "springBoot4" }
+spring6-jdbc = { group = "org.springframework", name = "spring-jdbc", version.ref = "springFramework6" }
+spring6-context = { group = "org.springframework", name = "spring-context", version.ref = "springFramework6" }
+spring6-test = { group = "org.springframework", name = "spring-test", version.ref = "springFramework6" }
+spring7-jdbc = { group = "org.springframework", name = "spring-jdbc", version.ref = "springFramework7" }
+spring7-context = { group = "org.springframework", name = "spring-context", version.ref = "springFramework7" }
+spring7-test = { group = "org.springframework", name = "spring-test", version.ref = "springFramework7" }
 
 h2 = { group = "com.h2database", name = "h2", version.ref = "h2_v2" }
 

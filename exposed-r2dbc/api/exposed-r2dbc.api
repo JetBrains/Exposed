@@ -116,14 +116,10 @@ public final class org/jetbrains/exposed/v1/r2dbc/QueriesKt {
 	public static final fun deleteAll (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun deleteIgnoreWhere (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun deleteIgnoreWhere$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static final fun deleteJoinNullableParam (Lorg/jetbrains/exposed/v1/core/Join;Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Table;ZLjava/lang/Integer;Lkotlin/jvm/functions/Function0;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun deleteJoinNullableParam$default (Lorg/jetbrains/exposed/v1/core/Join;Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Table;ZLjava/lang/Integer;Lkotlin/jvm/functions/Function0;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun deleteReturning (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
 	public static final fun deleteReturning (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function0;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
 	public static synthetic fun deleteReturning$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
 	public static synthetic fun deleteReturning$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
-	public static final fun deleteReturningNullableParam (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function0;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
-	public static synthetic fun deleteReturningNullableParam$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
 	public static final fun deleteWhere (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun deleteWhere$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun insert (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -139,8 +135,6 @@ public final class org/jetbrains/exposed/v1/r2dbc/QueriesKt {
 	public static final fun mergeFrom (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/QueryAlias;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun mergeFrom (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun mergeFrom (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static final fun mergeFromNullableParam (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun mergeFromNullableParam$default (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun replace (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun replace (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun replace$default (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Ljava/util/List;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
@@ -155,16 +149,10 @@ public final class org/jetbrains/exposed/v1/r2dbc/QueriesKt {
 	public static synthetic fun update$default (Lorg/jetbrains/exposed/v1/core/Join;Lkotlin/jvm/functions/Function0;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun update$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun update$default (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function0;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static final fun updateJoinNullableParam (Lorg/jetbrains/exposed/v1/core/Join;Lkotlin/jvm/functions/Function0;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun updateJoinNullableParam$default (Lorg/jetbrains/exposed/v1/core/Join;Lkotlin/jvm/functions/Function0;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static final fun updateNullableParam (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function0;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun updateNullableParam$default (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function0;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun updateReturning (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
 	public static final fun updateReturning (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
 	public static synthetic fun updateReturning$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
 	public static synthetic fun updateReturning$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
-	public static final fun updateReturningNullableParam (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
-	public static synthetic fun updateReturningNullableParam$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
 	public static final fun upsert (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun upsert$default (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun upsertReturning (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Ljava/util/List;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
@@ -758,13 +746,10 @@ public final class org/jetbrains/exposed/v1/r2dbc/statements/R2dbcPreparedStatem
 	public fun executeQuery (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun executeUpdate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun fillParameters (Ljava/lang/Iterable;)I
-	public fun getArrayColumnType (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/ArrayColumnType;
 	public final fun getConnection ()Lio/r2dbc/spi/Connection;
 	public fun getResultRow (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getWasGeneratedKeysRequested ()Z
-	public fun set (ILjava/lang/Object;)V
 	public fun set (ILjava/lang/Object;Lorg/jetbrains/exposed/v1/core/IColumnType;)V
-	public fun setArray (ILjava/lang/String;[Ljava/lang/Object;)V
 	public fun setArray (ILorg/jetbrains/exposed/v1/core/ArrayColumnType;[Ljava/lang/Object;)V
 	public fun setFetchSize (Ljava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun setInputStream (ILjava/io/InputStream;Z)V
@@ -979,8 +964,6 @@ public abstract interface class org/jetbrains/exposed/v1/r2dbc/statements/api/R2
 
 public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi$DefaultImpls {
 	public static fun fillParameters (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Ljava/lang/Iterable;)I
-	public static fun getArrayColumnType (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/ArrayColumnType;
-	public static fun set (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;ILjava/lang/Object;)V
 }
 
 public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcResult : org/jetbrains/exposed/v1/core/statements/api/ResultApi {

@@ -264,6 +264,63 @@ transaction {
 
 </compare>
 
+## Spring dependencies
+
+Version 1.0.0 maintains compatibility with Spring Framework 6 and Spring Boot 3 via the original `exposed-spring-boot-starter`
+artifact (and its `spring-transaction` dependency).
+
+In order to migrate to Spring Framework 7 and Spring Boot 4, this dependency should be replaced with the new versioned artifact,
+`exposed-spring-boot4-starter`:
+
+<compare first-title="0.61.0" second-title="1.0.0">
+
+```kotlin
+dependencies {
+    // ...
+    implementation("org.jetbrains.exposed:exposed-spring-boot-starter:0.61.0")
+}
+```
+
+```kotlin
+dependencies {
+    // Only if migrating from Spring Boot 3 to Spring Boot 4
+    implementation("org.jetbrains.exposed:exposed-spring-boot4-starter:1.0.0")
+}
+```
+
+</compare>
+
+This means that the import path of the provided Spring Boot 4 compatible classes has also been updated to follow the pattern
+of the other [package changes](#updated-imports):
+
+<compare first-title="0.61.0" second-title="1.0.0">
+
+```kotlin
+import org.jetbrains.exposed.v1.spring.boot.autoconfigure.ExposedAutoConfiguration
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration
+import org.springframework.boot.autoconfigure.SpringBootApplication
+
+@SpringBootApplication
+@ImportAutoConfiguration(ExposedAutoConfiguration::class)
+class SpringApplication
+```
+
+```kotlin
+// Only if migrating from Spring 6 to Spring 7
+import org.jetbrains.exposed.v1.spring.boot4.autoconfigure.ExposedAutoConfiguration
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration
+import org.springframework.boot.autoconfigure.SpringBootApplication
+
+@SpringBootApplication
+@ImportAutoConfiguration(ExposedAutoConfiguration::class)
+class SpringApplication
+```
+
+</compare>
+
+If migrating to Spring Framework 7 and using Exposed's `SpringTransactionManager` directly, a dependency on the `spring-transaction`
+artifact should be replaced with the new versioned `spring7-transaction` dependency.
+
 ## Transactions
 
 The class `Transaction` remains in `exposed-core` but it is now abstract and all its driver-specific properties and methods
@@ -1176,6 +1233,96 @@ Its property is now of type `ResultApi`.
 
 ## Column types
 
+### Updated UUID type classes {id = uuid-column-type-refactor}
+
+Version 1.0.0 comes with support for storing `kotlin.uuid.Uuid` values in binary columns via the new `UuidColumnType` class.
+Built-in support for DAO API elements are also available by using `UuidTable` with `UuidEntity` and `UuidEntityClass`. The
+existing `Table.uuid()` method will now only accept values of the type `kotlin.uuid.Uuid`.
+
+In order to avoid name shadowing and unresolved errors, the original classes for storing `java.util.UUID` values have all been
+moved to new `.java.*` packages:
+
+| 0.61.0                                      | 1.0.0                                                 |
+|---------------------------------------------|-------------------------------------------------------|
+| `org.jetbrains.exposed.sql.UUIDColumnType`  | `org.jetbrains.exposed.v1.core.java.UUIDColumnType`   |
+| `org.jetbrains.exposed.dao.id.UUIDTable`    | `org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable` |
+| `org.jetbrains.exposed.dao.UUIDEntity`      | `org.jetbrains.exposed.v1.dao.java.UUIDEntity`        |
+| `org.jetbrains.exposed.dao.UUIDEntityClass` | `org.jetbrains.exposed.v1.dao.java.UUIDEntityClass`   |
+
+To continue passing `java.util.UUID` values, your import statements should be updated and any use of `Table.uuid()` should
+be replaced by the extension function `.javaUUID()`, with the addition of `import org.jetbrains.exposed.v1.core.java.javaUUID`.
+
+While `UuidColumnType` and `UUIDColumnType` accept different UUID types on the client-side, they both map to the same
+data type on the database-side. This means that keeping the use of `Table.uuid()` (or switching to the new `UuidTable`)
+will not trigger the generation of any migration DDL statements.
+
+Assuming the following table and entity objects with version 0.61.0:
+
+```kotlin
+import org.jetbrains.exposed.dao.id.*
+import org.jetbrains.exposed.dao.*
+import java.util.UUID
+
+object TestTable : UUIDTable("tester") {
+    val secondaryId = uuid("secondary_id").uniqueIndex()
+}
+
+class TestEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<TestEntity>(TestTable)
+
+    var secondaryId by TestTable.secondaryId
+}
+```
+
+The following changes should be made depending on which client-side type is required:
+
+<compare first-title="kotlin.uuid.Uuid" second-title="java.util.UUID">
+
+```kotlin
+import org.jetbrains.exposed.v1.core.dao.id.*
+import org.jetbrains.exposed.v1.dao.*
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
+
+object TestTable : UuidTable("tester") {
+    @OptIn(ExperimentalUuidApi::class)
+    val secondaryId = uuid("secondary_id").uniqueIndex()
+}
+
+@OptIn(ExperimentalUuidApi::class)
+class TestEntity(id: EntityID<Uuid>) : UuidEntity(id) {
+    companion object : UuidEntityClass<TestEntity>(TestTable)
+
+    var secondaryId by TestTable.secondaryId
+}
+```
+
+```kotlin
+import org.jetbrains.exposed.v1.core.dao.id.*
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.dao.java.*
+import java.util.UUID
+
+object TestTable : UUIDTable("tester") {
+    val secondaryId = javaUUID("secondary_id").uniqueIndex()
+}
+
+class TestEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<TestEntity>(TestTable)
+
+    var secondaryId by TestTable.secondaryId
+}
+```
+
+</compare>
+
+<note>
+At the time of writing, <code>kotlin.uuid.Uuid</code> support in the standard library is experimental. To opt in, either use the
+<code>@OptIn(ExperimentalUuidApi::class)</code> annotation, or add a file-level annotation <code>@file:OptIn(ExperimentalUuidApi::class)</code>,
+or add the compiler option to your <a href="https://kotlinlang.org/docs/opt-in-requirements.html#opt-in-a-module">build file</a>.
+</note>
+
 ### H2 DATETIME data type
 
 Starting from [H2 version 2.4.240](https://github.com/h2database/h2database/releases/tag/version-2.4.240), `DATETIME(9)` data type is
@@ -1191,6 +1338,12 @@ Prior to version 1.0.0, `KotlinInstantColumnType` and `Table.timestamp()` (from 
 were mapped to accept `kotlinx.datetime.Instant` values. These now only accept `kotlin.time.Instant` values.
 This also applies to `CurrentTimestamp`, `CustomTimeStampFunction`, and any provided functions that had the old
 `kotlinx.datetime.Instant` as a type parameter.
+
+<note>
+<code>kotlin.time.Instant</code> support in the standard library is experimental up until Kotlin 2.3. To opt in, either use the
+<code>@OptIn(ExperimentalTime::class)</code> annotation, or add a file-level annotation <code>@file:OptIn(ExperimentalTime::class)</code>,
+or add the compiler option to your <a href="https://kotlinlang.org/docs/opt-in-requirements.html#opt-in-a-module">build file</a>.
+</note>
 
 If `kotlinx.datetime.Instant` is still a requirement, all usages must be replaced with their deprecated variants, prefixed
 with 'X'. For example, `XKotlinInstantColumnType`, `Table.xTimestamp()`, `XCurrentTimestamp`, and `XCustomTimeStampFunction`.
@@ -1269,7 +1422,7 @@ transaction {
 ### H2 version 1.x.x
 
 Support for H2 versions earlier than 2.0.202 (namely 1.4.200 and earlier) has now been fully phased out. In addition,
-`H2Dialect.H2MajorVersion.One` is now deprecated and `H2Dialect`-specific properties, like `majorVersion` and `isSecondVersion`,
+`H2Dialect.H2MajorVersion.One` is now removed and `H2Dialect`-specific properties, like `majorVersion` and `isSecondVersion`,
 now throw an exception if H2 version 1.x.x is detected.
 
 Moving forward, new features will no longer be tested on H2 version 1.x.x, so support for those versions will not be guaranteed.
@@ -1334,15 +1487,15 @@ With version 1.0.0, these are now only accessible from the new driver-specific i
 | `PreparedStatementApi.addBatch()`            | `JdbcPreparedStatementApi.addBatch()`      |
 | `PreparedStatementApi.cancel()`              | `JdbcPreparedStatementApi.cancel()`        |
 
-#### `set()` deprecated
+#### `set()` removed
 
-The original `operator fun set(index: Int, value: Any)` has been deprecated. It should be replaced by a new variant
+The original `operator fun set(index: Int, value: Any)` has been removed. It should be replaced by a new variant
 that accepts a third argument for the column type associated with the value being bound to the statement.
 This new `set()` method will require an override if the interface is implemented directly.
 
-#### `setArray()` deprecated
+#### `setArray()` removed
 
-The original `setArray(index: Int, type: String, array: Array<*>)` has been deprecated. It should be replaced by a new variant
+The original `setArray(index: Int, type: String, array: Array<*>)` has been removed. It should be replaced by a new variant
 that accepts the actual `ArrayColumnType` associated with the array value being bound to the statement as the second argument,
 instead of a string representation of the type. This new `setArray()` method will require an override if the interface is
 implemented directly.

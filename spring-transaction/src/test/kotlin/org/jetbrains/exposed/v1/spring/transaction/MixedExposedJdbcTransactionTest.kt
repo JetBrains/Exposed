@@ -4,25 +4,25 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
-import java.util.UUID
 import javax.sql.DataSource
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
-import kotlin.test.Test
 import kotlin.test.assertEquals
+import java.util.UUID as JavaUUID
 
 class MixedExposedJdbcTransactionTest : SpringTransactionTestBase() {
 
     @Autowired
     private lateinit var mixedTransactionService: MixedTransactionService
 
-    @BeforeTest
+    @BeforeEach
     fun setUp() {
         transaction {
             SchemaUtils.create(CustomerTable)
@@ -109,7 +109,7 @@ class MixedExposedJdbcTransactionTest : SpringTransactionTestBase() {
         assertEquals(2, customers.size)
     }
 
-    @AfterTest
+    @AfterEach
     fun tearDown() {
         transaction {
             SchemaUtils.drop(CustomerTable)
@@ -143,12 +143,12 @@ open class MixedTransactionService {
 
     private fun saveTwoThings(fail: Boolean) {
         CustomerTable.insert {
-            it[id] = UUID.randomUUID()
+            it[id] = JavaUUID.randomUUID()
             it[name] = "Test${nextNameIndex++}"
         }
         client
             .sql("INSERT INTO customer VALUES (:id, :name)")
-            .param("id", UUID.randomUUID())
+            .param("id", JavaUUID.randomUUID())
             .param("name", "Test${nextNameIndex++}")
             .update()
 

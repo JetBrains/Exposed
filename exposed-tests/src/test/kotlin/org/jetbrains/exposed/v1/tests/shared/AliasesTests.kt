@@ -3,7 +3,7 @@ package org.jetbrains.exposed.v1.tests.shared
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
-import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.dao.entityCache
 import org.jetbrains.exposed.v1.dao.flushCache
 import org.jetbrains.exposed.v1.jdbc.*
@@ -23,11 +23,11 @@ import kotlin.test.assertTrue
 class AliasesTests : DatabaseTestsBase() {
     @Test
     fun `test_github_issue_379_count_alias_ClassCastException`() {
-        val stables = object : UUIDTable("Stables") {
+        val stables = object : UuidTable("Stables") {
             val name = varchar("name", 256).uniqueIndex()
         }
 
-        val facilities = object : UUIDTable("Facilities") {
+        val facilities = object : UuidTable("Facilities") {
             val stableId = reference("stable_id", stables)
             val name = varchar("name", 256)
         }
@@ -228,9 +228,9 @@ class AliasesTests : DatabaseTestsBase() {
 
     @Test
     fun testReferenceIsSameInAlias() {
-        val stables = object : UUIDTable("Stables") {}
+        val stables = object : UuidTable("Stables") {}
 
-        val facilities = object : UUIDTable("Facilities") {
+        val facilities = object : UuidTable("Facilities") {
             val stableId = reference("stable_id", stables)
         }
 

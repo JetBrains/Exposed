@@ -1,0 +1,28 @@
+public class org/jetbrains/exposed/v1/spring/boot4/DatabaseInitializer : org/springframework/boot/ApplicationRunner, org/springframework/core/Ordered {
+	public static final field Companion Lorg/jetbrains/exposed/v1/spring/boot4/DatabaseInitializer$Companion;
+	public static final field DATABASE_INITIALIZER_ORDER I
+	public fun <init> (Lorg/springframework/context/ApplicationContext;Ljava/util/List;)V
+	public fun getOrder ()I
+	public fun run (Lorg/springframework/boot/ApplicationArguments;)V
+}
+
+public final class org/jetbrains/exposed/v1/spring/boot4/DatabaseInitializer$Companion {
+}
+
+public final class org/jetbrains/exposed/v1/spring/boot4/DatabaseInitializerKt {
+	public static final fun discoverExposedTables (Lorg/springframework/context/ApplicationContext;Ljava/util/List;)Ljava/util/List;
+}
+
+public final class org/jetbrains/exposed/v1/spring/boot4/ExposedAotContribution : org/springframework/beans/factory/aot/BeanFactoryInitializationAotProcessor {
+	public fun <init> ()V
+	public fun processAheadOfTime (Lorg/springframework/beans/factory/config/ConfigurableListableBeanFactory;)Lorg/springframework/beans/factory/aot/BeanFactoryInitializationAotContribution;
+}
+
+public class org/jetbrains/exposed/v1/spring/boot4/autoconfigure/ExposedAutoConfiguration {
+	public fun <init> (Lorg/springframework/context/ApplicationContext;)V
+	public fun databaseConfig ()Lorg/jetbrains/exposed/v1/core/DatabaseConfig;
+	public fun databaseInitializer ()Lorg/jetbrains/exposed/v1/spring/boot4/DatabaseInitializer;
+	public fun exposedSpringTransactionAttributeSource ()Lorg/jetbrains/exposed/v1/spring7/transaction/ExposedSpringTransactionAttributeSource;
+	public fun springTransactionManager (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/v1/core/DatabaseConfig;)Lorg/jetbrains/exposed/v1/spring7/transaction/SpringTransactionManager;
+}
+

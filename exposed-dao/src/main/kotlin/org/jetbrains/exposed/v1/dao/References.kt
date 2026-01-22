@@ -197,26 +197,6 @@ open class Referrers<ParentID : Any, in Parent : Entity<ParentID>, ChildID : Any
     fun orderBy(vararg order: Pair<Expression<*>, SortOrder>) = orderBy(order.asList())
 }
 
-/**
- * Class responsible for implementing property delegates of the read-only properties involved in an optional one-to-many
- * relation, which retrieves all child entities that optionally reference the parent entity.
- *
- * @param reference The nullable reference column defined on the child entity's associated table.
- * @param factory The [EntityClass] associated with the child entity that optionally references the parent entity.
- * @param cache Whether loaded reference entities should be stored in the [EntityCache].
- */
-@Deprecated(
-    message = "The OptionalReferrers class is a complete duplicate of the Referrers class; therefore, the latter should be used instead.",
-    replaceWith = ReplaceWith("Referrers"),
-    level = DeprecationLevel.HIDDEN
-)
-class OptionalReferrers<ParentID : Any, in Parent : Entity<ParentID>, ChildID : Any, out Child : Entity<ChildID>, REF>(
-    reference: Column<REF?>,
-    factory: EntityClass<ChildID, Child>,
-    cache: Boolean,
-    references: Map<Column<*>, Column<*>>? = null
-) : Referrers<ParentID, Parent, ChildID, Child, REF?>(reference, factory, cache, references)
-
 private fun <SRC : Entity<*>> getReferenceObjectFromDelegatedProperty(entity: SRC, property: KProperty1<SRC, Any?>): Any? {
     property.isAccessible = true
     return property.getDelegate(entity)
