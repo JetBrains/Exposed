@@ -39,7 +39,7 @@
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
-        <div class="library-version" id="library-version">1.0.0-rc-4
+        <div class="library-version" id="library-version">1.0.0
         </div>
         <div class="navigation-controls">
         <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
@@ -94,10 +94,10 @@
   <div class="breadcrumbs"><a href="../../index.html">exposed-jdbc</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.v1.jdbc.transactions</a><span class="delimiter">/</span><span class="current">TransactionManager</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Transaction</span><wbr><span><span>Manager</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">TransactionManager</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">db<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.jdbc/-database/index.html">Database</a><span class="token punctuation">, </span></span><span class="parameter ">setupTxConnection<span class="token operator">: </span><span class="token punctuation">(</span><a href="../../org.jetbrains.exposed.v1.jdbc.statements.api/-exposed-connection/index.html">ExposedConnection</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../-jdbc-transaction-interface/index.html">JdbcTransactionInterface</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-unit/index.html">Unit</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="../../../exposed-core/org.jetbrains.exposed.v1.core.transactions/-transaction-manager-api/index.html">TransactionManagerApi</a></div><p class="paragraph"><a href="index.html">TransactionManager</a> implementation registered to the provided database value <a href="../../../exposed-jdbc/org.jetbrains.exposed.v1.jdbc.transactions/-transaction-manager/--root--.html">db</a>.</p><p class="paragraph"><a href="../../../exposed-jdbc/org.jetbrains.exposed.v1.jdbc.transactions/-transaction-manager/--root--.html">setupTxConnection</a> can be provided to override the default configuration of transaction settings when a connection is retrieved from the database.</p></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">TransactionManager</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>db<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.jdbc/-database/index.html">Database</a><span class="token punctuation">, </span></span><span class="parameter ">setupTxConnection<span class="token operator">: </span><span class="token punctuation">(</span><a href="../../org.jetbrains.exposed.v1.jdbc.statements.api/-exposed-connection/index.html">ExposedConnection</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../-jdbc-transaction-interface/index.html">JdbcTransactionInterface</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-unit/index.html">Unit</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="../-jdbc-transaction-manager/index.html">JdbcTransactionManager</a></div><p class="paragraph"><a href="../-jdbc-transaction-manager/index.html">JdbcTransactionManager</a> implementation registered to the provided database value <a href="../../../exposed-jdbc/org.jetbrains.exposed.v1.jdbc.transactions/-transaction-manager/--root--.html">db</a>.</p><p class="paragraph"><a href="../../../exposed-jdbc/org.jetbrains.exposed.v1.jdbc.transactions/-transaction-manager/--root--.html">setupTxConnection</a> can be provided to override the default configuration of transaction settings when a connection is retrieved from the database.</p></div></div>
   </div>
   <div class="tabbedcontent">
-    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button><button class="section-tab" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION,EXTENSION_PROPERTY,EXTENSION_FUNCTION">Members &amp; Extensions</button></div>
     <div class="tabs-section-body">
       <div data-togglable="CONSTRUCTOR">
         <h2 class="tableheader">Constructors</h2>
@@ -139,7 +139,22 @@
       </div>
       <div data-togglable="PROPERTY">
         <h2 class="tableheader">Properties</h2>
-        <div class="table"><a data-name="59733756%2FProperties%2F-1624674168" anchor-label="defaultIsolationLevel" id="59733756%2FProperties%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+        <div class="table"><a data-name="2069834601%2FProperties%2F-1624674168" anchor-label="db" id="2069834601%2FProperties%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="db.html"><span><span>db</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2069834601%2FProperties%2F-1624674168"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="db.html">db</a><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.jdbc/-database/index.html">Database</a></div><div class="brief "><p class="paragraph">The database instance associated with this transaction manager.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="59733756%2FProperties%2F-1624674168" anchor-label="defaultIsolationLevel" id="59733756%2FProperties%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
           <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
@@ -149,7 +164,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-volatile/index.html"><span class="token annotation builtin">Volatile</span></a></div></div><span class="token keyword">var </span><a href="default-isolation-level.html">defaultIsolationLevel</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">The default transaction isolation level. Unless specified, the database-specific level will be used.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-volatile/index.html"><span class="token annotation builtin">Volatile</span></a></div></div><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">var </span><a href="default-isolation-level.html">defaultIsolationLevel</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">The default transaction isolation level. Unless specified, the database-specific level will be used.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -218,17 +233,17 @@
       </div>
       <div data-togglable="FUNCTION">
         <h2 class="tableheader">Functions</h2>
-        <div class="table"><a data-name="-1629233264%2FFunctions%2F-1624674168" anchor-label="currentOrNull" id="-1629233264%2FFunctions%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
+        <div class="table"><a data-name="4935376%2FFunctions%2F-1624674168" anchor-label="currentOrNull" id="4935376%2FFunctions%2F-1624674168" data-filterable-set=":exposed-jdbc/main"></a>
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-jdbc/main" data-filterable-set=":exposed-jdbc/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="current-or-null.html"><span>current</span><wbr><span>Or</span><wbr><span><span>Null</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1629233264%2FFunctions%2F-1624674168"></span>
+                  <div><a href="../current-or-null.html"><span>current</span><wbr><span>Or</span><wbr><span><span>Null</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="4935376%2FFunctions%2F-1624674168"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="current-or-null.html"><span class="token function">currentOrNull</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.jdbc/-jdbc-transaction/index.html">JdbcTransaction</a><span class="token operator">?</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-jdbc-transaction-manager/index.html">JdbcTransactionManager</a><span class="token punctuation">.</span><a href="../current-or-null.html"><span class="token function">currentOrNull</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.jdbc/-jdbc-transaction/index.html">JdbcTransaction</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Returns the current JDBC transaction from the thread-local stack for this manager's database, or null if none exists.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -243,7 +258,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="new-transaction.html"><span class="token function">newTransaction</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">isolation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span>defaultIsolationLevel<span class="token punctuation">, </span></span><span class="parameter ">readOnly<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span>defaultReadOnly<span class="token punctuation">, </span></span><span class="parameter ">outerTransaction<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.jdbc/-jdbc-transaction/index.html">JdbcTransaction</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.jdbc/-jdbc-transaction/index.html">JdbcTransaction</a></div><div class="brief "><p class="paragraph">Returns a <a href="../../org.jetbrains.exposed.v1.jdbc/-jdbc-transaction/index.html">JdbcTransaction</a> instance.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jdbc/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="new-transaction.html"><span class="token function">newTransaction</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">isolation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">readOnly<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter ">outerTransaction<span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.jdbc/-jdbc-transaction/index.html">JdbcTransaction</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.jdbc/-jdbc-transaction/index.html">JdbcTransaction</a></div><div class="brief "><p class="paragraph">Returns a <a href="../../org.jetbrains.exposed.v1.jdbc/-jdbc-transaction/index.html">JdbcTransaction</a> instance.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -277,7 +292,7 @@
                     <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
                         Dokka
                     </a>
-                    <div>© 2025 Copyright</div>
+                    <div>© 2026 Copyright</div>
                 </div>
             </div>
         </div>

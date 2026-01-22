@@ -4,13 +4,16 @@ $dokka.linkExtension:html
 module:exposed-core
 org.jetbrains.exposed.v1.core
 org.jetbrains.exposed.v1.core.dao.id
+org.jetbrains.exposed.v1.core.dao.id.java
 org.jetbrains.exposed.v1.core.datetime
 org.jetbrains.exposed.v1.core.functions.array
 org.jetbrains.exposed.v1.core.functions.math
+org.jetbrains.exposed.v1.core.java
 org.jetbrains.exposed.v1.core.ops
 org.jetbrains.exposed.v1.core.statements
 org.jetbrains.exposed.v1.core.statements.api
 org.jetbrains.exposed.v1.core.transactions
+org.jetbrains.exposed.v1.core.transactions.suspend
 org.jetbrains.exposed.v1.core.utils
 org.jetbrains.exposed.v1.core.vendors
 org.jetbrains.exposed.v1.exceptions
@@ -19,6 +22,7 @@ org.jetbrains.exposed.v1.crypt
 module:exposed-dao
 org.jetbrains.exposed.v1.dao
 org.jetbrains.exposed.v1.dao.exceptions
+org.jetbrains.exposed.v1.dao.java
 module:exposed-java-time
 org.jetbrains.exposed.v1.javatime
 module:exposed-jdbc
@@ -53,5 +57,10 @@ org.jetbrains.exposed.v1.r2dbc.vendors
 module:exposed-spring-boot-starter
 org.jetbrains.exposed.v1.spring.boot
 org.jetbrains.exposed.v1.spring.boot.autoconfigure
+module:exposed-spring-boot4-starter
+org.jetbrains.exposed.v1.spring.boot4
+org.jetbrains.exposed.v1.spring.boot4.autoconfigure
 module:spring-transaction
 org.jetbrains.exposed.v1.spring.transaction
+module:spring7-transaction
+org.jetbrains.exposed.v1.spring7.transaction

@@ -1,6 +1,6 @@
 # Breaking Changes
 
-## 1.0.0-rc-5
+## 1.0.0
 
 * The interface `R2dbcPreparedStatementApi` no longer holds the unused methods `closeIfPossible()` or `cancel()`
   as there are no relevant matching methods available for `io.r2dbc.spi.Statement`, in the same way as there are for
@@ -40,12 +40,12 @@
 * Support for `kotlin.uuid.Uuid` has been added, resulting in a name clash between the new and existing column type classes in the packages.
   The original classes, which accepted `java.util.UUID` values, have been moved to a new package to distinguish them accordingly:
 
-| 1.0.0-rc-4                                       | 1.0.0-rc-5                                            |
-|--------------------------------------------------|-------------------------------------------------------|
+| 1.0.0-rc-4                                       | 1.0.0                                            |
+|--------------------------------------------------|--------------------------------------------------|
 | `org.jetbrains.exposed.v1.core.dao.id.UUIDTable` | `org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable` |
-| `org.jetbrains.exposed.v1.core.UUIDColumnType`   | `org.jetbrains.exposed.v1.core.java.UUIDColumnType`   |
-| `org.jetbrains.exposed.v1.dao.UUIDEntity`        | `org.jetbrains.exposed.v1.dao.java.UUIDEntity`        |
-| `org.jetbrains.exposed.v1.dao.UUIDEntityClass`   | `org.jetbrains.exposed.v1.dao.java.UUIDEntityClass`   |
+| `org.jetbrains.exposed.v1.core.UUIDColumnType`   | `org.jetbrains.exposed.v1.core.java.UUIDColumnType` |
+| `org.jetbrains.exposed.v1.dao.UUIDEntity`        | `org.jetbrains.exposed.v1.dao.java.UUIDEntity`   |
+| `org.jetbrains.exposed.v1.dao.UUIDEntityClass`   | `org.jetbrains.exposed.v1.dao.java.UUIDEntityClass` |
 
   The method `Table.uuid()` now only accepts `kotlin.uuid.Uuid` values. So the extension function `Table.javaUUID()` (from
   the package `org.jetbrains.exposed.v1.core.java`) should be used instead to continue passing `java.util.UUID` values.
