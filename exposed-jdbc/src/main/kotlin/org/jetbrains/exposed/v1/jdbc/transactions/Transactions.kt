@@ -218,7 +218,7 @@ fun <T> inTopLevelTransaction(
 
             try {
                 Thread.sleep(retryDelay)
-            } catch (cause: InterruptedException) {
+            } catch (_: InterruptedException) {
                 // Do nothing
             }
 
@@ -365,7 +365,7 @@ suspend fun <T> inTopLevelSuspendTransaction(
 
             try {
                 Thread.sleep(retryDelay)
-            } catch (cause: InterruptedException) {
+            } catch (_: InterruptedException) {
                 // Do nothing
             }
 
