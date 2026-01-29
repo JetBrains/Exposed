@@ -5,7 +5,7 @@ import org.jetbrains.exposed.v1.core.statements.buildStatement
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
-import java.util.UUID
+import kotlin.uuid.Uuid
 
 const val URL = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"
 const val USER = "root"
@@ -39,7 +39,7 @@ fun simulateExistingDatabase() {
         // INSERT INTO USERS (ID, EMAIL) VALUES ('05fb3246-9387-4d04-a27f-fa0107c33883', 'root1@root.com')
         buildStatement {
             Users.insert {
-                it[id] = UUID.fromString("05fb3246-9387-4d04-a27f-fa0107c33883")
+                it[id] = Uuid.parseHexDash("05fb3246-9387-4d04-a27f-fa0107c33883")
                 it[email] = "root1@root.com"
             }
         }
