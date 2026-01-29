@@ -1,6 +1,6 @@
 # Exposed-Spring
 
-This Spring Boot 3 based project uses Exposed for CRUD (Create, Read, Update, Delete) operations.
+This Spring Boot 4 based project uses Exposed for CRUD (Create, Read, Update, Delete) operations.
 
 - [UserEntity.kt](src/main/kotlin/domain/UserEntity.kt): Describes our database schema. If you need to modify the structure, please take care to
   understand the existing design first.

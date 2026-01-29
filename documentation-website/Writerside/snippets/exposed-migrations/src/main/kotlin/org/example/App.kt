@@ -8,7 +8,7 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.vendors.currentDialectMetadata
 import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
-import java.util.*
+import kotlin.uuid.Uuid
 
 /*
     Important: The contents of this file are referenced by line number in `Migrations.md`.
@@ -81,7 +81,7 @@ fun main() {
         println("Primary key: ${currentDialectMetadata.existingPrimaryKeys(UsersTable)[UsersTable]}")
 
         UsersTable.insert {
-            it[id] = UUID.randomUUID()
+            it[id] = Uuid.random()
             it[email] = "root2@root.com"
         }
     }

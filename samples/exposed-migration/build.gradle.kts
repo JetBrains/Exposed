@@ -14,6 +14,12 @@ application {
     mainClass = "ApplicationKt"
 }
 
+kotlin {
+    compilerOptions {
+        optIn.add("kotlin.uuid.ExperimentalUuidApi")
+    }
+}
+
 repositories {
     mavenCentral()
 }

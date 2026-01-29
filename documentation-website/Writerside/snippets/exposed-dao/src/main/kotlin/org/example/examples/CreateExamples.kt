@@ -5,7 +5,7 @@ import org.example.entities.StarWarsFilmEntity
 import org.example.tables.DirectorsTable
 import org.example.tables.Genre
 import org.jetbrains.exposed.v1.core.dao.id.CompositeID
-import java.util.*
+import kotlin.uuid.Uuid
 
 const val MOVIE_SEQUEL_ID = 8
 const val MOVIE2_SEQUEL_ID = 9
@@ -32,7 +32,7 @@ class CreateExamples {
     fun createNewWithCompositeId() {
         val directorId = CompositeID {
             it[DirectorsTable.name] = "J.J. Abrams"
-            it[DirectorsTable.guildId] = UUID.randomUUID()
+            it[DirectorsTable.guildId] = Uuid.random()
         }
 
         val director = DirectorEntity.new(directorId) {
