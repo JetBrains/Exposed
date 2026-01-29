@@ -216,7 +216,7 @@ suspend fun <T> inTopLevelSuspendTransaction(
 
             try {
                 delay(retryDelay)
-            } catch (cause: InterruptedException) {
+            } catch (_: InterruptedException) {
                 // Do nothing
             }
 

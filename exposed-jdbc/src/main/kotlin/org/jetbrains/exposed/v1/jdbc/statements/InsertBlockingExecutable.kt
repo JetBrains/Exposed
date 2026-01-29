@@ -177,10 +177,9 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
             this@InsertBlockingExecutable.statement.table.columns
         }
         return columns.mapNotNull { col ->
-            @Suppress("SwallowedException")
             try {
                 this?.findColumn(col.name)?.let { col to it }
-            } catch (e: SQLException) {
+            } catch (_: SQLException) {
                 null
             }
         }
