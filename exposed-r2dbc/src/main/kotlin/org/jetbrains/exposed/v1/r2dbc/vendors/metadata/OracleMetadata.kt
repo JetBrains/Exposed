@@ -130,18 +130,20 @@ internal class OracleMetadata : MetadataProvider(OraclePropertyProvider, OracleT
 
     override fun getColumns(catalog: String, schemaPattern: String, table: String): String {
         return buildString {
-            append("SELECT COLUMN_NAME, ")
-            typeProvider.appendDataTypes("DATA_TYPE", "DATA_TYPE", this)
+            append("SELECT c.COLUMN_NAME, ")
+            typeProvider.appendDataTypes("c.DATA_TYPE", "DATA_TYPE", this)
             append(", ")
-            typeProvider.appendDataPrecisions("DATA_TYPE", "COLUMN_SIZE", this)
+            typeProvider.appendDataPrecisions("c.DATA_TYPE", "COLUMN_SIZE", this)
             append(", ")
-            append("DATA_SCALE AS DECIMAL_DIGITS, ")
-            append("CASE WHEN NULLABLE = 'Y' THEN 'TRUE' ELSE 'FALSE' END AS NULLABLE, ")
-            append("DATA_DEFAULT AS COLUMN_DEF, COLUMN_ID AS ORDINAL_POSITION, ")
-            append("CASE WHEN IDENTITY_COLUMN = 'YES' THEN 'TRUE' ELSE 'FALSE' END AS IS_AUTOINCREMENT ")
-            append("FROM ALL_TAB_COLUMNS ")
-            append("WHERE OWNER LIKE '$schemaPattern' ")
-            append("AND TABLE_NAME = '$table' ")
+            append("c.DATA_SCALE AS DECIMAL_DIGITS, ")
+            append("CASE WHEN c.NULLABLE = 'Y' THEN 'TRUE' ELSE 'FALSE' END AS NULLABLE, ")
+            append("c.DATA_DEFAULT AS COLUMN_DEF, c.COLUMN_ID AS ORDINAL_POSITION, ")
+            append("CASE WHEN c.IDENTITY_COLUMN = 'YES' THEN 'TRUE' ELSE 'FALSE' END AS IS_AUTOINCREMENT, ")
+            append("cc.COMMENTS AS REMARKS ")
+            append("FROM ALL_TAB_COLUMNS c ")
+            append("LEFT JOIN ALL_COL_COMMENTS cc ON c.OWNER = cc.OWNER AND c.TABLE_NAME = cc.TABLE_NAME AND c.COLUMN_NAME = cc.COLUMN_NAME ")
+            append("WHERE c.OWNER LIKE '$schemaPattern' ")
+            append("AND c.TABLE_NAME = '$table' ")
             append("ORDER BY ORDINAL_POSITION")
         }
     }

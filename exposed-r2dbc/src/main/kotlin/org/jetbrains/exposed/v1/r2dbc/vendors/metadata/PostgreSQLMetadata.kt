@@ -197,20 +197,21 @@ internal class PostgreSQLMetadata : MetadataProvider(PostgreSQLPropertyProvider,
 
     override fun getColumns(catalog: String, schemaPattern: String, table: String): String {
         return buildString {
-            append("SELECT COLUMN_NAME, ")
-            typeProvider.appendDataTypes("DATA_TYPE", "DATA_TYPE", this)
+            append("SELECT c.COLUMN_NAME, ")
+            typeProvider.appendDataTypes("c.DATA_TYPE", "DATA_TYPE", this)
             append(", ")
-            typeProvider.appendDataPrecisions("DATA_TYPE", "COLUMN_SIZE", this)
+            typeProvider.appendDataPrecisions("c.DATA_TYPE", "COLUMN_SIZE", this)
             append(", ")
-            append("NUMERIC_SCALE AS DECIMAL_DIGITS, ")
-            append("CASE WHEN IS_NULLABLE = 'YES' THEN 'TRUE' ELSE 'FALSE' END AS NULLABLE, ")
-            append("COLUMN_DEFAULT AS COLUMN_DEF, ORDINAL_POSITION, ")
-            append("CASE WHEN IS_IDENTITY = 'YES' OR COLUMN_DEFAULT LIKE 'nextval(%' THEN 'YES' ELSE 'NO' END AS IS_AUTOINCREMENT ")
-            append("FROM INFORMATION_SCHEMA.COLUMNS ")
-            append("WHERE TABLE_CATALOG = '$catalog' ")
-            append("AND TABLE_SCHEMA LIKE '$schemaPattern' ")
-            append("AND TABLE_NAME = '$table' ")
-            append("ORDER BY ORDINAL_POSITION")
+            append("c.NUMERIC_SCALE AS DECIMAL_DIGITS, ")
+            append("CASE WHEN c.IS_NULLABLE = 'YES' THEN 'TRUE' ELSE 'FALSE' END AS NULLABLE, ")
+            append("c.COLUMN_DEFAULT AS COLUMN_DEF, c.ORDINAL_POSITION, ")
+            append("CASE WHEN c.IS_IDENTITY = 'YES' OR c.COLUMN_DEFAULT LIKE 'nextval(%' THEN 'YES' ELSE 'NO' END AS IS_AUTOINCREMENT, ")
+            append("pg_catalog.col_description((quote_ident(c.TABLE_SCHEMA) || '.' || quote_ident(c.TABLE_NAME))::regclass, c.ORDINAL_POSITION) AS REMARKS ")
+            append("FROM INFORMATION_SCHEMA.COLUMNS AS c ")
+            append("WHERE c.TABLE_CATALOG = '$catalog' ")
+            append("AND c.TABLE_SCHEMA LIKE '$schemaPattern' ")
+            append("AND c.TABLE_NAME = '$table' ")
+            append("ORDER BY c.ORDINAL_POSITION")
         }
     }
 

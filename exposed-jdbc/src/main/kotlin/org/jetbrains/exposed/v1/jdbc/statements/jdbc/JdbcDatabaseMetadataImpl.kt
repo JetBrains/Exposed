@@ -220,7 +220,95 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             }
         }
 
+        // Oracle JDBC driver doesn't populate REMARKS column by default
+        // Query Oracle system catalog to get column comments
+        if (currentDialect is OracleDialect) {
+            enrichOracleComments(result)
+        }
+
         return result
+    }
+
+    @Suppress("NestedBlockDepth")
+    private fun enrichOracleComments(result: MutableMap<Table, List<ColumnMetadata>>) {
+        if (result.isEmpty()) return
+
+        // Group tables by schema to minimize queries
+        val tablesBySchema = result.keys.groupBy { table ->
+            table.schemaName?.let { identifierManager.inProperCase(it).uppercase() }
+        }
+
+        val jdbcConnection = (TransactionManager.current().connection as JdbcConnectionImpl).connection
+
+        val allComments = mutableMapOf<String, MutableMap<String, String>>()
+
+        for ((schemaName, tablesInSchema) in tablesBySchema) {
+            val tableNames = tablesInSchema.map { it.nameInDatabaseCaseUnquoted().uppercase() }
+
+            val placeholders = tableNames.joinToString(",") { "?" }
+            val sql = if (schemaName != null) {
+                """
+                SELECT TABLE_NAME, COLUMN_NAME, COMMENTS
+                FROM ALL_COL_COMMENTS
+                WHERE TABLE_NAME IN ($placeholders) AND OWNER = ?
+                """.trimIndent()
+            } else {
+                """
+                SELECT TABLE_NAME, COLUMN_NAME, COMMENTS
+                FROM USER_COL_COMMENTS
+                WHERE TABLE_NAME IN ($placeholders)
+                """.trimIndent()
+            }
+
+            jdbcConnection.prepareStatement(sql).use { stmt ->
+                tableNames.forEachIndexed { index, tableName ->
+                    stmt.setString(index + 1, tableName)
+                }
+                if (schemaName != null) {
+                    stmt.setString(tableNames.size + 1, schemaName)
+                }
+
+                stmt.executeQuery().use { rs ->
+                    while (rs.next()) {
+                        val tableName = rs.getString(1)?.uppercase()
+                        val columnName = rs.getString(2)?.uppercase()
+
+                        @Suppress("MagicNumber")
+                        val comment = rs.getString(3)
+
+                        if (!tableName.isNullOrBlank() && !columnName.isNullOrBlank() && !comment.isNullOrBlank()) {
+                            allComments.getOrPut(tableName) { mutableMapOf() }[columnName] = comment
+                        }
+                    }
+                }
+            }
+        }
+
+        for ((table, columns) in result) {
+            val tableName = table.nameInDatabaseCaseUnquoted().uppercase()
+            val commentsMap = allComments[tableName]
+
+            if (!commentsMap.isNullOrEmpty()) {
+                result[table] = columns.map { column ->
+                    val oracleComment = commentsMap[column.name.uppercase()]
+                    if (oracleComment != null && column.comment == null) {
+                        ColumnMetadata(
+                            column.name,
+                            column.jdbcType,
+                            column.sqlType,
+                            column.nullable,
+                            column.size,
+                            column.scale,
+                            column.autoIncrement,
+                            column.defaultDbValue,
+                            oracleComment
+                        )
+                    } else {
+                        column
+                    }
+                }
+            }
+        }
     }
 
     private val existingIndicesCache = HashMap<Table, List<Index>>()

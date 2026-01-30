@@ -1338,6 +1338,18 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     /**
+     * Adds a comment to this column that will be stored in the database schema.
+     *
+     * The comment will be included in DDL generation and visible in database administration tools.
+     *
+     * @param text The comment text, or null to remove the comment
+     * @return This column for method chaining
+     */
+    fun <T> Column<T>.comment(text: String?): Column<T> = apply {
+        columnComment = text
+    }
+
+    /**
      * Transforms a column by specifying transformation functions.
      *
      * Sample:
@@ -1748,7 +1760,19 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             emptyList()
         }
 
-        return createAutoIncColumnSequence() + createTable + createConstraint
+        val commentStatements = buildList {
+            val isInlineCommentDialect = (currentDialect as? VendorDialect)?.isInlineCommentDialect() == true
+
+            if (!isInlineCommentDialect) {
+                columns.forEach { col ->
+                    col.columnComment?.let { commentText ->
+                        addAll(currentDialect.commentOnColumn(col, commentText))
+                    }
+                }
+            }
+        }
+
+        return createAutoIncColumnSequence() + createTable + createConstraint + commentStatements
     }
 
     private fun createAutoIncColumnSequence(): List<String> {

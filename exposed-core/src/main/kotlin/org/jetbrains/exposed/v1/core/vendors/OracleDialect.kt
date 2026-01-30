@@ -456,17 +456,23 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
     }
 
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> {
-        val result = super.modifyColumn(column, columnDiff).map {
-            it.replace("MODIFY COLUMN", "MODIFY")
-        }
-        return if (!columnDiff.nullability) {
-            val nullableState = if (column.columnType.nullable) "NULL " else "NOT NULL"
-            result.map {
-                it.replace(nullableState, "")
+        return super.modifyColumn(column, columnDiff)
+            .map {
+                it.replace("MODIFY COLUMN", "MODIFY")
             }
-        } else {
-            result
-        }
+            .let { statements ->
+                if (!columnDiff.nullability) {
+                    val nullableState = if (column.columnType.nullable) "NULL " else "NOT NULL"
+                    statements.map {
+                        it.replace(nullableState, "")
+                    }
+                } else {
+                    statements
+                }
+            }
+            .let { statements ->
+                statements + if (columnDiff.comment) commentOnColumn(column, column.columnComment) else emptyList()
+            }
     }
 
     override fun createDatabase(name: String): String {
@@ -500,6 +506,17 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
         if (cascade) {
             append(" CASCADE")
         }
+    }
+
+    override fun commentOnColumn(column: Column<*>, comment: String?): List<String> {
+        @OptIn(InternalApi::class)
+        val tr = currentTransaction()
+        val tableName = tr.identity(column.table)
+        val columnName = tr.identity(column)
+
+        val commentStr = comment?.escapeComment() ?: ""
+
+        return listOf("COMMENT ON COLUMN $tableName.$columnName IS '$commentStr'")
     }
 
     companion object : DialectNameProvider("Oracle")
