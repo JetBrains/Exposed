@@ -38,6 +38,7 @@ abstract class SchemaUtilityApi {
                 true
             }
         }.partition { it.startsWith("CREATE ") }
+
         val indicesDDL = table.indices.flatMap { it.createStatement() }
         return Pair(ddlWithoutExistingSequence.first + indicesDDL, ddlWithoutExistingSequence.second)
     }
@@ -338,13 +339,16 @@ abstract class SchemaUtilityApi {
             val incorrectDefaults = if (col.isDatabaseGenerated) false else isIncorrectDefault(dialect, existingCol, col, columnDbDefaultIsAllowed)
             val incorrectCaseSensitiveName = existingCol.name.inProperCase() != col.nameUnquoted().inProperCase()
             val incorrectSizeOrScale = if (incorrectType) false else isIncorrectSizeOrScale(existingCol, columnType)
+
+            val incorrectComment = isIncorrectComment(dialect, existingCol, col)
             ColumnDiff(
                 incorrectNullability,
                 incorrectType,
                 incorrectAutoInc,
                 incorrectDefaults,
                 incorrectCaseSensitiveName,
-                incorrectSizeOrScale
+                incorrectSizeOrScale,
+                incorrectComment
             )
         }.filterValues { it.hasDifferences() }
     }
@@ -356,6 +360,29 @@ abstract class SchemaUtilityApi {
             existingColumn.autoIncrement && isAutoIncColumn && column.autoIncColumnType?.sequence != null -> true
             existingColumn.autoIncrement && !isAutoIncColumn -> true
             else -> false
+        }
+    }
+
+    private fun isIncorrectComment(
+        dialect: DatabaseDialect,
+        existingColumn: ColumnMetadata,
+        column: Column<*>
+    ): Boolean {
+        // Only check comment differences if using the new .comment() API (not the old .withDefinition("COMMENT") API)
+        // for backward compatibility. Also check if database supports comments.
+        val usesOldCommentAPI = column.extraDefinitions.any { it.toString().uppercase().contains("COMMENT") }
+        val databaseSupportsComments = when (dialect) {
+            is SQLiteDialect, is SQLServerDialect -> false
+            is H2Dialect -> {
+                val h2Mode = dialect.h2Mode
+                h2Mode == H2Dialect.H2CompatibilityMode.MySQL || h2Mode == H2Dialect.H2CompatibilityMode.MariaDB
+            }
+            else -> true
+        }
+        return if (usesOldCommentAPI || !databaseSupportsComments) {
+            false // Don't check comments if using old API or database doesn't support them
+        } else {
+            existingColumn.comment != column.columnComment
         }
     }
 

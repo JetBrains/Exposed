@@ -441,6 +441,9 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
                 }
             )
         }
+        if (columnDiff.comment) {
+            list.addAll(commentOnColumn(column, column.columnComment))
+        }
         return list
     }
 
@@ -467,6 +470,19 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
             "ALTER TABLE IF EXISTS ${identifierManager.quoteIfNecessary(tableName)} DROP CONSTRAINT IF EXISTS ${identifierManager.quoteIfNecessary(indexName)}"
         } else {
             "DROP INDEX IF EXISTS ${identifierManager.cutIfNecessaryAndQuote(indexName)}"
+        }
+    }
+
+    override fun commentOnColumn(column: Column<*>, comment: String?): List<String> {
+        @OptIn(InternalApi::class)
+        val tr = currentTransaction()
+        val tableName = tr.identity(column.table)
+        val columnName = tr.identity(column)
+
+        return if (comment != null) {
+            listOf("COMMENT ON COLUMN $tableName.$columnName IS '${comment.escapeComment()}'")
+        } else {
+            listOf("COMMENT ON COLUMN $tableName.$columnName IS NULL")
         }
     }
 

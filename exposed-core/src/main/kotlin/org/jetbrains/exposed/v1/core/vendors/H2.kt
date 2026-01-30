@@ -473,6 +473,21 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
         }
     }
 
+    override fun commentOnColumn(column: Column<*>, comment: String?): List<String> {
+        @OptIn(InternalApi::class)
+        val tableName = currentTransaction().identity(column.table)
+        // H2 only supports comments in MySQL/MariaDB compatibility mode
+        return if (h2Mode == H2CompatibilityMode.MySQL || h2Mode == H2CompatibilityMode.MariaDB) {
+            val columnDef = column.descriptionDdl(modify = true)
+            listOf("ALTER TABLE $tableName ALTER COLUMN $columnDef")
+        } else {
+            if (comment != null) {
+                exposedLogger.warn("H2 doesn't support comments on columns. The comment on column of table $tableName could not be added.")
+            }
+            emptyList()
+        }
+    }
+
     companion object : DialectNameProvider("H2")
 }
 
