@@ -52,7 +52,7 @@ enum class TestDB(
         connection = {
             "jdbc:mysql://127.0.0.1:3001/" +
                 "testdb" +
-                "?useSSL=false" +
+                "?sslMode=DISABLED" +
                 "&characterEncoding=UTF-8" +
                 "&zeroDateTimeBehavior=convertToNull"
         },
@@ -62,7 +62,7 @@ enum class TestDB(
         connection = {
             "jdbc:mysql://127.0.0.1:3002/" +
                 "testdb" +
-                "?useSSL=false" +
+                "?sslMode=DISABLED" +
                 "&characterEncoding=UTF-8" +
                 "&zeroDateTimeBehavior=convertToNull" +
                 "&allowPublicKeyRetrieval=true" +
