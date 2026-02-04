@@ -47,14 +47,14 @@ enum class TestDB(
     MYSQL_V5(
         {
             "r2dbc:mysql://${MYSQL_V5.user}:${MYSQL_V5.pass}@127.0.0.1:3001/testdb" +
-                "?useSSL=false&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull"
+                "?sslMode=DISABLED&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull"
         },
         "com.mysql.jdbc.Driver"
     ),
     MYSQL_V8(
         {
             "r2dbc:mysql://${MYSQL_V8.user}:${MYSQL_V8.pass}@127.0.0.1:3002/testdb" +
-                "?useSSL=false&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&allowPublicKeyRetrieval=true"
+                "?sslMode=DISABLED&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&allowPublicKeyRetrieval=true"
         },
         "com.mysql.cj.jdbc.Driver"
     ),
