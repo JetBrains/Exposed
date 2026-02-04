@@ -31,6 +31,7 @@ dependencies {
 
     implementation("com.h2database:h2")
     implementation("org.jetbrains.exposed:exposed-spring-boot4-starter:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-jdbc:${exposedVersion}")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
