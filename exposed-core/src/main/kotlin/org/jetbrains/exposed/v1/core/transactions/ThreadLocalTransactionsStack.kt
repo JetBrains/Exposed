@@ -7,7 +7,7 @@ import java.util.Stack
 import kotlin.concurrent.getOrSet
 
 /**
- * A thread-local stack for managing R2dbcTransaction objects.
+ * A thread-local stack for managing Transaction objects.
  *
  * Each thread keeps its own stack so transactions are isolated per thread.
  * Coroutines that hop threads must pair every push with a pop to avoid leaks.
