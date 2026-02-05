@@ -81,7 +81,6 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
     override fun booleanFromStringToBoolean(value: String): Boolean = try {
         value.toLong() != 0L
     } catch (_: NumberFormatException) {
-        @Suppress("SwallowedException")
         try {
             value.lowercase().toBooleanStrict()
         } catch (_: IllegalArgumentException) {

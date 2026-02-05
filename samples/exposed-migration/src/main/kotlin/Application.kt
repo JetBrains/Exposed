@@ -2,7 +2,7 @@ import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.vendors.currentDialectMetadata
-import java.util.*
+import kotlin.uuid.Uuid
 
 fun main() {
     val flyway = Flyway.configure()
@@ -30,7 +30,7 @@ fun main() {
         println("Primary key: ${currentDialectMetadata.existingPrimaryKeys(Users)[Users]}")
 
         Users.insert {
-            it[id] = UUID.randomUUID()
+            it[id] = Uuid.random()
             it[email] = "root2@root.com"
         }
     }
