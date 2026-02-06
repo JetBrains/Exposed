@@ -6,7 +6,7 @@
        title="Entity definition" id="DAO-Entity-definition">
     <show-structure for="chapter,procedure" depth="2"/>
     <p>
-        An <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-entity/index.html"><code>Entity</code></a>
+        An <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity/index.html"><code>Entity</code></a>
         in Exposed maps a database table record to a Kotlin object. This ensures type safety and allows you to work with
         database records just like regular Kotlin objects, taking full advantage of Kotlin's language features.
     </p>
@@ -33,7 +33,7 @@
             <p>
                 The entity type determines how the <code>Entity</code> class interacts with the table’s primary key.
                 Since <code>StarWarsFilmsTable</code> is an <code>IntIdTable</code>, the <code>StarWarsFilmsEntity</code>
-                class extends from <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-int-entity/index.html"><code>IntEntity</code></a>,
+                class extends from <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-int-entity/index.html"><code>IntEntity</code></a>,
                 which indicates that the ID and primary key of <code>StarWarsFilmsTable</code> is of type
                 <code>Int</code>.
             </p>
@@ -43,7 +43,7 @@
             <deflist type="medium">
                 <def id="IntEntity">
                     <title>
-                        <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-int-entity/index.html">
+                        <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-int-entity/index.html">
                             <code>IntEntity</code>
                         </a>
                     </title>
@@ -54,7 +54,7 @@
                 </def>
                 <def id="LongEntity">
                     <title>
-                        <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-long-entity/index.html">
+                        <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-long-entity/index.html">
                             <code>LongEntity</code>
                         </a>
                     </title>
@@ -65,7 +65,7 @@
                 </def>
                 <def id="UIntEntity">
                     <title>
-                        <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-u-int-entity/index.html">
+                        <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-u-int-entity/index.html">
                             <code>UIntEntity</code>
                         </a>
                     </title>
@@ -76,7 +76,7 @@
                 </def>
                 <def id="ULongEntity">
                     <title>
-                        <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-u-long-entity/index.html">
+                        <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-u-long-entity/index.html">
                             <code>ULongEntity</code>
                         </a>
                     </title>
@@ -87,7 +87,7 @@
                 </def>
                 <def id="UuidEntity">
                     <title>
-                        <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-uuid-entity/index.html">
+                        <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-uuid-entity/index.html">
                             <code>UuidEntity</code>
                         </a>
                     </title>
@@ -99,7 +99,7 @@
 
                 <def id="JavaUUIDEntity">
                     <title>
-                        <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao.java/-u-u-i-d-entity/index.html">
+                        <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao.java/-u-u-i-d-entity/index.html">
                             <code>UUIDEntity</code>
                         </a>
                     </title>
@@ -110,7 +110,7 @@
                 </def>
                 <def id="CompositeEntity">
                     <title>
-                        <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-composite-entity/index.html">
+                        <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-composite-entity/index.html">
                             <code>CompositeEntity</code>
                         </a>
                     </title>
@@ -122,7 +122,7 @@
         </chapter>
         <chapter title="Entity class" id="EntityClass">
             <p>
-                The <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-entity-class/index.html"><code>EntityClass</code></a>
+                The <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/index.html"><code>EntityClass</code></a>
                 in the <code>companion object</code> block is responsible for managing <code>Entity</code> instances,
                 such as creating, querying, and deleting records. It also maintains the relationship between the entity
                 class (<code>StarWarsFilmEntity</code> in this example) and the database table
@@ -173,9 +173,9 @@
     <chapter title="Immutable entities" id="immutable-entities">
         <p>
             For defining entities that are immutable, Exposed provides the additional
-            <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-immutable-entity-class/index.html"><code>ImmutableEntityClass</code></a>
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-immutable-entity-class/index.html"><code>ImmutableEntityClass</code></a>
             and
-            <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-immutable-cached-entity-class/index.html"><code>ImmutableCachedEntityClass</code></a>
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-immutable-cached-entity-class/index.html"><code>ImmutableCachedEntityClass</code></a>
             .
         </p>
         <p>
@@ -199,7 +199,7 @@
                 not to modify it. Therefore, inserts can only be performed using the
                 DSL <a href="DSL-CRUD-operations.topic" anchor="insert"><code>.insert()</code></a> method and updates
                 can be done either through the DSL <a href="DSL-CRUD-operations.topic" anchor="update"><code>.update()</code></a>
-                or the <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-immutable-entity-class/force-update-entity.html">
+                or the <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-immutable-entity-class/force-update-entity.html">
                 <code>ImmutableEntityClass.forceUpdateEntity()</code></a> methods.
             </li>
         </list>
