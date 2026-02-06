@@ -86,7 +86,7 @@ spring6-jdbc = { group = "org.springframework", name = "spring-jdbc", version.re
 spring6-context = { group = "org.springframework", name = "spring-context", version.ref = "springFramework6" }
 spring6-test = { group = "org.springframework", name = "spring-test", version.ref = "springFramework6" }
 spring7-jdbc = { group = "org.springframework", name = "spring-jdbc", version.ref = "springFramework7" }
-spring-r2dbc = { group = "org.springframework", name = "spring-r2dbc", version.ref = "springFramework7" }
+spring7-r2dbc = { group = "org.springframework", name = "spring-r2dbc", version.ref = "springFramework7" }
 spring7-context = { group = "org.springframework", name = "spring-context", version.ref = "springFramework7" }
 spring7-test = { group = "org.springframework", name = "spring-test", version.ref = "springFramework7" }
 
