@@ -1,0 +1,12 @@
+public final class org/jetbrains/exposed/v1/spring7/reactive/transaction/ExposedSpringReactiveTransactionAttributeSource : org/springframework/transaction/interceptor/TransactionAttributeSource {
+	public fun <init> ()V
+	public fun <init> (Lorg/springframework/transaction/interceptor/TransactionAttributeSource;Ljava/util/List;)V
+	public synthetic fun <init> (Lorg/springframework/transaction/interceptor/TransactionAttributeSource;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getTransactionAttribute (Ljava/lang/reflect/Method;Ljava/lang/Class;)Lorg/springframework/transaction/interceptor/TransactionAttribute;
+}
+
+public final class org/jetbrains/exposed/v1/spring7/reactive/transaction/SpringReactiveTransactionManager : org/springframework/transaction/reactive/AbstractReactiveTransactionManager {
+	public fun <init> (Lio/r2dbc/spi/ConnectionFactory;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Builder;Z)V
+	public synthetic fun <init> (Lio/r2dbc/spi/ConnectionFactory;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Builder;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
