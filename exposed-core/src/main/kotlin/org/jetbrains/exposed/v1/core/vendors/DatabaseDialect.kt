@@ -111,10 +111,10 @@ interface DatabaseDialect {
     fun addPrimaryKey(table: Table, pkName: String?, vararg pkColumns: Column<*>): String
 
     /**
-     * Returns SQL statements to add/update a comment on the specified column.
+     * Returns SQL statements to set a comment on the specified column.
      * Returns empty list if comments are not supported.
      */
-    fun commentOnColumn(column: Column<*>, comment: String?): List<String> = emptyList()
+    fun setColumnComment(column: Column<*>, comment: String?): List<String> = emptyList()
 
     /** Returns the SQL statement that creates a database with the specified [name]. */
     fun createDatabase(name: String): String {

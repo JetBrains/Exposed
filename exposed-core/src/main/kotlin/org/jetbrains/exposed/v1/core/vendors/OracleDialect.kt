@@ -471,7 +471,7 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
                 }
             }
             .let { statements ->
-                statements + if (columnDiff.comment) commentOnColumn(column, column.columnComment) else emptyList()
+                statements + if (columnDiff.comment) setColumnComment(column, column.columnComment) else emptyList()
             }
     }
 
@@ -508,15 +508,15 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
         }
     }
 
-    override fun commentOnColumn(column: Column<*>, comment: String?): List<String> {
+    override fun setColumnComment(column: Column<*>, comment: String?): List<String> {
         @OptIn(InternalApi::class)
         val tr = currentTransaction()
-        val tableName = tr.identity(column.table)
-        val columnName = tr.identity(column)
+        val fullColumnIdentity = tr.fullIdentity(column)
 
+        @OptIn(InternalApi::class)
         val commentStr = comment?.escapeComment() ?: ""
 
-        return listOf("COMMENT ON COLUMN $tableName.$columnName IS '$commentStr'")
+        return listOf("COMMENT ON COLUMN $fullColumnIdentity IS '$commentStr'")
     }
 
     companion object : DialectNameProvider("Oracle")

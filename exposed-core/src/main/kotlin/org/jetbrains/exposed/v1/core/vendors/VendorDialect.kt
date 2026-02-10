@@ -17,24 +17,6 @@ abstract class VendorDialect(
         @OptIn(InternalApi::class)
         get() = currentTransaction().db.identifierManager
 
-    /**
-     * Escapes special characters in comments to prevent SQL injection.
-     * Single quotes are doubled per SQL standard.
-     */
-    protected fun String.escapeComment(): String = this.replace("'", "''")
-
-    /**
-     * Checks if the current dialect uses inline comments (MySQL syntax).
-     * Returns true for MySQL and H2 in MySQL/MariaDB compatibility modes.
-     */
-    fun isInlineCommentDialect(): Boolean {
-        val isH2MysqlMode = currentDialect is H2Dialect && (
-            currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.MySQL ||
-                currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.MariaDB
-            )
-        return currentDialect is MysqlDialect || isH2MysqlMode
-    }
-
     @Suppress("UnnecessaryAbstractClass")
     abstract class DialectNameProvider(val dialectName: String)
 
@@ -137,4 +119,27 @@ abstract class VendorDialect(
         val constraint = pkName?.let { " CONSTRAINT ${identifierManager.quoteIfNecessary(it)} " } ?: " "
         return "ALTER TABLE ${transaction.identity(table)} ADD${constraint}PRIMARY KEY $columns"
     }
+}
+
+/**
+ * Escapes special characters in comments to prevent SQL injection.
+ * Single quotes are doubled per SQL standard.
+ * @suppress
+ */
+@InternalApi
+internal fun String.escapeComment(): String = this.replace("'", "''")
+
+/**
+ * Checks if the current dialect uses inline comments (MySQL syntax).
+ * Returns true for MySQL and H2 in MySQL/MariaDB compatibility modes.
+ * @suppress
+ */
+@InternalApi
+internal fun isInlineCommentDialect(): Boolean {
+    val currentDialect = currentTransaction().db.dialect
+    val isH2MysqlMode = currentDialect is H2Dialect && (
+        currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.MySQL ||
+            currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.MariaDB
+        )
+    return currentDialect is MysqlDialect || isH2MysqlMode
 }

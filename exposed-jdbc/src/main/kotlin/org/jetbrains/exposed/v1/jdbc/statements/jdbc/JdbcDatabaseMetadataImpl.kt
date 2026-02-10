@@ -238,7 +238,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             table.schemaName?.let { identifierManager.inProperCase(it).uppercase() }
         }
 
-        val jdbcConnection = (TransactionManager.current().connection as JdbcConnectionImpl).connection
+        val jdbcConnection = metadata.connection
 
         val allComments = mutableMapOf<String, MutableMap<String, String>>()
 
@@ -260,27 +260,25 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 """.trimIndent()
             }
 
-            jdbcConnection.prepareStatement(sql).use { stmt ->
-                tableNames.forEachIndexed { index, tableName ->
-                    stmt.setString(index + 1, tableName)
-                }
-                if (schemaName != null) {
-                    stmt.setString(tableNames.size + 1, schemaName)
-                }
+            val params = if (schemaName != null) {
+                tableNames + schemaName
+            } else {
+                tableNames
+            }
 
-                stmt.executeQuery().use { rs ->
-                    while (rs.next()) {
-                        val tableName = rs.getString(1)?.uppercase()
-                        val columnName = rs.getString(2)?.uppercase()
+            jdbcConnection.executeSQL(sql, params) { rs ->
+                while (rs.next()) {
+                    val tableName = rs.getString(1)?.uppercase()
+                    val columnName = rs.getString(2)?.uppercase()
 
-                        @Suppress("MagicNumber")
-                        val comment = rs.getString(3)
+                    @Suppress("MagicNumber")
+                    val comment = rs.getString(3)
 
-                        if (!tableName.isNullOrBlank() && !columnName.isNullOrBlank() && !comment.isNullOrBlank()) {
-                            allComments.getOrPut(tableName) { mutableMapOf() }[columnName] = comment
-                        }
+                    if (!tableName.isNullOrBlank() && !columnName.isNullOrBlank() && !comment.isNullOrBlank()) {
+                        allComments.getOrPut(tableName) { mutableMapOf() }[columnName] = comment
                     }
                 }
+                Unit
             }
         }
 
@@ -682,4 +680,21 @@ private fun <T : Any> Connection.executeSQL(
     if (!rs.isClosed) rs.close()
     stmt.close()
     return result
+}
+
+private fun <T : Any> Connection.executeSQL(
+    sqlQuery: String,
+    params: List<Any>,
+    transform: (ResultSet) -> T?
+): T? {
+    if (sqlQuery.isEmpty()) return null
+
+    prepareStatement(sqlQuery).use { stmt ->
+        params.forEachIndexed { index, param ->
+            stmt.setObject(index + 1, param)
+        }
+        stmt.executeQuery().use { rs ->
+            return transform(rs)
+        }
+    }
 }

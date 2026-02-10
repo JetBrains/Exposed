@@ -442,7 +442,7 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
             )
         }
         if (columnDiff.comment) {
-            list.addAll(commentOnColumn(column, column.columnComment))
+            list.addAll(setColumnComment(column, column.columnComment))
         }
         return list
     }
@@ -473,16 +473,16 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
         }
     }
 
-    override fun commentOnColumn(column: Column<*>, comment: String?): List<String> {
+    override fun setColumnComment(column: Column<*>, comment: String?): List<String> {
         @OptIn(InternalApi::class)
         val tr = currentTransaction()
-        val tableName = tr.identity(column.table)
-        val columnName = tr.identity(column)
+        val fullColumnIdentity = tr.fullIdentity(column)
 
+        @OptIn(InternalApi::class)
         return if (comment != null) {
-            listOf("COMMENT ON COLUMN $tableName.$columnName IS '${comment.escapeComment()}'")
+            listOf("COMMENT ON COLUMN $fullColumnIdentity IS '${comment.escapeComment()}'")
         } else {
-            listOf("COMMENT ON COLUMN $tableName.$columnName IS NULL")
+            listOf("COMMENT ON COLUMN $fullColumnIdentity IS NULL")
         }
     }
 

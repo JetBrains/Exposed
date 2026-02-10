@@ -418,7 +418,7 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider.INSTA
 
     override fun dropSchema(schema: Schema, cascade: Boolean): String = "DROP SCHEMA IF EXISTS ${schema.identifier}"
 
-    override fun commentOnColumn(column: Column<*>, comment: String?): List<String> {
+    override fun setColumnComment(column: Column<*>, comment: String?): List<String> {
         @OptIn(InternalApi::class)
         val tableName = currentTransaction().identity(column.table)
         val columnDef = column.descriptionDdl(modify = true)

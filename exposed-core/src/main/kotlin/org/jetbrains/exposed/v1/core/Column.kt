@@ -174,8 +174,10 @@ class Column<T>(
         }
 
         // Add MySQL and H2 MySQL/MariaDB mode inline column comment (must come after NULL/NOT NULL)
-        if ((currentDialect as? VendorDialect)?.isInlineCommentDialect() == true && columnComment != null) {
-            val comment = columnComment?.replace("'", "''") ?: ""
+        @OptIn(InternalApi::class)
+        if (isInlineCommentDialect() && columnComment != null) {
+            @OptIn(InternalApi::class)
+            val comment = columnComment?.escapeComment() ?: ""
             append(" COMMENT '$comment'")
         }
 

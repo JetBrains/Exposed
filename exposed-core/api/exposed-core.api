@@ -3886,7 +3886,6 @@ public abstract interface class org/jetbrains/exposed/v1/core/vendors/DatabaseDi
 	public static final field Companion Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect$Companion;
 	public abstract fun addPrimaryKey (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;[Lorg/jetbrains/exposed/v1/core/Column;)Ljava/lang/String;
 	public fun areEquivalentColumnTypes (Ljava/lang/String;ILjava/lang/String;)Z
-	public fun commentOnColumn (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/String;)Ljava/util/List;
 	public fun createDatabase (Ljava/lang/String;)Ljava/lang/String;
 	public abstract fun createIndex (Lorg/jetbrains/exposed/v1/core/Index;)Ljava/lang/String;
 	public fun createSchema (Lorg/jetbrains/exposed/v1/core/Schema;)Ljava/lang/String;
@@ -3922,6 +3921,7 @@ public abstract interface class org/jetbrains/exposed/v1/core/vendors/DatabaseDi
 	public fun listDatabases ()Ljava/lang/String;
 	public abstract fun modifyColumn (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnDiff;)Ljava/util/List;
 	public fun modifyColumn (Lorg/jetbrains/exposed/v1/core/vendors/ColumnMetadata;Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnDiff;)Ljava/util/List;
+	public fun setColumnComment (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/String;)Ljava/util/List;
 	public fun setSchema (Lorg/jetbrains/exposed/v1/core/Schema;)Ljava/lang/String;
 }
 
@@ -3930,7 +3930,6 @@ public final class org/jetbrains/exposed/v1/core/vendors/DatabaseDialect$Compani
 
 public final class org/jetbrains/exposed/v1/core/vendors/DatabaseDialect$DefaultImpls {
 	public static fun areEquivalentColumnTypes (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Ljava/lang/String;ILjava/lang/String;)Z
-	public static fun commentOnColumn (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/String;)Ljava/util/List;
 	public static fun createDatabase (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Ljava/lang/String;)Ljava/lang/String;
 	public static fun createSchema (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/core/Schema;)Ljava/lang/String;
 	public static fun dropDatabase (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Ljava/lang/String;)Ljava/lang/String;
@@ -3959,6 +3958,7 @@ public final class org/jetbrains/exposed/v1/core/vendors/DatabaseDialect$Default
 	public static fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/core/Expression;)Z
 	public static fun listDatabases (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Ljava/lang/String;
 	public static fun modifyColumn (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/core/vendors/ColumnMetadata;Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnDiff;)Ljava/util/List;
+	public static fun setColumnComment (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/String;)Ljava/util/List;
 	public static fun setSchema (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/core/Schema;)Ljava/lang/String;
 }
 
@@ -4162,7 +4162,6 @@ public class org/jetbrains/exposed/v1/core/vendors/H2Dialect : org/jetbrains/exp
 	public static final field Companion Lorg/jetbrains/exposed/v1/core/vendors/H2Dialect$Companion;
 	public fun <init> ()V
 	public fun areEquivalentColumnTypes (Ljava/lang/String;ILjava/lang/String;)Z
-	public fun commentOnColumn (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/String;)Ljava/util/List;
 	public fun createDatabase (Ljava/lang/String;)Ljava/lang/String;
 	public fun createIndex (Lorg/jetbrains/exposed/v1/core/Index;)Ljava/lang/String;
 	public fun dropDatabase (Ljava/lang/String;)Ljava/lang/String;
@@ -4194,6 +4193,7 @@ public class org/jetbrains/exposed/v1/core/vendors/H2Dialect : org/jetbrains/exp
 	public final fun isSecondVersion ()Z
 	public fun listDatabases ()Ljava/lang/String;
 	public fun modifyColumn (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnDiff;)Ljava/util/List;
+	public fun setColumnComment (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/String;)Ljava/util/List;
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -4250,7 +4250,6 @@ public final class org/jetbrains/exposed/v1/core/vendors/MariaDBDialect$Companio
 public class org/jetbrains/exposed/v1/core/vendors/MysqlDialect : org/jetbrains/exposed/v1/core/vendors/VendorDialect {
 	public static final field Companion Lorg/jetbrains/exposed/v1/core/vendors/MysqlDialect$Companion;
 	public fun <init> ()V
-	public fun commentOnColumn (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/String;)Ljava/util/List;
 	public fun createIndex (Lorg/jetbrains/exposed/v1/core/Index;)Ljava/lang/String;
 	public fun createSchema (Lorg/jetbrains/exposed/v1/core/Schema;)Ljava/lang/String;
 	public fun dropIndex (Ljava/lang/String;Ljava/lang/String;ZZ)Ljava/lang/String;
@@ -4265,6 +4264,7 @@ public class org/jetbrains/exposed/v1/core/vendors/MysqlDialect : org/jetbrains/
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/v1/core/Expression;)Z
 	public fun isFractionDateTimeSupported ()Z
 	public fun isTimeZoneOffsetSupported ()Z
+	public fun setColumnComment (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/String;)Ljava/util/List;
 	public fun setSchema (Lorg/jetbrains/exposed/v1/core/Schema;)Ljava/lang/String;
 }
 
@@ -4274,7 +4274,6 @@ public final class org/jetbrains/exposed/v1/core/vendors/MysqlDialect$Companion 
 public class org/jetbrains/exposed/v1/core/vendors/OracleDialect : org/jetbrains/exposed/v1/core/vendors/VendorDialect {
 	public static final field Companion Lorg/jetbrains/exposed/v1/core/vendors/OracleDialect$Companion;
 	public fun <init> ()V
-	public fun commentOnColumn (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/String;)Ljava/util/List;
 	public fun createDatabase (Ljava/lang/String;)Ljava/lang/String;
 	public fun createSchema (Lorg/jetbrains/exposed/v1/core/Schema;)Ljava/lang/String;
 	public fun dropDatabase (Ljava/lang/String;)Ljava/lang/String;
@@ -4295,6 +4294,7 @@ public class org/jetbrains/exposed/v1/core/vendors/OracleDialect : org/jetbrains
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/v1/core/Expression;)Z
 	public fun listDatabases ()Ljava/lang/String;
 	public fun modifyColumn (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnDiff;)Ljava/util/List;
+	public fun setColumnComment (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/String;)Ljava/util/List;
 	public fun setSchema (Lorg/jetbrains/exposed/v1/core/Schema;)Ljava/lang/String;
 }
 
@@ -4306,7 +4306,6 @@ public class org/jetbrains/exposed/v1/core/vendors/PostgreSQLDialect : org/jetbr
 	public fun <init> ()V
 	public fun <init> (Ljava/lang/String;)V
 	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun commentOnColumn (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/String;)Ljava/util/List;
 	public fun createDatabase (Ljava/lang/String;)Ljava/lang/String;
 	protected fun createIndexWithType (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun dropDatabase (Ljava/lang/String;)Ljava/lang/String;
@@ -4320,6 +4319,7 @@ public class org/jetbrains/exposed/v1/core/vendors/PostgreSQLDialect : org/jetbr
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/v1/core/Expression;)Z
 	public fun listDatabases ()Ljava/lang/String;
 	public fun modifyColumn (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnDiff;)Ljava/util/List;
+	public fun setColumnComment (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/String;)Ljava/util/List;
 	public fun setSchema (Lorg/jetbrains/exposed/v1/core/Schema;)Ljava/lang/String;
 }
 
@@ -4412,7 +4412,6 @@ public abstract class org/jetbrains/exposed/v1/core/vendors/VendorDialect : org/
 	public fun <init> (Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/vendors/DataTypeProvider;Lorg/jetbrains/exposed/v1/core/vendors/FunctionProvider;)V
 	public fun addPrimaryKey (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;[Lorg/jetbrains/exposed/v1/core/Column;)Ljava/lang/String;
 	public fun areEquivalentColumnTypes (Ljava/lang/String;ILjava/lang/String;)Z
-	public fun commentOnColumn (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/String;)Ljava/util/List;
 	public fun createDatabase (Ljava/lang/String;)Ljava/lang/String;
 	public fun createIndex (Lorg/jetbrains/exposed/v1/core/Index;)Ljava/lang/String;
 	protected fun createIndexWithType (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
@@ -4420,7 +4419,6 @@ public abstract class org/jetbrains/exposed/v1/core/vendors/VendorDialect : org/
 	public fun dropDatabase (Ljava/lang/String;)Ljava/lang/String;
 	public fun dropIndex (Ljava/lang/String;Ljava/lang/String;ZZ)Ljava/lang/String;
 	public fun dropSchema (Lorg/jetbrains/exposed/v1/core/Schema;Z)Ljava/lang/String;
-	protected final fun escapeComment (Ljava/lang/String;)Ljava/lang/String;
 	public final fun filterCondition (Lorg/jetbrains/exposed/v1/core/Index;)Ljava/lang/String;
 	public fun getDataTypeProvider ()Lorg/jetbrains/exposed/v1/core/vendors/DataTypeProvider;
 	public fun getDefaultReferenceOption ()Lorg/jetbrains/exposed/v1/core/ReferenceOption;
@@ -4449,10 +4447,10 @@ public abstract class org/jetbrains/exposed/v1/core/vendors/VendorDialect : org/
 	public fun getSupportsTernaryAffectedRowValues ()Z
 	public fun getSupportsWindowFrameGroupsMode ()Z
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/v1/core/Expression;)Z
-	public final fun isInlineCommentDialect ()Z
 	public fun listDatabases ()Ljava/lang/String;
 	public fun modifyColumn (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnDiff;)Ljava/util/List;
 	public fun modifyColumn (Lorg/jetbrains/exposed/v1/core/vendors/ColumnMetadata;Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnDiff;)Ljava/util/List;
+	public fun setColumnComment (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/String;)Ljava/util/List;
 	public fun setSchema (Lorg/jetbrains/exposed/v1/core/Schema;)Ljava/lang/String;
 }
 

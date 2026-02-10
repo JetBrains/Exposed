@@ -665,6 +665,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             newCol.dbDefaultValue = dbDefaultValue?.let { default -> default as Expression<EntityID<T>> }
             newCol.extraDefinitions = extraDefinitions
             newCol.foreignKey = foreignKey
+            newCol.columnComment = this.columnComment
         }
         (table as IdTable<T>).addIdColumnInternal(newColumn)
         return replaceColumn(this, newColumn)
@@ -1315,6 +1316,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         newColumn.isDatabaseGenerated = isDatabaseGenerated
         newColumn.columnType.nullable = true
         newColumn.extraDefinitions = extraDefinitions
+        newColumn.columnComment = this.columnComment
         return replaceColumn(this, newColumn)
     }
 
@@ -1342,10 +1344,13 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      *
      * The comment will be included in DDL generation and visible in database administration tools.
      *
-     * @param text The comment text, or null to remove the comment
+     * To remove a comment from an existing column, remove the `.comment()` call from the column definition.
+     * The schema migration will detect the change and remove the comment from the database.
+     *
+     * @param text The comment text to add to the column
      * @return This column for method chaining
      */
-    fun <T> Column<T>.comment(text: String?): Column<T> = apply {
+    fun <T> Column<T>.comment(text: String): Column<T> = apply {
         columnComment = text
     }
 
@@ -1761,12 +1766,13 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         }
 
         val commentStatements = buildList {
-            val isInlineCommentDialect = (currentDialect as? VendorDialect)?.isInlineCommentDialect() == true
+            @OptIn(InternalApi::class)
+            val isInlineDialect = isInlineCommentDialect()
 
-            if (!isInlineCommentDialect) {
+            if (!isInlineDialect) {
                 columns.forEach { col ->
                     col.columnComment?.let { commentText ->
-                        addAll(currentDialect.commentOnColumn(col, commentText))
+                        addAll(currentDialect.setColumnComment(col, commentText))
                     }
                 }
             }
