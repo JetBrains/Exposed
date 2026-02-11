@@ -207,13 +207,33 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
         wrapRow(it, alias)
     }
 
-    /** Wraps the specified [ResultRow] data into an [Entity] instance. */
-    @Suppress("MemberVisibilityCanBePrivate")
+    /**
+     * Wraps the specified [ResultRow] data into an [Entity] instance.
+     *
+     * This method updates the entity's internal read values with fresh data from the [ResultRow],
+     * ensuring that queries like SELECT FOR UPDATE return current database state rather than cached values.
+     *
+     * When an entity is already cached and has accessed columns that are not in the new [ResultRow],
+     * the method performs a selective merge: columns present in the [ResultRow] are updated with fresh data,
+     * while previously accessed columns not in the [ResultRow] retain their cached values.
+     */
     fun wrapRow(row: ResultRow): T {
         val entity = wrap(row[table.id], row)
+
         if (entity._readValues == null) {
             entity._readValues = row
+            return entity
         }
+
+        // This line should cause N + 1, while fetching happens only if `_readValues` is null,
+        // but it should not be null here (at least while only one thread manipulates with this data)
+        val existingKeys = entity.readValues.fieldIndex.keys
+        val fetchedKeys = row.fieldIndex.keys
+
+        val columnToValue = (existingKeys + fetchedKeys).toSet().associateWith { column ->
+            if (row.hasValue(column)) row[column] else entity._readValues?.get(column)
+        }
+        entity._readValues = ResultRow.createAndFillValues(columnToValue)
 
         return entity
     }
