@@ -1,0 +1,43 @@
+name: Close wait-for-reply issues
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # Run daily at 3 AM UTC
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  issues: write
+
+jobs:
+  close-wait-for-reply:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+          # Only process issues with this label
+          only-labels: 'waiting for reply'
+
+          # Mark as stale after 45 days of inactivity
+          days-before-issue-stale: 45
+          # Close immediately after marking as stale
+          days-before-issue-close: 0
+
+          # Message when marking as stale
+          stale-issue-message: >
+            This issue has been waiting for feedback for 45 days.
+            If you still need help, please reply with the requested information.
+
+          # Message when closing
+          close-issue-message: >
+            Closing this issue due to inactivity.
+            Feel free to comment to reopen it if you can provide the missing details.
+
+          # Don't process PRs
+          days-before-pr-stale: -1
+          days-before-pr-close: -1
+
+          # Don't close issues with milestones or assignees
+          exempt-all-milestones: true
+          exempt-all-assignees: true
