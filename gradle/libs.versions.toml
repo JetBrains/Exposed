@@ -4,7 +4,7 @@ dokka = "2.1.0"
 detekt = "1.23.8" # When upgrading, also upgrade in detekt.yml and add corresponding detekt-formatting jar file.
 binary-compatibility-validator = "0.18.1"
 docker-compose = "0.17.5"
-kover = "0.9.6"
+kover = "0.9.7"
 kotlinCoroutines = "1.10.2"
 kotlinxSerialization = "1.9.0"
 
