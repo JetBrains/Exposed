@@ -110,6 +110,12 @@ interface DatabaseDialect {
     /** Returns the SQL statement that adds a primary key specified [pkName] to an existing [table]. */
     fun addPrimaryKey(table: Table, pkName: String?, vararg pkColumns: Column<*>): String
 
+    /**
+     * Returns SQL statements to set a comment on the specified column.
+     * Returns empty list if comments are not supported.
+     */
+    fun setColumnComment(column: Column<*>, comment: String?): List<String> = emptyList()
+
     /** Returns the SQL statement that creates a database with the specified [name]. */
     fun createDatabase(name: String): String {
         @OptIn(InternalApi::class)

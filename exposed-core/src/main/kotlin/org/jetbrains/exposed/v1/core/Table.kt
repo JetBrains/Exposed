@@ -665,6 +665,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             newCol.dbDefaultValue = dbDefaultValue?.let { default -> default as Expression<EntityID<T>> }
             newCol.extraDefinitions = extraDefinitions
             newCol.foreignKey = foreignKey
+            newCol.columnComment = this.columnComment
         }
         (table as IdTable<T>).addIdColumnInternal(newColumn)
         return replaceColumn(this, newColumn)
@@ -1315,6 +1316,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         newColumn.isDatabaseGenerated = isDatabaseGenerated
         newColumn.columnType.nullable = true
         newColumn.extraDefinitions = extraDefinitions
+        newColumn.columnComment = this.columnComment
         return replaceColumn(this, newColumn)
     }
 
@@ -1335,6 +1337,21 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      */
     fun <T> Column<T>.withDefinition(vararg definition: Any): Column<T> = apply {
         extraDefinitions.addAll(definition)
+    }
+
+    /**
+     * Adds a comment to this column that will be stored in the database schema.
+     *
+     * The comment will be included in DDL generation and visible in database administration tools.
+     *
+     * To remove a comment from an existing column, remove the `.comment()` call from the column definition.
+     * The schema migration will detect the change and remove the comment from the database.
+     *
+     * @param text The comment text to add to the column
+     * @return This column for method chaining
+     */
+    fun <T> Column<T>.comment(text: String): Column<T> = apply {
+        columnComment = text
     }
 
     /**
@@ -1748,7 +1765,20 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             emptyList()
         }
 
-        return createAutoIncColumnSequence() + createTable + createConstraint
+        val commentStatements = buildList {
+            @OptIn(InternalApi::class)
+            val isInlineDialect = isInlineCommentDialect()
+
+            if (!isInlineDialect) {
+                columns.forEach { col ->
+                    col.columnComment?.let { commentText ->
+                        addAll(currentDialect.setColumnComment(col, commentText))
+                    }
+                }
+            }
+        }
+
+        return createAutoIncColumnSequence() + createTable + createConstraint + commentStatements
     }
 
     private fun createAutoIncColumnSequence(): List<String> {
