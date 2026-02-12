@@ -15,7 +15,9 @@ import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import java.sql.SQLException
 import kotlin.concurrent.thread
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 @Tag(MISSING_R2DBC_TEST)
@@ -146,6 +148,99 @@ class ImmutableEntityTest : DatabaseTestsBase() {
                     throw e
                 }
             }
+        }
+    }
+
+    object Organizations : IntIdTable("organizations") {
+        val name = varchar("name", 255)
+        val code = varchar("code", 50)
+    }
+
+    class Organization(id: EntityID<Int>) : IntEntity(id) {
+        var name by Organizations.name
+        var code by Organizations.code
+
+        companion object : ImmutableCachedEntityClass<Int, Organization>(Organizations)
+    }
+
+    /**
+     * This is the reproducer of the https://youtrack.jetbrains.com/issue/EXPOSED-986 issue
+     */
+    @Tag(MISSING_R2DBC_TEST)
+    @Test
+    fun `test ImmutableCachedEntity should not lose cache on rollback`() {
+        withTables(Organizations) {
+            // Create an organization
+            val orgId = Organizations.insert {
+                it[name] = "Test Organization"
+                it[code] = "TEST"
+            }[Organizations.id]
+
+            // First transaction: load the entity into cache
+            transaction {
+                val org = Organization[orgId]
+                assertEquals("Test Organization", org.name)
+                assertEquals("TEST", org.code)
+            }
+
+            val initialStatementCount = statementCount
+
+            // Second transaction: access the entity (should use cache)
+            transaction {
+                val org = Organization[orgId]
+                assertEquals("Test Organization", org.name)
+                assertEquals("TEST", org.code)
+                // Verify _readValues is set
+                assert(org._readValues != null) { "Entity should have _readValues set after loading" }
+            }
+
+            // This should not trigger any additional queries since the entity is cached
+            val afterCacheAccessCount = statementCount
+            assertEquals(
+                initialStatementCount,
+                afterCacheAccessCount,
+                "No queries should be executed when accessing cached immutable entity"
+            )
+
+            // Third transaction: trigger a rollback
+            try {
+                transaction {
+                    maxAttempts = 1
+
+                    // Access the entity before rollback
+                    val org = Organization[orgId]
+                    assertEquals("Test Organization", org.name)
+
+                    // Force rollback
+                    throw SQLException("Force rollback")
+                }
+            } catch (_: SQLException) {
+                // Expected
+            }
+
+            val beforeRollbackTestCount = statementCount
+
+            // Fourth transaction: access the entity after rollback
+            transaction {
+                val org = Organization[orgId]
+                assertEquals("Test Organization", org.name)
+                assertEquals("TEST", org.code)
+
+                // For ImmutableCachedEntity, the cache should persist across rollbacks
+                assert(org._readValues != null) {
+                    "ImmutableCachedEntity should not have _readValues cleared on rollback"
+                }
+            }
+
+            val afterRollbackAccessCount = statementCount
+
+            // For ImmutableCachedEntity, accessing the entity after rollback should NOT
+            // trigger additional queries since the entity is immutable and cached values remain valid
+            assertEquals(
+                beforeRollbackTestCount,
+                afterRollbackAccessCount,
+                "ImmutableCachedEntity should not trigger queries after rollback - cached values should remain valid"
+            )
         }
     }
 }
