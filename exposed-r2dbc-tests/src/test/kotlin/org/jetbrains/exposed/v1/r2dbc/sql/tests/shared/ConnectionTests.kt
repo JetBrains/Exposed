@@ -6,8 +6,10 @@ import io.r2dbc.h2.H2ConnectionOption
 import io.r2dbc.spi.ConnectionFactoryOptions
 import io.r2dbc.spi.Option
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
@@ -38,6 +40,7 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.sql.Types
 import kotlin.test.assertContains
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -309,6 +312,54 @@ class ConnectionTests : R2dbcDatabaseTestsBase() {
             }
         } catch (cause: ExposedR2dbcException) {
             assertContains(cause.message, "Table \"TESTER\" not found")
+        }
+    }
+
+    /**
+     * Test for EXPOSED-982: Connection leak when coroutine is cancelled during suspendTransaction.
+     * Verifies that connections are properly cleaned up even when coroutines are cancelled.
+     */
+    @Test
+    fun testNoConnectionLeakOnCancellation() = runTest {
+        Assumptions.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
+        val initialCount = getIdleInTransactionCount()
+
+        repeat(30) { i ->
+            val job = launch {
+                suspendTransaction(dialect.db) {
+                    People.insert {
+                        it[People.firstName] = "test-$i"
+                    }
+                    delay(5000) // Cancellation happens here
+                }
+            }
+            delay(100)
+            job.cancelAndJoin()
+
+            val finalCount = getIdleInTransactionCount()
+            val leaked = finalCount - initialCount
+            assertEquals(0, leaked, "Connection was leaked due to transdaction cancellation")
+        }
+    }
+
+    private suspend fun getIdleInTransactionCount(): Int {
+        if (dialect.db == null) {
+            dialect.db = dialect.connect()
+        }
+
+        return suspendTransaction(dialect.db!!) {
+            maxAttempts = 1
+            exec(
+                """
+              SELECT COUNT(*) as count
+              FROM pg_stat_activity
+              WHERE state = 'idle in transaction'
+              AND datname = current_database()
+              AND pid != pg_backend_pid()
+                """.trimIndent()
+            ) { row ->
+                row.get(0, Int::class.java)
+            }?.first() ?: 0
         }
     }
 }

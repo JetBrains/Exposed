@@ -2,7 +2,9 @@ package org.jetbrains.exposed.v1.r2dbc.transactions
 
 import io.r2dbc.spi.IsolationLevel
 import io.r2dbc.spi.R2dbcException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.SqlLogger
 import org.jetbrains.exposed.v1.core.exposedLogger
@@ -42,21 +44,25 @@ private suspend inline fun <T> executeR2dbcTransactionWithErrorHandling(
         }
     } catch (cause: R2dbcException) {
         val currentStatement = transaction.currentStatement
-        transaction.rollbackLoggingException {
-            exposedLogger.warn(
-                "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
-                it
-            )
-        }
-        throw cause
-    } catch (cause: Throwable) {
-        if (shouldCommit) {
-            val currentStatement = transaction.currentStatement
+        withContext(NonCancellable) {
             transaction.rollbackLoggingException {
                 exposedLogger.warn(
                     "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
                     it
                 )
+            }
+        }
+        throw cause
+    } catch (cause: Throwable) {
+        if (shouldCommit) {
+            val currentStatement = transaction.currentStatement
+            withContext(NonCancellable) {
+                transaction.rollbackLoggingException {
+                    exposedLogger.warn(
+                        "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
+                        it
+                    )
+                }
             }
         }
         throw cause
@@ -225,8 +231,10 @@ suspend fun <T> inTopLevelSuspendTransaction(
             }
         } finally {
             @OptIn(InternalApi::class)
-            withTransactionContext(transaction) {
-                closeStatementsAndConnection(transaction)
+            withContext(NonCancellable) {
+                withTransactionContext(transaction) {
+                    closeStatementsAndConnection(transaction)
+                }
             }
         }
     }
@@ -252,8 +260,10 @@ internal suspend fun handleR2dbcException(cause: R2dbcException, transaction: R2
         }
     }
     exposedLogger.debug(message, cause)
-    transaction.rollbackLoggingException {
-        exposedLogger.debug("Transaction rollback failed: ${it.message}. See previous log line for statement", it)
+    withContext(NonCancellable) {
+        transaction.rollbackLoggingException {
+            exposedLogger.debug("Transaction rollback failed: ${it.message}. See previous log line for statement", it)
+        }
     }
 }
 
