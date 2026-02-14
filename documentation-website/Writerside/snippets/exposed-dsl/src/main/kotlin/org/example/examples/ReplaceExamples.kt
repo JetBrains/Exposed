@@ -10,7 +10,7 @@ private const val MOVIE_SEQUEL_3_ID = 9
 private const val MOVIE_3_RELEASE_YEAR = 2019
 private const val MOVIE_RATING = 5.2
 private const val MAX_VARCHAR_LENGTH = 2019
-private const val LOW_RAITING_THRESHOLD = 5.0
+private const val LOW_RATING_THRESHOLD = 5.0
 private const val DEFAULT_RATING = 10.0
 
 object StarWarsFilmsTable : Table() {
@@ -44,7 +44,7 @@ class ReplaceExamples {
 
     fun replaceWithQuery() {
         val allRowsWithLowRating: Query = StarWarsFilmsTable.selectAll().where {
-            StarWarsFilmsTable.rating less LOW_RAITING_THRESHOLD
+            StarWarsFilmsTable.rating less LOW_RATING_THRESHOLD
         }
         StarWarsFilmsTable.replace(allRowsWithLowRating)
     }
