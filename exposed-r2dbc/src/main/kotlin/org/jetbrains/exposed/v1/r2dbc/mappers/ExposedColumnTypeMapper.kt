@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.r2dbc.mappers
 
 import io.r2dbc.spi.Statement
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import kotlin.reflect.KClass
 
@@ -29,7 +30,12 @@ class ExposedColumnTypeMapper : TypeMapper {
     ): Boolean {
         when (columnType) {
             is EntityIDColumnType<*> -> {
-                return typeMapping.setValue(statement, dialect, columnType.idColumn.columnType, value, index)
+                val unwrappedValue = if (value is EntityID<*>) {
+                    value._value
+                } else {
+                    value
+                }
+                return typeMapping.setValue(statement, dialect, columnType.idColumn.columnType, unwrappedValue, index)
             }
             is ColumnWithTransform<*, *> -> {
                 return typeMapping.setValue(statement, dialect, columnType.delegate, value, index)
