@@ -1,0 +1,176 @@
+public final class org/jetbrains/exposed/r2dbc/dao/R2dbcDaoEntityID : org/jetbrains/exposed/v1/core/dao/id/EntityID {
+	public fun <init> (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;)V
+}
+
+public class org/jetbrains/exposed/r2dbc/dao/R2dbcEntity {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;)V
+	public fun flush (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityBatchUpdate;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun flush$default (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityBatchUpdate;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun getDb ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
+	public final fun getId ()Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;
+	public final fun getKlass ()Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;
+	public final fun getReadValues ()Lorg/jetbrains/exposed/v1/core/ResultRow;
+	public final fun getValue (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;Lkotlin/reflect/KProperty;)Ljava/lang/Object;
+	public final fun getWriteValues ()Ljava/util/LinkedHashMap;
+	public final fun get_readValues ()Lorg/jetbrains/exposed/v1/core/ResultRow;
+	public final fun lookup (Lorg/jetbrains/exposed/v1/core/Column;)Ljava/lang/Object;
+	public fun refresh (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun refresh$default (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun setValue (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;Lkotlin/reflect/KProperty;Ljava/lang/Object;)V
+	public final fun set_readValues (Lorg/jetbrains/exposed/v1/core/ResultRow;)V
+}
+
+public final class org/jetbrains/exposed/r2dbc/dao/R2dbcEntityBatchUpdate {
+	public fun <init> ()V
+	public final fun set (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Object;)V
+}
+
+public final class org/jetbrains/exposed/r2dbc/dao/R2dbcEntityCache {
+	public fun <init> (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;)V
+	public final fun addNotInitializedEntityToQueue (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;)V
+	public final fun find (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;)Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;
+	public final fun findAll (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;)Ljava/util/List;
+	public final fun finishEntityInitialization (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;)V
+	public final fun flush (Ljava/lang/Iterable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun flush (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getData ()Ljava/util/concurrent/ConcurrentHashMap;
+	public final fun getMaxEntitiesToStore ()I
+	public final fun getOrPutReferrers (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getPendingInitializationLambdas ()Ljava/util/concurrent/ConcurrentHashMap;
+	public final fun isEntityInInitializationState (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;)Z
+	public final fun remove (Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;)V
+	public final fun removeReferrer (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;)V
+	public final fun removeTablesReferrers (Ljava/util/Collection;)V
+	public final fun scheduleInsert (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;)V
+	public final fun scheduleUpdate (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;)V
+	public final fun setMaxEntitiesToStore (I)V
+	public final fun store (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;)V
+	public final fun updateEntities (Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/r2dbc/dao/R2dbcEntityCacheKt {
+	public static final fun getEntityCache (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;)Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityCache;
+}
+
+public abstract class org/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Ljava/lang/Class;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Ljava/lang/Class;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun all ()Lorg/jetbrains/exposed/v1/r2dbc/Query;
+	protected fun createInstance (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;Lorg/jetbrains/exposed/v1/core/ResultRow;)Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;
+	public final fun find (Lkotlin/jvm/functions/Function0;)Lorg/jetbrains/exposed/v1/r2dbc/Query;
+	public final fun find (Lorg/jetbrains/exposed/v1/core/Op;)Lorg/jetbrains/exposed/v1/r2dbc/Query;
+	public fun findById (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun get (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun get (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getDependsOnColumns ()Ljava/util/List;
+	public fun getDependsOnTables ()Lorg/jetbrains/exposed/v1/core/ColumnSet;
+	public final fun getTable ()Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;
+	public fun new (Ljava/lang/Object;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;
+	public fun new (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;
+	public final fun removeFromCache (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;)V
+	public fun searchQuery (Lorg/jetbrains/exposed/v1/core/Op;)Lorg/jetbrains/exposed/v1/r2dbc/Query;
+	public final fun testCache (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;)Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;
+	protected fun warmCache ()Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityCache;
+	public final fun wrap (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;Lorg/jetbrains/exposed/v1/core/ResultRow;)Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;
+	public final fun wrapRow (Lorg/jetbrains/exposed/v1/core/ResultRow;)Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;
+}
+
+public final class org/jetbrains/exposed/r2dbc/dao/R2dbcEntityLifecycleInterceptor : org/jetbrains/exposed/v1/r2dbc/statements/GlobalSuspendStatementInterceptor {
+	public fun <init> ()V
+	public fun afterCommit (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun afterExecution (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/util/List;Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun afterRollback (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun afterStatementPrepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun beforeCommit (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun beforeExecution (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lorg/jetbrains/exposed/v1/core/statements/StatementContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun beforeRollback (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun keepUserDataInTransactionStoreOnCommit (Ljava/util/Map;)Ljava/util/Map;
+}
+
+public final class org/jetbrains/exposed/r2dbc/dao/R2dbcEntityLifecycleInterceptorKt {
+	public static final fun flushCache (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract class org/jetbrains/exposed/r2dbc/dao/R2dbcIntEntity : org/jetbrains/exposed/r2dbc/dao/R2dbcEntity {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;)V
+}
+
+public abstract class org/jetbrains/exposed/r2dbc/dao/R2dbcIntEntityClass : org/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Ljava/lang/Class;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Ljava/lang/Class;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public abstract class org/jetbrains/exposed/r2dbc/dao/R2dbcLongEntity : org/jetbrains/exposed/r2dbc/dao/R2dbcEntity {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;)V
+}
+
+public abstract class org/jetbrains/exposed/r2dbc/dao/R2dbcLongEntityClass : org/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Ljava/lang/Class;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Ljava/lang/Class;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class org/jetbrains/exposed/r2dbc/dao/exceptions/R2dbcEntityNotFoundException : java/lang/Exception {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;)V
+	public final fun getEntity ()Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;
+	public final fun getId ()Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;
+}
+
+public final class org/jetbrains/exposed/r2dbc/dao/relationships/OptionalSuspendAccessor {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;)V
+	public final fun getValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;)Lorg/jetbrains/exposed/r2dbc/dao/relationships/OptionalSuspendAccessor;
+	public final fun invoke (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun set (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;)V
+}
+
+public final class org/jetbrains/exposed/r2dbc/dao/relationships/OptionalSuspendReference {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;)V
+	public final fun getFactory ()Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;
+	public final fun getReference ()Lorg/jetbrains/exposed/v1/core/Column;
+	public final fun provideDelegate (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;Lkotlin/reflect/KProperty;)Lorg/jetbrains/exposed/r2dbc/dao/relationships/OptionalSuspendAccessor;
+}
+
+public final class org/jetbrains/exposed/r2dbc/dao/relationships/R2dbcBackReference {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;)V
+	public final fun getValue (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;Lkotlin/reflect/KProperty;)Lkotlin/jvm/functions/Function1;
+}
+
+public final class org/jetbrains/exposed/r2dbc/dao/relationships/R2dbcOptionalBackReference {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;)V
+	public final fun getValue (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;Lkotlin/reflect/KProperty;)Lkotlin/jvm/functions/Function1;
+}
+
+public final class org/jetbrains/exposed/r2dbc/dao/relationships/R2dbcReferrers {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;Z)V
+	public final fun getCache ()Z
+	public final fun getFactory ()Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;
+	public final fun getReference ()Lorg/jetbrains/exposed/v1/core/Column;
+	public final fun getValue (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;Lkotlin/reflect/KProperty;)Lkotlin/jvm/functions/Function1;
+}
+
+public final class org/jetbrains/exposed/r2dbc/dao/relationships/R2dbcRelationshipExtensionsKt {
+	public static final fun backReferencedOnSuspend (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/r2dbc/dao/relationships/R2dbcBackReference;
+	public static final fun optionalBackReferencedOnSuspend (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/r2dbc/dao/relationships/R2dbcOptionalBackReference;
+	public static final fun optionalReferencedOnSuspend (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/r2dbc/dao/relationships/OptionalSuspendReference;
+	public static final fun optionalReferrersOnSuspend (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/r2dbc/dao/relationships/R2dbcReferrers;
+	public static final fun optionalReferrersOnSuspend (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;Lorg/jetbrains/exposed/v1/core/Column;Z)Lorg/jetbrains/exposed/r2dbc/dao/relationships/R2dbcReferrers;
+	public static synthetic fun optionalReferrersOnSuspend$default (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;Lorg/jetbrains/exposed/v1/core/Column;ZILjava/lang/Object;)Lorg/jetbrains/exposed/r2dbc/dao/relationships/R2dbcReferrers;
+	public static final fun referencedOnSuspend (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/r2dbc/dao/relationships/SuspendReference;
+	public static final fun referrersOnSuspend (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/r2dbc/dao/relationships/R2dbcReferrers;
+	public static final fun referrersOnSuspend (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;Lorg/jetbrains/exposed/v1/core/Column;Z)Lorg/jetbrains/exposed/r2dbc/dao/relationships/R2dbcReferrers;
+	public static synthetic fun referrersOnSuspend$default (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;Lorg/jetbrains/exposed/v1/core/Column;ZILjava/lang/Object;)Lorg/jetbrains/exposed/r2dbc/dao/relationships/R2dbcReferrers;
+}
+
+public final class org/jetbrains/exposed/r2dbc/dao/relationships/SuspendAccessor {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;)V
+	public final fun getValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;)Lorg/jetbrains/exposed/r2dbc/dao/relationships/SuspendAccessor;
+	public final fun invoke (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun set (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;)V
+}
+
+public final class org/jetbrains/exposed/r2dbc/dao/relationships/SuspendReference {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;)V
+	public final fun getFactory ()Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntityClass;
+	public final fun getReference ()Lorg/jetbrains/exposed/v1/core/Column;
+	public final fun provideDelegate (Lorg/jetbrains/exposed/r2dbc/dao/R2dbcEntity;Lkotlin/reflect/KProperty;)Lorg/jetbrains/exposed/r2dbc/dao/relationships/SuspendAccessor;
+}
+
