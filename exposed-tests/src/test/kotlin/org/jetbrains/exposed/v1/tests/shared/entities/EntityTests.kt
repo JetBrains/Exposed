@@ -97,7 +97,6 @@ object EntityTestsData {
     }
 }
 
-@Tag(MISSING_R2DBC_TEST)
 @Suppress("LargeClass")
 class EntityTests : DatabaseTestsBase() {
     @Test
@@ -121,6 +120,8 @@ class EntityTests : DatabaseTestsBase() {
             assertEquals(b.b2, false, "b.b2 mismatched")
 
             b.y = y
+
+            println("b.y: ${b.y}")
 
             assertFalse(b.y!!.x)
             assertNotNull(y.b)
@@ -257,6 +258,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testInsertNonChildWithoutFlush() {
         withTables(Boards, Posts, Categories) {
             val board = Board.new { name = "irrelevant" }
@@ -266,6 +268,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testThatQueriesWithinOtherQueryIteratorWorksFine() {
         withTables(Boards, Posts, Categories) {
             val board1 = Board.new { name = "irrelevant" }
@@ -280,6 +283,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testInsertChildWithFlush() {
         withTables(Boards, Posts, Categories) {
             val parent = Post.new { this.category = Category.new { title = "title" } }
@@ -291,6 +295,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testInsertChildWithChild() {
         withTables(Boards, Posts, Categories) {
             val parent = Post.new { this.category = Category.new { title = "title1" } }
@@ -304,6 +309,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testOptionalReferrersWithDifferentKeys() {
         withTables(Boards, Posts, Categories) {
             val board = Board.new { name = "irrelevant" }
@@ -320,6 +326,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testErrorOnSetToDeletedEntity() {
         withTables(Boards) {
             expectException<EntityNotFoundException> {
@@ -331,6 +338,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testCacheInvalidatedOnDSLDelete() {
         withTables(Boards) {
             val board1 = Board.new { name = "irrelevant" }
@@ -346,6 +354,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testCacheInvalidatedOnDSLUpdate() {
         withTables(Boards) {
             val board1 = Board.new { name = "irrelevant" }
@@ -378,6 +387,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testCacheInvalidatedOnDSLUpsert() {
         withTables(Items) { testDb ->
             val oldPrice = 20.0
@@ -417,6 +427,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testDaoFindByIdAndUpdate() {
         withTables(Items) {
             val oldPrice = 20.0
@@ -446,6 +457,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testDaoFindSingleByAndUpdate() {
         withTables(Items) {
             val oldPrice = 20.0
@@ -504,6 +516,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testOneToOneReference() {
         withTables(Humans, Users) {
             val user = User.create("testUser")
@@ -524,6 +537,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
     fun testSelfReferences() {
         withTables(SelfReferenceTable) {
@@ -535,6 +549,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testNonEntityIdReference() {
         withTables(Posts, Boards, Categories) {
             val category1 = Category.new {
@@ -559,6 +574,7 @@ class EntityTests : DatabaseTestsBase() {
 
     // https://github.com/JetBrains/Exposed/issues/439
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun callLimitOnRelationDoesntMutateTheCachedValue() {
         withTables(Posts, Boards, Categories) {
             addLogger(StdOutSqlLogger) // this is left in on purpose for flaky tests
@@ -586,6 +602,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testOrderByOnEntities() {
         withTables(Categories) {
             Categories.deleteAll()
@@ -600,6 +617,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testThatUpdateOfInsertedEntitiesGoesBeforeAnInsert() {
         withTables(Categories, Posts, Boards) {
             val category1 = Category.new {
@@ -655,6 +673,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testNewIdWithGet() {
         // SQL Server doesn't support an explicit id for auto-increment table
         withTables(listOf(TestDB.SQLSERVER), Parents, Children) {
@@ -675,6 +694,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun `newly created entity flushed successfully`() {
         withTables(Boards) {
             val board = Board.new { name = "Board1" }.apply {
@@ -689,6 +709,7 @@ class EntityTests : DatabaseTestsBase() {
         inTopLevelTransaction(null, statement = statement)
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun sharingEntityBetweenTransactions() {
         withTables(Humans) {
             val human1 = newTransaction {
@@ -824,6 +845,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun preloadReferencesOnASizedIterable() {
         withTables(Regions, Schools) {
             val region1 = Region.new {
@@ -865,6 +887,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testIterationOverSizedIterableWithPreload() {
         fun HashMap<String, Pair<Int, Long>>.assertEachQueryExecutedOnlyOnce() {
             forEach { (statement, stats) ->
@@ -932,6 +955,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun preloadReferencesOnAnEntity() {
         withTables(Regions, Schools) {
             val region1 = Region.new {
@@ -964,6 +988,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun preloadOptionalReferencesOnASizedIterable() {
         withTables(Regions, Schools) {
             val region1 = Region.new {
@@ -1004,6 +1029,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun preloadOptionalReferencesOnAnEntity() {
         withTables(Regions, Schools) {
             val region1 = Region.new {
@@ -1034,6 +1060,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun preloadReferrersOnASizedIterable() {
         withTables(Regions, Schools, Students) {
             val region1 = Region.new {
@@ -1095,6 +1122,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun preloadReferrersOnAnEntity() {
         withTables(Regions, Schools, Students) {
             val region1 = Region.new {
@@ -1135,6 +1163,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun preloadOptionalReferrersOnASizedIterable() {
         withTables(Regions, Schools, Students, Detentions) {
             val region1 = Region.new {
@@ -1183,6 +1212,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun preloadInnerTableLinkOnASizedIterable() {
         withTables(Regions, Schools, Holidays, SchoolHolidays) {
             val now = System.currentTimeMillis()
@@ -1244,6 +1274,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun preloadInnerTableLinkOnAnEntity() {
         withTables(Regions, Schools, Holidays, SchoolHolidays) {
             val now = System.currentTimeMillis()
@@ -1303,6 +1334,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun preloadRelationAtDepth() {
         withTables(Regions, Schools, Holidays, SchoolHolidays, Students, Notes) {
             val region1 = Region.new {
@@ -1346,6 +1378,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun preloadBackReferrenceOnASizedIterable() {
         withTables(Regions, Schools, Students, StudentBios) {
             val region1 = Region.new {
@@ -1391,6 +1424,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun preloadBackReferrenceOnAnEntity() {
         withTables(Regions, Schools, Students, StudentBios) {
             val region1 = Region.new {
@@ -1435,6 +1469,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun `test reference cache doesn't fully invalidated on set entity reference`() {
         withTables(Regions, Schools, Students, StudentBios) {
             val region1 = Region.new {
@@ -1467,6 +1502,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun `test nested entity initialization`() {
         withTables(Posts, Categories, Boards) {
             val post = Post.new {
@@ -1493,6 +1529,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testExplicitEntityConstructor() {
         var createBoardCalled = false
         fun createBoard(id: EntityID<Int>): Board {
@@ -1527,6 +1564,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testSelectFromStringIdTableWithPrimaryKeyByColumn() {
         withTables(RequestsTable) {
             Request.new {
@@ -1551,6 +1589,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testDatabaseGeneratedValues() {
         withTables(excludeSettings = listOf(TestDB.SQLITE), CreditCards) { testDb ->
             when (testDb) {
@@ -1609,6 +1648,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testEntityIdParam() {
         withTables(CreditCards) {
             val newCard = CreditCard.new {
@@ -1653,6 +1693,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testEagerLoadingWithStringParentId() {
         withTables(Countries, Dishes, configure = { keepLoadedReferencesOutOfTransaction = true }) {
             val lebanonId = Countries.insertAndGetId {
@@ -1722,6 +1763,7 @@ class EntityTests : DatabaseTestsBase() {
      * another column that is a unique index.
      */
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testEagerLoadingWithReferenceDifferentFromParentId() {
         withTables(Customers, Orders, configure = { keepLoadedReferencesOutOfTransaction = true }) {
             val customer1 = Customer.new {
@@ -1765,6 +1807,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testDifferentEntitiesMappedToTheSameTable() {
         withTables(TestTable) {
             val entityA = TestEntityA.new {
