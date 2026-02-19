@@ -41,7 +41,7 @@
             <tab id="user-entity" title="UserEntity">
                 <code-block lang="kotlin"
                             src="exposed-dao-relationships/src/main/kotlin/org/example/entities/UserEntity.kt"
-                            include-lines="17-19,21-22"
+                            include-lines="17-20,22"
                 />
             </tab>
         </tabs>

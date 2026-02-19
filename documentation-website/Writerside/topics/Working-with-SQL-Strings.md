@@ -17,7 +17,7 @@ The following example retrieves a single result for the current database version
 
 <code-block lang="kotlin"
             src="exposed-transactions/src/main/kotlin/org/example/examples/ExecExamples.kt"
-            include-lines="29-33"/>
+            include-lines="29-32"/>
 
 This example iterates over the result and returns a collection of database schema information:
 

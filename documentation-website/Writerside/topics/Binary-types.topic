@@ -85,7 +85,7 @@
         />
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/BinaryExamples.kt"
-                    include-lines="29-48"
+                    include-lines="28-47,51"
         />
     </chapter>
     <chapter title="PostgreSQL Object Identifiers" id="object-identifiers">
