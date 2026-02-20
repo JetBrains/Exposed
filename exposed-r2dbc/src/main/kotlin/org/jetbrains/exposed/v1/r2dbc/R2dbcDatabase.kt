@@ -173,8 +173,6 @@ class R2dbcDatabase private constructor(
                 connectionUrl = options.urlString
                 connectionUrlMode = options.urlMode
                 TransactionManager.registerManager(this, manager(this))
-                // ABOVE should be replaced with BELOW when ThreadLocalTransactionManager is fully deprecated
-                // TransactionManager.registerManager(this, manager(this))
             }
         }
 
