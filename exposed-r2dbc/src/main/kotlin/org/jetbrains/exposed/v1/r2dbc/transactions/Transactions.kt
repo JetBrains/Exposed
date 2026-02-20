@@ -44,25 +44,21 @@ private suspend inline fun <T> executeR2dbcTransactionWithErrorHandling(
         }
     } catch (cause: R2dbcException) {
         val currentStatement = transaction.currentStatement
-        withContext(NonCancellable) {
-            transaction.rollbackLoggingException {
-                exposedLogger.warn(
-                    "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
-                    it
-                )
-            }
+        transaction.rollbackLoggingException {
+            exposedLogger.warn(
+                "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
+                it
+            )
         }
         throw cause
     } catch (cause: Throwable) {
         if (shouldCommit) {
             val currentStatement = transaction.currentStatement
-            withContext(NonCancellable) {
-                transaction.rollbackLoggingException {
-                    exposedLogger.warn(
-                        "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
-                        it
-                    )
-                }
+            transaction.rollbackLoggingException {
+                exposedLogger.warn(
+                    "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
+                    it
+                )
             }
         }
         throw cause
@@ -260,10 +256,8 @@ internal suspend fun handleR2dbcException(cause: R2dbcException, transaction: R2
         }
     }
     exposedLogger.debug(message, cause)
-    withContext(NonCancellable) {
-        transaction.rollbackLoggingException {
-            exposedLogger.debug("Transaction rollback failed: ${it.message}. See previous log line for statement", it)
-        }
+    transaction.rollbackLoggingException {
+        exposedLogger.debug("Transaction rollback failed: ${it.message}. See previous log line for statement", it)
     }
 }
 
