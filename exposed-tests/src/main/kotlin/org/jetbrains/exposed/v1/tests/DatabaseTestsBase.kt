@@ -59,7 +59,7 @@ abstract class DatabaseTestsBase {
     lateinit var testName: String
 
     fun withConnection(
-        dbSettings: TestDB,
+        dbSettings: TestDB = dialect,
         configure: (DatabaseConfig.Builder.() -> Unit)? = null,
         statement: (Database, TestDB) -> Unit
     ) {

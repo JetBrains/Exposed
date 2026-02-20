@@ -2,7 +2,9 @@ package org.jetbrains.exposed.v1.r2dbc.transactions
 
 import io.r2dbc.spi.IsolationLevel
 import io.r2dbc.spi.R2dbcException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.SqlLogger
 import org.jetbrains.exposed.v1.core.exposedLogger
@@ -225,8 +227,10 @@ suspend fun <T> inTopLevelSuspendTransaction(
             }
         } finally {
             @OptIn(InternalApi::class)
-            withTransactionContext(transaction) {
-                closeStatementsAndConnection(transaction)
+            withContext(NonCancellable) {
+                withTransactionContext(transaction) {
+                    closeStatementsAndConnection(transaction)
+                }
             }
         }
     }

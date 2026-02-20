@@ -62,7 +62,7 @@ abstract class R2dbcDatabaseTestsBase {
 
     @OptIn(InternalApi::class)
     fun withConnection(
-        dbSettings: TestDB,
+        dbSettings: TestDB = dialect,
         configure: (DatabaseConfig.Builder.() -> Unit)? = null,
         statement: suspend (R2dbcDatabase, TestDB) -> Unit
     ) = runTest {

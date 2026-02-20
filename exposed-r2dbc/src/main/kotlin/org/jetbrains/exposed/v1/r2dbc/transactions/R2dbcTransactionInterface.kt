@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.v1.r2dbc.transactions
 
 import io.r2dbc.spi.IsolationLevel
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.transactions.TransactionInterface
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
@@ -39,10 +41,12 @@ val R2dbcDatabase.transactionManager: R2dbcTransactionManager
 
 @Suppress("TooGenericExceptionCaught")
 internal suspend fun R2dbcTransactionInterface.rollbackLoggingException(log: (Exception) -> Unit) {
-    try {
-        rollback()
-    } catch (e: Exception) {
-        log(e)
+    withContext(NonCancellable) {
+        try {
+            rollback()
+        } catch (e: Exception) {
+            log(e)
+        }
     }
 }
 
