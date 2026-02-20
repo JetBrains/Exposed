@@ -17,13 +17,13 @@ The following example retrieves a single result for the current database version
 
 <code-block lang="kotlin"
             src="exposed-transactions/src/main/kotlin/org/example/examples/ExecExamples.kt"
-            include-lines="30-33"/>
+            include-lines="29-32"/>
 
 This example iterates over the result and returns a collection of database schema information:
 
 <code-block lang="kotlin"
             src="exposed-transactions/src/main/kotlin/org/example/examples/ExecExamples.kt"
-            include-lines="36-45"/>
+            include-lines="35-45"/>
 
 Alternatively, a convenience extension function could be created to use SQL strings directly, for example:
 
@@ -34,7 +34,7 @@ This function could then be called in the following way:
 
 <code-block lang="kotlin"
             src="exposed-transactions/src/main/kotlin/org/example/examples/ExecExamples.kt"
-            include-lines="70-72"/>
+            include-lines="69-72"/>
 
 ## Parameterized statements
 
@@ -42,7 +42,7 @@ SQL strings can be parameterized by substituting values with a `?` placeholder i
 
 <code-block lang="kotlin"
             src="exposed-transactions/src/main/kotlin/org/example/examples/ExecExamples.kt"
-            include-lines="81-90"/>
+            include-lines="80-90"/>
 
 ## Explicit statement types
 
@@ -55,7 +55,7 @@ An argument can always be passed to the parameter `explicitStatementType` to avo
 
 <code-block lang="kotlin"
             src="exposed-transactions/src/main/kotlin/org/example/examples/ExecExamples.kt"
-            include-lines="48-51"/>
+            include-lines="47-50"/>
 
 Of all the defined `StatementType`s, only four prompt the function to execute the statement in such a way that results are 
 expected to be returned. These types are:
@@ -73,7 +73,7 @@ The `.exec()` would only succeed if a statement type override that expects a res
 
 <code-block lang="kotlin"
             src="exposed-transactions/src/main/kotlin/org/example/examples/ExecExamples.kt"
-            include-lines="99-110"/>
+            include-lines="98-110"/>
 
 ## Multiple SQL strings
 
@@ -85,7 +85,7 @@ the `id` column value of the last inserted row:
 
 <code-block lang="kotlin"
             src="exposed-transactions/src/main/kotlin/org/example/examples/ExecMySQLExamples.kt"
-            include-lines="26-40"/>
+            include-lines="25-40"/>
 
 <note>
 The exact result (and quantity of results) returned by multiple grouped statements executed together varies and is dependent on 

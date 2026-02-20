@@ -343,7 +343,7 @@
 
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/UpdateOrInsertExamples.kt"
-                        include-lines="14-24"
+                        include-lines="14-25"
             />
             <p>
                 If none of the optional arguments are provided to <code>.upsert()</code>, and an <code>onUpdate</code> block
@@ -369,7 +369,7 @@
 
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/UpdateOrInsertExamples.kt"
-                        include-lines="28-46"
+                        include-lines="29-47"
             />
             <p>If the update operation should be identical to the insert operation except for a few columns,
                 then <code>onUpdateExclude</code> should be provided as an argument with the specific columns to exclude.
@@ -378,7 +378,7 @@
 
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/UpdateOrInsertExamples.kt"
-                        include-lines="50-64"
+                        include-lines="51-65"
             />
             <p>If a specific database supports user-defined key columns and none are provided, the table's primary key is
                 used. If there
@@ -413,7 +413,7 @@
 
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReplaceExamples.kt"
-                        include-lines="30-43"
+                        include-lines="29-42"
             />
             <p>Unlike <code>.upsert()</code>, none of the supporting databases allows a <code>WHERE</code> clause.
                 Also, the constraints used to assess a violation are limited to the primary key and unique indexes, so there
@@ -430,7 +430,7 @@
             </p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReplaceExamples.kt"
-                        include-lines="47-50"
+                        include-lines="46-49"
             />
             <p>By default, it will try to insert into all non auto-increment <code>Table</code> columns in the order they
                 are defined in the <code>Table</code> instance.
@@ -438,7 +438,7 @@
                 parameter:</p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReplaceExamples.kt"
-                        include-lines="54-66"
+                        include-lines="53-65"
             />
         </chapter>
     </chapter>
