@@ -1,8 +1,8 @@
 [//]: # (title: Spring Boot integration)
 
 <show-structure for="chapter,procedure" depth="2"/>
-<var name="artifact_name" value="exposed-spring-boot-starter"/>
-<var name="artifact2_name" value="exposed-spring-boot4-starter"/>
+<var name="artifact_name" value="exposed-spring-boot4-starter"/>
+<var name="artifact2_name" value="exposed-spring-boot-starter"/>
 <var name="example_name" value="exposed-spring"/>
 <tldr>
     <p>
@@ -44,18 +44,25 @@ java {
 
 ## Add dependencies
 
-To use Exposed with Spring Boot, add the `%artifact_name%` artifact to your build script:
-
-<include from="lib.topic" element-id="add-dependency"/>
-
-This starter includes the latest version of Exposed and its `spring-transaction` library along with the [Spring Boot Starter JDBC](http://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-jdbc).
-
 ### Spring Boot 4
 
-For Spring Boot 4.x only support, use the `%artifact2_name%` artifact:
+To use Exposed with Spring Boot 4, add the `%artifact_name%` artifact to your build script:
 
-<var name="artifact_name" value="exposed-spring-boot4-starter"/>
 <include from="lib.topic" element-id="add-dependency"/>
+
+This starter includes the latest version of Exposed and its custom [`SpringTransactionManager`](https://jetbrains.github.io/Exposed/api/spring7-transaction/org.jetbrains.exposed.v1.spring7.transaction/-spring-transaction-manager/index.html)
+class from the `spring7-transaction` library along with the [Spring Boot Starter JDBC](http://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-jdbc).
+
+### Spring Boot 3
+
+For applications using Spring Boot 3, use the `%artifact2_name%` artifact:
+
+<var name="artifact_name" value="exposed-spring-boot-starter"/>
+<include from="lib.topic" element-id="add-dependency"/>
+
+> Support for Spring Boot 3 support will be removed in the next major Exposed release.
+> 
+{style="warning"}
 
 ## Configure a database connection {id="configure-db"}
 
@@ -89,23 +96,8 @@ To ensure that Exposed’s transaction manager is used, you need to first enable
 You can apply the autoconfiguration directly to the class annotated with `@SpringBootApplication`:
 
 ```kotlin
-import org.jetbrains.exposed.v1.spring.autoconfigure.ExposedAutoConfiguration
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration
-import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
-import org.springframework.boot.runApplication
-
-@SpringBootApplication
-@ImportAutoConfiguration(
-    value = [ExposedAutoConfiguration::class],
-    exclude = [DataSourceTransactionManagerAutoConfiguration::class]
-)
-class MyApplication
-
-fun main(args: Array<String>) {
-    runApplication<MyApplication>(*args)
-}
 ```
+{src="exposed-spring/src/main/kotlin/com/example/exposedspring/ExposedSpringApplication.kt" include-symbol="ExposedSpringApplication,main"}
 
 > For additional options for excluding autoconfiguration classes, see the [official Spring Boot documentation](https://docs.spring.io/spring-boot/reference/using/auto-configuration.html#using.auto-configuration.disabling-specific).
 > 
@@ -113,17 +105,10 @@ fun main(args: Array<String>) {
 
 ### Customize Exposed behavior {id="custom-config"}
 
-To customize the default Exposed behavior, register a [`DatabaseConfig`](https://jetbrains.github.io/Exposed/api/exposed-spring-boot-starter/org.jetbrains.exposed.v1.spring.boot.autoconfigure/-exposed-auto-configuration/database-config.html)
+To customize the default Exposed behavior, register a [`DatabaseConfig`](https://jetbrains.github.io/Exposed/api/exposed-spring-boot4-starter/org.jetbrains.exposed.v1.spring.boot4.autoconfigure/-exposed-auto-configuration/database-config.html)
 bean:
 
 ```kotlin
-import org.jetbrains.exposed.v1.spring.autoconfigure.ExposedAutoConfiguration
-import org.jetbrains.exposed.v1.core.DatabaseConfig
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration
-import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-
 @Configuration
 @ImportAutoConfiguration(
     value = [ExposedAutoConfiguration::class],
@@ -158,7 +143,7 @@ property in your <path>application.properties</path> file:
 spring.exposed.generate-ddl=true
 ```
 
-When enabled, the starter detects all classes extending `org.jetbrains.exposed.v1.sql.Table` and creates the schema
+When enabled, the starter detects all classes extending `org.jetbrains.exposed.v1.core.Table` and creates the schema
 during application startup.
 
 ### Exclude packages
@@ -261,8 +246,8 @@ by default when `@Transactional` does not specify a manager.
 You can build a GraalVM native image of a Spring Boot application that uses the Exposed Spring starter without 
 additional configuration.
 
-The starter contributes the required runtime hints through `ExposedAotContribution`, which enables compatibility with
-Spring Boot’s AOT (Ahead-of-Time) processing.
+The starter contributes the required runtime hints through the [`ExposedAotContribution`](https://jetbrains.github.io/Exposed/api/exposed-spring-boot4-starter/org.jetbrains.exposed.v1.spring.boot4/-exposed-aot-contribution/index.html)
+class, which enables compatibility with Spring Boot’s AOT (Ahead-of-Time) processing.
 
 ### AOT limitations
 
@@ -307,7 +292,7 @@ To register your implementation, use one of the following approaches:
   ```
 * Register the implementation in a `META-INF/spring.factories` file:
   ```generic
-  org.springframework.aot.hint.RuntimeHintsRegistrar=<fully qualified class name>.ExposedHints
+  org.springframework.aot.hint.RuntimeHintsRegistrar=com.example.ExposedHints
   ```
   Replace `com.example.ExposedHints` with the fully qualified name of your implementation.
 
