@@ -24,4 +24,6 @@ data class ColumnMetadata(
     val autoIncrement: Boolean,
     /** Default value of the column. */
     val defaultDbValue: String?,
+    /** Optional comment on the column. */
+    val comment: String? = null,
 )

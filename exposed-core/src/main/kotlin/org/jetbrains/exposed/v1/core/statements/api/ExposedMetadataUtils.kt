@@ -27,8 +27,9 @@ object ExposedMetadataUtils {
         val size = getObject("COLUMN_SIZE")?.toString()?.toInt().takeIf { it != 0 }
         val scale = getObject("DECIMAL_DIGITS")?.toString()?.toInt().takeIf { it != 0 }
         val sqlType = getColumnType(this, prefetchedColumnTypes)
+        val comment = getObject("REMARKS")?.toString()?.takeIf { it.isNotBlank() }
 
-        return ColumnMetadata(name, type, sqlType, nullable, size, scale, autoIncrement, defaultDbValue?.takeIf { !autoIncrement })
+        return ColumnMetadata(name, type, sqlType, nullable, size, scale, autoIncrement, defaultDbValue?.takeIf { !autoIncrement }, comment)
     }
 
     private fun RowApi.getStringOrThrow(

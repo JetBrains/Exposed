@@ -42,6 +42,9 @@ class Column<T>(
 
     internal var extraDefinitions = mutableListOf<Any>()
 
+    /** Comment for this column, stored in database schema */
+    internal var columnComment: String? = null
+
     /** Appends the SQL representation of this column to the specified [queryBuilder]. */
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         @OptIn(InternalApi::class)
@@ -170,6 +173,14 @@ class Column<T>(
             append(" NOT NULL")
         }
 
+        // Add MySQL and H2 MySQL/MariaDB mode inline column comment (must come after NULL/NOT NULL)
+        @OptIn(InternalApi::class)
+        if (isInlineCommentDialect() && columnComment != null) {
+            @OptIn(InternalApi::class)
+            val comment = columnComment?.escapeComment() ?: ""
+            append(" COMMENT '$comment'")
+        }
+
         if (!modify && isOneColumnPK() && !isPrimaryConstraintWillBeDefined && !isSQLiteAutoIncColumn) {
             append(" PRIMARY KEY")
         }
@@ -182,6 +193,7 @@ class Column<T>(
         newColumn.dbDefaultValue = dbDefaultValue as Expression<R>?
         newColumn.isDatabaseGenerated = isDatabaseGenerated
         newColumn.extraDefinitions = extraDefinitions
+        newColumn.columnComment = columnComment
         body?.let { newColumn.it() }
 
         if (defaultValueFun != null) {
@@ -203,6 +215,7 @@ class Column<T>(
         it.dbDefaultValue = this.dbDefaultValue
         it.isDatabaseGenerated = this.isDatabaseGenerated
         it.extraDefinitions = this.extraDefinitions
+        it.columnComment = this.columnComment
     }
 
     override fun compareTo(other: Column<*>): Int = comparator.compare(this, other)
