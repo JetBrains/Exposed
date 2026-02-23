@@ -8,10 +8,12 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.tests.NO_R2DBC_SUPPORT
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.RepeatedTest
+import org.junit.jupiter.api.Tag
 import org.springframework.test.annotation.Commit
 import org.springframework.transaction.IllegalTransactionStateException
 import org.springframework.transaction.TransactionDefinition
@@ -290,6 +292,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
      * Test for Timeout
      * Execute with query timeout
      */
+    @Tag(NO_R2DBC_SUPPORT)
     @RepeatedTest(5)
     open fun testTimeout() {
         transactionManager.execute(timeout = 1) {

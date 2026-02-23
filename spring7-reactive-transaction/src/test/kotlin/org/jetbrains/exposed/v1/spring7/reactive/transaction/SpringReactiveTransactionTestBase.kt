@@ -33,13 +33,16 @@ open class TestConfig : TransactionManagementConfigurer {
     open fun cxFactory(): ConnectionFactory = ConnectionFactories.get("r2dbc:h2:mem:///embeddedTest;DB_CLOSE_DELAY=-1;")
 
     @Bean
-    override fun annotationDrivenTransactionManager(): SpringReactiveTransactionManager = SpringReactiveTransactionManager(
+    override fun annotationDrivenTransactionManager(): ReactiveTransactionManager = SpringReactiveTransactionManager(
         cxFactory(),
         R2dbcDatabaseConfig {
             useNestedTransactions = true
             explicitDialect = H2Dialect()
         }
     )
+
+    @Bean
+    open fun mixedTransactionService(): MixedTransactionService = MixedTransactionService()
 }
 
 @ExtendWith(SpringExtension::class)

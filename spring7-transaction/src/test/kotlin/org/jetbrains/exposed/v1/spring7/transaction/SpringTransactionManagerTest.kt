@@ -3,9 +3,12 @@ package org.jetbrains.exposed.v1.spring7.transaction
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
+import org.jetbrains.exposed.v1.tests.NO_R2DBC_SUPPORT
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy
 import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy
@@ -171,6 +174,7 @@ class SpringTransactionManagerTest {
         assertEquals(1, con1.closeCallCount)
     }
 
+    @Tag(NO_R2DBC_SUPPORT) // https://github.com/spring-projects/spring-data-relational/issues/2026
     @Test
     fun `transaction rollback with lazy connection data source proxy`() {
         val lazyDs = LazyConnectionDataSourceProxy(ds1)
@@ -215,6 +219,7 @@ class SpringTransactionManagerTest {
         assertTrue(con1.closeCallCount > 0)
     }
 
+    @Tag(NOT_APPLICABLE_TO_R2DBC) // no equivalent isRollbackOnCommitFailure property
     @Test
     fun `transaction exception on commit and rollback on commit failure`() {
         con1.mockCommit = { throw SQLException("Commit failure") }

@@ -8,5 +8,6 @@ public final class org/jetbrains/exposed/v1/spring7/reactive/transaction/Exposed
 public final class org/jetbrains/exposed/v1/spring7/reactive/transaction/SpringReactiveTransactionManager : org/springframework/transaction/reactive/AbstractReactiveTransactionManager {
 	public fun <init> (Lio/r2dbc/spi/ConnectionFactory;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Builder;Z)V
 	public synthetic fun <init> (Lio/r2dbc/spi/ConnectionFactory;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Builder;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getConnectionFactory ()Lio/r2dbc/spi/ConnectionFactory;
 }
 
