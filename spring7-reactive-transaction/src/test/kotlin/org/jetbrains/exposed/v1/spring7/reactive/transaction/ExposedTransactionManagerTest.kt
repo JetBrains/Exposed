@@ -2,17 +2,16 @@ package org.jetbrains.exposed.v1.spring7.reactive.transaction
 
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.test.runTest
-import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
+import org.jetbrains.exposed.v1.r2dbc.transactions.viewThreadStack
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.RepeatedTest
 import org.springframework.test.annotation.Commit
 import org.springframework.transaction.IllegalTransactionStateException
@@ -32,33 +31,37 @@ open class ExposedTransactionManagerTest : SpringReactiveTransactionTestBase() {
         }
     }
 
-    @OptIn(InternalApi::class)
     @BeforeEach
     fun beforeTest() = runTest {
+        println("Starting beforeTest... : ${viewThreadStack()}")
         transactionManager.execute {
+            println("Doing work... : ${viewThreadStack()}")
             SchemaUtils.create(T1)
         }
+        println("Ending beforeTest... : ${viewThreadStack()}")
     }
 
-    @OptIn(InternalApi::class)
     @AfterEach
     fun afterTest() = runTest {
+        println("Starting afterTest... : ${viewThreadStack()}")
         transactionManager.execute {
+            println("Doing work... : ${viewThreadStack()}")
             SchemaUtils.drop(T1)
         }
+        println("Ending afterTest... : ${viewThreadStack()}")
     }
 
+    @RepeatedTest(5)
     //    @Transactional // see [runTestWithMockTransactional]
     @Commit
-    @RepeatedTest(5)
     open fun testConnection() = runTestWithMockTransactional {
         T1.insertRandom()
         assertEquals(1, T1.selectAll().count())
     }
 
+    @RepeatedTest(5)
     //    @Transactional // see [runTestWithMockTransactional]
     @Commit
-    @RepeatedTest(5)
     open fun testConnection2() = runTestWithMockTransactional {
         val rnd = Random().nextInt().toString()
         T1.insert {
@@ -86,7 +89,6 @@ open class ExposedTransactionManagerTest : SpringReactiveTransactionTestBase() {
 
     // TODO - This (& only this test?) fails because of line 114 in suspendTransaction();
     // If the line is reverted to original, it passes -> ThreadLocalTransactionsStack.getTransactionOrNull(databaseToUse)
-    @Disabled
     @RepeatedTest(5)
     @Commit
 //    @Transactional // see [runTestWithMockTransactional]
@@ -164,18 +166,33 @@ open class ExposedTransactionManagerTest : SpringReactiveTransactionTestBase() {
      * Test for Propagation.REQUIRES_NEW
      * Create a new transaction, and suspend the current transaction if one exists.
      */
-    @Disabled("After doResume(), TransactionManager.current() in count() returns wrong unpopped transaction from thread-switch")
     @RepeatedTest(1)
     //    @Transactional // see [runTestWithMockTransactional]
     open fun testConnectionWithRequiresNew() = runTestWithMockTransactional {
+        println("Starting actual test... : ${viewThreadStack()}")
         T1.insertRandom()
         assertEquals(1, T1.selectAll().count())
+//        val currentCx1 = ConnectionFactoryUtils.doGetConnection(
+//            (transactionManager as SpringReactiveTransactionManager).connectionFactory
+//        ).awaitSingle()
+        println("Finished first work...")
         transactionManager.execute(TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
+            println("Nested in test... : ${viewThreadStack()}")
+//            val currentCx2 = ConnectionFactoryUtils.doGetConnection(
+//                (transactionManager as SpringReactiveTransactionManager).connectionFactory
+//            ).awaitSingle()
+//            println("Nested work... on $currentCx2")
             assertEquals(0, T1.selectAll().count())
             T1.insertRandom()
             assertEquals(1, T1.selectAll().count())
         }
+        println("No longer nested in test... : ${viewThreadStack()}")
+//        val currentCx3 = ConnectionFactoryUtils.doGetConnection(
+//            (transactionManager as SpringReactiveTransactionManager).connectionFactory
+//        ).awaitSingle()
+//        println("Outer work... on $currentCx3")
         assertEquals(2, T1.selectAll().count())
+        println("Ending actual test... : ${viewThreadStack()}")
     }
 
     // TODO
@@ -184,7 +201,6 @@ open class ExposedTransactionManagerTest : SpringReactiveTransactionTestBase() {
      * The inner transaction will be roll-back only inner transaction when the transaction marks as rollback.
      * And since isolation level is READ_COMMITTED, the inner transaction can't see the changes of outer transaction.
      */
-    @Disabled("After doResume(), TransactionManager.current() in count() returns wrong unpopped transaction from thread-switch")
     @RepeatedTest(5)
     fun testConnectionWithRequiresNewWithInnerTransactionRollback() = runTest {
         transactionManager.execute {
@@ -284,7 +300,6 @@ open class ExposedTransactionManagerTest : SpringReactiveTransactionTestBase() {
         }
     }
 
-    @Disabled
     @RepeatedTest(5)
     //    @Transactional(isolation = Isolation.READ_COMMITTED) // see [runTestWithMockTransactional]
     open fun testIsolationLevelReadUncommitted() = runTestWithMockTransactional(

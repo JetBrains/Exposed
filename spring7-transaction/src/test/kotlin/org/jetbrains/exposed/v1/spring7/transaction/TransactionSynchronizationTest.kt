@@ -1,12 +1,15 @@
 package org.jetbrains.exposed.v1.spring7.transaction
 
+import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.support.TransactionSynchronization
 import org.springframework.transaction.support.TransactionSynchronizationManager
 
+@Tag(NOT_APPLICABLE_TO_R2DBC)
 class TransactionSynchronizationTest : SpringTransactionTestBase() {
 
     private var synchronization: TestSynchronization = TestSynchronization()

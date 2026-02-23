@@ -1,26 +1,24 @@
 package org.jetbrains.exposed.v1.spring7.reactive.transaction
 
 import io.r2dbc.spi.ConnectionFactory
+import io.r2dbc.spi.R2dbcRollbackException
 import kotlinx.coroutines.test.runTest
-import org.jetbrains.exposed.v1.core.InternalApi
-import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.r2dbc.UncategorizedR2dbcException
 import org.springframework.r2dbc.connection.TransactionAwareConnectionFactoryProxy
 import org.springframework.transaction.IllegalTransactionStateException
 import org.springframework.transaction.ReactiveTransaction
-import org.springframework.transaction.ReactiveTransactionManager
 import org.springframework.transaction.TransactionDefinition
-import org.springframework.transaction.TransactionSystemException
 import org.springframework.transaction.reactive.TransactionalOperator
 import org.springframework.transaction.reactive.executeAndAwait
 import org.springframework.transaction.support.DefaultTransactionDefinition
-import java.sql.SQLException
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
@@ -32,6 +30,17 @@ class SpringReactiveTransactionManagerTest {
         val cf2 = ConnectionFactorySpy(::ConnectionSpy)
         lateinit var con2: ConnectionSpy
 
+        /**
+         * This test has a teardown that unregisters databases. The intention
+         * is to only tear down databases registered by this test - but
+         * an earlier implementation accidentally unregistered the main
+         * database registered by the [SpringReactiveTransactionTestBase].
+         *
+         * To avoid doing such, we try to only unregister until we hit the
+         * one that was there before the start of this test.
+         */
+        private var databaseBeforeTestStart: R2dbcDatabase? = null
+
         @BeforeAll
         @JvmStatic
         fun init() = runTest {
@@ -40,21 +49,20 @@ class SpringReactiveTransactionManagerTest {
         }
     }
 
-    @OptIn(InternalApi::class)
     @BeforeEach
     fun beforeTest() {
+        databaseBeforeTestStart = TransactionManager.primaryDatabase
         con1.clearMock()
         con2.clearMock()
 
         // TODO - this should not be done, but transactions are not being popped on original thread after coroutine switches thread
-        ThreadLocalTransactionsStack.threadTransactions()?.clear()
+//        ThreadLocalTransactionsStack.threadTransactions()?.clear()
     }
 
-    @OptIn(InternalApi::class)
     @BeforeEach
     fun afterTest() {
-        while (TransactionManager.defaultDatabase != null) {
-            TransactionManager.defaultDatabase?.let { TransactionManager.closeAndUnregister(it) }
+        while (TransactionManager.primaryDatabase != databaseBeforeTestStart) {
+            TransactionManager.primaryDatabase?.let { TransactionManager.closeAndUnregister(it) }
         }
     }
 
@@ -204,10 +212,10 @@ class SpringReactiveTransactionManagerTest {
 
     @Test
     fun `transaction with exception on rollback`() = runTest {
-        con1.mockRollback = { throw SQLException("Rollback failure") }
+        con1.mockRollback = { throw R2dbcRollbackException("Rollback failure") }
 
         val tm = getDefaultManager(cf1)
-        assertFailsWith<TransactionSystemException> {
+        assertFailsWith<UncategorizedR2dbcException> {
             tm.executeAssert {
                 assertEquals(false, it.isRollbackOnly)
                 it.setRollbackOnly()
@@ -379,7 +387,7 @@ class SpringReactiveTransactionManagerTest {
         databaseConfig = databaseConfig.apply { explicitDialect = H2Dialect() }
     )
 
-    private suspend fun ReactiveTransactionManager.executeAssert(
+    private suspend fun SpringReactiveTransactionManager.executeAssert(
         initializeConnection: Boolean = true,
         propagationBehavior: Int = TransactionDefinition.PROPAGATION_REQUIRED,
         timeout: Int? = null,

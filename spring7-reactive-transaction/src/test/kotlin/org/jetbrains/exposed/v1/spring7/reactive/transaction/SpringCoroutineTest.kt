@@ -17,7 +17,7 @@ open class SpringCoroutineTest : SpringReactiveTransactionTestBase() {
         override val primaryKey = PrimaryKey(id)
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
+    @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
     @RepeatedTest(5)
 //    @Transactional // see [runTestWithMockTransactional]
     @Commit
