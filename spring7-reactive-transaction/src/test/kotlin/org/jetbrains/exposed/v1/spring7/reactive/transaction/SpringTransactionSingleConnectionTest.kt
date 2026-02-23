@@ -5,7 +5,6 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.test.runTest
-import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
@@ -25,7 +24,7 @@ import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import kotlin.test.assertEquals
 
-class SpringReactiveTransactionSingleConnectionTest {
+class SpringTransactionSingleConnectionTest {
     object T1 : Table() {
         val c1 = varchar("c1", Int.MIN_VALUE.toString().length)
     }
@@ -34,7 +33,6 @@ class SpringReactiveTransactionSingleConnectionTest {
     val transactionManager: ReactiveTransactionManager = singleConnectionH2TestContainer.getBean(ReactiveTransactionManager::class.java)
     val connectionFactory: ConnectionFactory = singleConnectionH2TestContainer.getBean(ConnectionFactory::class.java)
 
-    @OptIn(InternalApi::class)
     @BeforeEach
     fun beforeTest() = runTest {
         transactionManager.execute {
@@ -42,7 +40,6 @@ class SpringReactiveTransactionSingleConnectionTest {
         }
     }
 
-    @OptIn(InternalApi::class)
     @AfterEach
     fun afterTest() = runTest {
         transactionManager.execute {
@@ -72,11 +69,12 @@ class SpringReactiveTransactionSingleConnectionTest {
                 isolationLevel = TransactionDefinition.ISOLATION_READ_UNCOMMITTED,
             ) {
                 val cx = ConnectionFactoryUtils.getConnection(connectionFactory).awaitFirst()
+                val actualLevel = cx.transactionIsolationLevel
+                cx.close().awaitFirstOrNull()
                 assertEquals(
-                    cx.transactionIsolationLevel,
+                    actualLevel,
                     TransactionDefinition.ISOLATION_SERIALIZABLE.resolveIsolationLevel()
                 )
-                cx.close().awaitFirstOrNull()
 
                 T1.selectAll().toList()
             }

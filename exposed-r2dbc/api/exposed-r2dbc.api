@@ -1066,6 +1066,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/transactions/TransactionsKt {
 	public static synthetic fun inTopLevelSuspendTransaction$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lio/r2dbc/spi/IsolationLevel;Ljava/lang/Boolean;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun suspendTransaction (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lio/r2dbc/spi/IsolationLevel;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun suspendTransaction$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lio/r2dbc/spi/IsolationLevel;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun viewThreadStack ()Ljava/lang/String;
 }
 
 public abstract class org/jetbrains/exposed/v1/r2dbc/vendors/DatabaseDialectMetadata {
