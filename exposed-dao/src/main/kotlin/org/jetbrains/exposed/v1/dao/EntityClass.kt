@@ -213,9 +213,10 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * This method updates the entity's internal read values with fresh data from the [ResultRow],
      * ensuring that queries like SELECT FOR UPDATE return current database state rather than cached values.
      *
-     * When an entity is already cached and has accessed columns that are not in the new [ResultRow],
-     * the method performs a selective merge: columns present in the [ResultRow] are updated with fresh data,
-     * while previously accessed columns not in the [ResultRow] retain their cached values.
+     * When an entity is already cached and has fields that already accessed columns not present in the new [ResultRow],
+     * the method performs a selective merge: values from columns present in the [ResultRow] are used to update
+     * the entity with fresh data, while entity fields mapped to previously accessed columns not in the [ResultRow]
+     * retain their cached values.
      */
     fun wrapRow(row: ResultRow): T {
         val entity = wrap(row[table.id], row)

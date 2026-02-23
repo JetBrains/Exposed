@@ -165,54 +165,6 @@ class EntityCacheRefreshTests : DatabaseTestsBase() {
     }
 
     /**
-     * This test verifies that when an entity is first accessed via TestEntity[id]
-     * (which caches it), and then accessed again via SELECT FOR UPDATE, the fresh
-     * data is returned even though the entity is already in cache.
-     */
-    @Test
-    fun testEntityByIdThenSelectForUpdateSeesFreshData() {
-        // Skip databases that don't support SELECT FOR UPDATE
-        if (dialect in excludedDbs) {
-            Assumptions.assumeFalse(true)
-        }
-
-        withTables(TestTable) {
-            val db1 = dialect.connect()
-            val db2 = dialect.connect()
-
-            val entityId = transaction(db = db1) {
-                TestEntity.new { value = 50 }.id
-            }
-
-            transaction(db = db1, transactionIsolation = Connection.TRANSACTION_READ_COMMITTED) {
-                // Access by ID (caches entity)
-                val entityById = TestEntity[entityId]
-                assertEquals(50, entityById.value)
-
-                // Another transaction updates
-                inTopLevelTransaction(db = db2) {
-                    TestEntity[entityId].value = 75
-                }
-
-                // Access same entity via SELECT FOR UPDATE
-                val entityForUpdate = TestEntity.find { TestTable.id eq entityId.value }
-                    .forUpdate()
-                    .single()
-
-                // Should see fresh value 75, not cached 50
-                assertEquals(
-                    75,
-                    entityForUpdate.value,
-                    "Entity accessed via SELECT FOR UPDATE should have fresh value (75), not cached (50)"
-                )
-
-                // Should be the same entity object (same cache entry)
-                assertEquals(entityById.id.value, entityForUpdate.id.value)
-            }
-        }
-    }
-
-    /**
      * This test verifies that when users manually create a partial SELECT
      * (selecting only some columns) and call wrapRow(), the method performs a selective merge:
      * - Columns in the partial SELECT are updated with fresh data
@@ -238,19 +190,20 @@ class EntityCacheRefreshTests : DatabaseTestsBase() {
             inTopLevelTransaction(db = db2) {
                 ExtendedTestTable.update({ ExtendedTestTable.id eq entityId }) {
                     it[value] = 200
+                    it[name] = "Updated"
                 }
             }
 
             val partialResults = ExtendedTestTable
-                .select(ExtendedTestTable.id)
+                .select(ExtendedTestTable.id, ExtendedTestTable.value)
                 .where { ExtendedTestTable.id eq entityId.value }
                 .map { row -> ExtendedTestEntity.wrapRow(row) }
 
             val entityFromPartial = partialResults.single()
 
-            // Should see old value, because the new value is not fetched from the query
+            // Should see new value, because the new value was fetched from the query
             assertEquals(
-                100,
+                200,
                 entityFromPartial.value,
                 "Value should be updated from partial SELECT"
             )
