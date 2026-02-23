@@ -2,14 +2,17 @@ package org.jetbrains.exposed.v1.spring7.reactive.transaction
 
 import io.r2dbc.spi.Connection
 import io.r2dbc.spi.IsolationLevel
+import io.r2dbc.spi.TransactionDefinition
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Mono
 
 class ConnectionSpy(private val connection: Connection) : Connection by connection {
+    // some mocks from JDBC tests are excluded as they have no relevance here, like mockIsClosed
     var commitCallCount: Int = 0
     var rollbackCallCount: Int = 0
     var closeCallCount: Int = 0
     var releaseSavepointCallCount: Int = 0
+    var mockReadOnly: Boolean = false
     var mockAutoCommit: Boolean = false
     var mockTransactionIsolation: IsolationLevel = IsolationLevel.READ_COMMITTED
     var mockCommit: () -> Unit = {}
@@ -26,6 +29,7 @@ class ConnectionSpy(private val connection: Connection) : Connection by connecti
         rollbackCallCount = 0
         closeCallCount = 0
         releaseSavepointCallCount = 0
+        mockReadOnly = false
         mockAutoCommit = false
         mockTransactionIsolation = IsolationLevel.READ_COMMITTED
         mockCommit = {}
@@ -40,9 +44,30 @@ class ConnectionSpy(private val connection: Connection) : Connection by connecti
         Mono.empty<Void>()
     } as Publisher<Void?>
 
+    override fun setAutoCommit(autoCommit: Boolean): Publisher<Void?>? = Mono.defer {
+        callOrder.add("setAutoCommit")
+        mockAutoCommit = autoCommit
+
+        Mono.empty<Void>()
+    } as Publisher<Void?>
+
     override fun beginTransaction(): Publisher<Void?> = Mono.defer {
         callOrder.add("setAutoCommit")
         mockAutoCommit = false
+
+        Mono.empty<Void>()
+    } as Publisher<Void?>
+
+    override fun beginTransaction(definition: TransactionDefinition?): Publisher<Void?>? = Mono.defer {
+        callOrder.add("setAutoCommit")
+        mockAutoCommit = false
+
+        definition
+            ?.getAttribute(TransactionDefinition.READ_ONLY)
+            ?.let {
+                callOrder.add("setReadOnly")
+                mockReadOnly = it
+            }
 
         Mono.empty<Void>()
     } as Publisher<Void?>

@@ -287,3 +287,11 @@ internal suspend fun closeStatementsAndConnection(transaction: R2dbcTransaction)
         exposedLogger.warn("Transaction close failed: ${it.message}. Statement: $currentStatement", it)
     }
 }
+
+@OptIn(InternalApi::class)
+fun viewThreadStack(): String {
+    val currentThread = Thread.currentThread().name
+    val currentTrx = ThreadLocalTransactionsStack.getTransactionOrNull()?.transactionId ?: "NOT IN TRX"
+    val allTrx = ThreadLocalTransactionsStack.threadTransactions()?.map { it.transactionId } ?: listOf("EMPTY STACK")
+    return "\n\tTHREAD --> $currentThread\n\tTRX --> $currentTrx\n\tSTACK --> $allTrx"
+}
