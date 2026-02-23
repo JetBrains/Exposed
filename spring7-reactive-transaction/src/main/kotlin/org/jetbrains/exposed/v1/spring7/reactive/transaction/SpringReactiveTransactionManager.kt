@@ -1,19 +1,26 @@
 package org.jetbrains.exposed.v1.spring7.reactive.transaction
 
+import io.r2dbc.spi.Connection
 import io.r2dbc.spi.ConnectionFactory
 import io.r2dbc.spi.IsolationLevel
 import io.r2dbc.spi.R2dbcException
+import kotlinx.coroutines.reactive.awaitLast
 import kotlinx.coroutines.reactor.mono
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.StdOutSqlLogger
+import org.jetbrains.exposed.v1.core.exposedLogger
 import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
-import org.jetbrains.exposed.v1.core.transactions.currentTransactionOrNull
+import org.jetbrains.exposed.v1.core.transactions.transactionScope
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
+import org.jetbrains.exposed.v1.r2dbc.transactions.currentOrNull
 import org.jetbrains.exposed.v1.r2dbc.transactions.transactionManager
-import org.jetbrains.exposed.v1.r2dbc.withTransactionContext
+import org.jetbrains.exposed.v1.r2dbc.transactions.viewThreadStack
+import org.reactivestreams.Publisher
 import org.springframework.r2dbc.UncategorizedR2dbcException
+import org.springframework.r2dbc.connection.ConnectionHolder
+import org.springframework.transaction.CannotCreateTransactionException
 import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.TransactionSystemException
 import org.springframework.transaction.reactive.AbstractReactiveTransactionManager
@@ -30,30 +37,29 @@ import reactor.core.publisher.Mono
  * @property showSql Whether transaction queries should be logged. Defaults to `false`.
  */
 class SpringReactiveTransactionManager(
-    connectionFactory: ConnectionFactory,
+    val connectionFactory: ConnectionFactory,
     databaseConfig: R2dbcDatabaseConfig.Builder,
     private val showSql: Boolean = false,
 ) : AbstractReactiveTransactionManager() {
 
     private val database: R2dbcDatabase = R2dbcDatabase.connect(
         connectionFactory = connectionFactory,
-        databaseConfig = databaseConfig
+        databaseConfig = databaseConfig,
     )
 
     override fun doGetTransaction(
         synchronizationManager: TransactionSynchronizationManager
     ): Any {
-        val holder = ExposedTransactionObject(database = database)
-        val outer = holder.getCurrentTransaction()
-
-        // Only clears up leftovers between transactions, to prevent invalid re-use;
-        // Will not be able to clean the final active transaction
-        if (outer != null && synchronizationManager.getResource(database) == null) {
-            @OptIn(InternalApi::class)
-            ThreadLocalTransactionsStack.popTransaction()
+        val retrieved = ExposedTransactionObject(
+            database = database,
+        ).apply {
+            connectionHolder = synchronizationManager.getResourceHolderOrNull()
+            synchronizationManager.getResourceAndSynchronize(this)
         }
 
-        return holder
+        synchronizationManager.printEverything(::doGetTransaction.name)
+
+        return retrieved
     }
 
     override fun doSuspend(
@@ -63,18 +69,16 @@ class SpringReactiveTransactionManager(
         return Mono.defer {
             val trxObject = transaction as ExposedTransactionObject
 
-            val currentTransaction = trxObject.getCurrentTransaction()
+            synchronizationManager.getResourceAndSynchronize(trxObject)
+            synchronizationManager.printEverything(::doSuspend.name)
 
-            val holder = SuspendedObject(
-                transaction = currentTransaction ?: error("No transaction to suspend"),
-            )
-            synchronizationManager.unbindResource(database)
+            trxObject.connectionHolder = null
 
-            @OptIn(InternalApi::class)
-            ThreadLocalTransactionsStack.popTransaction()
-
-            Mono.just(holder)
+            Mono
+                .justOrEmpty(synchronizationManager.unbindResource(connectionFactory) as ExposedHolderObject)
+            // traditionally should pop in doOnSuccess (done when syncing)
         }
+        // doAfterTerminate on defer would be closest but causes no transaction in context
     }
 
     override fun doResume(
@@ -83,17 +87,18 @@ class SpringReactiveTransactionManager(
         suspendedResources: Any
     ): Mono<Void> {
         return Mono.defer {
-            val suspendedObject = suspendedResources as SuspendedObject
+            val suspendedObject = suspendedResources as ExposedHolderObject
 
-            val suspendedTransaction = suspendedObject.transaction
-
-            synchronizationManager.bindResource(database, suspendedTransaction)
+            synchronizationManager.bindResource(connectionFactory, suspendedObject)
 
             @OptIn(InternalApi::class)
-            ThreadLocalTransactionsStack.pushTransaction(suspendedTransaction)
+            ThreadLocalTransactionsStack.pushTransaction(suspendedObject.transaction)
+
+            synchronizationManager.printEverything(::doResume.name)
 
             Mono.empty()
         }
+        // doFinally on defer may be a good contender
     }
 
     override fun isExistingTransaction(transaction: Any): Boolean {
@@ -112,13 +117,13 @@ class SpringReactiveTransactionManager(
         return Mono.defer {
             val trxObject = transaction as ExposedTransactionObject
 
-            @OptIn(InternalApi::class)
-            val currentTransaction = currentTransactionOrNull() as R2dbcTransaction?
+            val currentTransaction = synchronizationManager.getResourceAndSynchronize(transaction)
             val outerTransactionToUse = if (currentTransaction?.db == database) {
                 currentTransaction
             } else {
                 null
             }
+            synchronizationManager.printEverything(::doBegin.name)
 
             val newTransaction = trxObject.database.transactionManager.newTransaction(
                 isolation = definition.isolationLevel.resolveIsolationLevel(),
@@ -134,37 +139,65 @@ class SpringReactiveTransactionManager(
                 }
             }
 
-            trxObject.isNewConnection = newTransaction.outerTransaction == null || trxObject.isNestedTransactionAllowed
-            if (trxObject.isNewConnection) {
-                // otherwise a PROPAGATION_NESTED transaction would incorrectly have the context of its outer
-                // transaction used when doCommit() or doRollback() is invoked
-                synchronizationManager.unbindResourceIfPossible(database)
+            val newConnectionMono = mono {
+                synchronizationManager.getResourceAndSynchronize(trxObject)
+                synchronizationManager.printEverything(::doResume.name)
 
-                synchronizationManager.bindResource(database, newTransaction)
+                if (trxObject.connectionHolder == null) {
+                    trxObject.connectionHolder = ExposedHolderObject(newTransaction.awaitConnection(), newTransaction)
+                    trxObject.isNewConnectionHolder = true
+                }
+                trxObject.connectionHolder?.isSynchronizedWithTransaction = true
+
+                if (definition.timeout != TransactionDefinition.TIMEOUT_DEFAULT) {
+                    trxObject.connectionHolder?.setTimeoutInSeconds(definition.timeout)
+                }
             }
 
-            @OptIn(InternalApi::class)
-            ThreadLocalTransactionsStack.pushTransaction(newTransaction)
+            Mono
+                .just(newTransaction)
+                .doOnSuccess {
+                    @OptIn(InternalApi::class)
+                    ThreadLocalTransactionsStack.pushTransaction(newTransaction)
+                }
+                .then(newConnectionMono)
+                .doOnSuccess {
+                    if (trxObject.isNewConnectionHolder) {
+                        synchronizationManager.bindResource(connectionFactory, trxObject.connectionHolder!!)
+                    }
+                    synchronizationManager.getResourceAndSynchronize(trxObject)
+                    synchronizationManager.printEverything(::doBegin.name)
+                }
+                .doOnError { ex ->
+                    trxObject.connectionHolder = null
 
-            Mono.just(newTransaction)
-        }.then()
+                    @OptIn(InternalApi::class)
+                    ThreadLocalTransactionsStack.popTransaction()
+
+                    throw CannotCreateTransactionException("Could not open R2DBC Connection for transaction", ex)
+                }
+            // doFinally on kotlin mono may be a good contender
+        }
+            .then()
     }
 
     override fun doCommit(
         synchronizationManager: TransactionSynchronizationManager,
         status: GenericReactiveTransaction
     ): Mono<Void> {
-        return Mono.defer {
-            val trxObject = status.transaction as ExposedTransactionObject
+        val trxObject = status.transaction as ExposedTransactionObject
 
-            mono {
-                @OptIn(InternalApi::class)
-                withTransactionContext(synchronizationManager.getResourceOrThrow()) {
-                    trxObject.commit()
-                }
+        synchronizationManager.getResourceAndSynchronize(trxObject)
+            ?: error("No synchronized transaction to commit")
+        synchronizationManager.printEverything(::doCommit.name)
 
-                null
-            }
+        return mono {
+            synchronizationManager.getResourceAndSynchronize(trxObject)
+            synchronizationManager.printEverything(::doCommit.name)
+
+            trxObject.commit()
+
+            null
         }
     }
 
@@ -172,17 +205,19 @@ class SpringReactiveTransactionManager(
         synchronizationManager: TransactionSynchronizationManager,
         status: GenericReactiveTransaction
     ): Mono<Void> {
-        return Mono.defer {
-            val trxObject = status.transaction as ExposedTransactionObject
+        val trxObject = status.transaction as ExposedTransactionObject
 
-            mono {
-                @OptIn(InternalApi::class)
-                withTransactionContext(synchronizationManager.getResourceOrThrow()) {
-                    trxObject.rollback()
-                }
+        synchronizationManager.getResourceAndSynchronize(trxObject)
+            ?: error("No synchronized transaction to rollback")
+        synchronizationManager.printEverything(::doRollback.name)
 
-                null
-            }
+        return mono {
+            synchronizationManager.getResourceAndSynchronize(trxObject)
+            synchronizationManager.printEverything(::doRollback.name)
+
+            trxObject.rollback()
+
+            null
         }
     }
 
@@ -193,32 +228,42 @@ class SpringReactiveTransactionManager(
         return Mono.defer {
             val trxObject = transaction as ExposedTransactionObject
 
-            mono {
-                @OptIn(InternalApi::class)
-                withTransactionContext(synchronizationManager.getResourceOrThrow()) {
-                    val completedTransaction = trxObject.getCurrentTransaction()
+            val completedTransaction = synchronizationManager.getResourceAndSynchronize(trxObject)?.also {
+                clearStatements(it)
+            }
+            synchronizationManager.printEverything(::doCleanupAfterCompletion.name)
 
-                    completedTransaction
-                        ?.let {
-                            clearStatements(it)
+            if (trxObject.isNewConnectionHolder) {
+                synchronizationManager.unbindResource(connectionFactory)
 
-                            if (trxObject.isNewConnection) {
-                                synchronizationManager.unbindResource(database)
+                // otherwise a PROPAGATION_NESTED transaction would incorrectly have the context of its
+                // now closed inner transaction used when doCommit() or doRollback() is later invoked
+                completedTransaction?.outerTransaction?.let { outer ->
+                    synchronizationManager.bindResource(database, outer)
 
-                                // otherwise a PROPAGATION_NESTED transaction would incorrectly have the context of its
-                                // now closed inner transaction used when doCommit() or doRollback() is later invoked
-                                it.outerTransaction?.let { outer ->
-                                    synchronizationManager.bindResource(database, outer)
-                                }
-                            }
-
-                            it.close()
-                        }
+                    @OptIn(InternalApi::class)
+                    ThreadLocalTransactionsStack.pushTransaction(outer)
                 }
+
+                synchronizationManager.getResourceAndSynchronize(trxObject)
+                synchronizationManager.printEverything(::doCleanupAfterCompletion.name)
+            }
+
+            mono {
+                synchronizationManager.getResourceAndSynchronize(trxObject)
+                synchronizationManager.printEverything(::doCleanupAfterCompletion.name)
+                completedTransaction?.close()
 
                 null
             }
+                .doOnEach {
+                    if (trxObject.isNewConnectionHolder) {
+                        trxObject.connectionHolder?.released()
+                    }
+                    trxObject.connectionHolder?.clear()
+                }
         }
+        // doFinally on defer may be a good contender
     }
 
     private fun clearStatements(transaction: R2dbcTransaction) {
@@ -237,25 +282,32 @@ class SpringReactiveTransactionManager(
         return Mono.fromRunnable {
             val trxObject = status.transaction as ExposedTransactionObject
 
+            synchronizationManager.getResourceAndSynchronize(trxObject)
+            synchronizationManager.printEverything(::doSetRollbackOnly.name)
+
+            if (status.isDebug) {
+                exposedLogger.debug("Exposed transaction [${status.transactionName}] set rollback-only")
+            }
+
             trxObject.setRollbackOnly()
         }
     }
 
-    private fun TransactionSynchronizationManager.getResourceOrThrow(): R2dbcTransaction {
-        return this.getResource(database) as? R2dbcTransaction ?: error("No transaction value bound to the current context")
+    private class ExposedHolderObject(
+        connection: Connection,
+        val transaction: R2dbcTransaction,
+    ) : ConnectionHolder(connection)
+
+    @Suppress("UNCHECKED_CAST")
+    private suspend fun R2dbcTransaction.awaitConnection(): Connection {
+        return (this.connection().connection as Publisher<out Connection>).awaitLast()
     }
 
-    private data class SuspendedObject(
-        val transaction: R2dbcTransaction
-    )
-
     private data class ExposedTransactionObject(
-        val database: R2dbcDatabase
+        val database: R2dbcDatabase,
     ) {
-        private var isRollback: Boolean = false
-
-        val isNestedTransactionAllowed = database.config.useNestedTransactions
-        var isNewConnection: Boolean = false
+        var isNewConnectionHolder: Boolean = false
+        var connectionHolder: ExposedHolderObject? = null
 
         @Suppress("TooGenericExceptionCaught")
         suspend fun commit() {
@@ -279,16 +331,62 @@ class SpringReactiveTransactionManager(
             }
         }
 
-        @OptIn(InternalApi::class)
         fun getCurrentTransaction(): R2dbcTransaction? {
-            return ThreadLocalTransactionsStack.getTransactionOrNull(database) as R2dbcTransaction?
+            return connectionHolder?.transaction
         }
 
         fun setRollbackOnly() {
-            isRollback = true
+            getCurrentTransaction()?.isRollback = true
+            connectionHolder?.setRollbackOnly()
         }
     }
+
+    private fun TransactionSynchronizationManager.getResourceHolderOrNull(): ExposedHolderObject? {
+        return this.getResource(connectionFactory) as? ExposedHolderObject
+    }
+
+    private fun TransactionSynchronizationManager.getResourceOrNull(): R2dbcTransaction? {
+        return this.getResourceHolderOrNull()?.transaction
+    }
+
+    private fun TransactionSynchronizationManager.getResourceAndSynchronize(
+        trxObject: ExposedTransactionObject
+    ): R2dbcTransaction? {
+        val currentFromResource = this.getResourceOrNull()
+        val currentOnStack = trxObject.database.transactionManager.currentOrNull()
+        return when {
+            currentOnStack == null && currentFromResource != null -> {
+                @OptIn(InternalApi::class)
+                ThreadLocalTransactionsStack.pushTransaction(currentFromResource)
+                currentFromResource
+            }
+            currentOnStack != null && currentFromResource == null -> {
+                @OptIn(InternalApi::class)
+                ThreadLocalTransactionsStack.threadTransactions()?.clear()
+                null
+            }
+            currentOnStack != null && currentFromResource != null && currentOnStack != currentFromResource -> {
+                @OptIn(InternalApi::class)
+                ThreadLocalTransactionsStack.threadTransactions()?.clear()
+                @OptIn(InternalApi::class)
+                ThreadLocalTransactionsStack.pushTransaction(currentFromResource)
+                currentFromResource
+            }
+            else -> currentOnStack
+        }
+    }
+
+    @OptIn(InternalApi::class)
+    private fun TransactionSynchronizationManager.printEverything(methodName: String) {
+        val resource = this.getResourceOrNull()?.transactionId ?: "NO SPRING TRX"
+        println("In $methodName...${viewThreadStack()}\n\tSPRING --> $resource")
+    }
 }
+
+private var R2dbcTransaction.isRollback: Boolean by transactionScope { false }
+
+/** Returns the rollback status of the current [R2dbcTransaction]. */
+internal fun R2dbcTransaction.isMarkedRollback(): Boolean = isRollback
 
 internal fun Int.resolveIsolationLevel(): IsolationLevel? = when (this) {
     TransactionDefinition.ISOLATION_READ_UNCOMMITTED -> IsolationLevel.READ_UNCOMMITTED
