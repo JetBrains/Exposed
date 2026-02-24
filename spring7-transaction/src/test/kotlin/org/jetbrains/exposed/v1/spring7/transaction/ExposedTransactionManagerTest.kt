@@ -275,6 +275,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
     /**
      * Test for Isolation Level
      */
+    @Tag(NO_R2DBC_SUPPORT) // H2_R2DBC used in tests
     @RepeatedTest(5)
     @Transactional(isolation = Isolation.READ_COMMITTED)
     open fun testIsolationLevelReadUncommitted() {
@@ -292,7 +293,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
      * Test for Timeout
      * Execute with query timeout
      */
-    @Tag(NO_R2DBC_SUPPORT)
+    @Tag(NO_R2DBC_SUPPORT) // H2_R2DBC used in tests
     @RepeatedTest(5)
     open fun testTimeout() {
         transactionManager.execute(timeout = 1) {
