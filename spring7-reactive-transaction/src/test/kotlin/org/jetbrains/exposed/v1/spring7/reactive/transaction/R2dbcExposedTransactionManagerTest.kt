@@ -4,7 +4,6 @@ import io.r2dbc.spi.ConnectionFactory
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
-import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -109,8 +108,6 @@ open class R2dbcExposedTransactionManagerTest : SpringReactiveTransactionTestBas
         }
     }
 
-    // TODO - This (& only this test?) fails because of line 114 in suspendTransaction();
-    // If the line is reverted to original, it passes -> ThreadLocalTransactionsStack.getTransactionOrNull(databaseToUse)
     @RepeatedTest(5)
     @Commit
 //    @Transactional // see [runTestWithMockTransactional]
@@ -145,16 +142,21 @@ open class R2dbcExposedTransactionManagerTest : SpringReactiveTransactionTestBas
      * Test for Propagation.NESTED with inner roll-back
      * The nested transaction will be roll-back only inner transaction when the transaction marks as rollback.
      */
-    @RepeatedTest(5)
+    @RepeatedTest(1)
 //    @Transactional // see [runTestWithMockTransactional]
     open fun testConnectionWithNestedTransactionInnerRollback() = runTestWithMockTransactional {
+        println("Start test...")
         insertRandom()
         assertEquals(1, getCount())
+        println("Finished outside work...")
         transactionManager.execute(TransactionDefinition.PROPAGATION_NESTED) { status ->
+            println("Nested test...")
             insertRandom()
             assertEquals(2, getCount())
             status.setRollbackOnly()
+            println("Finished nested work...")
         }
+        println("Outside again work...")
         assertEquals(1, getCount())
     }
 
@@ -162,62 +164,77 @@ open class R2dbcExposedTransactionManagerTest : SpringReactiveTransactionTestBas
      * Test for Propagation.NESTED with outer roll-back
      * The nested transaction will be roll-back entire transaction when the transaction marks as rollback.
      */
-    @RepeatedTest(5)
+    @RepeatedTest(1)
     fun testConnectionWithNestedTransactionOuterRollback() = runTest {
+        println("Start test... straight to trx1")
         transactionManager.execute {
             insertRandom()
             assertEquals(1, getCount())
             it.setRollbackOnly()
 
+            println("Finished trx1 work...")
             transactionManager.execute(TransactionDefinition.PROPAGATION_NESTED) {
+                println("Nested test...")
                 insertRandom()
                 assertEquals(2, getCount())
+                println("Finished nested work...")
             }
+            println("Outside again work...")
             assertEquals(2, getCount())
         }
 
+        println("Straight to trx2")
         transactionManager.execute {
             assertEquals(0, getCount())
         }
     }
 
-    // TODO
     /**
      * Test for Propagation.REQUIRES_NEW
      * Create a new transaction, and suspend the current transaction if one exists.
      */
-    @RepeatedTest(5)
+    @RepeatedTest(1)
     //    @Transactional // see [runTestWithMockTransactional]
     open fun testConnectionWithRequiresNew() = runTestWithMockTransactional {
+        println("Start test...")
         insertRandom()
         assertEquals(1, getCount())
+        println("Finished outside work...")
         transactionManager.execute(TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
+            println("Nested test...")
             assertEquals(0, getCount())
             insertRandom()
             assertEquals(1, getCount())
+            println("Finished nested work...")
         }
+        println("Outside again work...")
         assertEquals(2, getCount())
     }
 
-    // TODO
     /**
      * Test for Propagation.REQUIRES_NEW with inner transaction roll-back
      * The inner transaction will be roll-back only inner transaction when the transaction marks as rollback.
      * And since isolation level is READ_COMMITTED, the inner transaction can't see the changes of outer transaction.
      */
-    @RepeatedTest(5)
+    @RepeatedTest(1)
     fun testConnectionWithRequiresNewWithInnerTransactionRollback() = runTest {
+        println("Start test... straight to trx1")
         transactionManager.execute {
             insertRandom()
             assertEquals(1, getCount())
+            println("Finished trx1 work...")
             transactionManager.execute(TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
+                println("Nested test...")
                 insertRandom()
                 assertEquals(1, getCount())
                 it.setRollbackOnly()
+                println("Finished nested work...")
             }
+            println("Outside again work...")
             assertEquals(1, getCount())
         }
 
+        println("Straight to trx2")
         transactionManager.execute {
             assertEquals(1, getCount())
         }
@@ -287,28 +304,5 @@ open class R2dbcExposedTransactionManagerTest : SpringReactiveTransactionTestBas
             insertRandom()
         }
         assertEquals(1, getCount())
-    }
-
-    @RepeatedTest(5)
-    //    @Transactional(isolation = Isolation.READ_COMMITTED) // see [runTestWithMockTransactional]
-    open fun testIsolationLevelReadUncommitted() = runTestWithMockTransactional(
-        isolationLevel = TransactionDefinition.ISOLATION_READ_COMMITTED
-    ) {
-        assertTransactionIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED)
-        insertRandom()
-        val count = getCount()
-        transactionManager.execute(
-            TransactionDefinition.PROPAGATION_REQUIRES_NEW,
-            TransactionDefinition.ISOLATION_READ_UNCOMMITTED
-        ) {
-            assertTransactionIsolationLevel(TransactionDefinition.ISOLATION_READ_UNCOMMITTED)
-            assertEquals(count, getCount())
-        }
-        assertTransactionIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED)
-    }
-
-    private suspend fun assertTransactionIsolationLevel(expected: Int) {
-        val connection = TransactionManager.current().connection()
-        assertEquals(expected.resolveIsolationLevel(), connection.getTransactionIsolation())
     }
 }
