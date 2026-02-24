@@ -68,4 +68,35 @@
             <b>JDBC</b>: ✅ Supported
         </p>
     </snippet>
+
+    <snippet id="add-dependency">
+        <tabs>
+            <tab title="Kotlin Gradle">
+                <code-block lang="kotlin">
+                dependencies {
+                    implementation("org.jetbrains.exposed:%artifact_name%:%exposed_version%")
+                }
+                </code-block>
+            </tab>
+            <tab title="Maven">
+                <code-block lang="xml"><![CDATA[
+                <dependencies>
+                    <dependency>
+                        <groupId>org.jetbrains.exposed</groupId>
+                        <artifactId>%artifact_name%</artifactId>
+                        <version>%exposed_version%</version>
+                    </dependency>
+                </dependencies>
+                ]]></code-block>
+            </tab>
+            <tab title="Groovy Gradle">
+
+                <code-block lang="kotlin">
+                dependencies {
+                    implementation "org.jetbrains.exposed:%artifact_name%:%exposed_version%"
+                }
+                </code-block>
+            </tab>
+        </tabs>
+    </snippet>
 </topic>

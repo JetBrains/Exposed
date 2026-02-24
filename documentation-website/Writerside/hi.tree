@@ -54,6 +54,7 @@
         <toc-element topic="DAO-CRUD-Operations.topic"/>
         <toc-element topic="DAO-Relationships.topic"/>
     </toc-element>
+    <toc-element topic="Spring-Boot-integration.md"/>
     <toc-element toc-title="Releases">
         <toc-element topic="Breaking-Changes.md"/>
         <toc-element topic="Migration-Guide-0-46-0.md"/>
