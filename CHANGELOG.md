@@ -1,3 +1,28 @@
+# 1.1.0
+
+Fixes:
+* fix: Fix MySql SSL connection error from CI by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2727
+* fix: EXPOSED-982 Connection leak when coroutine is cancelled during suspendTransaction by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2738
+* fix: Select For Update returns cached entity instead of updated entity by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2734
+
+Docs:
+* docs: Fix typo in the KDoc of `ThreadLocalTransactionsStack` to clarify by @ShreckYe in https://github.com/JetBrains/Exposed/pull/2725
+* docs: Update samples broken by bump to version 1.0.0 by @bog-walk in https://github.com/JetBrains/Exposed/pull/2723
+* docs: EXPOSED-977 Add missing Dokka API files by @bog-walk in https://github.com/JetBrains/Exposed/pull/2729
+* docs: fix: EXPOSED-978 Broken links in the entity definition topic by @vnikolova in https://github.com/JetBrains/Exposed/pull/2730
+* docs: Fix broken include-lines attributes of code-blocks and typo by @sh-cho in https://github.com/JetBrains/Exposed/pull/2739
+* docs: feat: EXPOSED-974 Add documentation and code example for Spring Boot support by @vnikolova in https://github.com/JetBrains/Exposed/pull/2740
+
+Refactoring:
+* refactor: Replace unused exception parameter with underscore by @devch37 in https://github.com/JetBrains/Exposed/pull/2721
+
+Infrastructure:
+* kover 0.9.7
+* ojdbc11 23.26.1.0.0
+* springFramework6 6.2.16
+* postgresql 42.7.10
+* r2dbc-mariadb 1.4.0
+
 # 1.0.0
 
 Breaking changes:
