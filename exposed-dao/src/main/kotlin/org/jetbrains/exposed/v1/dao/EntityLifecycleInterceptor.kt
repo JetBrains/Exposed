@@ -109,16 +109,24 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
         // stale data from being carried over into a new transaction. Ideally, at this stage,
         // values from writeValues should not have been transferred to readValues yet, but we clear
         // both for reliability to ensure complete cleanup.
+        //
+        // For ImmutableCachedEntityClass entities, we preserve _readValues to avoid refetches because these
+        // entities are immutable and their values don't change and use a cross-transaction cache that
+        // persists across rollbacks
         entityCache.data.values.forEach { entityMap ->
             entityMap.values.forEach { entity ->
                 entity.writeValues.clear()
-                entity._readValues = null
+                if (entity.klass !is ImmutableCachedEntityClass<*, *>) {
+                    entity._readValues = null
+                }
             }
         }
         entityCache.updates.values.forEach { entitySet ->
             entitySet.forEach { entity ->
                 entity.writeValues.clear()
-                entity._readValues = null
+                if (entity.klass !is ImmutableCachedEntityClass<*, *>) {
+                    entity._readValues = null
+                }
             }
         }
 
