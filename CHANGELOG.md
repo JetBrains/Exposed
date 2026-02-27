@@ -1,3 +1,8 @@
+# 1.1.1
+
+Fixes:
+* fix: EXPOSED-986: ImmutableCachedEntity cache is incorrectly cleared on tr… by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2743
+
 # 1.1.0
 
 Fixes:
