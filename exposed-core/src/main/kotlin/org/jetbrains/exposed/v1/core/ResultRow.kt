@@ -6,6 +6,7 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.statements.api.RowApi
 import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.core.transactions.currentTransactionOrNull
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.core.vendors.withDialect
 
 /** A row of data representing a single record retrieved from a database result set. */
@@ -39,7 +40,7 @@ class ResultRow(
                 }
                 EntityID(resultID, column.table) as T
             }
-            column?.isJsonBColumnForCasting() == true -> try {
+            column?.isJsonBColumnForCasting(database?.dialect ?: currentDialect) == true -> try {
                 val castExpression = CastToJson(column, column.columnType)
                 getInternal(castExpression, checkNullability = true) as T
             } catch (_: IllegalStateException) {

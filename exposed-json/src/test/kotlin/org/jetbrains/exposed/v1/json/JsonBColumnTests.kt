@@ -6,8 +6,11 @@ import kotlinx.serialization.builtins.ArraySerializer
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.dao.IntEntity
+import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
@@ -22,6 +25,7 @@ import org.jetbrains.exposed.v1.tests.shared.expectException
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -449,11 +453,11 @@ class JsonBColumnTests : DatabaseTestsBase() {
         withTables(excludeSettings = binaryJsonNotSupportedDB, tester) { testDb ->
             // all db, other than SQLite, should switch flag off
             val expectedFlag = testDb == TestDB.SQLITE
-            val actualWithFlag = (tester.withFlag.columnType as JsonBColumnType).needsBinaryFormatCast
+            val actualWithFlag = (tester.withFlag.columnType as JsonBColumnType).needsBinaryFormatCast(testDb.db!!.dialect)
             assertEquals(expectedFlag, actualWithFlag)
 
             // all db should switch flag off
-            val actualWithoutFlag = (tester.withoutFlag.columnType as JsonBColumnType).needsBinaryFormatCast
+            val actualWithoutFlag = (tester.withoutFlag.columnType as JsonBColumnType).needsBinaryFormatCast(testDb.db!!.dialect)
             assertFalse(actualWithoutFlag)
 
             val user = User("Pro", "Alpha")
@@ -473,5 +477,32 @@ class JsonBColumnTests : DatabaseTestsBase() {
                 assertEquals(user, result[tester.withoutFlag])
             }
         }
+    }
+
+    object MyTable : IntIdTable("my_table") {
+        val name = text("name")
+        val user = jsonb<User>("json_column", Json.Default)
+    }
+
+    class MyEntity(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<MyEntity>(MyTable)
+
+        var name by MyTable.name
+        var user by MyTable.user
+    }
+
+    @Test
+    fun testFieldsOutsideTransaction() {
+        lateinit var entity: MyEntity
+        withTables(excludeSettings = binaryJsonNotSupportedDB, MyTable) {
+            entity = MyEntity.new {
+                name = "Test"
+                user = User("Pro", "Alpha")
+            }
+        }
+
+        // Should be able to read fields despite having no transaction
+        assertEquals("Test", entity.name)
+        assertEquals(User("Pro", "Alpha"), entity.user)
     }
 }
