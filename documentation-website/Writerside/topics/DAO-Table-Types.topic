@@ -4,7 +4,13 @@
 <topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
        title="Table types" id="DAO-Table-Types" help-id="DAO-Table-types">
-
+    <tldr>
+        <p>
+            <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-core</code>
+        </p>
+        <include from="lib.topic" element-id="jdbc-supported"/>
+        <include from="lib.topic" element-id="r2dbc-supported"/>
+    </tldr>
     <include from="DSL-Table-Types.topic" element-id="dsl-core-table-class"/>
     <chapter title="Auto-incrementing ID column tables" id="defining-tables">
         <snippet id="dao-table-types">
@@ -23,7 +29,7 @@
             </p>
             <p>
                 <code>IdTable</code> and its subclasses are located in the
-                <control>org.jetbrains.exposed.dao.id</control>
+                <control>org.jetbrains.exposed.v1.core.dao.id</control>
                 package of the
                 <control>exposed-core</control>
                 module.

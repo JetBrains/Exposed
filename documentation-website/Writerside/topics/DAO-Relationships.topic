@@ -6,6 +6,11 @@
        title="Relationships" id="DAO-Relationships">
     <show-structure for="chapter" depth="2" />
     <tldr>
+        <p>
+            <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-dao</code>
+        </p>
+        <include from="lib.topic" element-id="jdbc-supported"/>
+        <include from="lib.topic" element-id="r2dbc-not-supported"/>
         <p><b>Code example</b>:
             <a href="https://github.com/JetBrains/Exposed/tree/main/documentation-website/Writerside/snippets/exposed-dao-relationships/">
                 exposed-dao-relationships
