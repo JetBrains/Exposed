@@ -22,6 +22,8 @@ data class ColumnDiff(
      * and those values of the defined column.
      */
     val sizeAndScale: Boolean,
+    /** Whether there is a mismatch between the comment of the existing column and that of the defined column. */
+    val comment: Boolean = false,
 ) {
     /** Returns `true` if there is a difference between the column definition and the existing column in the database. */
     fun hasDifferences() = this != NoneChanged
@@ -35,6 +37,7 @@ data class ColumnDiff(
             defaults = false,
             caseSensitiveName = false,
             sizeAndScale = false,
+            comment = false,
         )
 
         /** A [ColumnDiff] with differences for every matched property. */
@@ -45,6 +48,7 @@ data class ColumnDiff(
             defaults = true,
             caseSensitiveName = true,
             sizeAndScale = true,
+            comment = true,
         )
     }
 }

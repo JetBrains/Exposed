@@ -22,6 +22,7 @@ class Alias<out T : Table>(val delegate: T, val alias: String) : Table() {
         it.isDatabaseGenerated = isDatabaseGenerated
         it.foreignKey = foreignKey
         it.extraDefinitions = extraDefinitions
+        it.columnComment = this.columnComment
     }
 
     /**
