@@ -59,7 +59,7 @@ class PrimitiveTypeMapper : TypeMapper {
             is FloatColumnType -> java.lang.Float::class.java
             is DoubleColumnType -> java.lang.Double::class.java
             is DecimalColumnType -> java.math.BigDecimal::class.java
-            is UuidColumnType -> kotlin.uuid.Uuid::class.java
+            is UuidColumnType -> java.util.UUID::class.java
             is UUIDColumnType -> java.util.UUID::class.java
             is CharacterColumnType -> java.lang.String::class.java
             is BooleanColumnType -> java.lang.Boolean::class.java
