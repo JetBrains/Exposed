@@ -12,3 +12,5 @@ classes/
 .DS_Store
 .kotlin
 /.run/
+/issues/github/
+/issues/youtrack/
