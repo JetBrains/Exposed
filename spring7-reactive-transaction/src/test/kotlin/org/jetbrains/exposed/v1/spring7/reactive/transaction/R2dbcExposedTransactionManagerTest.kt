@@ -142,21 +142,16 @@ open class R2dbcExposedTransactionManagerTest : SpringReactiveTransactionTestBas
      * Test for Propagation.NESTED with inner roll-back
      * The nested transaction will be roll-back only inner transaction when the transaction marks as rollback.
      */
-    @RepeatedTest(1)
+    @RepeatedTest(5)
 //    @Transactional // see [runTestWithMockTransactional]
     open fun testConnectionWithNestedTransactionInnerRollback() = runTestWithMockTransactional {
-        println("Start test...")
         insertRandom()
         assertEquals(1, getCount())
-        println("Finished outside work...")
         transactionManager.execute(TransactionDefinition.PROPAGATION_NESTED) { status ->
-            println("Nested test...")
             insertRandom()
             assertEquals(2, getCount())
             status.setRollbackOnly()
-            println("Finished nested work...")
         }
-        println("Outside again work...")
         assertEquals(1, getCount())
     }
 
@@ -164,26 +159,20 @@ open class R2dbcExposedTransactionManagerTest : SpringReactiveTransactionTestBas
      * Test for Propagation.NESTED with outer roll-back
      * The nested transaction will be roll-back entire transaction when the transaction marks as rollback.
      */
-    @RepeatedTest(1)
+    @RepeatedTest(5)
     fun testConnectionWithNestedTransactionOuterRollback() = runTest {
-        println("Start test... straight to trx1")
         transactionManager.execute {
             insertRandom()
             assertEquals(1, getCount())
             it.setRollbackOnly()
 
-            println("Finished trx1 work...")
             transactionManager.execute(TransactionDefinition.PROPAGATION_NESTED) {
-                println("Nested test...")
                 insertRandom()
                 assertEquals(2, getCount())
-                println("Finished nested work...")
             }
-            println("Outside again work...")
             assertEquals(2, getCount())
         }
 
-        println("Straight to trx2")
         transactionManager.execute {
             assertEquals(0, getCount())
         }
@@ -193,21 +182,16 @@ open class R2dbcExposedTransactionManagerTest : SpringReactiveTransactionTestBas
      * Test for Propagation.REQUIRES_NEW
      * Create a new transaction, and suspend the current transaction if one exists.
      */
-    @RepeatedTest(1)
+    @RepeatedTest(5)
     //    @Transactional // see [runTestWithMockTransactional]
     open fun testConnectionWithRequiresNew() = runTestWithMockTransactional {
-        println("Start test...")
         insertRandom()
         assertEquals(1, getCount())
-        println("Finished outside work...")
         transactionManager.execute(TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
-            println("Nested test...")
             assertEquals(0, getCount())
             insertRandom()
             assertEquals(1, getCount())
-            println("Finished nested work...")
         }
-        println("Outside again work...")
         assertEquals(2, getCount())
     }
 
@@ -216,25 +200,19 @@ open class R2dbcExposedTransactionManagerTest : SpringReactiveTransactionTestBas
      * The inner transaction will be roll-back only inner transaction when the transaction marks as rollback.
      * And since isolation level is READ_COMMITTED, the inner transaction can't see the changes of outer transaction.
      */
-    @RepeatedTest(1)
+    @RepeatedTest(5)
     fun testConnectionWithRequiresNewWithInnerTransactionRollback() = runTest {
-        println("Start test... straight to trx1")
         transactionManager.execute {
             insertRandom()
             assertEquals(1, getCount())
-            println("Finished trx1 work...")
             transactionManager.execute(TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
-                println("Nested test...")
                 insertRandom()
                 assertEquals(1, getCount())
                 it.setRollbackOnly()
-                println("Finished nested work...")
             }
-            println("Outside again work...")
             assertEquals(1, getCount())
         }
 
-        println("Straight to trx2")
         transactionManager.execute {
             assertEquals(1, getCount())
         }

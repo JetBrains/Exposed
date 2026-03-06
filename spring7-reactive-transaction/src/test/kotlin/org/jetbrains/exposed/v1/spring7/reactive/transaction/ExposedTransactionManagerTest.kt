@@ -7,10 +7,10 @@ import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
+import org.jetbrains.exposed.v1.r2dbc.transactions.viewThreadStack
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.RepeatedTest
 import org.springframework.test.annotation.Commit
 import org.springframework.transaction.IllegalTransactionStateException
@@ -82,21 +82,27 @@ open class ExposedTransactionManagerTest : SpringReactiveTransactionTestBase() {
 
     // TODO - This (& only this test) fails because of line 114 in suspendTransaction();
     // If the line is reverted to original, it passes -> ThreadLocalTransactionsStack.getTransactionOrNull(databaseToUse)
-    @Disabled
     @RepeatedTest(1)
     @Commit
 //    @Transactional // see [runTestWithMockTransactional]
     open fun testConnectionCombineWithExposedTransaction2() = runTestWithMockTransactional {
+        println("Starting TEST...\n${viewThreadStack()}")
         val rnd = Random().nextInt().toString()
         T1.insert {
             it[c1] = rnd
         }
         assertEquals(rnd, T1.selectAll().single()[T1.c1])
 
+        println("About to enter nested...")
         suspendTransaction {
+            println("Starting NESTED...\n${viewThreadStack()}")
             T1.insertRandom()
             assertEquals(2, T1.selectAll().count())
+            println("NESTED = ${T1.selectAll().count()}")
+            println("Finishing NESTED...")
         }
+        println("TEST = ${T1.selectAll().count()}")
+        println("Finishing TEST...\n${viewThreadStack()}")
     }
 
     /**
@@ -199,8 +205,7 @@ open class ExposedTransactionManagerTest : SpringReactiveTransactionTestBase() {
      * Test for Propagation.NEVER
      * Execute non-transactionally, throw an exception if a transaction exists.
      */
-    @Disabled
-    @RepeatedTest(1)
+    @RepeatedTest(5)
 //    @Transactional(propagation = Propagation.NEVER) // see [runTestWithMockTransactional]
     open fun testPropagationNever() = runTestWithMockTransactional(
         propagationBehavior = TransactionDefinition.PROPAGATION_NEVER
@@ -268,8 +273,7 @@ open class ExposedTransactionManagerTest : SpringReactiveTransactionTestBase() {
      * Test for Propagation.SUPPORTS
      * Execute non-transactionally if none exists.
      */
-    @Disabled
-    @RepeatedTest(1)
+    @RepeatedTest(5)
     open fun testPropagationSupportWithoutTransaction() = runTest {
         transactionManager.execute(TransactionDefinition.PROPAGATION_SUPPORTS) {
             assertFailsWith<IllegalStateException> { // Should Be "No transaction exists"

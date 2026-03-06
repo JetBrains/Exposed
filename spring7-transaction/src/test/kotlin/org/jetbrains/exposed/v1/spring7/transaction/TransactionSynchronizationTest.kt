@@ -9,6 +9,7 @@ import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.support.TransactionSynchronization
 import org.springframework.transaction.support.TransactionSynchronizationManager
 
+// Test interface use is only supported by AbstractPlatformTransactionManager
 @Tag(NOT_APPLICABLE_TO_R2DBC)
 class TransactionSynchronizationTest : SpringTransactionTestBase() {
 

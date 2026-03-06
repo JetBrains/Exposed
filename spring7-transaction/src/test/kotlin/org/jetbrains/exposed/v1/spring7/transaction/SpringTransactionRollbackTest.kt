@@ -8,8 +8,10 @@ import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
@@ -273,6 +275,9 @@ class SpringTransactionRollbackTest {
         assertTrue { entities.none { it.name.startsWith("No ") || it.name.startsWith("New ") } }
     }
 
+    // Left out because rollback involving Spring (partial) NESTED is not actually supported by Exposed;
+    // this test would fail with "Transaction manager does not allow nested transactions by default" if catch block removed
+    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun `nested should rollback innerTx without affecting outerTx`() {
         val testRollback = container.getBean(TestRollback::class.java)
