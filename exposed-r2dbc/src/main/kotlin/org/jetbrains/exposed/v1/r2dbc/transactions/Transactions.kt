@@ -113,7 +113,20 @@ suspend fun <T> suspendTransaction(
     statement: suspend R2dbcTransaction.() -> T
 ): T {
     val databaseToUse = resolveR2dbcDatabaseOrThrow(db)
-    val outer = databaseToUse.transactionManager.getCurrentContextTransaction()
+    val outerFromContext = databaseToUse.transactionManager.getCurrentContextTransaction()
+
+    @OptIn(InternalApi::class)
+    val outerFromStack = ThreadLocalTransactionsStack.getTransactionOrNull() as? R2dbcTransaction
+
+    if (outerFromContext?.transactionId != outerFromStack?.transactionId) {
+        exposedLogger.error(
+            "Coroutine context result does not match thread-local stack result:" +
+                "\n\tContext returns --> ${outerFromContext?.transactionId}" +
+                "\n\tStack returns --> ${outerFromStack?.transactionId}"
+        )
+    }
+
+    val outer = outerFromContext ?: outerFromStack
 
     return if (outer != null) {
         val transaction = outer.transactionManager.newTransaction(
