@@ -5,6 +5,13 @@
        xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
        title="Entity definition" id="DAO-Entity-definition">
     <show-structure for="chapter,procedure" depth="2"/>
+    <tldr>
+        <p>
+            <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-dao</code>
+        </p>
+        <include from="lib.topic" element-id="jdbc-supported"/>
+        <include from="lib.topic" element-id="r2dbc-not-supported"/>
+    </tldr>
     <p>
         An <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity/index.html"><code>Entity</code></a>
         in Exposed maps a database table record to a Kotlin object. This ensures type safety and allows you to work with

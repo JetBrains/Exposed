@@ -113,10 +113,9 @@ Transport modules define how Exposed communicates with the database and are mutu
 Exposed offers an optional database access module that builds on top of `exposed-core` and provides higher-level
 abstractions for working with database data:
 
-| Module          | Function                                                                                                                 |
-|-----------------|--------------------------------------------------------------------------------------------------------------------------|
-| `exposed-dao`   | Provides the Data Access Object (DAO) API. <br> Requires `exposed-jdbc` and is not compatible with `exposed-r2dbc`.</br> |
-
+| Module        | Function                                                                                                            |
+|---------------|---------------------------------------------------------------------------------------------------------------------|
+| `exposed-dao` | Provides the Data Access Object (DAO) API.<br/> Requires `exposed-jdbc` and is not compatible with `exposed-r2dbc`. |
 
 ### Extension modules
 
