@@ -279,7 +279,7 @@ open class JdbcExposedTransactionManagerTest : SpringTransactionTestBase() {
     /**
      * Test for Isolation Level
      */
-    @Tag(NO_R2DBC_SUPPORT) // H2_R2DBC used in tests
+    @Tag(NO_R2DBC_SUPPORT) // H2_R2DBC used in tests with restricted level support
     @RepeatedTest(5)
     @Transactional(isolation = Isolation.READ_COMMITTED)
     open fun testIsolationLevelReadUncommitted() {
