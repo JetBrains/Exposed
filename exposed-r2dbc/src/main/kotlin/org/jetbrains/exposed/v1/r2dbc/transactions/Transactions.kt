@@ -116,7 +116,7 @@ suspend fun <T> suspendTransaction(
     val outerFromContext = databaseToUse.transactionManager.getCurrentContextTransaction()
 
     @OptIn(InternalApi::class)
-    val outerFromStack = ThreadLocalTransactionsStack.getTransactionOrNull() as? R2dbcTransaction
+    val outerFromStack = ThreadLocalTransactionsStack.getTransactionOrNull(databaseToUse) as? R2dbcTransaction
 
     if (outerFromContext?.transactionId != outerFromStack?.transactionId) {
         exposedLogger.error(
