@@ -148,7 +148,9 @@ class SpringReactiveTransactionManager(
             // force new coroutine to start in current thread so that potential callbacks can access correct stack
             val newConnectionMono: Mono<Boolean> = mono(Dispatchers.Unconfined) {
                 if (trxObject.connectionHolder == null || trxObject.isExposedNestedTransactionAllowed) {
-                    trxObject.connectionHolder = ExposedHolderObject(newTransaction.awaitConnection(), newTransaction)
+                    @Suppress("UNCHECKED_CAST")
+                    val actualConnection = (newTransaction.connection().activeConnection() as Publisher<out Connection>).awaitSingle()
+                    trxObject.connectionHolder = ExposedHolderObject(actualConnection, newTransaction)
                     trxObject.isNewConnectionHolder = true
                 }
                 trxObject.connectionHolder?.isSynchronizedWithTransaction = true
@@ -298,15 +300,21 @@ class SpringReactiveTransactionManager(
         }
     }
 
+    /**
+     * This can be bound to the Spring R2DBC synchronization manager, which makes Spring R2DBC see the same
+     * connection as is currently held and managed by the Exposed [R2dbcTransaction].
+     *
+     * When installed using [TransactionSynchronizationManager.bindResource], Spring R2DBC constructs like
+     * DatabaseClient will see the same connection as Exposed and partake in the same transaction with the
+     * same underlying autocommit-disabled connection.
+     *
+     * It additionally stores the active transaction that is using the held connection, so that the stack can be
+     * synchronized accurately when binding/unbinding the resource.
+     */
     private class ExposedHolderObject(
         connection: Connection,
         val transaction: R2dbcTransaction,
     ) : ConnectionHolder(connection)
-
-    @Suppress("UNCHECKED_CAST")
-    private suspend fun R2dbcTransaction.awaitConnection(): Connection {
-        return (this.connection().activeConnection() as Publisher<out Connection>).awaitSingle()
-    }
 
     private data class ExposedTransactionObject(
         val database: R2dbcDatabase,
@@ -356,7 +364,6 @@ class SpringReactiveTransactionManager(
         return this.getResourceHolderOrNull()?.transaction
     }
 
-    @OptIn(InternalApi::class)
     private fun TransactionSynchronizationManager.printEverything(methodName: String) {
         val resource = this.getResourceOrNull()?.transactionId ?: "NO SPRING TRX"
         println("In $methodName...${viewThreadStack()}\n\tSPRING --> $resource")
