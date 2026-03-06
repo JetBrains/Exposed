@@ -165,6 +165,7 @@ class SpringTransactionManagerTest {
         assertEquals(1, con1.closeCallCount)
     }
 
+    @Tag(NO_R2DBC_SUPPORT) // https://github.com/spring-projects/spring-data-relational/issues/2026
     @Test
     fun `transaction commit with lazy connection data source proxy`() {
         val lazyDs = LazyConnectionDataSourceProxy(ds1)

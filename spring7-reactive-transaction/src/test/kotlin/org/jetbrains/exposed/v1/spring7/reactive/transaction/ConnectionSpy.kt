@@ -44,7 +44,7 @@ class ConnectionSpy(private val connection: Connection) : Connection by connecti
         Mono.empty<Void>()
     } as Publisher<Void?>
 
-    override fun setAutoCommit(autoCommit: Boolean): Publisher<Void?>? = Mono.defer {
+    override fun setAutoCommit(autoCommit: Boolean): Publisher<Void?> = Mono.defer {
         callOrder.add("setAutoCommit")
         mockAutoCommit = autoCommit
 
@@ -58,12 +58,12 @@ class ConnectionSpy(private val connection: Connection) : Connection by connecti
         Mono.empty<Void>()
     } as Publisher<Void?>
 
-    override fun beginTransaction(definition: TransactionDefinition?): Publisher<Void?>? = Mono.defer {
+    override fun beginTransaction(definition: TransactionDefinition): Publisher<Void?> = Mono.defer {
         callOrder.add("setAutoCommit")
         mockAutoCommit = false
 
         definition
-            ?.getAttribute(TransactionDefinition.READ_ONLY)
+            .getAttribute(TransactionDefinition.READ_ONLY)
             ?.let {
                 callOrder.add("setReadOnly")
                 mockReadOnly = it
