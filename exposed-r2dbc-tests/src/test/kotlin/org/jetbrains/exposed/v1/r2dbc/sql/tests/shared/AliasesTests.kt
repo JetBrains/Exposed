@@ -5,6 +5,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.dao.id.UuidTable
@@ -14,19 +16,35 @@ import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
 import org.jetbrains.exposed.v1.r2dbc.select
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.withCitiesAndUsers
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.entities.EntityTestsData
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class AliasesTests : R2dbcDatabaseTestsBase() {
+    object YTable : IdTable<String>("YTable") {
+        override val id: Column<EntityID<String>> = varchar("uuid", 36).entityId().clientDefault {
+            EntityID(UUID.randomUUID().toString(), YTable)
+        }
+
+        val x = bool("x").default(true)
+
+        override val primaryKey = PrimaryKey(id)
+    }
+
+    object XTable : IntIdTable("XTable") {
+        val b1 = bool("b1").default(true)
+        val b2 = bool("b2").default(false)
+        val y1 = optReference("y1", YTable)
+    }
+
     @Test
     fun `test_github_issue_379_count_alias_ClassCastException`() {
         val stables = object : UuidTable("Stables") {
@@ -110,24 +128,24 @@ class AliasesTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun `test aliased expression with aliased query`() {
-        withTables(EntityTestsData.XTable, EntityTestsData.YTable) {
+        withTables(XTable, YTable) {
             val dataToInsert = listOf(true, true, false, true)
             // Oracle throws: Batch execution returning generated values is not supported
-            EntityTestsData.XTable.batchInsert(dataToInsert, shouldReturnGeneratedValues = false) {
-                this[EntityTestsData.XTable.b1] = it
+            XTable.batchInsert(dataToInsert, shouldReturnGeneratedValues = false) {
+                this[XTable.b1] = it
             }
-            val aliasedExpression = EntityTestsData.XTable.id.max().alias("maxId")
-            val aliasedQuery = EntityTestsData.XTable
-                .select(EntityTestsData.XTable.b1, aliasedExpression)
-                .groupBy(EntityTestsData.XTable.b1)
+            val aliasedExpression = XTable.id.max().alias("maxId")
+            val aliasedQuery = XTable
+                .select(XTable.b1, aliasedExpression)
+                .groupBy(XTable.b1)
                 .alias("maxBoolean")
 
-            val aliasedBool = aliasedQuery[EntityTestsData.XTable.b1]
+            val aliasedBool = aliasedQuery[XTable.b1]
             val expressionToCheck = aliasedQuery[aliasedExpression]
             assertEquals("maxBoolean.maxId", expressionToCheck.toString())
 
             val resultQuery = aliasedQuery
-                .leftJoin(EntityTestsData.XTable, { this[aliasedExpression] }, { id })
+                .leftJoin(XTable, { this[aliasedExpression] }, { id })
                 .select(aliasedBool, expressionToCheck)
 
             val result = resultQuery.map {
@@ -140,11 +158,11 @@ class AliasesTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun `test alias for same table with join`() {
-        withTables(EntityTestsData.XTable, EntityTestsData.YTable) {
-            val table1Count = EntityTestsData.XTable.id.max().alias("t1max")
-            val table2Count = EntityTestsData.XTable.id.max().alias("t2max")
-            val t1Alias = EntityTestsData.XTable.select(table1Count).groupBy(EntityTestsData.XTable.b1).alias("t1")
-            val t2Alias = EntityTestsData.XTable.select(table2Count).groupBy(EntityTestsData.XTable.b1).alias("t2")
+        withTables(XTable, YTable) {
+            val table1Count = XTable.id.max().alias("t1max")
+            val table2Count = XTable.id.max().alias("t2max")
+            val t1Alias = XTable.select(table1Count).groupBy(XTable.b1).alias("t1")
+            val t2Alias = XTable.select(table2Count).groupBy(XTable.b1).alias("t2")
             t1Alias.join(t2Alias, JoinType.INNER) {
                 t1Alias[table1Count] eq t2Alias[table2Count]
             }.select(t1Alias[table1Count]).toList()
