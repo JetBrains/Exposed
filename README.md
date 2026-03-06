@@ -81,6 +81,7 @@ Kotlin version 2.1.+
 The following module(s) require JDK 17 or newer:
 * `spring-transaction` - depends on Spring Framework 6
 * `spring7-transaction` - depends on Spring Framework 7
+* `spring7-reactive-transaction` - depends on Spring Framework 7
 * `exposed-spring-boot-starter` - depends on Spring Boot 3
 * `exposed-spring-boot4-starter` - depends on Spring Boot 4
 * `exposed-crypt` - depends on Spring Security 7

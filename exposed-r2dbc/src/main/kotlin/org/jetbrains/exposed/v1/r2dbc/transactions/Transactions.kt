@@ -114,6 +114,8 @@ suspend fun <T> suspendTransaction(
 ): T {
     val databaseToUse = resolveR2dbcDatabaseOrThrow(db)
     val outer = databaseToUse.transactionManager.getCurrentContextTransaction()
+//    @OptIn(InternalApi::class)
+//    val outer = ThreadLocalTransactionsStack.getTransactionOrNull(databaseToUse) as? R2dbcTransaction
 
     return if (outer != null) {
         val transaction = outer.transactionManager.newTransaction(
@@ -284,4 +286,12 @@ internal suspend fun closeStatementsAndConnection(transaction: R2dbcTransaction)
     transaction.closeLoggingException {
         exposedLogger.warn("Transaction close failed: ${it.message}. Statement: $currentStatement", it)
     }
+}
+
+@OptIn(InternalApi::class)
+fun viewThreadStack(): String {
+    val currentThread = Thread.currentThread().name
+    val currentTrx = ThreadLocalTransactionsStack.getTransactionOrNull()?.transactionId ?: "NOT IN TRX"
+    val allTrx = ThreadLocalTransactionsStack.threadTransactions()?.map { it.transactionId } ?: listOf("EMPTY STACK")
+    return "\n\tTHREAD --> $currentThread\n\tTRX --> $currentTrx\n\tSTACK --> $allTrx"
 }

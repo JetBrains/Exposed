@@ -713,6 +713,7 @@ public class org/jetbrains/exposed/v1/r2dbc/statements/MergeSuspendExecutable : 
 
 public final class org/jetbrains/exposed/v1/r2dbc/statements/R2dbcConnectionImpl : org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposedConnection {
 	public fun <init> (Lorg/reactivestreams/Publisher;Ljava/lang/String;Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;)V
+	public fun activeConnection (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun commit (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun executeInBatch (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -865,6 +866,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcDatabaseMe
 }
 
 public abstract interface class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposedConnection {
+	public fun activeConnection (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun commit (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun executeInBatch (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -887,6 +889,10 @@ public abstract interface class org/jetbrains/exposed/v1/r2dbc/statements/api/R2
 	public abstract fun setSavepoint (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun setTransactionDefinition (Lio/r2dbc/spi/TransactionDefinition;)V
 	public abstract fun setTransactionIsolation (Lio/r2dbc/spi/IsolationLevel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposedConnection$DefaultImpls {
+	public static fun activeConnection (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposedConnection;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public abstract class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposedDatabaseMetadata : org/jetbrains/exposed/v1/core/statements/api/ExposedDatabaseMetadata {
@@ -1066,6 +1072,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/transactions/TransactionsKt {
 	public static synthetic fun inTopLevelSuspendTransaction$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lio/r2dbc/spi/IsolationLevel;Ljava/lang/Boolean;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun suspendTransaction (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lio/r2dbc/spi/IsolationLevel;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun suspendTransaction$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lio/r2dbc/spi/IsolationLevel;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun viewThreadStack ()Ljava/lang/String;
 }
 
 public abstract class org/jetbrains/exposed/v1/r2dbc/vendors/DatabaseDialectMetadata {

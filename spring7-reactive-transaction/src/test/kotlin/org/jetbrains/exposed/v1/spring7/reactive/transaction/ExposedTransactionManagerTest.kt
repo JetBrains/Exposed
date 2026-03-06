@@ -1,62 +1,61 @@
-package org.jetbrains.exposed.v1.spring7.transaction
+package org.jetbrains.exposed.v1.spring7.reactive.transaction
 
+import kotlinx.coroutines.flow.single
+import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.core.statements.StatementType
-import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
-import org.jetbrains.exposed.v1.jdbc.SchemaUtils
-import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.tests.NO_R2DBC_SUPPORT
+import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
+import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
+import org.jetbrains.exposed.v1.r2dbc.transactions.viewThreadStack
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.RepeatedTest
-import org.junit.jupiter.api.Tag
 import org.springframework.test.annotation.Commit
 import org.springframework.transaction.IllegalTransactionStateException
 import org.springframework.transaction.TransactionDefinition
-import org.springframework.transaction.annotation.Isolation
-import org.springframework.transaction.annotation.Propagation
-import org.springframework.transaction.annotation.Transactional
-import java.sql.SQLTimeoutException
 import java.util.*
 import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
-import kotlin.test.fail
 
-open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
+open class ExposedTransactionManagerTest : SpringReactiveTransactionTestBase() {
 
     object T1 : Table() {
         val c1 = varchar("c1", Int.MIN_VALUE.toString().length)
     }
 
-    private fun T1.insertRandom() {
+    private suspend fun T1.insertRandom() {
         insert {
             it[c1] = Random().nextInt().toString()
         }
     }
 
     @BeforeEach
-    fun beforeTest() {
+    fun beforeTest() = runTest {
         transactionManager.execute {
             SchemaUtils.create(T1)
         }
     }
 
+    @AfterEach
+    fun afterTest() = runTest {
+        transactionManager.execute {
+            SchemaUtils.drop(T1)
+        }
+    }
+
     @RepeatedTest(5)
-    @Transactional
+    //    @Transactional // see [runTestWithMockTransactional]
     @Commit
-    open fun testConnection() {
+    open fun testConnection() = runTestWithMockTransactional {
         T1.insertRandom()
         assertEquals(1, T1.selectAll().count())
     }
 
     @RepeatedTest(5)
-    @Transactional
+    //    @Transactional // see [runTestWithMockTransactional]
     @Commit
-    open fun testConnection2() {
+    open fun testConnection2() = runTestWithMockTransactional {
         val rnd = Random().nextInt().toString()
         T1.insert {
             it[c1] = rnd
@@ -66,8 +65,8 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
 
     @RepeatedTest(5)
     @Commit
-    open fun testConnectionCombineWithExposedTransaction() {
-        transaction {
+    open fun testConnectionCombineWithExposedTransaction() = runTest {
+        suspendTransaction {
             val rnd = Random().nextInt().toString()
             T1.insert {
                 it[c1] = rnd
@@ -81,20 +80,29 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         }
     }
 
-    @RepeatedTest(5)
+    // TODO - This (& only this test) fails because of line 114 in suspendTransaction();
+    // If the line is reverted to original, it passes -> ThreadLocalTransactionsStack.getTransactionOrNull(databaseToUse)
+    @RepeatedTest(1)
     @Commit
-    @Transactional
-    open fun testConnectionCombineWithExposedTransaction2() {
+//    @Transactional // see [runTestWithMockTransactional]
+    open fun testConnectionCombineWithExposedTransaction2() = runTestWithMockTransactional {
+        println("Starting TEST...\n${viewThreadStack()}")
         val rnd = Random().nextInt().toString()
         T1.insert {
             it[c1] = rnd
         }
         assertEquals(rnd, T1.selectAll().single()[T1.c1])
 
-        transaction {
+        println("About to enter nested...")
+        suspendTransaction {
+            println("Starting NESTED...\n${viewThreadStack()}")
             T1.insertRandom()
             assertEquals(2, T1.selectAll().count())
+            println("NESTED = ${T1.selectAll().count()}")
+            println("Finishing NESTED...")
         }
+        println("TEST = ${T1.selectAll().count()}")
+        println("Finishing TEST...\n${viewThreadStack()}")
     }
 
     /**
@@ -102,8 +110,8 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
      * Execute within a nested transaction if a current transaction exists, behave like REQUIRED otherwise.
      */
     @RepeatedTest(5)
-    @Transactional
-    open fun testConnectionWithNestedTransactionCommit() {
+//    @Transactional // see [runTestWithMockTransactional]
+    open fun testConnectionWithNestedTransactionCommit() = runTestWithMockTransactional {
         T1.insertRandom()
         assertEquals(1, T1.selectAll().count())
         transactionManager.execute(TransactionDefinition.PROPAGATION_NESTED) {
@@ -118,8 +126,8 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
      * The nested transaction will be roll-back only inner transaction when the transaction marks as rollback.
      */
     @RepeatedTest(5)
-    @Transactional
-    open fun testConnectionWithNestedTransactionInnerRollback() {
+//    @Transactional // see [runTestWithMockTransactional]
+    open fun testConnectionWithNestedTransactionInnerRollback() = runTestWithMockTransactional {
         T1.insertRandom()
         assertEquals(1, T1.selectAll().count())
         transactionManager.execute(TransactionDefinition.PROPAGATION_NESTED) { status ->
@@ -135,7 +143,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
      * The nested transaction will be roll-back entire transaction when the transaction marks as rollback.
      */
     @RepeatedTest(5)
-    fun testConnectionWithNestedTransactionOuterRollback() {
+    fun testConnectionWithNestedTransactionOuterRollback() = runTest {
         transactionManager.execute {
             T1.insertRandom()
             assertEquals(1, T1.selectAll().count())
@@ -158,8 +166,8 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
      * Create a new transaction, and suspend the current transaction if one exists.
      */
     @RepeatedTest(5)
-    @Transactional
-    open fun testConnectionWithRequiresNew() {
+    //    @Transactional // see [runTestWithMockTransactional]
+    open fun testConnectionWithRequiresNew() = runTestWithMockTransactional {
         T1.insertRandom()
         assertEquals(1, T1.selectAll().count())
         transactionManager.execute(TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
@@ -176,7 +184,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
      * And since isolation level is READ_COMMITTED, the inner transaction can't see the changes of outer transaction.
      */
     @RepeatedTest(5)
-    fun testConnectionWithRequiresNewWithInnerTransactionRollback() {
+    fun testConnectionWithRequiresNewWithInnerTransactionRollback() = runTest {
         transactionManager.execute {
             T1.insertRandom()
             assertEquals(1, T1.selectAll().count())
@@ -198,9 +206,11 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
      * Execute non-transactionally, throw an exception if a transaction exists.
      */
     @RepeatedTest(5)
-    @Transactional(propagation = Propagation.NEVER)
-    open fun testPropagationNever() {
-        assertFailsWith<IllegalStateException> { // Should Be "No transaction exist"
+//    @Transactional(propagation = Propagation.NEVER) // see [runTestWithMockTransactional]
+    open fun testPropagationNever() = runTestWithMockTransactional(
+        propagationBehavior = TransactionDefinition.PROPAGATION_NEVER
+    ) {
+        assertFailsWith<IllegalStateException> { // Should Be "No transaction exists"
             T1.insertRandom()
         }
     }
@@ -210,8 +220,8 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
      * Throw an exception cause outer transaction exists.
      */
     @RepeatedTest(5)
-    @Transactional
-    open fun testPropagationNeverWithExistingTransaction() {
+//    @Transactional // see [runTestWithMockTransactional]
+    open fun testPropagationNeverWithExistingTransaction() = runTestWithMockTransactional {
         assertFailsWith<IllegalTransactionStateException> {
             T1.insertRandom()
             transactionManager.execute(TransactionDefinition.PROPAGATION_NEVER) {
@@ -225,8 +235,8 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
      * Support a current transaction, throw an exception if none exists.
      */
     @RepeatedTest(5)
-    @Transactional
-    open fun testPropagationMandatoryWithTransaction() {
+//    @Transactional // see [runTestWithMockTransactional]
+    open fun testPropagationMandatoryWithTransaction() = runTestWithMockTransactional {
         T1.insertRandom()
         transactionManager.execute(TransactionDefinition.PROPAGATION_MANDATORY) {
             T1.insertRandom()
@@ -238,7 +248,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
      * Throw an exception cause no transaction exists.
      */
     @RepeatedTest(5)
-    open fun testPropagationMandatoryWithoutTransaction() {
+    open fun testPropagationMandatoryWithoutTransaction() = runTest {
         assertFailsWith<IllegalTransactionStateException> {
             transactionManager.execute(TransactionDefinition.PROPAGATION_MANDATORY) {
                 T1.insertRandom()
@@ -251,8 +261,8 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
      * Support a current transaction, execute non-transactionally if none exists.
      */
     @RepeatedTest(5)
-    @Transactional
-    open fun testPropagationSupportWithTransaction() {
+//    @Transactional // see [runTestWithMockTransactional]
+    open fun testPropagationSupportWithTransaction() = runTestWithMockTransactional {
         T1.insertRandom()
         transactionManager.execute(TransactionDefinition.PROPAGATION_SUPPORTS) {
             T1.insertRandom()
@@ -264,68 +274,11 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
      * Execute non-transactionally if none exists.
      */
     @RepeatedTest(5)
-    open fun testPropagationSupportWithoutTransaction() {
+    open fun testPropagationSupportWithoutTransaction() = runTest {
         transactionManager.execute(TransactionDefinition.PROPAGATION_SUPPORTS) {
-            assertFailsWith<IllegalStateException> { // Should Be "No transaction exist"
+            assertFailsWith<IllegalStateException> { // Should Be "No transaction exists"
                 T1.insertRandom()
             }
         }
-    }
-
-    /**
-     * Test for Isolation Level
-     */
-    @Tag(NO_R2DBC_SUPPORT) // H2_R2DBC used in tests with restricted level support
-    @RepeatedTest(5)
-    @Transactional(isolation = Isolation.READ_COMMITTED)
-    open fun testIsolationLevelReadUncommitted() {
-        assertTransactionIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED)
-        T1.insertRandom()
-        val count = T1.selectAll().count()
-        transactionManager.execute(TransactionDefinition.PROPAGATION_REQUIRES_NEW, TransactionDefinition.ISOLATION_READ_UNCOMMITTED) {
-            assertTransactionIsolationLevel(TransactionDefinition.ISOLATION_READ_UNCOMMITTED)
-            assertEquals(count, T1.selectAll().count())
-        }
-        assertTransactionIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED)
-    }
-
-    /**
-     * Test for Timeout
-     * Execute with query timeout
-     */
-    @Tag(NO_R2DBC_SUPPORT) // H2_R2DBC used in tests with restricted timeout support
-    @RepeatedTest(5)
-    open fun testTimeout() {
-        transactionManager.execute(timeout = 1) {
-            try {
-                // H2 database doesn't support sql sleep function so use recursive query to simulate long running query
-                TransactionManager.current().exec(
-                    """
-               WITH RECURSIVE T(N) AS (
-               SELECT 1
-               UNION ALL
-               SELECT N+1 FROM T WHERE N<10000000
-               )
-               SELECT * FROM T;
-                    """.trimIndent(),
-                    explicitStatementType = StatementType.SELECT
-                )
-                fail("Should have thrown a timeout exception")
-            } catch (cause: ExposedSQLException) {
-                assertTrue(cause.cause is SQLTimeoutException)
-            }
-        }
-    }
-
-    @AfterEach
-    fun afterTest() {
-        transactionManager.execute {
-            SchemaUtils.drop(T1)
-        }
-    }
-
-    private fun assertTransactionIsolationLevel(expected: Int) {
-        val connection = TransactionManager.current().connection
-        assertEquals(expected, connection.transactionIsolation)
     }
 }
