@@ -54,9 +54,6 @@ class SpringReactiveTransactionManagerTest {
         databaseBeforeTestStart = TransactionManager.primaryDatabase
         con1.clearMock()
         con2.clearMock()
-
-        // TODO - this should not be done, but transactions are not being popped on original thread after coroutine switches thread
-//        ThreadLocalTransactionsStack.threadTransactions()?.clear()
     }
 
     @BeforeEach
