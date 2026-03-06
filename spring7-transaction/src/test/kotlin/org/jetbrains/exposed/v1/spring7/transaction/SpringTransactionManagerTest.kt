@@ -165,7 +165,10 @@ class SpringTransactionManagerTest {
         assertEquals(1, con1.closeCallCount)
     }
 
-    @Tag(NO_R2DBC_SUPPORT) // https://github.com/spring-projects/spring-data-relational/issues/2026
+    // LazyConnectionDataSourceProxy has no R2DBC equivalent
+    // https://github.com/spring-projects/spring-framework/issues/33897
+    // https://github.com/spring-projects/spring-data-relational/issues/2026
+    @Tag(NO_R2DBC_SUPPORT)
     @Test
     fun `transaction commit with lazy connection data source proxy`() {
         val lazyDs = LazyConnectionDataSourceProxy(ds1)
@@ -175,7 +178,10 @@ class SpringTransactionManagerTest {
         assertEquals(1, con1.closeCallCount)
     }
 
-    @Tag(NO_R2DBC_SUPPORT) // https://github.com/spring-projects/spring-data-relational/issues/2026
+    // LazyConnectionDataSourceProxy has no R2DBC equivalent
+    // https://github.com/spring-projects/spring-framework/issues/33897
+    // https://github.com/spring-projects/spring-data-relational/issues/2026
+    @Tag(NO_R2DBC_SUPPORT)
     @Test
     fun `transaction rollback with lazy connection data source proxy`() {
         val lazyDs = LazyConnectionDataSourceProxy(ds1)
@@ -220,7 +226,9 @@ class SpringTransactionManagerTest {
         assertTrue(con1.closeCallCount > 0)
     }
 
-    @Tag(NOT_APPLICABLE_TO_R2DBC) // no equivalent isRollbackOnCommitFailure property
+    // Rollback following commit failure was purposefully removed from Spring R2DBC
+    // https://github.com/spring-projects/spring-framework/pull/27572
+    @Tag(NOT_APPLICABLE_TO_R2DBC)
     @Test
     fun `transaction exception on commit and rollback on commit failure`() {
         con1.mockCommit = { throw SQLException("Commit failure") }
