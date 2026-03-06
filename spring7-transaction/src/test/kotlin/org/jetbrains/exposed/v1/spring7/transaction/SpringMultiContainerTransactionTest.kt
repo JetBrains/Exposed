@@ -7,10 +7,8 @@ import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.tests.NO_R2DBC_SUPPORT
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean
@@ -22,7 +20,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 import org.springframework.transaction.annotation.Transactional
 import javax.sql.DataSource
 
-@Tag(NO_R2DBC_SUPPORT)
 open class SpringMultiContainerTransactionTest {
 
     val orderContainer = AnnotationConfigApplicationContext(OrderConfig::class.java)
