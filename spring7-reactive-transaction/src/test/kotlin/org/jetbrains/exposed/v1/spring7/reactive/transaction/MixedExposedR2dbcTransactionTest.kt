@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.r2dbc.core.DatabaseClient
+import org.springframework.r2dbc.core.awaitRowsUpdated
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
@@ -154,7 +155,7 @@ open class MixedTransactionService {
             .bind("id", UUID.randomUUID())
             .bind("name", "Test${nextNameIndex++}")
             .fetch()
-            .rowsUpdated()
+            .awaitRowsUpdated()
 
         @Suppress("UseCheckOrError")
         if (fail) {

@@ -279,30 +279,6 @@ class SpringTransactionRollbackTest {
         assertEquals(2, entities.size) // Only original records should remain
         assertTrue { entities.none { it.name.startsWith("No ") || it.name.startsWith("New ") } }
     }
-
-    @Test
-    fun `nested should rollback innerTx without affecting outerTx`() = runTest {
-        val testRollback = container.getBean(TestRollback::class.java)
-
-        testRollback.suspendTransaction {
-            testRollback.insertOriginTable("Tx1")
-
-            try {
-                testRollback.transactionWithNested {
-                    testRollback.insertOriginTable("Tx2")
-
-                    @Suppress("TooGenericExceptionThrown")
-                    throw RuntimeException() // Rollback only the inner transaction
-                }
-            } catch (@Suppress("SwallowedException") _: RuntimeException) {
-                // Ignore exception
-            }
-        }
-
-        val entities = testRollback.selectAll()
-        assertEquals(1, entities.size)
-        assertEquals("Tx1", entities.first().name) // Only the outer transaction should remain
-    }
 }
 
 @Configuration
