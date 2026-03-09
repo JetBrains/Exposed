@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.v1.r2dbc.transactions
 
 import io.r2dbc.spi.IsolationLevel
-import kotlinx.coroutines.currentCoroutineContext
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
@@ -65,23 +64,23 @@ internal fun R2dbcTransactionManager.createTransactionContext(transaction: Trans
 }
 
 /**
- * Returns the current R2DBC transaction from the coroutine context, or null if none exists.
+ * Returns the current R2DBC transaction from the stack, or null if none exists.
  *
- * This method performs type checking to ensure the transaction in the context is actually
- * an [R2dbcTransaction]. If a non-R2DBC transaction is found in the context, an error is thrown
+ * This method performs type checking to ensure the transaction in the stack is actually
+ * an [R2dbcTransaction]. If a non-R2DBC transaction is found in the stack, an error is thrown
  * to prevent type confusion between JDBC and R2DBC transactions.
  *
- * @return The current [R2dbcTransaction] from the coroutine context, or null if no transaction exists
- * @throws [IllegalStateException] If the transaction in the context is not an [R2dbcTransaction]
+ * @return The current [R2dbcTransaction] from the stack, or null if no transaction exists
+ * @throws [IllegalStateException] If the transaction in the stack is not an [R2dbcTransaction]
  */
-internal suspend fun R2dbcTransactionManager.getCurrentContextTransaction(): R2dbcTransaction? {
+internal fun R2dbcTransactionManager.getCurrentStackTransaction(): R2dbcTransaction? {
     @OptIn(InternalApi::class)
-    val transaction = currentCoroutineContext()[contextKey]?.transaction
+    val transaction = ThreadLocalTransactionsStack.getTransactionOrNull(db)
     return when {
         transaction == null -> null
         transaction is R2dbcTransaction -> transaction
         else -> error(
-            "Expected R2dbcTransaction in coroutine context but found ${transaction::class.simpleName}. " +
+            "Expected R2dbcTransaction in stack but found ${transaction::class.simpleName}. " +
                 "This may indicate mixing JDBC and R2DBC transactions incorrectly."
         )
     }
