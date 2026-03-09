@@ -275,8 +275,10 @@ class SpringTransactionRollbackTest {
         assertTrue { entities.none { it.name.startsWith("No ") || it.name.startsWith("New ") } }
     }
 
-    // Left out because rollback involving Spring (partial) NESTED is not actually supported by Exposed;
-    // this test would fail with "Transaction manager does not allow nested transactions by default" if catch block removed
+    // Left out because rollback involving Spring (partial) NESTED is not actually fully supported by Exposed;
+    // this test would fail with "Transaction manager does not allow nested transactions by default" if catch block removed,
+    // not the artificial RuntimeException as expected
+    // https://youtrack.jetbrains.com/issue/EXPOSED-996/Reassess-support-for-Spring-PROPAGATIONNESTED
     @Tag(MISSING_R2DBC_TEST)
     @Test
     fun `nested should rollback innerTx without affecting outerTx`() {

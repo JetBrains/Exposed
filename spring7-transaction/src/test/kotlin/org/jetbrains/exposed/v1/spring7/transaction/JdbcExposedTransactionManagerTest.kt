@@ -17,7 +17,7 @@ import org.springframework.transaction.IllegalTransactionStateException
 import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
-import java.util.*
+import java.util.Random
 import javax.sql.DataSource
 import kotlin.test.assertFailsWith
 
