@@ -113,6 +113,34 @@ open class SpringMultiContainerTransactionTest {
         Assertions.assertEquals(1, orders.findAllWithExposedTrxBlock().size)
         Assertions.assertEquals(2, payments.findAllWithExposedTrxBlock().size)
     }
+
+    @Test
+    open fun test9() = runTest {
+        kotlin.runCatching {
+            orders.suspendTransaction {
+                orders.createWithExposedTrxBlock()
+                payments.createWithExposedTrxBlock()
+                throw SpringTransactionTestException()
+            }
+        }
+        Assertions.assertEquals(0, orders.findAllWithExposedTrxBlock().size)
+        Assertions.assertEquals(1, payments.findAllWithExposedTrxBlock().size)
+    }
+
+    @Test
+    open fun test10() = runTest {
+        kotlin.runCatching {
+            orders.suspendTransaction {
+                orders.createWithExposedTrxBlock()
+                payments.databaseTemplate {
+                    payments.createWithExposedTrxBlock()
+                    throw SpringTransactionTestException()
+                }
+            }
+        }
+        Assertions.assertEquals(0, orders.findAllWithExposedTrxBlock().size)
+        Assertions.assertEquals(0, payments.findAllWithExposedTrxBlock().size)
+    }
 }
 
 @Configuration

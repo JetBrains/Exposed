@@ -48,7 +48,14 @@ class R2dbcConnectionImpl(
 
     /**
      * Retrieves a publisher that provides only the single current underlying database [Connection] instance in use.
-     * If none is active, it awaits a value from the [connection] publisher and internally stores the result.
+     *
+     * If none is active, it awaits a value from the [connection] publisher and internally stores the result. Retrieval
+     * of a new value will invoke `Connection.beginTransaction()`, so this method should preferably be called when an active
+     * transaction is underway, in order to retrieve the accurate connection object instance.
+     *
+     * If this method is invoked intentionally to trigger the start of a transaction, then [setTransactionDefinition]
+     * should ideally be manually called first with the appropriate [TransactionDefinition], as well as any other
+     * [Connection] configuration methods.
      */
     override suspend fun activeConnection(): Publisher<out Connection> {
         // retrieves localConnection if not null, otherwise awaits value from connection publisher
