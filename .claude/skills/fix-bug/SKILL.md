@@ -19,7 +19,7 @@ The user provides one of:
 Parse the input to determine the source:
 
 1. **GitHub**: Extract the number, fetch via `gh issue view NUMBER --repo jetbrains/exposed`
-2. **YouTrack ID** (pattern `EXPOSED-\d+`): Fetch via the YouTrack MCP (see below)
+2. **YouTrack ID** (pattern `EXPOSED-XXXX`): Fetch via the YouTrack MCP (see below)
 3. **YouTrack URL**: Extract the `EXPOSED-XXXX` ID from the URL, then fetch via the YouTrack MCP (see below)
 
 ### Fetching YouTrack Issues
@@ -40,6 +40,7 @@ From the issue, extract:
 - **Steps to reproduce** (if provided)
 - **Expected vs actual behavior**
 - **Affected module(s)** — identify which Exposed Gradle module is relevant
+- **Affected databases** - identify which databases are affected by the issue, these databases could be used for reproducer tests first
 - **Issue comments** — read through comments as they might contain useful information (reproduction details, workarounds, related context)
 - **Issue ID** for branch naming and commit messages (e.g., `EXPOSED-1234` or `#123`)
 
@@ -102,14 +103,22 @@ Write a test that demonstrates the bug as described in the issue. The goal is:
 
 - **Minimal**: Only test the specific buggy behavior, nothing extra
 - **Clear**: Test name in backticks should describe what it checks (e.g., `` `requestWithEmptyBodyDoesntCausesNPE` ``)
-  - Comment of the test should say what is the issues that caused necessity in this test (e.g., `/* EXPOSED-9352 request with empty body causes NPE */`)
+    - Comment of the test should say what is the issues that caused necessity in this test (e.g., `/* EXPOSED-9352 request with empty body causes NPE */`)
 - **Failing**: The test MUST fail on the current codebase to confirm the bug exists
 
 Place the test appropriately:
 
-- There are 2 primary modules to put tests: `exposed-tests` and `exposed-r2dbc-tests`
-- Many features that are related to both types of drivers (jdbc and r2dbc) should have tests in both testing modules
-- If the feature related only to specific databases, other databases should be excluded from the test
+- **Primary test modules**: `exposed-tests` (JDBC) and `exposed-r2dbc-tests` (R2DBC)
+  - Core DSL and DAO functionality tests go here
+  - Many features that work with both drivers should have tests in both modules
+- **Extension module tests**: If the bug is in an extension module, add tests there:
+  - `exposed-java-time`, `exposed-jodatime`, `exposed-kotlin-datetime` for date/time issues
+  - `exposed-json` for JSON column type issues
+  - `exposed-crypt` for encrypted column issues
+  - `exposed-money` for monetary amount issues
+  - `exposed-migration-jdbc`, `exposed-migration-r2dbc` for migration issues
+  - `exposed-spring-boot-starter`, `spring-transaction` for Spring integration issues
+- **Database-specific tests**: If the feature is only relevant to specific databases, exclude other databases from the test using the `excludeSettings` parameter in test helper functions
 
 After writing the test, run it to confirm it fails:
 
@@ -148,7 +157,7 @@ Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
 
 For GitHub issues, use `#NUMBER` in the commit message. For YouTrack, use `EXPOSED-XXXX`.
 
-## Step 6: Plan and Implement the Fix
+## Step 6: Plan the Fix
 
 Analyze the bug based on what you learned from the issue and the reproducer test:
 
@@ -156,63 +165,91 @@ Analyze the bug based on what you learned from the issue and the reproducer test
 - Identify the root cause
 - Plan the minimal fix
 
-Implement the fix directly — do not present the plan to the user for approval. Keep changes minimal and focused:
+Present your analysis and plan to the user for review. Include:
+
+- **Root cause**: What is causing the bug?
+- **Proposed fix**: What changes will be made and where?
+- **Approach**: Why is this the right solution?
+- **Scope**: Confirm the fix is minimal and focused
+
+Wait for user approval before implementing.
+
+If user provides additional context, concerns, or feedback, take it into account, and repeat Step 6 with the new input
+
+## Step 7: Implement the Fix
+
+After receiving user approval, implement the planned fix. Keep changes minimal and focused:
 
 - Fix only the bug, do not refactor surrounding code
 - Do not add features beyond what's needed
 - Preserve existing comments and code style
 
-## Step 7: Validate the Fix
+## Step 8: Validate the Fix
 
-Run the reproducer test to confirm it passes:
+Run the reproducer test to confirm it now passes. Use the same test commands from Step 4:
 
 ```bash
-./gradlew :module-name:jvmTest --tests "fully.qualified.TestClassName.methodName"
+# For JDBC tests
+./gradlew :exposed-tests:test_h2_v2 --tests "fully.qualified.TestClassName.methodName"
+
+# For R2DBC tests
+./gradlew :exposed-r2dbc-tests:test_h2_v2 --tests "fully.qualified.TestClassName.methodName"
 ```
 
-Then run the full test suite for the affected module. Choose the scope based on where the changes are:
+After confirming the reproducer passes, optionally run the broader test suite for the affected module:
 
-- **JVM-only changes** (test and fix both in `jvm/`):
-  ```bash
-  ./gradlew :module-name:jvmTest
-  ```
-- **Common/multiplatform changes** (test or fix in `common/`, or the bug affects multiple platforms):
-  ```bash
-  ./gradlew :module-name:allTests
-  ```
+```bash
+# Run all H2 tests for the module
+./gradlew :exposed-tests:test_h2_v2
+./gradlew :exposed-r2dbc-tests:test_h2_v2
+
+# Or test against specific database if the fix is database-specific
+./gradlew :exposed-tests:test_postgres
+./gradlew :exposed-r2dbc-tests:test_postgres
+```
+
+Refer to Step 4 for the full list of available test commands and database-specific test tasks.
 
 If any tests fail, investigate and fix. Do not skip or disable tests.
 
-## Step 8: Format and Lint
+## Step 9: Code Style Validation
+
+Exposed uses Detekt for code style validation. Run the linter to check for any issues:
 
 ```bash
-./gradlew :module-name:formatKotlin :module-name:lintKotlin
+./gradlew detekt
 ```
 
-Fix any lint issues before proceeding.
+This validates code style across all modules according to the rules defined in `detekt/detekt-config.yml`.
 
-## Step 9: ABI Validation
+If Detekt reports any issues, fix them before proceeding. The build requires zero issues (max issues: 0).
 
-If the fix changed any `public` or `protected` API (new methods, changed signatures, etc.):
+## Step 10: API Documentation Update
+
+If the fix changed any `public` or `protected` API (new methods, changed signatures, etc.), update the API documentation:
 
 ```bash
-./gradlew :module-name:checkLegacyAbi
+./gradlew apiDump
 ```
 
-If it fails, update the ABI dumps:
+This command updates the Dokka API documentation files to reflect the public API changes.
+
+Stage any updated API files (`.api` files) along with the fix:
 
 ```bash
-./gradlew :module-name:updateLegacyAbi
+git add <api-files>
 ```
-
-Stage the updated `.api` files along with the fix.
 
 If no public API changed, skip this step.
 
-## Step 10: Commit the Fix
+## Step 11: Commit the Fix
 
 Exposed uses [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) for commit messages. If the fix
 has no breaking changes the prefix is `fix:`. If it introduces a breaking change, use `fix!:`.
+
+Be aware that the commit message will be validated on CI by the following regex:
+`"^(build|chore|ci|deprecate|docs|feat|fix|perf|refactor|revert|style|test)(!)?(\([^\)]*\))?:\s?(EXPOSED-[0-9]+\s?)?.+$"`
+(it's defined in `.github/workflows/commit-message-validation.yml` file)
 
 Stage and commit the fix:
 
@@ -223,7 +260,7 @@ git commit -m "fix: <ISSUE-ID> <Imperative description of the fix>
 Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
 ```
 
-## Step 11: Push and Create PR
+## Step 12: Push and Create PR
 
 Push the branch and create a PR:
 
@@ -231,7 +268,7 @@ Push the branch and create a PR:
 git push -u origin claude/<issue-id>-<short-description>
 ```
 
-Create the PR targeting the base branch chosen in Step 3. The title should follow the Conventional Commits format and the 
+Create the PR targeting the base branch chosen in Step 3. The title should follow the Conventional Commits format and the
 the commit message should have the following structure:
 
 ```bash
@@ -297,7 +334,7 @@ Call `mcp__youtrack__update_issue` with `customFields: {"State": "Ready for Revi
 
 If the YT MCP call fails, skip silently — the status update is not blocking.
 
-## Step 12: Documentation Issue (if needed)
+## Step 13: Documentation Issue (if needed)
 
 Assess whether the fix changes behavior that users rely on or that is described in the Exposed documentation. A documentation update is needed when:
 
