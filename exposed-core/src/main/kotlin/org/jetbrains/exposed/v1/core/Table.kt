@@ -655,6 +655,50 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      */
     open val primaryKey: PrimaryKey? = null
 
+    /**
+     * Table modifiers to be appended after the table definition.
+     *
+     * Commonly used for MySQL/MariaDB ENGINE specification, charset settings, and other
+     * database-specific table options that appear after the closing parenthesis.
+     *
+     * Example:
+     * ```kotlin
+     * object Users : Table("users") {
+     *     val id = integer("id")
+     *     override val primaryKey = PrimaryKey(id)
+     *     override val modifiers = listOf("ENGINE=InnoDB", "DEFAULT CHARSET=utf8mb4")
+     * }
+     * ```
+     *
+     * This will generate:
+     * ```sql
+     * CREATE TABLE users (id INT NOT NULL, PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+     * ```
+     */
+    open val modifiers: List<String> = emptyList()
+
+    /**
+     * Storage parameters to be included in the WITH clause.
+     *
+     * Used by PostgreSQL, SQL Server, and other databases for storage-specific options
+     * that appear in a WITH clause after the table definition.
+     *
+     * Example:
+     * ```kotlin
+     * object Users : Table("users") {
+     *     val id = integer("id")
+     *     override val primaryKey = PrimaryKey(id)
+     *     override val storageParameters = listOf("fillfactor=70", "autovacuum_enabled=false")
+     * }
+     * ```
+     *
+     * This will generate:
+     * ```sql
+     * CREATE TABLE users (id INT NOT NULL, PRIMARY KEY (id)) WITH (fillfactor=70, autovacuum_enabled=false)
+     * ```
+     */
+    open val storageParameters: List<String> = emptyList()
+
     // EntityID columns
 
     /** Converts the @receiver column to an [EntityID] column. */
@@ -1756,6 +1800,19 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
                 }
 
                 append(")")
+
+                // Add table modifiers (e.g., ENGINE=InnoDB for MySQL)
+                if (modifiers.isNotEmpty()) {
+                    append(" ")
+                    append(modifiers.joinToString(separator = " "))
+                }
+
+                // Add storage parameters in WITH clause (e.g., PostgreSQL, SQL Server)
+                if (storageParameters.isNotEmpty()) {
+                    append(" WITH (")
+                    append(storageParameters.joinToString(separator = ", "))
+                    append(")")
+                }
             }
         }
 

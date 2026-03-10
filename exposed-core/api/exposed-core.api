@@ -2371,9 +2371,11 @@ public class org/jetbrains/exposed/v1/core/Table : org/jetbrains/exposed/v1/core
 	public fun getDdl ()Ljava/util/List;
 	public final fun getForeignKeys ()Ljava/util/List;
 	public final fun getIndices ()Ljava/util/List;
+	public fun getModifiers ()Ljava/util/List;
 	public fun getPrimaryKey ()Lorg/jetbrains/exposed/v1/core/Table$PrimaryKey;
 	public final fun getSchemaName ()Ljava/lang/String;
 	public final fun getSequences ()Ljava/util/List;
+	public fun getStorageParameters ()Ljava/util/List;
 	public fun getTableName ()Ljava/lang/String;
 	public final fun getTableNameWithoutScheme ()Ljava/lang/String;
 	public final fun getTableNameWithoutSchemeSanitized ()Ljava/lang/String;

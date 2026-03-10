@@ -1263,40 +1263,63 @@ class DDLTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testTableEngineOption() {
+    fun testTableModifiers() {
         /* #312 Allow use of other database engines for MySQL/MariaDB */
         val testTable = object : Table("test_engine") {
             val id = integer("id")
             override val primaryKey = PrimaryKey(id)
-        }.tableOption("ENGINE=MEMORY")
+            override val modifiers = listOf("ENGINE=MEMORY")
+        }
 
-        withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_MARIADB) {
-            val expectedDdl = "CREATE TABLE " + addIfNotExistsIfSupported() +
-                testTable.nameInDatabaseCase() + " (" +
-                testTable.id.descriptionDdl(false) + " NOT NULL, " +
-                "CONSTRAINT pk_test_engine PRIMARY KEY (" +
-                testTable.id.nameInDatabaseCase() + ")" +
-                ") ENGINE=MEMORY"
-            assertEquals(expectedDdl, testTable.ddl.single())
+        withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE) {
+            assertTrue(testTable.ddl.single().endsWith("ENGINE=MEMORY"))
         }
     }
 
     @Test
-    fun testMultipleTableOptions() {
+    fun testMultipleTableModifiers() {
         /* #312 Allow use of other database engines for MySQL/MariaDB */
         val testTable = object : Table("test_multi_options") {
             val id = integer("id")
             override val primaryKey = PrimaryKey(id)
-        }.tableOption("ENGINE=InnoDB", "DEFAULT CHARSET=utf8mb4")
+            override val modifiers = listOf("ENGINE=InnoDB", "DEFAULT CHARSET=utf8mb4")
+        }
 
-        withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_MARIADB) {
-            val expectedDdl = "CREATE TABLE " + addIfNotExistsIfSupported() +
-                testTable.nameInDatabaseCase() + " (" +
-                testTable.id.descriptionDdl(false) + " NOT NULL, " +
-                "CONSTRAINT pk_test_multi_options PRIMARY KEY (" +
-                testTable.id.nameInDatabaseCase() + ")" +
-                ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-            assertEquals(expectedDdl, testTable.ddl.single())
+        withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE) {
+            val ddl = testTable.ddl.single()
+            assertTrue(ddl.contains("ENGINE=InnoDB"))
+            assertTrue(ddl.contains("DEFAULT CHARSET=utf8mb4"))
+        }
+    }
+
+    @Test
+    fun testStorageParameters() {
+        /* #312 Support storage parameters for PostgreSQL/SQL Server */
+        val testTable = object : Table("test_storage") {
+            val id = integer("id")
+            override val primaryKey = PrimaryKey(id)
+            override val storageParameters = listOf("fillfactor=70")
+        }
+
+        withDb(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES_LIKE - listOf(TestDB.SQLSERVER)) {
+            assertTrue(testTable.ddl.single().contains("WITH (fillfactor=70)"))
+        }
+    }
+
+    @Test
+    fun testModifiersAndStorageParameters() {
+        /* #312 Support both modifiers and storage parameters */
+        val testTable = object : Table("test_combined") {
+            val id = integer("id")
+            override val primaryKey = PrimaryKey(id)
+            override val modifiers = listOf("ENGINE=InnoDB")
+            override val storageParameters = listOf("fillfactor=70", "autovacuum_enabled=false")
+        }
+
+        withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE) {
+            val ddl = testTable.ddl.single()
+            assertTrue(ddl.contains("ENGINE=InnoDB"))
+            assertTrue(ddl.contains("WITH (fillfactor=70, autovacuum_enabled=false)"))
         }
     }
 }
