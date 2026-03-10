@@ -1261,4 +1261,42 @@ class DDLTests : DatabaseTestsBase() {
             }
         }
     }
+
+    @Test
+    fun testTableEngineOption() {
+        /* #312 Allow use of other database engines for MySQL/MariaDB */
+        val testTable = object : Table("test_engine") {
+            val id = integer("id")
+            override val primaryKey = PrimaryKey(id)
+        }.tableOption("ENGINE=MEMORY")
+
+        withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_MARIADB) {
+            val expectedDdl = "CREATE TABLE " + addIfNotExistsIfSupported() +
+                testTable.nameInDatabaseCase() + " (" +
+                testTable.id.descriptionDdl(false) + " NOT NULL, " +
+                "CONSTRAINT pk_test_engine PRIMARY KEY (" +
+                testTable.id.nameInDatabaseCase() + ")" +
+                ") ENGINE=MEMORY"
+            assertEquals(expectedDdl, testTable.ddl.single())
+        }
+    }
+
+    @Test
+    fun testMultipleTableOptions() {
+        /* #312 Allow use of other database engines for MySQL/MariaDB */
+        val testTable = object : Table("test_multi_options") {
+            val id = integer("id")
+            override val primaryKey = PrimaryKey(id)
+        }.tableOption("ENGINE=InnoDB", "DEFAULT CHARSET=utf8mb4")
+
+        withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_MARIADB) {
+            val expectedDdl = "CREATE TABLE " + addIfNotExistsIfSupported() +
+                testTable.nameInDatabaseCase() + " (" +
+                testTable.id.descriptionDdl(false) + " NOT NULL, " +
+                "CONSTRAINT pk_test_multi_options PRIMARY KEY (" +
+                testTable.id.nameInDatabaseCase() + ")" +
+                ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+            assertEquals(expectedDdl, testTable.ddl.single())
+        }
+    }
 }
