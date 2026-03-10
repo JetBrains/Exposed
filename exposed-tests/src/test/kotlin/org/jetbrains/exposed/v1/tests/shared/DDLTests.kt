@@ -1322,4 +1322,117 @@ class DDLTests : DatabaseTestsBase() {
             assertTrue(ddl.contains("WITH (fillfactor=70, autovacuum_enabled=false)"))
         }
     }
+
+    @Test
+    fun testTableWithMemoryEngineCreatedSuccessfully() {
+        /* #312 Verify table with MEMORY engine can be created and used */
+        val testTable = object : Table("test_memory_engine") {
+            val id = integer("id")
+            val name = varchar("name", 50)
+            override val primaryKey = PrimaryKey(id)
+            override val modifiers = listOf("ENGINE=MEMORY")
+        }
+
+        withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE) {
+            SchemaUtils.create(testTable)
+
+            // Insert test data
+            testTable.insert {
+                it[id] = 1
+                it[name] = "test"
+            }
+
+            // Verify data was inserted
+            val result = testTable.selectAll().single()
+            assertEquals(1, result[testTable.id])
+            assertEquals("test", result[testTable.name])
+
+            // Verify engine type from information_schema
+            if (currentDialectTest is MysqlDialect) {
+                val engineQuery = exec(
+                    "SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '${testTable.tableName}'"
+                ) { rs ->
+                    if (rs.next()) rs.getString(1) else null
+                }
+                assertEquals("MEMORY", engineQuery)
+            }
+
+            SchemaUtils.drop(testTable)
+        }
+    }
+
+    @Test
+    fun testTableWithCharsetModifierCreatedSuccessfully() {
+        /* #312 Verify table with charset modifier can be created */
+        val testTable = object : Table("test_charset") {
+            val id = integer("id")
+            val text = varchar("text", 100)
+            override val primaryKey = PrimaryKey(id)
+            override val modifiers = listOf("ENGINE=InnoDB", "DEFAULT CHARSET=utf8mb4")
+        }
+
+        withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE) {
+            SchemaUtils.create(testTable)
+
+            // Insert UTF-8 data including emoji
+            testTable.insert {
+                it[id] = 1
+                it[text] = "Hello 世界 🌍"
+            }
+
+            // Verify data was inserted correctly
+            val result = testTable.selectAll().single()
+            assertEquals("Hello 世界 🌍", result[testTable.text])
+
+            // Verify charset from information_schema
+            if (currentDialectTest is MysqlDialect) {
+                val charsetQuery = exec(
+                    "SELECT TABLE_COLLATION FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '${testTable.tableName}'"
+                ) { rs ->
+                    if (rs.next()) rs.getString(1) else null
+                }
+                assertTrue(charsetQuery?.startsWith("utf8mb4") == true)
+            }
+
+            SchemaUtils.drop(testTable)
+        }
+    }
+
+    @Test
+    fun testTableWithStorageParametersCreatedSuccessfully() {
+        /* #312 Verify table with storage parameters can be created */
+        val testTable = object : Table("test_storage_params") {
+            val id = integer("id")
+            val data = varchar("data", 100)
+            override val primaryKey = PrimaryKey(id)
+            override val storageParameters = listOf("fillfactor=70")
+        }
+
+        // Only test with real PostgreSQL, not H2 emulation
+        withDb(excludeSettings = TestDB.ALL - TestDB.POSTGRESQL - TestDB.POSTGRESQLNG) {
+            SchemaUtils.create(testTable)
+
+            // Insert test data
+            testTable.insert {
+                it[id] = 1
+                it[data] = "test data"
+            }
+
+            // Verify data was inserted
+            val result = testTable.selectAll().single()
+            assertEquals(1, result[testTable.id])
+            assertEquals("test data", result[testTable.data])
+
+            // Verify storage parameters from pg_class
+            val fillfactorQuery = exec(
+                "SELECT reloptions FROM pg_class WHERE relname = '${testTable.tableName}'"
+            ) { rs ->
+                if (rs.next()) rs.getArray(1)?.array as? Array<*> else null
+            }
+            val options = fillfactorQuery?.joinToString() ?: ""
+            assertTrue(options.contains("fillfactor=70"))
+
+            SchemaUtils.drop(testTable)
+        }
+    }
 }
