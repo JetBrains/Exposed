@@ -4,6 +4,7 @@ import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -44,6 +45,22 @@ class UuidColumnTypeTests : DatabaseTestsBase() {
             assertEquals(key, uidById)
             val uidByKey = node.selectAll().where { node.uuid eq key }.singleOrNull()?.get(node.uuid)
             assertEquals(key, uidByKey)
+        }
+    }
+
+    @Test
+    fun testNullableUuidColumnTypeExplicitInsert() {
+        val node = object : IntIdTable("node") {
+            val uuid = uuid("uuid").nullable()
+        }
+
+        withTables(node) {
+            val id = node.insertAndGetId { it[uuid] = null }
+            assertNotNull(id)
+            val uidById = node.selectAll().where { node.id eq id }.singleOrNull()?.get(node.uuid)
+            assertEquals(null, uidById)
+            val uidByKey = node.selectAll().where { node.uuid.isNull() }.singleOrNull()?.get(node.uuid)
+            assertEquals(null, uidByKey)
         }
     }
 
