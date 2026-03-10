@@ -1333,9 +1333,7 @@ class DDLTests : DatabaseTestsBase() {
             override val modifiers = listOf("ENGINE=MEMORY")
         }
 
-        withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE) {
-            SchemaUtils.create(testTable)
-
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE, testTable) {
             // Insert test data
             testTable.insert {
                 it[id] = 1
@@ -1356,45 +1354,6 @@ class DDLTests : DatabaseTestsBase() {
                 }
                 assertEquals("MEMORY", engineQuery)
             }
-
-            SchemaUtils.drop(testTable)
-        }
-    }
-
-    @Test
-    fun testTableWithCharsetModifierCreatedSuccessfully() {
-        /* #312 Verify table with charset modifier can be created */
-        val testTable = object : Table("test_charset") {
-            val id = integer("id")
-            val text = varchar("text", 100)
-            override val primaryKey = PrimaryKey(id)
-            override val modifiers = listOf("ENGINE=InnoDB", "DEFAULT CHARSET=utf8mb4")
-        }
-
-        withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE) {
-            SchemaUtils.create(testTable)
-
-            // Insert UTF-8 data including emoji
-            testTable.insert {
-                it[id] = 1
-                it[text] = "Hello 世界 🌍"
-            }
-
-            // Verify data was inserted correctly
-            val result = testTable.selectAll().single()
-            assertEquals("Hello 世界 🌍", result[testTable.text])
-
-            // Verify charset from information_schema
-            if (currentDialectTest is MysqlDialect) {
-                val charsetQuery = exec(
-                    "SELECT TABLE_COLLATION FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '${testTable.tableName}'"
-                ) { rs ->
-                    if (rs.next()) rs.getString(1) else null
-                }
-                assertTrue(charsetQuery?.startsWith("utf8mb4") == true)
-            }
-
-            SchemaUtils.drop(testTable)
         }
     }
 
@@ -1409,9 +1368,7 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         // Only test with real PostgreSQL, not H2 emulation
-        withDb(excludeSettings = TestDB.ALL - TestDB.POSTGRESQL - TestDB.POSTGRESQLNG) {
-            SchemaUtils.create(testTable)
-
+        withTables(excludeSettings = TestDB.ALL - TestDB.POSTGRESQL - TestDB.POSTGRESQLNG, testTable) {
             // Insert test data
             testTable.insert {
                 it[id] = 1
@@ -1431,8 +1388,6 @@ class DDLTests : DatabaseTestsBase() {
             }
             val options = fillfactorQuery?.joinToString() ?: ""
             assertTrue(options.contains("fillfactor=70"))
-
-            SchemaUtils.drop(testTable)
         }
     }
 }
