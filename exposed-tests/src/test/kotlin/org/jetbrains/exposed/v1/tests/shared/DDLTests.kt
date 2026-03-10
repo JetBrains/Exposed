@@ -1301,7 +1301,7 @@ class DDLTests : DatabaseTestsBase() {
             override val storageParameters = listOf("fillfactor=70")
         }
 
-        withDb(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES_LIKE - listOf(TestDB.SQLSERVER)) {
+        withDb(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES_LIKE - TestDB.SQLSERVER) {
             assertTrue(testTable.ddl.single().contains("WITH (fillfactor=70)"))
         }
     }
