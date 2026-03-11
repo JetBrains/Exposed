@@ -257,44 +257,67 @@ to `SERIAL` columns on `IdTable`).
 
 Sequences manually created with `CREATE SEQUENCE` and not linked to a table are ignored. No `DROP` statements are generated for such sequences.
 
-### Constraint changes
+### Constraint change detection
 
-Any detected changes to table and column constraints generally result in the generation of `DROP` and `CREATE/ALTER` statement pairs.
+Any detected changes to table and column constraints generally result in the generation of `DROP` and `CREATE` / `ALTER` statement pairs.
 The type of change that generates these migration statements depends on the type of constraint:
 
-- [`ForeignKeyConstraint`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-foreign-key-constraint/index.html):
-  Detects any mismatch in name, update rule, or delete rule.
-- [`Index`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-index/index.html):
-  Detects any mismatch in name, uniqueness, or columns involved. Differences in index type, index function, or filter conditions will not be detected.
-- [`CheckConstraint`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-check-constraint/index.html):
-  Detects any mismatch in name only. Differences in the boolean expression or condition used by this constraint will not be detected.
+- [`ForeignKeyConstraint`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-foreign-key-constraint/index.html) detects mismatches in name, update rule, or delete rule.
+- [`Index`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-index/index.html) detects mismatches in name, uniqueness, or columns involved. Differences in index type, index function, or filter conditions will not be detected.
+- [`CheckConstraint`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-check-constraint/index.html) detects mismatches in name only. Differences in the boolean expression or condition used by this constraint will not be detected.
 
-### Column changes
+### Column change detection
 
 A table's column can have multiple defining properties that need to be evaluated by Exposed's migration tools.
-The current set of detected changes are determined by [`ColumnDiff`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-column-diff/index.html)
-and include:
+Column changes are determined by [`ColumnDiff`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-column-diff/index.html).
 
-- **Name**: This typically results in a pair of statements being generated to add the new column and drop the old one. Changes to a name's case sensitivity
-  are usually ignored unless either the database does not auto-fold identifiers or the name has been quoted. SQLite, for example, is a database for which an
-  `ALTER... RENAME` statement will be specifically generated if a difference in case sensitivity is found.
-- **Nullability**
-- **Autoincrement status**
-- **Default values**: This only applies to default values that are primitives. The detection of changes to default expressions or functions may not be guaranteed.
-  Additionally, any column marked with [`.databaseGenerated()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/database-generated.html)
-  will have its default values excluded from the check to ensure that potential database-side defaults are not incorrectly removed.
-- **Type**: Full support for column type changes is currently only available when using H2.
-- **Size and Scale**: This is only applicable to column types that support these values, like `DECIMAL` and `CHAR`.
-- **Comment**
+Column properties, such as nullability, autoincrement status, and comments,
+are compared directly and result in appropriate migration statements.
+
+The following column properties have limitations in how changes are detected:
+
+* [Name](#column-name)
+* [Default values](#default-values)
+* [Type](#type)
+* [Size and scale](#size-and-scale)
+
+####  Name {id="column-name"}
+
+Renaming a column typically results in a pair of statements that add the new column and drop the old one.
+
+Changes to a name's case sensitivity are usually ignored unless the database does not auto-fold identifiers or the name
+is quoted.
+
+SQLite, for example, is a database for which an `ALTER... RENAME` statement will be specifically generated if a
+difference in case sensitivity is found.
+
+#### Default values {id="default-values"}
+
+Only primitive default values are reliably detected. The detection of changes to default expressions or functions may
+not be guaranteed.
+
+Additionally, any column marked with [`.databaseGenerated()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/database-generated.html)
+will have its default values excluded from the check to ensure that potential database-side defaults are not incorrectly removed.
+
+#### Type {id="type"}
+
+Full support for column type changes is currently only available when using H2.
+
+#### Size and scale {id="size-and-scale"}
+
+Detection applies only to column types that support these values, such as `DECIMAL` and `CHAR`.
+
+#### Custom column definitions
 
 It is also possible to configure a column's definition on table creation by marking it with [`.withDefinition()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/with-definition.html),
-which accepts any combination of strings and expressions to append to the SQL column syntax. These custom definitions however are not used when
-checking the difference between the Exposed table object and retrieved database metadata. For a more guaranteed migration workflow, it is recommended that
-more definitive column methods are used when built-in or customized directly.
+which accepts any combination of strings and expressions to append to the SQL column syntax.
+
+However, these custom definitions are not used when comparing the Exposed table object with database metadata. For a 
+more reliable migration workflow, prefer more definitive column methods whenever possible.
 
 For example, if your database supports column comments on table creation, marking a table column using `.withDefinition("COMMENT '...'")` and then changing the
-comment string value in the future will not trigger a migration statement. If the method [`.comment("...")`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/comment.html)
-is used instead, the string value will be properly compared with the comment retrieved from the database.
+comment string value in the future will not trigger a migration statement. If you use the [`.comment("...")`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/comment.html)
+method instead, the string value will be properly compared with the comment retrieved from the database.
 
 ## Feature requests
 
