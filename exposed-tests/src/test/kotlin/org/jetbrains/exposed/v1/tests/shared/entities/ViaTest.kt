@@ -381,4 +381,43 @@ class ViaTests : DatabaseTestsBase() {
             }
         }
     }
+
+    @Test
+    fun `testIncrementalAddOperationOnManyToManyRelationship`() { // #348 Add/remove operations on InnerTableLink references
+        withTables(NodesTable, NodeToNodes) {
+            val root = Node.new { name = "root" }
+            val child1 = Node.new { name = "child1" }
+            val child2 = Node.new { name = "child2" }
+            val child3 = Node.new { name = "child3" }
+
+            // Start with two children
+            root.children = SizedCollection(listOf(child1, child2))
+            assertEquals(2L, root.children.count())
+            assertEqualCollections(root.children, listOf(child1, child2))
+
+            // Add a third child incrementally (without reassigning the entire collection)
+            root.children.add(child3)
+            assertEquals(3L, root.children.count())
+            assertEqualCollections(root.children, listOf(child1, child2, child3))
+        }
+    }
+
+    @Test
+    fun `testIncrementalRemoveOperationOnManyToManyRelationship`() { // #348 Add/remove operations on InnerTableLink references
+        withTables(NodesTable, NodeToNodes) {
+            val root = Node.new { name = "root" }
+            val child1 = Node.new { name = "child1" }
+            val child2 = Node.new { name = "child2" }
+            val child3 = Node.new { name = "child3" }
+
+            // Start with three children
+            root.children = SizedCollection(listOf(child1, child2, child3))
+            assertEquals(3L, root.children.count())
+
+            // Remove one child incrementally (without reassigning the entire collection)
+            root.children.remove(child2)
+            assertEquals(2L, root.children.count())
+            assertEqualCollections(root.children, listOf(child1, child3))
+        }
+    }
 }
