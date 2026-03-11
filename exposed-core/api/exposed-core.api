@@ -4053,6 +4053,13 @@ public final class org/jetbrains/exposed/v1/core/vendors/ForUpdateOption$Oracle$
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class org/jetbrains/exposed/v1/core/vendors/ForUpdateOption$Oracle$ForUpdateSkipLocked : org/jetbrains/exposed/v1/core/vendors/ForUpdateOption {
+	public static final field INSTANCE Lorg/jetbrains/exposed/v1/core/vendors/ForUpdateOption$Oracle$ForUpdateSkipLocked;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class org/jetbrains/exposed/v1/core/vendors/ForUpdateOption$Oracle$ForUpdateWait : org/jetbrains/exposed/v1/core/vendors/ForUpdateOption {
 	public fun <init> (I)V
 }

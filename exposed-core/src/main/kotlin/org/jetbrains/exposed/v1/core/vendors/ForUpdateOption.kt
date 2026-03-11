@@ -128,5 +128,8 @@ sealed class ForUpdateOption(open val querySuffix: String) {
 
         /** Oracle clause that waits for the provided timeout until the row becomes available. */
         class ForUpdateWait(timeout: Int) : ForUpdateOption("FOR UPDATE WAIT $timeout")
+
+        /** Oracle clause that skips any rows that are already locked by other transactions. */
+        data object ForUpdateSkipLocked : ForUpdateOption("FOR UPDATE SKIP LOCKED")
     }
 }
