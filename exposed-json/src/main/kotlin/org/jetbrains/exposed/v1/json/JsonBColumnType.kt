@@ -4,7 +4,9 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.transactions.currentTransactionOrNull
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
@@ -26,7 +28,7 @@ class JsonBColumnType<T : Any>(
     override val usesBinaryFormat: Boolean = true
 
     override val needsBinaryFormatCast: Boolean = castToJsonFormat
-        get() = field && currentDialect is SQLiteDialect
+        get() = field && checkIfSqliteDialectIsAvailable()
 
     override fun sqlType(): String = when (currentDialect) {
         is H2Dialect -> (currentDialect as H2Dialect).originalDataTypeProvider.jsonBType()
@@ -43,6 +45,15 @@ class JsonBColumnType<T : Any>(
         return when (currentDialect) {
             is SQLiteDialect -> "(JSONB(${nonNullValueToString(value)}))"
             else -> super.nonNullValueAsDefaultString(value)
+        }
+    }
+
+    @OptIn(InternalApi::class)
+    private fun checkIfSqliteDialectIsAvailable(): Boolean {
+        return when (val dialectIfAvailable = currentTransactionOrNull()?.db?.dialect) {
+            // true by default if no transaction available to force all dialects to be cast
+            null -> return true
+            else -> dialectIfAvailable is SQLiteDialect
         }
     }
 }
