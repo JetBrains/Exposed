@@ -421,11 +421,9 @@ class JsonBColumnTests : R2dbcDatabaseTestsBase() {
 
         withTables(excludeSettings = binaryJsonNotSupportedDB, tester) { testDb ->
             // all db should switch both flags off
-            val actualWithFlag = (tester.withFlag.columnType as JsonBColumnType)
-                .needsBinaryFormatCast(testDb.db!!.dialect)
+            val actualWithFlag = (tester.withFlag.columnType as JsonBColumnType).needsBinaryFormatCast
             assertFalse(actualWithFlag)
-            val actualWithoutFlag = (tester.withoutFlag.columnType as JsonBColumnType)
-                .needsBinaryFormatCast(testDb.db!!.dialect)
+            val actualWithoutFlag = (tester.withoutFlag.columnType as JsonBColumnType).needsBinaryFormatCast
             assertFalse(actualWithoutFlag)
 
             val user = User("Pro", "Alpha")

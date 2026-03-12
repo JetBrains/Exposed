@@ -9,7 +9,6 @@ import org.jetbrains.exposed.v1.core.JsonColumnMarker
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.v1.core.statements.api.RowApi
-import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
@@ -27,7 +26,7 @@ open class JsonColumnType<T : Any>(
 ) : ColumnType<T>(), JsonColumnMarker {
     override val usesBinaryFormat: Boolean = false
 
-    override fun needsBinaryFormatCast(dialect: DatabaseDialect): Boolean = false
+    override val needsBinaryFormatCast: Boolean = false
 
     override fun sqlType(): String = currentDialect.dataTypeProvider.jsonType()
 

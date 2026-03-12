@@ -1424,14 +1424,14 @@ interface JsonColumnMarker {
     val usesBinaryFormat: Boolean
 
     /** Whether the column type needs to retrieve stored data in a format other than binary. */
-    fun needsBinaryFormatCast(dialect: DatabaseDialect): Boolean
+    val needsBinaryFormatCast: Boolean
 }
 
 /** Returns whether this column stores JSONB data in a format that requires casting to readable text when querying. */
-internal fun Column<*>.isJsonBColumnForCasting(dialect: DatabaseDialect = currentDialect): Boolean {
+internal fun Column<*>.isJsonBColumnForCasting(): Boolean {
     if (columnType !is JsonColumnMarker) return false
 
-    return columnType.usesBinaryFormat && columnType.needsBinaryFormatCast(dialect)
+    return columnType.usesBinaryFormat && columnType.needsBinaryFormatCast
 }
 
 /**

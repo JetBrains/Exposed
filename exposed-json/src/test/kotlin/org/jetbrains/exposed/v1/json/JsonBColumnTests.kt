@@ -453,11 +453,11 @@ class JsonBColumnTests : DatabaseTestsBase() {
         withTables(excludeSettings = binaryJsonNotSupportedDB, tester) { testDb ->
             // all db, other than SQLite, should switch flag off
             val expectedFlag = testDb == TestDB.SQLITE
-            val actualWithFlag = (tester.withFlag.columnType as JsonBColumnType).needsBinaryFormatCast(testDb.db!!.dialect)
+            val actualWithFlag = (tester.withFlag.columnType as JsonBColumnType).needsBinaryFormatCast
             assertEquals(expectedFlag, actualWithFlag)
 
             // all db should switch flag off
-            val actualWithoutFlag = (tester.withoutFlag.columnType as JsonBColumnType).needsBinaryFormatCast(testDb.db!!.dialect)
+            val actualWithoutFlag = (tester.withoutFlag.columnType as JsonBColumnType).needsBinaryFormatCast
             assertFalse(actualWithoutFlag)
 
             val user = User("Pro", "Alpha")
