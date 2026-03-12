@@ -1431,7 +1431,7 @@ interface JsonColumnMarker {
 internal fun Column<*>.isJsonBColumnForCasting(): Boolean {
     if (columnType !is JsonColumnMarker) return false
 
-    return columnType.usesBinaryFormat && columnType.needsBinaryFormatCast && currentDialect is SQLiteDialect
+    return columnType.usesBinaryFormat && columnType.needsBinaryFormatCast
 }
 
 /**
