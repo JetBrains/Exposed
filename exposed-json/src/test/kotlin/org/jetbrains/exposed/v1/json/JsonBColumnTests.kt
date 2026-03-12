@@ -492,6 +492,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Tag(MISSING_R2DBC_TEST)
     fun testFieldsOutsideTransaction() {
         lateinit var entity: MyEntity
         withTables(excludeSettings = binaryJsonNotSupportedDB, MyTable) {
