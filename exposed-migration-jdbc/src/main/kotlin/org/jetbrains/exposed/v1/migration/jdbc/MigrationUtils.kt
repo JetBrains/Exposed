@@ -311,7 +311,7 @@ object MigrationUtils : MigrationUtilityApi() {
      */
     @OptIn(InternalApi::class)
     private fun checkMissingCheckConstraints(vararg tables: Table, withLogs: Boolean): List<CheckConstraint> {
-        if (!currentDialect.supportsColumnTypeChange) {
+        if (!currentDialect.supportsAlterCheckConstraint) {
             return emptyList()
         }
 
@@ -319,8 +319,9 @@ object MigrationUtils : MigrationUtilityApi() {
         tables.forEach { table ->
             val mappedCheckConstraints = table.checkConstraints()
             val existingCheckConstraints = currentDialectMetadata.existingCheckConstraints(*tables)[table].orEmpty()
-            val existingCheckConstraintsNames = existingCheckConstraints.map { it.checkName.uppercase() }.toSet()
-            missingCheckConstraints.addAll(mappedCheckConstraints.filterNot { it.checkName.uppercase() in existingCheckConstraintsNames })
+            val existingCheckConstraintsNames = existingCheckConstraints.map { it.checkName.lowercase() }.toSet()
+
+            missingCheckConstraints.addAll(mappedCheckConstraints.filterNot { it.checkName.lowercase() in existingCheckConstraintsNames })
         }
         missingCheckConstraints.log("CHECK constraints missed from database (will be created):", withLogs)
         return missingCheckConstraints
@@ -334,7 +335,7 @@ object MigrationUtils : MigrationUtilityApi() {
      */
     @OptIn(InternalApi::class)
     private fun checkUnmappedCheckConstraints(vararg tables: Table, withLogs: Boolean): List<CheckConstraint> {
-        if (!currentDialect.supportsColumnTypeChange) {
+        if (!currentDialect.supportsAlterCheckConstraint) {
             return emptyList()
         }
 
@@ -342,9 +343,9 @@ object MigrationUtils : MigrationUtilityApi() {
         tables.forEach { table ->
             val mappedCheckConstraints = table.checkConstraints()
             val existingCheckConstraints = currentDialectMetadata.existingCheckConstraints(*tables)[table].orEmpty()
-            val mappedCheckConstraintsNames = mappedCheckConstraints.map { it.checkName.uppercase() }.toSet()
+            val mappedCheckConstraintsNames = mappedCheckConstraints.map { it.checkName.lowercase() }.toSet()
 
-            unmappedCheckConstraints.addAll(existingCheckConstraints.filterNot { it.checkName.uppercase() in mappedCheckConstraintsNames })
+            unmappedCheckConstraints.addAll(existingCheckConstraints.filterNot { it.checkName.lowercase() in mappedCheckConstraintsNames })
         }
         unmappedCheckConstraints.log("CHECK constraints exist in database and not mapped in code:", withLogs)
         return unmappedCheckConstraints

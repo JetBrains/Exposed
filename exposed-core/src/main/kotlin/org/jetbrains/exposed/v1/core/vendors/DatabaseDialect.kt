@@ -81,6 +81,9 @@ interface DatabaseDialect {
     /** Returns whether Exposed currently supports column type change in migrations for this dialect. */
     val supportsColumnTypeChange: Boolean get() = false
 
+    /** Returns `true` if the dialect supports ALTER TABLE with either an add or drop check constraint clause. */
+    val supportsAlterCheckConstraint: Boolean get() = true
+
     /** Returns `true` if the dialect supports `SELECT FOR UPDATE` statements, `false` otherwise. */
     @Deprecated(
         "The parameter was moved to JdbcExposedDatabaseMetadata/R2dbcExposedDatabaseMetadata classes",

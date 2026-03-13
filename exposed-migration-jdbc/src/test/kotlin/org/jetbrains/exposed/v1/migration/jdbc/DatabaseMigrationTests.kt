@@ -455,7 +455,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             // rely on SQL string + connection execution
             connection.metadata { databaseDialectMode }
             connection.metadata { supportsLimitWithUpdateOrDelete() }
-            if (currentDialectTest.supportsColumnTypeChange) {
+            if (currentDialectTest.supportsAlterCheckConstraint) {
                 currentDialectMetadataTest.existingCheckConstraints(tester)
             }
             currentDialectMetadataTest.sequences()

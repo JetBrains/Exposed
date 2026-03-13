@@ -443,7 +443,7 @@ class DatabaseMigrationTests : R2dbcDatabaseTestsBase() {
             currentDialectMetadataTest.allTablesNames()
             currentDialectMetadataTest.columnConstraints(tester)
             connection().metadata { getDatabaseDialectMode() }
-            if (currentDialectTest.supportsColumnTypeChange) {
+            if (currentDialectTest.supportsAlterCheckConstraint) {
                 currentDialectMetadataTest.existingCheckConstraints(tester)
             }
             currentDialectMetadataTest.sequences()
