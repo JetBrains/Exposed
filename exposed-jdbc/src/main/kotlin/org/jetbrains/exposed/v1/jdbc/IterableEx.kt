@@ -37,6 +37,54 @@ interface LazySizedIterable<T> : SizedIterable<T> {
     var loadedResult: List<T>?
 }
 
+/**
+ * Represents a mutable iterable of database elements that supports add/remove operations.
+ * Changes are tracked in memory and applied during entity flush.
+ */
+interface MutableSizedIterable<T> : SizedIterable<T> {
+    /**
+     * Adds the specified element to this collection.
+     * The change is tracked in memory and will be applied to the database during flush.
+     *
+     * @param element The element to add.
+     * @return `true` if the element was added, `false` if it was already present.
+     */
+    fun add(element: T): Boolean
+
+    /**
+     * Removes the specified element from this collection.
+     * The change is tracked in memory and will be applied to the database during flush.
+     *
+     * @param element The element to remove.
+     * @return `true` if the element was removed, `false` if it was not present.
+     */
+    fun remove(element: T): Boolean
+
+    /**
+     * Adds all elements from the specified collection to this collection.
+     * The changes are tracked in memory and will be applied to the database during flush.
+     *
+     * @param elements The collection of elements to add.
+     * @return `true` if any elements were added, `false` otherwise.
+     */
+    fun addAll(elements: Collection<T>): Boolean
+
+    /**
+     * Removes all elements from the specified collection from this collection.
+     * The changes are tracked in memory and will be applied to the database during flush.
+     *
+     * @param elements The collection of elements to remove.
+     * @return `true` if any elements were removed, `false` otherwise.
+     */
+    fun removeAll(elements: Collection<T>): Boolean
+
+    /**
+     * Removes all elements from this collection.
+     * The change is tracked in memory and will be applied to the database during flush.
+     */
+    fun clear()
+}
+
 /** Returns an [EmptySizedIterable]. */
 fun <T> emptySized(): SizedIterable<T> = EmptySizedIterable()
 
