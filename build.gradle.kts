@@ -73,6 +73,8 @@ allprojects {
     if (this.name != "exposed-tests" &&
         this.name != "exposed-r2dbc-tests" &&
         this.name != "exposed-jdbc-r2dbc-tests" &&
+        this.name != "exposed-dao-r2dbc-tests" &&
+        this.name != "exposed-dao-r2dbc" &&
         this != rootProject
     ) {
         apply(plugin = "com.vanniktech.maven.publish")
@@ -89,7 +91,7 @@ allprojects {
 }
 
 apiValidation {
-    ignoredProjects.addAll(listOf("exposed-tests", "exposed-bom", "exposed-r2dbc-tests", "exposed-jdbc-r2dbc-tests"))
+    ignoredProjects.addAll(listOf("exposed-tests", "exposed-bom", "exposed-r2dbc-tests", "exposed-jdbc-r2dbc-tests", "exposed-dao-r2dbc-tests"))
 }
 
 subprojects {
