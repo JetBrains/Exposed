@@ -100,6 +100,103 @@
                         include-lines="21-25" />
             <p>Depending on what DBMS you use, the types of columns could be different in actual SQL queries.</p>
         </chapter>
+        <chapter title="Table options" id="table-options">
+            <p>
+                Exposed allows you to specify database-specific table options using the <code>modifiers</code> and
+                <code>storageParameters</code> properties. These options are appended to the generated <code>CREATE TABLE</code>
+                statement.
+            </p>
+            <chapter title="Table modifiers" id="table-modifiers">
+                <p>
+                    The <code>modifiers</code> property accepts a list of strings that will be appended after the table
+                    definition. This is commonly used for MySQL/MariaDB storage engines and character set configurations:
+                </p>
+                <code-block lang="kotlin">
+                    object Users : Table("users") {
+                        val id = integer("id")
+                        val name = varchar("name", 50)
+                        override val primaryKey = PrimaryKey(id)
+                        override val modifiers = listOf("ENGINE=InnoDB", "DEFAULT CHARSET=utf8mb4")
+                    }
+                </code-block>
+                <p>This generates the following SQL:</p>
+                <code-block lang="sql">
+                    CREATE TABLE users (
+                        id INT NOT NULL,
+                        name VARCHAR(50) NOT NULL,
+                        PRIMARY KEY (id)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                </code-block>
+                <note>
+                    <p>
+                        Table modifiers are database-specific. Ensure that the options you specify are valid for your
+                        target database system.
+                    </p>
+                </note>
+            </chapter>
+            <chapter title="Storage parameters" id="storage-parameters">
+                <p>
+                    The <code>storageParameters</code> property accepts a list of strings that will be included in a
+                    <code>WITH</code> clause. This is used by PostgreSQL, SQL Server, and other databases for
+                    storage-specific options:
+                </p>
+                <code-block lang="kotlin">
+                    object LargeDataTable : Table("large_data") {
+                        val id = integer("id")
+                        val data = text("data")
+                        override val primaryKey = PrimaryKey(id)
+                        override val storageParameters = listOf("fillfactor=70", "autovacuum_enabled=false")
+                    }
+                </code-block>
+                <p>This generates the following SQL for PostgreSQL:</p>
+                <code-block lang="sql">
+                    CREATE TABLE large_data (
+                        id INT NOT NULL,
+                        data TEXT NOT NULL,
+                        PRIMARY KEY (id)
+                    ) WITH (fillfactor=70, autovacuum_enabled=false)
+                </code-block>
+                <tip>
+                    <p>
+                        You can use both <code>modifiers</code> and <code>storageParameters</code> together if your
+                        database supports it, although this is uncommon in practice.
+                    </p>
+                </tip>
+            </chapter>
+            <chapter title="Common use cases" id="table-options-use-cases">
+                <p>Here are some common scenarios where table options are useful:</p>
+                <deflist>
+                    <def title="MySQL/MariaDB Storage Engines">
+                        <p>
+                            Specify the storage engine for tables that need specific features:
+                        </p>
+                        <list>
+                            <li><code>ENGINE=InnoDB</code> - Default engine with transaction support and foreign keys</li>
+                            <li><code>ENGINE=MEMORY</code> - In-memory tables for temporary or cache data</li>
+                            <li><code>ENGINE=MyISAM</code> - Legacy engine for read-heavy workloads</li>
+                        </list>
+                    </def>
+                    <def title="Character Set and Collation">
+                        <p>
+                            Configure character encoding for international applications:
+                        </p>
+                        <code-block lang="kotlin">
+                            override val modifiers = listOf("DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci")
+                        </code-block>
+                    </def>
+                    <def title="PostgreSQL Storage Parameters">
+                        <p>
+                            Optimize table storage and performance:
+                        </p>
+                        <list>
+                            <li><code>fillfactor=70</code> - Reserve space for updates to reduce table bloat</li>
+                            <li><code>autovacuum_enabled=false</code> - Disable automatic vacuum for specific tables</li>
+                            <li><code>toast_tuple_target=8160</code> - Configure TOAST storage behavior</li>
+                        </list>
+                    </def>
+                </deflist>
+            </chapter>
+        </chapter>
     </chapter>
 
     <chapter title="Constraints" id="constraints">

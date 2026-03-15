@@ -1261,4 +1261,133 @@ class DDLTests : DatabaseTestsBase() {
             }
         }
     }
+
+    @Test
+    fun testTableModifiers() {
+        /* #312 Allow use of other database engines for MySQL/MariaDB */
+        val testTable = object : Table("test_engine") {
+            val id = integer("id")
+            override val primaryKey = PrimaryKey(id)
+            override val modifiers = listOf("ENGINE=MEMORY")
+        }
+
+        withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE) {
+            assertTrue(testTable.ddl.single().endsWith("ENGINE=MEMORY"))
+        }
+    }
+
+    @Test
+    fun testMultipleTableModifiers() {
+        /* #312 Allow use of other database engines for MySQL/MariaDB */
+        val testTable = object : Table("test_multi_options") {
+            val id = integer("id")
+            override val primaryKey = PrimaryKey(id)
+            override val modifiers = listOf("ENGINE=InnoDB", "DEFAULT CHARSET=utf8mb4")
+        }
+
+        withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE) {
+            val ddl = testTable.ddl.single()
+            assertTrue(ddl.contains("ENGINE=InnoDB"))
+            assertTrue(ddl.contains("DEFAULT CHARSET=utf8mb4"))
+        }
+    }
+
+    @Test
+    fun testStorageParameters() {
+        /* #312 Support storage parameters for PostgreSQL/SQL Server */
+        val testTable = object : Table("test_storage") {
+            val id = integer("id")
+            override val primaryKey = PrimaryKey(id)
+            override val storageParameters = listOf("fillfactor=70")
+        }
+
+        withDb(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES_LIKE - TestDB.SQLSERVER) {
+            assertTrue(testTable.ddl.single().contains("WITH (fillfactor=70)"))
+        }
+    }
+
+    @Test
+    fun testModifiersAndStorageParameters() {
+        /* #312 Support both modifiers and storage parameters */
+        val testTable = object : Table("test_combined") {
+            val id = integer("id")
+            override val primaryKey = PrimaryKey(id)
+            override val modifiers = listOf("ENGINE=InnoDB")
+            override val storageParameters = listOf("fillfactor=70", "autovacuum_enabled=false")
+        }
+
+        withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE) {
+            val ddl = testTable.ddl.single()
+            assertTrue(ddl.contains("ENGINE=InnoDB"))
+            assertTrue(ddl.contains("WITH (fillfactor=70, autovacuum_enabled=false)"))
+        }
+    }
+
+    @Test
+    fun testTableWithMemoryEngineCreatedSuccessfully() {
+        /* #312 Verify table with MEMORY engine can be created and used */
+        val testTable = object : Table("test_memory_engine") {
+            val id = integer("id")
+            val name = varchar("name", 50)
+            override val primaryKey = PrimaryKey(id)
+            override val modifiers = listOf("ENGINE=MEMORY")
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE, testTable) {
+            // Insert test data
+            testTable.insert {
+                it[id] = 1
+                it[name] = "test"
+            }
+
+            // Verify data was inserted
+            val result = testTable.selectAll().single()
+            assertEquals(1, result[testTable.id])
+            assertEquals("test", result[testTable.name])
+
+            // Verify engine type from information_schema
+            if (currentDialectTest is MysqlDialect) {
+                val engineQuery = exec(
+                    "SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '${testTable.tableName}'"
+                ) { rs ->
+                    if (rs.next()) rs.getString(1) else null
+                }
+                assertEquals("MEMORY", engineQuery)
+            }
+        }
+    }
+
+    @Test
+    fun testTableWithStorageParametersCreatedSuccessfully() {
+        /* #312 Verify table with storage parameters can be created */
+        val testTable = object : Table("test_storage_params") {
+            val id = integer("id")
+            val data = varchar("data", 100)
+            override val primaryKey = PrimaryKey(id)
+            override val storageParameters = listOf("fillfactor=70")
+        }
+
+        // Only test with real PostgreSQL, not H2 emulation
+        withTables(excludeSettings = TestDB.ALL - TestDB.POSTGRESQL - TestDB.POSTGRESQLNG, testTable) {
+            // Insert test data
+            testTable.insert {
+                it[id] = 1
+                it[data] = "test data"
+            }
+
+            // Verify data was inserted
+            val result = testTable.selectAll().single()
+            assertEquals(1, result[testTable.id])
+            assertEquals("test data", result[testTable.data])
+
+            // Verify storage parameters from pg_class
+            val fillfactorQuery = exec(
+                "SELECT reloptions FROM pg_class WHERE relname = '${testTable.tableName}'"
+            ) { rs ->
+                if (rs.next()) rs.getArray(1)?.array as? Array<*> else null
+            }
+            val options = fillfactorQuery?.joinToString() ?: ""
+            assertTrue(options.contains("fillfactor=70"))
+        }
+    }
 }
