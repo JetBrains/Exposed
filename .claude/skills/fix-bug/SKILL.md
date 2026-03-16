@@ -264,7 +264,6 @@ Skip this step when:
 The documentation website is located in the `documentation-website` directory:
 
 - **Topic files**: `documentation-website/Writerside/topics/` - XML files for each documentation page
-- **Code samples**: `documentation-website/Writerside/snippets/` - May include embedded code examples
 
 ### How to Update
 
@@ -277,14 +276,8 @@ The documentation website is located in the `documentation-website` directory:
     - Add new sections for new features with clear examples
     - Update existing examples if API changed
     - Add notes or callouts for important behavior changes
-    - Include code samples demonstrating the new functionality
 
-3. **Update code samples**:
-    - Ensure code examples are syntactically correct
-    - Use realistic, clear examples that users can adapt
-    - Include comments explaining key points
-
-4. **Test locally** (if possible):
+3. **Test locally** (if possible):
     - Check if there's a preview or build command in the documentation-website directory
     - Verify that examples compile and make sense in context
 

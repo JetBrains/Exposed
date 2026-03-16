@@ -656,48 +656,75 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     open val primaryKey: PrimaryKey? = null
 
     /**
-     * Table modifiers to be appended after the table definition.
+     * Table options to be appended at the very end of the CREATE TABLE statement,
+     * after the closing parenthesis of the column definitions block.
      *
      * Commonly used for MySQL/MariaDB ENGINE specification, charset settings, and other
-     * database-specific table options that appear after the closing parenthesis.
+     * database-specific table options.
+     *
+     * **Important**: Table options are only applied during table creation. They are **not tracked**
+     * by Exposed's migration system. If you change an option (e.g., from `ENGINE=MyISAM` to `ENGINE=InnoDB`),
+     * the migration system will not detect this change. You must manually create ALTER TABLE statements
+     * or recreate the table to apply option changes.
      *
      * Example:
      * ```kotlin
      * object Users : Table("users") {
      *     val id = integer("id")
      *     override val primaryKey = PrimaryKey(id)
-     *     override val modifiers = listOf("ENGINE=InnoDB", "DEFAULT CHARSET=utf8mb4")
+     *     override val options = listOf(
+     *         EngineModifier(TableEngine.INNODB),
+     *         CharsetModifier("utf8mb4")
+     *     )
      * }
      * ```
      *
      * This will generate:
      * ```sql
-     * CREATE TABLE users (id INT NOT NULL, PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+     * CREATE TABLE users (
+     *     id INT NOT NULL,
+     *     PRIMARY KEY (id)
+     * ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
      * ```
+     *
+     * The table options appear after the `)` that closes the column definitions.
      */
-    open val modifiers: List<String> = emptyList()
+    open val options: List<TableModifier> = emptyList()
 
     /**
-     * Storage parameters to be included in the WITH clause.
+     * Storage parameters to be included in the WITH clause at the very end of the CREATE TABLE statement,
+     * after the closing parenthesis of the column definitions block and after any table modifiers.
      *
-     * Used by PostgreSQL, SQL Server, and other databases for storage-specific options
-     * that appear in a WITH clause after the table definition.
+     * Used by PostgreSQL, SQL Server, and other databases for storage-specific options.
+     *
+     * **Important**: Storage parameters are only applied during table creation. They are **not tracked**
+     * by Exposed's migration system. If you change a storage parameter (e.g., from `fillfactor=70` to
+     * `fillfactor=80`), the migration system will not detect this change. You must manually create
+     * ALTER TABLE statements or use database-specific commands to apply storage parameter changes.
      *
      * Example:
      * ```kotlin
      * object Users : Table("users") {
      *     val id = integer("id")
      *     override val primaryKey = PrimaryKey(id)
-     *     override val storageParameters = listOf("fillfactor=70", "autovacuum_enabled=false")
+     *     override val storageParameters = listOf(
+     *         FillFactorParameter(70),
+     *         AutovacuumEnabledParameter(false)
+     *     )
      * }
      * ```
      *
      * This will generate:
      * ```sql
-     * CREATE TABLE users (id INT NOT NULL, PRIMARY KEY (id)) WITH (fillfactor=70, autovacuum_enabled=false)
+     * CREATE TABLE users (
+     *     id INT NOT NULL,
+     *     PRIMARY KEY (id)
+     * ) WITH (fillfactor=70, autovacuum_enabled=false)
      * ```
+     *
+     * The storage parameters appear in a `WITH (...)` clause after the `)` that closes the column definitions.
      */
-    open val storageParameters: List<String> = emptyList()
+    open val storageParameters: List<TableStorageParameter> = emptyList()
 
     // EntityID columns
 
@@ -1801,16 +1828,16 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
                 append(")")
 
-                // Add table modifiers (e.g., ENGINE=InnoDB for MySQL)
-                if (modifiers.isNotEmpty()) {
+                // Add table options (e.g., ENGINE=InnoDB for MySQL)
+                if (options.isNotEmpty()) {
                     append(" ")
-                    append(modifiers.joinToString(separator = " "))
+                    append(options.joinToString(separator = " ") { it.toSQL() })
                 }
 
                 // Add storage parameters in WITH clause (e.g., PostgreSQL, SQL Server)
                 if (storageParameters.isNotEmpty()) {
                     append(" WITH (")
-                    append(storageParameters.joinToString(separator = ", "))
+                    append(storageParameters.joinToString(separator = ", ") { it.toSQL() })
                     append(")")
                 }
             }

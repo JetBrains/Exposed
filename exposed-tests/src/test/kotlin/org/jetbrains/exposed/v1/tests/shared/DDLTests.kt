@@ -26,6 +26,9 @@ import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.util.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 import kotlin.test.expect
 
 @Suppress("LargeClass")
@@ -1268,7 +1271,7 @@ class DDLTests : DatabaseTestsBase() {
         val testTable = object : Table("test_engine") {
             val id = integer("id")
             override val primaryKey = PrimaryKey(id)
-            override val modifiers = listOf("ENGINE=MEMORY")
+            override val options = listOf(EngineModifier(TableEngine.MEMORY))
         }
 
         withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE) {
@@ -1282,7 +1285,10 @@ class DDLTests : DatabaseTestsBase() {
         val testTable = object : Table("test_multi_options") {
             val id = integer("id")
             override val primaryKey = PrimaryKey(id)
-            override val modifiers = listOf("ENGINE=InnoDB", "DEFAULT CHARSET=utf8mb4")
+            override val options = listOf(
+                EngineModifier(TableEngine.INNODB),
+                CharsetModifier("utf8mb4")
+            )
         }
 
         withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE) {
@@ -1298,7 +1304,7 @@ class DDLTests : DatabaseTestsBase() {
         val testTable = object : Table("test_storage") {
             val id = integer("id")
             override val primaryKey = PrimaryKey(id)
-            override val storageParameters = listOf("fillfactor=70")
+            override val storageParameters = listOf(FillFactorParameter(70))
         }
 
         withDb(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES_LIKE - TestDB.SQLSERVER) {
@@ -1312,8 +1318,11 @@ class DDLTests : DatabaseTestsBase() {
         val testTable = object : Table("test_combined") {
             val id = integer("id")
             override val primaryKey = PrimaryKey(id)
-            override val modifiers = listOf("ENGINE=InnoDB")
-            override val storageParameters = listOf("fillfactor=70", "autovacuum_enabled=false")
+            override val options = listOf(EngineModifier(TableEngine.INNODB))
+            override val storageParameters = listOf(
+                FillFactorParameter(70),
+                AutovacuumEnabledParameter(false)
+            )
         }
 
         withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE) {
@@ -1330,7 +1339,7 @@ class DDLTests : DatabaseTestsBase() {
             val id = integer("id")
             val name = varchar("name", 50)
             override val primaryKey = PrimaryKey(id)
-            override val modifiers = listOf("ENGINE=MEMORY")
+            override val options = listOf(EngineModifier(TableEngine.MEMORY))
         }
 
         withTables(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE, testTable) {
@@ -1364,7 +1373,7 @@ class DDLTests : DatabaseTestsBase() {
             val id = integer("id")
             val data = varchar("data", 100)
             override val primaryKey = PrimaryKey(id)
-            override val storageParameters = listOf("fillfactor=70")
+            override val storageParameters = listOf(FillFactorParameter(70))
         }
 
         // Only test with real PostgreSQL, not H2 emulation
@@ -1389,5 +1398,50 @@ class DDLTests : DatabaseTestsBase() {
             val options = fillfactorQuery?.joinToString() ?: ""
             assertTrue(options.contains("fillfactor=70"))
         }
+    }
+
+    @Test
+    fun testTableModifiersAndStorageParametersSQL() {
+        // Test TableEngine enum values
+        assertEquals("InnoDB", TableEngine.INNODB.engineName)
+        assertEquals("MyISAM", TableEngine.MYISAM.engineName)
+        assertEquals("MEMORY", TableEngine.MEMORY.engineName)
+        assertEquals("ARCHIVE", TableEngine.ARCHIVE.engineName)
+        assertEquals("CSV", TableEngine.CSV.engineName)
+
+        // Test EngineModifier SQL generation
+        assertEquals("ENGINE=InnoDB", EngineModifier(TableEngine.INNODB).toSQL())
+        assertEquals("ENGINE=MEMORY", EngineModifier(TableEngine.MEMORY).toSQL())
+        assertEquals("ENGINE=MyISAM", EngineModifier(TableEngine.MYISAM).toSQL())
+
+        // Test CharsetModifier SQL generation
+        assertEquals("DEFAULT CHARSET=utf8mb4", CharsetModifier("utf8mb4").toSQL())
+        assertEquals(
+            "DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+            CharsetModifier("utf8mb4", "utf8mb4_unicode_ci").toSQL()
+        )
+
+        // Test RawTableModifier SQL generation
+        assertEquals("ROW_FORMAT=COMPRESSED", RawTableModifier("ROW_FORMAT=COMPRESSED").toSQL())
+
+        // Test FillFactorParameter SQL generation and validation
+        assertEquals("fillfactor=70", FillFactorParameter(70).toSQL())
+        assertEquals("fillfactor=10", FillFactorParameter(10).toSQL())
+        assertEquals("fillfactor=100", FillFactorParameter(100).toSQL())
+        assertFailsWith<IllegalArgumentException> { FillFactorParameter(9) }
+        assertFailsWith<IllegalArgumentException> { FillFactorParameter(101) }
+
+        // Test AutovacuumEnabledParameter SQL generation
+        assertEquals("autovacuum_enabled=true", AutovacuumEnabledParameter(true).toSQL())
+        assertEquals("autovacuum_enabled=false", AutovacuumEnabledParameter(false).toSQL())
+
+        // Test ToastTupleTargetParameter SQL generation and validation
+        assertEquals("toast_tuple_target=8160", ToastTupleTargetParameter(8160).toSQL())
+        assertEquals("toast_tuple_target=1", ToastTupleTargetParameter(1).toSQL())
+        assertFailsWith<IllegalArgumentException> { ToastTupleTargetParameter(0) }
+        assertFailsWith<IllegalArgumentException> { ToastTupleTargetParameter(-1) }
+
+        // Test RawStorageParameter SQL generation
+        assertEquals("parallel_workers=4", RawStorageParameter("parallel_workers=4").toSQL())
     }
 }
