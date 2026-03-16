@@ -234,7 +234,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
         val columnToValue = (existingKeys + fetchedKeys).toSet().associateWith { column ->
             if (row.hasValue(column)) row[column] else entity._readValues?.get(column)
         }
-        entity._readValues = ResultRow.createAndFillValues(columnToValue)
+        entity._readValues = ResultRow.createAndFillValues(unwrapColumnValues(columnToValue))
 
         return entity
     }
