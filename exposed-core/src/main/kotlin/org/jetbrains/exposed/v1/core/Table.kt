@@ -673,8 +673,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      *     val id = integer("id")
      *     override val primaryKey = PrimaryKey(id)
      *     override val options = listOf(
-     *         EngineModifier(TableEngine.INNODB),
-     *         CharsetModifier("utf8mb4")
+     *         EngineOption(TableEngine.INNODB),
+     *         CharsetOption("utf8mb4")
      *     )
      * }
      * ```
@@ -689,7 +689,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      *
      * The table options appear after the `)` that closes the column definitions.
      */
-    open val options: List<TableModifier> = emptyList()
+    open val options: List<TableOption> = emptyList()
 
     /**
      * Storage parameters to be included in the WITH clause at the very end of the CREATE TABLE statement,

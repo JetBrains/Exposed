@@ -1271,7 +1271,7 @@ class DDLTests : DatabaseTestsBase() {
         val testTable = object : Table("test_engine") {
             val id = integer("id")
             override val primaryKey = PrimaryKey(id)
-            override val options = listOf(EngineModifier(TableEngine.MEMORY))
+            override val options = listOf(EngineOption(TableEngine.MEMORY))
         }
 
         withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE) {
@@ -1286,8 +1286,8 @@ class DDLTests : DatabaseTestsBase() {
             val id = integer("id")
             override val primaryKey = PrimaryKey(id)
             override val options = listOf(
-                EngineModifier(TableEngine.INNODB),
-                CharsetModifier("utf8mb4")
+                EngineOption(TableEngine.INNODB),
+                CharsetOption("utf8mb4")
             )
         }
 
@@ -1318,7 +1318,7 @@ class DDLTests : DatabaseTestsBase() {
         val testTable = object : Table("test_combined") {
             val id = integer("id")
             override val primaryKey = PrimaryKey(id)
-            override val options = listOf(EngineModifier(TableEngine.INNODB))
+            override val options = listOf(EngineOption(TableEngine.INNODB))
             override val storageParameters = listOf(
                 FillFactorParameter(70),
                 AutovacuumEnabledParameter(false)
@@ -1339,7 +1339,7 @@ class DDLTests : DatabaseTestsBase() {
             val id = integer("id")
             val name = varchar("name", 50)
             override val primaryKey = PrimaryKey(id)
-            override val options = listOf(EngineModifier(TableEngine.MEMORY))
+            override val options = listOf(EngineOption(TableEngine.MEMORY))
         }
 
         withTables(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE, testTable) {
@@ -1409,20 +1409,20 @@ class DDLTests : DatabaseTestsBase() {
         assertEquals("ARCHIVE", TableEngine.ARCHIVE.engineName)
         assertEquals("CSV", TableEngine.CSV.engineName)
 
-        // Test EngineModifier SQL generation
-        assertEquals("ENGINE=InnoDB", EngineModifier(TableEngine.INNODB).toSQL())
-        assertEquals("ENGINE=MEMORY", EngineModifier(TableEngine.MEMORY).toSQL())
-        assertEquals("ENGINE=MyISAM", EngineModifier(TableEngine.MYISAM).toSQL())
+        // Test EngineOption SQL generation
+        assertEquals("ENGINE=InnoDB", EngineOption(TableEngine.INNODB).toSQL())
+        assertEquals("ENGINE=MEMORY", EngineOption(TableEngine.MEMORY).toSQL())
+        assertEquals("ENGINE=MyISAM", EngineOption(TableEngine.MYISAM).toSQL())
 
-        // Test CharsetModifier SQL generation
-        assertEquals("DEFAULT CHARSET=utf8mb4", CharsetModifier("utf8mb4").toSQL())
+        // Test CharsetOption SQL generation
+        assertEquals("DEFAULT CHARSET=utf8mb4", CharsetOption("utf8mb4").toSQL())
         assertEquals(
             "DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
-            CharsetModifier("utf8mb4", "utf8mb4_unicode_ci").toSQL()
+            CharsetOption("utf8mb4", "utf8mb4_unicode_ci").toSQL()
         )
 
-        // Test RawTableModifier SQL generation
-        assertEquals("ROW_FORMAT=COMPRESSED", RawTableModifier("ROW_FORMAT=COMPRESSED").toSQL())
+        // Test RawTableOption SQL generation
+        assertEquals("ROW_FORMAT=COMPRESSED", RawTableOption("ROW_FORMAT=COMPRESSED").toSQL())
 
         // Test FillFactorParameter SQL generation and validation
         assertEquals("fillfactor=70", FillFactorParameter(70).toSQL())

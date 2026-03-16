@@ -108,7 +108,7 @@
             </p>
             <chapter title="Table modifiers" id="table-modifiers">
                 <p>
-                    The <code>options</code> property accepts a list of <code>TableModifier</code> objects that will be
+                    The <code>options</code> property accepts a list of <code>TableOption</code> objects that will be
                     appended after the table definition. This is commonly used for MySQL/MariaDB storage engines and
                     character set configurations:
                 </p>
@@ -118,8 +118,8 @@
                         val name = varchar("name", 50)
                         override val primaryKey = PrimaryKey(id)
                         override val options = listOf(
-                            EngineModifier(TableEngine.INNODB),
-                            CharsetModifier("utf8mb4")
+                            EngineOption(TableEngine.INNODB),
+                            CharsetOption("utf8mb4")
                         )
                     }
                 </code-block>
@@ -132,10 +132,10 @@
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
                 </code-block>
                 <p>
-                    For custom database-specific options not covered by built-in modifiers, use <code>RawTableModifier</code>:
+                    For custom database-specific options not covered by built-in modifiers, use <code>RawTableOption</code>:
                 </p>
                 <code-block lang="kotlin">
-                    override val options = listOf(RawTableModifier("ROW_FORMAT=COMPRESSED"))
+                    override val options = listOf(RawTableOption("ROW_FORMAT=COMPRESSED"))
                 </code-block>
                 <note>
                     <p>

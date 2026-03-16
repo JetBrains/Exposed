@@ -321,7 +321,7 @@ public final class org/jetbrains/exposed/v1/core/CharacterColumnType : org/jetbr
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 }
 
-public final class org/jetbrains/exposed/v1/core/CharsetModifier : org/jetbrains/exposed/v1/core/TableModifier {
+public final class org/jetbrains/exposed/v1/core/CharsetOption : org/jetbrains/exposed/v1/core/TableOption {
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun toSQL ()Ljava/lang/String;
@@ -755,7 +755,7 @@ public final class org/jetbrains/exposed/v1/core/DoubleColumnType : org/jetbrain
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 }
 
-public final class org/jetbrains/exposed/v1/core/EngineModifier : org/jetbrains/exposed/v1/core/TableModifier {
+public final class org/jetbrains/exposed/v1/core/EngineOption : org/jetbrains/exposed/v1/core/TableOption {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/TableEngine;)V
 	public fun toSQL ()Ljava/lang/String;
 }
@@ -1981,7 +1981,7 @@ public final class org/jetbrains/exposed/v1/core/RawStorageParameter : org/jetbr
 	public fun toSQL ()Ljava/lang/String;
 }
 
-public final class org/jetbrains/exposed/v1/core/RawTableModifier : org/jetbrains/exposed/v1/core/TableModifier {
+public final class org/jetbrains/exposed/v1/core/RawTableOption : org/jetbrains/exposed/v1/core/TableOption {
 	public fun <init> (Ljava/lang/String;)V
 	public fun toSQL ()Ljava/lang/String;
 }
@@ -2522,7 +2522,7 @@ public final class org/jetbrains/exposed/v1/core/TableKt {
 	public static final fun targetTables (Lorg/jetbrains/exposed/v1/core/ColumnSet;)Ljava/util/List;
 }
 
-public abstract class org/jetbrains/exposed/v1/core/TableModifier {
+public abstract class org/jetbrains/exposed/v1/core/TableOption {
 	public fun <init> ()V
 	public abstract fun toSQL ()Ljava/lang/String;
 	public fun toString ()Ljava/lang/String;
