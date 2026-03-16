@@ -1,13 +1,16 @@
 package org.jetbrains.exposed.v1.migration.r2dbc
 
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.r2dbc.exists
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.junit.jupiter.api.Test
+import kotlin.test.expect
 
 class IndexConstraintsTests : R2dbcDatabaseTestsBase() {
     @Test
@@ -133,6 +136,40 @@ class IndexConstraintsTests : R2dbcDatabaseTestsBase() {
             statements.forEach { exec(it) }
             newTable.insert {
                 it[tester_col] = "Testing text"
+            }
+        }
+    }
+
+    @Test
+    fun testCheckConstraintWithNameChangeTriggersStatements() {
+        val oldTable = object : Table("tester") {
+            val tester_col = text("tester_col").check("testCheck1") { it like "The%" }
+        }
+        val newTable = object : Table("tester") {
+            val tester_col = text("tester_col").check("testCheck2") { it like "The%" }
+        }
+
+        withTables(oldTable) {
+            // original table should not trigger
+            assertTrue(MigrationUtils.statementsRequiredForDatabaseMigration(oldTable, withLogs = false).isEmpty())
+
+            // name change should trigger add + drop of check constraints
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(newTable, withLogs = false)
+            if (currentDialectTest.supportsAlterCheckConstraint) {
+                assertEquals(2, statements.size)
+                assertEquals(
+                    newTable.checkConstraints().single().createStatement().single().lowercase(),
+                    statements[0].lowercase()
+                )
+                assertEquals(
+                    oldTable.checkConstraints().single().dropStatement().single().lowercase(),
+                    statements[1].lowercase()
+                )
+                expect(Unit) {
+                    statements.forEach { exec(it) }
+                }
+            } else {
+                assertEquals(0, statements.size)
             }
         }
     }

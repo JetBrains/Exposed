@@ -365,6 +365,9 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider.INSTA
     )
     override val supportsSelectForUpdate: Boolean = true
 
+    override val supportsAlterCheckConstraint: Boolean
+        get() = isMysql8
+
     /** Returns `true` if the MySQL database version is greater than or equal to 5.6. */
     @Suppress("MagicNumber")
     open fun isFractionDateTimeSupported(): Boolean {

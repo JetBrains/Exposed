@@ -380,18 +380,34 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
     override fun existingCheckConstraints(vararg tables: Table): Map<Table, List<CheckConstraint>> {
         val result = mutableMapOf<Table, List<CheckConstraint>>()
-        tables.forEach { table ->
-            val transaction = TransactionManager.current()
-            val checkConstraints = mutableListOf<CheckConstraint>()
-            metadata.connection.executeSQL(
-                """
+        val query = when (currentDialect) {
+            is PostgreSQLDialect -> """
+                SELECT cc.conname AS CONSTRAINT_NAME, pg_catalog.pg_get_constraintdef(cc.oid, true) AS CHECK_CLAUSE
+                    FROM pg_catalog.pg_class AS ct
+                    JOIN pg_catalog.pg_constraint AS cc ON (ct.oid = cc.conrelid)
+                    WHERE cc.contype = 'c' AND cc.conrelid <> 0
+                    AND ct.relname =
+            """.trimIndent()
+            is OracleDialect -> """
+                    SELECT ac.CONSTRAINT_NAME, ac.SEARCH_CONDITION AS CHECK_CLAUSE
+                    FROM ALL_CONSTRAINTS ac
+                    WHERE ac.CONSTRAINT_TYPE = 'C' AND ac.CONSTRAINT_NAME NOT LIKE 'SYS_C%'
+                    AND ac.TABLE_NAME =
+            """.trimIndent()
+            else -> """
                     SELECT tc.CONSTRAINT_NAME, cc.CHECK_CLAUSE
                     FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
                     JOIN INFORMATION_SCHEMA.CHECK_CONSTRAINTS cc
                         ON tc.CONSTRAINT_NAME = cc.CONSTRAINT_NAME
                     WHERE tc.CONSTRAINT_TYPE = 'CHECK'
-                    AND tc.TABLE_NAME = '${table.nameInDatabaseCaseUnquoted()}';
-                """.trimIndent()
+                    AND tc.TABLE_NAME =
+            """.trimIndent()
+        }
+        tables.forEach { table ->
+            val transaction = TransactionManager.current()
+            val checkConstraints = mutableListOf<CheckConstraint>()
+            metadata.connection.executeSQL(
+                "$query '${table.nameInDatabaseCaseUnquoted()}'"
             ) { rs ->
                 while (rs.next()) {
                     checkConstraints.add(
