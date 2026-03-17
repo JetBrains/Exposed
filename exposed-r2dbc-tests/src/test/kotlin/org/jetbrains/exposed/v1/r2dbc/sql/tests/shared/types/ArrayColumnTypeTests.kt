@@ -315,6 +315,32 @@ class ArrayColumnTypeTests : R2dbcDatabaseTestsBase() {
     }
 
     @Test
+    fun testArrayColumnWithStringColumnTypes() {
+        val tester = object : Table("string_array_test") {
+            val textArray = array("text_col", TextColumnType())
+            val varcharArray = array("varchar_col", VarCharColumnType(36))
+            val charArray = array("char_col", CharColumnType(36))
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, tester) {
+            val textInput = listOf("foo", "bar", "baz")
+            val varcharInput = listOf("abc", "def")
+            val charInput = listOf("xxx", "yyy")
+
+            tester.insert {
+                it[textArray] = textInput
+                it[varcharArray] = varcharInput
+                it[charArray] = charInput
+            }
+
+            val result = tester.selectAll().single()
+            assertContentEquals(textInput, result[tester.textArray])
+            assertContentEquals(varcharInput, result[tester.varcharArray])
+            assertContentEquals(charInput, result[tester.charArray])
+        }
+    }
+
+    @Test
     fun testAliasedArray() {
         val tester = object : IntIdTable("test_aliased_array") {
             val value = array<Int>("value")
