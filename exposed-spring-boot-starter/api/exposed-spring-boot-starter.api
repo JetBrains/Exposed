@@ -1,12 +1,6 @@
-public class org/jetbrains/exposed/v1/spring/boot/DatabaseInitializer : org/springframework/boot/ApplicationRunner, org/springframework/core/Ordered {
-	public static final field Companion Lorg/jetbrains/exposed/v1/spring/boot/DatabaseInitializer$Companion;
-	public static final field DATABASE_INITIALIZER_ORDER I
+public class org/jetbrains/exposed/v1/spring/boot/DatabaseInitializer : org/springframework/beans/factory/InitializingBean {
 	public fun <init> (Lorg/springframework/context/ApplicationContext;Ljava/util/List;)V
-	public fun getOrder ()I
-	public fun run (Lorg/springframework/boot/ApplicationArguments;)V
-}
-
-public final class org/jetbrains/exposed/v1/spring/boot/DatabaseInitializer$Companion {
+	public fun afterPropertiesSet ()V
 }
 
 public final class org/jetbrains/exposed/v1/spring/boot/DatabaseInitializerKt {

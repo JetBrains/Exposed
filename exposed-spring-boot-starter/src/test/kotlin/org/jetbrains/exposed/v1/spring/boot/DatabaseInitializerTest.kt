@@ -3,7 +3,6 @@ package org.jetbrains.exposed.v1.spring.boot
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.spring.boot.tables.TestTable
 import org.jetbrains.exposed.v1.spring.boot.tables.ignore.IgnoreTable
 import org.junit.jupiter.api.Assertions
@@ -25,13 +24,9 @@ open class DatabaseInitializerTest {
     fun `should create schema for TestTable and not for IgnoreTable`() {
         Assertions.assertThrows(ExposedSQLException::class.java) {
             Database.connect("jdbc:h2:mem:test-spring", user = "sa", driver = "org.h2.Driver")
-            transaction {
-                DatabaseInitializer(applicationContext, listOf("org.jetbrains.exposed.v1.spring.boot.tables.ignore")).run(
-                    null
-                )
-                Assertions.assertEquals(0L, TestTable.selectAll().count())
-                IgnoreTable.selectAll().count()
-            }
+            DatabaseInitializer(applicationContext, listOf("org.jetbrains.exposed.v1.spring.boot.tables.ignore")).afterPropertiesSet()
+            Assertions.assertEquals(0L, TestTable.selectAll().count())
+            IgnoreTable.selectAll().count()
         }
     }
 
