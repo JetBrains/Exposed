@@ -2,13 +2,10 @@
 
 package org.jetbrains.exposed.v1.`jdbc-template`
 
-import org.jetbrains.exposed.v1.jdbc.SchemaUtils
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.event.annotation.BeforeTestClass
 
 @SpringBootApplication
 open class JdbcTemplateApplication
@@ -19,13 +16,6 @@ open class JdbcTemplateApplication
 )
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class JdbcTemplateTests {
-
-    @BeforeTestClass
-    fun beforeTests() {
-        transaction {
-            SchemaUtils.create(AuthorTable, BookTable)
-        }
-    }
 
     @Autowired
     lateinit var bookService: BookService
