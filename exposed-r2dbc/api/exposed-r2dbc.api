@@ -271,6 +271,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Companion 
 public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfigImpl : org/jetbrains/exposed/v1/core/DatabaseConfig, org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig {
 	public fun <init> (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Builder;)V
 	public fun getConnectionFactoryOptions ()Lio/r2dbc/spi/ConnectionFactoryOptions;
+	public fun getDdl ()Lorg/jetbrains/exposed/v1/core/Ddl;
 	public fun getDefaultFetchSize ()Ljava/lang/Integer;
 	public fun getDefaultIsolationLevel ()I
 	public fun getDefaultMaxAttempts ()I

@@ -611,6 +611,7 @@ public final class org/jetbrains/exposed/v1/core/DatabaseApi$Companion {
 
 public abstract interface class org/jetbrains/exposed/v1/core/DatabaseConfig {
 	public static final field Companion Lorg/jetbrains/exposed/v1/core/DatabaseConfig$Companion;
+	public abstract fun getDdl ()Lorg/jetbrains/exposed/v1/core/Ddl;
 	public abstract fun getDefaultFetchSize ()Ljava/lang/Integer;
 	public abstract fun getDefaultIsolationLevel ()I
 	public abstract fun getDefaultMaxAttempts ()I
@@ -632,6 +633,7 @@ public abstract interface class org/jetbrains/exposed/v1/core/DatabaseConfig {
 
 public class org/jetbrains/exposed/v1/core/DatabaseConfig$Builder {
 	public fun <init> ()V
+	public final fun getDdl ()Lorg/jetbrains/exposed/v1/core/Ddl;
 	public final fun getDefaultFetchSize ()Ljava/lang/Integer;
 	public fun getDefaultIsolationLevel ()I
 	public final fun getDefaultMaxAttempts ()I
@@ -649,6 +651,7 @@ public class org/jetbrains/exposed/v1/core/DatabaseConfig$Builder {
 	public final fun getSqlLogger ()Lorg/jetbrains/exposed/v1/core/SqlLogger;
 	public final fun getUseNestedTransactions ()Z
 	public final fun getWarnLongQueriesDuration ()Ljava/lang/Long;
+	public final fun setDdl (Lorg/jetbrains/exposed/v1/core/Ddl;)V
 	public final fun setDefaultFetchSize (Ljava/lang/Integer;)V
 	public fun setDefaultIsolationLevel (I)V
 	public final fun setDefaultMaxAttempts (I)V
@@ -675,6 +678,7 @@ public final class org/jetbrains/exposed/v1/core/DatabaseConfig$Companion {
 
 public class org/jetbrains/exposed/v1/core/DatabaseConfigImpl : org/jetbrains/exposed/v1/core/DatabaseConfig {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/DatabaseConfig$Builder;)V
+	public fun getDdl ()Lorg/jetbrains/exposed/v1/core/Ddl;
 	public fun getDefaultFetchSize ()Ljava/lang/Integer;
 	public fun getDefaultIsolationLevel ()I
 	public fun getDefaultMaxAttempts ()I
@@ -692,6 +696,17 @@ public class org/jetbrains/exposed/v1/core/DatabaseConfigImpl : org/jetbrains/ex
 	public fun getSqlLogger ()Lorg/jetbrains/exposed/v1/core/SqlLogger;
 	public fun getUseNestedTransactions ()Z
 	public fun getWarnLongQueriesDuration ()Ljava/lang/Long;
+}
+
+public final class org/jetbrains/exposed/v1/core/Ddl {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lorg/jetbrains/exposed/v1/core/Ddl;
+	public static synthetic fun copy$default (Lorg/jetbrains/exposed/v1/core/Ddl;Ljava/util/List;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Ddl;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getTables ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public abstract interface class org/jetbrains/exposed/v1/core/DdlAware {

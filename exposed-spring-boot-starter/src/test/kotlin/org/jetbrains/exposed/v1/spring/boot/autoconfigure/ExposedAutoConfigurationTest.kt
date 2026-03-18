@@ -4,7 +4,6 @@ import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.spring.boot.Application
-import org.jetbrains.exposed.v1.spring.boot.DatabaseInitializer
 import org.jetbrains.exposed.v1.spring.boot.tables.TestTable
 import org.jetbrains.exposed.v1.spring.transaction.ExposedSpringTransactionAttributeSource
 import org.jetbrains.exposed.v1.spring.transaction.SpringTransactionManager
@@ -34,9 +33,6 @@ open class ExposedAutoConfigurationTest {
     @Autowired(required = false)
     private var springTransactionManager: SpringTransactionManager? = null
 
-    @Autowired(required = false)
-    private var databaseInitializer: DatabaseInitializer? = null
-
     @Autowired
     private var databaseConfig: DatabaseConfig? = null
 
@@ -46,11 +42,6 @@ open class ExposedAutoConfigurationTest {
     @Test
     fun `should initialize the database connection`() {
         assertNotNull(springTransactionManager)
-    }
-
-    @Test
-    fun `should not create schema`() {
-        assertNull(databaseInitializer)
     }
 
     @Test

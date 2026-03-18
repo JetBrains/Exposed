@@ -1,22 +1,16 @@
-public class org/jetbrains/exposed/v1/spring/boot/DatabaseInitializer : org/springframework/beans/factory/InitializingBean {
-	public fun <init> (Lorg/springframework/context/ApplicationContext;Ljava/util/List;)V
-	public fun afterPropertiesSet ()V
-}
-
-public final class org/jetbrains/exposed/v1/spring/boot/DatabaseInitializerKt {
-	public static final fun discoverExposedTables (Lorg/springframework/context/ApplicationContext;Ljava/util/List;)Ljava/util/List;
-}
-
 public final class org/jetbrains/exposed/v1/spring/boot/ExposedAotContribution : org/springframework/beans/factory/aot/BeanFactoryInitializationAotProcessor {
 	public fun <init> ()V
 	public fun processAheadOfTime (Lorg/springframework/beans/factory/config/ConfigurableListableBeanFactory;)Lorg/springframework/beans/factory/aot/BeanFactoryInitializationAotContribution;
 }
 
 public class org/jetbrains/exposed/v1/spring/boot/autoconfigure/ExposedAutoConfiguration {
+	public static final field Companion Lorg/jetbrains/exposed/v1/spring/boot/autoconfigure/ExposedAutoConfiguration$Companion;
 	public fun <init> (Lorg/springframework/context/ApplicationContext;)V
 	public fun databaseConfig ()Lorg/jetbrains/exposed/v1/core/DatabaseConfig;
-	public fun databaseInitializer ()Lorg/jetbrains/exposed/v1/spring/boot/DatabaseInitializer;
 	public fun exposedSpringTransactionAttributeSource ()Lorg/jetbrains/exposed/v1/spring/transaction/ExposedSpringTransactionAttributeSource;
 	public fun springTransactionManager (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/v1/core/DatabaseConfig;)Lorg/jetbrains/exposed/v1/spring/transaction/SpringTransactionManager;
+}
+
+public final class org/jetbrains/exposed/v1/spring/boot/autoconfigure/ExposedAutoConfiguration$Companion {
 }
 
