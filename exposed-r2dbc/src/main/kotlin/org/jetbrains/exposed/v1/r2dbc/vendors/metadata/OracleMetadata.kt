@@ -195,5 +195,13 @@ internal class OracleMetadata : MetadataProvider(OraclePropertyProvider, OracleT
         }
     }
 
-    override fun getCheckConstraints(catalog: String, schemaPattern: String, table: String): String = ""
+    override fun getCheckConstraints(catalog: String, schemaPattern: String, table: String): String {
+        return buildString {
+            append("SELECT ac.CONSTRAINT_NAME, ac.SEARCH_CONDITION AS CHECK_CLAUSE ")
+            append("FROM ALL_CONSTRAINTS ac ")
+            append("WHERE ac.CONSTRAINT_TYPE = 'C' AND ac.CONSTRAINT_NAME NOT LIKE 'SYS_C%' ")
+            append("AND ac.OWNER LIKE '$schemaPattern' ")
+            append("AND ac.TABLE_NAME = '$table' ")
+        }
+    }
 }

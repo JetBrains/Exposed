@@ -283,5 +283,16 @@ internal class PostgreSQLMetadata : MetadataProvider(PostgreSQLPropertyProvider,
         }
     }
 
-    override fun getCheckConstraints(catalog: String, schemaPattern: String, table: String): String = ""
+    override fun getCheckConstraints(catalog: String, schemaPattern: String, table: String): String {
+        return buildString {
+            append("SELECT cc.conname AS CONSTRAINT_NAME, pg_catalog.pg_get_constraintdef(cc.oid, true) AS CHECK_CLAUSE ")
+            append("FROM pg_catalog.pg_class AS ct ")
+            append("JOIN pg_catalog.pg_namespace AS n ON (ct.relnamespace = n.oid) ")
+            append("JOIN pg_catalog.pg_constraint AS cc ON (ct.oid = cc.conrelid) ")
+            append("WHERE cc.contype = 'c' AND cc.conrelid <> 0 ")
+            append("AND current_database() = '$catalog' ")
+            append("AND n.nspname LIKE '$schemaPattern' ")
+            append("AND ct.relname = '$table' ")
+        }
+    }
 }

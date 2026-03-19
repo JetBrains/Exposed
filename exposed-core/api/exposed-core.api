@@ -3901,6 +3901,7 @@ public abstract interface class org/jetbrains/exposed/v1/core/vendors/DatabaseDi
 	public fun getNeedsSequenceToAutoInc ()Z
 	public fun getRequiresAutoCommitOnCreateDrop ()Z
 	public fun getSequenceMaxValue ()J
+	public fun getSupportsAlterCheckConstraint ()Z
 	public fun getSupportsColumnTypeChange ()Z
 	public fun getSupportsCreateSchema ()Z
 	public fun getSupportsCreateSequence ()Z
@@ -3940,6 +3941,7 @@ public final class org/jetbrains/exposed/v1/core/vendors/DatabaseDialect$Default
 	public static fun getNeedsSequenceToAutoInc (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getRequiresAutoCommitOnCreateDrop (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getSequenceMaxValue (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)J
+	public static fun getSupportsAlterCheckConstraint (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getSupportsColumnTypeChange (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getSupportsCreateSchema (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getSupportsCreateSequence (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
@@ -4262,6 +4264,7 @@ public class org/jetbrains/exposed/v1/core/vendors/MysqlDialect : org/jetbrains/
 	public fun dropIndex (Ljava/lang/String;Ljava/lang/String;ZZ)Ljava/lang/String;
 	public fun dropSchema (Lorg/jetbrains/exposed/v1/core/Schema;Z)Ljava/lang/String;
 	protected final fun getNotAcceptableDefaults ()Ljava/util/List;
+	public fun getSupportsAlterCheckConstraint ()Z
 	public fun getSupportsCreateSequence ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z
 	public fun getSupportsSelectForUpdate ()Z
@@ -4389,6 +4392,7 @@ public class org/jetbrains/exposed/v1/core/vendors/SQLiteDialect : org/jetbrains
 	public fun createIndex (Lorg/jetbrains/exposed/v1/core/Index;)Ljava/lang/String;
 	public fun dropDatabase (Ljava/lang/String;)Ljava/lang/String;
 	public fun dropIndex (Ljava/lang/String;Ljava/lang/String;ZZ)Ljava/lang/String;
+	public fun getSupportsAlterCheckConstraint ()Z
 	public fun getSupportsCreateSchema ()Z
 	public fun getSupportsCreateSequence ()Z
 	public fun getSupportsMultipleGeneratedKeys ()Z
@@ -4437,6 +4441,7 @@ public abstract class org/jetbrains/exposed/v1/core/vendors/VendorDialect : org/
 	public fun getNeedsSequenceToAutoInc ()Z
 	public fun getRequiresAutoCommitOnCreateDrop ()Z
 	public fun getSequenceMaxValue ()J
+	public fun getSupportsAlterCheckConstraint ()Z
 	public fun getSupportsColumnTypeChange ()Z
 	public fun getSupportsCreateSchema ()Z
 	public fun getSupportsCreateSequence ()Z

@@ -1,13 +1,16 @@
 package org.jetbrains.exposed.v1.migration.jdbc
 
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.jdbc.exists
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
+import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.junit.jupiter.api.Test
+import kotlin.test.expect
 
 class IndexConstraintsTests : DatabaseTestsBase() {
     @Test
@@ -133,6 +136,40 @@ class IndexConstraintsTests : DatabaseTestsBase() {
             statements.forEach(::exec)
             newTable.insert {
                 it[tester_col] = "Testing text"
+            }
+        }
+    }
+
+    @Test
+    fun testCheckConstraintWithNameChangeTriggersStatements() {
+        val oldTable = object : Table("tester") {
+            val tester_col = text("tester_col").check("testCheck1") { it like "The%" }
+        }
+        val newTable = object : Table("tester") {
+            val tester_col = text("tester_col").check("testCheck2") { it like "The%" }
+        }
+
+        withTables(oldTable) {
+            // original table should not trigger
+            assertTrue(MigrationUtils.statementsRequiredForDatabaseMigration(oldTable, withLogs = false).isEmpty())
+
+            // name change should trigger add + drop of check constraints
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(newTable, withLogs = false)
+            if (currentDialectTest.supportsAlterCheckConstraint) {
+                assertEquals(2, statements.size)
+                assertEquals(
+                    newTable.checkConstraints().single().createStatement().single().lowercase(),
+                    statements[0].lowercase()
+                )
+                assertEquals(
+                    oldTable.checkConstraints().single().dropStatement().single().lowercase(),
+                    statements[1].lowercase()
+                )
+                expect(Unit) {
+                    statements.forEach(::exec)
+                }
+            } else {
+                assertEquals(0, statements.size)
             }
         }
     }
