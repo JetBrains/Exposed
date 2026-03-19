@@ -319,7 +319,7 @@ class ArrayColumnTypeTests : R2dbcDatabaseTestsBase() {
         val tester = object : Table("string_array_test") {
             val textArray = array("text_col", TextColumnType())
             val varcharArray = array("varchar_col", VarCharColumnType(36))
-            val charArray = array("char_col", CharColumnType(36))
+            val charArray = array("char_col", CharColumnType(8))
         }
 
         withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, tester) {
