@@ -354,7 +354,6 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
         }
 
         withTables(excludeSettings = arrayTypeUnsupportedDb, tester) {
-            addLogger(StdOutSqlLogger)
             val textInput = listOf("foo", "bar", "baz")
             val varcharInput = listOf("abc", "def")
             val charInput = listOf("xxx", "yyy")
