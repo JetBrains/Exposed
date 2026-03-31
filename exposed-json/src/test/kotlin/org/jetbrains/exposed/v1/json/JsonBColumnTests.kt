@@ -18,6 +18,7 @@ import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
+import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
@@ -166,9 +167,11 @@ class JsonBColumnTests : DatabaseTestsBase() {
         }
     }
 
+    private val jsonbContainsNotSupported = binaryJsonNotSupportedDB + TestDB.ALL_H2_V2 + TestDB.SQLITE
+
     @Test
     fun testJsonContains() {
-        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V2 + TestDB.SQLITE) { tester, user1, data1, testDb ->
+        withJsonBTable(exclude = jsonbContainsNotSupported) { tester, user1, data1, testDb ->
             val alphaTeamUser = user1.copy(team = "Alpha")
             val newId = tester.insertAndGetId {
                 it[jsonBColumn] = data1.copy(user = alphaTeamUser)
@@ -247,7 +250,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonContainsWithArrays() {
-        withJsonBArrays(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V2 + TestDB.SQLITE) { tester, _, tripleId, testDb ->
+        withJsonBArrays(exclude = jsonbContainsNotSupported) { tester, _, tripleId, testDb ->
             val hasSmallNumbers = JsonTestsData.JsonBArrays.numbers.contains("[3, 5]")
             assertEquals(tripleId, tester.selectAll().where { hasSmallNumbers }.single()[tester.id])
 
@@ -268,6 +271,44 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
             val hasAtLeast3Numbers = JsonTestsData.JsonBArrays.numbers.exists("[2]", optional = optional)
             assertEquals(tripleId, tester.selectAll().where { hasAtLeast3Numbers }.single()[tester.id])
+        }
+    }
+
+    @Test
+    fun testJsonBContainsWithIterables() {
+        val iterables = object : IntIdTable("iterables") {
+            val userList = jsonb<List<User>>("user_list", Json.Default)
+            val userSet = jsonb<Set<User>>("user_set", Json.Default)
+            val userArray = jsonb<Array<User>>("user_array", Json.Default)
+            val stringList = jsonb<List<String>>("string_list", Json.Default)
+        }
+
+        fun selectIdWhere(condition: () -> Op<Boolean>): List<EntityID<Int>> {
+            val query = iterables.select(iterables.id).where(condition())
+            return query.map { it[iterables.id] }
+        }
+
+        withTables(excludeSettings = jsonbContainsNotSupported, iterables) {
+            val user1 = User("A", "Team A")
+            val user2 = User("B", "Team B")
+            val stringsWithApostrophes = listOf("They're", "O'", "Connor's")
+            val id1 = iterables.insertAndGetId {
+                it[userList] = listOf(user1, user2)
+                it[userSet] = setOf(user1)
+                it[userArray] = arrayOf(user1, user2)
+                it[stringList] = listOf("Kotlin", "Java")
+            }
+            val id2 = iterables.insertAndGetId {
+                it[userList] = listOf(user2)
+                it[userSet] = setOf(user2)
+                it[userArray] = arrayOf(user1, user2)
+                it[stringList] = stringsWithApostrophes
+            }
+
+            assertEqualLists(listOf(id1), selectIdWhere { iterables.userList.contains(listOf(user1)) })
+            assertEqualLists(listOf(id2), selectIdWhere { iterables.userSet.contains(setOf(user2)) })
+            assertEqualLists(listOf(id1, id2), selectIdWhere { iterables.userArray.contains(arrayOf(user1, user2)) })
+            assertEqualLists(listOf(id2), selectIdWhere { iterables.stringList.contains(stringsWithApostrophes) })
         }
     }
 

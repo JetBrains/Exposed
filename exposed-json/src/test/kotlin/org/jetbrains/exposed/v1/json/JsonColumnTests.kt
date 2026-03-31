@@ -272,6 +272,7 @@ class JsonColumnTests : DatabaseTestsBase() {
             val userList = json<List<User>>("user_list", Json.Default)
             val userSet = json<Set<User>>("user_set", Json.Default)
             val userArray = json<Array<User>>("user_array", Json.Default)
+            val stringList = json<List<String>>("string_list", Json.Default)
         }
 
         fun selectIdWhere(condition: () -> Op<Boolean>): List<EntityID<Int>> {
@@ -282,20 +283,24 @@ class JsonColumnTests : DatabaseTestsBase() {
         withTables(excludeSettings = jsonContainsNotSupported, iterables) {
             val user1 = User("A", "Team A")
             val user2 = User("B", "Team B")
+            val stringsWithApostrophes = listOf("They're", "O'", "Connor's")
             val id1 = iterables.insertAndGetId {
                 it[userList] = listOf(user1, user2)
                 it[userSet] = setOf(user1)
                 it[userArray] = arrayOf(user1, user2)
+                it[stringList] = listOf("Kotlin", "Java")
             }
             val id2 = iterables.insertAndGetId {
                 it[userList] = listOf(user2)
                 it[userSet] = setOf(user2)
                 it[userArray] = arrayOf(user1, user2)
+                it[stringList] = stringsWithApostrophes
             }
 
             assertEqualLists(listOf(id1), selectIdWhere { iterables.userList.contains(listOf(user1)) })
             assertEqualLists(listOf(id2), selectIdWhere { iterables.userSet.contains(setOf(user2)) })
             assertEqualLists(listOf(id1, id2), selectIdWhere { iterables.userArray.contains(arrayOf(user1, user2)) })
+            assertEqualLists(listOf(id2), selectIdWhere { iterables.stringList.contains(stringsWithApostrophes) })
         }
     }
 
