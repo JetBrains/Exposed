@@ -322,7 +322,7 @@ class ArrayColumnTypeTests : R2dbcDatabaseTestsBase() {
             val charArray = array("char_col", CharColumnType(3))
         }
 
-        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, tester) {
+        withTables(excludeSettings = arrayTypeUnsupportedDb, tester) {
             val textInput = listOf("foo", "bar", "baz")
             val varcharInput = listOf("abc", "def")
             val charInput = listOf("xxx", "yyy")
