@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.tests.shared.types
 
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.CharColumnType
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
@@ -341,6 +342,32 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
             assertNotNull(result)
             assertEquals(testByteArraysList[0][0], result[0][0])
             assertEquals(testByteArraysList[1].toUByteString(), result[1].toUByteString())
+        }
+    }
+
+    @Test
+    fun testArrayColumnWithStringColumnTypes() {
+        val tester = object : Table("string_array_test") {
+            val textArray = array("text_col", TextColumnType())
+            val varcharArray = array("varchar_col", VarCharColumnType(36))
+            val charArray = array("char_col", CharColumnType(3))
+        }
+
+        withTables(excludeSettings = arrayTypeUnsupportedDb, tester) {
+            val textInput = listOf("foo", "bar", "baz")
+            val varcharInput = listOf("abc", "def")
+            val charInput = listOf("xxx", "yyy")
+
+            tester.insert {
+                it[textArray] = textInput
+                it[varcharArray] = varcharInput
+                it[charArray] = charInput
+            }
+
+            val result = tester.selectAll().single()
+            assertContentEquals(textInput, result[tester.textArray])
+            assertContentEquals(varcharInput, result[tester.varcharArray])
+            assertContentEquals(charInput, result[tester.charArray])
         }
     }
 

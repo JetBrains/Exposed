@@ -3,12 +3,14 @@ package org.jetbrains.exposed.v1.jdbc.statements.jdbc
 import org.jetbrains.exposed.v1.core.ArrayColumnType
 import org.jetbrains.exposed.v1.core.BinaryColumnType
 import org.jetbrains.exposed.v1.core.BlobColumnType
+import org.jetbrains.exposed.v1.core.CharColumnType
 import org.jetbrains.exposed.v1.core.IColumnType
 import org.jetbrains.exposed.v1.core.statements.StatementResult
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
 import java.io.InputStream
+import java.sql.JDBCType
 import java.sql.PreparedStatement
 import java.sql.Statement
 import java.sql.Types
@@ -86,7 +88,9 @@ class JdbcPreparedStatementImpl(
     }
 
     override fun setArray(index: Int, type: ArrayColumnType<*, *>, array: Array<*>) {
-        statement.setArray(index, statement.connection.createArrayOf(type.delegateType, array))
+        // otherwise any fixed-length CHAR(n) column will always be treated & truncated as CHAR(1)
+        val typeName = if (type.delegate is CharColumnType) JDBCType.VARCHAR.name else type.delegateType
+        statement.setArray(index, statement.connection.createArrayOf(typeName, array))
     }
 
     override fun closeIfPossible() {
