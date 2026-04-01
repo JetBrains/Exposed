@@ -1,3 +1,29 @@
+# 1.2.0
+
+Infrastructure:
+* Joda-Time 2.14.1
+* Spring Framework(6) 6.2.17
+* Dokka 2.2.0
+* Kover 0.9.8
+* logcaptor 2.12.6
+
+Features:
+* feat: EXPOSED-418 Support comments on table columns by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2728
+* feat: EXPOSED-989 Add Oracle FOR UPDATE SKIP LOCKED support by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2752
+* feat: EXPOSED-1001 Enable check constraint name change to trigger ALTER TABLE statements for more than H2 by @bog-walk in https://github.com/JetBrains/Exposed/pull/2759
+
+Bug fixes:
+* fix: EXPOSED-992 Prevent kotlin Uuid type leakage into r2dbc by @mcmacker4 in https://github.com/JetBrains/Exposed/pull/2750
+* fix: EXPOSED-983 Support reading JSONB columns outside transaction by using safer dialect check by @bystam in https://github.com/JetBrains/Exposed/pull/2748
+* fix: EXPOSED-1000 Fetching fresh data for cached entity causes encrypted field to fail with multiple decrypts by @bog-walk in https://github.com/JetBrains/Exposed/pull/2758
+* fix: In r2dbc use StringColumnType supertype for PostgreSQL text array handling by @o-nix in https://github.com/JetBrains/Exposed/pull/2761
+* fix: EXPOSED-994 JSONB contains() produces invalid SQL when JSON array contains single quote by @bog-walk in https://github.com/JetBrains/Exposed/pull/2768
+* fix: EXPOSED-1007 Array of fixed length CHAR type is truncated when statement parameter set by @bog-walk in https://github.com/JetBrains/Exposed/pull/2767
+
+Docs:
+* docs: EXPOSED-991 Specify the lack of R2DBC support in DAO-related topics by @vnikolova in https://github.com/JetBrains/Exposed/pull/2749
+* docs: EXPOSED-997 Update migration topic with known limitations by @bog-walk in https://github.com/JetBrains/Exposed/pull/2755
+
 # 1.1.1
 
 Fixes:
