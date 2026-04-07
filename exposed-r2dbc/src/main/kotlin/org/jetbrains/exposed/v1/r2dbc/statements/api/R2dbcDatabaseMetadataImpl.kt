@@ -7,6 +7,8 @@ import io.r2dbc.spi.Row
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.collect
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.api.ExposedMetadataUtils
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
@@ -320,17 +322,28 @@ class R2dbcDatabaseMetadataImpl(
         }
     }
 
+    private val sequenceNameCacheLock = Mutex()
+    private val existingSequenceNameCache = mutableSetOf<String>()
+
     override suspend fun sequences(): List<String> {
+        if (existingSequenceNameCache.isNotEmpty()) return existingSequenceNameCache.toList()
+
         val results = connection.executeSQL(metadataProvider.getAllSequences()) { row, _ ->
             row.getString("SEQUENCE_NAME")!!
         }.orEmpty()
 
         val dialect = currentDialect
-        return if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+        val processedNames = if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
             results.map { if (identifierManager.isDotPrefixedAndUnquoted(it)) "\"$it\"" else it }
         } else {
             results
         }
+
+        sequenceNameCacheLock.withLock {
+            existingSequenceNameCache.addAll(processedNames)
+        }
+
+        return processedNames
     }
 
     override suspend fun tableConstraints(tables: List<Table>): Map<String, List<ForeignKeyConstraint>> {
@@ -387,6 +400,7 @@ class R2dbcDatabaseMetadataImpl(
 
     override fun cleanCache() {
         existingIndicesCache.clear()
+        existingSequenceNameCache.clear()
     }
 
     private suspend fun tableCatalogAndSchema(table: Table): Pair<String, String> {
