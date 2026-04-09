@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.migration.plugin
+package org.jetbrains.exposed.v1.gradle.plugin
 
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
@@ -9,9 +9,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for the ExposedMigrationPlugin class.
- */
 class ExposedMigrationPluginTest {
 
     private lateinit var project: Project
