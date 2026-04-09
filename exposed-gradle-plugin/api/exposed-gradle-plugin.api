@@ -1,4 +1,4 @@
-public class org/jetbrains/exposed/migration/plugin/ExposedMigrationExtension {
+public class org/jetbrains/exposed/v1/gradle/plugin/ExposedMigrationExtension {
 	public fun <init> (Lorg/gradle/api/model/ObjectFactory;)V
 	public final fun getClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
 	public final fun getDatabasePassword ()Lorg/gradle/api/provider/Property;
@@ -12,13 +12,13 @@ public class org/jetbrains/exposed/migration/plugin/ExposedMigrationExtension {
 	public final fun getTestContainersImageName ()Lorg/gradle/api/provider/Property;
 }
 
-public final class org/jetbrains/exposed/migration/plugin/ExposedMigrationPlugin : org/gradle/api/Plugin {
+public final class org/jetbrains/exposed/v1/gradle/plugin/ExposedMigrationPlugin : org/gradle/api/Plugin {
 	public fun <init> ()V
 	public synthetic fun apply (Ljava/lang/Object;)V
 	public fun apply (Lorg/gradle/api/Project;)V
 }
 
-public abstract interface class org/jetbrains/exposed/migration/plugin/GenerateMigrationsParameters : org/gradle/workers/WorkParameters {
+public abstract interface class org/jetbrains/exposed/v1/gradle/plugin/GenerateMigrationsParameters : org/gradle/workers/WorkParameters {
 	public abstract fun getClasspathUrls ()Ljava/util/List;
 	public abstract fun getDatabasePassword ()Ljava/lang/String;
 	public abstract fun getDatabaseUrl ()Ljava/lang/String;
@@ -42,7 +42,7 @@ public abstract interface class org/jetbrains/exposed/migration/plugin/GenerateM
 	public abstract fun setTestContainersImageName (Ljava/lang/String;)V
 }
 
-public abstract class org/jetbrains/exposed/migration/plugin/GenerateMigrationsTask : org/gradle/api/DefaultTask {
+public abstract class org/jetbrains/exposed/v1/gradle/plugin/GenerateMigrationsTask : org/gradle/api/DefaultTask {
 	public fun <init> ()V
 	public final fun generateMigrations ()V
 	public abstract fun getClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
@@ -58,19 +58,19 @@ public abstract class org/jetbrains/exposed/migration/plugin/GenerateMigrationsT
 	public abstract fun getWorkerExecutor ()Lorg/gradle/workers/WorkerExecutor;
 }
 
-public abstract class org/jetbrains/exposed/migration/plugin/GenerateMigrationsWorker : org/gradle/workers/WorkAction {
+public abstract class org/jetbrains/exposed/v1/gradle/plugin/GenerateMigrationsWorker : org/gradle/workers/WorkAction {
 	public fun <init> ()V
 	public final fun container (Ljava/lang/String;)Lorg/testcontainers/containers/JdbcDatabaseContainer;
 	public fun execute ()V
 	public final fun findHighestVersion (Ljava/io/File;)Lkotlin/jvm/functions/Function1;
 }
 
-public final class org/jetbrains/exposed/migration/plugin/GenerateMigrationsWorker$GradleLogger : org/jetbrains/exposed/sql/SqlLogger {
-	public fun <init> (Lorg/jetbrains/exposed/migration/plugin/GenerateMigrationsWorker;)V
-	public fun log (Lorg/jetbrains/exposed/sql/statements/StatementContext;Lorg/jetbrains/exposed/sql/Transaction;)V
+public final class org/jetbrains/exposed/v1/gradle/plugin/GenerateMigrationsWorker$GradleLogger : org/jetbrains/exposed/v1/core/SqlLogger {
+	public fun <init> (Lorg/jetbrains/exposed/v1/gradle/plugin/GenerateMigrationsWorker;)V
+	public fun log (Lorg/jetbrains/exposed/v1/core/statements/StatementContext;Lorg/jetbrains/exposed/v1/core/Transaction;)V
 }
 
-public final class org/jetbrains/exposed/migration/plugin/NameGeneratorKt {
+public final class org/jetbrains/exposed/v1/gradle/plugin/NameGeneratorKt {
 	public static final fun statementToFileName (Ljava/lang/String;)Ljava/lang/String;
 }
 

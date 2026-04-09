@@ -1,5 +1,11 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     kotlin("jvm")
+
     alias(libs.plugins.dokka)
 }
 
@@ -7,11 +13,15 @@ repositories {
     mavenCentral()
 }
 
+kotlin {
+    jvmToolchain(17)
+}
+
 dependencies {
     implementation(gradleApi())
 
-    implementation(projects.exposed.exposedJdbc)
-    implementation(projects.exposed.exposedMigration)
+    implementation(project(":exposed-jdbc"))
+    implementation(project(":exposed-migration-jdbc"))
 
     implementation(libs.flyway.postgresql)
     implementation(libs.flyway.mysql)
@@ -24,20 +34,43 @@ dependencies {
     implementation(libs.testcontainers.mssqlserver)
     implementation(libs.testcontainers.oracle)
 
+    // TODO need to be implementation?
     implementation(libs.h2)
-    implementation(libs.postgre)
     implementation(libs.mysql)
-    implementation(libs.maria.db3)
+    implementation(libs.postgre)
+    implementation(libs.mariadb)
+    implementation(libs.oracle)
     implementation(libs.mssql)
-    implementation(libs.oracle19)
 
-    testImplementation(kotlin("test"))
+    testImplementation(libs.junit5)
+    testRuntimeOnly(libs.junit.platform.launcher)
+    testImplementation(kotlin("test-junit5"))
 }
 
-tasks.test {
+tasks.withType<KotlinCompile>().configureEach {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_1_8)
+    }
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    targetCompatibility = "8"
+}
+
+tasks.withType<Test>().configureEach {
+    if (JavaVersion.VERSION_1_8 > JavaVersion.current()) {
+        jvmArgs("-XX:MaxPermSize=256m")
+    }
+
+    // Needed for JDK 17 + ProjectBuilder; otherwise first test always fails with 'Could not inject synthetic classes'
+    // https://github.com/gradle/gradle/issues/18647
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED")
+
+    testLogging {
+        events.addAll(listOf(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED))
+        showStandardStreams = true
+        exceptionFormat = TestExceptionFormat.FULL
+    }
+
     useJUnitPlatform()
-}
-
-kotlin {
-    jvmToolchain(8)
 }

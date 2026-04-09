@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.migration.plugin
+package org.jetbrains.exposed.v1.gradle.plugin
 
 private const val HASH_LENGTH: Int = 8
 

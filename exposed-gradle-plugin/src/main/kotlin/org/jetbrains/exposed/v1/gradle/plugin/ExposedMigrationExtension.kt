@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.migration.plugin
+package org.jetbrains.exposed.v1.gradle.plugin
 
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty

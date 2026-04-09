@@ -46,9 +46,9 @@ hikariCP = "7.0.2"
 logcaptor = "2.12.6"
 maven-publish = "0.35.0"
 
-testcontainers = "1.20.6"
+testcontainers = "2.0.4"
 
-flyway = "11.4.1"
+flyway = "12.3.0"
 
 [libraries]
 jvm = { group = "org.jetbrains.kotlin.jvm", name = "org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }
@@ -118,16 +118,16 @@ r2dbc-oracle = { group = "com.oracle.database.r2dbc", name = "oracle-r2dbc", ver
 r2dbc-postgresql = { group = "org.postgresql", name = "r2dbc-postgresql", version.ref = "postgresql-r2dbc" }
 r2dbc-sqlserver = { group = "io.r2dbc", name = "r2dbc-mssql", version.ref = "sqlserver-r2dbc" }
 
-testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
-testcontainers-mysql = { module = "org.testcontainers:mysql", version.ref = "testcontainers" }
-testcontainers-mariadb = { module = "org.testcontainers:mariadb", version.ref = "testcontainers" }
-testcontainers-mssqlserver = { module = "org.testcontainers:mssqlserver", version.ref = "testcontainers" }
-testcontainers-oracle = { module = "org.testcontainers:oracle-xe", version.ref = "testcontainers" }
+testcontainers-postgresql = { group = "org.testcontainers", name = "testcontainers-postgresql", version.ref = "testcontainers" }
+testcontainers-mysql = { group = "org.testcontainers", name = "testcontainers-mysql", version.ref = "testcontainers" }
+testcontainers-mariadb = { group = "org.testcontainers", name = "testcontainers-mariadb", version.ref = "testcontainers" }
+testcontainers-mssqlserver = { group = "org.testcontainers", name = "testcontainers-mssqlserver", version.ref = "testcontainers" }
+testcontainers-oracle = { group = "org.testcontainers", name = "testcontainers-oracle-xe", version.ref = "testcontainers" }
 
-flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
-flyway-mysql = { module = "org.flywaydb:flyway-mysql", version.ref = "flyway" }
-flyway-sqlserver = { module = "org.flywaydb:flyway-sqlserver", version.ref = "flyway" }
-flyway-oracle = { module = "org.flywaydb:flyway-database-oracle", version.ref = "flyway" }
+flyway-postgresql = { group = "org.flywaydb", name = "flyway-database-postgresql", version.ref = "flyway" }
+flyway-mysql = { group = "org.flywaydb", name = "flyway-mysql", version.ref = "flyway" }
+flyway-sqlserver = { group = "org.flywaydb", name = "flyway-sqlserver", version.ref = "flyway" }
+flyway-oracle = { group = "org.flywaydb", name = "flyway-database-oracle", version.ref = "flyway" }
 
 logcaptor = { group = "io.github.hakky54", name = "logcaptor", version.ref = "logcaptor" }
 

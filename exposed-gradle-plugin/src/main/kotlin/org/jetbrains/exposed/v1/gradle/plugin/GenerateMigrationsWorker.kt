@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.migration.plugin
+package org.jetbrains.exposed.v1.gradle.plugin
 
 import org.flywaydb.core.Flyway
 import org.gradle.api.file.DirectoryProperty
@@ -6,22 +6,22 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SqlLogger
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.addLogger
-import org.jetbrains.exposed.sql.statements.StatementContext
-import org.jetbrains.exposed.sql.statements.expandArgs
-import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.SqlLogger
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.statements.StatementContext
+import org.jetbrains.exposed.v1.core.statements.expandArgs
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
 import org.testcontainers.containers.JdbcDatabaseContainer
-import org.testcontainers.containers.MSSQLServerContainer
-import org.testcontainers.containers.MariaDBContainer
-import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.containers.OracleContainer
-import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.Wait
+import org.testcontainers.mariadb.MariaDBContainer
+import org.testcontainers.mssqlserver.MSSQLServerContainer
+import org.testcontainers.mysql.MySQLContainer
+import org.testcontainers.postgresql.PostgreSQLContainer
 import java.io.File
 import java.io.File.separator
 import java.net.URL
@@ -160,12 +160,12 @@ abstract class GenerateMigrationsWorker : WorkAction<GenerateMigrationsParameter
 
     fun container(imageName: String): JdbcDatabaseContainer<*> =
         when {
-            imageName.startsWith("postgres:") -> PostgreSQLContainer<Nothing>(imageName)
-            imageName.startsWith("mysql:") -> MySQLContainer<Nothing>(imageName)
-            imageName.startsWith("mariadb:") -> MariaDBContainer<Nothing>(imageName)
+            imageName.startsWith("postgres:") -> PostgreSQLContainer(imageName)
+            imageName.startsWith("mysql:") -> MySQLContainer(imageName)
+            imageName.startsWith("mariadb:") -> MariaDBContainer(imageName)
             imageName.startsWith("oracle:") || imageName.startsWith("gvenzl/oracle-xe:") -> OracleContainer(imageName)
             imageName.startsWith("mcr.microsoft.com/mssql/server:") || imageName.startsWith("sqlserver:") ->
-                MSSQLServerContainer<Nothing>(imageName)
+                MSSQLServerContainer(imageName)
 
             else -> throw IllegalArgumentException(
                 "Unsupported database container image: $imageName. " +

@@ -28,6 +28,10 @@ class TestDb(val name: String) {
         return name != "h2_v2" || dialect != "H2_V2"
     }
 
+    internal fun ignoresPluginTests(dialect: String): Boolean {
+        return name != "h2_v2" || dialect != "H2_V2"
+    }
+
     inner class DependencyBlock {
         fun dependency(dependencyNotation: String) {
             dependencies.add(dependencyNotation)
@@ -108,6 +112,16 @@ private fun Project.createDbTestTaskByDialect(db: TestDb, taskName: String, dial
                     "org/jetbrains/exposed/v1/spring/*",
                     "org/jetbrains/exposed/v1/spring7/*",
                     "org/jetbrains/exposed/v1/jdbc-template/*"
+                )
+                isFailOnNoMatchingTests = false
+            }
+        }
+        if (db.ignoresPluginTests(dialect)) {
+            filter {
+                // exclude all test classes in Plugin modules:
+                // exposed-gradle-plugin
+                exclude(
+                    "org/jetbrains/exposed/v1/gradle/plugin/*",
                 )
                 isFailOnNoMatchingTests = false
             }
