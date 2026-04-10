@@ -38,6 +38,7 @@ dependencies {
     dokka(projects.exposed.exposedSpringBoot4Starter)
     dokka(projects.exposed.springTransaction)
     dokka(projects.exposed.spring7Transaction)
+    dokka(projects.exposed.exposedDaoR2dbc)
 
     // Kover aggregated coverage dependencies
     // Include all source modules for coverage aggregation
@@ -58,6 +59,7 @@ dependencies {
     kover(project(":exposed-migration-jdbc"))
     kover(project(":exposed-migration-r2dbc"))
     kover(project(":exposed-r2dbc"))
+    kover(project(":exposed-dao-r2dbc"))
 
     // Include test modules to ensure their tests are executed and coverage is collected
     kover(project(":exposed-tests"))
@@ -69,14 +71,10 @@ repositories {
     mavenCentral()
 }
 
+val unpublishedProjects = setOf("exposed-tests", "exposed-r2dbc-tests", "exposed-jdbc-r2dbc-tests", "exposed-dao-r2dbc-tests", "exposed-dao-r2dbc")
+
 allprojects {
-    if (this.name != "exposed-tests" &&
-        this.name != "exposed-r2dbc-tests" &&
-        this.name != "exposed-jdbc-r2dbc-tests" &&
-        this.name != "exposed-dao-r2dbc-tests" &&
-        this.name != "exposed-dao-r2dbc" &&
-        this != rootProject
-    ) {
+    if (this.name !in unpublishedProjects && this != rootProject) {
         apply(plugin = "com.vanniktech.maven.publish")
         apply(plugin = "signing")
         this@allprojects.mavenPublishing {
@@ -91,7 +89,7 @@ allprojects {
 }
 
 apiValidation {
-    ignoredProjects.addAll(listOf("exposed-tests", "exposed-bom", "exposed-r2dbc-tests", "exposed-jdbc-r2dbc-tests", "exposed-dao-r2dbc-tests"))
+    ignoredProjects.addAll(listOf("exposed-tests", "exposed-bom", "exposed-r2dbc-tests", "exposed-jdbc-r2dbc-tests", "exposed-dao-r2dbc-tests", "exposed-dao-r2dbc"))
 }
 
 subprojects {

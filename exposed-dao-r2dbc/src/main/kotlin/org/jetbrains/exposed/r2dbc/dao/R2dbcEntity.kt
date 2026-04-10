@@ -50,7 +50,7 @@ open class R2dbcEntity<ID : Any>(val id: EntityID<ID>) {
                 else -> defaultValueFun?.invoke() as T
             }
         }
-        else -> _readValues?.get(this) as T
+        else -> readValues[this]
     }
 
     operator fun <T> Column<T>.setValue(entity: R2dbcEntity<ID>, desc: KProperty<*>, value: T) {
@@ -101,7 +101,7 @@ open class R2dbcEntity<ID : Any>(val id: EntityID<ID>) {
         return cache.inserts[klass.table]?.contains(this) ?: false
     }
 
-    private fun storeWrittenValues() {
+    fun storeWrittenValues() {
         // Move write values to read values
         if (_readValues != null) {
             for ((c, v) in writeValues) {
@@ -119,7 +119,8 @@ open class R2dbcEntity<ID : Any>(val id: EntityID<ID>) {
     @Suppress("ForbiddenComment")
     open suspend fun flush(batch: R2dbcEntityBatchUpdate? = null): Boolean {
         if (isNewEntity()) {
-            return false
+            TransactionManager.current().entityCache.flushInserts(klass.table)
+            return true
         }
         if (writeValues.isNotEmpty()) {
             if (batch == null) {
