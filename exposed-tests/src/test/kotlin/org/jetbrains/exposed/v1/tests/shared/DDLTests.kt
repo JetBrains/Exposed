@@ -1,6 +1,10 @@
 package org.jetbrains.exposed.v1.tests.shared
 
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.Table.AutovacuumEnabledParameter
+import org.jetbrains.exposed.v1.core.Table.FillFactorParameter
+import org.jetbrains.exposed.v1.core.Table.RawTableStorageParameter
+import org.jetbrains.exposed.v1.core.Table.ToastTupleTargetParameter
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
@@ -1271,7 +1275,7 @@ class DDLTests : DatabaseTestsBase() {
         val testTable = object : Table("test_engine") {
             val id = integer("id")
             override val primaryKey = PrimaryKey(id)
-            override val options = listOf(EngineOption(TableEngine.MEMORY))
+            override val options = listOf(Table.EngineOption(Table.TableEngine.MEMORY))
         }
 
         withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE) {
@@ -1286,8 +1290,8 @@ class DDLTests : DatabaseTestsBase() {
             val id = integer("id")
             override val primaryKey = PrimaryKey(id)
             override val options = listOf(
-                EngineOption(TableEngine.INNODB),
-                CharsetOption("utf8mb4")
+                Table.EngineOption(Table.TableEngine.INNODB),
+                Table.CharsetOption("utf8mb4")
             )
         }
 
@@ -1318,7 +1322,7 @@ class DDLTests : DatabaseTestsBase() {
         val testTable = object : Table("test_combined") {
             val id = integer("id")
             override val primaryKey = PrimaryKey(id)
-            override val options = listOf(EngineOption(TableEngine.INNODB))
+            override val options = listOf(Table.EngineOption(Table.TableEngine.INNODB))
             override val storageParameters = listOf(
                 FillFactorParameter(70),
                 AutovacuumEnabledParameter(false)
@@ -1339,7 +1343,7 @@ class DDLTests : DatabaseTestsBase() {
             val id = integer("id")
             val name = varchar("name", 50)
             override val primaryKey = PrimaryKey(id)
-            override val options = listOf(EngineOption(TableEngine.MEMORY))
+            override val options = listOf(Table.EngineOption(Table.TableEngine.MEMORY))
         }
 
         withTables(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE, testTable) {
@@ -1403,28 +1407,28 @@ class DDLTests : DatabaseTestsBase() {
     @Test
     fun testTableModifiersAndStorageParametersSQL() {
         // Test TableEngine enum values
-        assertEquals("InnoDB", TableEngine.INNODB.engineName)
-        assertEquals("MyISAM", TableEngine.MYISAM.engineName)
-        assertEquals("MEMORY", TableEngine.MEMORY.engineName)
-        assertEquals("ARCHIVE", TableEngine.ARCHIVE.engineName)
-        assertEquals("CSV", TableEngine.CSV.engineName)
+        assertEquals("InnoDB", Table.TableEngine.INNODB.engineName)
+        assertEquals("MyISAM", Table.TableEngine.MYISAM.engineName)
+        assertEquals("MEMORY", Table.TableEngine.MEMORY.engineName)
+        assertEquals("ARCHIVE", Table.TableEngine.ARCHIVE.engineName)
+        assertEquals("CSV", Table.TableEngine.CSV.engineName)
 
-        // Test EngineOption SQL generation
-        assertEquals("ENGINE=InnoDB", EngineOption(TableEngine.INNODB).toSQL())
-        assertEquals("ENGINE=MEMORY", EngineOption(TableEngine.MEMORY).toSQL())
-        assertEquals("ENGINE=MyISAM", EngineOption(TableEngine.MYISAM).toSQL())
+        // Test Table.EngineOption SQL generation
+        assertEquals("ENGINE=InnoDB", Table.EngineOption(Table.TableEngine.INNODB).toSQL())
+        assertEquals("ENGINE=MEMORY", Table.EngineOption(Table.TableEngine.MEMORY).toSQL())
+        assertEquals("ENGINE=MyISAM", Table.EngineOption(Table.TableEngine.MYISAM).toSQL())
 
-        // Test CharsetOption SQL generation
-        assertEquals("DEFAULT CHARSET=utf8mb4", CharsetOption("utf8mb4").toSQL())
+        // Test Table.CharsetOption SQL generation
+        assertEquals("DEFAULT CHARSET=utf8mb4", Table.CharsetOption("utf8mb4").toSQL())
         assertEquals(
             "DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
-            CharsetOption("utf8mb4", "utf8mb4_unicode_ci").toSQL()
+            Table.CharsetOption("utf8mb4", "utf8mb4_unicode_ci").toSQL()
         )
 
-        // Test RawTableOption SQL generation
-        assertEquals("ROW_FORMAT=COMPRESSED", RawTableOption("ROW_FORMAT=COMPRESSED").toSQL())
+        // Test Table.RawTableOption SQL generation
+        assertEquals("ROW_FORMAT=COMPRESSED", Table.RawTableOption("ROW_FORMAT=COMPRESSED").toSQL())
 
-        // Test FillFactorParameter SQL generation and validation
+        // Test Table.FillFactorParameter SQL generation and validation
         assertEquals("fillfactor=70", FillFactorParameter(70).toSQL())
         assertEquals("fillfactor=10", FillFactorParameter(10).toSQL())
         assertEquals("fillfactor=100", FillFactorParameter(100).toSQL())
@@ -1441,7 +1445,7 @@ class DDLTests : DatabaseTestsBase() {
         assertFailsWith<IllegalArgumentException> { ToastTupleTargetParameter(0) }
         assertFailsWith<IllegalArgumentException> { ToastTupleTargetParameter(-1) }
 
-        // Test RawStorageParameter SQL generation
-        assertEquals("parallel_workers=4", RawStorageParameter("parallel_workers=4").toSQL())
+        // Test RawTableStorageParameter SQL generation
+        assertEquals("parallel_workers=4", RawTableStorageParameter("parallel_workers=4").toSQL())
     }
 }

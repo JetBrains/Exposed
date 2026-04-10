@@ -144,11 +144,6 @@ public final class org/jetbrains/exposed/v1/core/AutoIncColumnType : org/jetbrai
 	public fun valueToString (Ljava/lang/Object;)Ljava/lang/String;
 }
 
-public final class org/jetbrains/exposed/v1/core/AutovacuumEnabledParameter : org/jetbrains/exposed/v1/core/TableStorageParameter {
-	public fun <init> (Z)V
-	public fun toSQL ()Ljava/lang/String;
-}
-
 public final class org/jetbrains/exposed/v1/core/Avg : org/jetbrains/exposed/v1/core/Function, org/jetbrains/exposed/v1/core/WindowFunction {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Expression;I)V
 	public final fun getExpr ()Lorg/jetbrains/exposed/v1/core/Expression;
@@ -319,12 +314,6 @@ public final class org/jetbrains/exposed/v1/core/CharacterColumnType : org/jetbr
 	public fun sqlType ()Ljava/lang/String;
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Character;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
-}
-
-public final class org/jetbrains/exposed/v1/core/CharsetOption : org/jetbrains/exposed/v1/core/TableOption {
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun toSQL ()Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/v1/core/CheckConstraint : org/jetbrains/exposed/v1/core/DdlAware {
@@ -755,11 +744,6 @@ public final class org/jetbrains/exposed/v1/core/DoubleColumnType : org/jetbrain
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 }
 
-public final class org/jetbrains/exposed/v1/core/EngineOption : org/jetbrains/exposed/v1/core/TableOption {
-	public fun <init> (Lorg/jetbrains/exposed/v1/core/TableEngine;)V
-	public fun toSQL ()Ljava/lang/String;
-}
-
 public final class org/jetbrains/exposed/v1/core/EntityIDColumnType : org/jetbrains/exposed/v1/core/ColumnType {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Column;)V
 	public fun equals (Ljava/lang/Object;)Z
@@ -899,11 +883,6 @@ public abstract interface class org/jetbrains/exposed/v1/core/FieldSet {
 
 public final class org/jetbrains/exposed/v1/core/FieldSet$DefaultImpls {
 	public static fun getRealFields (Lorg/jetbrains/exposed/v1/core/FieldSet;)Ljava/util/List;
-}
-
-public final class org/jetbrains/exposed/v1/core/FillFactorParameter : org/jetbrains/exposed/v1/core/TableStorageParameter {
-	public fun <init> (I)V
-	public fun toSQL ()Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/v1/core/FirstValue : org/jetbrains/exposed/v1/core/WindowFunction {
@@ -1976,16 +1955,6 @@ public final class org/jetbrains/exposed/v1/core/Rank : org/jetbrains/exposed/v1
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 }
 
-public final class org/jetbrains/exposed/v1/core/RawStorageParameter : org/jetbrains/exposed/v1/core/TableStorageParameter {
-	public fun <init> (Ljava/lang/String;)V
-	public fun toSQL ()Ljava/lang/String;
-}
-
-public final class org/jetbrains/exposed/v1/core/RawTableOption : org/jetbrains/exposed/v1/core/TableOption {
-	public fun <init> (Ljava/lang/String;)V
-	public fun toSQL ()Ljava/lang/String;
-}
-
 public final class org/jetbrains/exposed/v1/core/ReferenceOption : java/lang/Enum {
 	public static final field CASCADE Lorg/jetbrains/exposed/v1/core/ReferenceOption;
 	public static final field NO_ACTION Lorg/jetbrains/exposed/v1/core/ReferenceOption;
@@ -2483,8 +2452,29 @@ public class org/jetbrains/exposed/v1/core/Table : org/jetbrains/exposed/v1/core
 	public final fun withDefinition (Lorg/jetbrains/exposed/v1/core/Column;[Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Column;
 }
 
+public final class org/jetbrains/exposed/v1/core/Table$AutovacuumEnabledParameter : org/jetbrains/exposed/v1/core/Table$TableStorageParameter {
+	public fun <init> (Z)V
+	public fun toSQL ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/v1/core/Table$CharsetOption : org/jetbrains/exposed/v1/core/Table$TableOption {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun toSQL ()Ljava/lang/String;
+}
+
 public final class org/jetbrains/exposed/v1/core/Table$Dual : org/jetbrains/exposed/v1/core/Table {
 	public static final field INSTANCE Lorg/jetbrains/exposed/v1/core/Table$Dual;
+}
+
+public final class org/jetbrains/exposed/v1/core/Table$EngineOption : org/jetbrains/exposed/v1/core/Table$TableOption {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/Table$TableEngine;)V
+	public fun toSQL ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/v1/core/Table$FillFactorParameter : org/jetbrains/exposed/v1/core/Table$TableStorageParameter {
+	public fun <init> (I)V
+	public fun toSQL ()Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/v1/core/Table$PrimaryKey {
@@ -2496,16 +2486,43 @@ public final class org/jetbrains/exposed/v1/core/Table$PrimaryKey {
 	public final fun getName ()Ljava/lang/String;
 }
 
-public final class org/jetbrains/exposed/v1/core/TableEngine : java/lang/Enum {
-	public static final field ARCHIVE Lorg/jetbrains/exposed/v1/core/TableEngine;
-	public static final field CSV Lorg/jetbrains/exposed/v1/core/TableEngine;
-	public static final field INNODB Lorg/jetbrains/exposed/v1/core/TableEngine;
-	public static final field MEMORY Lorg/jetbrains/exposed/v1/core/TableEngine;
-	public static final field MYISAM Lorg/jetbrains/exposed/v1/core/TableEngine;
+public final class org/jetbrains/exposed/v1/core/Table$RawTableOption : org/jetbrains/exposed/v1/core/Table$TableOption {
+	public fun <init> (Ljava/lang/String;)V
+	public fun toSQL ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/v1/core/Table$RawTableStorageParameter : org/jetbrains/exposed/v1/core/Table$TableStorageParameter {
+	public fun <init> (Ljava/lang/String;)V
+	public fun toSQL ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/v1/core/Table$TableEngine : java/lang/Enum {
+	public static final field ARCHIVE Lorg/jetbrains/exposed/v1/core/Table$TableEngine;
+	public static final field CSV Lorg/jetbrains/exposed/v1/core/Table$TableEngine;
+	public static final field INNODB Lorg/jetbrains/exposed/v1/core/Table$TableEngine;
+	public static final field MEMORY Lorg/jetbrains/exposed/v1/core/Table$TableEngine;
+	public static final field MYISAM Lorg/jetbrains/exposed/v1/core/Table$TableEngine;
 	public final fun getEngineName ()Ljava/lang/String;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/TableEngine;
-	public static fun values ()[Lorg/jetbrains/exposed/v1/core/TableEngine;
+	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Table$TableEngine;
+	public static fun values ()[Lorg/jetbrains/exposed/v1/core/Table$TableEngine;
+}
+
+public abstract class org/jetbrains/exposed/v1/core/Table$TableOption {
+	public fun <init> ()V
+	public abstract fun toSQL ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/jetbrains/exposed/v1/core/Table$TableStorageParameter {
+	public fun <init> ()V
+	public abstract fun toSQL ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/v1/core/Table$ToastTupleTargetParameter : org/jetbrains/exposed/v1/core/Table$TableStorageParameter {
+	public fun <init> (I)V
+	public fun toSQL ()Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/v1/core/TableKt {
@@ -2520,18 +2537,6 @@ public final class org/jetbrains/exposed/v1/core/TableKt {
 	public static final fun rightJoin (Lorg/jetbrains/exposed/v1/core/ColumnSet;Lorg/jetbrains/exposed/v1/core/ColumnSet;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;)Lorg/jetbrains/exposed/v1/core/Join;
 	public static synthetic fun rightJoin$default (Lorg/jetbrains/exposed/v1/core/ColumnSet;Lorg/jetbrains/exposed/v1/core/ColumnSet;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Join;
 	public static final fun targetTables (Lorg/jetbrains/exposed/v1/core/ColumnSet;)Ljava/util/List;
-}
-
-public abstract class org/jetbrains/exposed/v1/core/TableOption {
-	public fun <init> ()V
-	public abstract fun toSQL ()Ljava/lang/String;
-	public fun toString ()Ljava/lang/String;
-}
-
-public abstract class org/jetbrains/exposed/v1/core/TableStorageParameter {
-	public fun <init> ()V
-	public abstract fun toSQL ()Ljava/lang/String;
-	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/v1/core/TableUtils : org/jetbrains/exposed/v1/core/SchemaUtilityApi {
@@ -2551,11 +2556,6 @@ public class org/jetbrains/exposed/v1/core/TextColumnType : org/jetbrains/expose
 
 public final class org/jetbrains/exposed/v1/core/TimesOp : org/jetbrains/exposed/v1/core/CustomOperator {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/IColumnType;)V
-}
-
-public final class org/jetbrains/exposed/v1/core/ToastTupleTargetParameter : org/jetbrains/exposed/v1/core/TableStorageParameter {
-	public fun <init> (I)V
-	public fun toSQL ()Ljava/lang/String;
 }
 
 public abstract class org/jetbrains/exposed/v1/core/Transaction : org/jetbrains/exposed/v1/core/UserDataHolder, org/jetbrains/exposed/v1/core/transactions/TransactionInterface {
