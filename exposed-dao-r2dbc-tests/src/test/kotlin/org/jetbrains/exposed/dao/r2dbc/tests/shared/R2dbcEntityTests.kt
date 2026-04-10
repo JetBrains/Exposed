@@ -1,11 +1,11 @@
 package org.jetbrains.exposed.dao.r2dbc.tests.shared
 
+import org.jetbrains.exposed.r2dbc.dao.IntR2dbcEntity
+import org.jetbrains.exposed.r2dbc.dao.IntR2dbcEntityClass
+import org.jetbrains.exposed.r2dbc.dao.LongR2dbcEntity
+import org.jetbrains.exposed.r2dbc.dao.LongR2dbcEntityClass
 import org.jetbrains.exposed.r2dbc.dao.R2dbcEntity
 import org.jetbrains.exposed.r2dbc.dao.R2dbcEntityClass
-import org.jetbrains.exposed.r2dbc.dao.R2dbcIntEntity
-import org.jetbrains.exposed.r2dbc.dao.R2dbcIntEntityClass
-import org.jetbrains.exposed.r2dbc.dao.R2dbcLongEntity
-import org.jetbrains.exposed.r2dbc.dao.R2dbcLongEntityClass
 import org.jetbrains.exposed.r2dbc.dao.flushCache
 import org.jetbrains.exposed.r2dbc.dao.relationships.backReferencedOnSuspend
 import org.jetbrains.exposed.r2dbc.dao.relationships.optionalBackReferencedOnSuspend
@@ -55,10 +55,10 @@ object EntityTestsData {
         A, B
     }
 
-    open class AEntity(id: EntityID<Int>) : R2dbcIntEntity(id) {
+    open class AEntity(id: EntityID<Int>) : IntR2dbcEntity(id) {
         var b1 by XTable.b1
 
-        companion object : R2dbcIntEntityClass<AEntity>(XTable) {
+        companion object : IntR2dbcEntityClass<AEntity>(XTable) {
             fun create(b1: Boolean, type: XType): AEntity {
                 val init: AEntity.() -> Unit = {
                     this.b1 = b1
@@ -76,7 +76,7 @@ object EntityTestsData {
         var b2 by XTable.b2
         val y by YEntity optionalReferencedOnSuspend XTable.y1
 
-        companion object : R2dbcIntEntityClass<BEntity>(XTable) {
+        companion object : IntR2dbcEntityClass<BEntity>(XTable) {
             fun create(init: AEntity.() -> Unit): BEntity {
                 val answer = new {
                     init()
@@ -158,14 +158,14 @@ class R2dbcEntityTests : R2dbcDatabaseTestsBase() {
     }
 
     internal object OneAutoFieldTable : IntIdTable("single")
-    internal class SingleFieldEntity(id: EntityID<Int>) : R2dbcIntEntity(id) {
-        companion object : R2dbcIntEntityClass<SingleFieldEntity>(OneAutoFieldTable)
+    internal class SingleFieldR2dbcEntity(id: EntityID<Int>) : IntR2dbcEntity(id) {
+        companion object : IntR2dbcEntityClass<SingleFieldR2dbcEntity>(OneAutoFieldTable)
     }
 
     @Test
     fun testOneFieldEntity() {
         withTables(OneAutoFieldTable) {
-            val new = SingleFieldEntity.new { }
+            val new = SingleFieldR2dbcEntity.new { }
             commit()
         }
     }
@@ -208,15 +208,15 @@ class R2dbcEntityTests : R2dbcDatabaseTestsBase() {
         val title = varchar("title", 50)
     }
 
-    class Board(id: EntityID<Int>) : R2dbcIntEntity(id) {
-        companion object : R2dbcIntEntityClass<Board>(Boards)
+    class Board(id: EntityID<Int>) : IntR2dbcEntity(id) {
+        companion object : IntR2dbcEntityClass<Board>(Boards)
 
         var name by Boards.name
         val posts by Post optionalReferrersOnSuspend Posts.board
     }
 
-    class Post(id: EntityID<Long>) : R2dbcLongEntity(id) {
-        companion object : R2dbcLongEntityClass<Post>(Posts)
+    class Post(id: EntityID<Long>) : LongR2dbcEntity(id) {
+        companion object : LongR2dbcEntityClass<Post>(Posts)
 
         val board by Board optionalReferencedOnSuspend Posts.board
         val parent by Post optionalReferencedOnSuspend Posts.parent
@@ -224,8 +224,8 @@ class R2dbcEntityTests : R2dbcDatabaseTestsBase() {
         val optCategory by Category optionalReferencedOnSuspend Posts.optCategory
     }
 
-    class Category(id: EntityID<Int>) : R2dbcIntEntity(id) {
-        companion object : R2dbcIntEntityClass<Category>(Categories)
+    class Category(id: EntityID<Int>) : IntR2dbcEntity(id) {
+        companion object : IntR2dbcEntityClass<Category>(Categories)
 
         val uniqueId by Categories.uniqueId
         var title by Categories.title
@@ -260,14 +260,14 @@ class R2dbcEntityTests : R2dbcDatabaseTestsBase() {
         val name = text("name")
     }
 
-    open class Human(id: EntityID<Int>) : R2dbcIntEntity(id) {
-        companion object : R2dbcIntEntityClass<Human>(Humans)
+    open class Human(id: EntityID<Int>) : IntR2dbcEntity(id) {
+        companion object : IntR2dbcEntityClass<Human>(Humans)
 
         var h by Humans.h
     }
 
-    class User(id: EntityID<Int>) : R2dbcIntEntity(id) {
-        companion object : R2dbcIntEntityClass<User>(Users) {
+    class User(id: EntityID<Int>) : IntR2dbcEntity(id) {
+        companion object : IntR2dbcEntityClass<User>(Users) {
             fun create(name: String): User {
                 val h = Human.new { h = name.take(2) }
                 return User.new(h.id.value) {
