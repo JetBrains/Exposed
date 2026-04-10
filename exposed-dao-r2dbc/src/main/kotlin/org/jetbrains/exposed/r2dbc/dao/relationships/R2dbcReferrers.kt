@@ -24,7 +24,7 @@ class R2dbcReferrers<ParentID : Any, in Parent : R2dbcEntity<ParentID>, ChildID 
         }
     }
 
-    @Suppress("NestedBlockDepth")
+    @Suppress("NestedBlockDepth", "ForbiddenComment")
     operator fun getValue(thisRef: Parent, property: KProperty<*>): suspend () -> List<Child> {
         // Return a suspend lambda that will load the referrers when invoked
         return {

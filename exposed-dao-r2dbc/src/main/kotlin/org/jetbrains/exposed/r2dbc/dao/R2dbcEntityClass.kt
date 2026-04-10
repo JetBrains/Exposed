@@ -117,6 +117,7 @@ abstract class R2dbcEntityClass<ID : Any, out T : R2dbcEntity<ID>>(
 
     suspend operator fun get(id: ID): T = get(R2dbcDaoEntityID(id, table))
 
+    @Suppress("ForbiddenComment")
     fun removeFromCache(entity: R2dbcEntity<ID>) {
         val cache = warmCache()
         cache.remove(table, entity)
