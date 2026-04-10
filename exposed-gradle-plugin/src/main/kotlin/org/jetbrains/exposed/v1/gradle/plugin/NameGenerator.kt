@@ -3,147 +3,143 @@ package org.jetbrains.exposed.v1.gradle.plugin
 private const val HASH_LENGTH: Int = 8
 
 /**
- * The function extracts the operation type and table name from the SQL statement
+ * Extracts the operation type and table name from the SQL statement
  * and formats them into a standardized filename pattern.
  *
  * @return A formatted filename for the SQL statement
  */
-fun String.statementToFileName(): String {
+internal fun String.statementToFileDescription(useUpperCase: Boolean): String {
     val normalizedStatement = trim().replace(Regex("\\s+"), " ")
 
     return when {
         // CREATE TABLE statements
         normalizedStatement.startsWith("CREATE TABLE", ignoreCase = true) -> {
-            val tableName = extractTableName("CREATE TABLE", normalizedStatement)
-            "CREATE_TABLE_$tableName"
+            val tableName = normalizedStatement.extractTableName("CREATE TABLE")
+            "CREATE_TABLE_$tableName".inRequestedCase(useUpperCase)
         }
 
         // ALTER TABLE statements
         normalizedStatement.startsWith("ALTER TABLE", ignoreCase = true) -> {
-            val tableName = extractTableName("ALTER TABLE", normalizedStatement)
-
-            // Check if it's a constraint addition
+            val tableName = normalizedStatement.extractTableName("ALTER TABLE")
+            // Check if it's a constraint addition or drop
             if (normalizedStatement.contains("ADD CONSTRAINT", ignoreCase = true)) {
-                val constraintName = extractConstraintName(normalizedStatement)
-                "ALTER_TABLE_${tableName}_ADD_CONSTRAINT_$constraintName"
+                val constraintName = normalizedStatement.extractConstraintName("ADD CONSTRAINT")
+                "ALTER_TABLE_${tableName}_ADD_CONSTRAINT_$constraintName".inRequestedCase(useUpperCase)
+            } else if (normalizedStatement.contains("DROP CONSTRAINT", ignoreCase = true)) {
+                val constraintName = normalizedStatement.extractConstraintName("DROP CONSTRAINT")
+                "ALTER_TABLE_${tableName}_DROP_CONSTRAINT_$constraintName".inRequestedCase(useUpperCase)
             } else {
-                "ALTER_TABLE_$tableName"
+                "ALTER_TABLE_$tableName".inRequestedCase(useUpperCase)
             }
         }
 
         // CREATE SEQUENCE statements
         normalizedStatement.startsWith("CREATE SEQUENCE", ignoreCase = true) -> {
-            val sequenceName = extractSequenceName(normalizedStatement)
-            "CREATE_SEQUENCE_$sequenceName"
-        }
-
-        // DROP TABLE statements
-        normalizedStatement.startsWith("DROP TABLE", ignoreCase = true) -> {
-            val tableName = extractTableName("DROP TABLE", normalizedStatement)
-            "DROP_TABLE_$tableName"
+            // Check if it's a new sequence for a new table
+            if (normalizedStatement.contains("CREATE TABLE", ignoreCase = true)) {
+                val tableName = normalizedStatement.extractTableName("CREATE TABLE")
+                "CREATE_TABLE_$tableName".inRequestedCase(useUpperCase)
+            } else {
+                val sequenceName = normalizedStatement.extractSequenceName("CREATE SEQUENCE")
+                "CREATE_SEQUENCE_$sequenceName".inRequestedCase(useUpperCase)
+            }
         }
 
         // CREATE INDEX statements
         normalizedStatement.startsWith("CREATE INDEX", ignoreCase = true) -> {
-            val indexInfo = extractIndexInfo(normalizedStatement)
-            "CREATE_INDEX_$indexInfo"
+            val indexInfo = normalizedStatement.extractIndexInfo("CREATE INDEX")
+            "CREATE_INDEX_$indexInfo".inRequestedCase(useUpperCase)
+        }
+
+        // DROP TABLE statements
+        normalizedStatement.startsWith("DROP TABLE", ignoreCase = true) -> {
+            val tableName = normalizedStatement.extractTableName("DROP TABLE")
+            "DROP_TABLE_$tableName".inRequestedCase(useUpperCase)
+        }
+
+        // DROP INDEX statements
+        normalizedStatement.startsWith("DROP INDEX", ignoreCase = true) -> {
+            val indexInfo = normalizedStatement.extractIndexInfo("DROP INDEX")
+            "DROP_INDEX_$indexInfo".inRequestedCase(useUpperCase)
         }
 
         else -> {
-            val operation = normalizedStatement.split(" ").first().uppercase()
-            val tableName = tryExtractAnyTableName(normalizedStatement)
+            val operation = normalizedStatement.split(" ").first()
+            val tableName = normalizedStatement.extractAnyTableNameOrNull()
 
-            if (tableName.isNotEmpty()) {
-                "${operation}_$tableName"
+            if (tableName != null) {
+                "${operation}_$tableName".inRequestedCase(useUpperCase)
             } else {
                 val hash = normalizedStatement.hashCode().toString().replace("-", "").take(HASH_LENGTH)
-                "${operation}_STATEMENT_$hash"
+                "${operation}_STATEMENT_$hash".inRequestedCase(useUpperCase)
             }
         }
     }
 }
 
-private fun extractTableName(prefix: String, statement: String): String {
-    // Remove the prefix and get the table name part
-    val afterPrefix = statement.substring(statement.indexOf(prefix, ignoreCase = true) + prefix.length).trim()
+private fun String.inRequestedCase(useUpperCase: Boolean): String = if (useUpperCase) uppercase() else lowercase()
 
-    // Handle "IF NOT EXISTS" in CREATE TABLE statements or "IF EXISTS" in DROP TABLE statements
-    val tableNamePart = when {
-        afterPrefix.startsWith("IF NOT EXISTS", ignoreCase = true) -> {
-            afterPrefix.substring("IF NOT EXISTS".length).trim()
-        }
+private fun String.extractTableName(prefix: String): String {
+    val afterPrefix = substringAfterPrefix(prefix)
 
-        afterPrefix.startsWith("IF EXISTS", ignoreCase = true) -> {
-            afterPrefix.substring("IF EXISTS".length).trim()
-        }
-
-        else -> {
-            afterPrefix
-        }
-    }
+    // Handle potential "IF NOT EXISTS" or "IF EXISTS"
+    val tableNamePart = afterPrefix.substringAfterExists()
 
     // Extract the table name (everything up to the first space, parenthesis, or end of string)
     val tableName = tableNamePart.split(Regex("[ (]"))[0].trim()
 
-    // Remove quotes and schema prefixes if present
-    return sanitizeIdentifier(tableName)
+    return tableName.sanitized()
 }
 
-private fun extractSequenceName(statement: String): String {
-    // Remove the prefix and get the sequence name part
-    val afterPrefix =
-        statement.substring(statement.indexOf("CREATE SEQUENCE", ignoreCase = true) + "CREATE SEQUENCE".length).trim()
+private fun String.extractSequenceName(prefix: String): String {
+    val afterPrefix = substringAfterPrefix(prefix)
 
-    // Handle "IF NOT EXISTS" in CREATE SEQUENCE statements
-    val sequenceNamePart = if (afterPrefix.startsWith("IF NOT EXISTS", ignoreCase = true)) {
-        afterPrefix.substring("IF NOT EXISTS".length).trim()
-    } else {
-        afterPrefix
-    }
+    // Handle potential "IF NOT EXISTS" or "IF EXISTS"
+    val sequenceNamePart = afterPrefix.substringAfterExists()
 
     // Extract the sequence name (everything up to the first space or end of string)
     val sequenceName = sequenceNamePart.split(" ")[0].trim()
 
-    // Remove quotes and schema prefixes if present
-    return sanitizeIdentifier(sequenceName)
+    return sequenceName.sanitized()
 }
 
-private fun extractConstraintName(statement: String): String {
-    val constraintPart =
-        statement.substring(statement.indexOf("ADD CONSTRAINT", ignoreCase = true) + "ADD CONSTRAINT".length).trim()
+private fun String.extractConstraintName(prefix: String): String {
+    val constraintPart = substringAfterPrefix(prefix)
 
     // Extract the constraint name (everything up to the first space or end of string)
     val constraintName = constraintPart.split(" ")[0].trim()
 
-    // Remove quotes if present
-    return sanitizeIdentifier(constraintName)
+    return constraintName.sanitized()
 }
 
-private fun extractIndexInfo(statement: String): String {
-    // Extract the index name
-    val afterPrefix =
-        statement.substring(statement.indexOf("CREATE INDEX", ignoreCase = true) + "CREATE INDEX".length).trim()
+private fun String.extractIndexInfo(prefix: String): String {
+    val afterPrefix = substringAfterPrefix(prefix)
     val indexName = afterPrefix.split(" ")[0].trim()
 
     // Extract the table name (after "ON")
-    val onIndex = statement.indexOf(" ON ", ignoreCase = true)
+    val onKey = " ON "
+    val onIndex = indexOf(" ON ", ignoreCase = true)
     if (onIndex != -1) {
-        val afterOn = statement.substring(onIndex + " ON ".length).trim()
+        val afterOn = substring(onIndex + onKey.length).trim()
         val tableName = afterOn.split(Regex("[ (]"))[0].trim()
 
-        return "${sanitizeIdentifier(indexName)}_ON_${sanitizeIdentifier(tableName)}"
+        return "${indexName.sanitized()}_ON_${tableName.sanitized()}"
     }
 
-    return sanitizeIdentifier(indexName)
+    return indexName.sanitized()
 }
 
-private fun tryExtractAnyTableName(statement: String): String {
+private fun String.extractAnyTableNameOrNull(): String? {
+    val sqlDelimiter = Regex("[ ,;(]")
+
+    // TODO determine how UPDATE statements could be in generated SQL
     // Special case for UPDATE statements
-    if (statement.startsWith("UPDATE", ignoreCase = true)) {
-        val afterUpdate = statement.substring("UPDATE".length).trim()
-        val tableName = afterUpdate.split(Regex("[ ,;(]"))[0].trim()
+    val updateKey = "UPDATE"
+    if (startsWith(updateKey, ignoreCase = true)) {
+        val afterUpdate = substring(updateKey.length).trim()
+        val tableName = afterUpdate.split(sqlDelimiter)[0].trim()
         if (tableName.isNotEmpty()) {
-            return sanitizeIdentifier(tableName)
+            return tableName.sanitized()
         }
     }
 
@@ -153,30 +149,44 @@ private fun tryExtractAnyTableName(statement: String): String {
     for (keyword in tableKeywords) {
         // Look for the keyword with word boundaries
         val regex = Regex("\\b$keyword\\b", RegexOption.IGNORE_CASE)
-        val match = regex.find(statement)
+        val match = regex.find(this)
         if (match != null) {
-            val afterKeyword = statement.substring(match.range.last + 1).trim()
-            val potentialTableName = afterKeyword.split(Regex("[ ,;(]"))[0].trim()
+            val afterKeyword = substring(match.range.last + 1).trim()
+            val potentialTableName = afterKeyword.split(sqlDelimiter)[0].trim()
             if (potentialTableName.isNotEmpty()) {
-                return sanitizeIdentifier(potentialTableName)
+                return potentialTableName.sanitized()
             }
         }
     }
 
-    return ""
+    return null
 }
 
-private fun sanitizeIdentifier(identifier: String): String {
-    var result = identifier
-        .replace("\"", "")
+private fun String.substringAfterPrefix(prefix: String): String {
+    return substring(indexOf(prefix, ignoreCase = true) + prefix.length).trim()
+}
+
+private fun String.substringAfterExists(): String {
+    val ifNotExistsClause = "IF NOT EXISTS"
+    val ifExistsClause = "IF EXISTS"
+    return when {
+        startsWith(ifNotExistsClause, ignoreCase = true) -> substring(ifNotExistsClause.length).trim()
+
+        startsWith(ifExistsClause, ignoreCase = true) -> substring(ifExistsClause.length).trim()
+
+        else -> this
+    }
+}
+
+private fun String.sanitized(): String {
+    var result = replace("\"", "")
         .replace("`", "")
         .replace("'", "")
 
-    // Remove schema prefix if present (e.g., "schema.table" -> "table")
+    // Remove schema prefix if present (e.g., "schema.table" -> "table"; "schema.public.table" -> "table")
     if (result.contains(".")) {
         result = result.substring(result.lastIndexOf(".") + 1)
     }
 
-    // Convert to uppercase
-    return result.uppercase()
+    return result
 }

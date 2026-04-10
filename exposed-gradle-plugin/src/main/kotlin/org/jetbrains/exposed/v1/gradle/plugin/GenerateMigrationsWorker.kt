@@ -1,11 +1,12 @@
 package org.jetbrains.exposed.v1.gradle.plugin
 
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.format
+import kotlinx.datetime.format.DateTimeComponents
 import org.flywaydb.core.Flyway
-import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkParameters
 import org.jetbrains.exposed.v1.core.SqlLogger
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.Transaction
@@ -24,60 +25,62 @@ import org.testcontainers.mysql.MySQLContainer
 import org.testcontainers.postgresql.PostgreSQLContainer
 import java.io.File
 import java.io.File.separator
-import java.net.URL
 import java.net.URLClassLoader
-import java.util.regex.Pattern
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
-interface GenerateMigrationsParameters : WorkParameters {
-    val migrationsDir: DirectoryProperty
-    var exposedTablesPackage: String
-    var migrationFilePrefix: String
-    var migrationFileSeparator: String
-    var migrationFileExtension: String
-    var databaseUrl: String?
-    var databaseUser: String?
-    var databasePassword: String?
-    var testContainersImageName: String?
-    var classpathUrls: List<URL>
-    var debug: Boolean
-}
-
+/**
+ * Represents the implementation of a unit of work to be used when submitting work to the migrations extension work executor.
+ */
 abstract class GenerateMigrationsWorker : WorkAction<GenerateMigrationsParameters> {
     private val logger: Logger = Logging.getLogger(GenerateMigrationsWorker::class.java)
-    private val versionPattern by lazy {
-        Pattern.compile("^${parameters.migrationFilePrefix}(\\d+)${parameters.migrationFileSeparator}.*$")
+    private val classExtensionLength: Int = ".class".length
+
+    // format like V3__description or V0003_description
+    private val versionXPattern by lazy {
+        Regex("^${parameters.filePrefix}(\\d+)${parameters.fileSeparator}.*$")
     }
+
+    // format like V3_1__description or V0003_001_description
     private val versionXYPattern by lazy {
-        Pattern.compile("^${parameters.migrationFilePrefix}(\\d+)_(\\d+)${parameters.migrationFileSeparator}.*$")
+        Regex("^${parameters.filePrefix}(\\d+)_(\\d+)${parameters.fileSeparator}.*$")
     }
-    private val clasExtensionLength: Int = ".class".length
+
+    // format like V3_YYYYMMDDHHMMSS__description or V003_YYYYMMDDHHMMSS__description or V3_YYYYMMDDHHMM__description
+    private val versionXTSPattern by lazy {
+        Regex("^${parameters.filePrefix}(\\d+)_(\\d{12,14})${parameters.fileSeparator}.*$")
+    }
 
     override fun execute() {
         val params = parameters
-        val extension = params.migrationFileExtension
-        val migrationsDirectory = params.migrationsDir.get().asFile
-        if (!migrationsDirectory.exists()) migrationsDirectory.mkdirs()
+        val extension = params.fileExtension
+        val migrationsDirectory = params.fileDirectory.get().asFile
+        if (!migrationsDirectory.exists()) {
+            migrationsDirectory.mkdirs()
+        }
         val versionGen = findHighestVersion(migrationsDirectory)
 
         val generated = withClassloader { classloader ->
             withDatabase { database ->
                 var ignored = 0
-                classloader.getClassesInPackage(params.exposedTablesPackage)
+                classloader
+                    .getClassesInPackage(params.tablesPackage)
                     .mapNotNull { it.tableOrNull() }
                     .mapIndexedNotNull { index, table ->
                         transaction(database) {
                             addLogger(GradleLogger())
-                            val statements =
-                                MigrationUtils.statementsRequiredForDatabaseMigration(
-                                    table,
-                                    withLogs = params.debug
-                                )
+                            // TODO confirm order <-- this goes through each individual table & creates a script
+                            // TODO what if tables have references, as this avoids Exposed implicit sortTablesByReferences?
+                            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(
+                                table,
+                                withLogs = params.debug
+                            )
                             if (statements.isNotEmpty()) {
-                                val name = statements.first().statementToFileName()
+                                val description = statements.first().statementToFileDescription(params.useUpperCaseDescription)
                                 val version = versionGen(index - ignored)
-                                val fileName = "$version$name$extension"
+                                val fileName = "$version$description$extension"
                                 val migrationFile = File(migrationsDirectory, fileName)
                                 migrationFile.writeText(statements.joinToString(";\n"))
                                 fileName
@@ -95,86 +98,132 @@ abstract class GenerateMigrationsWorker : WorkAction<GenerateMigrationsParameter
         logger.lifecycle("")
     }
 
+    // TODO should there be an extensions property for versionFormat, to simplify/override this?
+    @OptIn(ExperimentalTime::class)
     @Suppress("NestedBlockDepth")
-    fun findHighestVersion(migrationsDirectory: File): (Int) -> String {
+    private fun findHighestVersion(migrationsDirectory: File): (Int) -> String {
         var highestMajor = 0
-        var hasXYFormat = true
+        var highestVersionLength = 0
+        var hasXTSFormat = false
+        var hasXYFormat = false
+        var hasXFormat = false
 
         migrationsDirectory.listFiles()?.forEach { file ->
             val fileName = file.name
+            var version = 0
+            var versionLength = 0
 
-            // Check for VX_Y__ format first
-            val matcherXY = versionXYPattern.matcher(fileName)
-            if (matcherXY.matches()) {
-                val major = matcherXY.group(1).toInt()
-
-                if (major > highestMajor || (major == highestMajor)) {
-                    highestMajor = major
+            // TODO should VYYYMMDDHHMMSS__ format also be an option?
+            // TODO should VX__ be the fallback default?
+            // Check for V#_YYYYMMDDHHMMSS__ format first (also covers formats like V00#_YYYYMMDDHHMMSS__ or without SS)
+            // Then check for V#_#__ format second (also covers formats like V00#_00#__)
+            // Then check for V#__ format (also covers formats like V00#__)
+            versionXTSPattern.matchEntire(fileName)?.let { matcher ->
+                hasXTSFormat = true
+                val stringVersion = matcher.groupValues[1]
+                version = stringVersion.toInt()
+                versionLength = stringVersion.length
+            }
+                ?: versionXYPattern.matchEntire(fileName)?.let { matcher ->
+                    hasXTSFormat = false
+                    hasXYFormat = true
+                    val stringVersion = matcher.groupValues[1]
+                    version = stringVersion.toInt()
+                    versionLength = stringVersion.length
                 }
-            } else {
-                // Check for VX__ format
-                val matcher = versionPattern.matcher(fileName)
-                if (matcher.matches()) {
+                ?: versionXPattern.matchEntire(fileName)?.let { matcher ->
+                    hasXTSFormat = false
                     hasXYFormat = false
-                    val version = matcher.group(1).toInt()
-                    if (version > highestMajor) {
-                        highestMajor = version
-                    }
+                    hasXFormat = true
+                    val stringVersion = matcher.groupValues[1]
+                    version = stringVersion.toInt()
+                    versionLength = stringVersion.length
+                }
+
+            // TODO determine if the boolean flags is what we want; i.e. the last file format always wins??? Or should the first win?
+            if (hasXTSFormat || hasXYFormat || hasXFormat) {
+                if (version >= highestMajor) {
+                    highestMajor = version
+                }
+                if (versionLength > version.toString().length && versionLength > highestVersionLength) {
+                    highestVersionLength = versionLength
                 }
             }
         }
         highestMajor++
 
-        return if (hasXYFormat) {
-            { index: Int -> "${parameters.migrationFilePrefix}${highestMajor}_${index}${parameters.migrationFileSeparator}" }
+        return if (hasXTSFormat) {
+            { _: Int ->
+                val majorPadded = highestMajor.toString().padStart(highestVersionLength, '0')
+                "${parameters.filePrefix}${majorPadded}_${getCurrentTimestamp()}${parameters.fileSeparator}"
+            }
+        } else if (hasXYFormat) {
+            { index: Int ->
+                val majorPadded = highestMajor.toString().padStart(highestVersionLength, '0')
+                val minorPadded = index.toString().padStart(highestVersionLength, '0')
+                "${parameters.filePrefix}${majorPadded}_${minorPadded}${parameters.fileSeparator}"
+            }
         } else {
-            { index: Int -> "${parameters.migrationFilePrefix}${highestMajor}${parameters.migrationFileSeparator}" }
+            { _: Int ->
+                val majorPadded = highestMajor.toString().padStart(highestVersionLength, '0')
+                "${parameters.filePrefix}$majorPadded${parameters.fileSeparator}"
+            }
         }
     }
 
-    private inline fun <A> withDatabase(block: (Database) -> A): A =
-        if (parameters.testContainersImageName != null) {
-            container(parameters.testContainersImageName!!).use { container ->
-                withDatabase(container.jdbcUrl, container.username, container.password) { database ->
-                    val migrationsDirectory = parameters.migrationsDir.get().asFile
-                    if (migrationsDirectory.walk().any()) {
-                        Flyway.configure()
-                            .dataSource(container.jdbcUrl, container.username, container.password)
-                            .locations("filesystem:${migrationsDirectory.absolutePath}")
-                            .load()
-                            .migrate()
-                    }
-                    block(database)
+    @OptIn(ExperimentalTime::class)
+    private fun getCurrentTimestamp(): String {
+        val ts = Clock.System.now()
+        val customFormat = DateTimeComponents.Format {
+            date(LocalDate.Formats.ISO_BASIC)
+            hour()
+            minute()
+            second()
+        }
+        return ts.format(customFormat)
+    }
+
+    private inline fun <A> withDatabase(block: (Database) -> A): A = if (parameters.testContainersImageName != null) {
+        container(parameters.testContainersImageName!!).use { container ->
+            withDatabase(container.jdbcUrl, container.username, container.password) { database ->
+                val migrationsDirectory = parameters.fileDirectory.get().asFile
+                if (migrationsDirectory.walk().any()) {
+                    Flyway.configure()
+                        .dataSource(container.jdbcUrl, container.username, container.password)
+                        .locations("filesystem:${migrationsDirectory.absolutePath}")
+                        .load()
+                        .migrate()
                 }
+                block(database)
             }
-        } else {
-            require(
-                parameters.databaseUrl == null ||
-                    parameters.databaseUser == null ||
-                    parameters.databasePassword == null
-            ) {
-                "Database properties (url, user, password) must be provided when not using TestContainers"
-            }
-            withDatabase(parameters.databaseUrl!!, parameters.databaseUser!!, parameters.databasePassword!!, block)
         }
-
-    fun container(imageName: String): JdbcDatabaseContainer<*> =
-        when {
-            imageName.startsWith("postgres:") -> PostgreSQLContainer(imageName)
-            imageName.startsWith("mysql:") -> MySQLContainer(imageName)
-            imageName.startsWith("mariadb:") -> MariaDBContainer(imageName)
-            imageName.startsWith("oracle:") || imageName.startsWith("gvenzl/oracle-xe:") -> OracleContainer(imageName)
-            imageName.startsWith("mcr.microsoft.com/mssql/server:") || imageName.startsWith("sqlserver:") ->
-                MSSQLServerContainer(imageName)
-
-            else -> throw IllegalArgumentException(
-                "Unsupported database container image: $imageName. " +
-                    "Supported prefixes are: postgres:, mysql:, mariadb:, sqlserver:, mcr.microsoft.com/mssql/server:, oracle:, gvenzl/oracle-xe:"
-            )
-        }.apply {
-            waitingFor(Wait.forListeningPort())
-            start()
+    } else {
+        require(
+            parameters.databaseUrl != null &&
+                parameters.databaseUser != null &&
+                parameters.databasePassword != null
+        ) {
+            "Database properties (url, user, password) must be provided when not using TestContainers"
         }
+        withDatabase(parameters.databaseUrl!!, parameters.databaseUser!!, parameters.databasePassword!!, block)
+    }
+
+    private fun container(imageName: String): JdbcDatabaseContainer<*> = when {
+        imageName.startsWith("postgres:") -> PostgreSQLContainer(imageName)
+        imageName.startsWith("mysql:") -> MySQLContainer(imageName)
+        imageName.startsWith("mariadb:") -> MariaDBContainer(imageName)
+        imageName.startsWith("oracle:") || imageName.startsWith("gvenzl/oracle-xe:") -> OracleContainer(imageName)
+        imageName.startsWith("mcr.microsoft.com/mssql/server:") || imageName.startsWith("sqlserver:") ->
+            MSSQLServerContainer(imageName)
+
+        else -> throw IllegalArgumentException(
+            "Unsupported database container image: $imageName. " +
+                "Supported prefixes are: postgres:, mysql:, mariadb:, sqlserver:, mcr.microsoft.com/mssql/server:, oracle:, gvenzl/oracle-xe:"
+        )
+    }.apply {
+        waitingFor(Wait.forListeningPort())
+        start()
+    }
 
     private inline fun <A> withDatabase(url: String, user: String, password: String, block: (Database) -> A): A {
         val db = Database.connect(url = url, user = user, password = password)
@@ -185,12 +234,11 @@ abstract class GenerateMigrationsWorker : WorkAction<GenerateMigrationsParameter
         }
     }
 
-    private fun KClass<*>.tableOrNull(): Table? =
-        if (isSubclassOf(Table::class) && !isAbstract) {
-            (objectInstance as Table)
-        } else {
-            null
-        }
+    private fun KClass<*>.tableOrNull(): Table? = if (isSubclassOf(Table::class) && !isAbstract) {
+        (objectInstance as Table)
+    } else {
+        null
+    }
 
     private inline fun <A> withClassloader(block: (URLClassLoader) -> A): A {
         val original = Thread.currentThread().contextClassLoader
@@ -215,7 +263,7 @@ abstract class GenerateMigrationsWorker : WorkAction<GenerateMigrationsParameter
                         .path
                         .replace(separator, ".").dropLast(file.name.length + 1)
                     val fullPackage = packageName + "." + if (subPackageName.isBlank()) "" else "$subPackageName."
-                    val clazzName = file.name.dropLast(clasExtensionLength)
+                    val clazzName = file.name.dropLast(classExtensionLength)
                     Class.forName("$fullPackage$clazzName", true, this).kotlin
                 }
         }
