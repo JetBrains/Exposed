@@ -131,6 +131,44 @@ To generate a migration script based on schema differences between your database
 This method allows you to see what the migration script will look like before applying the migration. If a migration script with the same name already exists,
 its content will be overwritten.
 
+### Reset metadata caches
+
+<tldr>
+    <p>API references:
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc.vendors/-database-dialect-metadata/reset-caches.html">
+            <code>resetCaches</code> (JDBC)
+        </a>,
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc.vendors/-database-dialect-metadata/reset-caches.html">
+            <code>resetCaches</code> (R2DBC)
+        </a>
+    </p>
+</tldr>
+
+Some schema alignment methods rely on database metadata queries that could be potentially run multiple times for all tables being migrated.
+Exposed uses a number of metadata caches internally to avoid these unecessary and redundant query calls. In order to ensure accurate metadata retrieval,
+these caches are automatically cleared and reset whenever a schema-altering method is invoked, like `SchemaUtils.create()`, `SchemaUtils.drop()`,
+or `SchemaUtils.setSchema()`. The caches are also reset at the termination of a transaction block.
+
+Simply generating the required SQL statements to align your schema will not trigger a cache reset.
+This means that if you manually execute SQL statements, then attempt, for example, a schema validation method within the same transaction,
+the result may be inaccurate due to a stale cache. It is suggested that running schema-altering SQL statements should be done in a separate
+transaction block from any methods that may later use metadata caches. Otherwise, a manual call to `.resetCaches()` should be immediately made
+to ensure that updated database metadata will be later retrieved:
+
+```Kotlin
+transaction(db) {
+    println(UsersTable.exists()) // true
+
+    val statements: List<String> = UsersTable.dropStatement()
+    execInBatch(statements)
+    db.dialectMetadata.resetCaches()
+
+    println(UsersTable.exists()) // false
+}
+```
+
+In the example above, there would be no need to call `.resetCaches()` if `SchemaUtils.drop(UsersTable)` is used instead.
+
 ## Validating the database schema
 
 Before applying any migrations, it's useful to validate that your Exposed schema definitions match the actual state of the database. While the primary use of

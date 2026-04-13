@@ -508,11 +508,15 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         }
     }
 
+    private val existingSequenceNameCache = ConcurrentHashMap.newKeySet<String>()
+
     @Suppress("MagicNumber")
     override fun sequences(): List<String> {
+        if (existingSequenceNameCache.isNotEmpty()) return existingSequenceNameCache.toList()
+
         val dialect = currentDialect
         val fieldName = "SEQUENCE_NAME"
-        return when (dialect) {
+        val sequenceNames = when (dialect) {
             is OracleDialect -> metadata.connection.executeSQL("SELECT $fieldName FROM USER_SEQUENCES") { rs ->
                 rs.iterate {
                     val seqName = getString(fieldName)
@@ -538,6 +542,10 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 getString(3)
             }
         } ?: emptyList()
+
+        existingSequenceNameCache.addAll(sequenceNames)
+
+        return sequenceNames
     }
 
     @Synchronized
@@ -675,6 +683,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     @Synchronized
     override fun cleanCache() {
         existingIndicesCache.clear()
+        existingSequenceNameCache.clear()
     }
 
     private fun <T> lazyMetadata(body: DatabaseMetaData.() -> T) = lazy { metadata.body() }

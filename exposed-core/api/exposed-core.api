@@ -2045,6 +2045,7 @@ public abstract class org/jetbrains/exposed/v1/core/SchemaUtilityApi {
 	protected final fun createDdl (Lorg/jetbrains/exposed/v1/core/ForeignKeyConstraint;)Ljava/util/List;
 	protected final fun filterAndLogExcessConstraints (Ljava/util/Map;Z)Ljava/util/List;
 	protected final fun filterAndLogExcessIndices (Ljava/util/Map;Z)Ljava/util/List;
+	protected final fun filterAndLogMissingAndUnmappedCheckConstraints (Ljava/util/Map;Z[Lorg/jetbrains/exposed/v1/core/Table;)Lkotlin/Pair;
 	protected final fun filterAndLogMissingAndUnmappedIndices (Ljava/util/Map;Ljava/util/Set;ZZ[Lorg/jetbrains/exposed/v1/core/Table;)Lkotlin/Pair;
 	protected final fun hasCycle (Ljava/util/List;)Z
 	protected final fun log (Ljava/util/Collection;Ljava/lang/String;Z)V
