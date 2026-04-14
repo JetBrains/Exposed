@@ -43,6 +43,7 @@ import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
 
 class ConnectionTests : R2dbcDatabaseTestsBase() {
 
@@ -324,21 +325,29 @@ class ConnectionTests : R2dbcDatabaseTestsBase() {
         Assumptions.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
         val initialCount = getIdleInTransactionCount()
 
+        suspendTransaction(dialect.db) {
+            SchemaUtils.create(People)
+        }
+
         repeat(30) { i ->
             val job = launch {
                 suspendTransaction(dialect.db) {
                     People.insert {
                         it[People.firstName] = "test-$i"
                     }
-                    delay(5000) // Cancellation happens here
+                    delay(5000.milliseconds) // Cancellation happens here
                 }
             }
-            delay(100)
+            delay(100.milliseconds)
             job.cancelAndJoin()
 
             val finalCount = getIdleInTransactionCount()
             val leaked = finalCount - initialCount
-            assertEquals(0, leaked, "Connection was leaked due to transdaction cancellation")
+            assertEquals(0, leaked, "Connection was leaked due to transaction cancellation")
+        }
+
+        suspendTransaction(dialect.db) {
+            SchemaUtils.drop(People)
         }
     }
 

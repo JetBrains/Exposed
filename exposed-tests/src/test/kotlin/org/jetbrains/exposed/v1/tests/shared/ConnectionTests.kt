@@ -1,12 +1,19 @@
 package org.jetbrains.exposed.v1.tests.shared
 
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.name
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
@@ -15,6 +22,8 @@ import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 import java.sql.Types
 import kotlin.test.assertContains
+import kotlin.test.assertEquals
+import kotlin.time.Duration.Companion.milliseconds
 
 class ConnectionTests : DatabaseTestsBase() {
 
@@ -136,6 +145,59 @@ class ConnectionTests : DatabaseTestsBase() {
         } catch (cause: Exception) {
             assertTrue(cause.message != null)
             assertContains(cause.message!!, "Table \"TESTER\" not found")
+        }
+    }
+
+    @Test
+    fun testNoConnectionLeakOnCancellation() = runTest {
+        Assumptions.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
+        val initialCount = getIdleInTransactionCount()
+
+        transaction(dialect.db) {
+            SchemaUtils.create(People)
+        }
+
+        repeat(30) { i ->
+            val job = launch {
+                suspendTransaction(dialect.db) {
+                    People.insert {
+                        it[People.firstName] = "test-$i"
+                    }
+                    delay(5000.milliseconds) // Cancellation happens here
+                }
+            }
+            delay(100.milliseconds)
+            job.cancelAndJoin()
+
+            val finalCount = getIdleInTransactionCount()
+            val leaked = finalCount - initialCount
+            assertEquals(0, leaked, "Connection was leaked due to transaction cancellation")
+        }
+
+        transaction(dialect.db) {
+            SchemaUtils.drop(People)
+        }
+    }
+
+    private suspend fun getIdleInTransactionCount(): Int {
+        if (dialect.db == null) {
+            dialect.db = dialect.connect()
+        }
+
+        return suspendTransaction(dialect.db!!) {
+            maxAttempts = 1
+            exec(
+                """
+              SELECT COUNT(*) as count
+              FROM pg_stat_activity
+              WHERE state is not null
+              AND datname = current_database()
+              AND pid != pg_backend_pid()
+                """.trimIndent()
+            ) { rs ->
+                rs.next()
+                rs.getInt(1)
+            } ?: 0
         }
     }
 }
