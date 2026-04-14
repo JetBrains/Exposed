@@ -5,6 +5,7 @@ import io.r2dbc.spi.Statement
 import org.jetbrains.exposed.v1.core.IColumnType
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import java.util.ServiceLoader
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Base representation of a type mapper that allows logic for setting a value in a [Statement] and getting a value
@@ -101,9 +102,12 @@ interface R2dbcRegistryTypeMapping : R2dbcTypeMapping {
 class R2dbcRegistryTypeMappingImpl : R2dbcRegistryTypeMapping {
     private val mappers: MutableList<TypeMapper> = mutableListOf()
 
+    private val matchingMappersCache = ConcurrentHashMap<Pair<Class<*>, Class<*>>, List<TypeMapper>>()
+
     override fun register(mapper: TypeMapper): R2dbcRegistryTypeMappingImpl {
         mappers.add(mapper)
         mappers.sortBy { -it.priority }
+        matchingMappersCache.clear()
         return this
     }
 
@@ -115,7 +119,6 @@ class R2dbcRegistryTypeMappingImpl : R2dbcRegistryTypeMapping {
         index: Int
     ): Boolean {
         for (mapper in getMatchingMappers(dialect, columnType)) {
-            // Try to set the value
             if (mapper.setValue(statement, dialect, this, columnType, value, index)) return true
         }
         return false
@@ -143,8 +146,11 @@ class R2dbcRegistryTypeMappingImpl : R2dbcRegistryTypeMapping {
         dialect: DatabaseDialect,
         columnType: IColumnType<*>,
     ): List<TypeMapper> {
-        return mappers
-            .filter { mapper -> mapper.dialects.isEmpty() || mapper.dialects.any { it.isInstance(dialect) } }
-            .filter { mapper -> mapper.columnTypes.isEmpty() || mapper.columnTypes.any { it.isInstance(columnType) } }
+        val key = dialect.javaClass to columnType.javaClass
+        return matchingMappersCache.getOrPut(key) {
+            mappers
+                .filter { mapper -> mapper.dialects.isEmpty() || mapper.dialects.any { it.isInstance(dialect) } }
+                .filter { mapper -> mapper.columnTypes.isEmpty() || mapper.columnTypes.any { it.isInstance(columnType) } }
+        }
     }
 }
