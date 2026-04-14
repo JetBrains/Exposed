@@ -655,6 +655,90 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      */
     open val primaryKey: PrimaryKey? = null
 
+    /**
+     * Table options to be appended at the very end of the CREATE TABLE statement,
+     * after the closing parenthesis of the column definitions block.
+     *
+     * Commonly used for MySQL/MariaDB ENGINE specification, charset settings, and other
+     * database-specific table options.
+     *
+     * Exposed provides built-in option classes:
+     * - [EngineOption] - MySQL/MariaDB storage engine (InnoDB, MyISAM, MEMORY, etc.)
+     * - [CharsetOption] - Character set and collation
+     * - [RawTableOption] - Custom options as raw SQL strings for any database-specific setting
+     *
+     * **Important**: Table options are only applied during table creation. They are **not tracked**
+     * by Exposed's migration system. If you change an option (e.g., from `ENGINE=MyISAM` to `ENGINE=InnoDB`),
+     * the migration system will not detect this change. You must manually create ALTER TABLE statements
+     * or recreate the table to apply option changes.
+     *
+     * Example:
+     * ```kotlin
+     * object Users : Table("users") {
+     *     val id = integer("id")
+     *     override val primaryKey = PrimaryKey(id)
+     *     override val options = listOf(
+     *         EngineOption(TableEngine.INNODB),
+     *         CharsetOption("utf8mb4"),
+     *         RawTableOption("ROW_FORMAT=COMPRESSED")  // Custom option
+     *     )
+     * }
+     * ```
+     *
+     * This will generate:
+     * ```sql
+     * CREATE TABLE users (
+     *     id INT NOT NULL,
+     *     PRIMARY KEY (id)
+     * ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=COMPRESSED
+     * ```
+     *
+     * The table options appear after the `)` that closes the column definitions.
+     */
+    open val options: List<TableOption> = emptyList()
+
+    /**
+     * Storage parameters to be included in the WITH clause at the very end of the CREATE TABLE statement,
+     * after the closing parenthesis of the column definitions block and after any table options.
+     *
+     * Used by PostgreSQL, SQL Server, and other databases for storage-specific options.
+     *
+     * Exposed provides built-in parameter classes:
+     * - [FillFactorParameter] - PostgreSQL fillfactor (10-100)
+     * - [AutovacuumEnabledParameter] - PostgreSQL autovacuum control
+     * - [ToastTupleTargetParameter] - PostgreSQL TOAST configuration
+     * - [RawTableStorageParameter] - Custom parameters as raw SQL strings for any database-specific setting
+     *
+     * **Important**: Storage parameters are only applied during table creation. They are **not tracked**
+     * by Exposed's migration system. If you change a storage parameter (e.g., from `fillfactor=70` to
+     * `fillfactor=80`), the migration system will not detect this change. You must manually create
+     * ALTER TABLE statements or use database-specific commands to apply storage parameter changes.
+     *
+     * Example:
+     * ```kotlin
+     * object Users : Table("users") {
+     *     val id = integer("id")
+     *     override val primaryKey = PrimaryKey(id)
+     *     override val storageParameters = listOf(
+     *         FillFactorParameter(70),
+     *         AutovacuumEnabledParameter(false),
+     *         RawTableStorageParameter("parallel_workers=4")  // Custom parameter
+     *     )
+     * }
+     * ```
+     *
+     * This will generate:
+     * ```sql
+     * CREATE TABLE users (
+     *     id INT NOT NULL,
+     *     PRIMARY KEY (id)
+     * ) WITH (fillfactor=70, autovacuum_enabled=false, parallel_workers=4)
+     * ```
+     *
+     * The storage parameters appear in a `WITH (...)` clause after the `)` that closes the column definitions.
+     */
+    open val storageParameters: List<TableStorageParameter> = emptyList()
+
     // EntityID columns
 
     /** Converts the @receiver column to an [EntityID] column. */
@@ -1756,6 +1840,19 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
                 }
 
                 append(")")
+
+                // Add table options (e.g., ENGINE=InnoDB for MySQL)
+                if (options.isNotEmpty()) {
+                    append(" ")
+                    append(options.joinToString(separator = " ") { it.toSQL() })
+                }
+
+                // Add storage parameters in WITH clause (e.g., PostgreSQL, SQL Server)
+                if (storageParameters.isNotEmpty()) {
+                    append(" WITH (")
+                    append(storageParameters.joinToString(separator = ", ") { it.toSQL() })
+                    append(")")
+                }
             }
         }
 
@@ -1818,6 +1915,221 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     override fun hashCode(): Int = tableName.hashCode()
+
+    /**
+     * Base class for table options that are appended at the very end of CREATE TABLE statements,
+     * after the closing parenthesis of the column definitions block.
+     *
+     * Table options are database-specific settings that appear after the `)` that closes the
+     * column definitions and before any WITH clause. Commonly used for MySQL/MariaDB storage engines,
+     * character sets, and other vendor-specific options.
+     *
+     * **Important**: Table options are only applied during table creation and are **not tracked**
+     * by Exposed's migration system. Changes to options will not be detected automatically.
+     *
+     * Example SQL structure:
+     * ```sql
+     * CREATE TABLE users (
+     *     id INT,
+     *     name VARCHAR(50)
+     * ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4  -- Table options appear here
+     *   WITH (fillfactor=70)  -- Storage parameters appear here
+     * ```
+     */
+    abstract class TableOption {
+        /**
+         * Returns the SQL string representation of this option.
+         */
+        abstract fun toSQL(): String
+
+        override fun toString(): String = toSQL()
+    }
+
+    /**
+     * MySQL/MariaDB storage engine option.
+     *
+     * Example:
+     * ```kotlin
+     * object Users : Table("users") {
+     *     override val options = listOf(Table.EngineOption(Table.TableEngine.INNODB))
+     * }
+     * ```
+     *
+     * Generates: `ENGINE=InnoDB`
+     */
+    class EngineOption(private val engine: TableEngine) : TableOption() {
+        override fun toSQL(): String = "ENGINE=${engine.engineName}"
+    }
+
+    /**
+     * Character set and collation option for MySQL/MariaDB.
+     *
+     * Example:
+     * ```kotlin
+     * object Users : Table("users") {
+     *     override val options = listOf(Table.CharsetOption("utf8mb4", "utf8mb4_unicode_ci"))
+     * }
+     * ```
+     *
+     * Generates: `DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`
+     */
+    class CharsetOption(
+        private val charset: String,
+        private val collation: String? = null
+    ) : TableOption() {
+        override fun toSQL(): String = buildString {
+            append("DEFAULT CHARSET=$charset")
+            if (collation != null) {
+                append(" COLLATE=$collation")
+            }
+        }
+    }
+
+    /**
+     * Generic table option for database-specific settings not covered by specific option types.
+     *
+     * Use this for vendor-specific options that don't have a dedicated option class.
+     *
+     * Example:
+     * ```kotlin
+     * object Users : Table("users") {
+     *     override val options = listOf(Table.RawTableOption("ROW_FORMAT=COMPRESSED"))
+     * }
+     * ```
+     */
+    class RawTableOption(private val sql: String) : TableOption() {
+        override fun toSQL(): String = sql
+    }
+
+    /**
+     * Common MySQL/MariaDB storage engines.
+     */
+    enum class TableEngine(val engineName: String) {
+        /** InnoDB - Default engine with ACID transaction support and foreign keys */
+        INNODB("InnoDB"),
+
+        /** MyISAM - Legacy engine for read-heavy workloads without transaction support */
+        MYISAM("MyISAM"),
+
+        /** MEMORY - In-memory tables for temporary or cache data */
+        MEMORY("MEMORY"),
+
+        /** ARCHIVE - Compressed, archived storage for historical data */
+        ARCHIVE("ARCHIVE"),
+
+        /** CSV - Tables stored in CSV format */
+        CSV("CSV")
+    }
+
+    /**
+     * Base class for storage parameters included in the WITH clause at the very end of CREATE TABLE statements,
+     * after the closing parenthesis of the column definitions block and after any table modifiers.
+     *
+     * Storage parameters are database-specific options for configuring table storage behavior.
+     * Used by PostgreSQL, SQL Server, and other databases.
+     *
+     * **Important**: Storage parameters are only applied during table creation and are **not tracked**
+     * by Exposed's migration system. Changes to storage parameters will not be detected automatically.
+     *
+     * Example SQL structure:
+     * ```sql
+     * CREATE TABLE users (
+     *     id INT,
+     *     name VARCHAR(50)
+     * ) ENGINE=InnoDB  -- Table modifiers appear here
+     *   WITH (fillfactor=70, autovacuum_enabled=false)  -- Storage parameters appear here
+     * ```
+     */
+    abstract class TableStorageParameter {
+        /**
+         * Returns the SQL string representation of this parameter for use in a WITH clause.
+         */
+        abstract fun toSQL(): String
+
+        override fun toString(): String = toSQL()
+    }
+
+    /**
+     * PostgreSQL fillfactor parameter.
+     *
+     * Specifies the percentage of space that table pages should be filled with data.
+     * The remaining space is reserved for updates to reduce table bloat.
+     *
+     * Valid range: 10-100
+     *
+     * Example:
+     * ```kotlin
+     * object Users : Table("users") {
+     *     override val storageParameters = listOf(Table.FillFactorParameter(70))
+     * }
+     * ```
+     *
+     * Generates: `fillfactor=70` (used in `WITH (fillfactor=70)`)
+     */
+    class FillFactorParameter(private val value: Int) : TableStorageParameter() {
+        init {
+            require(value in 10..100) { "fillfactor must be between 10 and 100, got $value" }
+        }
+
+        override fun toSQL(): String = "fillfactor=$value"
+    }
+
+    /**
+     * PostgreSQL autovacuum_enabled parameter.
+     *
+     * Controls whether automatic vacuuming is enabled for this table.
+     *
+     * Example:
+     * ```kotlin
+     * object LargeTable : Table("large_table") {
+     *     override val storageParameters = listOf(Table.AutovacuumEnabledParameter(false))
+     * }
+     * ```
+     *
+     * Generates: `autovacuum_enabled=false`
+     */
+    class AutovacuumEnabledParameter(private val enabled: Boolean) : TableStorageParameter() {
+        override fun toSQL(): String = "autovacuum_enabled=$enabled"
+    }
+
+    /**
+     * PostgreSQL toast_tuple_target parameter.
+     *
+     * Controls the minimum tuple length required before TOAST compression is attempted.
+     * Larger values may reduce CPU overhead at the cost of storage space.
+     *
+     * Example:
+     * ```kotlin
+     * object Documents : Table("documents") {
+     *     override val storageParameters = listOf(Table.ToastTupleTargetParameter(8160))
+     * }
+     * ```
+     *
+     * Generates: `toast_tuple_target=8160`
+     */
+    class ToastTupleTargetParameter(private val value: Int) : TableStorageParameter() {
+        init {
+            require(value > 0) { "toast_tuple_target must be positive, got $value" }
+        }
+
+        override fun toSQL(): String = "toast_tuple_target=$value"
+    }
+
+    /**
+     * Generic storage parameter for database-specific options not covered by specific parameter types.
+     *
+     * Use this for vendor-specific options that don't have a dedicated parameter class.
+     *
+     * Example:
+     * ```kotlin
+     * object Users : Table("users") {
+     *     override val storageParameters = listOf(Table.RawTableStorageParameter("parallel_workers=4"))
+     * }
+     * ```
+     */
+    class RawTableStorageParameter(private val sql: String) : TableStorageParameter() {
+        override fun toSQL(): String = sql
+    }
 
     /**
      * Represents a special dummy `DUAL` table that is accessible by all users.
