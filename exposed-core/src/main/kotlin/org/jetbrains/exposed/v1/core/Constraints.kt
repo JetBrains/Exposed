@@ -216,11 +216,8 @@ data class CheckConstraint(
 
     internal val checkPart = "CONSTRAINT $checkName CHECK ($checkOp)"
 
-    private val DatabaseDialect.cannotAlterCheckConstraint: Boolean
-        get() = this is SQLiteDialect || (this as? MysqlDialect)?.isMysql8 == false
-
     override fun createStatement(): List<String> {
-        return if (currentDialect.cannotAlterCheckConstraint) {
+        return if (!currentDialect.supportsAlterCheckConstraint) {
             exposedLogger.warn("Creation of CHECK constraints is not currently supported by ${currentDialect.name}")
             listOf()
         } else {
@@ -231,7 +228,7 @@ data class CheckConstraint(
     override fun modifyStatement(): List<String> = dropStatement() + createStatement()
 
     override fun dropStatement(): List<String> {
-        return if (currentDialect.cannotAlterCheckConstraint) {
+        return if (!currentDialect.supportsAlterCheckConstraint) {
             exposedLogger.warn("Deletion of CHECK constraints is not currently supported by ${currentDialect.name}")
             listOf()
         } else {

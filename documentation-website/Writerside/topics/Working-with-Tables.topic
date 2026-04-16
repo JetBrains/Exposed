@@ -100,6 +100,122 @@
                         include-lines="21-25" />
             <p>Depending on what DBMS you use, the types of columns could be different in actual SQL queries.</p>
         </chapter>
+        <chapter title="Table options" id="table-options">
+            <p>
+                Exposed allows you to specify database-specific table options using the <code>options</code> and
+                <code>storageParameters</code> properties. These options are appended to the generated <code>CREATE TABLE</code>
+                statement.
+            </p>
+            <chapter title="Table modifiers" id="table-modifiers">
+                <p>
+                    The <code>options</code> property accepts a list of <code>TableOption</code> objects that will be
+                    appended after the table definition. This is commonly used for MySQL/MariaDB storage engines and
+                    character set configurations:
+                </p>
+                <code-block lang="kotlin">
+                    object Users : Table("users") {
+                        val id = integer("id")
+                        val name = varchar("name", 50)
+                        override val primaryKey = PrimaryKey(id)
+                        override val options = listOf(
+                            EngineOption(TableEngine.INNODB),
+                            CharsetOption("utf8mb4")
+                        )
+                    }
+                </code-block>
+                <p>This generates the following SQL:</p>
+                <code-block lang="sql">
+                    CREATE TABLE users (
+                        id INT NOT NULL,
+                        name VARCHAR(50) NOT NULL,
+                        PRIMARY KEY (id)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                </code-block>
+                <p>
+                    For custom database-specific options not covered by built-in modifiers, use <code>RawTableOption</code>:
+                </p>
+                <code-block lang="kotlin">
+                    override val options = listOf(RawTableOption("ROW_FORMAT=COMPRESSED"))
+                </code-block>
+                <note>
+                    <p>
+                        Table options are database-specific. See
+                        <a href="https://dev.mysql.com/doc/refman/8.0/en/create-table.html">MySQL</a> or
+                        <a href="https://mariadb.com/kb/en/create-table/">MariaDB</a> documentation
+                        for available options.
+                    </p>
+                </note>
+            </chapter>
+            <chapter title="Storage parameters" id="storage-parameters">
+                <p>
+                    The <code>storageParameters</code> property accepts a list of <code>TableStorageParameter</code> objects
+                    that will be included in a <code>WITH</code> clause. This is used by PostgreSQL, SQL Server, and other
+                    databases for storage-specific options:
+                </p>
+                <code-block lang="kotlin">
+                    object LargeDataTable : Table("large_data") {
+                        val id = integer("id")
+                        val data = text("data")
+                        override val primaryKey = PrimaryKey(id)
+                        override val storageParameters = listOf(
+                            FillFactorParameter(70),
+                            AutovacuumEnabledParameter(false)
+                        )
+                    }
+                </code-block>
+                <p>This generates the following SQL for PostgreSQL:</p>
+                <code-block lang="sql">
+                    CREATE TABLE large_data (
+                        id INT NOT NULL,
+                        data TEXT NOT NULL,
+                        PRIMARY KEY (id)
+                    ) WITH (fillfactor=70, autovacuum_enabled=false)
+                </code-block>
+                <p>
+                    For custom storage parameters not covered by built-in types, use <code>RawStorageParameter</code>:
+                </p>
+                <code-block lang="kotlin">
+                    override val storageParameters = listOf(RawStorageParameter("parallel_workers=4"))
+                </code-block>
+                <note>
+                    <p>
+                        Storage parameters are database-specific. See
+                        <a href="https://www.postgresql.org/docs/current/sql-createtable.html">PostgreSQL</a> or
+                        <a href="https://learn.microsoft.com/en-us/sql/t-sql/statements/create-table-transact-sql">SQL Server</a>
+                        documentation for available parameters.
+                    </p>
+                </note>
+                <tip>
+                    <p>
+                        You can use both <code>options</code> and <code>storageParameters</code> together if your
+                        database supports it, although this is uncommon in practice.
+                    </p>
+                </tip>
+            </chapter>
+            <chapter title="Database-specific documentation" id="table-options-references">
+                <p>
+                    For complete information about available table options and storage parameters for your database,
+                    refer to the official documentation:
+                </p>
+                <list>
+                    <li>
+                        <a href="https://dev.mysql.com/doc/refman/8.0/en/create-table.html">MySQL CREATE TABLE syntax</a>
+                        (see table_options section)
+                    </li>
+                    <li>
+                        <a href="https://mariadb.com/docs/server/server-usage/tables/create-table#table-options">MariaDB CREATE TABLE syntax</a>
+                        (see table_options section)
+                    </li>
+                    <li>
+                        <a href="https://www.postgresql.org/docs/current/sql-createtable.html">PostgreSQL CREATE TABLE syntax</a>
+                        (see WITH clause for storage parameters)
+                    </li>
+                    <li>
+                        <a href="https://learn.microsoft.com/en-us/sql/t-sql/statements/create-table-transact-sql">SQL Server CREATE TABLE syntax</a>
+                    </li>
+                </list>
+            </chapter>
+        </chapter>
     </chapter>
 
     <chapter title="Constraints" id="constraints">

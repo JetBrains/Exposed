@@ -242,7 +242,48 @@ git add <api-files>
 
 If no public API changed, skip this step.
 
-## Step 11: Commit the Fix
+## Step 11: Update Documentation Website
+
+If the PR introduces a new feature or changes existing public API behavior, update the documentation website to reflect these changes.
+
+### When to Update Documentation
+
+Update documentation when:
+- A new public API is added (new methods, properties, or classes)
+- Existing API behavior changes in a way users would notice
+- A new feature is introduced that users need to learn about
+- An example or best practice in the docs no longer applies
+
+Skip this step when:
+- The change is purely internal (bug fix with no API changes)
+- The change only affects test code
+- The documentation already accurately describes the new behavior
+
+### Documentation Structure
+
+The documentation website is located in the `documentation-website` directory:
+
+- **Topic files**: `documentation-website/Writerside/topics/` - XML files for each documentation page
+
+### How to Update
+
+1. **Identify the relevant topic**:
+    - For DSL features: Look in topics related to table definitions, queries, or DDL
+    - For DAO features: Look in DAO-related topics
+    - For database-specific features: Check vendor-specific documentation sections
+
+2. **Update the content**:
+    - Add new sections for new features with clear examples
+    - Update existing examples if API changed
+    - Add notes or callouts for important behavior changes
+
+3. **Test locally** (if possible):
+    - Check if there's a preview or build command in the documentation-website directory
+    - Verify that examples compile and make sense in context
+
+Prefer modifying existing documentation files over creating new ones. Ask for user approval before creating new files in the documentation website.
+
+## Step 12: Commit the Fix
 
 Exposed uses [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) for commit messages. If the fix
 has no breaking changes the prefix is `fix:`. If it introduces a breaking change, use `fix!:`.
@@ -260,7 +301,7 @@ git commit -m "fix: <ISSUE-ID> <Imperative description of the fix>
 Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
 ```
 
-## Step 12: Push and Create PR
+## Step 13: Push and Create PR
 
 Push the branch and create a PR:
 
@@ -334,7 +375,7 @@ Call `mcp__youtrack__update_issue` with `customFields: {"State": "Ready for Revi
 
 If the YT MCP call fails, skip silently — the status update is not blocking.
 
-## Step 13: Documentation Issue (if needed)
+## Step 14: Documentation Issue (if needed)
 
 Assess whether the fix changes behavior that users rely on or that is described in the Exposed documentation. A documentation update is needed when:
 

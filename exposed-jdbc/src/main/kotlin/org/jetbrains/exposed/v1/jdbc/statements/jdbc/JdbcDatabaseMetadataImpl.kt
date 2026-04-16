@@ -384,14 +384,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             val transaction = TransactionManager.current()
             val checkConstraints = mutableListOf<CheckConstraint>()
             metadata.connection.executeSQL(
-                """
-                    SELECT tc.CONSTRAINT_NAME, cc.CHECK_CLAUSE
-                    FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
-                    JOIN INFORMATION_SCHEMA.CHECK_CONSTRAINTS cc
-                        ON tc.CONSTRAINT_NAME = cc.CONSTRAINT_NAME
-                    WHERE tc.CONSTRAINT_TYPE = 'CHECK'
-                    AND tc.TABLE_NAME = '${table.nameInDatabaseCaseUnquoted()}';
-                """.trimIndent()
+                getCheckConstraintsQuery(table)
             ) { rs ->
                 while (rs.next()) {
                     checkConstraints.add(
@@ -406,6 +399,38 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             result[table] = checkConstraints
         }
         return result
+    }
+
+    private fun getCheckConstraintsQuery(table: Table): String {
+        val (_, tableSchema) = tableCatalogAndSchema(table)
+        val tableName = table.nameInDatabaseCaseUnquoted()
+        return when (currentDialect) {
+            is PostgreSQLDialect -> """
+                SELECT cc.conname AS CONSTRAINT_NAME, pg_catalog.pg_get_constraintdef(cc.oid, true) AS CHECK_CLAUSE
+                    FROM pg_catalog.pg_class AS ct
+                    JOIN pg_catalog.pg_namespace AS n ON (ct.relnamespace = n.oid)
+                    JOIN pg_catalog.pg_constraint AS cc ON (ct.oid = cc.conrelid)
+                    WHERE cc.contype = 'c' AND cc.conrelid <> 0
+                    AND n.nspname LIKE '$tableSchema'
+                    AND ct.relname = '$tableName'
+            """.trimIndent()
+            is OracleDialect -> """
+                    SELECT ac.CONSTRAINT_NAME, ac.SEARCH_CONDITION AS CHECK_CLAUSE
+                    FROM ALL_CONSTRAINTS ac
+                    WHERE ac.CONSTRAINT_TYPE = 'C' AND ac.CONSTRAINT_NAME NOT LIKE 'SYS_C%'
+                    AND ac.OWNER LIKE '$tableSchema'
+                    AND ac.TABLE_NAME = '$tableName'
+            """.trimIndent()
+            else -> """
+                    SELECT tc.CONSTRAINT_NAME, cc.CHECK_CLAUSE
+                    FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+                    JOIN INFORMATION_SCHEMA.CHECK_CONSTRAINTS cc
+                        ON tc.CONSTRAINT_NAME = cc.CONSTRAINT_NAME
+                    WHERE tc.CONSTRAINT_TYPE = 'CHECK'
+                    AND tc.TABLE_SCHEMA LIKE '$tableSchema'
+                    AND tc.TABLE_NAME = '$tableName'
+            """.trimIndent()
+        }
     }
 
     override fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> {
@@ -483,11 +508,15 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         }
     }
 
+    private val existingSequenceNameCache = ConcurrentHashMap.newKeySet<String>()
+
     @Suppress("MagicNumber")
     override fun sequences(): List<String> {
+        if (existingSequenceNameCache.isNotEmpty()) return existingSequenceNameCache.toList()
+
         val dialect = currentDialect
         val fieldName = "SEQUENCE_NAME"
-        return when (dialect) {
+        val sequenceNames = when (dialect) {
             is OracleDialect -> metadata.connection.executeSQL("SELECT $fieldName FROM USER_SEQUENCES") { rs ->
                 rs.iterate {
                     val seqName = getString(fieldName)
@@ -513,6 +542,10 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 getString(3)
             }
         } ?: emptyList()
+
+        existingSequenceNameCache.addAll(sequenceNames)
+
+        return sequenceNames
     }
 
     @Synchronized
@@ -650,6 +683,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     @Synchronized
     override fun cleanCache() {
         existingIndicesCache.clear()
+        existingSequenceNameCache.clear()
     }
 
     private fun <T> lazyMetadata(body: DatabaseMetaData.() -> T) = lazy { metadata.body() }

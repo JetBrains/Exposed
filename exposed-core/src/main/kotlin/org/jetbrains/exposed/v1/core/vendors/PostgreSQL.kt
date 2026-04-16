@@ -188,11 +188,12 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             currentTransaction().throwUnsupportedException("PostgreSQL does not support a JSON path argument")
         }
         val isNotJsonB = !(jsonType as JsonColumnMarker).usesBinaryFormat
+        val candidateNeedsCast = candidate !is QueryParameter || candidate.columnType is StringColumnType
         queryBuilder {
             append(target)
             if (isNotJsonB) append("::jsonb")
             append(" @> ", candidate)
-            if (isNotJsonB) append("::jsonb")
+            if (isNotJsonB || candidateNeedsCast) append("::jsonb")
         }
     }
 

@@ -323,6 +323,8 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
 
     override val supportsWindowFrameGroupsMode: Boolean = true
 
+    override val supportsAlterCheckConstraint: Boolean = false
+
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
     override fun createIndex(index: Index): String {

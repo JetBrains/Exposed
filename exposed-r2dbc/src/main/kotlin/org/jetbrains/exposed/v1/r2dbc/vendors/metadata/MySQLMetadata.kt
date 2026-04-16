@@ -215,7 +215,17 @@ internal open class MySQLMetadata : MetadataProvider(MySQLPropertyProvider(), My
         }
     }
 
-    override fun getCheckConstraints(catalog: String, schemaPattern: String, table: String): String = ""
+    override fun getCheckConstraints(catalog: String, schemaPattern: String, table: String): String {
+        return buildString {
+            append("SELECT tc.CONSTRAINT_NAME AS CONSTRAINT_NAME, cc.CHECK_CLAUSE AS CHECK_CLAUSE ")
+            append("FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS tc ")
+            append("JOIN INFORMATION_SCHEMA.CHECK_CONSTRAINTS AS cc ")
+            append("ON tc.CONSTRAINT_NAME = cc.CONSTRAINT_NAME ")
+            append("WHERE tc.CONSTRAINT_TYPE = 'CHECK' ")
+            append("AND tc.TABLE_SCHEMA LIKE '$schemaPattern' ")
+            append("AND tc.TABLE_NAME = '$table' ")
+        }
+    }
 }
 
 private val isMySQL6Plus: Boolean

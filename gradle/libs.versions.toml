@@ -1,10 +1,10 @@
 [versions]
 kotlin = "2.2.20"
-dokka = "2.1.0"
+dokka = "2.2.0"
 detekt = "1.23.8" # When upgrading, also upgrade in detekt.yml and add corresponding detekt-formatting jar file.
 binary-compatibility-validator = "0.18.1"
 docker-compose = "0.17.5"
-kover = "0.9.7"
+kover = "0.9.8"
 kotlinCoroutines = "1.10.2"
 kotlinxSerialization = "1.9.0"
 
@@ -18,7 +18,7 @@ mysql80 = "8.4.0"
 oracle = "23.26.1.0.0"
 postgre = "42.7.10"
 postgreNG = "0.8.9"
-sqlite3 = "3.50.2.0"
+sqlite3 = "3.53.0.0"
 sqlserver = "13.2.1.jre11"
 
 r2dbc-spi = "1.0.0.RELEASE"
@@ -43,7 +43,7 @@ kotlinx-datetime = "0.7.1-0.6.x-compat"
 javax-money = "1.1"
 moneta = "1.4.5"
 hikariCP = "7.0.2"
-logcaptor = "2.12.5"
+logcaptor = "2.12.6"
 maven-publish = "0.35.0"
 
 [libraries]

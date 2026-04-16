@@ -237,24 +237,35 @@ object MigrationUtils : MigrationUtilityApi() {
      * from the database will be checked, potentially returning SQL statements to drop any sequences that are unlinked
      * or unrelated to [tables].
      */
+    @OptIn(InternalApi::class)
     private fun mappingConsistenceRequiredStatements(vararg tables: Table, withLogs: Boolean = true): List<String> {
         val foreignKeyConstraints = currentDialectMetadata.columnConstraints(*tables)
         val existingIndices = currentDialectMetadata.existingIndices(*tables)
+        val existingCheckConstraints = if (currentDialect.supportsAlterCheckConstraint) {
+            // as long as 'tables' is not empty, this method always returns a non-empty map;
+            // even if no tables have a check constraint, each table will still have a key with an empty list value.
+            currentDialectMetadata.existingCheckConstraints(*tables)
+        } else {
+            emptyMap()
+        }
 
-        @OptIn(InternalApi::class)
         val filteredIndices = existingIndices.filterAndLogMissingAndUnmappedIndices(
             foreignKeyConstraints.keys, withDropIndices = true, withLogs, tables = tables
         )
         val (createMissing, dropUnmapped) = filteredIndices
 
-        @OptIn(InternalApi::class)
+        val (createMissingChecks, dropUnmappedChecks) = existingCheckConstraints.filterAndLogMissingAndUnmappedCheckConstraints(
+            withLogs = withLogs,
+            tables = tables
+        )
+
         return createMissing.flatMap { it.createStatement() } +
             dropUnmapped.flatMap { it.dropStatement() } +
             foreignKeyConstraints.filterAndLogExcessConstraints(withLogs).flatMap { it.dropStatement() } +
             existingIndices.filterAndLogExcessIndices(withLogs).flatMap { it.dropStatement() } +
             checkUnmappedSequences(tables = tables, withLogs).flatMap { it.dropStatement() } +
-            checkMissingCheckConstraints(tables = tables, withLogs).flatMap { it.createStatement() } +
-            checkUnmappedCheckConstraints(tables = tables, withLogs).flatMap { it.dropStatement() }
+            createMissingChecks.flatMap { it.createStatement() } +
+            dropUnmappedChecks.flatMap { it.dropStatement() }
     }
 
     /**
@@ -301,52 +312,5 @@ object MigrationUtils : MigrationUtilityApi() {
         return existingSequencesNames.filterUnmappedSequences(tables = tables).also {
             it.log("Sequences exist in database and not mapped in code:", withLogs)
         }
-    }
-
-    /**
-     * Checks all [tables] for any that have CHECK constraints that are missing in the database but are defined in the code.
-     * If found, this function also logs the CHECK constraints that will be created.
-     *
-     * @return List of CHECK constraints that are missing and can be created.
-     */
-    @OptIn(InternalApi::class)
-    private fun checkMissingCheckConstraints(vararg tables: Table, withLogs: Boolean): List<CheckConstraint> {
-        if (!currentDialect.supportsColumnTypeChange) {
-            return emptyList()
-        }
-
-        val missingCheckConstraints = mutableListOf<CheckConstraint>()
-        tables.forEach { table ->
-            val mappedCheckConstraints = table.checkConstraints()
-            val existingCheckConstraints = currentDialectMetadata.existingCheckConstraints(*tables)[table].orEmpty()
-            val existingCheckConstraintsNames = existingCheckConstraints.map { it.checkName.uppercase() }.toSet()
-            missingCheckConstraints.addAll(mappedCheckConstraints.filterNot { it.checkName.uppercase() in existingCheckConstraintsNames })
-        }
-        missingCheckConstraints.log("CHECK constraints missed from database (will be created):", withLogs)
-        return missingCheckConstraints
-    }
-
-    /**
-     * Checks all [tables] for any that have CHECK constraints that exist in the database but are not mapped in the code.
-     * If found, this function also logs the CHECK constraints that will be dropped.
-     *
-     * @return List of CHECK constraints that are unmapped and can be dropped.
-     */
-    @OptIn(InternalApi::class)
-    private fun checkUnmappedCheckConstraints(vararg tables: Table, withLogs: Boolean): List<CheckConstraint> {
-        if (!currentDialect.supportsColumnTypeChange) {
-            return emptyList()
-        }
-
-        val unmappedCheckConstraints = mutableListOf<CheckConstraint>()
-        tables.forEach { table ->
-            val mappedCheckConstraints = table.checkConstraints()
-            val existingCheckConstraints = currentDialectMetadata.existingCheckConstraints(*tables)[table].orEmpty()
-            val mappedCheckConstraintsNames = mappedCheckConstraints.map { it.checkName.uppercase() }.toSet()
-
-            unmappedCheckConstraints.addAll(existingCheckConstraints.filterNot { it.checkName.uppercase() in mappedCheckConstraintsNames })
-        }
-        unmappedCheckConstraints.log("CHECK constraints exist in database and not mapped in code:", withLogs)
-        return unmappedCheckConstraints
     }
 }
