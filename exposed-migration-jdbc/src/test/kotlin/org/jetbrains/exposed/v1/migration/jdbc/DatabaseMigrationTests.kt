@@ -4,7 +4,12 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import nl.altindag.log.LogCaptor
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.dao.id.*
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.core.dao.id.UIntIdTable
+import org.jetbrains.exposed.v1.core.dao.id.ULongIdTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.statements.StatementType
@@ -32,9 +37,9 @@ import kotlin.test.assertNull
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlin.uuid.toKotlinUuid
-import java.util.UUID as JavaUUID
 import org.jetbrains.exposed.v1.datetime.date as kotlinDatetimeDate
 import org.jetbrains.exposed.v1.javatime.date as javatimeDate
+import java.util.UUID as JavaUUID
 
 class DatabaseMigrationTests : DatabaseTestsBase() {
     private val columnTypeChangeUnsupportedDb = TestDB.ALL - TestDB.ALL_H2_V2
@@ -521,41 +526,35 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
         // MariaDB JSON type is actually an alias for LONGTEXT + an automatic check constraint with checkOp=json_valid(`numbers`);
         // MariaDB is the only db so far that backs up a JSON column with a constraint, which should be ignored by schema diffs.
-        withDb { testDb ->
-            try {
-                SchemaUtils.create(testerOG)
+        withTables(testerOG) { testDb ->
+            var alterStatements = MigrationUtils.statementsRequiredForDatabaseMigration(testerOG, withLogs = false)
+            // neither db-generated nor mapped user-defined check constraints should be dropped
+            assertTrue(alterStatements.isEmpty())
 
-                var alterStatements = MigrationUtils.statementsRequiredForDatabaseMigration(testerOG, withLogs = false)
-                // neither db-generated nor mapped user-defined check constraints should be dropped
-                assertTrue(alterStatements.isEmpty())
+            val jsonBUnsupportedDb = listOf(TestDB.ORACLE, TestDB.SQLSERVER)
+            if (testDb !in jsonBUnsupportedDb) {
+                alterStatements = MigrationUtils.statementsRequiredForDatabaseMigration(testerNew, withLogs = false)
+                // column should be dropped without attempting to drop db-generated constraint
+                assertEquals(2, alterStatements.size)
+                assertTrue(
+                    alterStatements.first()
+                        .startsWith("ALTER TABLE ${testerNew.nameInDatabaseCase()} ADD ${testerNew.letters.nameInDatabaseCase()}")
+                )
+                assertEquals(
+                    alterStatements.last(),
+                    testerOG.numbers.dropStatement().single()
+                )
 
-                val jsonBUnsupportedDb = listOf(TestDB.ORACLE, TestDB.SQLSERVER)
-                if (testDb !in jsonBUnsupportedDb) {
-                    alterStatements = MigrationUtils.statementsRequiredForDatabaseMigration(testerNew, withLogs = false)
-                    // column should be dropped without attempting to drop db-generated constraint
-                    assertEquals(2, alterStatements.size)
-                    assertTrue(
-                        alterStatements.first()
-                            .startsWith("ALTER TABLE ${testerNew.nameInDatabaseCase()} ADD ${testerNew.letters.nameInDatabaseCase()}")
-                    )
-                    assertEquals(
-                        alterStatements.last(),
-                        testerOG.numbers.dropStatement().single()
-                    )
-
-                    if (testDb == TestDB.SQLITE) {
-                        // SQLite ALTER TABLE ADD returns results, so must use executeQuery()
-                        exec(alterStatements.first(), explicitStatementType = StatementType.EXEC)
-                        exec(alterStatements.last(), explicitStatementType = StatementType.ALTER)
-                    } else {
-                        alterStatements.forEach(::exec)
-                    }
-
-                    alterStatements = MigrationUtils.statementsRequiredForDatabaseMigration(testerNew, withLogs = false)
-                    assertTrue(alterStatements.isEmpty())
+                if (testDb == TestDB.SQLITE) {
+                    // SQLite ALTER TABLE ADD returns results, so must use executeQuery()
+                    exec(alterStatements.first(), explicitStatementType = StatementType.EXEC)
+                    exec(alterStatements.last(), explicitStatementType = StatementType.ALTER)
+                } else {
+                    alterStatements.forEach(::exec)
                 }
-            } finally {
-                SchemaUtils.drop(testerOG)
+
+                alterStatements = MigrationUtils.statementsRequiredForDatabaseMigration(testerNew, withLogs = false)
+                assertTrue(alterStatements.isEmpty())
             }
         }
     }

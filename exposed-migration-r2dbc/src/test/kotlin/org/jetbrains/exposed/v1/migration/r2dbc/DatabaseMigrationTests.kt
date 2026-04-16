@@ -36,9 +36,9 @@ import kotlin.test.assertNull
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlin.uuid.toKotlinUuid
-import java.util.UUID as JavaUUID
 import org.jetbrains.exposed.v1.datetime.date as kotlinDatetimeDate
 import org.jetbrains.exposed.v1.javatime.date as javatimeDate
+import java.util.UUID as JavaUUID
 
 class DatabaseMigrationTests : R2dbcDatabaseTestsBase() {
     private val columnTypeChangeUnsupportedDb = TestDB.ALL - TestDB.ALL_H2_V2
@@ -508,35 +508,29 @@ class DatabaseMigrationTests : R2dbcDatabaseTestsBase() {
 
         // MariaDB JSON type is actually an alias for LONGTEXT + an automatic check constraint with checkOp=json_valid(`numbers`);
         // MariaDB is the only db so far that backs up a JSON column with a constraint, which should be ignored by schema diffs.
-        withDb { testDb ->
-            try {
-                SchemaUtils.create(testerOG)
+        withTables(testerOG) { testDb ->
+            var alterStatements = MigrationUtils.statementsRequiredForDatabaseMigration(testerOG, withLogs = false)
+            // neither db-generated nor mapped user-defined check constraints should be dropped
+            assertTrue(alterStatements.isEmpty())
 
-                var alterStatements = MigrationUtils.statementsRequiredForDatabaseMigration(testerOG, withLogs = false)
-                // neither db-generated nor mapped user-defined check constraints should be dropped
+            val jsonBUnsupportedDb = listOf(TestDB.ORACLE, TestDB.SQLSERVER)
+            if (testDb !in jsonBUnsupportedDb) {
+                alterStatements = MigrationUtils.statementsRequiredForDatabaseMigration(testerNew, withLogs = false)
+                // column should be dropped without attempting to drop db-generated constraint
+                assertEquals(2, alterStatements.size)
+                assertTrue(
+                    alterStatements.first()
+                        .startsWith("ALTER TABLE ${testerNew.nameInDatabaseCase()} ADD ${testerNew.letters.nameInDatabaseCase()}")
+                )
+                assertEquals(
+                    alterStatements.last(),
+                    testerOG.numbers.dropStatement().single()
+                )
+
+                alterStatements.forEach { exec(it) }
+
+                alterStatements = MigrationUtils.statementsRequiredForDatabaseMigration(testerNew, withLogs = false)
                 assertTrue(alterStatements.isEmpty())
-
-                val jsonBUnsupportedDb = listOf(TestDB.ORACLE, TestDB.SQLSERVER)
-                if (testDb !in jsonBUnsupportedDb) {
-                    alterStatements = MigrationUtils.statementsRequiredForDatabaseMigration(testerNew, withLogs = false)
-                    // column should be dropped without attempting to drop db-generated constraint
-                    assertEquals(2, alterStatements.size)
-                    assertTrue(
-                        alterStatements.first()
-                            .startsWith("ALTER TABLE ${testerNew.nameInDatabaseCase()} ADD ${testerNew.letters.nameInDatabaseCase()}")
-                    )
-                    assertEquals(
-                        alterStatements.last(),
-                        testerOG.numbers.dropStatement().single()
-                    )
-
-                    alterStatements.forEach { exec(it) }
-
-                    alterStatements = MigrationUtils.statementsRequiredForDatabaseMigration(testerNew, withLogs = false)
-                    assertTrue(alterStatements.isEmpty())
-                }
-            } finally {
-                SchemaUtils.drop(testerOG)
             }
         }
     }
