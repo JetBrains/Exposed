@@ -290,6 +290,14 @@ abstract class SchemaUtilityApi {
     ): Pair<List<CheckConstraint>, List<CheckConstraint>> {
         if (this.isEmpty()) return Pair(emptyList(), emptyList())
 
+        // MariaDB: unmapped check constraints on JSON(B) columns are db-generated for internal validation use
+        fun CheckConstraint.isInternalConstraint(): Boolean {
+            // generated constraint name always matches the column name;
+            // but doing a further column-name or -type check here would overlook the case when a JSON column has been dropped,
+            // resulting in an invalid DROP constraint due to an unmapped column to check
+            return currentDialect is MariaDBDialect && checkOp.startsWith("json_valid(", ignoreCase = true)
+        }
+
         val missingCheckConstraints = mutableListOf<CheckConstraint>()
         val unmappedCheckConstraints = mutableListOf<CheckConstraint>()
 
@@ -304,7 +312,9 @@ abstract class SchemaUtilityApi {
 
             val mappedCheckConstraintsNames = mappedCheckConstraints.map { it.checkName.uppercase() }.toSet()
             unmappedCheckConstraints.addAll(
-                existingCheckConstraints.filterNot { it.checkName.uppercase() in mappedCheckConstraintsNames }
+                existingCheckConstraints.filterNot {
+                    it.checkName.uppercase() in mappedCheckConstraintsNames || it.isInternalConstraint()
+                }
             )
         }
 

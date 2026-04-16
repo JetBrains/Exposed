@@ -15,6 +15,7 @@ import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
+import org.jetbrains.exposed.v1.json.json
 import org.jetbrains.exposed.v1.json.jsonb
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.batchInsert
@@ -491,6 +492,46 @@ class DatabaseMigrationTests : R2dbcDatabaseTestsBase() {
                 it[secondaryId] = Uuid.random()
             }
             assertEquals(convertedIdPairs.size + 1L, updatedTable.selectAll().count())
+        }
+    }
+
+    @Test
+    fun testJsonGeneratedCheckConstraintNotDroppedByRepeatedMigrations() {
+        val testerOG = object : Table("tester") {
+            val numbers = json<IntArray>("numbers", Json.Default)
+            val names = json<List<String>>("names", Json.Default).check { it.isNotNull() }
+        }
+        val testerNew = object : Table("tester") {
+            val letters = jsonb<CharArray>("letters", Json.Default)
+            val names = json<List<String>>("names", Json.Default).check { it.isNotNull() }
+        }
+
+        // MariaDB JSON type is actually an alias for LONGTEXT + an automatic check constraint with checkOp=json_valid(`numbers`);
+        // MariaDB is the only db so far that backs up a JSON column with a constraint, which should be ignored by schema diffs.
+        withTables(testerOG) { testDb ->
+            var alterStatements = MigrationUtils.statementsRequiredForDatabaseMigration(testerOG, withLogs = false)
+            // neither db-generated nor mapped user-defined check constraints should be dropped
+            assertTrue(alterStatements.isEmpty())
+
+            val jsonBUnsupportedDb = listOf(TestDB.ORACLE, TestDB.SQLSERVER)
+            if (testDb !in jsonBUnsupportedDb) {
+                alterStatements = MigrationUtils.statementsRequiredForDatabaseMigration(testerNew, withLogs = false)
+                // column should be dropped without attempting to drop db-generated constraint
+                assertEquals(2, alterStatements.size)
+                assertTrue(
+                    alterStatements.first()
+                        .startsWith("ALTER TABLE ${testerNew.nameInDatabaseCase()} ADD ${testerNew.letters.nameInDatabaseCase()}")
+                )
+                assertEquals(
+                    alterStatements.last(),
+                    testerOG.numbers.dropStatement().single()
+                )
+
+                alterStatements.forEach { exec(it) }
+
+                alterStatements = MigrationUtils.statementsRequiredForDatabaseMigration(testerNew, withLogs = false)
+                assertTrue(alterStatements.isEmpty())
+            }
         }
     }
 }
