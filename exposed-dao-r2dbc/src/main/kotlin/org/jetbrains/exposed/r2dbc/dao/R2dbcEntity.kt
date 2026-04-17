@@ -1,16 +1,19 @@
 package org.jetbrains.exposed.r2dbc.dao
 
 import org.jetbrains.exposed.r2dbc.dao.exceptions.R2dbcEntityNotFoundException
+import org.jetbrains.exposed.r2dbc.dao.relationships.R2dbcInnerTableLink
 import org.jetbrains.exposed.v1.core.AutoIncColumnType
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.EntityIDColumnType
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
+import org.jetbrains.exposed.v1.r2dbc.deleteWhere
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.update
 import kotlin.collections.get
@@ -54,6 +57,7 @@ open class R2dbcEntity<ID : Any>(val id: EntityID<ID>) {
     }
 
     operator fun <T> Column<T>.setValue(entity: R2dbcEntity<ID>, desc: KProperty<*>, value: T) {
+        klass.invalidateEntityInCache(entity)
         val currentValue = _readValues?.getOrNull(this)
         if (writeValues.containsKey(this as Column<out Any?>) || currentValue != value) {
             val entityCache = TransactionManager.current().entityCache
@@ -132,9 +136,11 @@ open class R2dbcEntity<ID : Any>(val id: EntityID<ID>) {
 
                 @Suppress("ForbiddenComment")
                 // TODO: Implement entity change tracking when subscriptions are implemented
-                table.update({ table.id eq id }) {
-                    for ((c, v) in _writeValues) {
-                        it[c] = v
+                executeAsPartOfEntityLifecycle {
+                    table.update({ table.id eq id }) {
+                        for ((c, v) in _writeValues) {
+                            it[c] = v
+                        }
                     }
                 }
                 // TODO: Implement alertSubscribers when subscriptions are implemented
@@ -149,6 +155,21 @@ open class R2dbcEntity<ID : Any>(val id: EntityID<ID>) {
             return true
         }
         return false
+    }
+
+    open suspend fun delete() {
+        val table = klass.table
+        val entityId = this.id
+        // TODO add register change like in JDBCHello.
+        // TODO should we insert before and then remove
+        //  (extra requests, but probablyt correctness could be better)
+        if (!isNewEntity()) {
+            executeAsPartOfEntityLifecycle {
+                table.deleteWhere { table.id eq entityId }
+            }
+        }
+
+        klass.removeFromCache(this)
     }
 
     internal fun hasInReferenceCache(ref: Column<*>): Boolean {
@@ -183,6 +204,40 @@ open class R2dbcEntity<ID : Any>(val id: EntityID<ID>) {
         _readValues = reloaded.readValues
         db = transaction.db
     }
+
+    /**
+     * Registers an intermediate [table] as a many-to-many link between this entity's table and
+     * the target [R2dbcEntityClass]. The source and target columns are inferred from the
+     * intermediate table's foreign keys.
+     *
+     * Counterpart of JDBC's `via`. Named `viaSuspend` to match the rest of the R2DBC DAO API.
+     */
+    infix fun <TID : Any, Target : R2dbcEntity<TID>> R2dbcEntityClass<TID, Target>.viaSuspend(
+        table: Table
+    ): R2dbcInnerTableLink<ID, R2dbcEntity<ID>, TID, Target> =
+        R2dbcInnerTableLink(
+            table = table,
+            sourceTable = this@R2dbcEntity.id.table,
+            target = this@viaSuspend
+        )
+
+    /**
+     * Registers an intermediate table as a many-to-many link with explicitly specified
+     * [sourceColumn] and [targetColumn] — use this when the intermediate table has multiple
+     * references into the same entity's table and the defaults cannot be inferred.
+     */
+    // TODO similar to jdbc, but not covered with tests yet
+    fun <TID : Any, Target : R2dbcEntity<TID>> R2dbcEntityClass<TID, Target>.viaSuspend(
+        sourceColumn: Column<EntityID<ID>>,
+        targetColumn: Column<EntityID<TID>>
+    ): R2dbcInnerTableLink<ID, R2dbcEntity<ID>, TID, Target> =
+        R2dbcInnerTableLink(
+            table = sourceColumn.table,
+            sourceTable = this@R2dbcEntity.id.table,
+            target = this@viaSuspend,
+            _sourceColumn = sourceColumn,
+            _targetColumn = targetColumn
+        )
 }
 
 class R2dbcEntityBatchUpdate {

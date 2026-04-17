@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.core
 
 import org.jetbrains.exposed.v1.core.dao.id.CompositeID
+import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.statements.api.ExposedBlob
 import java.math.BigDecimal
@@ -14,7 +15,9 @@ class QueryParameter<T>(
     /** Returns the column type of this expression. */
     override val columnType: IColumnType<T & Any>
 ) : ExpressionWithColumnType<T>() {
-    internal val compositeValue: CompositeID? = (value as? EntityID<*>)?.value as? CompositeID
+    internal val compositeValue: CompositeID? = (value as? EntityID<*>)
+        ?.takeIf { it.table is CompositeIdTable }
+        ?.value as? CompositeID
 
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         queryBuilder {

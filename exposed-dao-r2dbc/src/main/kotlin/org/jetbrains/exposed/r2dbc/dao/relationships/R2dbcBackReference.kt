@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.r2dbc.dao.relationships
 
+import kotlinx.coroutines.flow.single
+import kotlinx.coroutines.flow.singleOrNull
 import org.jetbrains.exposed.r2dbc.dao.R2dbcEntity
 import org.jetbrains.exposed.r2dbc.dao.R2dbcEntityClass
 import org.jetbrains.exposed.v1.core.Column
