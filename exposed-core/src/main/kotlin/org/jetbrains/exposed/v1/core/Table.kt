@@ -1737,12 +1737,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param op The expression against which the newly inserted values will be compared.
      */
     fun <T> Column<T>.check(name: String = "", op: (Column<T>) -> Op<Boolean>): Column<T> = apply {
-        if (name.isEmpty() || table.checkConstraints.none { it.first.equals(name, true) }) {
-            table.checkConstraints.add(name to op(this))
-        } else {
-            exposedLogger
-                .warn("A CHECK constraint with name '$name' was ignored because there is already one with that name")
-        }
+        table.check(name) { op(this) }
     }
 
     /**
