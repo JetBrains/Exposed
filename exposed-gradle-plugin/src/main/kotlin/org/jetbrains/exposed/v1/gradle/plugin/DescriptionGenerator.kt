@@ -45,9 +45,9 @@ internal fun String.statementToFileDescription(useUpperCase: Boolean): String {
             }
         }
 
-        // CREATE INDEX statements
-        normalizedStatement.startsWith("CREATE INDEX", ignoreCase = true) -> {
-            val indexInfo = normalizedStatement.extractIndexInfo("CREATE INDEX")
+        // CREATE INDEX or CREATE ??? INDEX statements
+        Regex("^CREATE\\s+(\\w+\\s+)*INDEX\\s+").containsMatchIn(normalizedStatement.uppercase()) -> {
+            val indexInfo = normalizedStatement.extractIndexInfo(" INDEX ")
             "CREATE_INDEX_$indexInfo".inRequestedCase(useUpperCase)
         }
 

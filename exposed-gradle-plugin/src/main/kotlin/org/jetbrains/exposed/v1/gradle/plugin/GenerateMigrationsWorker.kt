@@ -10,6 +10,7 @@ import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.statements.StatementContext
 import org.jetbrains.exposed.v1.core.statements.expandArgs
 import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
@@ -57,7 +58,7 @@ abstract class GenerateMigrationsWorker : WorkAction<GenerateMigrationsParameter
                             withLogs = params.debug
                         )
                         val migrationFile = File(migrationsDirectory, expectedFileName)
-                        migrationFile.writeText(statements.joinToString(";\n"))
+                        migrationFile.writeText(statements.joinToString(";\n", postfix = ";"))
                         listOf(expectedFileName)
                     }
                 }
@@ -71,32 +72,30 @@ abstract class GenerateMigrationsWorker : WorkAction<GenerateMigrationsParameter
             withClassloader { classloader ->
                 withDatabase { database ->
                     var ignored = 0
-                    classloader
+                    val foundTables = classloader
                         .getClassesInPackage(params.tablesPackage)
                         .mapNotNull { it.tableOrNull() }
-                        .mapIndexedNotNull { index, table ->
-                            transaction(database) {
-                                addLogger(GradleLogger())
-                                // TODO confirm order <-- this goes through each individual table & creates a script
-                                // TODO what if tables have references, as this avoids Exposed implicit sortTablesByReferences?
-                                val statements = MigrationUtils.statementsRequiredForDatabaseMigration(
-                                    table,
-                                    withLogs = params.debug
-                                )
-                                println("Found the following statements for ${table.tableName}: $statements")
-                                if (statements.isNotEmpty()) {
-                                    val description = statements.first().statementToFileDescription(params.useUpperCaseDescription)
-                                    val version = versionGenerator(index - ignored)
-                                    val fileName = "$version$description$extension"
-                                    val migrationFile = File(migrationsDirectory, fileName)
-                                    migrationFile.writeText(statements.joinToString(";\n"))
-                                    fileName
-                                } else {
-                                    ignored++
-                                    null
-                                }
+                    val sortedTables = SchemaUtils.sortTablesByReferences(foundTables.toList())
+                    sortedTables.mapIndexedNotNull { index, table ->
+                        transaction(database) {
+                            addLogger(GradleLogger())
+                            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(
+                                table,
+                                withLogs = params.debug
+                            )
+                            if (statements.isNotEmpty()) {
+                                val description = statements.first().statementToFileDescription(params.useUpperCaseDescription)
+                                val version = versionGenerator(index - ignored)
+                                val fileName = "$version$description$extension"
+                                val migrationFile = File(migrationsDirectory, fileName)
+                                migrationFile.writeText(statements.joinToString(";\n", postfix = ";"))
+                                fileName
+                            } else {
+                                ignored++
+                                null
                             }
-                        }.toList()
+                        }
+                    }.toList()
                 }
             }
         }
@@ -166,7 +165,6 @@ abstract class GenerateMigrationsWorker : WorkAction<GenerateMigrationsParameter
         val original = Thread.currentThread().contextClassLoader
         return try {
             val urls = parameters.classpathUrls.toTypedArray()
-            println("Classpath URLS -> ${urls.map { it.file }}")
             val classLoader = URLClassLoader(urls, original)
             Thread.currentThread().contextClassLoader = classLoader
             block(classLoader)
@@ -176,18 +174,13 @@ abstract class GenerateMigrationsWorker : WorkAction<GenerateMigrationsParameter
     }
 
     private fun URLClassLoader.getClassesInPackage(packageName: String): Sequence<KClass<*>> = getResources(
-        packageName.replace('.', '/').also { println("Getting resource for $it") }
+        packageName.replace('.', '/')
     )
         .asSequence()
         .flatMap { resource ->
             File(resource.toURI())
-                .also { println("Looking at ${it.name}") }
                 .walk()
-                .filter { file ->
-                    val x = file.isFile && file.name.endsWith(".class")
-                    println("Found contender $x: ${file.name}")
-                    x
-                }
+                .filter { file -> file.isFile && file.name.endsWith(".class") }
                 .map { file ->
                     val baseDir = File(resource.toURI())
                     val subPackageName = file.relativeTo(baseDir)
