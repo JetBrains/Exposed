@@ -134,6 +134,16 @@ class StatementToFileDescriptionGeneratorTest {
             "CREATE_INDEX_IDX_ITEMS_ORDER_ID_ON_ITEMS",
             "CREATE INDEX \"idx_items_order_id\" ON \"items\" (order_id)".statementToFileDescription(true)
         )
+
+        Assertions.assertEquals(
+            "CREATE_INDEX_IDX_USERS_EMAIL_ON_USERS",
+            "CREATE UNIQUE INDEX idx_users_email ON users (email)".statementToFileDescription(true)
+        )
+
+        Assertions.assertEquals(
+            "CREATE_INDEX_IDX_PRODUCTS_NAME_ON_PRODUCTS",
+            "CREATE CLUSTERED INDEX idx_products_name ON public.products (name)".statementToFileDescription(true)
+        )
     }
 
     @Test
