@@ -4,9 +4,9 @@ private const val HASH_LENGTH: Int = 8
 
 /**
  * Extracts the operation type and table name from the SQL statement
- * and formats them into a standardized filename pattern.
+ * and formats them into a standardized filename sub-pattern.
  *
- * @return A formatted filename for the SQL statement
+ * @return A formatted part of a filename that describes the SQL statement
  */
 internal fun String.statementToFileDescription(useUpperCase: Boolean): String {
     val normalizedStatement = trim().replace(Regex("\\s+"), " ")
@@ -132,7 +132,6 @@ private fun String.extractIndexInfo(prefix: String): String {
 private fun String.extractAnyTableNameOrNull(): String? {
     val sqlDelimiter = Regex("[ ,;(]")
 
-    // TODO determine how UPDATE statements could be in generated SQL
     // Special case for UPDATE statements
     val updateKey = "UPDATE"
     if (startsWith(updateKey, ignoreCase = true)) {

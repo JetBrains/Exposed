@@ -12,9 +12,11 @@ interface GenerateMigrationsParameters : WorkParameters {
     var classpathUrls: List<URL>
     val fileDirectory: DirectoryProperty
     var filePrefix: String
+    var fileVersionFormat: VersionFormat
     var fileSeparator: String
     var useUpperCaseDescription: Boolean
     var fileExtension: String
+    var fullFileName: String?
     var databaseUrl: String?
     var databaseUser: String?
     var databasePassword: String?

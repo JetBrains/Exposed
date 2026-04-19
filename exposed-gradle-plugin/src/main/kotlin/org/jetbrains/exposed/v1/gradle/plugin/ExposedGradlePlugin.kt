@@ -2,47 +2,42 @@ package org.jetbrains.exposed.v1.gradle.plugin
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.tasks.SourceSetContainer
 
 /**
  * A plugin extension of the Gradle build tool that applies configured automations to specific Exposed functionality.
  */
 class ExposedGradlePlugin : Plugin<Project> {
-    override fun apply(project: Project) {
-        val extension = project.extensions
-            .create(MigrationsExtension.NAME, MigrationsExtension::class.java, project.objects)
+    override fun apply(project: Project): Unit = with(project) {
+        extensions
+            .create(ExposedExtension.NAME, ExposedExtension::class.java, objects)
 
-        // Set default migration directory
-        extension.fileDirectory.convention(project.layout.projectDirectory.dir("src/main/resources/db/migration"))
+        configureMigrations()
 
-        // Set default classpath for Exposed tables
-        val classpath = project
-            .extensions
-            .findByType(SourceSetContainer::class.java)
-            ?.findByName("main")
-            ?.runtimeClasspath
-
-        if (classpath != null) extension.classpath.setFrom(classpath)
-
-        project.tasks.register(GENERATE_MIGRATIONS_TASK_NAME, GenerateMigrationsTask::class.java) {
-            it.description = GENERATE_MIGRATIONS_TASK_DESCRIPTION
-            it.group = TASK_GROUP
-
-            it.tablesPackage.set(extension.tablesPackage)
-            it.classpath.setFrom(extension.classpath.toList())
-
-            it.fileDirectory.set(extension.fileDirectory)
-            it.filePrefix.set(extension.filePrefix)
-            it.fileSeparator.set(extension.fileSeparator)
-            it.useUpperCaseDescription.set(extension.useUpperCaseDescription)
-            it.fileExtension.set(extension.fileExtension)
-
-            it.databaseUrl.set(extension.databaseUrl)
-            it.databaseUser.set(extension.databaseUser)
-            it.databasePassword.set(extension.databasePassword)
-
-            it.testContainersImageName.set(extension.testContainersImageName)
+        var kotlinPluginApplied = false
+        whenKotlinPluginApplied {
+            kotlinPluginApplied = true
         }
+
+        afterEvaluate {
+            if (!kotlinPluginApplied) {
+                reportKotlinPluginMissingWarning()
+                return@afterEvaluate
+            }
+        }
+    }
+
+    private fun Project.reportKotlinPluginMissingWarning() {
+        logger.warn("Warning: The Exposed Gradle plugin requires the Kotlin Gradle plugin.")
+        logger.lifecycle(
+            """
+            |To fix this, apply the Kotlin Gradle plugin to your project:
+            |
+            |  plugins {
+            |      kotlin("jvm")
+            |  }
+            |
+            """.trimMargin()
+        )
     }
 
     companion object {
@@ -53,3 +48,17 @@ class ExposedGradlePlugin : Plugin<Project> {
         const val TASK_GROUP: String = "Exposed"
     }
 }
+
+private fun Project.whenKotlinPluginApplied(block: (KotlinPluginType) -> Unit) {
+    whenKotlinJvmApplied { block(KotlinPluginType.JVM) }
+}
+
+private fun Project.whenKotlinJvmApplied(block: () -> Unit) {
+    pluginManager.withPlugin(KOTLIN_JVM_PLUGIN_ID) { block() }
+}
+
+private enum class KotlinPluginType {
+    JVM,
+}
+
+private const val KOTLIN_JVM_PLUGIN_ID = "org.jetbrains.kotlin.jvm"

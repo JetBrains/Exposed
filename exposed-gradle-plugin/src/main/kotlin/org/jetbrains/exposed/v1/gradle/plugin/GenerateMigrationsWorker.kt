@@ -1,8 +1,5 @@
 package org.jetbrains.exposed.v1.gradle.plugin
 
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.format
-import kotlinx.datetime.format.DateTimeComponents
 import org.flywaydb.core.Flyway
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
@@ -29,7 +26,6 @@ import java.net.URLClassLoader
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 
 /**
  * Represents the implementation of a unit of work to be used when submitting work to the migrations extension work executor.
@@ -38,149 +34,77 @@ abstract class GenerateMigrationsWorker : WorkAction<GenerateMigrationsParameter
     private val logger: Logger = Logging.getLogger(GenerateMigrationsWorker::class.java)
     private val classExtensionLength: Int = ".class".length
 
-    // format like V3__description or V0003_description
-    private val versionXPattern by lazy {
-        Regex("^${parameters.filePrefix}(\\d+)${parameters.fileSeparator}.*$")
-    }
-
-    // format like V3_1__description or V0003_001_description
-    private val versionXYPattern by lazy {
-        Regex("^${parameters.filePrefix}(\\d+)_(\\d+)${parameters.fileSeparator}.*$")
-    }
-
-    // format like V3_YYYYMMDDHHMMSS__description or V003_YYYYMMDDHHMMSS__description or V3_YYYYMMDDHHMM__description
-    private val versionXTSPattern by lazy {
-        Regex("^${parameters.filePrefix}(\\d+)_(\\d{12,14})${parameters.fileSeparator}.*$")
-    }
-
     override fun execute() {
         val params = parameters
-        val extension = params.fileExtension
         val migrationsDirectory = params.fileDirectory.get().asFile
         if (!migrationsDirectory.exists()) {
             migrationsDirectory.mkdirs()
         }
-        val versionGen = findHighestVersion(migrationsDirectory)
+        val expectedFileName = params.fullFileName
 
-        val generated = withClassloader { classloader ->
-            withDatabase { database ->
-                var ignored = 0
-                classloader
-                    .getClassesInPackage(params.tablesPackage)
-                    .mapNotNull { it.tableOrNull() }
-                    .mapIndexedNotNull { index, table ->
-                        transaction(database) {
-                            addLogger(GradleLogger())
-                            // TODO confirm order <-- this goes through each individual table & creates a script
-                            // TODO what if tables have references, as this avoids Exposed implicit sortTablesByReferences?
-                            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(
-                                table,
-                                withLogs = params.debug
-                            )
-                            if (statements.isNotEmpty()) {
-                                val description = statements.first().statementToFileDescription(params.useUpperCaseDescription)
-                                val version = versionGen(index - ignored)
-                                val fileName = "$version$description$extension"
-                                val migrationFile = File(migrationsDirectory, fileName)
-                                migrationFile.writeText(statements.joinToString(";\n"))
-                                fileName
-                            } else {
-                                ignored++
-                                null
+        val generated: List<String> = if (expectedFileName != null) {
+            withClassloader { classloader ->
+                withDatabase { database ->
+                    val tables = classloader
+                        .getClassesInPackage(params.tablesPackage)
+                        .mapNotNull { it.tableOrNull() }
+                        .toList()
+                        .toTypedArray()
+                    transaction(database) {
+                        addLogger(GradleLogger())
+                        val statements = MigrationUtils.statementsRequiredForDatabaseMigration(
+                            tables = tables,
+                            withLogs = params.debug
+                        )
+                        val migrationFile = File(migrationsDirectory, expectedFileName)
+                        migrationFile.writeText(statements.joinToString(";\n"))
+                        listOf(expectedFileName)
+                    }
+                }
+            }
+        } else {
+            val prefix = params.filePrefix
+            val separator = params.fileSeparator
+            val extension = params.fileExtension
+            val versionGenerator = params.fileVersionFormat.nextVersion(migrationsDirectory, Clock.System, prefix, separator)
+
+            withClassloader { classloader ->
+                withDatabase { database ->
+                    var ignored = 0
+                    classloader
+                        .getClassesInPackage(params.tablesPackage)
+                        .mapNotNull { it.tableOrNull() }
+                        .mapIndexedNotNull { index, table ->
+                            transaction(database) {
+                                addLogger(GradleLogger())
+                                // TODO confirm order <-- this goes through each individual table & creates a script
+                                // TODO what if tables have references, as this avoids Exposed implicit sortTablesByReferences?
+                                val statements = MigrationUtils.statementsRequiredForDatabaseMigration(
+                                    table,
+                                    withLogs = params.debug
+                                )
+                                println("Found the following statements for ${table.tableName}: $statements")
+                                if (statements.isNotEmpty()) {
+                                    val description = statements.first().statementToFileDescription(params.useUpperCaseDescription)
+                                    val version = versionGenerator(index - ignored)
+                                    val fileName = "$version$description$extension"
+                                    val migrationFile = File(migrationsDirectory, fileName)
+                                    migrationFile.writeText(statements.joinToString(";\n"))
+                                    fileName
+                                } else {
+                                    ignored++
+                                    null
+                                }
                             }
-                        }
-                    }.toList()
+                        }.toList()
+                }
             }
         }
+
         logger.lifecycle("")
         logger.lifecycle("# Exposed Migrations Generated ${generated.size} migrations:")
         generated.forEach { logger.lifecycle("  * $it") }
         logger.lifecycle("")
-    }
-
-    // TODO should there be an extensions property for versionFormat, to simplify/override this?
-    @OptIn(ExperimentalTime::class)
-    @Suppress("NestedBlockDepth")
-    private fun findHighestVersion(migrationsDirectory: File): (Int) -> String {
-        var highestMajor = 0
-        var highestVersionLength = 0
-        var hasXTSFormat = false
-        var hasXYFormat = false
-        var hasXFormat = false
-
-        migrationsDirectory.listFiles()?.forEach { file ->
-            val fileName = file.name
-            var version = 0
-            var versionLength = 0
-
-            // TODO should VYYYMMDDHHMMSS__ format also be an option?
-            // TODO should VX__ be the fallback default?
-            // Check for V#_YYYYMMDDHHMMSS__ format first (also covers formats like V00#_YYYYMMDDHHMMSS__ or without SS)
-            // Then check for V#_#__ format second (also covers formats like V00#_00#__)
-            // Then check for V#__ format (also covers formats like V00#__)
-            versionXTSPattern.matchEntire(fileName)?.let { matcher ->
-                hasXTSFormat = true
-                val stringVersion = matcher.groupValues[1]
-                version = stringVersion.toInt()
-                versionLength = stringVersion.length
-            }
-                ?: versionXYPattern.matchEntire(fileName)?.let { matcher ->
-                    hasXTSFormat = false
-                    hasXYFormat = true
-                    val stringVersion = matcher.groupValues[1]
-                    version = stringVersion.toInt()
-                    versionLength = stringVersion.length
-                }
-                ?: versionXPattern.matchEntire(fileName)?.let { matcher ->
-                    hasXTSFormat = false
-                    hasXYFormat = false
-                    hasXFormat = true
-                    val stringVersion = matcher.groupValues[1]
-                    version = stringVersion.toInt()
-                    versionLength = stringVersion.length
-                }
-
-            // TODO determine if the boolean flags is what we want; i.e. the last file format always wins??? Or should the first win?
-            if (hasXTSFormat || hasXYFormat || hasXFormat) {
-                if (version >= highestMajor) {
-                    highestMajor = version
-                }
-                if (versionLength > version.toString().length && versionLength > highestVersionLength) {
-                    highestVersionLength = versionLength
-                }
-            }
-        }
-        highestMajor++
-
-        return if (hasXTSFormat) {
-            { _: Int ->
-                val majorPadded = highestMajor.toString().padStart(highestVersionLength, '0')
-                "${parameters.filePrefix}${majorPadded}_${getCurrentTimestamp()}${parameters.fileSeparator}"
-            }
-        } else if (hasXYFormat) {
-            { index: Int ->
-                val majorPadded = highestMajor.toString().padStart(highestVersionLength, '0')
-                val minorPadded = index.toString().padStart(highestVersionLength, '0')
-                "${parameters.filePrefix}${majorPadded}_${minorPadded}${parameters.fileSeparator}"
-            }
-        } else {
-            { _: Int ->
-                val majorPadded = highestMajor.toString().padStart(highestVersionLength, '0')
-                "${parameters.filePrefix}$majorPadded${parameters.fileSeparator}"
-            }
-        }
-    }
-
-    @OptIn(ExperimentalTime::class)
-    private fun getCurrentTimestamp(): String {
-        val ts = Clock.System.now()
-        val customFormat = DateTimeComponents.Format {
-            date(LocalDate.Formats.ISO_BASIC)
-            hour()
-            minute()
-            second()
-        }
-        return ts.format(customFormat)
     }
 
     private inline fun <A> withDatabase(block: (Database) -> A): A = if (parameters.testContainersImageName != null) {
@@ -209,16 +133,14 @@ abstract class GenerateMigrationsWorker : WorkAction<GenerateMigrationsParameter
     }
 
     private fun container(imageName: String): JdbcDatabaseContainer<*> = when {
-        imageName.startsWith("postgres:") -> PostgreSQLContainer(imageName)
-        imageName.startsWith("mysql:") -> MySQLContainer(imageName)
-        imageName.startsWith("mariadb:") -> MariaDBContainer(imageName)
-        imageName.startsWith("oracle:") || imageName.startsWith("gvenzl/oracle-xe:") -> OracleContainer(imageName)
-        imageName.startsWith("mcr.microsoft.com/mssql/server:") || imageName.startsWith("sqlserver:") ->
-            MSSQLServerContainer(imageName)
+        SupportedImage.POSTGRES.prefixMatches(imageName) -> PostgreSQLContainer(imageName)
+        SupportedImage.MYSQL.prefixMatches(imageName) -> MySQLContainer(imageName)
+        SupportedImage.MARIADB.prefixMatches(imageName) -> MariaDBContainer(imageName)
+        SupportedImage.ORACLE.prefixMatches(imageName) -> OracleContainer(imageName)
+        SupportedImage.SQLSERVER.prefixMatches(imageName) -> MSSQLServerContainer(imageName)
 
         else -> throw IllegalArgumentException(
-            "Unsupported database container image: $imageName. " +
-                "Supported prefixes are: postgres:, mysql:, mariadb:, sqlserver:, mcr.microsoft.com/mssql/server:, oracle:, gvenzl/oracle-xe:"
+            "Unsupported database container image: $imageName. ${SupportedImage.supportedPrefixesMessage}"
         )
     }.apply {
         waitingFor(Wait.forListeningPort())
@@ -244,6 +166,7 @@ abstract class GenerateMigrationsWorker : WorkAction<GenerateMigrationsParameter
         val original = Thread.currentThread().contextClassLoader
         return try {
             val urls = parameters.classpathUrls.toTypedArray()
+            println("Classpath URLS -> ${urls.map { it.file }}")
             val classLoader = URLClassLoader(urls, original)
             Thread.currentThread().contextClassLoader = classLoader
             block(classLoader)
@@ -252,17 +175,26 @@ abstract class GenerateMigrationsWorker : WorkAction<GenerateMigrationsParameter
         }
     }
 
-    private fun URLClassLoader.getClassesInPackage(packageName: String): Sequence<KClass<*>> =
-        getResources(packageName.replace('.', '/')).asSequence().flatMap { resource ->
+    private fun URLClassLoader.getClassesInPackage(packageName: String): Sequence<KClass<*>> = getResources(
+        packageName.replace('.', '/').also { println("Getting resource for $it") }
+    )
+        .asSequence()
+        .flatMap { resource ->
             File(resource.toURI())
+                .also { println("Looking at ${it.name}") }
                 .walk()
-                .filter { file -> file.isFile && file.name.endsWith(".class") }
+                .filter { file ->
+                    val x = file.isFile && file.name.endsWith(".class")
+                    println("Found contender $x: ${file.name}")
+                    x
+                }
                 .map { file ->
                     val baseDir = File(resource.toURI())
                     val subPackageName = file.relativeTo(baseDir)
                         .path
-                        .replace(separator, ".").dropLast(file.name.length + 1)
-                    val fullPackage = packageName + "." + if (subPackageName.isBlank()) "" else "$subPackageName."
+                        .replace(separator, ".")
+                        .dropLast(file.name.length + 1)
+                    val fullPackage = "$packageName.${if (subPackageName.isBlank()) "" else "$subPackageName."}"
                     val clazzName = file.name.dropLast(classExtensionLength)
                     Class.forName("$fullPackage$clazzName", true, this).kotlin
                 }
@@ -271,8 +203,23 @@ abstract class GenerateMigrationsWorker : WorkAction<GenerateMigrationsParameter
     inner class GradleLogger : SqlLogger {
         override fun log(context: StatementContext, transaction: Transaction) {
             if (parameters.debug) {
-                logger.debug(context.expandArgs(TransactionManager.current()))
+                logger.debug(context.expandArgs(transaction))
             }
+        }
+    }
+
+    private enum class SupportedImage(vararg val prefixes: String) {
+        MYSQL("mysql:"),
+        MARIADB("mariadb:"),
+        POSTGRES("postgres:"),
+        SQLSERVER("mcr.microsoft.com/mssql/server:"),
+        ORACLE("container-registry.oracle.com/", "gvenzl/oracle-", "oracle/");
+
+        fun prefixMatches(name: String): Boolean = prefixes.any { prefix -> name.startsWith(prefix) }
+
+        companion object {
+            val supportedPrefixesMessage: String
+                get() = "Supported prefixes are: ${entries.joinToString { si -> si.prefixes.joinToString { it } }}"
         }
     }
 }

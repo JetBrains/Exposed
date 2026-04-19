@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNull
 
 class ExposedGradlePluginTest {
     private lateinit var project: Project
@@ -26,15 +27,23 @@ class ExposedGradlePluginTest {
     }
 
     @Test
-    fun `test extension registered`() {
-        // Verify that the extension is registered
-        val extension = project.extensions.findByName(MigrationsExtension.NAME)
+    fun `test root extension registered`() {
+        // Verify that the parent extension is registered
+        val extension = project.extensions.findByName(ExposedExtension.NAME)
         assertNotNull(extension)
-        assertTrue(extension is MigrationsExtension)
+        assertTrue(extension is ExposedExtension)
     }
 
     @Test
-    fun `test tasks registered`() {
+    fun `test nested extensions registered`() {
+        // Verify that any children extensions are registered
+        val nestedExtension = project.exposedExtensions.getByName(MigrationsExtension.NAME)
+        assertNotNull(nestedExtension)
+        assertTrue(nestedExtension is MigrationsExtension)
+    }
+
+    @Test
+    fun `test all tasks registered`() {
         // Verify that the generateMigrations task is registered
         val task = project.tasks.findByName(GENERATE_MIGRATIONS_TASK_NAME)
         assertNotNull(task)
@@ -43,14 +52,14 @@ class ExposedGradlePluginTest {
     }
 
     @Test
-    fun `test task configuration with database properties`() {
-        // Get the extension
-        val extension = project.extensions.getByType(MigrationsExtension::class.java)
+    fun `test migrations task configuration with database properties`() {
+        val extension = project.exposedExtensions.getByType(MigrationsExtension::class.java)
 
         // Set custom values in the extension
         extension.tablesPackage.set("com.example.tables")
         extension.fileDirectory.set(project.layout.projectDirectory.dir("custom/migrations"))
         extension.filePrefix.set("M")
+        extension.fileVersionFormat.set(VersionFormat.MAJOR_ONLY)
         extension.fileSeparator.set("_")
         extension.useUpperCaseDescription.set(false)
         extension.fileExtension.set(".xml")
@@ -68,9 +77,11 @@ class ExposedGradlePluginTest {
         assertTrue(task.tablesPackage.isPresent)
         assertTrue(task.fileDirectory.isPresent)
         assertTrue(task.filePrefix.isPresent)
+        assertTrue(task.fileVersionFormat.isPresent)
         assertTrue(task.fileSeparator.isPresent)
         assertTrue(task.useUpperCaseDescription.isPresent)
         assertTrue(task.fileExtension.isPresent)
+        assertNull(task.fullFileName)
 
         // Verify that the database connection properties are correctly passed to the task
         assertTrue(task.databaseUrl.isPresent)
@@ -85,9 +96,8 @@ class ExposedGradlePluginTest {
     }
 
     @Test
-    fun `test task configuration with TestContainers`() {
-        // Get the extension and task
-        val extension = project.extensions.getByType(MigrationsExtension::class.java)
+    fun `test migrations task configuration with TestContainers`() {
+        val extension = project.exposedExtensions.getByType(MigrationsExtension::class.java)
 
         // Set custom values in the extension
         extension.tablesPackage.set("com.example.tables")
