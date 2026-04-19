@@ -1,8 +1,10 @@
-package org.jetbrains.exposed.v1.gradle.plugin
+package org.jetbrains.exposed.v1.gradle.plugin.migrations
 
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.jetbrains.exposed.v1.gradle.plugin.MigrationsExtension
+import org.jetbrains.exposed.v1.gradle.plugin.VersionFormat
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -21,10 +23,11 @@ class MigrationsExtensionTest {
 
     @Test
     fun `test default values`() {
-        assertEquals("V", extension.filePrefix.get())
-        assertEquals("__", extension.fileSeparator.get())
+        Assertions.assertEquals("V", extension.filePrefix.get())
+        Assertions.assertEquals(VersionFormat.TIMESTAMP_ONLY, extension.fileVersionFormat.get())
+        Assertions.assertEquals("__", extension.fileSeparator.get())
         assertTrue(extension.useUpperCaseDescription.get())
-        assertEquals(".sql", extension.fileExtension.get())
+        Assertions.assertEquals(".sql", extension.fileExtension.get())
     }
 
     @Test
@@ -33,6 +36,7 @@ class MigrationsExtensionTest {
         extension.fileDirectory.set(project.layout.projectDirectory.dir("custom/migrations"))
 
         extension.filePrefix.set("R")
+        extension.fileVersionFormat.set(VersionFormat.MAJOR_MINOR)
         extension.fileSeparator.set("-")
         extension.useUpperCaseDescription.set(false)
         extension.fileExtension.set(".xml")
@@ -41,19 +45,20 @@ class MigrationsExtensionTest {
         extension.databaseUser.set("sa")
         extension.databasePassword.set("")
 
-        assertEquals("com.example.tables", extension.tablesPackage.get())
-        assertEquals(
+        Assertions.assertEquals("com.example.tables", extension.tablesPackage.get())
+        Assertions.assertEquals(
             File(project.projectDir, "custom/migrations").absolutePath,
             extension.fileDirectory.get().asFile.absolutePath
         )
 
-        assertEquals("R", extension.filePrefix.get())
-        assertEquals("-", extension.fileSeparator.get())
+        Assertions.assertEquals("R", extension.filePrefix.get())
+        Assertions.assertEquals(VersionFormat.MAJOR_MINOR, extension.fileVersionFormat.get())
+        Assertions.assertEquals("-", extension.fileSeparator.get())
         assertFalse(extension.useUpperCaseDescription.get())
-        assertEquals(".xml", extension.fileExtension.get())
+        Assertions.assertEquals(".xml", extension.fileExtension.get())
 
-        assertEquals("jdbc:h2:mem:test", extension.databaseUrl.get())
-        assertEquals("sa", extension.databaseUser.get())
-        assertEquals("", extension.databasePassword.get())
+        Assertions.assertEquals("jdbc:h2:mem:test", extension.databaseUrl.get())
+        Assertions.assertEquals("sa", extension.databaseUser.get())
+        Assertions.assertEquals("", extension.databasePassword.get())
     }
 }

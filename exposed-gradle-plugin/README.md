@@ -82,6 +82,7 @@ You can optionally configure the following elements for more control over the pr
 - `classpath`: Classpath scanned for Exposed table definitions. Defaults to the project's runtime classpath.
 - `fileDirectory`: Directory where the generated migration scripts will be stored. Defaults to "src/main/resources/db/migration".
 - `filePrefix`: Prefix for migration script names. Defaults to "V".
+- `fileVersionFormat`: Version format for migration script names. Defaults to using the full current timestamp (with seconds) in the format YYYYMMDDHHMMSS.
 - `fileSeparator`: Separator for migration script names. Defaults to "__".
 - `useUpperCaseDescription`: Whether the descriptive part of migration script names should be all in upper-case. Defaults to true.
 - `fileExtension`: File extension for migration scripts. Defaults to ".sql".
@@ -96,6 +97,7 @@ exposed {
         classpath = sourceSets.main.get().runtimeClasspath
         fileDirectory.set(layout.projectDirectory.dir("src/main/resources/db/migration"))
         filePrefix.set("V")
+        fileVersionFormat.set(VersionFormat.TIMESTAMP_ONLY)
         fileSeparator.set("__")
         useUpperCaseDescription.set(true)
         fileExtension.set(".sql")
@@ -107,13 +109,31 @@ exposed {
 
 The default migration script naming pattern is as follows:
 
-`<prefix><version><separator><description>.<extension>`
+`<prefix><version><separator><description><extension>`
 
-By default, this plugin generates scripts that follow Flyway's naming conventions with support for three version formats:
+By default, this plugin generates scripts that use timestamps as part of the naming convention,
+with support for the following `VersionFormat` options:
 
-1. `VX__description.sql` (e.g., `V1__create_users_table.sql`)
-2. `VX_Y__description.sql` (e.g., `V1_0__create_users_table.sql`)
-3. `VX_YYYYMMDDHHMMSS__description.sql` (e.g., `V1_20250409163303__create_users_table.sql`)
+- `TIMESTAMP_ONLY` (e.g., `V20260417195521__create_table_users.sql`)
+- `TIMESTAMP_WITHOUT_SECONDS` (e.g., `V202604171955__create_table_users.sql`)
+- `MAJOR_TIMESTAMP` (e.g., `V3_20260417195521__create_table_users.sql`)
+- `MAJOR_TIMESTAMP_WITHOUT_SECONDS` (e.g., `V3_202604171955__create_table_users.sql`)
+- `MAJOR_MINOR` (e.g., `V3_1__create_table_users.sql`)
+- `MAJOR_ONLY` (e.g., `V3__create_table_users.sql`)
 
-The format used depends on any existing migration scripts detected in the project, with `VX__description.sql` being used
-as the default fallback if no matching scripts are found.
+The default setting can be configured by passing a specific `VersionFormat` to `fileVersionFormat` in your `build.gradle.kts`.
+
+If you choose to use a format that relies on a major version, the specified `fileDirectory` will be searched for existing
+scripts from which the next highest version will be resolved. If the directory is empty or no script files of the above
+formats are detected, the generated major version will start at 1.
+
+The file naming configurations specified in your `build.gradle.kts` can be ignored when the `generateMigrations` task is
+run by passing the exact required filename to use as a command line argument:
+
+```bash
+./gradlew generateMigrations --filename=V0__initialize_schema.sql
+```
+
+**Note:** If a filename argument is passed, only a single migration script will be generated, which will contain all the
+necessary migration statements. This will happen even if multiple Exposed table definitions are involved in the schema diff,
+which would otherwise generate a new migration script per table.

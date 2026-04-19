@@ -6,9 +6,11 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.options.Option
 import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
@@ -46,6 +48,14 @@ abstract class GenerateMigrationsTask : DefaultTask() {
     abstract val filePrefix: Property<String>
 
     /**
+     * Optional version format for migration script names.
+     * Defaults to using the full current timestamp (with seconds) in the format YYYYMMDDHHMMSS.
+     */
+    @get:Input
+    @get:Optional
+    abstract val fileVersionFormat: Property<VersionFormat>
+
+    /**
      * Optional separator for migration script names. Defaults to "__".
      */
     @get:Input
@@ -66,6 +76,20 @@ abstract class GenerateMigrationsTask : DefaultTask() {
     @get:Input
     @get:Optional
     abstract val fileExtension: Property<String>
+
+    @get:Internal
+    var fullFileName: String? = null
+        private set
+
+    /**
+     * Optional command line argument that overrides any filename configurations declared in the build file.
+     * Passing an argument to this option means all migration statements will be stored in a single
+     * generated file with the specified [name], which should include the required extension as well.
+     */
+    @Option(option = "filename", description = "The exact filename to use when generating a single script")
+    fun setFullFileName(name: String) {
+        this.fullFileName = name
+    }
 
     /**
      * Optional URL for the database connection, which should be considered as the current schema.
@@ -114,9 +138,11 @@ abstract class GenerateMigrationsTask : DefaultTask() {
 
                 parameters.fileDirectory.set(fileDirectory)
                 parameters.filePrefix = filePrefix.get()
+                parameters.fileVersionFormat = fileVersionFormat.get()
                 parameters.fileSeparator = fileSeparator.get()
                 parameters.useUpperCaseDescription = useUpperCaseDescription.get()
                 parameters.fileExtension = fileExtension.get()
+                parameters.fullFileName = fullFileName
 
                 if (databaseUrl.isPresent) parameters.databaseUrl = databaseUrl.get()
                 if (databaseUser.isPresent) parameters.databaseUser = databaseUser.get()
@@ -129,3 +155,6 @@ abstract class GenerateMigrationsTask : DefaultTask() {
             }
     }
 }
+
+internal const val GENERATE_MIGRATIONS_TASK_NAME = "generateMigrations"
+internal const val GENERATE_MIGRATIONS_TASK_DESCRIPTION = "Generates SQL migration scripts from Exposed table definitions"

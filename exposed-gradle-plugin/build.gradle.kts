@@ -4,6 +4,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
+    `java-gradle-plugin`
     kotlin("jvm")
 
     alias(libs.plugins.dokka)
@@ -15,6 +16,10 @@ repositories {
 
 kotlin {
     jvmToolchain(17)
+
+    compilerOptions {
+        optIn.add("kotlin.time.ExperimentalTime")
+    }
 }
 
 dependencies {
@@ -22,6 +27,8 @@ dependencies {
 
     implementation(project(":exposed-jdbc"))
     implementation(project(":exposed-migration-jdbc"))
+
+    implementation(libs.kotlin.stdlib)
 
     implementation(libs.flyway.postgresql)
     implementation(libs.flyway.mysql)
@@ -41,9 +48,25 @@ dependencies {
     implementation(libs.oracle)
     implementation(libs.mssql)
 
+    testImplementation(gradleTestKit())
     testImplementation(libs.junit5)
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(kotlin("test-junit5"))
+}
+
+gradlePlugin {
+    website = "https://www.jetbrains.com/exposed/"
+    vcsUrl = "https://github.com/JetBrains/Exposed"
+
+    plugins {
+        create("exposed").apply {
+            id = "org.jetbrains.exposed.plugin"
+            displayName = "Exposed Gradle Plugin"
+            implementationClass = "org.jetbrains.exposed.v1.gradle.plugin.ExposedGradlePlugin"
+            description = "Exposed Gradle Plugin configures the generation of migration scripts for applications that use Exposed"
+            tags = setOf("exposed", "kotlin", "sql", "database", "orm")
+        }
+    }
 }
 
 tasks.withType<KotlinCompile>().configureEach {
