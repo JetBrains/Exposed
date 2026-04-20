@@ -5,12 +5,14 @@ import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Version
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
+import org.jetbrains.exposed.v1.core.transactions.withThreadLocalTransaction
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.jdbc.statements.api.ExposedConnection
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcExposedDatabaseMetadata
 import org.jetbrains.exposed.v1.jdbc.transactions.JdbcTransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.vendors.*
+import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.DriverManager
 import java.util.*
@@ -105,6 +107,8 @@ class Database private constructor(
     internal var dataSourceReadOnly: Boolean = false
 
     companion object {
+        private val logger = LoggerFactory.getLogger(this::class.java)
+
         private val connectionInstanceImpl: DatabaseConnectionAutoRegistration by lazy {
             ServiceLoader.load(DatabaseConnectionAutoRegistration::class.java, Database::class.java.classLoader)
                 .firstOrNull()
@@ -174,10 +178,12 @@ class Database private constructor(
             setupConnection: (Connection) -> Unit = {},
             manager: (Database) -> JdbcTransactionManager = { TransactionManager(it) }
         ): Database {
-            return Database(explicitVendor, config ?: DatabaseConfig.invoke()) {
+            val databaseConfig = config ?: DatabaseConfig.invoke()
+            return Database(explicitVendor, databaseConfig) {
                 connectionAutoRegistration(getNewConnection().apply { setupConnection(this) })
             }.apply {
                 TransactionManager.registerManager(this, manager(this))
+                generateSchema(this)
             }
         }
 
@@ -296,6 +302,21 @@ class Database private constructor(
         fun getDialectName(url: String) = dialectMapping.entries.firstOrNull { (prefix, _) ->
             url.startsWith(prefix)
         }?.value
+
+        @OptIn(InternalApi::class)
+        internal fun generateSchema(database: Database) {
+            if (database.config.ddl == null) {
+                logger.debug("Schema generation not configured")
+                return
+            } else {
+                withThreadLocalTransaction(TransactionManager.manager.newTransaction(readOnly = false)) {
+                    val exposedTables = database.config.ddl!!.tables
+                    logger.info("Schema generation for tables '{}'", exposedTables.map { it.tableName })
+                    logger.debug("ddl {}", exposedTables.map { it.ddl }.joinToString())
+                    SchemaUtils.create(tables = exposedTables.toTypedArray())
+                }
+            }
+        }
     }
 }
 
