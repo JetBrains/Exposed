@@ -1,0 +1,112 @@
+public class org/jetbrains/exposed/v1/gradle/plugin/ExposedExtension {
+	public static final field Companion Lorg/jetbrains/exposed/v1/gradle/plugin/ExposedExtension$Companion;
+	public static final field NAME Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/v1/gradle/plugin/ExposedExtension$Companion {
+}
+
+public final class org/jetbrains/exposed/v1/gradle/plugin/ExposedGradlePlugin : org/gradle/api/Plugin {
+	public static final field Companion Lorg/jetbrains/exposed/v1/gradle/plugin/ExposedGradlePlugin$Companion;
+	public static final field TASK_GROUP Ljava/lang/String;
+	public static final field VERSION Ljava/lang/String;
+	public fun <init> ()V
+	public synthetic fun apply (Ljava/lang/Object;)V
+	public fun apply (Lorg/gradle/api/Project;)V
+}
+
+public final class org/jetbrains/exposed/v1/gradle/plugin/ExposedGradlePlugin$Companion {
+}
+
+public abstract interface class org/jetbrains/exposed/v1/gradle/plugin/GenerateMigrationsParameters : org/gradle/workers/WorkParameters {
+	public abstract fun getClasspathUrls ()Ljava/util/List;
+	public abstract fun getDatabasePassword ()Ljava/lang/String;
+	public abstract fun getDatabaseUrl ()Ljava/lang/String;
+	public abstract fun getDatabaseUser ()Ljava/lang/String;
+	public abstract fun getDebug ()Z
+	public abstract fun getFileDirectory ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getFileExtension ()Ljava/lang/String;
+	public abstract fun getFilePrefix ()Ljava/lang/String;
+	public abstract fun getFileSeparator ()Ljava/lang/String;
+	public abstract fun getFileVersionFormat ()Lorg/jetbrains/exposed/v1/gradle/plugin/VersionFormat;
+	public abstract fun getFullFileName ()Ljava/lang/String;
+	public abstract fun getTablesPackage ()Ljava/lang/String;
+	public abstract fun getTestContainersImageName ()Ljava/lang/String;
+	public abstract fun getUseUpperCaseDescription ()Z
+	public abstract fun setClasspathUrls (Ljava/util/List;)V
+	public abstract fun setDatabasePassword (Ljava/lang/String;)V
+	public abstract fun setDatabaseUrl (Ljava/lang/String;)V
+	public abstract fun setDatabaseUser (Ljava/lang/String;)V
+	public abstract fun setDebug (Z)V
+	public abstract fun setFileExtension (Ljava/lang/String;)V
+	public abstract fun setFilePrefix (Ljava/lang/String;)V
+	public abstract fun setFileSeparator (Ljava/lang/String;)V
+	public abstract fun setFileVersionFormat (Lorg/jetbrains/exposed/v1/gradle/plugin/VersionFormat;)V
+	public abstract fun setFullFileName (Ljava/lang/String;)V
+	public abstract fun setTablesPackage (Ljava/lang/String;)V
+	public abstract fun setTestContainersImageName (Ljava/lang/String;)V
+	public abstract fun setUseUpperCaseDescription (Z)V
+}
+
+public abstract class org/jetbrains/exposed/v1/gradle/plugin/GenerateMigrationsTask : org/gradle/api/DefaultTask {
+	public fun <init> ()V
+	public final fun generateMigrations ()V
+	public abstract fun getClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public abstract fun getDatabasePassword ()Lorg/gradle/api/provider/Property;
+	public abstract fun getDatabaseUrl ()Lorg/gradle/api/provider/Property;
+	public abstract fun getDatabaseUser ()Lorg/gradle/api/provider/Property;
+	public abstract fun getFileDirectory ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getFileExtension ()Lorg/gradle/api/provider/Property;
+	public abstract fun getFilePrefix ()Lorg/gradle/api/provider/Property;
+	public abstract fun getFileSeparator ()Lorg/gradle/api/provider/Property;
+	public abstract fun getFileVersionFormat ()Lorg/gradle/api/provider/Property;
+	public final fun getFullFileName ()Ljava/lang/String;
+	public abstract fun getTablesPackage ()Lorg/gradle/api/provider/Property;
+	public abstract fun getTestContainersImageName ()Lorg/gradle/api/provider/Property;
+	public abstract fun getUseUpperCaseDescription ()Lorg/gradle/api/provider/Property;
+	public abstract fun getWorkerExecutor ()Lorg/gradle/workers/WorkerExecutor;
+	public final fun setFullFileName (Ljava/lang/String;)V
+}
+
+public abstract class org/jetbrains/exposed/v1/gradle/plugin/GenerateMigrationsWorker : org/gradle/workers/WorkAction {
+	public fun <init> ()V
+	public fun execute ()V
+}
+
+public final class org/jetbrains/exposed/v1/gradle/plugin/GenerateMigrationsWorker$GradleLogger : org/jetbrains/exposed/v1/core/SqlLogger {
+	public fun <init> (Lorg/jetbrains/exposed/v1/gradle/plugin/GenerateMigrationsWorker;)V
+	public fun log (Lorg/jetbrains/exposed/v1/core/statements/StatementContext;Lorg/jetbrains/exposed/v1/core/Transaction;)V
+}
+
+public class org/jetbrains/exposed/v1/gradle/plugin/MigrationsExtension {
+	public static final field Companion Lorg/jetbrains/exposed/v1/gradle/plugin/MigrationsExtension$Companion;
+	public static final field NAME Ljava/lang/String;
+	public final fun getClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public final fun getDatabasePassword ()Lorg/gradle/api/provider/Property;
+	public final fun getDatabaseUrl ()Lorg/gradle/api/provider/Property;
+	public final fun getDatabaseUser ()Lorg/gradle/api/provider/Property;
+	public final fun getFileDirectory ()Lorg/gradle/api/file/DirectoryProperty;
+	public final fun getFileExtension ()Lorg/gradle/api/provider/Property;
+	public final fun getFilePrefix ()Lorg/gradle/api/provider/Property;
+	public final fun getFileSeparator ()Lorg/gradle/api/provider/Property;
+	public final fun getFileVersionFormat ()Lorg/gradle/api/provider/Property;
+	public final fun getTablesPackage ()Lorg/gradle/api/provider/Property;
+	public final fun getTestContainersImageName ()Lorg/gradle/api/provider/Property;
+	public final fun getUseUpperCaseDescription ()Lorg/gradle/api/provider/Property;
+}
+
+public final class org/jetbrains/exposed/v1/gradle/plugin/MigrationsExtension$Companion {
+}
+
+public final class org/jetbrains/exposed/v1/gradle/plugin/VersionFormat : java/lang/Enum {
+	public static final field MAJOR_MINOR Lorg/jetbrains/exposed/v1/gradle/plugin/VersionFormat;
+	public static final field MAJOR_ONLY Lorg/jetbrains/exposed/v1/gradle/plugin/VersionFormat;
+	public static final field MAJOR_TIMESTAMP Lorg/jetbrains/exposed/v1/gradle/plugin/VersionFormat;
+	public static final field MAJOR_TIMESTAMP_WITHOUT_SECONDS Lorg/jetbrains/exposed/v1/gradle/plugin/VersionFormat;
+	public static final field TIMESTAMP_ONLY Lorg/jetbrains/exposed/v1/gradle/plugin/VersionFormat;
+	public static final field TIMESTAMP_WITHOUT_SECONDS Lorg/jetbrains/exposed/v1/gradle/plugin/VersionFormat;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/gradle/plugin/VersionFormat;
+	public static fun values ()[Lorg/jetbrains/exposed/v1/gradle/plugin/VersionFormat;
+}
+
