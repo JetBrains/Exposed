@@ -112,6 +112,13 @@ The default migration script naming pattern is as follows:
 
 `<prefix><version><separator><description><extension>`
 
+**Note:** The generated description is extracted from the generated statement in the script, and is of the format:
+`<OPERATION><OBJECT><IDENTIFIER><EXTRA>`, like `CREATE_TABLE_USERS`. Sometimes a migration will generate multiple statements,
+for example, when two tables related by a foreign key constraint must be created. In these cases, the description used is
+usually based on the first generated statement. Some exceptions apply though, like when a sequence must be created before
+a table is created. In this case, even though `CREATE SEQUENCE` precedes `CREATE TABLE`, the description will use the latter.
+In the event a standard description cannot be generated, the plugin will fall to generic options like, `CUSTOM_STATEMENT_12345`
+
 By default, this plugin generates scripts that use timestamps as part of the naming convention,
 with support for the following `VersionFormat` options:
 

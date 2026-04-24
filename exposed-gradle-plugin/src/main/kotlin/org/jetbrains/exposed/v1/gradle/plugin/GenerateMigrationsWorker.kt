@@ -97,7 +97,7 @@ abstract class GenerateMigrationsWorker : WorkAction<GenerateMigrationsParameter
                                 null
                             }
                         }
-                    }.toList()
+                    }.distinct()
                 }
             }
         }
