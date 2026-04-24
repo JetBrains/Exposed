@@ -43,9 +43,16 @@ class StatementToFileDescriptionGeneratorTest {
 
     @Test
     fun `test ALTER TABLE statements`() {
-        // Simple ALTER TABLE
+        // ALTER TABLE with ADD COLUMN
         Assertions.assertEquals(
-            "ALTER_TABLE_USERS", "ALTER TABLE users ADD COLUMN email VARCHAR(255)".statementToFileDescription(true)
+            "ALTER_TABLE_USERS_ADD_COLUMN_EMAIL",
+            "ALTER TABLE users ADD COLUMN email VARCHAR(255)".statementToFileDescription(true)
+        )
+
+        // ALTER TABLE with just ADD (some db allow COLUMN keyword to be omitted)
+        Assertions.assertEquals(
+            "alter_table_users",
+            "ALTER TABLE users ADD email VARCHAR(255)".statementToFileDescription(false)
         )
 
         // ALTER TABLE with ADD CONSTRAINT
@@ -60,15 +67,28 @@ class StatementToFileDescriptionGeneratorTest {
             "ALTER TABLE users DROP CONSTRAINT users_email_unique UNIQUE (email)".statementToFileDescription(false)
         )
 
+        // ALTER TABLE with DROP COLUMN
+        Assertions.assertEquals(
+            "alter_table_users_drop_column_email",
+            "ALTER TABLE users DROP COLUMN IF EXISTS email".statementToFileDescription(false)
+        )
+
+        // ALTER TABLE with just DROP (some db allow COLUMN keyword to be omitted)
+        Assertions.assertEquals(
+            "ALTER_TABLE_USERS",
+            "ALTER TABLE users DROP email".statementToFileDescription(true)
+        )
+
         // ALTER TABLE with schema prefix
         Assertions.assertEquals(
-            "ALTER_TABLE_PRODUCTS",
+            "ALTER_TABLE_PRODUCTS_ADD_COLUMN_PRICE",
             "ALTER TABLE public.products ADD COLUMN price DECIMAL(10,2)".statementToFileDescription(true)
         )
 
         // ALTER TABLE with quoted identifiers
         Assertions.assertEquals(
-            "ALTER_TABLE_ITEMS", "ALTER TABLE \"items\" ADD COLUMN quantity INT".statementToFileDescription(true)
+            "ALTER_TABLE_ITEMS_ADD_COLUMN_QUANTITY",
+            "ALTER TABLE \"items\" ADD COLUMN \"quantity\" INT".statementToFileDescription(true)
         )
     }
 
@@ -117,10 +137,10 @@ class StatementToFileDescriptionGeneratorTest {
             "CREATE INDEX idx_users_email ON users (email)".statementToFileDescription(true)
         )
 
-        // Simple CREATE INDEX
+        // CREATE INDEX with IF NOT EXISTS
         Assertions.assertEquals(
             "create_index_idx_users_email_on_users",
-            "CREATE INDEX idx_users_email ON users (email)".statementToFileDescription(false)
+            "CREATE INDEX IF NOT EXISTS idx_users_email ON users (email)".statementToFileDescription(false)
         )
 
         // CREATE INDEX with schema prefix
@@ -176,10 +196,10 @@ class StatementToFileDescriptionGeneratorTest {
             "DROP_INDEX_IDX_USERS_EMAIL", "DROP INDEX idx_users_email".statementToFileDescription(true)
         )
 
-        // Simple DROP INDEX
+        // DROP INDEX with IF EXISTS
         Assertions.assertEquals(
             "drop_index_idx_users_email_on_users",
-            "DROP INDEX idx_users_email ON users".statementToFileDescription(false)
+            "DROP INDEX IF EXISTS idx_users_email ON users".statementToFileDescription(false)
         )
 
         // DROP INDEX with quoted identifiers
@@ -242,6 +262,15 @@ class StatementToFileDescriptionGeneratorTest {
             "CREATE SEQUENCE IF NOT EXISTS chat_memories_memory_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807".statementToFileDescription(
                 true
             )
+        )
+
+        // ALTER TABLE with ADD COLUMN + ADD CONSTRAINT
+        Assertions.assertEquals(
+            "ALTER_TABLE_USERS_ADD_COLUMN_EMAIL",
+            """
+                ALTER TABLE users ADD COLUMN email VARCHAR(255);
+                ALTER TABLE users ADD CONSTRAINT users_email_unique UNIQUE (email)
+            """.trimIndent().statementToFileDescription(true)
         )
     }
 

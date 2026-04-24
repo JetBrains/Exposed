@@ -2,10 +2,10 @@ package org.jetbrains.exposed.v1.gradle.plugin.migrations
 
 import org.jetbrains.exposed.v1.gradle.plugin.VersionFormat
 import org.jetbrains.exposed.v1.gradle.plugin.nextVersion
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -17,7 +17,6 @@ private class FixedClock(private val fixedTime: Instant) : Clock {
 }
 
 class FileVersionGeneratorTest {
-    private val scriptDirectory = "src/test/resources"
     private val filePrefix = "V"
     private val fileSeparator = "__"
     private val currentMajor = 3
@@ -25,28 +24,20 @@ class FileVersionGeneratorTest {
     private val versionMajorTsPattern by lazy { Regex("^$filePrefix(\\d+)_(\\d{12,14})$fileSeparator.*$") }
     private val testClock by lazy { FixedClock(Instant.parse("2026-04-17T22:10:43Z")) }
 
+    @field:TempDir
     private lateinit var testFilePath: File
-    private lateinit var testMajorTsFile: File
-    private lateinit var testMajorMinorFile: File
-    private lateinit var testMajorFile: File
+
+    private val testTsFile by lazy { testFilePath.resolve("V20260301113322__create_table_cities.sql") }
+    private val testMajorTsFile by lazy { testFilePath.resolve("V${currentMajor}_20260301113322__create_table_users.sql") }
+    private val testMajorMinorFile by lazy { testFilePath.resolve("V${currentMajor}_2__create_table_students.sql") }
+    private val testMajorFile by lazy { testFilePath.resolve("V${currentMajor}__create_table_employees.sql") }
 
     @BeforeEach
     fun setup() {
-        testFilePath = File(scriptDirectory)
-        testMajorTsFile = File("$scriptDirectory/V${currentMajor}_20260301113322__create_table_users.sql")
-        testMajorMinorFile = File("$scriptDirectory/V${currentMajor}_2__create_table_students.sql")
-        testMajorFile = File("$scriptDirectory/V${currentMajor}__create_table_employes.sql")
-        assertTrue { testFilePath.exists() }
+        assertTrue { testTsFile.createNewFile() }
         assertTrue { testMajorTsFile.createNewFile() }
         assertTrue { testMajorMinorFile.createNewFile() }
         assertTrue { testMajorFile.createNewFile() }
-    }
-
-    @AfterEach
-    fun teardown() {
-        if (testMajorTsFile.exists()) assertTrue { testMajorTsFile.delete() }
-        if (testMajorMinorFile.exists()) assertTrue { testMajorMinorFile.delete() }
-        if (testMajorFile.exists()) assertTrue { testMajorFile.delete() }
     }
 
     @Test
@@ -86,6 +77,19 @@ class FileVersionGeneratorTest {
     }
 
     @Test
+    fun `test major-minor format ignores existing timestamp files`() {
+        assertTrue { testMajorTsFile.delete() }
+        assertTrue { testMajorMinorFile.delete() }
+        assertTrue { testMajorFile.delete() }
+        // directory now only contains TS__ format
+
+        val version = VersionFormat.MAJOR_MINOR.nextVersion(testFilePath, testClock, filePrefix, fileSeparator).invoke(1)
+        val (major, minor) = version.substringAfter(filePrefix).substringBefore(fileSeparator).split('_')
+        assertEquals(1, major.toInt())
+        assertEquals(1, minor.toInt())
+    }
+
+    @Test
     fun `test major-only format uses existing files but ignores args`() {
         val version = VersionFormat.MAJOR_ONLY.nextVersion(testFilePath, testClock, filePrefix, fileSeparator).invoke(1)
         val major = version.substringAfter(filePrefix).substringBefore(fileSeparator)
@@ -94,6 +98,7 @@ class FileVersionGeneratorTest {
 
     @Test
     fun `test major formats when directory is empty`() {
+        assertTrue { testTsFile.delete() }
         assertTrue { testMajorTsFile.delete() }
         assertTrue { testMajorMinorFile.delete() }
         assertTrue { testMajorFile.delete() }
@@ -123,7 +128,7 @@ class FileVersionGeneratorTest {
     @Test
     fun `test correct format used even when directory uses other formats`() {
         assertTrue { testMajorMinorFile.delete() }
-        // directory now only contains #_TS__ and #__ formats
+        // directory now only contains TS__ and #_TS__ and #__ formats
 
         val version = VersionFormat.MAJOR_MINOR.nextVersion(testFilePath, testClock, filePrefix, fileSeparator).invoke(1)
         val (major, minor) = version.substringAfter(filePrefix).substringBefore(fileSeparator).split('_')

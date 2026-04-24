@@ -81,6 +81,7 @@ You can optionally configure the following elements for more control over the pr
 
 - `classpath`: Classpath scanned for Exposed table definitions. Defaults to the project's runtime classpath.
 - `fileDirectory`: Directory where the generated migration scripts will be stored. Defaults to "src/main/resources/db/migration".
+  If this directory does not yet exist, it will be created when the task is executed.
 - `filePrefix`: Prefix for migration script names. Defaults to "V".
 - `fileVersionFormat`: Version format for migration script names. Defaults to using the full current timestamp (with seconds) in the format YYYYMMDDHHMMSS.
 - `fileSeparator`: Separator for migration script names. Defaults to "__".
@@ -137,3 +138,24 @@ run by passing the exact required filename to use as a command line argument:
 **Note:** If a filename argument is passed, only a single migration script will be generated, which will contain all the
 necessary migration statements. This will happen even if multiple Exposed table definitions are involved in the schema diff,
 which would otherwise generate a new migration script per table.
+
+### Using TestContainers
+
+The plugin supports the following database container images:
+
+- MySQL: like `mysql`, `mysql:latest`, or with other tags
+- MariaDB: like `mariadb`, `mariadb:latest`, or with other tags
+- PostgreSQL: like `postgres`, `postgres:latest`, or with other tags
+- SQL Server: like `mcr.microsoft.com/mssql/server`, `mcr.microsoft.com/mssql/server:2025-latest`, or with other tags
+- Oracle: images starting like `container-registry.oracle.com/`, `gvenzl/oracle-`, or `oracle/`
+
+If existing migration scripts are detected in the configured directory, Flyway will be used to apply these scripts before generating new ones.
+This ensures that new migration scripts are always generated based on the latest database schema, including any changes made by previous migrations,
+even when working in a development environment without a persistent database.
+
+The plugin's full TestContainers workflow involves the following steps:
+
+- Start a database container
+- Apply all existing migration scripts in the migrations directory using Flyway
+- Generate new migration scripts based on the current state of the database and your Exposed table definitions
+- Shut down the container

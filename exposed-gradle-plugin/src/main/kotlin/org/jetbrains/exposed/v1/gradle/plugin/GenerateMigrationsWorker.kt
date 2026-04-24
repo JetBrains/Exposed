@@ -23,6 +23,7 @@ import org.testcontainers.mysql.MySQLContainer
 import org.testcontainers.postgresql.PostgreSQLContainer
 import java.io.File
 import java.io.File.separator
+import java.io.IOException
 import java.net.URLClassLoader
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
@@ -42,8 +43,10 @@ abstract class GenerateMigrationsWorker : WorkAction<GenerateMigrationsParameter
             migrationsDirectory.mkdirs()
         }
         val expectedFileName = params.fullFileName
+        // throws IOException if user-defined filename would write outside the provided migrations directory
+        val migrationFile = expectedFileName?.validateFilePath(migrationsDirectory)
 
-        val generated: List<String> = if (expectedFileName != null) {
+        val generated: List<String> = if (expectedFileName != null && migrationFile != null) {
             withClassloader { classloader ->
                 withDatabase { database ->
                     val tables = classloader
@@ -57,17 +60,16 @@ abstract class GenerateMigrationsWorker : WorkAction<GenerateMigrationsParameter
                             tables = tables,
                             withLogs = params.debug
                         )
-                        val migrationFile = File(migrationsDirectory, expectedFileName)
                         migrationFile.writeText(statements.joinToString(";\n", postfix = ";"))
                         listOf(expectedFileName)
                     }
                 }
             }
         } else {
-            val prefix = params.filePrefix
-            val separator = params.fileSeparator
-            val extension = params.fileExtension
-            val versionGenerator = params.fileVersionFormat.nextVersion(migrationsDirectory, Clock.System, prefix, separator)
+            val filePrefix = params.filePrefix
+            val fileSeparator = params.fileSeparator
+            val fileExtension = params.fileExtension
+            val versionGenerator = params.fileVersionFormat.nextVersion(migrationsDirectory, Clock.System, filePrefix, fileSeparator)
 
             withClassloader { classloader ->
                 withDatabase { database ->
@@ -86,7 +88,7 @@ abstract class GenerateMigrationsWorker : WorkAction<GenerateMigrationsParameter
                             if (statements.isNotEmpty()) {
                                 val description = statements.first().statementToFileDescription(params.useUpperCaseDescription)
                                 val version = versionGenerator(index - ignored)
-                                val fileName = "$version$description$extension"
+                                val fileName = "$version$description$fileExtension"
                                 val migrationFile = File(migrationsDirectory, fileName)
                                 migrationFile.writeText(statements.joinToString(";\n", postfix = ";"))
                                 fileName
@@ -156,7 +158,7 @@ abstract class GenerateMigrationsWorker : WorkAction<GenerateMigrationsParameter
     }
 
     private fun KClass<*>.tableOrNull(): Table? = if (isSubclassOf(Table::class) && !isAbstract) {
-        (objectInstance as Table)
+        (objectInstance as? Table)
     } else {
         null
     }
@@ -193,6 +195,19 @@ abstract class GenerateMigrationsWorker : WorkAction<GenerateMigrationsParameter
                 }
         }
 
+    private fun String.validateFilePath(parentPath: File): File {
+        val baseDir = parentPath.canonicalFile
+        val requestedFile = File(baseDir, this)
+
+        // Get the canonical path (resolves ../, and other edge cases)
+        val canonicalPath = requestedFile.canonicalPath
+        if (!canonicalPath.startsWith(baseDir.path)) {
+            throw IOException("Provided fileName is on a different path than provided migrations directory: $parentPath")
+        }
+
+        return requestedFile
+    }
+
     inner class GradleLogger : SqlLogger {
         override fun log(context: StatementContext, transaction: Transaction) {
             if (parameters.debug) {
@@ -202,10 +217,10 @@ abstract class GenerateMigrationsWorker : WorkAction<GenerateMigrationsParameter
     }
 
     private enum class SupportedImage(vararg val prefixes: String) {
-        MYSQL("mysql:"),
-        MARIADB("mariadb:"),
-        POSTGRES("postgres:"),
-        SQLSERVER("mcr.microsoft.com/mssql/server:"),
+        MYSQL("mysql"),
+        MARIADB("mariadb"),
+        POSTGRES("postgres"),
+        SQLSERVER("mcr.microsoft.com/mssql/server"),
         ORACLE("container-registry.oracle.com/", "gvenzl/oracle-", "oracle/");
 
         fun prefixMatches(name: String): Boolean = prefixes.any { prefix -> name.startsWith(prefix) }

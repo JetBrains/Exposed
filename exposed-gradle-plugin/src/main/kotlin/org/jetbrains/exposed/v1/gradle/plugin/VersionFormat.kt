@@ -160,18 +160,27 @@ private fun VersionFormat.findNextMajor(
 /**
  * Returns Regex for description prefixes like V3_YYYYMMDDHHMMSS__description or V003_YYYYMMDDHHMMSS__description
  * or V3_YYYYMMDDHHMM__description.
+ *
+ * The first group's amount of digits can be no higher than 10 for two reasons: to avoid issues with timestamp formats being incorrectly
+ * matched; and to avoid NumberFormatExceptions from call toInt() in findNextMajor().
  */
-private fun getVersionXTsPattern(prefix: String, separator: String): Regex = Regex("^$prefix(\\d+)_(\\d{12,14})$separator.*$")
+private fun getVersionXTsPattern(prefix: String, separator: String): Regex = Regex("^$prefix(\\d{1,10})_(\\d{12,14})$separator.*$")
 
 /**
  * Returns Regex for description prefixes like V3_1__description or V003_001__description.
+ *
+ * The amount of digits can be no higher than 10 for two reasons: to avoid issues with timestamp formats being incorrectly
+ * matched; and to avoid NumberFormatExceptions from call toInt() in findNextMajor().
  */
-private fun getVersionXYPattern(prefix: String, separator: String): Regex = Regex("^$prefix(\\d+)_(\\d+)$separator.*$")
+private fun getVersionXYPattern(prefix: String, separator: String): Regex = Regex("^$prefix(\\d{1,10})_(\\d{1,10})$separator.*$")
 
 /**
  * Returns Regex for description prefixes like V3__description or V003__description.
+ *
+ * The amount of digits can be no higher than 10 for two reasons: to avoid issues with timestamp formats being incorrectly
+ * matched; and to avoid NumberFormatExceptions from call toInt() in findNextMajor().
  */
-private fun getVersionXPattern(prefix: String, separator: String): Regex = Regex("^$prefix(\\d+)$separator.*$")
+private fun getVersionXPattern(prefix: String, separator: String): Regex = Regex("^$prefix(\\d{1,10})$separator.*$")
 
 /** Returns current timestamp as a String with format YYYYMMDDHHMMSS */
 private fun getCurrentTimestamp(clock: Clock, withSeconds: Boolean): String {
