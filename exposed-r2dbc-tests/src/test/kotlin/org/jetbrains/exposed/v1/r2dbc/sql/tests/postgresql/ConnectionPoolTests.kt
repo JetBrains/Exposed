@@ -25,6 +25,7 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.update
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
+import kotlin.time.Duration.Companion.milliseconds
 
 class ConnectionPoolTests : LogDbInTestName() {
     private val maximumPoolSize = 10
@@ -95,7 +96,7 @@ class ConnectionPoolTests : LogDbInTestName() {
                         .forUpdate()
                         .single()[TestTable.amount]
 
-                    delay(100)
+                    delay(100.milliseconds)
 
                     TestTable.update({ TestTable.id eq singleId }) {
                         it[amount] = current + 1

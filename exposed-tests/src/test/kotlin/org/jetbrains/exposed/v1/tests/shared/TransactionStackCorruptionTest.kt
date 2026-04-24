@@ -20,6 +20,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.fail
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Tests that detect stack corruption by inspecting the stack DURING query execution.
@@ -182,7 +183,7 @@ class TransactionStackCorruptionTest : DatabaseTestsBase() {
 
                             // Force context switch
                             withContext(Dispatchers.IO) {
-                                delay(1)
+                                delay(1.milliseconds)
                             }
 
                             assertEquals(1L, count, "Job $jobId failed")

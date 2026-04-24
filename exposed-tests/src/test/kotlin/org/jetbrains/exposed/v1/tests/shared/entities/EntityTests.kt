@@ -1585,7 +1585,7 @@ class EntityTests : DatabaseTestsBase() {
                     val creditCards2 = object : IntIdTable("CreditCards") {
                         val spendingLimit = ulong("spendingLimit").default(10000uL)
                     }
-                    val missingStatements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(creditCards2)
+                    val missingStatements = SchemaUtils.addMissingColumnsStatements(creditCards2)
                     missingStatements.forEach {
                         exec(it)
                     }

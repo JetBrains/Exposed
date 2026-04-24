@@ -145,7 +145,7 @@ object SchemaUtils : SchemaUtilityApi() {
         with(TransactionManager.current()) {
             execStatements(inBatch, createStatements(*tables))
             commit()
-            org.jetbrains.exposed.v1.jdbc.vendors.currentDialectMetadata.resetCaches()
+            currentDialectMetadata.resetCaches()
         }
     }
 
@@ -451,7 +451,7 @@ object SchemaUtils : SchemaUtilityApi() {
             }
             val dropStatements = tablesForDeletion.flatMap { it.dropStatement() }
             execStatements(inBatch, dropStatements)
-            org.jetbrains.exposed.v1.jdbc.vendors.currentDialectMetadata.resetCaches()
+            currentDialectMetadata.resetCaches()
         }
     }
 
@@ -473,7 +473,7 @@ object SchemaUtils : SchemaUtilityApi() {
                 is MysqlDialect -> connection.catalog = schema.identifier
                 is H2Dialect -> connection.schema = schema.identifier
             }
-            org.jetbrains.exposed.v1.jdbc.vendors.currentDialectMetadata.resetCaches()
+            currentDialectMetadata.resetCaches()
             connection.metadata { resetCurrentScheme() }
         }
     }
@@ -493,7 +493,7 @@ object SchemaUtils : SchemaUtilityApi() {
             val createStatements = toCreate.flatMap { it.createStatement() }
             execStatements(inBatch, createStatements)
             commit()
-            org.jetbrains.exposed.v1.jdbc.vendors.currentDialectMetadata.resetSchemaCaches()
+            currentDialectMetadata.resetSchemaCaches()
         }
     }
 
@@ -523,7 +523,7 @@ object SchemaUtils : SchemaUtilityApi() {
 
             execStatements(inBatch, dropStatements)
 
-            org.jetbrains.exposed.v1.jdbc.vendors.currentDialectMetadata.resetSchemaCaches()
+            currentDialectMetadata.resetSchemaCaches()
         }
     }
 }

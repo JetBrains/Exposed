@@ -274,16 +274,15 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
         val originalColumns = alias.query.set.source.columns
         val newFieldsMapping = row.fieldIndex.mapNotNull { (exp, _) ->
             val value = row[exp]
-            when {
-                exp is Column && exp.table is Alias<*> -> {
+            when (exp) {
+                is Column if exp.table is Alias<*> -> {
                     val delegate = (exp.table as Alias<*>).delegate
                     val column = originalColumns.single {
                         delegate == it.table && exp.name == it.name
                     }
                     column to value
                 }
-
-                exp is Column && exp.table == table -> null
+                is Column if exp.table == table -> null
                 else -> exp to value
             }
         }.toMap()
@@ -759,7 +758,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.v1.tests.shared.entities.TransformationsTable
      * @sample org.jetbrains.exposed.v1.tests.shared.entities.TransformationEntity
      */
-    fun <Unwrapped : Any?, Wrapped : Any?> Column<Unwrapped>.transform(
+    fun <Unwrapped, Wrapped> Column<Unwrapped>.transform(
         transformer: ColumnTransformer<Unwrapped, Wrapped>
     ): EntityFieldWithTransform<Unwrapped, Wrapped> = EntityFieldWithTransform(this, transformer, false)
 
@@ -772,7 +771,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.v1.tests.shared.entities.TransformationsTable
      * @sample org.jetbrains.exposed.v1.tests.shared.entities.TransformationEntity
      */
-    fun <Unwrapped : Any?, Wrapped : Any?> Column<Unwrapped>.transform(
+    fun <Unwrapped, Wrapped> Column<Unwrapped>.transform(
         unwrap: (Wrapped) -> Unwrapped,
         wrap: (Unwrapped) -> Wrapped
     ): EntityFieldWithTransform<Unwrapped, Wrapped> = transform(columnTransformer(unwrap, wrap))
@@ -785,7 +784,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.v1.tests.shared.entities.TransformationsTable
      * @sample org.jetbrains.exposed.v1.tests.shared.entities.TransformationEntity
      */
-    fun <TColumn : Any?, Unwrapped : Any?, Wrapped : Any?> EntityFieldWithTransform<TColumn, Unwrapped>.transform(
+    fun <TColumn, Unwrapped, Wrapped> EntityFieldWithTransform<TColumn, Unwrapped>.transform(
         unwrap: (Wrapped) -> Unwrapped,
         wrap: (Unwrapped) -> Wrapped
     ): EntityFieldWithTransform<TColumn, Wrapped> =
@@ -799,7 +798,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.v1.tests.shared.entities.TransformationsTable
      * @sample org.jetbrains.exposed.v1.tests.shared.entities.TransformationEntity
      */
-    fun <Unwrapped : Any?, Wrapped : Any?> Column<Unwrapped>.memoizedTransform(
+    fun <Unwrapped, Wrapped> Column<Unwrapped>.memoizedTransform(
         transformer: ColumnTransformer<Unwrapped, Wrapped>
     ): EntityFieldWithTransform<Unwrapped, Wrapped> = EntityFieldWithTransform(this, transformer, true)
 
@@ -813,7 +812,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.v1.tests.shared.entities.TransformationsTable
      * @sample org.jetbrains.exposed.v1.tests.shared.entities.TransformationEntity
      */
-    fun <Unwrapped : Any?, Wrapped : Any?> Column<Unwrapped>.memoizedTransform(
+    fun <Unwrapped, Wrapped> Column<Unwrapped>.memoizedTransform(
         unwrap: (Wrapped) -> Unwrapped,
         wrap: (Unwrapped) -> Wrapped
     ): EntityFieldWithTransform<Unwrapped, Wrapped> = memoizedTransform(columnTransformer(unwrap, wrap))
@@ -827,7 +826,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.v1.tests.shared.entities.TransformationsTable
      * @sample org.jetbrains.exposed.v1.tests.shared.entities.TransformationEntity
      */
-    fun <TColumn : Any?, Unwrapped : Any?, Wrapped : Any?> EntityFieldWithTransform<TColumn, Unwrapped>.memoizedTransform(
+    fun <TColumn, Unwrapped, Wrapped> EntityFieldWithTransform<TColumn, Unwrapped>.memoizedTransform(
         unwrap: (Wrapped) -> Unwrapped,
         wrap: (Unwrapped) -> Wrapped
     ): EntityFieldWithTransform<TColumn, Wrapped> = EntityFieldWithTransform(

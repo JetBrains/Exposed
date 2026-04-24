@@ -357,7 +357,7 @@ class SequencesTests : DatabaseTestsBase() {
 
                 assertNull(SchemaUtils.createStatements(DeveloperWithAutoIncrementBySequence).find { it.startsWith(createSequencePrefix) })
                 assertNull(
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(DeveloperWithAutoIncrementBySequence).find {
+                    SchemaUtils.statementsRequiredToActualizeScheme(DeveloperWithAutoIncrementBySequence).find {
                         it.startsWith(createSequencePrefix)
                     }
                 )

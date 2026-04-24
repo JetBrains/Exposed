@@ -92,22 +92,22 @@ class PostgresqlTests : DatabaseTestsBase() {
         }
         withDb(TestDB.ALL_POSTGRES) {
             val defaultPKName = "tester_pkey"
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(tester1)
+            SchemaUtils.createMissingTablesAndColumns(tester1)
             assertPrimaryKey {
                 assertFalse(it.next())
             }
 
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(tester2)
+            SchemaUtils.createMissingTablesAndColumns(tester2)
             assertPrimaryKey {
                 assertTrue(it.next())
                 assertEquals(defaultPKName, it.getString("PK_NAME"))
             }
 
             assertFailAndRollback("Multiple primary keys are not allowed") {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(tester3)
+                SchemaUtils.createMissingTablesAndColumns(tester3)
             }
 
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tester1)
+            SchemaUtils.drop(tester1)
         }
     }
 }

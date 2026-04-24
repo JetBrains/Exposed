@@ -52,7 +52,7 @@ class JsonBColumnType<T : Any>(
     private fun checkIfSqliteDialectIsAvailable(): Boolean {
         return when (val dialectIfAvailable = currentTransactionOrNull()?.db?.dialect) {
             // true by default if no transaction available to force all dialects to be cast
-            null -> return true
+            null -> true
             else -> dialectIfAvailable is SQLiteDialect
         }
     }

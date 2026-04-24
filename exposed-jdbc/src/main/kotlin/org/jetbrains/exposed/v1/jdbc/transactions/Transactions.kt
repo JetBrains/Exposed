@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.jdbc.transactions
 
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.SqlLogger
@@ -15,6 +16,7 @@ import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
 import org.jetbrains.exposed.v1.jdbc.withTransactionContext
 import java.sql.SQLException
 import java.util.concurrent.ThreadLocalRandom
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Executes the provided [block] within the context of the [transaction], handling commit and rollback operations.
@@ -394,7 +396,7 @@ suspend fun <T> inTopLevelSuspendTransaction(
             exposedLogger.debug("Wait $retryDelay milliseconds before retrying")
 
             try {
-                Thread.sleep(retryDelay)
+                delay(retryDelay.milliseconds)
             } catch (_: InterruptedException) {
                 // Do nothing
             }

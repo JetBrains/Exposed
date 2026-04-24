@@ -1163,7 +1163,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         val testTable = object : Table("test_engine") {
             val id = integer("id")
             override val primaryKey = PrimaryKey(id)
-            override val options = listOf(Table.EngineOption(Table.TableEngine.MEMORY))
+            override val options = listOf(EngineOption(TableEngine.MEMORY))
         }
 
         withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE) {
@@ -1178,8 +1178,8 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             val id = integer("id")
             override val primaryKey = PrimaryKey(id)
             override val options = listOf(
-                Table.EngineOption(Table.TableEngine.INNODB),
-                Table.CharsetOption("utf8mb4")
+                EngineOption(TableEngine.INNODB),
+                CharsetOption("utf8mb4")
             )
         }
 
@@ -1196,7 +1196,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         val testTable = object : Table("test_storage") {
             val id = integer("id")
             override val primaryKey = PrimaryKey(id)
-            override val storageParameters = listOf(Table.FillFactorParameter(70))
+            override val storageParameters = listOf(FillFactorParameter(70))
         }
 
         withDb(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES_LIKE - TestDB.SQLSERVER) {
@@ -1210,10 +1210,10 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         val testTable = object : Table("test_combined") {
             val id = integer("id")
             override val primaryKey = PrimaryKey(id)
-            override val options = listOf(Table.EngineOption(Table.TableEngine.INNODB))
+            override val options = listOf(EngineOption(TableEngine.INNODB))
             override val storageParameters = listOf(
-                Table.FillFactorParameter(70),
-                Table.AutovacuumEnabledParameter(false)
+                FillFactorParameter(70),
+                AutovacuumEnabledParameter(false)
             )
         }
 
@@ -1231,7 +1231,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             val id = integer("id")
             val name = varchar("name", 50)
             override val primaryKey = PrimaryKey(id)
-            override val options = listOf(Table.EngineOption(Table.TableEngine.MEMORY))
+            override val options = listOf(EngineOption(TableEngine.MEMORY))
         }
 
         withTables(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE, testTable) {
@@ -1263,7 +1263,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             val id = integer("id")
             val data = varchar("data", 100)
             override val primaryKey = PrimaryKey(id)
-            override val storageParameters = listOf(Table.FillFactorParameter(70))
+            override val storageParameters = listOf(FillFactorParameter(70))
         }
 
         // Only test with real PostgreSQL, not H2 emulation
@@ -1283,7 +1283,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             val reloptions = exec(
                 "SELECT reloptions FROM pg_class WHERE relname = '${testTable.tableName}'"
             ) { row -> row.get(0, Array::class.java) }?.single()
-            val optionsStr = (reloptions as? Array<*>)?.joinToString() ?: ""
+            val optionsStr = reloptions?.joinToString() ?: ""
             assertTrue(optionsStr.contains("fillfactor=70"))
         }
     }

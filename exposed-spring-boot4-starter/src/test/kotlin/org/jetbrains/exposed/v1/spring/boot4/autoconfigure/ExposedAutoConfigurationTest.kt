@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.getBean
 import org.springframework.boot.autoconfigure.AutoConfigurations
 import org.springframework.boot.jdbc.autoconfigure.DataSourceTransactionManagerAutoConfiguration
 import org.springframework.boot.test.context.SpringBootTest
@@ -70,7 +71,7 @@ open class ExposedAutoConfigurationTest {
         )
         contextRunner.run { context ->
             assertThrows(NoSuchBeanDefinitionException::class.java) {
-                context.getBean(DataSourceTransactionManagerAutoConfiguration::class.java)
+                context.getBean<DataSourceTransactionManagerAutoConfiguration>()
             }
         }
     }

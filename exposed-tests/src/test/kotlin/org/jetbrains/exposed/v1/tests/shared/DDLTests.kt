@@ -1275,7 +1275,7 @@ class DDLTests : DatabaseTestsBase() {
         val testTable = object : Table("test_engine") {
             val id = integer("id")
             override val primaryKey = PrimaryKey(id)
-            override val options = listOf(Table.EngineOption(Table.TableEngine.MEMORY))
+            override val options = listOf(EngineOption(TableEngine.MEMORY))
         }
 
         withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE) {
@@ -1290,8 +1290,8 @@ class DDLTests : DatabaseTestsBase() {
             val id = integer("id")
             override val primaryKey = PrimaryKey(id)
             override val options = listOf(
-                Table.EngineOption(Table.TableEngine.INNODB),
-                Table.CharsetOption("utf8mb4")
+                EngineOption(TableEngine.INNODB),
+                CharsetOption("utf8mb4")
             )
         }
 
@@ -1322,7 +1322,7 @@ class DDLTests : DatabaseTestsBase() {
         val testTable = object : Table("test_combined") {
             val id = integer("id")
             override val primaryKey = PrimaryKey(id)
-            override val options = listOf(Table.EngineOption(Table.TableEngine.INNODB))
+            override val options = listOf(EngineOption(TableEngine.INNODB))
             override val storageParameters = listOf(
                 FillFactorParameter(70),
                 AutovacuumEnabledParameter(false)
@@ -1343,7 +1343,7 @@ class DDLTests : DatabaseTestsBase() {
             val id = integer("id")
             val name = varchar("name", 50)
             override val primaryKey = PrimaryKey(id)
-            override val options = listOf(Table.EngineOption(Table.TableEngine.MEMORY))
+            override val options = listOf(EngineOption(TableEngine.MEMORY))
         }
 
         withTables(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE, testTable) {

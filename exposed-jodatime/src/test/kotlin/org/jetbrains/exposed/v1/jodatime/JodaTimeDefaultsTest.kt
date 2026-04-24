@@ -365,7 +365,7 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
                 assertEquals(now.hourOfDay, result[hour])
                 assertEquals(now.minuteOfHour, result[minute])
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testDate)
+                SchemaUtils.drop(testDate)
             }
         }
     }
@@ -465,7 +465,7 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
         }
 
         withTables(foo) {
-            val actual = org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(foo)
+            val actual = SchemaUtils.statementsRequiredToActualizeScheme(foo)
 
             assertTrue(actual.isEmpty())
         }

@@ -38,13 +38,13 @@ class CreateTableTests : DatabaseTestsBase() {
 
         withDb {
             assertFails(assertionFailureMessage) {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(TableWithDuplicatedColumn)
+                SchemaUtils.create(TableWithDuplicatedColumn)
             }
             assertFails(assertionFailureMessage) {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(TableDuplicatedColumnRefereToIntIdTable)
+                SchemaUtils.create(TableDuplicatedColumnRefereToIntIdTable)
             }
             assertFails(assertionFailureMessage) {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(TableDuplicatedColumnRefereToTable)
+                SchemaUtils.create(TableDuplicatedColumnRefereToTable)
             }
         }
     }
@@ -669,23 +669,23 @@ class CreateTableTests : DatabaseTestsBase() {
             assertEquals(false, OneTable.exists())
             assertEquals(false, OneOneTable.exists())
             try {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(OneTable)
+                SchemaUtils.create(OneTable)
                 assertEquals(true, OneTable.exists())
                 assertEquals(false, OneOneTable.exists())
 
                 val schemaPrefixedName = testDb.getDefaultSchemaPrefixedTableName(OneTable.tableName)
-                assertTrue(org.jetbrains.exposed.v1.jdbc.SchemaUtils.listTables().any { it.equals(schemaPrefixedName, ignoreCase = true) })
+                assertTrue(SchemaUtils.listTables().any { it.equals(schemaPrefixedName, ignoreCase = true) })
 
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createSchema(one)
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(OneOneTable)
+                SchemaUtils.createSchema(one)
+                SchemaUtils.create(OneOneTable)
                 assertEquals(true, OneTable.exists())
                 assertEquals(true, OneOneTable.exists())
 
-                assertTrue(org.jetbrains.exposed.v1.jdbc.SchemaUtils.listTablesInAllSchemas().any { it.equals(OneOneTable.tableName, ignoreCase = true) })
+                assertTrue(SchemaUtils.listTablesInAllSchemas().any { it.equals(OneOneTable.tableName, ignoreCase = true) })
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(OneTable, OneOneTable)
+                SchemaUtils.drop(OneTable, OneOneTable)
                 val cascade = testDb != TestDB.SQLSERVER
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropSchema(one, cascade = cascade)
+                SchemaUtils.dropSchema(one, cascade = cascade)
             }
         }
     }
@@ -693,17 +693,17 @@ class CreateTableTests : DatabaseTestsBase() {
     @Test
     fun testListTablesInCurrentSchema() {
         withDb { testDb ->
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(OneTable)
+            SchemaUtils.create(OneTable)
 
             val schemaPrefixedName = testDb.getDefaultSchemaPrefixedTableName(OneTable.tableName)
-            assertTrue(org.jetbrains.exposed.v1.jdbc.SchemaUtils.listTables().any { it.equals(schemaPrefixedName, ignoreCase = true) })
+            assertTrue(SchemaUtils.listTables().any { it.equals(schemaPrefixedName, ignoreCase = true) })
         }
 
         withDb { testDb ->
             // ensures that db connection has not been lost by calling listTables()
             assertEquals(testDb != TestDB.SQLITE, OneTable.exists())
 
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(OneTable)
+            SchemaUtils.drop(OneTable)
         }
     }
 
@@ -722,20 +722,20 @@ class CreateTableTests : DatabaseTestsBase() {
                 val one = prepareSchemaForTest("one")
 
                 try {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.createSchema(one)
+                    SchemaUtils.createSchema(one)
                     // table "one.one" is created in new schema by db because of name
                     // even though current schema has not been set to the new one above
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(OneOneTable)
+                    SchemaUtils.create(OneOneTable)
 
                     // so new table will not appear in list of tables in current schema
-                    assertFalse(org.jetbrains.exposed.v1.jdbc.SchemaUtils.listTables().any { it.equals(OneOneTable.tableName, ignoreCase = true) })
+                    assertFalse(SchemaUtils.listTables().any { it.equals(OneOneTable.tableName, ignoreCase = true) })
                     // but new table appears in list of tables from all schema
-                    assertTrue(org.jetbrains.exposed.v1.jdbc.SchemaUtils.listTablesInAllSchemas().any { it.equals(OneOneTable.tableName, ignoreCase = true) })
+                    assertTrue(SchemaUtils.listTablesInAllSchemas().any { it.equals(OneOneTable.tableName, ignoreCase = true) })
                     assertTrue(OneOneTable.exists())
                 } finally {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(OneOneTable)
+                    SchemaUtils.drop(OneOneTable)
                     val cascade = testDb != TestDB.SQLSERVER
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropSchema(one, cascade = cascade)
+                    SchemaUtils.dropSchema(one, cascade = cascade)
                 }
             }
         }
@@ -749,12 +749,12 @@ class CreateTableTests : DatabaseTestsBase() {
 
         withDb {
             try {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(testTable)
+                SchemaUtils.create(testTable)
                 assertTrue(testTable.exists())
                 testTable.insert { it[int] = 10 }
                 assertEquals(10, testTable.selectAll().singleOrNull()?.get(testTable.int))
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testTable)
+                SchemaUtils.drop(testTable)
             }
         }
     }
@@ -779,14 +779,14 @@ class CreateTableTests : DatabaseTestsBase() {
             }
 
             try {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(tester)
+                SchemaUtils.create(tester)
                 assertTrue(tester.exists())
 
                 val id = tester.insertAndGetId { it[text_col] = "Inserted text" }
                 tester.update({ tester.id eq id }) { it[text_col] = "Updated text" }
                 tester.deleteWhere { tester.id eq id }
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tester)
+                SchemaUtils.drop(tester)
             }
         }
     }

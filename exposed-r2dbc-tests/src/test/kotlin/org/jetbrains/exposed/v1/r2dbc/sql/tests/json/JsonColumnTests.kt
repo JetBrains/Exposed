@@ -134,7 +134,7 @@ class JsonColumnTests : R2dbcDatabaseTestsBase() {
             val result = tester.selectAll().where { userIsInactive }.toList()
             assertEquals(0, result.size)
 
-            val alphaTeamUserAsJson = "{\"user\":${Json.Default.encodeToString(alphaTeamUser)}}"
+            val alphaTeamUserAsJson = "{\"user\":${Json.encodeToString(alphaTeamUser)}}"
             var userIsInAlphaTeam = tester.jsonColumn.contains(stringLiteral(alphaTeamUserAsJson))
             assertEquals(1, tester.selectAll().where { userIsInAlphaTeam }.count())
 
@@ -181,9 +181,9 @@ class JsonColumnTests : R2dbcDatabaseTestsBase() {
                 assertEquals(newId, usersWithMaxLogin.single()[tester.id])
 
                 val (jsonPath, optionalArg) = if (testDialect is OracleDialect) {
-                    "?(@.user.team == \$team)" to "PASSING '$teamA' AS \"team\""
+                    $$"?(@.user.team == $team)" to "PASSING '$teamA' AS \"team\""
                 } else {
-                    ".user.team ? (@ == \$team)" to "{\"team\":\"$teamA\"}"
+                    $$".user.team ? (@ == $team)" to "{\"team\":\"$teamA\"}"
                 }
                 val isOnTeamA = tester.jsonColumn.exists(jsonPath, optional = optionalArg)
                 val usersOnTeamA = tester.select(tester.id).where { isOnTeamA }

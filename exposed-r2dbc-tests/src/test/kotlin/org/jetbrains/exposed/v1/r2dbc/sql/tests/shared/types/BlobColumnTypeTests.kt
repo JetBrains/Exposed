@@ -95,14 +95,14 @@ class BlobColumnTypeTests : R2dbcDatabaseTestsBase() {
                 }
 
                 else -> {
-                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(testTable)
+                    SchemaUtils.create(testTable)
 
                     testTable.insert {
                         it[number] = 1
                     }
                     assertEquals(defaultBlobStr, String(testTable.selectAll().first()[testTable.blobWithDefault].bytes))
 
-                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(testTable)
+                    SchemaUtils.drop(testTable)
                 }
             }
         }

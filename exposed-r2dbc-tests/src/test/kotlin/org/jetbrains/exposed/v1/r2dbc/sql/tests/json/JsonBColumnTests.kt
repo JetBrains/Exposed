@@ -148,7 +148,7 @@ class JsonBColumnTests : R2dbcDatabaseTestsBase() {
             val userIsInactive = tester.jsonBColumn.contains("{\"active\":false}")
             assertEquals(0, tester.selectAll().where { userIsInactive }.count())
 
-            val alphaTeamUserAsJson = "{\"user\":${Json.Default.encodeToString(alphaTeamUser)}}"
+            val alphaTeamUserAsJson = "{\"user\":${Json.encodeToString(alphaTeamUser)}}"
             var userIsInAlphaTeam = tester.jsonBColumn.contains(stringLiteral(alphaTeamUserAsJson))
             assertEquals(1, tester.selectAll().where { userIsInAlphaTeam }.count())
 
@@ -189,7 +189,7 @@ class JsonBColumnTests : R2dbcDatabaseTestsBase() {
                 val usersWithMaxLogin = tester.select(tester.id).where { hasMaxLogins }
                 assertEquals(newId, usersWithMaxLogin.single()[tester.id])
 
-                val (jsonPath, optionalArg) = ".user.team ? (@ == \$team)" to "{\"team\":\"$teamA\"}"
+                val (jsonPath, optionalArg) = $$".user.team ? (@ == $team)" to "{\"team\":\"$teamA\"}"
                 val isOnTeamA = tester.jsonBColumn.exists(jsonPath, optional = optionalArg)
                 val usersOnTeamA = tester.select(tester.id).where { isOnTeamA }
                 assertEquals(newId, usersOnTeamA.single()[tester.id])
@@ -310,7 +310,7 @@ class JsonBColumnTests : R2dbcDatabaseTestsBase() {
                     assertEquals(defaultUser.team, it[defaultTester.user2].team)
                 }
 
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(defaultTester)
+                SchemaUtils.drop(defaultTester)
             }
         }
     }

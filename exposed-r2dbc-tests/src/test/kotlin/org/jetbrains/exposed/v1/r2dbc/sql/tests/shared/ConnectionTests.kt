@@ -271,7 +271,7 @@ class ConnectionTests : R2dbcDatabaseTestsBase() {
                         launch {
                             // Force thread switching by using different dispatchers
                             withContext(Dispatchers.IO) {
-                                delay((Math.random() * 10).toLong())
+                                delay((Math.random() * 10).toLong().milliseconds)
                                 yield() // Force coroutine suspension/resumption
                             }
 

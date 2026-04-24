@@ -109,7 +109,7 @@ class JodaTimeTests : DatabaseTestsBase() {
                 val result2 = testTable.select(lastDayOfMonth).single()
                 assertEquals(expectedLastDayOfMonth, result2[lastDayOfMonth])
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testTable)
+                SchemaUtils.drop(testTable)
             }
         }
     }
@@ -164,7 +164,7 @@ class JodaTimeTests : DatabaseTestsBase() {
 
                 assertEquals(2, testTable.selectAll().count())
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testTable)
+                SchemaUtils.drop(testTable)
             }
         }
     }

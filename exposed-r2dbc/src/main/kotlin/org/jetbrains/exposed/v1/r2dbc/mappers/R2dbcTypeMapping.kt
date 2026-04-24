@@ -132,7 +132,7 @@ class R2dbcRegistryTypeMappingImpl : R2dbcRegistryTypeMapping {
         for (mapper in getMatchingMappers(dialect, columnType)) {
             val result = mapper.getValue(row, type, index, dialect, columnType)
             if (result.isPresent) {
-                return result.value() as T?
+                return result.value()
             }
         }
 

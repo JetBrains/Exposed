@@ -25,8 +25,8 @@ class SpringTransactionSingleConnectionTest {
     }
 
     val singleConnectionH2TestContainer = AnnotationConfigApplicationContext(SingleConnectionH2TestConfig::class.java)
-    val transactionManager = singleConnectionH2TestContainer.getBean(PlatformTransactionManager::class.java)
-    val dataSource = singleConnectionH2TestContainer.getBean(DataSource::class.java)
+    val transactionManager: PlatformTransactionManager = singleConnectionH2TestContainer.getBean(PlatformTransactionManager::class.java)
+    val dataSource: DataSource = singleConnectionH2TestContainer.getBean(DataSource::class.java)
 
     @BeforeEach
     fun beforeTest() {
@@ -79,9 +79,9 @@ open class SingleConnectionH2TestConfig {
     @Bean
     open fun singleConnectionH2DataSource(): DataSource = SingleConnectionDataSource().apply {
         setDriverClassName("org.h2.Driver")
-        setUrl("jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;")
-        setUsername("sa")
-        setPassword("")
+        url = "jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;"
+        username = "sa"
+        password = ""
         setSuppressClose(true)
     }
 

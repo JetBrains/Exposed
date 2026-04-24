@@ -75,9 +75,9 @@ internal fun JdbcTransactionManager.createTransactionContext(transaction: Transa
 internal suspend fun JdbcTransactionManager.getCurrentContextTransaction(): JdbcTransaction? {
     @OptIn(InternalApi::class)
     val transaction = currentCoroutineContext()[contextKey]?.transaction
-    return when {
-        transaction == null -> null
-        transaction is JdbcTransaction -> transaction
+    return when (transaction) {
+        null -> null
+        is JdbcTransaction -> transaction
         else -> error(
             "Expected JdbcTransaction in coroutine context but found ${transaction::class.simpleName}. " +
                 "This may indicate mixing JDBC and R2DBC transactions incorrectly."

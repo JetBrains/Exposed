@@ -20,7 +20,7 @@ import kotlin.test.assertFalse
 class UserCreatedTransactionsTests : DatabaseTestsBase() {
 
     // Exclude settings are needed just to avoid problems with correctness of column and table names in hardcoded SQL
-    private val excludeSettings = TestDB.Companion.ALL - TestDB.H2_V2 - TestDB.POSTGRESQL
+    private val excludeSettings = TestDB.ALL - TestDB.H2_V2 - TestDB.POSTGRESQL
 
     object TestTable : Table("txtest") {
         val param = integer("param")

@@ -411,7 +411,7 @@ class DefaultsTest : DatabaseTestsBase() {
         }
 
         withTables(foo) {
-            val actual = org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(foo)
+            val actual = SchemaUtils.statementsRequiredToActualizeScheme(foo)
 
             assertTrue(actual.isEmpty())
         }

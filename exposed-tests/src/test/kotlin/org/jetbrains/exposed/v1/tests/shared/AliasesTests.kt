@@ -22,7 +22,7 @@ import kotlin.test.assertTrue
 
 class AliasesTests : DatabaseTestsBase() {
     @Test
-    fun `test_github_issue_379_count_alias_ClassCastException`() {
+    fun test_github_issue_379_count_alias_ClassCastException() {
         val stables = object : UuidTable("Stables") {
             val name = varchar("name", 256).uniqueIndex()
         }

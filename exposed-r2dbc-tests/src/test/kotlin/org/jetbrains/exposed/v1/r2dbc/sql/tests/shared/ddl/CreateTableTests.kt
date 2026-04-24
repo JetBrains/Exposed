@@ -705,7 +705,7 @@ class CreateTableTests : R2dbcDatabaseTestsBase() {
         }
     }
 
-    private fun TestDB.getDefaultSchemaPrefixedTableName(tableName: String): String = when (org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest) {
+    private fun TestDB.getDefaultSchemaPrefixedTableName(tableName: String): String = when (currentDialectTest) {
         is SQLServerDialect -> "dbo.$tableName"
         is OracleDialect -> "${this.user}.$tableName"
         is MysqlDialect -> "${this.db!!.name}.$tableName"

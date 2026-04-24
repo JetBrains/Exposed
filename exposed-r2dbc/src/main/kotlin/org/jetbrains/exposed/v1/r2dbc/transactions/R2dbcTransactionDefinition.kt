@@ -9,7 +9,7 @@ internal class R2dbcTransactionDefinition(
     val readOnly: Boolean?,
 ) : TransactionDefinition {
     @Suppress("UNCHECKED_CAST")
-    override fun <T : Any?> getAttribute(option: Option<T?>): T? {
+    override fun <T> getAttribute(option: Option<T?>): T? {
         return getKnownAttribute(option) as? T
     }
 

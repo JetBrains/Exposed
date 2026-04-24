@@ -15,6 +15,7 @@ import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.withTransactionContext
 import java.util.concurrent.ThreadLocalRandom
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Executes the provided [block] within the context of the [transaction], handling commit and rollback operations.
@@ -217,7 +218,7 @@ suspend fun <T> inTopLevelSuspendTransaction(
             exposedLogger.debug("Wait $retryDelay milliseconds before retrying")
 
             try {
-                delay(retryDelay)
+                delay(retryDelay.milliseconds)
             } catch (_: InterruptedException) {
                 // Do nothing
             }

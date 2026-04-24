@@ -80,7 +80,7 @@ class UnsignedColumnTypeTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testPreviousUByteColumnTypeWorksWithNewSmallIntType() {
         // MySQL and MariaDB type hasn't changed, and PostgreSQL and Oracle never supported TINYINT
-        withDb(TestDB.ALL_H2_V2 - TestDB.H2_V2_PSQL) { testDb ->
+        withDb(TestDB.ALL_H2_V2 - TestDB.H2_V2_PSQL) {
             try {
                 val tableName = UByteTable.nameInDatabaseCase()
                 val columnName = UByteTable.unsignedByte.nameInDatabaseCase()
@@ -232,7 +232,7 @@ class UnsignedColumnTypeTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testPreviousUIntColumnTypeWorksWithNewBigIntType() {
         // Oracle was already previously constrained to NUMBER(13)
-        withDb(excludeSettings = listOf(TestDB.ORACLE)) { testDb ->
+        withDb(excludeSettings = listOf(TestDB.ORACLE)) {
             try {
                 val tableName = UIntTable.nameInDatabaseCase()
                 val columnName = UIntTable.unsignedInt.nameInDatabaseCase()

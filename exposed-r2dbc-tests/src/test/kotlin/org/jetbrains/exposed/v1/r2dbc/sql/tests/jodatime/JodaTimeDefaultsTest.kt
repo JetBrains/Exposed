@@ -126,7 +126,7 @@ class JodaTimeDefaultsTest : R2dbcDatabaseTestsBase() {
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
                 "${"t".inProperCase()} (" +
                 "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()}${
-                    testDb?.let { " PRIMARY KEY" } ?: ""
+                    testDb.let { " PRIMARY KEY" }
                 }, " +
                 "${"s".inProperCase()} $varCharType${testTable.s.constraintNamePart()} DEFAULT 'test' NOT NULL, " +
                 "${"sn".inProperCase()} $varCharType${testTable.sn.constraintNamePart()} DEFAULT 'testNullable' NULL, " +
@@ -275,8 +275,8 @@ class JodaTimeDefaultsTest : R2dbcDatabaseTestsBase() {
             }
 
             list1 = assertNotNull(testData.selectAll().singleOrNull())
-            assertEquals("test1", list1?.get(testData.name))
-            assertEquals(date.millis, list1?.get(testData.dateTime)?.millis)
+            assertEquals("test1", list1[testData.name])
+            assertEquals(date.millis, list1[testData.dateTime].millis)
         }
         assertEquals("test1", list1?.get(testData.name))
         assertEquals(date.millis, list1?.get(testData.dateTime)?.millis)
@@ -312,7 +312,7 @@ class JodaTimeDefaultsTest : R2dbcDatabaseTestsBase() {
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
                 "${"t".inProperCase()} (" +
                 "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()}${
-                    testDb?.let { " PRIMARY KEY" } ?: ""
+                    testDb.let { " PRIMARY KEY" }
                 }, " +
                 "${"t1".inProperCase()} $timestampWithTimeZoneType${testTable.t1.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
                 "${"t2".inProperCase()} $timestampWithTimeZoneType${testTable.t2.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +

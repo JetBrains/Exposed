@@ -69,7 +69,7 @@ class StatisticsFunctionTests : R2dbcDatabaseTestsBase() {
 
     private suspend fun R2dbcTransaction.assertExpressionEqual(expected: BigDecimal, expression: Function<BigDecimal?>) {
         val result = SampleTestTable.select(expression).first()[expression]
-        assertEquals(expected, result?.setScale(expected.scale(), java.math.RoundingMode.HALF_EVEN))
+        assertEquals(expected, result?.setScale(expected.scale(), RoundingMode.HALF_EVEN))
     }
 
     private fun calculateStandardDeviation(isPopulation: Boolean): BigDecimal {

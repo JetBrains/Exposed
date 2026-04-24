@@ -61,9 +61,8 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val dialect = currentDialect
         if (dialect !is H2Dialect) return@lazy null
 
-        val (settingNameField, settingValueField) = when ((dialect as H2Dialect).majorVersion) {
+        val (settingNameField, settingValueField) = when (dialect.majorVersion) {
             H2Dialect.H2MajorVersion.Two -> "SETTING_NAME" to "SETTING_VALUE"
-            else -> error("Unsupported H2 version")
         }
 
         @Language("H2")

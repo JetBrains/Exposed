@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.r2dbc.tests
 
 import io.r2dbc.spi.Row
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -15,6 +16,7 @@ import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.vendors.DatabaseDialectMetadata
 import java.util.*
+import kotlin.time.Duration.Companion.milliseconds
 
 val currentDialectTest: DatabaseDialect get() = TransactionManager.current().db.dialect
 
@@ -39,7 +41,7 @@ fun <T> Column<T>.constraintNamePart() = (currentDialectTest as? SQLServerDialec
 suspend fun Table.insertAndWait(duration: Long) {
     this.insert { }
     TransactionManager.current().commit()
-    Thread.sleep(duration)
+    delay(duration.milliseconds)
 }
 
 /** Retrieves the value of the designated column as a `String`, with column index starting at 1. **/

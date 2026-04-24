@@ -28,7 +28,7 @@ class DateTimeMySqlTypeMapper : TypeMapper {
         if (value == null) return false
 
         // this conversion is required to retain MySQL precision
-        if (value is java.sql.Timestamp && dialect is MysqlDialect) {
+        if (value is Timestamp && dialect is MysqlDialect) {
             statement.bind(index - 1, value.toString())
             return true
         }

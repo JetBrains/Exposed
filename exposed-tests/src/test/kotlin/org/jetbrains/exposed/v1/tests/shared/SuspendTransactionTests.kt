@@ -16,6 +16,7 @@ import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.junit.jupiter.api.Test
 import java.sql.Connection.TRANSACTION_SERIALIZABLE
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.uuid.Uuid
 
 class SuspendTransactionTests : DatabaseTestsBase() {
@@ -61,11 +62,11 @@ class SuspendTransactionTests : DatabaseTestsBase() {
         newSuspendedTransaction(null, transactionIsolation = TRANSACTION_SERIALIZABLE) {
             val current = TestConflictTable
                 .selectAll()
-                .where({ TestConflictTable.id eq uuid })
+                .where { TestConflictTable.id eq uuid }
                 .forUpdate()
                 .single()[TestConflictTable.value]
 
-            delay((100..300).random().toLong())
+            delay((100..300).random().toLong().milliseconds)
 
             TestConflictTable.update({ TestConflictTable.id eq uuid }) {
                 it[value] = current + 1

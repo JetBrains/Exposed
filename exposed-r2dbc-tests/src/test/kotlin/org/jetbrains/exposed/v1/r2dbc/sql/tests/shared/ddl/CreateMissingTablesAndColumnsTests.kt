@@ -160,7 +160,7 @@ class CreateMissingTablesAndColumnsTests : R2dbcDatabaseTestsBase() {
             if (db.supportsAlterTableWithAddColumn) {
                 SchemaUtils.createMissingTablesAndColumns(t1)
 
-                val missingStatements = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.addMissingColumnsStatements(t2)
+                val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
 
                 val alterColumnWord = when (currentDialectTest) {
                     is MysqlDialect -> "MODIFY COLUMN"
@@ -198,7 +198,7 @@ class CreateMissingTablesAndColumnsTests : R2dbcDatabaseTestsBase() {
         withDb {
             SchemaUtils.createMissingTablesAndColumns(t1)
 
-            val missingStatements = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.addMissingColumnsStatements(t2)
+            val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
 
             assertEqualCollections(missingStatements, emptyList())
 
@@ -223,7 +223,7 @@ class CreateMissingTablesAndColumnsTests : R2dbcDatabaseTestsBase() {
         withDb {
             SchemaUtils.createMissingTablesAndColumns(t1)
 
-            val missingStatements = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.addMissingColumnsStatements(t2)
+            val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
 
             assertEqualCollections(missingStatements, emptyList())
 
@@ -316,7 +316,7 @@ class CreateMissingTablesAndColumnsTests : R2dbcDatabaseTestsBase() {
                     }
                 }
 
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(table)
+                SchemaUtils.create(table)
                 val actual = SchemaUtils.statementsRequiredToActualizeScheme(table)
                 assertEqualLists(emptyList(), actual)
             } finally {
@@ -353,7 +353,7 @@ class CreateMissingTablesAndColumnsTests : R2dbcDatabaseTestsBase() {
             )
             tablesToTest.forEach { (whiteSpaceTable, emptyTable) ->
                 try {
-                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(whiteSpaceTable)
+                    SchemaUtils.create(whiteSpaceTable)
 
                     val whiteSpaceId = whiteSpaceTable.insertAndGetId { }
 
@@ -374,7 +374,7 @@ class CreateMissingTablesAndColumnsTests : R2dbcDatabaseTestsBase() {
                         actual.forEach { exec(it) }
                     } else {
                         SchemaUtils.drop(whiteSpaceTable)
-                        org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(emptyTable)
+                        SchemaUtils.create(emptyTable)
                     }
 
                     val emptyId = emptyTable.insertAndGetId { }
@@ -420,7 +420,7 @@ class CreateMissingTablesAndColumnsTests : R2dbcDatabaseTestsBase() {
             try {
                 SchemaUtils.createMissingTablesAndColumns(t1)
 
-                val missingStatements = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.addMissingColumnsStatements(t2)
+                val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
 
                 if (testDb !in complexAlterTable) {
                     val alterColumnWord = when (currentDialectTest) {
@@ -449,7 +449,7 @@ class CreateMissingTablesAndColumnsTests : R2dbcDatabaseTestsBase() {
             try {
                 SchemaUtils.createMissingTablesAndColumns(t2)
 
-                val missingStatements = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.addMissingColumnsStatements(t1)
+                val missingStatements = SchemaUtils.addMissingColumnsStatements(t1)
 
                 if (testDb !in complexAlterTable) {
                     val alterColumnWord = when (currentDialectTest) {
@@ -492,7 +492,7 @@ class CreateMissingTablesAndColumnsTests : R2dbcDatabaseTestsBase() {
 
         withDb {
             try {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(table)
+                SchemaUtils.create(table)
                 assertEqualLists(emptyList(), SchemaUtils.statementsRequiredToActualizeScheme(table))
             } finally {
                 SchemaUtils.drop(table)
@@ -707,8 +707,8 @@ class CreateMissingTablesAndColumnsTests : R2dbcDatabaseTestsBase() {
             }
 
             // Should not require to be in the same schema
-            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createSchema(schema)
-            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(parentTable, childTable)
+            SchemaUtils.createSchema(schema)
+            SchemaUtils.create(parentTable, childTable)
 
             try {
                 // Try in different schema
@@ -718,7 +718,7 @@ class CreateMissingTablesAndColumnsTests : R2dbcDatabaseTestsBase() {
 
                 // Try in the same schema
                 if (testDb != TestDB.ORACLE) {
-                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.setSchema(schema)
+                    SchemaUtils.setSchema(schema)
                     SchemaUtils.createMissingTablesAndColumns(parentTable, childTable)
                     assertTrue(parentTable.exists())
                     assertTrue(childTable.exists())

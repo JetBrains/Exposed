@@ -48,7 +48,7 @@ fun <ID : Any, T : Entity<ID>> EntityChange.toEntity(): T? =
  */
 fun <ID : Any, T : Entity<ID>> EntityChange.toEntity(klass: EntityClass<ID, T>): T? {
     if (!entityClass.isAssignableTo(klass)) return null
-    return toEntity<ID, T>()
+    return toEntity()
 }
 
 private val Transaction.unprocessedEvents: Deque<EntityChange> by transactionScope { ConcurrentLinkedDeque() }

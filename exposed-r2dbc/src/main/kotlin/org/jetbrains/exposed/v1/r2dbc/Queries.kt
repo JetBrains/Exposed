@@ -217,7 +217,7 @@ suspend fun <T : Table> T.insertIgnore(
     body: T.(UpdateBuilder<*>) -> Unit
 ): InsertStatement<Long> {
     val stmt = buildStatement { insertIgnore(body) }
-    return InsertSuspendExecutable<Long, InsertStatement<Long>>(stmt).apply {
+    return InsertSuspendExecutable(stmt).apply {
         execute(TransactionManager.current())
     }.statement
 }
@@ -236,7 +236,7 @@ suspend fun <Key : Any, T : IdTable<Key>> T.insertIgnoreAndGetId(
     body: T.(UpdateBuilder<*>) -> Unit
 ): EntityID<Key>? {
     val stmt = buildStatement { insertIgnore(body) }
-    return InsertSuspendExecutable<Long, InsertStatement<Long>>(stmt).run {
+    return InsertSuspendExecutable(stmt).run {
         when (execute(TransactionManager.current())) {
             null, 0 -> null
             else -> statement.getOrNull(id)
@@ -602,7 +602,7 @@ suspend fun <T : Table> T.upsert(
     body: T.(UpsertStatement<Long>) -> Unit
 ): UpsertStatement<Long> {
     val stmt = buildStatement { upsert(keys = keys, onUpdate, onUpdateExclude, where, body) }
-    return UpsertSuspendExecutable<Long>(stmt).apply { execute(TransactionManager.current()) }.statement
+    return UpsertSuspendExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
 }
 
 /**

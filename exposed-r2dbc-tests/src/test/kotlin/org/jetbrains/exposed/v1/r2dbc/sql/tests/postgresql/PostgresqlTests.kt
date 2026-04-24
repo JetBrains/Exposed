@@ -32,6 +32,7 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.update
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.uuid.Uuid
 
 class PostgresqlTests : R2dbcDatabaseTestsBase() {
@@ -170,11 +171,11 @@ class PostgresqlTests : R2dbcDatabaseTestsBase() {
         suspendTransaction(null, transactionIsolation = IsolationLevel.SERIALIZABLE) {
             val current = TestConflictTable
                 .selectAll()
-                .where({ TestConflictTable.id eq uuid })
+                .where { TestConflictTable.id eq uuid }
                 .forUpdate()
                 .single()[TestConflictTable.value]
 
-            delay((100..300).random().toLong())
+            delay((100..300).random().toLong().milliseconds)
 
             TestConflictTable.update({ TestConflictTable.id eq uuid }) {
                 it[value] = current + 1

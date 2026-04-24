@@ -20,6 +20,7 @@ import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import kotlin.time.Duration.Companion.milliseconds
 
 class ConnectionPoolTests : LogDbInTestName() {
     private val hikariDataSource1 by lazy {
@@ -48,7 +49,7 @@ class ConnectionPoolTests : LogDbInTestName() {
             repeat(exceedsPoolSize) {
                 launch {
                     suspendTransaction {
-                        delay(100)
+                        delay(100.milliseconds)
                         TestEntity.new { testValue = "test$it" }
                     }
                 }

@@ -132,12 +132,12 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
     fun testCreateAndDropCompositeIdTable() {
         withDb(excludeSettings = listOf(TestDB.SQLITE)) {
             try {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(tables = allTables)
+                SchemaUtils.create(tables = allTables)
 
                 allTables.forEach { assertTrue(it.exists()) }
-                assertTrue(org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(tables = allTables).isEmpty())
+                assertTrue(SchemaUtils.statementsRequiredToActualizeScheme(tables = allTables).isEmpty())
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tables = allTables)
+                SchemaUtils.drop(tables = allTables)
             }
         }
     }
@@ -152,14 +152,14 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
         withDb {
             // table can be created with no issue
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(missingIdsTable)
+            SchemaUtils.create(missingIdsTable)
 
             expectException<IllegalStateException> {
                 // but trying to use id property requires idColumns not being empty
                 missingIdsTable.select(missingIdsTable.id).toList()
             }
 
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(missingIdsTable)
+            SchemaUtils.drop(missingIdsTable)
         }
     }
 

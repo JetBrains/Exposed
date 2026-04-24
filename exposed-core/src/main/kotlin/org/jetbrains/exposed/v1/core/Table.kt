@@ -331,7 +331,7 @@ class Join(
     ): Join = join(JoinPart(joinType, otherTable, cond, lateral, additionalConstraint))
 
     private fun findKeys(a: ColumnSet, b: ColumnSet): List<Pair<Column<*>, List<Column<*>>>>? = a.columns
-        .map { a_pk -> a_pk to b.columns.filter { it.referee == a_pk } }
+        .map { apk -> apk to b.columns.filter { it.referee == apk } }
         .filter { it.second.isNotEmpty() }
         .takeIf { it.isNotEmpty() }
 
@@ -758,10 +758,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Creates an [EntityID] column, with the specified [name], for storing the same objects as the specified [originalColumn]. */
     fun <ID : Any> entityId(name: String, originalColumn: Column<ID>): Column<EntityID<ID>> {
         val columnTypeCopy = originalColumn.columnType.cloneAsBaseType()
-        val answer = Column<EntityID<ID>>(
+        val answer = Column(
             this,
             name,
-            EntityIDColumnType(Column<ID>(originalColumn.table, name, columnTypeCopy))
+            EntityIDColumnType(Column(originalColumn.table, name, columnTypeCopy))
         )
         _columns.addColumn(answer)
         return answer

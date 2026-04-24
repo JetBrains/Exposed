@@ -19,5 +19,5 @@ open class JdbcConfiguration {
 
     @Bean
     @Qualifier("operations2")
-    open fun operations2() = TransactionOperations.withoutTransaction()
+    open fun operations2(): TransactionOperations = TransactionOperations.withoutTransaction()
 }

@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.tests.shared.entities
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -97,7 +98,7 @@ class EntityCacheRefreshTests : DatabaseTestsBase() {
                             entity.value = currentValue + 1
                         }
                     }
-                }.forEach { it.join() }
+                }.joinAll()
             }
 
             // Verify all increments were applied

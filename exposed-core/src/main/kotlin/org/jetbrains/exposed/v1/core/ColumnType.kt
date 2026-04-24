@@ -1026,7 +1026,7 @@ class BlobColumnType(
 
     override fun readObject(rs: RowApi, index: Int) = when {
         currentDialect is PostgreSQLDialect && useObjectIdentifier -> {
-            rs.getObject(index, java.sql.Blob::class.java)?.binaryStream?.let(::ExposedBlob)
+            rs.getObject(index, Blob::class.java)?.binaryStream?.let(::ExposedBlob)
         }
         else -> rs.getObject(index)
     }

@@ -65,7 +65,7 @@ open class BatchInsertStatement(
         values.clear()
         values.putAll(data.last())
         arguments = null
-        hasBatchedValues = data.size > 0
+        hasBatchedValues = data.isNotEmpty()
     }
 
     /** @suppress */

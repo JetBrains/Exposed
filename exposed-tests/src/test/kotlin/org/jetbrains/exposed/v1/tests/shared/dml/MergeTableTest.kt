@@ -410,7 +410,7 @@ class MergeTableTest : MergeBaseTest() {
 
                 assertEquals(sequenceStartNumber, dest.selectAll().single()[dest.id].value)
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(dest)
+                SchemaUtils.drop(dest)
                 exec("drop sequence if exists testOverridingUserValueSequence")
             }
         }

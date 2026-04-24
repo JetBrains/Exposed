@@ -198,7 +198,7 @@ class EntityCache(private val transaction: Transaction) {
 
             SchemaUtils.sortTablesByReferences(tables).filterIsInstance<IdTable<*>>().forEach(::flushInserts)
 
-            val updateTheRestTables = tables - updateBeforeInsert
+            val updateTheRestTables = tables - updateBeforeInsert.toSet()
             for (t in updateTheRestTables) {
                 updateEntities(t)
             }

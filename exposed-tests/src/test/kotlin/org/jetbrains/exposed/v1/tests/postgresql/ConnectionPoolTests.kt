@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import java.sql.Connection
+import kotlin.time.Duration.Companion.milliseconds
 
 class ConnectionPoolTests : LogDbInTestName() {
     private val hikariDataSourcePG by lazy {
@@ -110,7 +111,7 @@ class ConnectionPoolTests : LogDbInTestName() {
                         .forUpdate()
                         .single()[TestTable.amount]
 
-                    delay(100)
+                    delay(100.milliseconds)
 
                     TestTable.update({ TestTable.id eq singleId }) {
                         it[amount] = current + 1

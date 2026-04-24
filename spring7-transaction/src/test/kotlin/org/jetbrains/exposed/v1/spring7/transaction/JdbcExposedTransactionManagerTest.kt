@@ -53,7 +53,7 @@ open class JdbcExposedTransactionManagerTest : SpringTransactionTestBase() {
 
     private fun getCount(): Int = jdbc
         .sql("SELECT count(*) FROM ${T1.tableName}")
-        .query<Int>(Int::class.java).single()
+        .query(Int::class.java).single()
 
     private fun getSingleValue(): String = jdbc
         .sql("SELECT * FROM ${T1.tableName}")

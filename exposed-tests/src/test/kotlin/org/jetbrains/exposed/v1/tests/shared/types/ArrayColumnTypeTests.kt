@@ -39,10 +39,10 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
     fun testCreateAndDropArrayColumns() {
         withDb(excludeSettings = arrayTypeUnsupportedDb) {
             try {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(ArrayTestTable)
+                SchemaUtils.create(ArrayTestTable)
                 assertTrue(ArrayTestTable.exists())
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(ArrayTestTable)
+                SchemaUtils.drop(ArrayTestTable)
             }
         }
     }
@@ -51,10 +51,10 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
     fun testCreateMissingColumnsWithArrayDefaults() {
         withTestTableAndExcludeSettings {
             try {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(ArrayTestTable)
-                assertTrue(org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(ArrayTestTable).isEmpty())
+                SchemaUtils.createMissingTablesAndColumns(ArrayTestTable)
+                assertTrue(SchemaUtils.statementsRequiredToActualizeScheme(ArrayTestTable).isEmpty())
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(ArrayTestTable)
+                SchemaUtils.drop(ArrayTestTable)
             }
         }
     }

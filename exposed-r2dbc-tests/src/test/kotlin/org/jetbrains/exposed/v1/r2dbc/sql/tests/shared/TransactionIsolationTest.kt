@@ -73,7 +73,7 @@ class TransactionIsolationTest : R2dbcDatabaseTestsBase() {
     }
 
     private class CustomTestTransactionDefinition : TransactionDefinition {
-        override fun <T : Any?> getAttribute(option: Option<T?>): T? {
+        override fun <T> getAttribute(option: Option<T?>): T? {
             return when (option) {
                 TransactionDefinition.ISOLATION_LEVEL -> IsolationLevel.REPEATABLE_READ as T
                 else -> null
