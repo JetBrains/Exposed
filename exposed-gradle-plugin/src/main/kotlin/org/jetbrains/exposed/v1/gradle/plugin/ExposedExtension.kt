@@ -14,7 +14,6 @@ import javax.inject.Inject
  * This root extension currently has no properties of its own and is intended as an extension-aware
  * container for the [MigrationsExtension] and any future feature extensions.
  */
-@Suppress("UnusedPrivateProperty")
 open class ExposedExtension @Inject internal constructor(objects: ObjectFactory) {
     companion object {
         const val NAME: String = "exposed"

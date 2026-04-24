@@ -115,8 +115,13 @@ internal fun Project.configureMigrations() {
         it.description = GENERATE_MIGRATIONS_TASK_DESCRIPTION
         it.group = TASK_GROUP
 
+        // forces the task to be out-of-date, ensuring it executes every time the build is run;
+        // this avoids potential cache issues due to fileDirectory being tagged @OutputDirectory even though it relies on inputs;
+        // but still allows the task to be executed even if the specified fileDirectory is missing (will create the directory).
+        it.outputs.upToDateWhen { false }
+
         it.tablesPackage.set(extension.tablesPackage)
-        it.classpath.setFrom(extension.classpath.toList())
+        it.classpath.setFrom(extension.classpath)
 
         it.fileDirectory.set(extension.fileDirectory)
         it.filePrefix.set(extension.filePrefix)
