@@ -22,11 +22,14 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
  * Represents an SQL operation that combines the results of multiple queries into a single result.
  *
  * @param secondStatement The SQL statement on the right-hand side of the set operator.
+ * @param wrapInParentheses If `true`, wraps any preceding set operation in parentheses to ensure the
+ * DSL chain order matches the SQL evaluation order. If `false`, relies on SQL operator precedence.
  */
 sealed class SetOperation(
     operationName: String,
     _firstStatement: AbstractQuery<*>,
-    val secondStatement: AbstractQuery<*>
+    val secondStatement: AbstractQuery<*>,
+    val wrapInParentheses: Boolean = true
 ) : AbstractQuery<SetOperation>((_firstStatement.targets + secondStatement.targets).distinct()),
     SuspendExecutable<ResultApi, SetOperation>,
     SizedIterable<ResultRow> {
@@ -137,7 +140,11 @@ sealed class SetOperation(
                         it.prepareSQL(this)
                         if (isSubQuery) append(")")
                     }
-                    is SetOperation -> it.prepareSQL(this)
+                    is SetOperation -> {
+                        if (wrapInParentheses) append("(")
+                        it.prepareSQL(this)
+                        if (wrapInParentheses) append(")")
+                    }
                 }
             }
         }
@@ -187,11 +194,12 @@ sealed class SetOperation(
 /** Represents an SQL operation that combines all results from two queries, without any duplicates. */
 class Union(
     firstStatement: AbstractQuery<*>,
-    secondStatement: AbstractQuery<*>
-) : SetOperation("UNION", firstStatement, secondStatement) {
+    secondStatement: AbstractQuery<*>,
+    wrapInParentheses: Boolean = true
+) : SetOperation("UNION", firstStatement, secondStatement, wrapInParentheses) {
     override fun withDistinct(value: Boolean): SetOperation {
         return if (!value) {
-            UnionAll(firstStatement, secondStatement).also {
+            UnionAll(firstStatement, secondStatement, wrapInParentheses).also {
                 copyTo(it)
             }
         } else {
@@ -199,7 +207,7 @@ class Union(
         }
     }
 
-    override fun copy() = Union(firstStatement, secondStatement).also {
+    override fun copy() = Union(firstStatement, secondStatement, wrapInParentheses).also {
         copyTo(it)
     }
 }
@@ -207,18 +215,19 @@ class Union(
 /** Represents an SQL operation that combines all results from two queries, with duplicates included. */
 class UnionAll(
     firstStatement: AbstractQuery<*>,
-    secondStatement: AbstractQuery<*>
-) : SetOperation("UNION ALL", firstStatement, secondStatement) {
+    secondStatement: AbstractQuery<*>,
+    wrapInParentheses: Boolean = true
+) : SetOperation("UNION ALL", firstStatement, secondStatement, wrapInParentheses) {
 
     override fun withDistinct(value: Boolean): SetOperation {
         return if (value) {
-            Union(firstStatement, secondStatement)
+            Union(firstStatement, secondStatement, wrapInParentheses)
         } else {
             this
         }
     }
 
-    override fun copy() = UnionAll(firstStatement, secondStatement).also {
+    override fun copy() = UnionAll(firstStatement, secondStatement, wrapInParentheses).also {
         copyTo(it)
     }
 }
@@ -226,9 +235,10 @@ class UnionAll(
 /** Represents an SQL operation that returns only the common rows from two query results, without any duplicates. */
 class Intersect(
     firstStatement: AbstractQuery<*>,
-    secondStatement: AbstractQuery<*>
-) : SetOperation("INTERSECT", firstStatement, secondStatement) {
-    override fun copy() = Intersect(firstStatement, secondStatement).also {
+    secondStatement: AbstractQuery<*>,
+    wrapInParentheses: Boolean = true
+) : SetOperation("INTERSECT", firstStatement, secondStatement, wrapInParentheses) {
+    override fun copy() = Intersect(firstStatement, secondStatement, wrapInParentheses).also {
         copyTo(it)
     }
 
@@ -248,8 +258,9 @@ class Intersect(
  */
 class Except(
     firstStatement: AbstractQuery<*>,
-    secondStatement: AbstractQuery<*>
-) : SetOperation("EXCEPT", firstStatement, secondStatement) {
+    secondStatement: AbstractQuery<*>,
+    wrapInParentheses: Boolean = true
+) : SetOperation("EXCEPT", firstStatement, secondStatement, wrapInParentheses) {
 
     override val operationName: String
         get() = when {
@@ -257,7 +268,7 @@ class Except(
             else -> "EXCEPT"
         }
 
-    override fun copy() = Intersect(firstStatement, secondStatement).also {
+    override fun copy() = Except(firstStatement, secondStatement, wrapInParentheses).also {
         copyTo(it)
     }
 
@@ -275,27 +286,35 @@ class Except(
 /**
  * Combines all results from [this] query with the results of [other], WITHOUT including duplicates.
  *
+ * @param withParentheses If `true`, wraps any preceding set operation in parentheses to ensure the
+ * DSL chain order matches the SQL evaluation order. If `false`, relies on SQL operator precedence.
  * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.UnionTests.testUnionWithLimit
  */
-fun AbstractQuery<*>.union(other: Query): Union = Union(this, other)
+fun AbstractQuery<*>.union(other: Query, withParentheses: Boolean = true): Union = Union(this, other, withParentheses)
 
 /**
  * Combines all results from [this] query with the results of [other], WITH duplicates included.
  *
+ * @param withParentheses If `true`, wraps any preceding set operation in parentheses to ensure the
+ * DSL chain order matches the SQL evaluation order. If `false`, relies on SQL operator precedence.
  * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.UnionTests.testUnionWithAllResults
  */
-fun AbstractQuery<*>.unionAll(other: Query): UnionAll = UnionAll(this, other)
+fun AbstractQuery<*>.unionAll(other: Query, withParentheses: Boolean = true): UnionAll = UnionAll(this, other, withParentheses)
 
 /**
  * Returns only results from [this] query that are common to the results of [other], WITHOUT including any duplicates.
  *
+ * @param withParentheses If `true`, wraps any preceding set operation in parentheses to ensure the
+ * DSL chain order matches the SQL evaluation order. If `false`, relies on SQL operator precedence.
  * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.UnionTests.testIntersectWithThreeQueries
  */
-fun AbstractQuery<*>.intersect(other: Query): Intersect = Intersect(this, other)
+fun AbstractQuery<*>.intersect(other: Query, withParentheses: Boolean = true): Intersect = Intersect(this, other, withParentheses)
 
 /**
  * Returns only distinct results from [this] query that are NOT common to the results of [other].
  *
+ * @param withParentheses If `true`, wraps any preceding set operation in parentheses to ensure the
+ * DSL chain order matches the SQL evaluation order. If `false`, relies on SQL operator precedence.
  * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.UnionTests.testExceptWithTwoQueries
  */
-fun AbstractQuery<*>.except(other: Query): Except = Except(this, other)
+fun AbstractQuery<*>.except(other: Query, withParentheses: Boolean = true): Except = Except(this, other, withParentheses)
