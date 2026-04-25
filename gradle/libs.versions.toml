@@ -59,6 +59,7 @@ kotlinx-coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutin
 kotlinx-coroutines-debug = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-debug", version.ref = "kotlinCoroutines" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinCoroutines" }
 kotlinx-coroutines-reactive = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-reactive", version.ref = "kotlinCoroutines" }
+kotlinx-coroutines-reactor = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-reactor", version.ref = "kotlinCoroutines" }
 kotlinx-jvm-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime-jvm", version.ref = "kotlinx-datetime" }
 kotlinx-serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 
@@ -85,6 +86,7 @@ spring6-jdbc = { group = "org.springframework", name = "spring-jdbc", version.re
 spring6-context = { group = "org.springframework", name = "spring-context", version.ref = "springFramework6" }
 spring6-test = { group = "org.springframework", name = "spring-test", version.ref = "springFramework6" }
 spring7-jdbc = { group = "org.springframework", name = "spring-jdbc", version.ref = "springFramework7" }
+spring7-r2dbc = { group = "org.springframework", name = "spring-r2dbc", version.ref = "springFramework7" }
 spring7-context = { group = "org.springframework", name = "spring-context", version.ref = "springFramework7" }
 spring7-test = { group = "org.springframework", name = "spring-test", version.ref = "springFramework7" }
 
