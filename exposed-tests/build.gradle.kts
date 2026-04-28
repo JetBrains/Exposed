@@ -39,6 +39,7 @@ dependencies {
     implementation(libs.log4j.core)
 
     implementation(libs.hikariCP)
+    testCompileOnly(libs.oracle)
     testCompileOnly(libs.mysql)
     testCompileOnly(libs.postgre)
     testCompileOnly(libs.pgjdbc.ng)
