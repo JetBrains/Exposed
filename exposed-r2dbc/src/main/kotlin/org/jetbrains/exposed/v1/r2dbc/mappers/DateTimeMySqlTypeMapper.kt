@@ -45,7 +45,7 @@ class DateTimeMySqlTypeMapper : TypeMapper {
         columnType: IColumnType<*>
     ): ValueContainer<T?> {
         if (dialect is MariaDBDialect) {
-            return NoValueContainer()
+            return sharedNoValueContainer()
         }
 
         return when (type) {
@@ -57,7 +57,7 @@ class DateTimeMySqlTypeMapper : TypeMapper {
                 row.get(index - 1, Instant::class.java)?.let { Timestamp.from(it) as T }
             )
 
-            else -> NoValueContainer()
+            else -> sharedNoValueContainer()
         }
     }
 }
