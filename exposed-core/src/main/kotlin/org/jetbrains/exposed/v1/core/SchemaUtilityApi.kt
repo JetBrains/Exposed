@@ -276,6 +276,55 @@ abstract class SchemaUtilityApi {
     }
 
     /**
+     * Filters all table check constraints that are either missing from the database
+     * or exist in the database but are not mapped in a table object.
+     * If [withLogs] is `true`, the corresponding statements for these check constraints will also be logged.
+     *
+     * @return Pair of missing [CheckConstraint] list and unmapped [CheckConstraint] list.
+     * @suppress
+     */
+    @InternalApi
+    protected fun Map<Table, List<CheckConstraint>>.filterAndLogMissingAndUnmappedCheckConstraints(
+        withLogs: Boolean,
+        vararg tables: Table
+    ): Pair<List<CheckConstraint>, List<CheckConstraint>> {
+        if (this.isEmpty()) return Pair(emptyList(), emptyList())
+
+        // MariaDB: unmapped check constraints on JSON(B) columns are db-generated for internal validation use
+        fun CheckConstraint.isInternalConstraint(): Boolean {
+            // generated constraint name always matches the column name;
+            // but doing a further column-name or -type check here would overlook the case when a JSON column has been dropped,
+            // resulting in an invalid DROP constraint due to an unmapped column to check
+            return currentDialect is MariaDBDialect && checkOp.startsWith("json_valid(", ignoreCase = true)
+        }
+
+        val missingCheckConstraints = mutableListOf<CheckConstraint>()
+        val unmappedCheckConstraints = mutableListOf<CheckConstraint>()
+
+        tables.forEach { table ->
+            val mappedCheckConstraints = table.checkConstraints()
+            val existingCheckConstraints = this[table].orEmpty()
+
+            val existingCheckConstraintsNames = existingCheckConstraints.map { it.checkName.uppercase() }.toSet()
+            missingCheckConstraints.addAll(
+                mappedCheckConstraints.filterNot { it.checkName.uppercase() in existingCheckConstraintsNames }
+            )
+
+            val mappedCheckConstraintsNames = mappedCheckConstraints.map { it.checkName.uppercase() }.toSet()
+            unmappedCheckConstraints.addAll(
+                existingCheckConstraints.filterNot {
+                    it.checkName.uppercase() in mappedCheckConstraintsNames || it.isInternalConstraint()
+                }
+            )
+        }
+
+        missingCheckConstraints.log("CHECK constraints missed from database (will be created):", withLogs)
+        unmappedCheckConstraints.log("CHECK constraints exist in database and not mapped in code:", withLogs)
+
+        return missingCheckConstraints to unmappedCheckConstraints
+    }
+
+    /**
      * If [withLogs] is `true`, this logs every item in this collection, prefixed by [mainMessage].
      * @suppress
      */

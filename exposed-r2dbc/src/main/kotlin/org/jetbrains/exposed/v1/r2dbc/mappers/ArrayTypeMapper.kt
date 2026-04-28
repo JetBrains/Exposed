@@ -114,7 +114,7 @@ class ArrayTypeMapper : TypeMapper {
             is FloatColumnType -> (mappedList as List<Float>).toTypedArray()
             is DoubleColumnType -> (mappedList as List<Double>).toTypedArray()
             is BinaryColumnType -> (mappedList as List<ByteArray>).toTypedArray()
-            is TextColumnType -> (mappedList as List<String>).toTypedArray()
+            is StringColumnType -> (mappedList as List<String>).toTypedArray()
             is DecimalColumnType -> (mappedList as List<java.math.BigDecimal>).toTypedArray()
             is UuidColumnType -> (mappedList as List<kotlin.uuid.Uuid>).toTypedArray()
             is UUIDColumnType -> (mappedList as List<java.util.UUID>).toTypedArray()
@@ -218,6 +218,7 @@ private fun ArrayColumnType<*, *>.arrayDeclaration(): Class<out Array<out Any>> 
     is BasicBinaryColumnType, is BlobColumnType -> Array<ByteArray>::class.java
     is UuidColumnType -> Array<kotlin.uuid.Uuid>::class.java
     is UUIDColumnType -> Array<java.util.UUID>::class.java
+    is StringColumnType -> Array<String>::class.java
     is CharacterColumnType -> Array<Char>::class.java
     is BooleanColumnType -> Array<Boolean>::class.java
     is IDateColumnType -> {

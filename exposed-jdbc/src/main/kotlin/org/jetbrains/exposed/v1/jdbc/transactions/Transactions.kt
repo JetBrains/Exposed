@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.v1.jdbc.transactions
 
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.SqlLogger
 import org.jetbrains.exposed.v1.core.exposedLogger
@@ -9,6 +11,7 @@ import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
 import org.jetbrains.exposed.v1.jdbc.withTransactionContext
 import java.sql.SQLException
 import java.util.concurrent.ThreadLocalRandom
@@ -28,10 +31,11 @@ import java.util.concurrent.ThreadLocalRandom
  * @throws Throwable If any other error occurs during execution (after attempting rollback)
  */
 @Suppress("TooGenericExceptionCaught")
-private inline fun <T> executeTransactionWithErrorHandling(
+private inline fun <T> executeBaseTransactionWithErrorHandling(
     transaction: JdbcTransaction,
     shouldCommit: Boolean,
-    block: () -> T
+    block: () -> T,
+    errorBlock: (JdbcPreparedStatementApi?) -> Unit,
 ): T {
     return try {
         block().also {
@@ -41,24 +45,44 @@ private inline fun <T> executeTransactionWithErrorHandling(
         }
     } catch (cause: SQLException) {
         val currentStatement = transaction.currentStatement
-        transaction.rollbackLoggingException {
-            exposedLogger.warn(
-                "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
-                it
-            )
-        }
+        errorBlock(currentStatement)
         throw cause
     } catch (cause: Throwable) {
         if (shouldCommit) {
             val currentStatement = transaction.currentStatement
-            transaction.rollbackLoggingException {
-                exposedLogger.warn(
-                    "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
-                    it
-                )
-            }
+            errorBlock(currentStatement)
         }
         throw cause
+    }
+}
+
+private inline fun <T> executeTransactionWithErrorHandling(
+    transaction: JdbcTransaction,
+    shouldCommit: Boolean,
+    block: () -> T,
+): T {
+    return executeBaseTransactionWithErrorHandling(transaction, shouldCommit, block) { errorStatement ->
+        transaction.rollbackLoggingException {
+            exposedLogger.warn(
+                "Transaction rollback failed: ${it.message}. Statement: $errorStatement",
+                it
+            )
+        }
+    }
+}
+
+private suspend inline fun <T> executeSuspendTransactionWithErrorHandling(
+    transaction: JdbcTransaction,
+    shouldCommit: Boolean,
+    block: () -> T,
+): T {
+    return executeBaseTransactionWithErrorHandling(transaction, shouldCommit, block) { errorStatement ->
+        transaction.rollbackSuspendLoggingException {
+            exposedLogger.warn(
+                "Transaction rollback failed: ${it.message}. Statement: $errorStatement",
+                it
+            )
+        }
     }
 }
 
@@ -193,7 +217,10 @@ fun <T> inTopLevelTransaction(
                         transaction.statement()
                     }
                 } catch (cause: SQLException) {
-                    handleSQLException(cause, transaction, attempts)
+                    logSQLException(cause, transaction, attempts)
+                    transaction.rollbackLoggingException {
+                        exposedLogger.debug("Transaction rollback failed: ${it.message}. See previous log line for statement", it)
+                    }
                     throw cause
                 }
             }
@@ -271,7 +298,7 @@ suspend fun <T> suspendTransaction(
 
         @OptIn(InternalApi::class)
         withTransactionContext(transaction) {
-            executeTransactionWithErrorHandling(
+            executeSuspendTransactionWithErrorHandling(
                 transaction,
                 shouldCommit = outer.db.useNestedTransactions
             ) {
@@ -335,12 +362,15 @@ suspend fun <T> inTopLevelSuspendTransaction(
             @OptIn(InternalApi::class)
             return withTransactionContext(transaction) {
                 try {
-                    executeTransactionWithErrorHandling(transaction, shouldCommit = true) {
+                    executeSuspendTransactionWithErrorHandling(transaction, shouldCommit = true) {
                         transaction.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
                         transaction.statement()
                     }
                 } catch (cause: SQLException) {
-                    handleSQLException(cause, transaction, attempts)
+                    logSQLException(cause, transaction, attempts)
+                    transaction.rollbackSuspendLoggingException {
+                        exposedLogger.debug("Transaction rollback failed: ${it.message}. See previous log line for statement", it)
+                    }
                     throw cause
                 }
             }
@@ -374,24 +404,29 @@ suspend fun <T> inTopLevelSuspendTransaction(
             }
         } finally {
             @OptIn(InternalApi::class)
-            withTransactionContext(transaction) {
-                closeStatementsAndConnection(transaction)
+            withContext(NonCancellable) {
+                withTransactionContext(transaction) {
+                    closeStatementsAndConnection(transaction)
+                }
             }
         }
     }
 }
 
 /**
- * Handles SQL exceptions that occur during transaction execution.
+ * Logs SQL exceptions that occur during execution of a suspended transaction.
  *
- * This function logs the exception details, including the queries that caused the exception,
- * and attempts to roll back the transaction.
+ * This function logs the exception details, including the queries that caused the exception.
  *
  * @param cause The SQLException that occurred.
  * @param transaction The transaction in which the exception occurred.
  * @param attempts The number of transaction attempts made so far.
  */
-internal fun handleSQLException(cause: SQLException, transaction: JdbcTransaction, attempts: Int) {
+private fun logSQLException(
+    cause: SQLException,
+    transaction: JdbcTransaction,
+    attempts: Int,
+) {
     val exposedSQLException = cause as? ExposedSQLException
     val queriesToLog = exposedSQLException?.causedByQueries()?.joinToString(";\n") ?: "${transaction.currentStatement}"
     val message = "Transaction attempt #$attempts failed: ${cause.message}. Statement(s): $queriesToLog"
@@ -401,9 +436,6 @@ internal fun handleSQLException(cause: SQLException, transaction: JdbcTransactio
         }
     }
     exposedLogger.debug(message, cause)
-    transaction.rollbackLoggingException {
-        exposedLogger.debug("Transaction rollback failed: ${it.message}. See previous log line for statement", it)
-    }
 }
 
 /**

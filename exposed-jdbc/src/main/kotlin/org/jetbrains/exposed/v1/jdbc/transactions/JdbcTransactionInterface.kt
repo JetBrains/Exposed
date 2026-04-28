@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.v1.jdbc.transactions
 
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.transactions.TransactionInterface
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
@@ -41,6 +43,13 @@ internal fun JdbcTransactionInterface.rollbackLoggingException(log: (Exception) 
         rollback()
     } catch (e: Exception) {
         log(e)
+    }
+}
+
+@Suppress("TooGenericExceptionCaught")
+internal suspend fun JdbcTransactionInterface.rollbackSuspendLoggingException(log: (Exception) -> Unit) {
+    withContext(NonCancellable) {
+        this@rollbackSuspendLoggingException.rollbackLoggingException(log)
     }
 }
 

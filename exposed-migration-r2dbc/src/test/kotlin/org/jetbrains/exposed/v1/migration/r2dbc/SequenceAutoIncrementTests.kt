@@ -493,6 +493,8 @@ class SequenceAutoIncrementTests : R2dbcDatabaseTestsBase() {
                 assertEquals(expectedDropSequenceStatement("test_table_auto_id_seq"), statements[1])
 
                 statements.forEach { exec(it) }
+                db.dialectMetadata.resetCaches()
+
                 assertFalse(autoSeq.exists())
                 assertTrue(MigrationTestsData.customSequence.exists())
                 assertTrue(implicitSeq.exists())

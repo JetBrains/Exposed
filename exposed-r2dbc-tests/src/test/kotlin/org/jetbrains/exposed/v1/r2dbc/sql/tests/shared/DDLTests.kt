@@ -30,6 +30,7 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 import java.util.*
+import kotlin.test.assertFailsWith
 import kotlin.test.expect
 
 @Suppress("LargeClass")
@@ -1154,5 +1155,181 @@ class DDLTests : R2dbcDatabaseTestsBase() {
                 SchemaUtils.drop(tableA, tableB)
             }
         }
+    }
+
+    @Test
+    fun testTableModifiers() {
+        /* #312 Allow use of other database engines for MySQL/MariaDB */
+        val testTable = object : Table("test_engine") {
+            val id = integer("id")
+            override val primaryKey = PrimaryKey(id)
+            override val options = listOf(Table.EngineOption(Table.TableEngine.MEMORY))
+        }
+
+        withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE) {
+            assertTrue(testTable.ddl.single().endsWith("ENGINE=MEMORY"))
+        }
+    }
+
+    @Test
+    fun testMultipleTableModifiers() {
+        /* #312 Allow use of other database engines for MySQL/MariaDB */
+        val testTable = object : Table("test_multi_options") {
+            val id = integer("id")
+            override val primaryKey = PrimaryKey(id)
+            override val options = listOf(
+                Table.EngineOption(Table.TableEngine.INNODB),
+                Table.CharsetOption("utf8mb4")
+            )
+        }
+
+        withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE) {
+            val ddl = testTable.ddl.single()
+            assertTrue(ddl.contains("ENGINE=InnoDB"))
+            assertTrue(ddl.contains("DEFAULT CHARSET=utf8mb4"))
+        }
+    }
+
+    @Test
+    fun testStorageParameters() {
+        /* #312 Support storage parameters for PostgreSQL/SQL Server */
+        val testTable = object : Table("test_storage") {
+            val id = integer("id")
+            override val primaryKey = PrimaryKey(id)
+            override val storageParameters = listOf(Table.FillFactorParameter(70))
+        }
+
+        withDb(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES_LIKE - TestDB.SQLSERVER) {
+            assertTrue(testTable.ddl.single().contains("WITH (fillfactor=70)"))
+        }
+    }
+
+    @Test
+    fun testModifiersAndStorageParameters() {
+        /* #312 Support both modifiers and storage parameters */
+        val testTable = object : Table("test_combined") {
+            val id = integer("id")
+            override val primaryKey = PrimaryKey(id)
+            override val options = listOf(Table.EngineOption(Table.TableEngine.INNODB))
+            override val storageParameters = listOf(
+                Table.FillFactorParameter(70),
+                Table.AutovacuumEnabledParameter(false)
+            )
+        }
+
+        withDb(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE) {
+            val ddl = testTable.ddl.single()
+            assertTrue(ddl.contains("ENGINE=InnoDB"))
+            assertTrue(ddl.contains("WITH (fillfactor=70, autovacuum_enabled=false)"))
+        }
+    }
+
+    @Test
+    fun testTableWithMemoryEngineCreatedSuccessfully() {
+        /* #312 Verify table with MEMORY engine can be created and used */
+        val testTable = object : Table("test_memory_engine") {
+            val id = integer("id")
+            val name = varchar("name", 50)
+            override val primaryKey = PrimaryKey(id)
+            override val options = listOf(Table.EngineOption(Table.TableEngine.MEMORY))
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE, testTable) {
+            // Insert test data
+            testTable.insert {
+                it[id] = 1
+                it[name] = "test"
+            }
+
+            // Verify data was inserted
+            val result = testTable.selectAll().single()
+            assertEquals(1, result[testTable.id])
+            assertEquals("test", result[testTable.name])
+
+            // Verify engine type from information_schema
+            if (currentDialectTest is MysqlDialect) {
+                val engineResult = exec(
+                    "SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '${testTable.tableName}'"
+                ) { row -> row.get(0, String::class.java) }?.single()
+                assertEquals("MEMORY", engineResult)
+            }
+        }
+    }
+
+    @Test
+    fun testTableWithStorageParametersCreatedSuccessfully() {
+        /* #312 Verify table with storage parameters can be created */
+        val testTable = object : Table("test_storage_params") {
+            val id = integer("id")
+            val data = varchar("data", 100)
+            override val primaryKey = PrimaryKey(id)
+            override val storageParameters = listOf(Table.FillFactorParameter(70))
+        }
+
+        // Only test with real PostgreSQL, not H2 emulation
+        withTables(excludeSettings = TestDB.ALL - TestDB.POSTGRESQL, testTable) {
+            // Insert test data
+            testTable.insert {
+                it[id] = 1
+                it[data] = "test data"
+            }
+
+            // Verify data was inserted
+            val result = testTable.selectAll().single()
+            assertEquals(1, result[testTable.id])
+            assertEquals("test data", result[testTable.data])
+
+            // Verify storage parameters from pg_class
+            val reloptions = exec(
+                "SELECT reloptions FROM pg_class WHERE relname = '${testTable.tableName}'"
+            ) { row -> row.get(0, Array::class.java) }?.single()
+            val optionsStr = (reloptions as? Array<*>)?.joinToString() ?: ""
+            assertTrue(optionsStr.contains("fillfactor=70"))
+        }
+    }
+
+    @Test
+    fun testTableModifiersAndStorageParametersSQL() {
+        // Test TableEngine enum values
+        kotlin.test.assertEquals("InnoDB", Table.TableEngine.INNODB.engineName)
+        kotlin.test.assertEquals("MyISAM", Table.TableEngine.MYISAM.engineName)
+        kotlin.test.assertEquals("MEMORY", Table.TableEngine.MEMORY.engineName)
+        kotlin.test.assertEquals("ARCHIVE", Table.TableEngine.ARCHIVE.engineName)
+        kotlin.test.assertEquals("CSV", Table.TableEngine.CSV.engineName)
+
+        // Test Table.EngineOption SQL generation
+        kotlin.test.assertEquals("ENGINE=InnoDB", Table.EngineOption(Table.TableEngine.INNODB).toSQL())
+        kotlin.test.assertEquals("ENGINE=MEMORY", Table.EngineOption(Table.TableEngine.MEMORY).toSQL())
+        kotlin.test.assertEquals("ENGINE=MyISAM", Table.EngineOption(Table.TableEngine.MYISAM).toSQL())
+
+        // Test Table.CharsetOption SQL generation
+        kotlin.test.assertEquals("DEFAULT CHARSET=utf8mb4", Table.CharsetOption("utf8mb4").toSQL())
+        kotlin.test.assertEquals(
+            "DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+            Table.CharsetOption("utf8mb4", "utf8mb4_unicode_ci").toSQL()
+        )
+
+        // Test Table.RawTableOption SQL generation
+        kotlin.test.assertEquals("ROW_FORMAT=COMPRESSED", Table.RawTableOption("ROW_FORMAT=COMPRESSED").toSQL())
+
+        // Test Table.FillFactorParameter SQL generation and validation
+        kotlin.test.assertEquals("fillfactor=70", Table.FillFactorParameter(70).toSQL())
+        kotlin.test.assertEquals("fillfactor=10", Table.FillFactorParameter(10).toSQL())
+        kotlin.test.assertEquals("fillfactor=100", Table.FillFactorParameter(100).toSQL())
+        assertFailsWith<IllegalArgumentException> { Table.FillFactorParameter(9) }
+        assertFailsWith<IllegalArgumentException> { Table.FillFactorParameter(101) }
+
+        // Test AutovacuumEnabledParameter SQL generation
+        kotlin.test.assertEquals("autovacuum_enabled=true", Table.AutovacuumEnabledParameter(true).toSQL())
+        kotlin.test.assertEquals("autovacuum_enabled=false", Table.AutovacuumEnabledParameter(false).toSQL())
+
+        // Test ToastTupleTargetParameter SQL generation and validation
+        kotlin.test.assertEquals("toast_tuple_target=8160", Table.ToastTupleTargetParameter(8160).toSQL())
+        kotlin.test.assertEquals("toast_tuple_target=1", Table.ToastTupleTargetParameter(1).toSQL())
+        assertFailsWith<IllegalArgumentException> { Table.ToastTupleTargetParameter(0) }
+        assertFailsWith<IllegalArgumentException> { Table.ToastTupleTargetParameter(-1) }
+
+        // Test RawTableStorageParameter SQL generation
+        kotlin.test.assertEquals("parallel_workers=4", Table.RawTableStorageParameter("parallel_workers=4").toSQL())
     }
 }

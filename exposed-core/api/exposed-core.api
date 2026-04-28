@@ -2045,6 +2045,7 @@ public abstract class org/jetbrains/exposed/v1/core/SchemaUtilityApi {
 	protected final fun createDdl (Lorg/jetbrains/exposed/v1/core/ForeignKeyConstraint;)Ljava/util/List;
 	protected final fun filterAndLogExcessConstraints (Ljava/util/Map;Z)Ljava/util/List;
 	protected final fun filterAndLogExcessIndices (Ljava/util/Map;Z)Ljava/util/List;
+	protected final fun filterAndLogMissingAndUnmappedCheckConstraints (Ljava/util/Map;Z[Lorg/jetbrains/exposed/v1/core/Table;)Lkotlin/Pair;
 	protected final fun filterAndLogMissingAndUnmappedIndices (Ljava/util/Map;Ljava/util/Set;ZZ[Lorg/jetbrains/exposed/v1/core/Table;)Lkotlin/Pair;
 	protected final fun hasCycle (Ljava/util/List;)Z
 	protected final fun log (Ljava/util/Collection;Ljava/lang/String;Z)V
@@ -2371,9 +2372,11 @@ public class org/jetbrains/exposed/v1/core/Table : org/jetbrains/exposed/v1/core
 	public fun getDdl ()Ljava/util/List;
 	public final fun getForeignKeys ()Ljava/util/List;
 	public final fun getIndices ()Ljava/util/List;
+	public fun getOptions ()Ljava/util/List;
 	public fun getPrimaryKey ()Lorg/jetbrains/exposed/v1/core/Table$PrimaryKey;
 	public final fun getSchemaName ()Ljava/lang/String;
 	public final fun getSequences ()Ljava/util/List;
+	public fun getStorageParameters ()Ljava/util/List;
 	public fun getTableName ()Ljava/lang/String;
 	public final fun getTableNameWithoutScheme ()Ljava/lang/String;
 	public final fun getTableNameWithoutSchemeSanitized ()Ljava/lang/String;
@@ -2450,8 +2453,29 @@ public class org/jetbrains/exposed/v1/core/Table : org/jetbrains/exposed/v1/core
 	public final fun withDefinition (Lorg/jetbrains/exposed/v1/core/Column;[Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Column;
 }
 
+public final class org/jetbrains/exposed/v1/core/Table$AutovacuumEnabledParameter : org/jetbrains/exposed/v1/core/Table$TableStorageParameter {
+	public fun <init> (Z)V
+	public fun toSQL ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/v1/core/Table$CharsetOption : org/jetbrains/exposed/v1/core/Table$TableOption {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun toSQL ()Ljava/lang/String;
+}
+
 public final class org/jetbrains/exposed/v1/core/Table$Dual : org/jetbrains/exposed/v1/core/Table {
 	public static final field INSTANCE Lorg/jetbrains/exposed/v1/core/Table$Dual;
+}
+
+public final class org/jetbrains/exposed/v1/core/Table$EngineOption : org/jetbrains/exposed/v1/core/Table$TableOption {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/Table$TableEngine;)V
+	public fun toSQL ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/v1/core/Table$FillFactorParameter : org/jetbrains/exposed/v1/core/Table$TableStorageParameter {
+	public fun <init> (I)V
+	public fun toSQL ()Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/v1/core/Table$PrimaryKey {
@@ -2461,6 +2485,45 @@ public final class org/jetbrains/exposed/v1/core/Table$PrimaryKey {
 	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getColumns ()[Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun getName ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/v1/core/Table$RawTableOption : org/jetbrains/exposed/v1/core/Table$TableOption {
+	public fun <init> (Ljava/lang/String;)V
+	public fun toSQL ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/v1/core/Table$RawTableStorageParameter : org/jetbrains/exposed/v1/core/Table$TableStorageParameter {
+	public fun <init> (Ljava/lang/String;)V
+	public fun toSQL ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/v1/core/Table$TableEngine : java/lang/Enum {
+	public static final field ARCHIVE Lorg/jetbrains/exposed/v1/core/Table$TableEngine;
+	public static final field CSV Lorg/jetbrains/exposed/v1/core/Table$TableEngine;
+	public static final field INNODB Lorg/jetbrains/exposed/v1/core/Table$TableEngine;
+	public static final field MEMORY Lorg/jetbrains/exposed/v1/core/Table$TableEngine;
+	public static final field MYISAM Lorg/jetbrains/exposed/v1/core/Table$TableEngine;
+	public final fun getEngineName ()Ljava/lang/String;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Table$TableEngine;
+	public static fun values ()[Lorg/jetbrains/exposed/v1/core/Table$TableEngine;
+}
+
+public abstract class org/jetbrains/exposed/v1/core/Table$TableOption {
+	public fun <init> ()V
+	public abstract fun toSQL ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/jetbrains/exposed/v1/core/Table$TableStorageParameter {
+	public fun <init> ()V
+	public abstract fun toSQL ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/v1/core/Table$ToastTupleTargetParameter : org/jetbrains/exposed/v1/core/Table$TableStorageParameter {
+	public fun <init> (I)V
+	public fun toSQL ()Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/v1/core/TableKt {
