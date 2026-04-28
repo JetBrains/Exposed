@@ -1,0 +1,80 @@
+=== 1.23.8 + formatting CPU  (pool=4626, total=281720) ===
+   2.85%      8032  AccessBarrierSupport::resolve_unknown_oop_ref_strength
+   0.98%      2774  com/pinterest/ktlint/rule/engine/core/api/ASTNodeExtensionKt.prevCodeLeaf$default
+   0.91%      2553  com/pinterest/ktlint/rule/engine/core/api/IndentConfig.parentIndentOf
+   0.76%      2154  VirtualSpace::reserved_size
+   0.37%      1041  ValueRecorder<Metadata*>::maybe_find_index
+   0.23%       662  __psynch_cvbroad
+   0.19%       527  com/pinterest/ktlint/rule/engine/core/api/ASTNodeExtensionKt.isWhiteSpace
+   0.12%       349  com/pinterest/ktlint/ruleset/standard/rules/WrappingRule$getStartOfBlock$1$1.invoke
+   0.12%       345  TaskTerminator::offer_termination
+   0.10%       287  kotlin/reflect/jvm/internal/impl/load/java/lazy/LazyJavaPackageFragmentProvider$$Lambda$0.invoke
+   0.09%       260  com/pinterest/ktlint/rule/engine/core/api/ASTNodeExtensionKt.nextCodeLeaf$default
+   0.09%       252  SystemDictionary::link_method_handle_constant
+   0.09%       243  kotlin/reflect/jvm/internal/impl/descriptors/impl/ModuleDescriptorImpl.toString
+   0.08%       227  kotlin/reflect/jvm/internal/impl/load/java/lazy/descriptors/LazyJavaPackageScope$$Lambda$1.invoke
+   0.08%       221  kotlin/collections/ArrayDeque.copyElements
+   0.08%       217  com/pinterest/ktlint/ruleset/standard/rules/ArgumentListWrappingRule.intendedIndent
+   0.07%       207  __vfprintf
+   0.06%       182  io/github/detekt/metrics/CyclomaticComplexity.isUsedForNesting
+
+=== 2.0.0-alpha.3 + ktlint CPU  (pool=5419, total=529211) ===
+   3.23%     17095  AccessBarrierSupport::resolve_unknown_oop_ref_strength
+   0.82%      4340  com/intellij/lang/impl/PsiBuilderAdapter.advanceLexer
+   0.74%      3902  com/intellij/lang/impl/PsiBuilderImpl$ProductionMarker.<init>
+   0.64%      3377  __semwait_signal
+   0.35%      1872  java/lang/invoke/CallSite.makeSite
+   0.34%      1777  [unknown]
+   0.29%      1537  dev/detekt/rules/potentialbugs/EqualsWithHashCodeExist.visitClassOrObject
+   0.26%      1360  dev/detekt/utils/PathMatchersKt.pathMatcher
+   0.20%      1057  dev/detekt/rules/style/UnusedPrivateClass$UnusedClassVisitor.visitImportDirective
+   0.17%       900  dev/detekt/rules/style/ExplicitItLambdaParameter.visitLambdaExpression
+   0.17%       885  java/lang/Character.digit
+   0.12%       636  dev/detekt/rules/potentialbugs/PotentialBugProvider.instance
+   0.12%       620  com/intellij/lang/impl/MarkerPool.freeMarker
+   0.09%       477  com/github/benmanes/caffeine/cache/WIA.<init>
+   0.09%       460  com/intellij/psi/LanguageSubstitutors.getInstance
+   0.09%       455  Thread::call_run
+   0.08%       433  com/intellij/lang/impl/PsiBuilderImpl.checkTreeDepth
+   0.07%       364  dev/detekt/tooling/api/DetektProvider$Companion.load$default
+
+=== 1.23.8 + formatting ALLOC  (pool=3082, total=1459764) ===
+   4.48%     65437  char[]
+   4.30%     62738  sun/reflect/annotation/AnnotationParser.parseStringArray
+   1.57%     22924  com.pinterest.ktlint.ruleset.standard.rules.NoUnusedImportsRule
+   0.70%     10242  org/ec4j/core/model/Property.builder
+   0.25%      3674  sun/nio/fs/UnixPath.getFileName
+   0.14%      2045  org/jetbrains/kotlin/cli/jvm/compiler/ClasspathRootsResolver.computeRoots
+   0.08%      1194  org/jetbrains/kotlin/psi/KtCommonFile.getImportLists
+   0.07%      1090  kotlin/sequences/SequencesKt___SequencesKt.sortedWith
+   0.07%      1008  org/jetbrains/kotlin/psi/KtVisitorVoid.visitArgument
+   0.07%       975  org/jetbrains/kotlin/psi/KtDeclarationStub.getDocComment
+   0.06%       945  org/jetbrains/kotlin/cli/jvm/compiler/KotlinCoreApplicationEnvironment$Companion.create
+   0.06%       923  org/jetbrains/kotlin/psi/KtVisitorVoid.visitParenthesizedExpression
+   0.03%       427  java/util/Arrays.copyOfRange
+   0.03%       369  io/gitlab/arturbosch/detekt/rules/exceptions/ExceptionsProvider.instance
+   0.02%       361  org/jetbrains/kotlin/cli/jvm/modules/CoreJrtFileSystem.<init>
+   0.02%       288  java/util/IdentityHashMap.<init>
+   0.02%       259  org/jetbrains/kotlin/psi/KtElementImplStub.<init>
+   0.01%       210  java/util/ArrayList.grow
+
+=== 2.0.0-alpha.3 + ktlint ALLOC  (pool=3508, total=2279255) ===
+   5.12%    116776  char[]
+   3.64%     82995  org/jetbrains/kotlin/psi/KtParameterList.<init>
+   3.35%     76443  org/jetbrains/kotlin/analysis/api/standalone/base/projectStructure/StandaloneProjectFactory.access$registerJavaPsiFacade
+   3.35%     76344  org/jetbrains/kotlin/analysis/api/standalone/base/projectStructure/ApplicationServiceRegistration.registerWithCustomRegistration
+   3.35%     76333  org/jetbrains/kotlin/psi/stubs/elements/KtFileElementType.doParseContents
+   2.71%     61748  org/jetbrains/kotlin/psi/KtVisitor.visitImportDirective
+   1.02%     23166  java.util.LinkedList
+   0.97%     22205  java/lang/ClassLoader.getClassLoadingLock
+   0.86%     19633  java/util/AbstractList$SubList.iterator
+   0.80%     18263  java/lang/invoke/DelegatingMethodHandle.makeReinvokerForm
+   0.69%     15668  org/jetbrains/kotlin/psi/impl/KotlinElementTypeProviderImpl.getFileType
+   0.40%      9058  java/util/ArrayList.<init>
+   0.39%      8971  org/jetbrains/kotlin/psi/KtVisitorVoid.visitProperty
+   0.34%      7771  java/lang/invoke/Invokers.callSiteForm
+   0.34%      7650  java/util/BitSet.initWords
+   0.32%      7367  dev/detekt/rules/style/FunctionOnlyReturningConstant.visitNamedFunction
+   0.30%      6942  dev/detekt/rules/style/MayBeConstant.visitProperty
+   0.28%      6366  com/beust/jcommander/JCommander.convertValue
+

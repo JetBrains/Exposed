@@ -1,0 +1,14 @@
+# script downloads ~155 MB of jars on first run
+jars/
+
+# per-run timing/stdout logs (regenerated each invocation)
+profiles-*/fmt-run-*.log
+profiles-*/fmt-run-*.out
+profiles-*/run-*.log
+profiles-*/run-*.out
+profiles-*/allrules-run-*.log
+profiles-*/allrules-run-*.out
+profiles-*/fmt-cpu.log
+profiles-*/fmt-alloc.log
+profiles-*/fmt-cpu.out
+profiles-*/fmt-alloc.out
