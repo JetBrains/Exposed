@@ -2,7 +2,7 @@ package org.jetbrains.exposed.dao.r2dbc.tests.shared
 
 import io.r2dbc.spi.IsolationLevel
 import kotlinx.coroutines.flow.FlowCollector
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.r2dbc.dao.IntR2dbcEntity
@@ -11,15 +11,18 @@ import org.jetbrains.exposed.r2dbc.dao.LongR2dbcEntity
 import org.jetbrains.exposed.r2dbc.dao.LongR2dbcEntityClass
 import org.jetbrains.exposed.r2dbc.dao.R2dbcEntity
 import org.jetbrains.exposed.r2dbc.dao.R2dbcEntityClass
+import org.jetbrains.exposed.r2dbc.dao.entityCache
 import org.jetbrains.exposed.r2dbc.dao.exceptions.R2dbcEntityNotFoundException
 import org.jetbrains.exposed.r2dbc.dao.flushCache
 import org.jetbrains.exposed.r2dbc.dao.relationships.backReferencedOnSuspend
+import org.jetbrains.exposed.r2dbc.dao.relationships.load
 import org.jetbrains.exposed.r2dbc.dao.relationships.optionalBackReferencedOnSuspend
 import org.jetbrains.exposed.r2dbc.dao.relationships.optionalReferencedOnSuspend
 import org.jetbrains.exposed.r2dbc.dao.relationships.optionalReferrersOnSuspend
 import org.jetbrains.exposed.r2dbc.dao.relationships.referencedOnSuspend
 import org.jetbrains.exposed.r2dbc.dao.relationships.referrersOnSuspend
 import org.jetbrains.exposed.r2dbc.dao.relationships.with
+import org.jetbrains.exposed.v1.core.Case
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -30,17 +33,27 @@ import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.idParam
+import org.jetbrains.exposed.v1.core.less
+import org.jetbrains.exposed.v1.core.vendors.OracleDialect
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.SizedIterable
 import org.jetbrains.exposed.v1.r2dbc.batchUpsert
 import org.jetbrains.exposed.v1.r2dbc.deleteAll
 import org.jetbrains.exposed.v1.r2dbc.deleteWhere
+import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
+import org.jetbrains.exposed.v1.r2dbc.select
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
+import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.update
 import org.jetbrains.exposed.v1.r2dbc.upsert
@@ -123,6 +136,7 @@ object EntityTestsData {
     }
 }
 
+@Suppress("LargeClass")
 class R2dbcEntityTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testDefaults01() {
@@ -896,6 +910,933 @@ class R2dbcEntityTests : R2dbcDatabaseTestsBase() {
                 assertEquals(region1, Region.testCache(School.testCache(school2.id)!!.readValues[Schools.region]))
                 assertEquals(region2, Region.testCache(School.testCache(school3.id)!!.readValues[Schools.region]))
             }
+        }
+    }
+
+    @Test
+    fun testIterationOverSizedIterableWithPreload() {
+        fun HashMap<String, Pair<Int, Long>>.assertEachQueryExecutedOnlyOnce() {
+            forEach { (statement, stats) ->
+                val executionCount = stats.first
+                assertEquals(1, executionCount, "Statement executed more than once: $statement")
+            }
+        }
+
+        withTables(Regions, Schools) {
+            val region1 = Region.new {
+                name = "United Kingdom"
+            }
+            School.new {
+                name = "Eton"
+                region set region1
+            }
+            School.new {
+                name = "Harrow"
+                region set region1
+            }
+
+            commit()
+
+            inTopLevelSuspendTransaction(transactionIsolation = IsolationLevel.SERIALIZABLE) {
+                debug = true // enables tracking of executed statements in this transaction
+
+                val allSchools = School.all().with(School::region).toList()
+
+                assertEquals(2, allSchools.size)
+                // expected: 1 query to select all School, and 1 query to select referenced Regions
+                assertEquals(2, statementCount)
+                assertEquals(statementCount, statementStats.size)
+                statementStats.assertEachQueryExecutedOnlyOnce()
+
+                // reset tracker
+                statementCount = 0
+                statementStats.clear()
+
+                val oneSchool = School.all().limit(1).with(School::region).toList()
+
+                assertEquals(1, oneSchool.size)
+                assertEquals(2, statementCount)
+                assertEquals(statementCount, statementStats.size)
+                statementStats.assertEachQueryExecutedOnlyOnce()
+
+                debug = false
+            }
+
+            // test that cached result doesn't propagate when SizedIterable query changes after loading
+            inTopLevelSuspendTransaction(transactionIsolation = IsolationLevel.SERIALIZABLE) {
+                debug = true
+
+                val oneSchool = School.all().with(School::region).limit(1).toList()
+
+                assertEquals(1, oneSchool.size)
+                // expected: 1 query to select all School, 1 query to select the referenced Regions,
+                // then 1 new query to select only first School
+                assertEquals(3, statementCount)
+                assertEquals(statementCount, statementStats.size)
+                statementStats.assertEachQueryExecutedOnlyOnce()
+
+                debug = false
+            }
+        }
+    }
+
+    @Test
+    fun preloadReferencesOnAnEntity() {
+        withTables(Regions, Schools) {
+            val region1 = Region.new {
+                name = "United Kingdom"
+            }
+
+            val school1 = School.new {
+                name = "Eton"
+                region set region1
+            }
+
+            commit()
+
+            inTopLevelSuspendTransaction(transactionIsolation = IsolationLevel.SERIALIZABLE) {
+                maxAttempts = 1
+                School.find {
+                    Schools.id eq school1.id
+                }.first().load(School::region)
+
+                assertNotNull(School.testCache(school1.id))
+                assertEquals(region1, Region.testCache(School.testCache(school1.id)!!.readValues[Schools.region]))
+            }
+        }
+    }
+
+    @Test
+    fun preloadOptionalReferencesOnASizedIterable() {
+        withTables(Regions, Schools) {
+            val region1 = Region.new {
+                name = "United Kingdom"
+            }
+
+            val region2 = Region.new {
+                name = "England"
+            }
+
+            val school1 = School.new {
+                name = "Eton"
+                region set region1
+                secondaryRegion set region2
+            }.apply {
+                // otherwise Oracle provides school1.id = 0 to testCache(), which returns null
+                if (currentDialectTest is OracleDialect) flush()
+            }
+
+            val school2 = School.new {
+                name = "Harrow"
+                region set region1
+            }
+
+            commit()
+
+            inTopLevelSuspendTransaction(transactionIsolation = IsolationLevel.SERIALIZABLE) {
+                maxAttempts = 1
+                School.all().with(School::region, School::secondaryRegion)
+                assertNotNull(School.testCache(school1.id))
+                assertNotNull(School.testCache(school2.id))
+
+                assertEquals(region1, Region.testCache(School.testCache(school1.id)!!.readValues[Schools.region]))
+                assertEquals(region2, Region.testCache(School.testCache(school1.id)!!.readValues[Schools.secondaryRegion]!!))
+                assertEquals(null, School.testCache(school2.id)!!.readValues[Schools.secondaryRegion])
+            }
+        }
+    }
+
+    @Test
+    fun preloadOptionalReferencesOnAnEntity() {
+        withTables(Regions, Schools) {
+            val region1 = Region.new {
+                name = "United Kingdom"
+            }
+            val region2 = Region.new {
+                name = "England"
+            }
+
+            val school1 = School.new {
+                name = "Eton"
+                region set region1
+                secondaryRegion set region2
+            }
+
+            commit()
+
+            inTopLevelSuspendTransaction(transactionIsolation = IsolationLevel.SERIALIZABLE) {
+                maxAttempts = 1
+                val school2 = School.find {
+                    Schools.id eq school1.id
+                }.first().load(School::secondaryRegion)
+
+                assertEquals(null, Region.testCache(school2.readValues[Schools.region]))
+                assertEquals(region2, Region.testCache(school2.readValues[Schools.secondaryRegion]!!))
+            }
+        }
+    }
+
+    @Test
+    fun preloadReferrersOnASizedIterable() {
+        withTables(Regions, Schools, Students) {
+            val region1 = Region.new {
+                name = "United Kingdom"
+            }
+
+            val region2 = Region.new {
+                name = "England"
+            }
+
+            val school1 = School.new {
+                name = "Eton"
+                region set region1
+            }
+
+            val school2 = School.new {
+                name = "Harrow"
+                region set region1
+            }
+
+            val school3 = School.new {
+                name = "Winchester"
+                region set region2
+            }
+
+            val student1 = Student.new {
+                name = "James Smith"
+                school set school1
+            }
+
+            val student2 = Student.new {
+                name = "Jack Smith"
+                school set school2
+            }
+
+            val student3 = Student.new {
+                name = "Henry Smith"
+                school set school3
+            }
+
+            val student4 = Student.new {
+                name = "Peter Smith"
+                school set school3
+            }
+
+            commit()
+
+            inTopLevelSuspendTransaction(transactionIsolation = IsolationLevel.SERIALIZABLE) {
+                maxAttempts = 1
+                val cache = TransactionManager.current().entityCache
+
+                School.all().with(School::students)
+
+                assertEqualCollections(cache.getReferrers<Student>(school1.id, Students.school)?.toList().orEmpty(), student1)
+                assertEqualCollections(cache.getReferrers<Student>(school2.id, Students.school)?.toList().orEmpty(), student2)
+                assertEqualCollections(cache.getReferrers<Student>(school3.id, Students.school)?.toList().orEmpty(), student3, student4)
+            }
+        }
+    }
+
+    @Test
+    fun preloadReferrersOnAnEntity() {
+        withTables(Regions, Schools, Students) {
+            val region1 = Region.new {
+                name = "United Kingdom"
+            }
+
+            val school1 = School.new {
+                name = "Eton"
+                region set region1
+            }
+
+            val student1 = Student.new {
+                name = "James Smith"
+                school set school1
+            }
+
+            val student2 = Student.new {
+                name = "Jack Smith"
+                school set school1
+            }
+
+            val student3 = Student.new {
+                name = "Henry Smith"
+                school set school1
+            }
+
+            commit()
+
+            inTopLevelSuspendTransaction(transactionIsolation = IsolationLevel.SERIALIZABLE) {
+                maxAttempts = 1
+                val cache = TransactionManager.current().entityCache
+
+                School.find { Schools.id eq school1.id }.first().load(School::students)
+
+                assertEqualCollections(cache.getReferrers<Student>(school1.id, Students.school)?.toList().orEmpty(), student1, student2, student3)
+            }
+        }
+    }
+
+    @Test
+    fun preloadOptionalReferrersOnASizedIterable() {
+        withTables(Regions, Schools, Students, Detentions) {
+            val region1 = Region.new {
+                name = "United Kingdom"
+            }
+
+            val school1 = School.new {
+                name = "Eton"
+                region set region1
+            }
+
+            val student1 = Student.new {
+                name = "James Smith"
+                school set school1
+            }
+
+            val student2 = Student.new {
+                name = "Jack Smith"
+                school set school1
+            }
+
+            val detention1 = Detention.new {
+                reason = "Poor Behaviour"
+                student set student1
+            }
+
+            val detention2 = Detention.new {
+                reason = "Poor Behaviour"
+                student set student1
+            }
+
+            commit()
+
+            inTopLevelSuspendTransaction(transactionIsolation = IsolationLevel.SERIALIZABLE) {
+                maxAttempts = 1
+                School.all().with(School::students, Student::detentions)
+                val cache = TransactionManager.current().entityCache
+
+                School.all().with(School::students, Student::detentions)
+
+                assertEqualCollections(cache.getReferrers<Student>(school1.id, Students.school)?.toList().orEmpty(), student1, student2)
+                assertEqualCollections(cache.getReferrers<Detention>(student1.id, Detentions.student)?.toList().orEmpty(), detention1, detention2)
+                assertEqualCollections(cache.getReferrers<Detention>(student2.id, Detentions.student)?.toList().orEmpty(), emptyList())
+            }
+        }
+    }
+
+    @Test
+    fun preloadInnerTableLinkOnASizedIterable() {
+        withTables(Regions, Schools, Holidays, SchoolHolidays) {
+            val now = System.currentTimeMillis()
+            val now10 = now + 10
+
+            val region1 = Region.new {
+                name = "United Kingdom"
+            }
+
+            val region2 = Region.new {
+                name = "England"
+            }
+
+            val school1 = School.new {
+                name = "Eton"
+                region set region1
+            }
+
+            val school2 = School.new {
+                name = "Harrow"
+                region set region1
+            }
+
+            val school3 = School.new {
+                name = "Winchester"
+                region set region2
+            }
+
+            val holiday1 = Holiday.new {
+                holidayStart = now
+                holidayEnd = now10
+            }
+
+            val holiday2 = Holiday.new {
+                holidayStart = now
+                holidayEnd = now10
+            }
+
+            val holiday3 = Holiday.new {
+                holidayStart = now
+                holidayEnd = now10
+            }
+
+            school1.holidays set listOf(holiday1, holiday2)
+            school2.holidays set listOf(holiday3)
+
+            commit()
+
+            inTopLevelSuspendTransaction(transactionIsolation = IsolationLevel.SERIALIZABLE) {
+                maxAttempts = 1
+                School.all().with(School::holidays)
+                val cache = TransactionManager.current().entityCache
+
+                assertEqualCollections(cache.getReferrers<Holiday>(school1.id, SchoolHolidays.school)?.toList().orEmpty(), holiday1, holiday2)
+                assertEqualCollections(cache.getReferrers<Holiday>(school2.id, SchoolHolidays.school)?.toList().orEmpty(), holiday3)
+                assertEqualCollections(cache.getReferrers<Holiday>(school3.id, SchoolHolidays.school)?.toList().orEmpty(), emptyList())
+            }
+        }
+    }
+
+    @Test
+    fun preloadInnerTableLinkOnAnEntity() {
+        withTables(Regions, Schools, Holidays, SchoolHolidays) {
+            val now = System.currentTimeMillis()
+            val now10 = now + 10
+
+            val region1 = Region.new {
+                name = "United Kingdom"
+            }
+
+            val school1 = School.new {
+                name = "Eton"
+                region set region1
+            }
+
+            val holiday1 = Holiday.new {
+                holidayStart = now
+                holidayEnd = now10
+            }
+
+            val holiday2 = Holiday.new {
+                holidayStart = now
+                holidayEnd = now10
+            }
+
+            val holiday3 = Holiday.new {
+                holidayStart = now
+                holidayEnd = now10
+            }
+
+            SchoolHolidays.insert {
+                it[school] = school1.id
+                it[holiday] = holiday1.id
+            }
+
+            SchoolHolidays.insert {
+                it[school] = school1.id
+                it[holiday] = holiday2.id
+            }
+
+            SchoolHolidays.insert {
+                it[school] = school1.id
+                it[holiday] = holiday3.id
+            }
+
+            commit()
+
+            School.find {
+                Schools.id eq school1.id
+            }.first().load(School::holidays)
+
+            val cache = TransactionManager.current().entityCache
+
+            assertEquals(true, cache.getReferrers<Holiday>(school1.id, SchoolHolidays.school)?.toList()?.contains(holiday1))
+            assertEquals(true, cache.getReferrers<Holiday>(school1.id, SchoolHolidays.school)?.toList()?.contains(holiday2))
+            assertEquals(true, cache.getReferrers<Holiday>(school1.id, SchoolHolidays.school)?.toList()?.contains(holiday3))
+        }
+    }
+
+    @Test
+    fun preloadRelationAtDepth() {
+        withTables(Regions, Schools, Holidays, SchoolHolidays, Students, Notes) {
+            val region1 = Region.new {
+                name = "United Kingdom"
+            }
+
+            val school1 = School.new {
+                name = "Eton"
+                region set region1
+            }
+
+            val student1 = Student.new {
+                name = "James Smith"
+                school set school1
+            }
+
+            val student2 = Student.new {
+                name = "Jack Smith"
+                school set school1
+            }
+
+            val note1 = Note.new {
+                text = "Note text"
+                student set student1
+            }
+
+            val note2 = Note.new {
+                text = "Note text"
+                student set student2
+            }
+
+            School.all().with(School::students, Student::notes)
+
+            val cache = TransactionManager.current().entityCache
+
+            assertEquals(true, cache.getReferrers<Student>(school1.id, Students.school)?.toList()?.contains(student1))
+            assertEquals(true, cache.getReferrers<Student>(school1.id, Students.school)?.toList()?.contains(student2))
+            assertEquals(note1, cache.getReferrers<Note>(student1.id, Notes.student)?.first())
+            assertEquals(note2, cache.getReferrers<Note>(student2.id, Notes.student)?.first())
+        }
+    }
+
+    @Test
+    fun preloadBackReferrenceOnASizedIterable() {
+        withTables(Regions, Schools, Students, StudentBios) {
+            val region1 = Region.new {
+                name = "United States"
+            }
+
+            val school1 = School.new {
+                name = "Eton"
+                region set region1
+            }
+
+            val student1 = Student.new {
+                name = "James Smith"
+                school set school1
+            }
+
+            val student2 = Student.new {
+                name = "John Smith"
+                school set school1
+            }
+
+            val bio1 = StudentBio.new {
+                student set student1
+                dateOfBirth = "01/01/2000"
+            }
+
+            val bio2 = StudentBio.new {
+                student set student2
+                dateOfBirth = "01/01/2002"
+            }
+
+            commit()
+
+            inTopLevelSuspendTransaction(transactionIsolation = IsolationLevel.SERIALIZABLE) {
+                maxAttempts = 1
+                Student.all().with(Student::bio)
+                val cache = TransactionManager.current().entityCache
+
+                assertEqualCollections(cache.getReferrers<StudentBio>(student1.id, StudentBios.student)?.toList().orEmpty(), bio1)
+                assertEqualCollections(cache.getReferrers<StudentBio>(student2.id, StudentBios.student)?.toList().orEmpty(), bio2)
+            }
+        }
+    }
+
+    @Test
+    fun preloadBackReferrenceOnAnEntity() {
+        withTables(Regions, Schools, Students, StudentBios) {
+            val region1 = Region.new {
+                name = "United States"
+            }
+
+            val school1 = School.new {
+                name = "Eton"
+                region set region1
+            }
+
+            val student1 = Student.new {
+                name = "James Smith"
+                school set school1
+            }
+
+            val student2 = Student.new {
+                name = "John Smith"
+                school set school1
+            }
+
+            val bio1 = StudentBio.new {
+                student set student1
+                dateOfBirth = "01/01/2000"
+            }
+
+            val bio2 = StudentBio.new {
+                student set student2
+                dateOfBirth = "01/01/2002"
+            }
+
+            commit()
+
+            inTopLevelSuspendTransaction(transactionIsolation = IsolationLevel.SERIALIZABLE) {
+                maxAttempts = 1
+                Student.all().first().load(Student::bio)
+                val cache = TransactionManager.current().entityCache
+
+                assertEqualCollections(cache.getReferrers<StudentBio>(student1.id, StudentBios.student)?.toList().orEmpty(), bio1)
+            }
+        }
+    }
+
+    @Test
+    fun `test reference cache doesn't fully invalidated on set entity reference`() {
+        withTables(Regions, Schools, Students, StudentBios) {
+            val region1 = Region.new {
+                name = "United States"
+            }
+
+            val school1 = School.new {
+                name = "Eton"
+                region set region1
+            }
+
+            val student1 = Student.new {
+                name = "James Smith"
+                school set school1
+            }
+
+            val student2 = Student.new {
+                name = "John Smith"
+                school set school1
+            }
+
+            val bio1 = StudentBio.new {
+                student set student1
+                dateOfBirth = "01/01/2000"
+            }
+
+            assertEquals(bio1, student1.bio())
+            assertEquals(bio1.student(), student1)
+        }
+    }
+
+    @Test
+    fun `test nested entity initialization`() {
+        withTables(Posts, Categories, Boards) {
+            val parent1 = Post.new {
+                board set Board.new {
+                    name = "Parent Board"
+                }
+                category set Category.new {
+                    title = "Parent Category"
+                }
+            }
+
+            val category1 = parent1.category()
+
+            val post = Post.new {
+                parent set parent1
+
+                category set Category.new {
+                    title = "Child Category"
+                }
+
+                // TODO before everything was inside `new()`, but now it requires suspend context
+
+                optCategory set category1
+            }
+
+            assertEquals("Parent Board", post.parent()?.board()?.name)
+            assertEquals("Parent Category", post.parent()?.category()?.title)
+            assertEquals("Parent Category", post.optCategory()?.title)
+            assertEquals("Child Category", post.category()?.title)
+        }
+    }
+
+    @Test
+    fun testExplicitEntityConstructor() {
+        var createBoardCalled = false
+        fun createBoard(id: EntityID<Int>): Board {
+            createBoardCalled = true
+            return Board(id)
+        }
+
+        val boardEntityClass = object : IntR2dbcEntityClass<Board>(Boards, entityCtor = ::createBoard) {}
+
+        withTables(Boards) {
+            val board = boardEntityClass.new {
+                name = "Test Board"
+            }
+
+            assertEquals("Test Board", board.name)
+            assertTrue(
+                createBoardCalled
+            )
+        }
+    }
+
+    object RequestsTable : IdTable<String>() {
+        val requestId: Column<String> = varchar("requestId", 256)
+        override val primaryKey = PrimaryKey(requestId)
+        override val id: Column<EntityID<String>> = requestId.entityId()
+    }
+
+    class Request(id: EntityID<String>) : R2dbcEntity<String>(id) {
+        companion object : R2dbcEntityClass<String, Request>(RequestsTable)
+
+        var requestId by RequestsTable.requestId
+    }
+
+    @Test
+    fun testSelectFromStringIdTableWithPrimaryKeyByColumn() {
+        withTables(RequestsTable) {
+            Request.new {
+                requestId = "123"
+            }
+
+            val count = Request.all().count()
+            assertEquals(1, count)
+        }
+    }
+
+    object CreditCards : IntIdTable("CreditCards") {
+        val number = varchar("number", 16)
+        val spendingLimit = ulong("spendingLimit").databaseGenerated()
+    }
+
+    class CreditCard(id: EntityID<Int>) : IntR2dbcEntity(id) {
+        companion object : IntR2dbcEntityClass<CreditCard>(CreditCards)
+
+        var number by CreditCards.number
+        var spendingLimit by CreditCards.spendingLimit
+    }
+
+    @Test
+    fun testDatabaseGeneratedValues() {
+        withTables(CreditCards) { testDb ->
+            when (testDb) {
+                TestDB.POSTGRESQL -> {
+                    // The value can also be set using a SQL trigger
+                    exec(
+                        """
+                        CREATE OR REPLACE FUNCTION set_spending_limit()
+                          RETURNS TRIGGER
+                          LANGUAGE PLPGSQL
+                          AS
+                        $$
+                        BEGIN
+                            NEW."spendingLimit" := 10000;
+                            RETURN NEW;
+                        END;
+                        $$;
+                        """.trimIndent()
+                    )
+                    exec(
+                        """
+                        CREATE TRIGGER set_spending_limit
+                        BEFORE INSERT
+                        ON CreditCards
+                        FOR EACH ROW
+                        EXECUTE PROCEDURE set_spending_limit();
+                        """.trimIndent()
+                    )
+                }
+                else -> {
+                    // This table is only used to get the statement that adds the DEFAULT value, and use it with exec
+                    val creditCards2 = object : IntIdTable("CreditCards") {
+                        val spendingLimit = ulong("spendingLimit").default(10000uL)
+                    }
+                    val missingStatements = SchemaUtils.addMissingColumnsStatements(creditCards2)
+                    missingStatements.forEach {
+                        exec(it)
+                    }
+                }
+            }
+
+            val creditCardId = CreditCards.insertAndGetId {
+                it[number] = "0000111122223333"
+            }.value
+            assertEquals(
+                10000uL,
+                CreditCards.selectAll().where { CreditCards.id eq creditCardId }.single()[CreditCards.spendingLimit]
+            )
+
+            val creditCard = CreditCard.new {
+                number = "0000111122223333"
+            }
+
+            // TODO Unlike JDBC, R2DBC's Column.getValue cannot synchronously flush the entity from a
+            //  non-suspend property accessor (Kotlin operators can't be `suspend`). For columns
+            //  whose value is set by the database (DEFAULT clause / trigger), R2DBC's
+            //  `flushInserts` does not necessarily get those values back through the INSERT
+            //  result row, so we call `refresh(flush = true)` — this flushes the pending insert
+            //  and then re-SELECTs the row to populate `_readValues` with all columns.
+            creditCard.refresh(flush = true)
+
+            assertEquals(10000uL, creditCard.spendingLimit)
+        }
+    }
+
+    @Test
+    fun testEntityIdParam() {
+        withTables(CreditCards) {
+            val newCard = CreditCard.new {
+                number = "0000111122223333"
+                spendingLimit = 10000uL
+            }
+            // It's also needed because of sync `new()`
+            flushCache()
+
+            val conditionalId = Case()
+                .When(CreditCards.spendingLimit less 500uL, CreditCards.id)
+                .Else(idParam(newCard.id, CreditCards.id))
+            assertEquals(newCard.id, CreditCards.select(conditionalId).single()[conditionalId])
+            assertEquals(
+                10000uL,
+                CreditCards.select(CreditCards.spendingLimit)
+                    .where { CreditCards.id eq idParam(newCard.id, CreditCards.id) }
+                    .single()[CreditCards.spendingLimit]
+            )
+        }
+    }
+
+    object Countries : IdTable<String>("Countries") {
+        override val id = varchar("id", 3).uniqueIndex().entityId()
+        var name = text("name")
+    }
+
+    class Country(id: EntityID<String>) : R2dbcEntity<String>(id) {
+        var name by Countries.name
+        val dishes by Dish referencedOnSuspend Dishes.country
+
+        companion object : R2dbcEntityClass<String, Country>(Countries)
+    }
+
+    object Dishes : IntIdTable("Dishes") {
+        var name = text("name")
+        val country = reference("country_id", Countries)
+    }
+
+    class Dish(id: EntityID<Int>) : IntR2dbcEntity(id) {
+        var name by Dishes.name
+        val country by Country referencedOnSuspend Dishes.country
+
+        companion object : IntR2dbcEntityClass<Dish>(Dishes)
+    }
+
+    @Test
+    fun testEagerLoadingWithStringParentId() {
+        withTables(Countries, Dishes, configure = { keepLoadedReferencesOutOfTransaction = true }) {
+            val lebanonId = Countries.insertAndGetId {
+                it[id] = "LB"
+                it[name] = "Lebanon"
+            }
+            val lebanon = Country.findById(lebanonId)!!
+
+            Dish.new {
+                name = "Kebbeh"
+                country set lebanon
+            }
+
+            Dish.new {
+                name = "Mjaddara"
+                country set lebanon
+            }
+
+            Dish.new {
+                name = "Fatteh"
+                country set lebanon
+            }
+
+            debug = true
+
+            Country.all().with(Country::dishes)
+
+            statementStats
+                .filterKeys { it.startsWith("SELECT ") }
+                .forEach { (_, stats) ->
+                    val (count, _) = stats
+                    assertEquals(1, count)
+                }
+
+            debug = false
+        }
+    }
+
+    object Customers : IntIdTable("Customers") {
+        val emailAddress = varchar("emailAddress", 30).uniqueIndex()
+        val fullName = text("fullName")
+    }
+
+    class Customer(id: EntityID<Int>) : IntR2dbcEntity(id) {
+        var emailAddress by Customers.emailAddress
+        var name by Customers.fullName
+
+        val orders by Order referrersOnSuspend Orders.customer
+
+        companion object : IntR2dbcEntityClass<Customer>(Customers)
+    }
+
+    object Orders : IntIdTable("Orders") {
+        var orderName = text("orderName")
+        val customer = reference("customer", Customers.emailAddress)
+    }
+
+    class Order(id: EntityID<Int>) : IntR2dbcEntity(id) {
+        var name by Orders.orderName
+        val customer by Customer referencedOnSuspend Orders.customer
+
+        companion object : IntR2dbcEntityClass<Order>(Orders)
+    }
+
+    @Test
+    fun testEagerLoadingWithReferenceDifferentFromParentId() {
+        withTables(Customers, Orders, configure = { keepLoadedReferencesOutOfTransaction = true }) {
+            val customer1 = Customer.new {
+                emailAddress = "customer1@testing.com"
+                name = "Customer1"
+            }
+
+            val order1 = Order.new {
+                name = "Order1"
+                customer set customer1
+            }
+
+            val order2 = Order.new {
+                name = "Order2"
+                customer set customer1
+            }
+
+            Customer.all().with(Customer::orders)
+
+            val cache = this.entityCache
+
+            assertEquals(true, cache.getReferrers<Order>(customer1.id, Orders.customer)?.toList()?.contains(order1))
+            assertEquals(true, cache.getReferrers<Order>(customer1.id, Orders.customer)?.toList()?.contains(order2))
+        }
+    }
+
+    object TestTable : IntIdTable("TestTable") {
+        val value = integer("value")
+    }
+
+    class TestEntityA(id: EntityID<Int>) : IntR2dbcEntity(id) {
+        var value by TestTable.value
+
+        companion object : IntR2dbcEntityClass<TestEntityA>(TestTable)
+    }
+
+    class TestEntityB(id: EntityID<Int>) : IntR2dbcEntity(id) {
+        var value by TestTable.value
+
+        companion object : IntR2dbcEntityClass<TestEntityB>(TestTable)
+    }
+
+    @Test
+    fun testDifferentEntitiesMappedToTheSameTable() {
+        withTables(TestTable) {
+            val entityA = TestEntityA.new {
+                value = 1
+            }
+            val entityB = TestEntityB.new {
+                value = 2
+            }
+
+            flushCache()
+
+            entityA.value = 3
+            entityB.value = 4
+
+            flushCache()
         }
     }
 }

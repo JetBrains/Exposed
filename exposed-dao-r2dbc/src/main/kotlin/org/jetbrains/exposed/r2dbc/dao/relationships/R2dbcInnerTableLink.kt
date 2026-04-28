@@ -82,8 +82,8 @@ class R2dbcInnerTableLink<SID : Any, Source : R2dbcEntity<SID>, ID : Any, Target
 
 @Suppress("UNCHECKED_CAST")
 class R2dbcInnerTableLinkAccessor<SID : Any, Source : R2dbcEntity<SID>, ID : Any, Target : R2dbcEntity<ID>>(
-    private val link: R2dbcInnerTableLink<SID, Source, ID, Target>,
-    private val entity: Source
+    val link: R2dbcInnerTableLink<SID, Source, ID, Target>,
+    val entity: Source
 ) {
     operator fun getValue(thisRef: Source, property: KProperty<*>): R2dbcInnerTableLinkAccessor<SID, Source, ID, Target> = this
 

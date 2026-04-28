@@ -3,6 +3,7 @@ package org.jetbrains.exposed.r2dbc.dao.relationships
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.r2dbc.dao.R2dbcEntity
 import org.jetbrains.exposed.r2dbc.dao.R2dbcEntityClass
+import org.jetbrains.exposed.r2dbc.dao.entityCache
 import org.jetbrains.exposed.r2dbc.dao.flushCache
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.EntityIDColumnType
@@ -11,6 +12,7 @@ import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.r2dbc.LazySizedIterable
 import org.jetbrains.exposed.v1.r2dbc.SizedCollection
 import org.jetbrains.exposed.v1.r2dbc.SizedIterable
+import org.jetbrains.exposed.v1.r2dbc.select
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
@@ -56,15 +58,35 @@ private suspend fun <ID : Any> List<R2dbcEntity<ID>>.preloadRelations(
     if (!nodesVisited.add(first.klass)) return
 
     val directRelations = filterRelationsForEntity(first, relations)
+    val loadedByRelation = mutableListOf<R2dbcEntity<*>>()
+
     directRelations.forEach { prop ->
-        when (val refObject = getReferenceObjectFromDelegatedProperty(first, prop)) {
-            is SuspendAccessor<*, *, *> -> preloadReference(refObject as SuspendAccessor<Any, R2dbcEntity<Any>, Any>)
+        val loaded: List<R2dbcEntity<*>> = when (val refObject = getReferenceObjectFromDelegatedProperty(first, prop)) {
+            is SuspendAccessor<*, *, *> ->
+                preloadReference(refObject as SuspendAccessor<Any, R2dbcEntity<Any>, Any>)
             is OptionalSuspendAccessor<*, *, *> ->
                 preloadOptionalReference(refObject as OptionalSuspendAccessor<Any, R2dbcEntity<Any>, Any>)
-            else -> {
-                // TODO: extend preloading to cover Referrers / BackReference / OptionalBackReference
-                //  / InnerTableLink delegates, like in JDBC's preloadRelations.
-            }
+            is R2dbcReferrers<*, *, *, *, *> ->
+                preloadReferrers(refObject as R2dbcReferrers<ID, R2dbcEntity<ID>, Any, R2dbcEntity<Any>, Any>)
+            is R2dbcInnerTableLinkAccessor<*, *, *, *> ->
+                preloadInnerTableLink(refObject as R2dbcInnerTableLinkAccessor<ID, R2dbcEntity<ID>, Any, R2dbcEntity<Any>>)
+            is R2dbcBackReference<*, *, *, *, *> ->
+                preloadReferrers(refObject.delegate as R2dbcReferrers<ID, R2dbcEntity<ID>, Any, R2dbcEntity<Any>, Any>)
+            is R2dbcOptionalBackReference<*, *, *, *, *> ->
+                preloadReferrers(refObject.delegate as R2dbcReferrers<ID, R2dbcEntity<ID>, Any, R2dbcEntity<Any>, Any>)
+            else -> emptyList()
+        }
+        loadedByRelation += loaded
+    }
+
+    // Mirrors JDBC's recursive step in `preloadRelations`.
+    if (directRelations.isNotEmpty() && relations.size != directRelations.size) {
+        val remainingRelations = (relations.toList() - directRelations.toSet()).toTypedArray()
+        loadedByRelation.groupBy { it::class }.forEach { (_, entities) ->
+            (entities as List<R2dbcEntity<Any>>).preloadRelations(
+                relations = remainingRelations,
+                nodesVisited = nodesVisited
+            )
         }
     }
 }
@@ -77,15 +99,15 @@ private suspend fun <ID : Any> List<R2dbcEntity<ID>>.preloadRelations(
 @Suppress("UNCHECKED_CAST")
 private suspend fun <ID : Any> List<R2dbcEntity<ID>>.preloadReference(
     accessor: SuspendAccessor<Any, R2dbcEntity<Any>, Any>
-) {
+): List<R2dbcEntity<*>> {
     val reference = accessor.reference
     val factory = accessor.factory
     val refIds = mapNotNull { entity -> entity.lookupRefValue(reference) }
-    if (refIds.isEmpty()) return
+    if (refIds.isEmpty()) return emptyList()
 
-    val referee = reference.referee ?: return
+    val referee = reference.referee ?: return emptyList()
     val condition = buildInListCondition(referee, refIds.distinct())
-    factory.find { condition }.toList()
+    return factory.find { condition }.toList()
 }
 
 /**
@@ -94,15 +116,121 @@ private suspend fun <ID : Any> List<R2dbcEntity<ID>>.preloadReference(
 @Suppress("UNCHECKED_CAST")
 private suspend fun <ID : Any> List<R2dbcEntity<ID>>.preloadOptionalReference(
     accessor: OptionalSuspendAccessor<Any, R2dbcEntity<Any>, Any>
-) {
+): List<R2dbcEntity<*>> {
     val reference = accessor.reference as Column<Any?>
     val factory = accessor.factory
     val refIds = mapNotNull { entity -> entity.lookupRefValue(reference) }
-    if (refIds.isEmpty()) return
+    if (refIds.isEmpty()) return emptyList()
 
-    val referee = reference.referee ?: return
+    val referee = reference.referee ?: return emptyList()
     val condition = buildInListCondition(referee, refIds.distinct())
-    factory.find { condition }.toList()
+    return factory.find { condition }.toList()
+}
+
+/**
+ * Bulk-loads child entities for a one-to-many relationship (`R2dbcReferrers`-backed property),
+ * for every parent in the receiver list. Children are grouped by their reference column value
+ * and inserted into the entity cache's referrers slot — so subsequent calls to the parent's
+ * accessor (`parent.children()`) hit the cache without issuing per-parent queries.
+ *
+ * Mirrors JDBC's `warmUpReferences` for the simple `EntityIDColumnType` case.
+ */
+private suspend fun <ID : Any> List<R2dbcEntity<ID>>.preloadReferrers(
+    referrers: R2dbcReferrers<ID, R2dbcEntity<ID>, Any, R2dbcEntity<Any>, Any>
+): List<R2dbcEntity<*>> {
+    val refColumn = referrers.reference
+    val factory = referrers.factory
+
+    val referee = refColumn.referee ?: return emptyList()
+
+    val parentMappings: List<Pair<EntityID<*>, Any>> = mapNotNull { entity ->
+        if (entity.id._value == null) return@mapNotNull null
+        val refereeValue = entity.lookupRefValue(referee) ?: return@mapNotNull null
+        entity.id to refereeValue
+    }
+    if (parentMappings.isEmpty()) return emptyList()
+
+    val cache = TransactionManager.current().entityCache
+
+    val toLoadMappings = parentMappings.filter { (parentId, _) ->
+        cache.getReferrers<R2dbcEntity<Any>>(parentId, refColumn) == null
+    }
+
+    if (toLoadMappings.isEmpty()) {
+        // Already cached for every parent — return the union of cached children so
+        // transitive preloading of remaining relations still has entities to recurse on.
+        return parentMappings.flatMap { (parentId, _) ->
+            cache.getReferrers<R2dbcEntity<Any>>(parentId, refColumn)?.toList().orEmpty()
+        }
+    }
+
+    val refereeValuesToLoad = toLoadMappings.map { it.second }.distinct()
+    val condition = buildInListCondition(refColumn, refereeValuesToLoad)
+    val loadedChildren = factory.find { condition }.toList()
+
+    val grouped: Map<Any, List<R2dbcEntity<Any>>> = loadedChildren.groupBy { child ->
+        @Suppress("UNCHECKED_CAST")
+        child.lookupRefValue(refColumn as Column<Any?>) as Any
+    }
+
+    parentMappings.forEach { (parentId, refereeValue) ->
+        cache.getOrPutReferrers(refColumn, parentId) {
+            // NOTE: we deliberately use `SizedCollection(emptyList())` rather than `emptySized()`
+            // for parents with no children. R2DBC's `EmptySizedIterable.collect` throws
+            // UnsupportedOperationException, which would propagate when the cached value is
+            // later read via `.toList()` (e.g. by transitive preload or by the user).
+            SizedCollection(grouped[refereeValue] ?: emptyList())
+        }
+    }
+
+    return loadedChildren
+}
+
+private suspend fun <ID : Any> List<R2dbcEntity<ID>>.preloadInnerTableLink(
+    accessor: R2dbcInnerTableLinkAccessor<ID, R2dbcEntity<ID>, Any, R2dbcEntity<Any>>
+): List<R2dbcEntity<*>> {
+    val link = accessor.link
+    val sourceColumn = link.sourceColumn
+    val target = link.target
+
+    val parentIds = mapNotNull { entity -> entity.id._value?.let { entity.id } }
+    if (parentIds.isEmpty()) return emptyList()
+
+    val distinctParentIds = parentIds.distinct()
+    val cache = TransactionManager.current().entityCache
+
+    val toLoad = distinctParentIds.filter { id ->
+        cache.getReferrers<R2dbcEntity<Any>>(id, sourceColumn) == null
+    }
+
+    if (toLoad.isEmpty()) {
+        return distinctParentIds.flatMap { id ->
+            cache.getReferrers<R2dbcEntity<Any>>(id, sourceColumn)?.toList().orEmpty()
+        }
+    }
+
+    val (columns, entityTables) = link.columnsAndTables
+
+    val rows = entityTables.select(columns).where { sourceColumn inList toLoad }
+        .toList()
+
+    val pairs: List<Pair<EntityID<ID>, R2dbcEntity<Any>>> = rows.map { row ->
+        @Suppress("UNCHECKED_CAST")
+        val parentId = row[sourceColumn] as EntityID<ID>
+        val targetEntity = target.wrapRow(row) as R2dbcEntity<Any>
+        parentId to targetEntity
+    }
+
+    val groupedBySourceId: Map<EntityID<ID>, List<R2dbcEntity<Any>>> = pairs
+        .groupBy({ it.first }, { it.second })
+
+    toLoad.forEach { id ->
+        cache.getOrPutReferrers(sourceColumn, id) {
+            SizedCollection(groupedBySourceId[id] ?: emptyList())
+        }
+    }
+
+    return pairs.map { it.second }.distinct()
 }
 
 private fun R2dbcEntity<*>.lookupRefValue(reference: Column<*>): Any? {

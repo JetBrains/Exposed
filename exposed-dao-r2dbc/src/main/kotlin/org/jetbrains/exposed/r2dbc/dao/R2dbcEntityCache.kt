@@ -132,6 +132,11 @@ class R2dbcEntityCache(private val transaction: R2dbcTransaction) {
         return columnReferrers.getOrPut(sourceId) { LazySizedCollection(refs()) } as SizedIterable<R>
     }
 
+    fun <R : R2dbcEntity<*>> getReferrers(sourceId: EntityID<*>, key: Column<*>): SizedIterable<R>? {
+        @Suppress("UNCHECKED_CAST")
+        return referrers[key]?.get(sourceId) as? SizedIterable<R>
+    }
+
     fun removeReferrer(column: Column<*>, entityId: EntityID<*>) {
         referrers[column]?.remove(entityId)
     }
