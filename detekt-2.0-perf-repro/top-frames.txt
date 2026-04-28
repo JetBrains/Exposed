@@ -1,0 +1,56 @@
+=== 1.23.8 CPU  (total=195649) ===
+   1.00%  io/github/detekt/metrics/LinesOfCodeKt$tokenSequence$1.create
+   0.93%  io/github/detekt/metrics/processors/LLOCVisitor.visitKtFile
+   0.24%  io/github/detekt/metrics/CognitiveComplexity$FunctionComplexity.visitNamedFunction
+   0.15%  org/jetbrains/kotlin/com/intellij/ide/plugins/RawPluginDescriptor.<init>
+   0.14%  io/gitlab/arturbosch/detekt/core/tooling/DefaultLifecycle._init_$lambda$1
+   0.13%  org/jetbrains/kotlin/com/intellij/extapi/psi/StubBasedPsiElementBase.getProject
+   0.12%  io/github/detekt/metrics/CyclomaticComplexity$Config.setNestingFunctions
+   0.11%  org/jetbrains/kotlin/com/intellij/lang/LanguageExtension.addExplicitExtension
+   0.10%  org/jetbrains/kotlin/com/intellij/lang/impl/PsiBuilderImpl.collapseLeaves
+   0.09%  org/jetbrains/kotlin/com/intellij/lang/impl/PsiBuilderImpl.getInternedText
+   0.08%  kotlin/text/DelimitedRangesSequence$iterator$1.calcNext
+   0.07%  io/gitlab/arturbosch/detekt/api/AnnotationExcluder.shouldExclude
+
+=== 2.0.0-alpha.3 CPU  (total=203161) ===
+   0.90%  com/intellij/openapi/vfs/impl/ArchiveHandler.getEntriesMap
+   0.86%  com/intellij/psi/AbstractFileViewProvider.getContents
+   0.18%  com/intellij/openapi/util/UserDataHolderBase.getUserData
+   0.10%  kotlin/reflect/jvm/internal/impl/resolve/scopes/LazyScopeAdapter.getWorkerScope
+   0.10%  com/intellij/psi/impl/source/tree/RecursiveTreeElementWalkingVisitor$ASTTreeGuide.getFirstChild
+   0.09%  com/intellij/lexer/FlexAdapter.getTokenEnd
+   0.09%  com/intellij/openapi/util/text/StringUtil.countNewLines
+   0.08%  kotlin/reflect/jvm/internal/impl/metadata/ProtoBuf$Property.initFields
+   0.08%  UseCountComputer::visit
+   0.07%  kotlin/sequences/DistinctIterator.<init>
+   0.06%  kotlin/reflect/jvm/internal/impl/serialization/deserialization/TypeDeserializer.access$computeClassifierDescriptor
+   0.05%  kotlin/reflect/jvm/ReflectJvmMapping.getJavaField
+
+=== 1.23.8 ALLOC  (total=135059) ===
+   4.73%  char[]
+   3.83%  org.jetbrains.kotlin.com.intellij.psi.tree.TokenSet[]
+   3.63%  org.jetbrains.kotlin.psi.KtArrayAccessExpression
+   3.18%  org.jetbrains.kotlin.psi.KtLambdaExpression
+   3.13%  jdk/internal/loader/BuiltinClassLoader.defineClass
+   2.78%  jdk.internal.math.FloatingDecimal$ASCIIToBinaryBuffer
+   1.00%  io/gitlab/arturbosch/detekt/rules/style/UseAnyOrNoneInsteadOfFind.<init>
+   0.95%  org/jetbrains/kotlin/psi/psiUtil/KtPsiUtilKt.getImportedSimpleNameByImportAlias
+   0.77%  org/jetbrains/kotlin/com/intellij/lang/impl/PsiBuilderImpl.rollbackTo
+   0.77%  io/gitlab/arturbosch/detekt/rules/style/UseIfInsteadOfWhen.<init>
+   0.74%  java/lang/reflect/Field.declaredAnnotations
+   0.72%  java/lang/invoke/MethodHandleNatives.linkMethodHandleConstant
+
+=== 2.0.0-alpha.3 ALLOC  (total=111847) ===
+   4.32%  char[]
+   0.87%  org/jetbrains/kotlin/psi/KtPsiUtil.safeName
+   0.84%  org/jetbrains/kotlin/psi/KtObjectDeclaration.accept
+   0.77%  org/jetbrains/kotlin/psi/typeRefHelpers/TypeRefHelpersKt.getTypeReference
+   0.76%  org/jetbrains/kotlin/psi/psiUtil/KtPsiUtilKt.isPrivate
+   0.68%  org.jetbrains.kotlin.psi.KtParameterList
+   0.68%  org.jetbrains.kotlin.kdoc.parser.KDocParser
+   0.48%  java/nio/file/Files.walkFileTree
+   0.45%  jdk/internal/module/Modules.addOpensToAllUnnamed
+   0.40%  java/util/regex/Pattern.createGroup
+   0.39%  java/util/Spliterator$OfInt.forEachRemaining
+   0.29%  com.intellij.openapi.project.ProjectLocator$Companion$withPreferredProject$1
+
