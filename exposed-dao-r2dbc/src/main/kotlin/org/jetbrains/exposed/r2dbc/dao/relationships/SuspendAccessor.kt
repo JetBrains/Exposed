@@ -1,19 +1,21 @@
 package org.jetbrains.exposed.r2dbc.dao.relationships
 
+import kotlinx.coroutines.flow.singleOrNull
 import org.jetbrains.exposed.r2dbc.dao.R2dbcEntity
 import org.jetbrains.exposed.r2dbc.dao.R2dbcEntityClass
 import org.jetbrains.exposed.r2dbc.dao.entityCache
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import kotlin.collections.get
 import kotlin.reflect.KProperty
 
 class SuspendAccessor<ID : Any, Parent : R2dbcEntity<ID>, REF : Any>(
-    private val reference: Column<REF>,
-    private val factory: R2dbcEntityClass<ID, @UnsafeVariance Parent>,
-    private val entity: R2dbcEntity<*>
+    internal val reference: Column<REF>,
+    internal val factory: R2dbcEntityClass<ID, @UnsafeVariance Parent>,
+    internal val entity: R2dbcEntity<*>
 ) {
     /**
      * getValue operator - returns this accessor which has invoke() and set operations.
@@ -73,16 +75,39 @@ class SuspendAccessor<ID : Any, Parent : R2dbcEntity<ID>, REF : Any>(
     }
 
     suspend operator fun invoke(): Parent {
-        @Suppress("ForbiddenComment")
-        // TODO: Implement reference loading similar to OptionalSuspendAccessor
-        TODO("Not yet implemented")
+        if (entity.hasInReferenceCache(reference)) {
+            return entity.getReferenceFromCache(reference)
+        }
+
+        // TODO incapsulate this logic inside entity to avoid checking for different fields outside.
+        @Suppress("UNCHECKED_CAST")
+        val refValue: REF = (entity.writeValues[reference as Column<Any?>] as? REF)
+            ?: (entity._readValues?.let { row -> row[reference] } as? REF)
+            ?: error("Reference column ${reference.name} has no value for entity ${entity.id}")
+
+        val parentEntity = when {
+            reference.referee == factory.table.id -> {
+                @Suppress("UNCHECKED_CAST")
+                factory.findById(refValue as EntityID<ID>)
+            }
+            reference.referee?.table == factory.table -> {
+                @Suppress("UNCHECKED_CAST")
+                val refereeColumn = reference.referee!! as Column<Any?>
+                factory.find { refereeColumn eq refValue }.singleOrNull()
+            }
+            else -> error("Reference column ${reference.name} does not point to any column in ${factory.table.tableName}")
+        } ?: error("Referenced entity not found for column ${reference.name} with value $refValue")
+
+        entity.storeReferenceInCache(reference, parentEntity)
+
+        return parentEntity
     }
 }
 
 class OptionalSuspendAccessor<ID : Any, Parent : R2dbcEntity<ID>, REF : Any>(
-    private val reference: Column<REF?>,
-    private val factory: R2dbcEntityClass<ID, @UnsafeVariance Parent>,
-    private val entity: R2dbcEntity<*>
+    internal val reference: Column<REF?>,
+    internal val factory: R2dbcEntityClass<ID, @UnsafeVariance Parent>,
+    internal val entity: R2dbcEntity<*>
 ) {
     operator fun getValue(thisRef: Any?, property: KProperty<*>): OptionalSuspendAccessor<ID, Parent, REF> {
         return this
@@ -147,13 +172,19 @@ class OptionalSuspendAccessor<ID : Any, Parent : R2dbcEntity<ID>, REF : Any>(
             return null
         }
 
-        @Suppress("UNCHECKED_CAST")
-        val parentId = when {
-            refValue is EntityID<*> && reference.referee == factory.table.id -> refValue as EntityID<ID>
-            else -> error("Reference column ${reference.name} does not point to ${factory.table.id}")
+        val parentEntity = when {
+            reference.referee == factory.table.id -> {
+                @Suppress("UNCHECKED_CAST")
+                factory.findById(refValue as EntityID<ID>)
+            }
+            reference.referee?.table == factory.table -> {
+                @Suppress("UNCHECKED_CAST")
+                val refereeColumn = reference.referee!! as Column<Any?>
+                factory.find { refereeColumn eq refValue }.singleOrNull()
+            }
+            else -> error("Reference column ${reference.name} does not point to any column in ${factory.table.tableName}")
         }
 
-        val parentEntity = factory.findById(parentId)
         entity.storeReferenceInCache(reference, parentEntity)
 
         return parentEntity

@@ -5,9 +5,22 @@ import org.jetbrains.exposed.v1.core.Key
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.statements.*
 import org.jetbrains.exposed.v1.core.targetTables
+import org.jetbrains.exposed.v1.core.transactions.transactionScope
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.statements.GlobalSuspendStatementInterceptor
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcPreparedStatementApi
+
+private var isExecutedWithinEntityLifecycle by transactionScope { false }
+
+internal suspend fun <T> executeAsPartOfEntityLifecycle(body: suspend () -> T): T {
+    val currentExecutionState = isExecutedWithinEntityLifecycle
+    return try {
+        isExecutedWithinEntityLifecycle = true
+        body()
+    } finally {
+        isExecutedWithinEntityLifecycle = currentExecutionState
+    }
+}
 
 class R2dbcEntityLifecycleInterceptor : GlobalSuspendStatementInterceptor {
 
@@ -31,11 +44,21 @@ class R2dbcEntityLifecycleInterceptor : GlobalSuspendStatementInterceptor {
             is DeleteStatement -> {
                 transaction.flushCache()
                 transaction.entityCache.removeTablesReferrers(statement.targetsSet.targetTables().filterIsInstance<IdTable<*>>())
+                if (!isExecutedWithinEntityLifecycle) {
+                    statement.targetsSet.targetTables().filterIsInstance<IdTable<*>>().forEach {
+                        transaction.entityCache.data[it]?.clear()
+                    }
+                }
             }
 
             is UpsertStatement<*>, is BatchUpsertStatement -> {
                 transaction.flushCache()
                 transaction.entityCache.removeTablesReferrers(statement.targets.filterIsInstance<IdTable<*>>())
+                if (!isExecutedWithinEntityLifecycle) {
+                    statement.targets.filterIsInstance<IdTable<*>>().forEach {
+                        transaction.entityCache.data[it]?.clear()
+                    }
+                }
             }
 
             is InsertStatement<*> -> {
@@ -48,6 +71,11 @@ class R2dbcEntityLifecycleInterceptor : GlobalSuspendStatementInterceptor {
             is UpdateStatement -> {
                 transaction.flushCache()
                 transaction.entityCache.removeTablesReferrers(statement.targetsSet.targetTables().filterIsInstance<IdTable<*>>())
+                if (!isExecutedWithinEntityLifecycle) {
+                    statement.targetsSet.targetTables().filterIsInstance<IdTable<*>>().forEach {
+                        transaction.entityCache.data[it]?.clear()
+                    }
+                }
             }
 
             else -> {
@@ -101,12 +129,4 @@ class R2dbcEntityLifecycleInterceptor : GlobalSuspendStatementInterceptor {
         val tables = query.targets.filterIsInstance(IdTable::class.java).toSet()
         entityCache.flush(tables)
     }
-}
-
-// Extension functions for R2dbcTransaction
-suspend fun R2dbcTransaction.flushCache(): List<R2dbcEntity<*>> {
-    entityCache.flush()
-    @Suppress("ForbiddenComment")
-    // TODO: Return list of created entities when entity change tracking is implemented
-    return emptyList()
 }
