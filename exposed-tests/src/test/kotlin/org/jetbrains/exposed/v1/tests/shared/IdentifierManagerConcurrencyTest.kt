@@ -2,6 +2,8 @@ package org.jetbrains.exposed.v1.tests.shared
 
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.Executors
@@ -23,6 +25,7 @@ import kotlin.test.assertTrue
  * threads (DataLoader batches, async statement preparation) that don't own the current
  * transaction thread-local.
  */
+@Tag(MISSING_R2DBC_TEST)
 class IdentifierManagerConcurrencyTest : DatabaseTestsBase() {
 
     @Test
