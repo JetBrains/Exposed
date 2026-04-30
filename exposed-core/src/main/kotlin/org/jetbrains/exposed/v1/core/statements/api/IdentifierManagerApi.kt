@@ -180,7 +180,19 @@ abstract class IdentifierManagerApi {
     private fun quote(identity: String) = quotedIdentifiersCache.getOrPut(identity) { "$quoteString$identity$quoteString".trim() }
 }
 
-private class IdentifiersCache<V : Any>(initialCapacity: Int = 100, private val cacheSize: Int = 1000) :
-    java.util.LinkedHashMap<String, V>(initialCapacity) {
-    override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, V>?): Boolean = size >= cacheSize
+private class IdentifiersCache<V : Any>(initialCapacity: Int = 100, private val cacheSize: Int = 1000) {
+    // A single IdentifierManagerApi instance is shared across every transaction on a Database, so
+    // these caches can be hit concurrently. A bare LinkedHashMap is not safe under concurrent
+    // structural modification (issue #1704: treeifyBin throws ClassCastException once a bucket
+    // grows past 8 entries). ConcurrentHashMap is not used because it would lose removeEldestEntry
+    // LRU eviction; instead wrap the map and make get-or-put atomic under the wrapper's monitor.
+    private val delegate: MutableMap<String, V> = java.util.Collections.synchronizedMap(
+        object : java.util.LinkedHashMap<String, V>(initialCapacity) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, V>?): Boolean = size >= cacheSize
+        }
+    )
+
+    inline fun getOrPut(key: String, defaultValue: () -> V): V = synchronized(delegate) {
+        delegate[key] ?: defaultValue().also { delegate[key] = it }
+    }
 }
