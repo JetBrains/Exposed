@@ -14,13 +14,9 @@ import org.jetbrains.exposed.r2dbc.dao.R2dbcEntityClass
 import org.jetbrains.exposed.r2dbc.dao.entityCache
 import org.jetbrains.exposed.r2dbc.dao.exceptions.R2dbcEntityNotFoundException
 import org.jetbrains.exposed.r2dbc.dao.flushCache
-import org.jetbrains.exposed.r2dbc.dao.relationships.backReferencedOnSuspend
 import org.jetbrains.exposed.r2dbc.dao.relationships.load
-import org.jetbrains.exposed.r2dbc.dao.relationships.optionalBackReferencedOnSuspend
 import org.jetbrains.exposed.r2dbc.dao.relationships.optionalReferencedOnSuspend
-import org.jetbrains.exposed.r2dbc.dao.relationships.optionalReferrersOnSuspend
 import org.jetbrains.exposed.r2dbc.dao.relationships.referencedOnSuspend
-import org.jetbrains.exposed.r2dbc.dao.relationships.referrersOnSuspend
 import org.jetbrains.exposed.r2dbc.dao.relationships.with
 import org.jetbrains.exposed.v1.core.Case
 import org.jetbrains.exposed.v1.core.Column
