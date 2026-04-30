@@ -16,8 +16,7 @@ class PostgresSpecificTypeMapper : TypeMapper {
     @Suppress("MagicNumber")
     override val priority = 0.2
 
-    override val dialects: List<KClass<out DatabaseDialect>>
-        get() = listOf(PostgreSQLDialect::class)
+    override val dialects: List<KClass<out DatabaseDialect>> = listOf(PostgreSQLDialect::class)
 
     @Suppress("UNCHECKED_CAST")
     override fun <T> getValue(
@@ -35,7 +34,7 @@ class PostgresSpecificTypeMapper : TypeMapper {
             // It will return always the string, event if it doesn't match `type`
             // But Json could be fetched even with BooleanColumnType that expects that String could be returned
             is Json -> PresentValueContainer(value.asString() as T)
-            else -> NoValueContainer()
+            else -> sharedNoValueContainer()
         }
     }
 

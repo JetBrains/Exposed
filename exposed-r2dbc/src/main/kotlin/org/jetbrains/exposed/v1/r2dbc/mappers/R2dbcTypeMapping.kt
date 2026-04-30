@@ -5,6 +5,8 @@ import io.r2dbc.spi.Statement
 import org.jetbrains.exposed.v1.core.IColumnType
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import java.util.ServiceLoader
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.reflect.KClass
 
 /**
  * Base representation of a type mapper that allows logic for setting a value in a [Statement] and getting a value
@@ -101,9 +103,17 @@ interface R2dbcRegistryTypeMapping : R2dbcTypeMapping {
 class R2dbcRegistryTypeMappingImpl : R2dbcRegistryTypeMapping {
     private val mappers: MutableList<TypeMapper> = mutableListOf()
 
+    private data class MatchingMappersCacheKey(
+        val dialectClass: KClass<out DatabaseDialect>,
+        val columnTypeClass: KClass<out IColumnType<*>>,
+    )
+
+    private val matchingMappersCache = ConcurrentHashMap<MatchingMappersCacheKey, List<TypeMapper>>()
+
     override fun register(mapper: TypeMapper): R2dbcRegistryTypeMappingImpl {
         mappers.add(mapper)
         mappers.sortBy { -it.priority }
+        matchingMappersCache.clear()
         return this
     }
 
@@ -143,8 +153,12 @@ class R2dbcRegistryTypeMappingImpl : R2dbcRegistryTypeMapping {
         dialect: DatabaseDialect,
         columnType: IColumnType<*>,
     ): List<TypeMapper> {
-        return mappers
-            .filter { mapper -> mapper.dialects.isEmpty() || mapper.dialects.any { it.isInstance(dialect) } }
-            .filter { mapper -> mapper.columnTypes.isEmpty() || mapper.columnTypes.any { it.isInstance(columnType) } }
+        val key = MatchingMappersCacheKey(dialect::class, columnType::class)
+        return matchingMappersCache.getOrPut(key) {
+            mappers.filter { mapper ->
+                (mapper.dialects.isEmpty() || mapper.dialects.any { it.isInstance(dialect) }) &&
+                    (mapper.columnTypes.isEmpty() || mapper.columnTypes.any { it.isInstance(columnType) })
+            }
+        }
     }
 }

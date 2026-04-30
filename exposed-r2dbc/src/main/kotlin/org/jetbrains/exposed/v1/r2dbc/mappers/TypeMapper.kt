@@ -88,6 +88,6 @@ interface TypeMapper {
         dialect: DatabaseDialect,
         columnType: IColumnType<*>,
     ): ValueContainer<T?> {
-        return NoValueContainer()
+        return sharedNoValueContainer()
     }
 }

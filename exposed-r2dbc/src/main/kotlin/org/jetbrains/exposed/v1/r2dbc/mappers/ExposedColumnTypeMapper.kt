@@ -13,11 +13,10 @@ class ExposedColumnTypeMapper : TypeMapper {
     @Suppress("MagicNumber")
     override val priority = 0.5
 
-    override val columnTypes: List<KClass<out IColumnType<*>>>
-        get() = listOf(
-            EntityIDColumnType::class,
-            ColumnWithTransform::class
-        )
+    override val columnTypes: List<KClass<out IColumnType<*>>> = listOf(
+        EntityIDColumnType::class,
+        ColumnWithTransform::class
+    )
 
     override fun setValue(
         statement: Statement,
