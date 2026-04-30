@@ -31,6 +31,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
+import java.util.Random
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -185,7 +186,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
             }
 
             val generatedIds = users.batchInsert(userNamesWithCityIds) { (userName, cityId) ->
-                this[users.id] = java.util.Random().nextInt().toString().take(6)
+                this[users.id] = Random().nextInt().toString().take(6)
                 this[users.name] = userName
                 this[users.cityId] = cityId.toInt()
             }

@@ -75,6 +75,21 @@ open class R2dbcEntity<ID : Any>(val id: EntityID<ID>) {
         }
     }
 
+    /**
+     * Property delegate for [EntityFieldWithTransform] — reads the raw column value via [Column.getValue]
+     * and runs it through the transformer's `wrap` function (with optional memoization).
+     */
+    operator fun <Unwrapped, Wrapped> EntityFieldWithTransform<Unwrapped, Wrapped>.getValue(o: R2dbcEntity<ID>, desc: KProperty<*>): Wrapped =
+        wrap(column.getValue(o, desc))
+
+    /**
+     * Property delegate for [EntityFieldWithTransform] — runs the supplied value through the transformer's
+     * `unwrap` function and writes it back to the original column via [Column.setValue].
+     */
+    operator fun <Unwrapped, Wrapped> EntityFieldWithTransform<Unwrapped, Wrapped>.setValue(o: R2dbcEntity<ID>, desc: KProperty<*>, value: Wrapped) {
+        column.setValue(o, desc, unwrap(value))
+    }
+
     @Suppress("UNCHECKED_CAST")
     internal fun writeIdColumnValue(table: IdTable<*>, value: EntityID<*>) {
         (value._value as? CompositeID)?.let { id ->
@@ -134,8 +149,11 @@ open class R2dbcEntity<ID : Any>(val id: EntityID<ID>) {
                 val _writeValues = writeValues.toMap()
                 storeWrittenValues()
 
-                @Suppress("ForbiddenComment")
-                // TODO: Implement entity change tracking when subscriptions are implemented
+                val transaction = TransactionManager.current()
+
+                @Suppress("UNCHECKED_CAST")
+                transaction.registerChange(klass as R2dbcEntityClass<*, R2dbcEntity<*>>, id, EntityChangeType.Updated)
+
                 executeAsPartOfEntityLifecycle {
                     table.update({ table.id eq id }) {
                         for ((c, v) in _writeValues) {
@@ -143,7 +161,6 @@ open class R2dbcEntity<ID : Any>(val id: EntityID<ID>) {
                         }
                     }
                 }
-                // TODO: Implement alertSubscribers when subscriptions are implemented
             } else {
                 batch.addBatch(this)
                 for ((c, v) in writeValues) {
@@ -160,10 +177,14 @@ open class R2dbcEntity<ID : Any>(val id: EntityID<ID>) {
     open suspend fun delete() {
         val table = klass.table
         val entityId = this.id
-        // TODO add register change like in JDBCHello.
         // TODO should we insert before and then remove
-        //  (extra requests, but probablyt correctness could be better)
+        //  (extra requests, but probably correctness could be better)
         if (!isNewEntity()) {
+            val transaction = TransactionManager.current()
+
+            @Suppress("UNCHECKED_CAST")
+            transaction.registerChange(klass as R2dbcEntityClass<*, R2dbcEntity<*>>, entityId, EntityChangeType.Removed)
+
             executeAsPartOfEntityLifecycle {
                 table.deleteWhere { table.id eq entityId }
             }
@@ -212,6 +233,8 @@ open class R2dbcEntity<ID : Any>(val id: EntityID<ID>) {
      *
      * Counterpart of JDBC's `via`. Named `viaSuspend` to match the rest of the R2DBC DAO API.
      */
+    // TODO ALIGN_WITH_JDBC: name diverges from JDBC's `via`; revisit if/when the relationship DSL
+    //  is unified across the JDBC and R2DBC DAO modules.
     infix fun <TID : Any, Target : R2dbcEntity<TID>> R2dbcEntityClass<TID, Target>.viaSuspend(
         table: Table
     ): R2dbcInnerTableLink<ID, R2dbcEntity<ID>, TID, Target> =

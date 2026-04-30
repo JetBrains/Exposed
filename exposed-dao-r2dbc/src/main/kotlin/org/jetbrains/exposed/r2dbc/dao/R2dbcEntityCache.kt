@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.r2dbc.dao
 
 import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.transactions.transactionScope
@@ -26,17 +27,14 @@ class R2dbcEntityCache(private val transaction: R2dbcTransaction) {
 
     internal val updates = ConcurrentHashMap<IdTable<*>, MutableSet<R2dbcEntity<*>>>()
 
-    internal val referrers = ConcurrentHashMap<Column<*>, MutableMap<EntityID<*>, Any>>()
+    internal val referrers = ConcurrentHashMap<Column<*>, MutableMap<EntityID<*>, SizedIterable<*>>>()
 
-    fun <ID : Any, T : R2dbcEntity<ID>> find(entityClass: R2dbcEntityClass<ID, T>, id: EntityID<ID>): T? {
-        // `id.value` can not be used, because it can't insert the entity in the case it's null
-        if (id._value == null) {
-            return inserts[entityClass.table]?.firstOrNull { it.id == id } as? T
-                ?: initializingEntities.firstOrNull { it.klass == entityClass && it.id == id } as? T
-        }
-
-        return getMap(entityClass)[id.value] as T?
-    }
+    fun <ID : Any, T : R2dbcEntity<ID>> find(f: R2dbcEntityClass<ID, T>, id: EntityID<ID>): T? =
+        // Mirrors JDBC's `EntityCache.find`. Unlike JDBC we can't dereference `id.value` blindly
+        // (it would throw on an un-flushed entity), so the first lookup is gated by `id._value`.
+        (id._value?.let { getMap(f)[it] as T? })
+            ?: inserts[f.table]?.firstOrNull { it.id == id } as? T
+            ?: initializingEntities.firstOrNull { it.klass == f && it.id == id } as? T
 
     private fun getMap(f: R2dbcEntityClass<*, *>): MutableMap<Any, R2dbcEntity<*>> = getMap(f.table)
 
@@ -59,19 +57,25 @@ class R2dbcEntityCache(private val transaction: R2dbcTransaction) {
             }
         }
 
-    fun <ID : Any> store(entity: R2dbcEntity<ID>) {
-        val map = data.getOrPut(entity.klass.table) { ConcurrentHashMap() }
-        map[entity.id.value] = entity
+    /** Stores the specified [R2dbcEntity] in this cache using its associated [R2dbcEntityClass] as the key. */
+    fun <ID : Any, T : R2dbcEntity<ID>> store(f: R2dbcEntityClass<ID, T>, o: T) {
+        getMap(f)[o.id.value] = o
     }
 
-    fun <ID : Any> remove(table: IdTable<ID>, entity: R2dbcEntity<ID>) {
-        // Same as in find(), 'entity.id.value' can not be used directly, because
-        // because the entity could not be fetched in this moment. Another option is to
-        // make 'remove()' suspend
-        if (entity.id._value != null) {
-            data[table]?.remove(entity.id._value)
-        }
-        inserts[table]?.remove(entity)
+    /**
+     * Stores the specified [R2dbcEntity] in this cache.
+     *
+     * The [R2dbcEntityClass] associated with this entity is inferred from its [R2dbcEntity.klass] property.
+     */
+    fun store(o: R2dbcEntity<*>) {
+        getMap(o.klass.table)[o.id.value] = o
+    }
+
+    fun <ID : Any, T : R2dbcEntity<ID>> remove(table: IdTable<ID>, o: T) {
+        // Mirrors JDBC's `EntityCache.remove`. Guard around `id._value`: in R2DBC an un-flushed
+        // entity's `id.value` would throw (no `invokeOnNoValue` flush), so just skip — the entity
+        // can't be in `data` yet.
+        o.id._value?.let { getMap(table).remove(it) }
     }
 
     fun <ID : Any> scheduleUpdate(klass: R2dbcEntityClass<ID, R2dbcEntity<ID>>, entity: R2dbcEntity<ID>) {
@@ -113,6 +117,7 @@ class R2dbcEntityCache(private val transaction: R2dbcTransaction) {
         inserts.getOrPut(klass.table) { LinkedIdentityHashSet() }.add(entity)
     }
 
+    // TODO parameters have other order rather tahn in jdbc alternative
     suspend fun <ID : Any, R : R2dbcEntity<ID>> getOrPutReferrers(
         column: Column<*>,
         sourceId: EntityID<*>,
@@ -130,6 +135,18 @@ class R2dbcEntityCache(private val transaction: R2dbcTransaction) {
 
     fun removeReferrer(column: Column<*>, entityId: EntityID<*>) {
         referrers[column]?.remove(entityId)
+    }
+
+    suspend fun clear(flush: Boolean = true) {
+        if (flush) flush()
+        data.clear()
+        inserts.clear()
+        updates.clear()
+        clearReferrersCache()
+    }
+
+    fun clearReferrersCache() {
+        referrers.clear()
     }
 
     suspend fun <ID : Any> updateEntities(table: IdTable<ID>) {
@@ -154,43 +171,48 @@ class R2dbcEntityCache(private val transaction: R2dbcTransaction) {
     }
 
     suspend fun flush(tables: Iterable<IdTable<*>>) {
-        if (flushingEntities) {
-            return
-        }
-
+        if (flushingEntities) return
         try {
             flushingEntities = true
-
             val insertedTables = inserts.keys
+
             val updateBeforeInsert = SchemaUtils.sortTablesByReferences(insertedTables).filterIsInstance<IdTable<*>>()
-            for (table in updateBeforeInsert) {
-                updateEntities(table)
-            }
+            updateBeforeInsert.forEach { updateEntities(it) }
 
-            val tablesToInsert = SchemaUtils.sortTablesByReferences(insertedTables).filterIsInstance<IdTable<*>>()
-            for (table in tablesToInsert) {
-                flushInserts(table)
-            }
+            SchemaUtils.sortTablesByReferences(tables).filterIsInstance<IdTable<*>>().forEach { flushInserts(it) }
 
-            val updateTheRestTables = tables.toSet() - updateBeforeInsert.toSet()
+            val updateTheRestTables = tables - updateBeforeInsert.toSet()
             for (t in updateTheRestTables) {
                 updateEntities(t)
             }
 
             if (insertedTables.isNotEmpty()) {
-                removeTablesReferrers(insertedTables)
+                removeTablesReferrers(insertedTables, true)
             }
         } finally {
             flushingEntities = false
         }
     }
 
-    fun removeTablesReferrers(tables: Collection<IdTable<*>>) {
-        val columnsToRemove = referrers.keys.filter { column ->
-            tables.any { table -> column.table == table }
+    internal fun removeTablesReferrers(tables: Collection<Table>, isInsert: Boolean) {
+        val insertedTablesSet = tables.toSet()
+        val columnsToInvalidate = tables.flatMapTo(hashSetOf()) { table ->
+            table.columns.mapNotNull { column -> column.takeIf { it.referee != null } }
         }
-        columnsToRemove.forEach { column ->
-            referrers.remove(column)
+
+        columnsToInvalidate.forEach {
+            referrers.remove(it)
+        }
+
+        referrers.keys.filter { refColumn ->
+            when {
+                isInsert -> false
+                refColumn.referee?.table in insertedTablesSet -> true
+                refColumn.table.columns.any { it.referee?.table in tables } -> true
+                else -> false
+            }
+        }.forEach {
+            referrers.remove(it)
         }
     }
 
@@ -243,11 +265,15 @@ class R2dbcEntityCache(private val transaction: R2dbcTransaction) {
             }
 
             store(entity)
+
+            transaction.registerChange(entity.klass, entity.id, EntityChangeType.Created)
         }
 
         for (entity in entitiesWithSelfRefs) {
             entity.flush()
         }
+
+        transaction.alertSubscribers()
     }
 }
 

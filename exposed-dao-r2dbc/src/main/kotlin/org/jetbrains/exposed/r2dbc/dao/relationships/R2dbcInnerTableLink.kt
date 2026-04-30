@@ -1,10 +1,12 @@
 package org.jetbrains.exposed.r2dbc.dao.relationships
 
 import kotlinx.coroutines.flow.toList
+import org.jetbrains.exposed.r2dbc.dao.EntityChangeType
 import org.jetbrains.exposed.r2dbc.dao.R2dbcEntity
 import org.jetbrains.exposed.r2dbc.dao.R2dbcEntityClass
 import org.jetbrains.exposed.r2dbc.dao.entityCache
 import org.jetbrains.exposed.r2dbc.dao.executeAsPartOfEntityLifecycle
+import org.jetbrains.exposed.r2dbc.dao.registerChange
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
@@ -124,6 +126,17 @@ class R2dbcInnerTableLinkAccessor<SID : Any, Source : R2dbcEntity<SID>, ID : Any
             ) { targetId ->
                 this[link.sourceColumn] = entity.id
                 this[link.targetColumn] = targetId
+            }
+        }
+
+        // current entity updated
+        tx.registerChange(entity.klass as R2dbcEntityClass<*, R2dbcEntity<*>>, entity.id, EntityChangeType.Updated)
+
+        // linked entities updated
+        val targetClass = (value.firstOrNull() ?: oldValue.firstOrNull())?.klass
+        if (targetClass != null) {
+            (existingIds + targetIds).forEach { targetId ->
+                tx.registerChange(targetClass as R2dbcEntityClass<*, R2dbcEntity<*>>, targetId, EntityChangeType.Updated)
             }
         }
     }

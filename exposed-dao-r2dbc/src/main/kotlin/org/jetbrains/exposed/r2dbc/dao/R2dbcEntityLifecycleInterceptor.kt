@@ -43,9 +43,9 @@ class R2dbcEntityLifecycleInterceptor : GlobalSuspendStatementInterceptor {
 
             is DeleteStatement -> {
                 transaction.flushCache()
-                transaction.entityCache.removeTablesReferrers(statement.targetsSet.targetTables().filterIsInstance<IdTable<*>>())
+                transaction.entityCache.removeTablesReferrers(statement.targetsSet.targetTables(), false)
                 if (!isExecutedWithinEntityLifecycle) {
-                    statement.targetsSet.targetTables().filterIsInstance<IdTable<*>>().forEach {
+                    statement.targets.filterIsInstance<IdTable<*>>().forEach {
                         transaction.entityCache.data[it]?.clear()
                     }
                 }
@@ -53,7 +53,7 @@ class R2dbcEntityLifecycleInterceptor : GlobalSuspendStatementInterceptor {
 
             is UpsertStatement<*>, is BatchUpsertStatement -> {
                 transaction.flushCache()
-                transaction.entityCache.removeTablesReferrers(statement.targets.filterIsInstance<IdTable<*>>())
+                transaction.entityCache.removeTablesReferrers(statement.targets, true)
                 if (!isExecutedWithinEntityLifecycle) {
                     statement.targets.filterIsInstance<IdTable<*>>().forEach {
                         transaction.entityCache.data[it]?.clear()
@@ -63,16 +63,17 @@ class R2dbcEntityLifecycleInterceptor : GlobalSuspendStatementInterceptor {
 
             is InsertStatement<*> -> {
                 transaction.flushCache()
-                if (statement.table is IdTable<*>) {
-                    transaction.entityCache.removeTablesReferrers(listOf(statement.table as IdTable<*>))
-                }
+                transaction.entityCache.removeTablesReferrers(listOf(statement.table), true)
+            }
+
+            is BatchUpdateStatement -> {
             }
 
             is UpdateStatement -> {
                 transaction.flushCache()
-                transaction.entityCache.removeTablesReferrers(statement.targetsSet.targetTables().filterIsInstance<IdTable<*>>())
+                transaction.entityCache.removeTablesReferrers(statement.targetsSet.targetTables(), false)
                 if (!isExecutedWithinEntityLifecycle) {
-                    statement.targetsSet.targetTables().filterIsInstance<IdTable<*>>().forEach {
+                    statement.targets.filterIsInstance<IdTable<*>>().forEach {
                         transaction.entityCache.data[it]?.clear()
                     }
                 }
@@ -84,28 +85,34 @@ class R2dbcEntityLifecycleInterceptor : GlobalSuspendStatementInterceptor {
         }
     }
 
-    @Suppress("ForbiddenComment")
     override suspend fun afterExecution(
         transaction: R2dbcTransaction,
         contexts: List<StatementContext>,
         executedStatement: R2dbcPreparedStatementApi
     ) {
-        // TODO: Implement alertSubscribers when subscriptions are implemented
+        if (!isExecutedWithinEntityLifecycle || contexts.first().statement !is InsertStatement<*>) {
+            transaction.alertSubscribers()
+        }
     }
 
-    @Suppress("ForbiddenComment")
     override suspend fun beforeCommit(transaction: R2dbcTransaction) {
         transaction.flushCache()
-        // TODO: Implement alertSubscribers and EntityCache.invalidateGlobalCaches when subscriptions are implemented
+        transaction.alertSubscribers()
+        transaction.flushCache()
+        // TODO ALIGN_WITH_JDBC: call `EntityCache.invalidateGlobalCaches(created + createdByHooks)`
+        //  once `ImmutableCachedEntityClass` exists in R2DBC.
     }
 
     override suspend fun beforeRollback(transaction: R2dbcTransaction) {
         val entityCache = transaction.entityCache
-        // Clear referrers cache
-        entityCache.referrers.clear()
+        entityCache.clearReferrersCache()
 
         // Clear writeValues and readValues for all entities before clearing the cache to prevent
-        // stale data from being carried over into a new transaction
+        // stale data from being carried over into a new transaction. Ideally, at this stage,
+        // values from writeValues should not have been transferred to readValues yet, but we clear
+        // both for reliability to ensure complete cleanup.
+        //
+        // TODO ALIGN_WITH_JDBC: when ImmutableCachedEntityClass is ported, preserve its _readValues here.
         entityCache.data.values.forEach { entityMap ->
             entityMap.values.forEach { entity ->
                 entity.writeValues.clear()
