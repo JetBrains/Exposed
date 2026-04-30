@@ -5,6 +5,7 @@ import org.jetbrains.exposed.r2dbc.dao.R2dbcEntity
 import org.jetbrains.exposed.r2dbc.dao.R2dbcEntityClass
 import org.jetbrains.exposed.r2dbc.dao.entityCache
 import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.EntityIDColumnType
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.eq
@@ -85,18 +86,8 @@ class SuspendAccessor<ID : Any, Parent : R2dbcEntity<ID>, REF : Any>(
             ?: (entity._readValues?.let { row -> row[reference] } as? REF)
             ?: error("Reference column ${reference.name} has no value for entity ${entity.id}")
 
-        val parentEntity = when {
-            reference.referee == factory.table.id -> {
-                @Suppress("UNCHECKED_CAST")
-                factory.findById(refValue as EntityID<ID>)
-            }
-            reference.referee?.table == factory.table -> {
-                @Suppress("UNCHECKED_CAST")
-                val refereeColumn = reference.referee!! as Column<Any?>
-                factory.find { refereeColumn eq refValue }.singleOrNull()
-            }
-            else -> error("Reference column ${reference.name} does not point to any column in ${factory.table.tableName}")
-        } ?: error("Referenced entity not found for column ${reference.name} with value $refValue")
+        val parentEntity = lookupParentEntity(factory, reference, refValue)
+            ?: error("Referenced entity not found for column ${reference.name} with value $refValue")
 
         entity.storeReferenceInCache(reference, parentEntity)
 
@@ -172,21 +163,41 @@ class OptionalSuspendAccessor<ID : Any, Parent : R2dbcEntity<ID>, REF : Any>(
             return null
         }
 
-        val parentEntity = when {
-            reference.referee == factory.table.id -> {
-                @Suppress("UNCHECKED_CAST")
-                factory.findById(refValue as EntityID<ID>)
-            }
-            reference.referee?.table == factory.table -> {
-                @Suppress("UNCHECKED_CAST")
-                val refereeColumn = reference.referee!! as Column<Any?>
-                factory.find { refereeColumn eq refValue }.singleOrNull()
-            }
-            else -> error("Reference column ${reference.name} does not point to any column in ${factory.table.tableName}")
-        }
+        val parentEntity = lookupParentEntity(factory, reference, refValue)
 
         entity.storeReferenceInCache(reference, parentEntity)
 
         return parentEntity
+    }
+}
+
+/**
+ * Shared lookup used by [SuspendAccessor.invoke] and [OptionalSuspendAccessor.invoke].
+ *
+ * Mirrors JDBC's `Reference.getValue` / `OptionalReference.getValue` logic from `Entity.kt`:
+ *
+ *   - When the child column already stores an `EntityID` AND the referee is the parent's id,
+ *     hit the cache-friendly `findById` path.
+ *   - Otherwise the child column stores a raw value (e.g. `Column<Long>` referencing
+ *     `Cities.id : Column<EntityID<Long>>`, or a column referencing a non-id unique column).
+ *     Unwrap the referee's column type — if it's `EntityIDColumnType<T>` we need to compare
+ *     against the inner `idColumn` (a raw `Column<T>`) so `eq refValue` type-checks.
+ */
+@Suppress("UNCHECKED_CAST")
+internal suspend fun <ID : Any, Parent : R2dbcEntity<ID>> lookupParentEntity(
+    factory: R2dbcEntityClass<ID, @UnsafeVariance Parent>,
+    reference: Column<*>,
+    refValue: Any
+): Parent? {
+    val referee = reference.referee
+        ?: error("Reference column ${reference.name} does not point to any column in ${factory.table.tableName}")
+
+    return when {
+        refValue is EntityID<*> && referee == factory.table.id ->
+            factory.findById(refValue as EntityID<ID>)
+        else -> {
+            val baseReferee = (referee.columnType as? EntityIDColumnType<Any>)?.idColumn ?: referee
+            factory.find { (baseReferee as Column<Any?>) eq refValue }.singleOrNull()
+        }
     }
 }

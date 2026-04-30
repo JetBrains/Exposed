@@ -29,6 +29,10 @@ class OptionalSuspendReference<ID : Any, Parent : R2dbcEntity<ID>, REF : Any>(
     }
 }
 
+// TODO ALIGN_WITH_JDBC: `referencedOnSuspend` / `optionalReferencedOnSuspend` diverge from JDBC's
+//  `referencedOn` / `optionalReferencedOn`. The suffix is intentional today (R2DBC returns a
+//  suspend accessor while JDBC returns an entity directly), but a unified DSL across modules
+//  would drop the suffix.
 infix fun <ID : Any, Parent : R2dbcEntity<ID>, REF : Any> R2dbcEntityClass<ID, Parent>.referencedOnSuspend(
     reference: Column<REF>
 ): SuspendReference<ID, Parent, REF> {
@@ -39,54 +43,4 @@ infix fun <ID : Any, Parent : R2dbcEntity<ID>, REF : Any> R2dbcEntityClass<ID, P
     reference: Column<REF?>
 ): OptionalSuspendReference<ID, Parent, REF> {
     return OptionalSuspendReference(reference, this)
-}
-
-fun <ParentID : Any, Parent : R2dbcEntity<ParentID>, ChildID : Any, Child : R2dbcEntity<ChildID>, REF> R2dbcEntityClass<ChildID, Child>.referrersOnSuspend(
-    reference: Column<REF>,
-    cache: Boolean = true
-): R2dbcReferrers<ParentID, Parent, ChildID, Child, REF> {
-    return R2dbcReferrers(reference, this, cache)
-}
-
-infix fun <ParentID : Any, Parent : R2dbcEntity<ParentID>, ChildID : Any, Child : R2dbcEntity<ChildID>, REF> R2dbcEntityClass<ChildID, Child>.referrersOnSuspend(
-    reference: Column<REF>
-): R2dbcReferrers<ParentID, Parent, ChildID, Child, REF> {
-    return referrersOnSuspend(reference, cache = true)
-}
-
-fun <ParentID : Any, Parent : R2dbcEntity<ParentID>, ChildID : Any, Child : R2dbcEntity<ChildID>, REF : Any>
-    R2dbcEntityClass<ChildID, Child>.optionalReferrersOnSuspend(
-        reference: Column<REF?>,
-        cache: Boolean = true
-    ): R2dbcReferrers<ParentID, Parent, ChildID, Child, REF?> {
-    return R2dbcReferrers(reference, this, cache)
-}
-
-infix fun <ParentID : Any, Parent : R2dbcEntity<ParentID>, ChildID : Any, Child : R2dbcEntity<ChildID>, REF : Any>
-    R2dbcEntityClass<ChildID, Child>.optionalReferrersOnSuspend(reference: Column<REF?>): R2dbcReferrers<ParentID, Parent, ChildID, Child, REF?> {
-    return optionalReferrersOnSuspend(reference, cache = true)
-}
-
-infix fun <ParentID : Any, Parent : R2dbcEntity<ParentID>, ChildID : Any, Child : R2dbcEntity<ChildID>, REF>
-    R2dbcEntityClass<ParentID, Parent>.backReferencedOnSuspend(reference: Column<REF>): R2dbcBackReference<ParentID, Parent, ChildID, Child, REF> {
-    return R2dbcBackReference(reference, this)
-}
-
-infix fun <ParentID : Any, Parent : R2dbcEntity<ParentID>, ChildID : Any, Child : R2dbcEntity<ChildID>, REF>
-    R2dbcEntityClass<ParentID, Parent>.optionalBackReferencedOnSuspend(reference: Column<REF?>): R2dbcOptionalBackReference<ParentID, Parent, ChildID, Child, REF> {
-    return R2dbcOptionalBackReference(reference, this)
-}
-
-/**
- * Overload for referencing a non-nullable column as an optional back reference.
- *
- * The child entity's referencing column is required (non-nullable) but, from the parent
- * side, the relationship is still optional: a child row may or may not exist. This mirrors
- * JDBC's `optionalBackReferencedOn(Column<REF>)` overload.
- */
-@Suppress("UNCHECKED_CAST")
-@JvmName("optionalBackReferencedOnSuspendNonNullable")
-infix fun <ParentID : Any, Parent : R2dbcEntity<ParentID>, ChildID : Any, Child : R2dbcEntity<ChildID>, REF : Any>
-    R2dbcEntityClass<ParentID, Parent>.optionalBackReferencedOnSuspend(reference: Column<REF>): R2dbcOptionalBackReference<ParentID, Parent, ChildID, Child, REF> {
-    return R2dbcOptionalBackReference(reference as Column<REF?>, this)
 }

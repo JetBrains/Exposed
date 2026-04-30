@@ -25,7 +25,13 @@ import kotlin.reflect.jvm.isAccessible
  *
  * Returns this [SizedIterable] to allow chaining; the loaded list is also pinned onto any
  * [LazySizedIterable] so subsequent iterations do not re-query the database.
+ *
+ * Note: R2DBC's [SizedIterable] extends `Flow<T>` (not `Iterable<T>` as in JDBC), so we provide
+ * a separate [Iterable.with] overload below — they cannot share one generic receiver.
  */
+// TODO ALIGN_WITH_JDBC: JDBC has a single `Iterable<T>.with` because its SizedIterable is also
+//  an Iterable. R2DBC has to expose two overloads (this one + the Iterable overload below). If
+//  R2DBC's SizedIterable ever stops being `Flow`-only, these can collapse into one.
 suspend fun <SRCID : Any, SRC : R2dbcEntity<SRCID>, REF : R2dbcEntity<*>, L : SizedIterable<SRC>> L.with(
     vararg relations: KProperty1<out REF, Any?>
 ): L {
@@ -41,15 +47,31 @@ suspend fun <SRCID : Any, SRC : R2dbcEntity<SRCID>, REF : R2dbcEntity<*>, L : Si
 }
 
 /**
+ * Eager-loads the specified [relations] for all entities in this in-memory [Iterable] (e.g. a
+ * plain `List<Entity>`). Mirrors JDBC's `Iterable.with`. This overload exists because R2DBC's
+ * [SizedIterable] is a `Flow`, not an `Iterable`, so the two receivers cannot be unified.
+ */
+suspend fun <SRCID : Any, SRC : R2dbcEntity<SRCID>, REF : R2dbcEntity<*>, L : Iterable<SRC>> L.with(
+    vararg relations: KProperty1<out REF, Any?>
+): L {
+    val asList = toList()
+    if (asList.any { it.isNewEntity() }) {
+        TransactionManager.current().flushCache()
+    }
+    asList.preloadRelations(*relations)
+    return this
+}
+
+/**
  * Eager-loads the specified [relations] for this entity. Mirrors JDBC's `Entity.load`.
  */
 suspend fun <SRCID : Any, SRC : R2dbcEntity<SRCID>> SRC.load(
     vararg relations: KProperty1<out R2dbcEntity<*>, Any?>
 ): SRC = apply {
-    SizedCollection(listOf(this)).with(*relations)
+    listOf(this).with(*relations)
 }
 
-@Suppress("UNCHECKED_CAST", "ForbiddenComment")
+@Suppress("UNCHECKED_CAST")
 private suspend fun <ID : Any> List<R2dbcEntity<ID>>.preloadRelations(
     vararg relations: KProperty1<out R2dbcEntity<*>, Any?>,
     nodesVisited: MutableSet<R2dbcEntityClass<*, *>> = mutableSetOf()
@@ -107,7 +129,19 @@ private suspend fun <ID : Any> List<R2dbcEntity<ID>>.preloadReference(
 
     val referee = reference.referee ?: return emptyList()
     val condition = buildInListCondition(referee, refIds.distinct())
-    return factory.find { condition }.toList()
+    val loadedParents = factory.find { condition }.toList()
+
+    // Mirrors JDBC's `storeReferenceCache`: pin the loaded parent on each child's per-entity
+    // reference cache so reads work after the transaction ends under
+    // `keepLoadedReferencesOutOfTransaction = true`.
+    val parentByKey = loadedParents.indexedByRefereeValue(referee)
+    forEach { child ->
+        val refValue = child.lookupRefValue(reference) ?: return@forEach
+        val parent = parentByKey[normalizeRefKey(refValue)] ?: return@forEach
+        child.storeReferenceInCache(reference, parent)
+    }
+
+    return loadedParents
 }
 
 /**
@@ -120,11 +154,39 @@ private suspend fun <ID : Any> List<R2dbcEntity<ID>>.preloadOptionalReference(
     val reference = accessor.reference as Column<Any?>
     val factory = accessor.factory
     val refIds = mapNotNull { entity -> entity.lookupRefValue(reference) }
-    if (refIds.isEmpty()) return emptyList()
 
     val referee = reference.referee ?: return emptyList()
-    val condition = buildInListCondition(referee, refIds.distinct())
-    return factory.find { condition }.toList()
+    val loadedParents = if (refIds.isEmpty()) {
+        emptyList()
+    } else {
+        val condition = buildInListCondition(referee, refIds.distinct())
+        factory.find { condition }.toList()
+    }
+
+    val parentByKey = loadedParents.indexedByRefereeValue(referee)
+    forEach { child ->
+        val refValue = child.lookupRefValue(reference)
+        if (refValue == null) {
+            child.storeReferenceInCache(reference, null)
+        } else {
+            parentByKey[normalizeRefKey(refValue)]?.let { parent ->
+                child.storeReferenceInCache(reference, parent)
+            }
+        }
+    }
+
+    return loadedParents
+}
+
+private fun normalizeRefKey(value: Any): Any = (value as? EntityID<*>)?.value ?: value
+
+private fun List<R2dbcEntity<*>>.indexedByRefereeValue(referee: Column<*>): Map<Any, R2dbcEntity<*>> {
+    val result = HashMap<Any, R2dbcEntity<*>>(size)
+    for (parent in this) {
+        val raw = parent.lookupRefValue(referee) ?: continue
+        result[normalizeRefKey(raw)] = parent
+    }
+    return result
 }
 
 /**
@@ -166,7 +228,13 @@ private suspend fun <ID : Any> List<R2dbcEntity<ID>>.preloadReferrers(
 
     val refereeValuesToLoad = toLoadMappings.map { it.second }.distinct()
     val condition = buildInListCondition(refColumn, refereeValuesToLoad)
-    val loadedChildren = factory.find { condition }.toList()
+    // Honour any `orderBy` configured on the Referrers delegate (e.g. `referrersOnSuspend X orderBy Y`)
+    // so the bulk-loaded list matches the order the user would see from a single-parent fetch.
+
+    @Suppress("SpreadOperator")
+    val loadedChildren = factory.find { condition }
+        .orderBy(*referrers.getOrderByExpressions())
+        .toList()
 
     val grouped: Map<Any, List<R2dbcEntity<Any>>> = loadedChildren.groupBy { child ->
         @Suppress("UNCHECKED_CAST")
@@ -181,6 +249,13 @@ private suspend fun <ID : Any> List<R2dbcEntity<ID>>.preloadReferrers(
             // later read via `.toList()` (e.g. by transitive preload or by the user).
             SizedCollection(grouped[refereeValue] ?: emptyList())
         }
+    }
+
+    val parentsById: Map<EntityID<*>, R2dbcEntity<ID>> = associateBy { it.id }
+    parentMappings.forEach { (parentId, refereeValue) ->
+        val parent = parentsById[parentId] ?: return@forEach
+        val children = SizedCollection(grouped[refereeValue] ?: emptyList())
+        parent.storeReferenceInCache(refColumn, children)
     }
 
     return loadedChildren
@@ -228,6 +303,12 @@ private suspend fun <ID : Any> List<R2dbcEntity<ID>>.preloadInnerTableLink(
         cache.getOrPutReferrers(sourceColumn, id) {
             SizedCollection(groupedBySourceId[id] ?: emptyList())
         }
+    }
+
+    val parentsById: Map<EntityID<ID>, R2dbcEntity<ID>> = associateBy { it.id }
+    distinctParentIds.forEach { id ->
+        val parent = parentsById[id] ?: return@forEach
+        parent.storeReferenceInCache(sourceColumn, SizedCollection(groupedBySourceId[id] ?: emptyList()))
     }
 
     return pairs.map { it.second }.distinct()
