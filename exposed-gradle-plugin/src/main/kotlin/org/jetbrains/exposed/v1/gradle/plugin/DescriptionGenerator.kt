@@ -56,21 +56,21 @@ internal fun String.statementToFileDescription(useUpperCase: Boolean): String {
         }
 
         // CREATE INDEX or CREATE ??? INDEX statements
-        Regex("^CREATE\\s+(\\w+\\s+)*INDEX\\s+").containsMatchIn(normalizedStatement.uppercase()) -> {
+        CREATE_INDEX_REGEX.containsMatchIn(normalizedStatement.uppercase()) -> {
             val indexInfo = normalizedStatement.extractIndexInfo(" INDEX ")
             "CREATE_INDEX_$indexInfo".inRequestedCase(useUpperCase)
-        }
-
-        // DROP TABLE statements
-        normalizedStatement.startsWith("DROP TABLE", ignoreCase = true) -> {
-            val tableName = normalizedStatement.extractNameAfter("DROP TABLE", """[ (]""")
-            "DROP_TABLE_$tableName".inRequestedCase(useUpperCase)
         }
 
         // DROP INDEX statements
         normalizedStatement.startsWith("DROP INDEX", ignoreCase = true) -> {
             val indexInfo = normalizedStatement.extractIndexInfo("DROP INDEX")
             "DROP_INDEX_$indexInfo".inRequestedCase(useUpperCase)
+        }
+
+        // DROP TABLE statements
+        normalizedStatement.startsWith("DROP TABLE", ignoreCase = true) -> {
+            val tableName = normalizedStatement.extractNameAfter("DROP TABLE", """[ (]""")
+            "DROP_TABLE_$tableName".inRequestedCase(useUpperCase)
         }
 
         else -> {
@@ -86,6 +86,8 @@ internal fun String.statementToFileDescription(useUpperCase: Boolean): String {
         }
     }
 }
+
+private val CREATE_INDEX_REGEX: Regex by lazy { Regex("^CREATE\\s+(\\w+\\s+)*INDEX\\s+") }
 
 private fun String.inRequestedCase(useUpperCase: Boolean): String = if (useUpperCase) uppercase() else lowercase()
 
@@ -143,12 +145,12 @@ private fun String.extractAnyTableNameOrNull(): String? {
     }
 
     // Common SQL keywords that are followed by a table name
-    val tableKeywords = listOf("TABLE", "FROM", "INTO", "JOIN")
+    val tableKeywordRegexes = listOf("TABLE", "FROM", "INTO", "JOIN")
+        .map { Regex("\\b$it\\b", RegexOption.IGNORE_CASE) }
 
-    for (keyword in tableKeywords) {
+    for (keywordRegex in tableKeywordRegexes) {
         // Look for the keyword with word boundaries
-        val regex = Regex("\\b$keyword\\b", RegexOption.IGNORE_CASE)
-        val match = regex.find(this)
+        val match = keywordRegex.find(this)
         if (match != null) {
             val afterKeyword = substring(match.range.last + 1).trim()
             val potentialTableName = afterKeyword.split(sqlDelimiter)[0].trim()

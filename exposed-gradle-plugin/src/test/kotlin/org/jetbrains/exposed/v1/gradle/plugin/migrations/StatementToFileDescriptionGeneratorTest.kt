@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 class StatementToFileDescriptionGeneratorTest {
 
     @Test
-    fun `test CREATE TABLE statements`() {
+    fun testCREATETABLEStatements() {
         // Simple CREATE TABLE
         Assertions.assertEquals(
             "CREATE_TABLE_USERS",
@@ -42,7 +42,7 @@ class StatementToFileDescriptionGeneratorTest {
     }
 
     @Test
-    fun `test ALTER TABLE statements`() {
+    fun testALTERTABLEStatements() {
         // ALTER TABLE with ADD COLUMN
         Assertions.assertEquals(
             "ALTER_TABLE_USERS_ADD_COLUMN_EMAIL",
@@ -93,7 +93,7 @@ class StatementToFileDescriptionGeneratorTest {
     }
 
     @Test
-    fun `test CREATE SEQUENCE statements`() {
+    fun testCREATESEQUENCEStatements() {
         // Simple CREATE SEQUENCE
         Assertions.assertEquals(
             "CREATE_SEQUENCE_USERS_ID_SEQ", "CREATE SEQUENCE users_id_seq".statementToFileDescription(true)
@@ -130,7 +130,7 @@ class StatementToFileDescriptionGeneratorTest {
     }
 
     @Test
-    fun `test CREATE INDEX statements`() {
+    fun testCREATEINDEXStatements() {
         // Simple CREATE INDEX
         Assertions.assertEquals(
             "CREATE_INDEX_IDX_USERS_EMAIL_ON_USERS",
@@ -167,7 +167,7 @@ class StatementToFileDescriptionGeneratorTest {
     }
 
     @Test
-    fun `test DROP TABLE statements`() {
+    fun testDROPTABLEStatements() {
         // Simple DROP TABLE
         Assertions.assertEquals(
             "DROP_TABLE_USERS", "DROP TABLE users".statementToFileDescription(true)
@@ -190,7 +190,7 @@ class StatementToFileDescriptionGeneratorTest {
     }
 
     @Test
-    fun `test DROP INDEX statements`() {
+    fun testDROPINDEXStatements() {
         // Simple DROP INDEX
         Assertions.assertEquals(
             "DROP_INDEX_IDX_USERS_EMAIL", "DROP INDEX idx_users_email".statementToFileDescription(true)
@@ -209,7 +209,7 @@ class StatementToFileDescriptionGeneratorTest {
     }
 
     @Test
-    fun `test complex SQL statements`() {
+    fun testComplexSQLStatements() {
         // Complex CREATE TABLE with multiple columns and constraints
         Assertions.assertEquals(
             "CREATE_TABLE_USERS",
@@ -275,7 +275,7 @@ class StatementToFileDescriptionGeneratorTest {
     }
 
     @Test
-    fun `test edge cases and special characters`() {
+    fun testEdgeCasesAndSpecialCharacters() {
         Assertions.assertEquals(
             "CREATE_TABLE_USERS",
             "  CREATE   TABLE   users   (id INT PRIMARY KEY, name VARCHAR(255))  ".statementToFileDescription(true)
@@ -313,7 +313,7 @@ class StatementToFileDescriptionGeneratorTest {
     }
 
     @Test
-    fun `test fallback for unknown statements`() {
+    fun testFallbackForUnknownStatements() {
         val customSql = "CUSTOM SQL STATEMENT"
         val result = customSql.statementToFileDescription(true)
         Assertions.assertEquals("CUSTOM_STATEMENT_${customSql.hashCode().toString().replace("-", "").take(8)}", result)

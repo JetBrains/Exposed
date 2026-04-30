@@ -22,7 +22,7 @@ class MigrationsExtensionTest {
     }
 
     @Test
-    fun `test default values`() {
+    fun testDefaultValues() {
         Assertions.assertEquals("V", extension.filePrefix.get())
         Assertions.assertEquals(VersionFormat.TIMESTAMP_ONLY, extension.fileVersionFormat.get())
         Assertions.assertEquals("__", extension.fileSeparator.get())
@@ -31,7 +31,7 @@ class MigrationsExtensionTest {
     }
 
     @Test
-    fun `test custom values`() {
+    fun testCustomValues() {
         extension.tablesPackage.set("com.example.tables")
         extension.fileDirectory.set(project.layout.projectDirectory.dir("custom/migrations"))
 

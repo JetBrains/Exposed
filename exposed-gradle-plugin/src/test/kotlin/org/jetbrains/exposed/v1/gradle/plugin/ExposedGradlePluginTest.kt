@@ -21,13 +21,13 @@ class ExposedGradlePluginTest {
     }
 
     @Test
-    fun `test plugin applied`() {
+    fun testPluginApplied() {
         // Verify that the plugin is applied
         assertTrue(project.plugins.hasPlugin("org.jetbrains.exposed.plugin"))
     }
 
     @Test
-    fun `test root extension registered`() {
+    fun testRootExtensionRegistered() {
         // Verify that the parent extension is registered
         val extension = project.extensions.findByName(ExposedExtension.NAME)
         assertNotNull(extension)
@@ -35,7 +35,7 @@ class ExposedGradlePluginTest {
     }
 
     @Test
-    fun `test nested extensions registered`() {
+    fun testNestedExtensionsRegistered() {
         // Verify that any children extensions are registered
         val nestedExtension = project.exposedExtensions.getByName(MigrationsExtension.NAME)
         assertNotNull(nestedExtension)
@@ -43,7 +43,7 @@ class ExposedGradlePluginTest {
     }
 
     @Test
-    fun `test all tasks registered`() {
+    fun testAllTasksRegistered() {
         // Verify that the generateMigrations task is registered
         val task = project.tasks.findByName(GENERATE_MIGRATIONS_TASK_NAME)
         assertNotNull(task)
@@ -52,7 +52,7 @@ class ExposedGradlePluginTest {
     }
 
     @Test
-    fun `test migrations task configuration with database properties`() {
+    fun testMigrationsTaskConfigurationWithDatabaseProperties() {
         val extension = project.exposedExtensions.getByType(MigrationsExtension::class.java)
 
         // Set custom values in the extension
@@ -96,7 +96,7 @@ class ExposedGradlePluginTest {
     }
 
     @Test
-    fun `test migrations task configuration with TestContainers`() {
+    fun testMigrationsTaskConfigurationWithTestContainers() {
         val extension = project.exposedExtensions.getByType(MigrationsExtension::class.java)
 
         // Set custom values in the extension

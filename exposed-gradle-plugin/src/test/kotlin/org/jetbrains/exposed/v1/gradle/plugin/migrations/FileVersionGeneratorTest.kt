@@ -41,7 +41,7 @@ class FileVersionGeneratorTest {
     }
 
     @Test
-    fun `test timestamp-only formats ignore existing files and args`() {
+    fun testTimestampOnlyFormatsIgnoreExistingFilesAndArgs() {
         val version1 = VersionFormat.TIMESTAMP_ONLY.nextVersion(testFilePath, testClock, filePrefix, fileSeparator).invoke(1)
         val match1 = versionTsPattern.matchEntire(version1)
         assertNotNull(match1)
@@ -54,7 +54,7 @@ class FileVersionGeneratorTest {
     }
 
     @Test
-    fun `test timestamp-with-major formats use existing files but ignores args`() {
+    fun testTimestampWithMajorFormatsUseExistingFilesButIgnoresArgs() {
         val version1 = VersionFormat.MAJOR_TIMESTAMP.nextVersion(testFilePath, testClock, filePrefix, fileSeparator).invoke(1)
         val match1 = versionMajorTsPattern.matchEntire(version1)
         assertNotNull(match1)
@@ -69,7 +69,7 @@ class FileVersionGeneratorTest {
     }
 
     @Test
-    fun `test major-minor format uses existing files and args`() {
+    fun testMajorMinorFormatsUseExistingFilesAndArgs() {
         val version = VersionFormat.MAJOR_MINOR.nextVersion(testFilePath, testClock, filePrefix, fileSeparator).invoke(1)
         val (major, minor) = version.substringAfter(filePrefix).substringBefore(fileSeparator).split('_')
         assertEquals(currentMajor + 1, major.toInt())
@@ -77,7 +77,7 @@ class FileVersionGeneratorTest {
     }
 
     @Test
-    fun `test major-minor format ignores existing timestamp files`() {
+    fun testMajorMinorFormatsIgnoreExistingTimestampFiles() {
         assertTrue { testMajorTsFile.delete() }
         assertTrue { testMajorMinorFile.delete() }
         assertTrue { testMajorFile.delete() }
@@ -90,14 +90,14 @@ class FileVersionGeneratorTest {
     }
 
     @Test
-    fun `test major-only format uses existing files but ignores args`() {
+    fun testMajorOnlyFormatsUseExistingFilesButIgnoresArgs() {
         val version = VersionFormat.MAJOR_ONLY.nextVersion(testFilePath, testClock, filePrefix, fileSeparator).invoke(1)
         val major = version.substringAfter(filePrefix).substringBefore(fileSeparator)
         assertEquals(currentMajor + 1, major.toInt())
     }
 
     @Test
-    fun `test major formats when directory is empty`() {
+    fun testMajorFormatsWhenDirectoryIsEmpty() {
         assertTrue { testTsFile.delete() }
         assertTrue { testMajorTsFile.delete() }
         assertTrue { testMajorMinorFile.delete() }
@@ -126,7 +126,7 @@ class FileVersionGeneratorTest {
     }
 
     @Test
-    fun `test correct format used even when directory uses other formats`() {
+    fun testCorrectFormatUsedEvenWhenDirectoryUsesOtherFormats() {
         assertTrue { testMajorMinorFile.delete() }
         // directory now only contains TS__ and #_TS__ and #__ formats
 

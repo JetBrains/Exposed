@@ -6,7 +6,7 @@ import kotlin.test.assertContains
 
 class ExposedPluginIntegrationTest : IntegrationTestBase() {
     @Test
-    fun `kotlin plugin not applied`() {
+    fun kotlinPluginNotApplied() {
         buildFile.overwriteFile(
             """
             plugins {
@@ -20,7 +20,7 @@ class ExposedPluginIntegrationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `exposed plugin applied after kotlin plugin`() {
+    fun exposedPluginAppliedAfterKotlinPlugin() {
         buildFile.appendToFile(
             PRINT_EXPOSED_TASKS
         )
@@ -30,7 +30,7 @@ class ExposedPluginIntegrationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `exposed plugin applied before kotlin plugin`() {
+    fun exposedPluginAppliedBeforeKotlinPlugin() {
         buildFile.overwriteFile(
             """
             plugins {

@@ -8,14 +8,14 @@ import kotlin.test.assertEquals
 
 class MigrationsIntegrationTest : IntegrationTestBase() {
     @Test
-    fun `minimum plugin configuration not applied`() {
+    fun minimumPluginConfigurationNotApplied() {
         val result = runBuildAndFail(GENERATE_MIGRATIONS_TASK_NAME)
         assertEquals(TaskOutcome.FAILED, result.task(":${GENERATE_MIGRATIONS_TASK_NAME}")?.outcome)
         assertContains(result.output, "This property isn't marked as optional and no value has been configured")
     }
 
     @Test
-    fun `minimum plugin configurations for database applied`() {
+    fun minimumPluginConfigurationsForDatabaseApplied() {
         buildFile.appendToFile(
             """
                 exposed {
@@ -35,7 +35,7 @@ class MigrationsIntegrationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `command line argument appears on help`() {
+    fun commandLineArgumentAppearsOnHelp() {
         val result = runBuild("help", "--task=${GENERATE_MIGRATIONS_TASK_NAME}")
         assertContains(result.output, "--filename")
         assertContains(result.output, "The exact filename to use when generating a single script")
