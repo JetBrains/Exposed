@@ -36,7 +36,7 @@ springBoot3 = "3.5.8"
 springBoot4 = "4.0.0"
 
 spring-security-crypto = "7.0.0"
-joda-time = "2.14.1"
+joda-time = "2.14.2"
 junit5 = "5.14.1"
 junit6 = "6.0.1"
 kotlinx-datetime = "0.7.1-0.6.x-compat"
