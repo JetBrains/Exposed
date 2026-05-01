@@ -257,7 +257,7 @@ class Database private constructor(
          * @param databaseConfig Configuration parameters for this [Database] instance.
          * @param manager The [TransactionManager] responsible for new transactions that use this [Database] instance.
          */
-        @Suppress("UnusedParameter", "LongParameterList")
+        @Suppress("LongParameterList")
         fun connect(
             url: String,
             driver: String = getDriver(url),

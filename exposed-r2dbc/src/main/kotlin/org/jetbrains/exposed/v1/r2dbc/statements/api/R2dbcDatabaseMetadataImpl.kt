@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Class responsible for retrieving and storing information about the R2DBC driver and underlying database.
  */
-@Suppress("UnusedPrivateMember", "UnusedParameter")
+@Suppress("UnusedPrivateMember")
 class R2dbcDatabaseMetadataImpl(
     database: String,
     private val connection: Connection,

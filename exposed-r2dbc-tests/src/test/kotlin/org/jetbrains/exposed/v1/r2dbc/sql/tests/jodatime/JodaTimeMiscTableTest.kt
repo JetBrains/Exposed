@@ -13,6 +13,7 @@ import org.jetbrains.exposed.v1.core.neq
 import org.jetbrains.exposed.v1.core.substring
 import org.jetbrains.exposed.v1.jodatime.date
 import org.jetbrains.exposed.v1.jodatime.datetime
+import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
@@ -449,7 +450,7 @@ class JodaTimeMiscTableTest : R2dbcDatabaseTestsBase() {
                 }
                 commit() // Need commit to persist data before drop tables
             } finally {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(ZeroDateTimeTable)
+                SchemaUtils.drop(ZeroDateTimeTable)
                 commit()
             }
         }

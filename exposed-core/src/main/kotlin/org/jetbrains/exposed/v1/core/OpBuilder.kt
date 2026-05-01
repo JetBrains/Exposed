@@ -448,10 +448,10 @@ infix operator fun <T> ExpressionWithColumnType<T>.div(t: T): DivideOp<T, T> = D
 infix operator fun <T, S : T> ExpressionWithColumnType<T>.div(other: Expression<S>): DivideOp<T, S> = DivideOp(this, other, columnType)
 
 /** Calculates the remainder of dividing this expression by the [t] value. */
-infix operator fun <T : Number?, S : T> ExpressionWithColumnType<T>.rem(t: S): ModOp<T, S, T> = ModOp<T, S, T>(this, wrap(t), columnType)
+infix operator fun <T : Number?, S : T> ExpressionWithColumnType<T>.rem(t: S): ModOp<T, S, T> = ModOp(this, wrap(t), columnType)
 
 /** Calculates the remainder of dividing this expression by the [other] expression. */
-infix operator fun <T : Number?, S : Number> ExpressionWithColumnType<T>.rem(other: Expression<S>): ModOp<T, S, T> = ModOp<T, S, T>(this, other, columnType)
+infix operator fun <T : Number?, S : Number> ExpressionWithColumnType<T>.rem(other: Expression<S>): ModOp<T, S, T> = ModOp(this, other, columnType)
 
 /** Calculates the remainder of dividing the value of [this] numeric PK by the [other] number. */
 @JvmName("remWithEntityId")

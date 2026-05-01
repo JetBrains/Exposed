@@ -357,7 +357,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
             val intArray = jsonb<IntArray>("int_array", Json.Default)
         }
 
-        withTables(excludeSettings = binaryJsonNotSupportedDB, iterables) { testDb ->
+        withTables(excludeSettings = binaryJsonNotSupportedDB, iterables) {
             // the logger is left in to test that it does not throw ClassCastException on insertion of iterables
             addLogger(StdOutSqlLogger)
 

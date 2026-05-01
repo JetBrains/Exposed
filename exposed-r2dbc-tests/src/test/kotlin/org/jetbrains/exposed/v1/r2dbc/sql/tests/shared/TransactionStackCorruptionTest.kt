@@ -21,6 +21,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.fail
+import kotlin.time.Duration.Companion.milliseconds
 
 class TransactionStackCorruptionTest : R2dbcDatabaseTestsBase() {
 
@@ -158,7 +159,7 @@ class TransactionStackCorruptionTest : R2dbcDatabaseTestsBase() {
 
                         // Force context switch
                         withContext(Dispatchers.IO) {
-                            delay(1)
+                            delay(1.milliseconds)
                         }
 
                         assertEquals(1L, count, "Job $jobId failed")

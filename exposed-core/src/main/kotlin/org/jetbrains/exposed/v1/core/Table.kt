@@ -331,7 +331,7 @@ class Join(
     ): Join = join(JoinPart(joinType, otherTable, cond, lateral, additionalConstraint))
 
     private fun findKeys(a: ColumnSet, b: ColumnSet): List<Pair<Column<*>, List<Column<*>>>>? = a.columns
-        .map { a_pk -> a_pk to b.columns.filter { it.referee == a_pk } }
+        .map { apk -> apk to b.columns.filter { it.referee == apk } }
         .filter { it.second.isNotEmpty() }
         .takeIf { it.isNotEmpty() }
 

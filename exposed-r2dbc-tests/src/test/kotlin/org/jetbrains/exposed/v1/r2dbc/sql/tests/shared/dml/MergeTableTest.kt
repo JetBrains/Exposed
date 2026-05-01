@@ -15,6 +15,7 @@ import org.jetbrains.exposed.v1.core.plus
 import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.core.times
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
+import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
 import org.jetbrains.exposed.v1.r2dbc.mergeFrom
@@ -417,7 +418,7 @@ class MergeTableTest : MergeBaseTest() {
 
                 assertEquals(sequenceStartNumber, dest.selectAll().single()[dest.id].value)
             } finally {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(dest)
+                SchemaUtils.drop(dest)
                 exec("drop sequence if exists testOverridingUserValueSequence")
             }
         }

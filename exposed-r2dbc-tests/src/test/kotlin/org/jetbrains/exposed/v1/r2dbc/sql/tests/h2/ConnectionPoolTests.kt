@@ -15,6 +15,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
+import kotlin.time.Duration.Companion.milliseconds
 
 class ConnectionPoolTests : LogDbInTestName() {
     private val maximumPoolSize = 10
@@ -34,7 +35,7 @@ class ConnectionPoolTests : LogDbInTestName() {
         repeat(exceedsPoolSize) { i ->
             launch {
                 suspendTransaction {
-                    delay(100)
+                    delay(100.milliseconds)
 //                TestEntity.new { testValue = "test$it" }
                     TestTable.insert { it[TestTable.testValue] = "test$i" }
                 }

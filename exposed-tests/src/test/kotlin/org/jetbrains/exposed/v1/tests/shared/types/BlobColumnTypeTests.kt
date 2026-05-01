@@ -102,14 +102,14 @@ class BlobColumnTypeTests : DatabaseTestsBase() {
                 }
 
                 else -> {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(testTable)
+                    SchemaUtils.create(testTable)
 
                     testTable.insert {
                         it[number] = 1
                     }
                     assertEquals(defaultBlobStr, String(testTable.selectAll().first()[testTable.blobWithDefault].bytes))
 
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testTable)
+                    SchemaUtils.drop(testTable)
                 }
             }
         }
@@ -136,7 +136,7 @@ class BlobColumnTypeTests : DatabaseTestsBase() {
                 }
             } else {
                 assertEquals("oid", tester.blobCol.descriptionDdl().split(" ")[1])
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(tester)
+                SchemaUtils.create(tester)
 
                 tester.insert {}
 
@@ -156,7 +156,7 @@ class BlobColumnTypeTests : DatabaseTestsBase() {
                 assertEquals(3, result2.count())
                 assertTrue(result2.all { it[tester.blobCol].bytes.contentEquals(defaultBytes) })
 
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tester)
+                SchemaUtils.drop(tester)
             }
         }
     }

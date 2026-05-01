@@ -35,10 +35,10 @@ class ArrayColumnTypeTests : R2dbcDatabaseTestsBase() {
     fun testCreateAndDropArrayColumns() {
         withDb(excludeSettings = arrayTypeUnsupportedDb) {
             try {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(ArrayTestTable)
+                SchemaUtils.create(ArrayTestTable)
                 assertTrue(ArrayTestTable.exists())
             } finally {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(ArrayTestTable)
+                SchemaUtils.drop(ArrayTestTable)
             }
         }
     }
@@ -47,10 +47,10 @@ class ArrayColumnTypeTests : R2dbcDatabaseTestsBase() {
     fun testCreateMissingColumnsWithArrayDefaults() {
         withTestTableAndExcludeSettings {
             try {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(ArrayTestTable)
-                assertTrue(org.jetbrains.exposed.v1.r2dbc.SchemaUtils.statementsRequiredToActualizeScheme(ArrayTestTable).isEmpty())
+                SchemaUtils.createMissingTablesAndColumns(ArrayTestTable)
+                assertTrue(SchemaUtils.statementsRequiredToActualizeScheme(ArrayTestTable).isEmpty())
             } finally {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(ArrayTestTable)
+                SchemaUtils.drop(ArrayTestTable)
             }
         }
     }

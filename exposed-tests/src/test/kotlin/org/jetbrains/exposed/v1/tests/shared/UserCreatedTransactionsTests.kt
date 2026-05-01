@@ -20,7 +20,7 @@ import kotlin.test.assertFalse
 class UserCreatedTransactionsTests : DatabaseTestsBase() {
 
     // Exclude settings are needed just to avoid problems with correctness of column and table names in hardcoded SQL
-    private val excludeSettings = TestDB.Companion.ALL - TestDB.H2_V2 - TestDB.POSTGRESQL
+    private val excludeSettings = TestDB.ALL - TestDB.H2_V2 - TestDB.POSTGRESQL
 
     object TestTable : Table("txtest") {
         val param = integer("param")
@@ -37,7 +37,7 @@ class UserCreatedTransactionsTests : DatabaseTestsBase() {
     @OptIn(InternalApi::class)
     @Test
     fun testSelectWithExec() {
-        withConnection(dialect) { db, testDb ->
+        withConnection(dialect) { _, _ ->
             val tx = TransactionManager.currentOrNew()
 
             withThreadLocalTransaction(tx) {
@@ -57,7 +57,7 @@ class UserCreatedTransactionsTests : DatabaseTestsBase() {
 
     @Test
     fun testAddLogger() {
-        withConnection(dialect) { db, testDb ->
+        withConnection(dialect) { _, _ ->
             val tx = TransactionManager.currentOrNew()
             // the logger is left in to test that the next line does not throw errors
             tx.addLogger(StdOutSqlLogger)
@@ -69,7 +69,7 @@ class UserCreatedTransactionsTests : DatabaseTestsBase() {
     @OptIn(InternalApi::class)
     @Test
     fun testCommit() {
-        withConnection(dialect) { db, testDb ->
+        withConnection(dialect) { _, _ ->
             val tx1 = TransactionManager.currentOrNew()
 
             withThreadLocalTransaction(tx1) {
@@ -95,7 +95,7 @@ class UserCreatedTransactionsTests : DatabaseTestsBase() {
     @OptIn(InternalApi::class)
     @Test
     fun testRollback() {
-        withConnection(dialect) { db, testDb ->
+        withConnection(dialect) { _, _ ->
             val tx = TransactionManager.currentOrNew()
 
             withThreadLocalTransaction(tx) {
@@ -117,7 +117,7 @@ class UserCreatedTransactionsTests : DatabaseTestsBase() {
     @OptIn(InternalApi::class)
     @Test
     fun testCloseExecutedStatements() {
-        withConnection(dialect) { db, testDb ->
+        withConnection(dialect) { _, _ ->
             val tx = TransactionManager.currentOrNew()
 
             withThreadLocalTransaction(tx) {
@@ -140,7 +140,7 @@ class UserCreatedTransactionsTests : DatabaseTestsBase() {
     @OptIn(InternalApi::class)
     @Test
     fun testExecInBatch() {
-        withConnection(dialect) { db, testDb ->
+        withConnection(dialect) { _, _ ->
             val tx = TransactionManager.currentOrNew()
 
             withThreadLocalTransaction(tx) {
@@ -167,7 +167,7 @@ class UserCreatedTransactionsTests : DatabaseTestsBase() {
     @OptIn(InternalApi::class)
     @Test
     fun testExecQuery() {
-        withConnection(dialect) { db, testDb ->
+        withConnection(dialect) { _, _ ->
             val tx = TransactionManager.currentOrNew()
 
             withThreadLocalTransaction(tx) {

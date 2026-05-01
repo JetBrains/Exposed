@@ -257,8 +257,8 @@ abstract class SchemaUtilityApi {
             }
             unMappedIndices
                 .getOrPut(table.nameInDatabaseCase()) { hashSetOf() }
-                .addAll(existingTableIndices.subtract(mappedIndices))
-            missingIndices.addAll(mappedIndices.subtract(existingTableIndices))
+                .addAll(existingTableIndices.subtract(mappedIndices.toSet()))
+            missingIndices.addAll(mappedIndices.subtract(existingTableIndices.toSet()))
         }
         val toCreate = missingIndices.subtract(nameDiffers)
         toCreate.log("Indices missed from database (will be created):", withLogs)
@@ -528,7 +528,7 @@ abstract class SchemaUtilityApi {
                                 when (this) {
                                     is PostgreSQLDialect -> {
                                         if (column.columnType.usesBinaryFormat) {
-                                            processed.replace(Regex("(\"|})(:|,)(\\[|\\{|\")"), "$1$2 $3")
+                                            processed.replace(Regex("([\"}])([:,])([\\[{\"])"), "$1$2 $3")
                                         } else {
                                             processed
                                         }

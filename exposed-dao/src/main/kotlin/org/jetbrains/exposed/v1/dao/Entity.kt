@@ -148,13 +148,13 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
                     allReferences.map { (child, parent) -> parent to child.getValue(o, desc) }
                 }
             }
-            when {
-                refValue is EntityID<*> && reference.referee<REF>() == factory.table.id -> {
+            when (refValue) {
+                is EntityID<*> if reference.referee<REF>() == factory.table.id -> {
                     factory.findById(refValue.value as RID).also {
                         storeReferenceInCache(reference, it)
                     }
                 }
-                refValue is CompositeID && allReferencesMatch(allReferences, factory.table) -> {
+                is CompositeID if allReferencesMatch(allReferences, factory.table) -> {
                     factory.findById(refValue as RID).also {
                         storeReferenceInCache(reference, it)
                     }
@@ -211,14 +211,14 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
                 }
                 if (childValues.any { it.second == null }) null else getCompositeID { childValues }
             }
-            when {
-                refValue == null -> null
-                refValue is EntityID<*> && reference.referee<REF>() == factory.table.id -> {
+            when (refValue) {
+                null -> null
+                is EntityID<*> if reference.referee<REF>() == factory.table.id -> {
                     factory.findById(refValue.value as RID).also {
                         storeReferenceInCache(reference, it)
                     }
                 }
-                refValue is CompositeID && allReferencesMatch(allReferences, factory.table) -> {
+                is CompositeID if allReferencesMatch(allReferences, factory.table) -> {
                     factory.findById(refValue as RID).also {
                         storeReferenceInCache(reference, it)
                     }

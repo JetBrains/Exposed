@@ -23,7 +23,7 @@ internal open class DataSourceStub : DataSource {
         throw NotImplementedError()
     }
 
-    override fun <T : Any?> unwrap(iface: Class<T>?): T {
+    override fun <T> unwrap(iface: Class<T>?): T {
         throw NotImplementedError()
     }
 

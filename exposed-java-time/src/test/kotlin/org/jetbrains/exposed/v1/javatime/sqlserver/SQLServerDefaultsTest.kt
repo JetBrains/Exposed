@@ -8,6 +8,7 @@ import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.javatime.JavaLocalDateTimeColumnType
 import org.jetbrains.exposed.v1.javatime.datetime
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
@@ -60,7 +61,7 @@ class SQLServerDefaultsTest : DatabaseTestsBase() {
                 assertNotNull(result[temporalTable.sysStart])
                 assertNotNull(result[temporalTable.sysEnd])
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(temporalTable)
+                SchemaUtils.drop(temporalTable)
             }
         }
     }

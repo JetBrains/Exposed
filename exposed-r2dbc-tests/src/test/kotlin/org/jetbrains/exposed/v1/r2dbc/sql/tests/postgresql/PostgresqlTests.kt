@@ -19,6 +19,7 @@ import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption.PostgreSQL
 import org.jetbrains.exposed.v1.r2dbc.Query
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
+import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
@@ -32,6 +33,7 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.update
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.uuid.Uuid
 
 class PostgresqlTests : R2dbcDatabaseTestsBase() {
@@ -111,20 +113,20 @@ class PostgresqlTests : R2dbcDatabaseTestsBase() {
         }
         withDb(TestDB.ALL_POSTGRES) {
             val defaultPKName = "tester_pkey"
-            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(tester1)
+            SchemaUtils.createMissingTablesAndColumns(tester1)
             assertFalse(assertPrimaryKey { it.getString(1)!! }?.any() == true)
 
-            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(tester2)
+            SchemaUtils.createMissingTablesAndColumns(tester2)
             val defaultPK = assertPrimaryKey {
                 it.getString("PK_NAME")!!
             }?.single()
             assertEquals(defaultPKName, defaultPK)
 
             assertFailAndRollback("Multiple primary keys are not allowed") {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(tester3)
+                SchemaUtils.createMissingTablesAndColumns(tester3)
             }
 
-            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(tester1)
+            SchemaUtils.drop(tester1)
         }
     }
 
@@ -170,11 +172,11 @@ class PostgresqlTests : R2dbcDatabaseTestsBase() {
         suspendTransaction(null, transactionIsolation = IsolationLevel.SERIALIZABLE) {
             val current = TestConflictTable
                 .selectAll()
-                .where({ TestConflictTable.id eq uuid })
+                .where { TestConflictTable.id eq uuid }
                 .forUpdate()
                 .single()[TestConflictTable.value]
 
-            delay((100..300).random().toLong())
+            delay((100..300).random().milliseconds)
 
             TestConflictTable.update({ TestConflictTable.id eq uuid }) {
                 it[value] = current + 1

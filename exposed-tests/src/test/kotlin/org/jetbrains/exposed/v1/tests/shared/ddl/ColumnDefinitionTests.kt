@@ -8,6 +8,7 @@ import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.jdbc.Query
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.statements.jdbc.JdbcResult
@@ -33,7 +34,7 @@ class ColumnDefinitionTests : DatabaseTestsBase() {
         val columnCommentSupportedDB = TestDB.ALL_H2_V2 + TestDB.ALL_MYSQL_MARIADB + TestDB.SQLITE
 
         withTables(excludeSettings = TestDB.ALL - columnCommentSupportedDB, tester) { testDb ->
-            assertTrue { org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
+            assertTrue { SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
 
             tester.insert { it[amount] = 9 }
             assertEquals(9, tester.selectAll().single()[tester.amount])
@@ -66,7 +67,7 @@ class ColumnDefinitionTests : DatabaseTestsBase() {
         }
 
         withTables(TestDB.ALL - TestDB.SQLSERVER, tester) {
-            assertTrue { org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
+            assertTrue { SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
 
             val testEmail = "mysecretemail123@gmail.com"
             tester.insert {
@@ -103,11 +104,11 @@ class ColumnDefinitionTests : DatabaseTestsBase() {
                     }
                 }
             }
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(tester)
+            SchemaUtils.create(tester)
 
             if (testDb != TestDB.ORACLE) {
                 // Oracle would not work with this use case as special DEFAULT syntax is not registered & causes mismatch
-                assertTrue { org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
+                assertTrue { SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
             }
 
             tester.insert {
@@ -147,7 +148,7 @@ class ColumnDefinitionTests : DatabaseTestsBase() {
                 assertEquals(itemA, singleItem)
             }
 
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tester)
+            SchemaUtils.drop(tester)
         }
     }
 
@@ -173,7 +174,7 @@ class ColumnDefinitionTests : DatabaseTestsBase() {
             if (testDb == TestDB.MYSQL_V8 || testDb == TestDB.ORACLE) {
                 // H2 metadata query does not return invisible column info
                 // Bug in MariaDB with nullable column - metadata default value returns as NULL - EXPOSED-415
-                assertTrue { org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
+                assertTrue { SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
             }
 
             tester.insert {

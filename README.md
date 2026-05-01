@@ -76,7 +76,7 @@ As well as the following extension modules:
 
 ### Requirements
 
-Kotlin version 2.1.+
+Kotlin version 2.2.+
 
 The following module(s) require JDK 17 or newer:
 * `spring-transaction` - depends on Spring Framework 6
