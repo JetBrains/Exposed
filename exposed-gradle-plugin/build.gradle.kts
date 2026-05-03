@@ -4,11 +4,15 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    `java-gradle-plugin`
     kotlin("jvm")
 
     alias(libs.plugins.dokka)
+    alias(libs.plugins.gradle.plugin.publish)
 }
+
+group = "org.jetbrains.exposed.plugin"
+version = "1.2.0"
+description = "Exposed Gradle plugin"
 
 repositories {
     mavenCentral()

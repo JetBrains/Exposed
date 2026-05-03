@@ -45,6 +45,7 @@ moneta = "1.4.5"
 hikariCP = "7.0.2"
 logcaptor = "2.12.6"
 maven-publish = "0.35.0"
+gradle-plugin-publish = "2.1.1"
 
 testcontainers = "2.0.5"
 
@@ -140,3 +141,4 @@ binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibil
 docker-compose = { id = "com.avast.gradle.docker-compose", version.ref = "docker-compose" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 maven-publish = { id = "com.vanniktech.maven.publish" }
+gradle-plugin-publish = { id = "com.gradle.plugin-publish", version.ref = "gradle-plugin-publish" }
