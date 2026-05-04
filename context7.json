@@ -1,0 +1,36 @@
+{
+    "$schema": "https://context7.com/schema/context7.json",
+    "projectTitle": "Exposed",
+    "description": "Lightweight SQL ORM framework for Kotlin with type-safe DSL and DAO API, supporting JDBC and R2DBC drivers.",
+    "folders": [
+        "documentation-website",
+        "samples"
+    ],
+    "excludeFolders": [
+        "**/build",
+        "**/.gradle",
+        "**/.idea",
+        "**/gradle/wrapper",
+        "exposed-perf-tests"
+    ],
+    "excludeFiles": [
+        "**/detekt.md",
+        "**/PULL_REQUEST_TEMPLATE.md",
+        "**/gradlew",
+        "**/gradlew.bat",
+        "**/*.gradle.kts",
+        "**/settings.gradle",
+        "**/build.gradle"
+    ],
+    "previousVersions": [
+        {
+            "tag": "1.2.0"
+        },
+        {
+            "tag": "1.1.1"
+        },
+        {
+            "tag": "1.0.0"
+        }
+    ]
+}

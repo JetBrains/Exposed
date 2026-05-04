@@ -16,7 +16,7 @@ mariaDB = "3.5.6"
 mysql51 = "5.1.49"
 mysql80 = "8.4.0"
 oracle = "23.26.1.0.0"
-postgre = "42.7.10"
+postgre = "42.7.11"
 postgreNG = "0.8.9"
 sqlite3 = "3.53.0.0"
 sqlserver = "13.2.1.jre11"
@@ -25,7 +25,7 @@ r2dbc-spi = "1.0.0.RELEASE"
 r2dbc-pool = "1.0.2.RELEASE"
 h2-r2dbc = "1.1.0.RELEASE"
 mariadb-r2dbc = "1.4.0"
-mysql-r2dbc = "1.4.1"
+mysql-r2dbc = "1.4.2"
 oracle-r2dbc = "1.3.0"
 postgresql-r2dbc = "1.1.1.RELEASE"
 sqlserver-r2dbc = "1.0.4.RELEASE"
@@ -36,7 +36,7 @@ springBoot3 = "3.5.8"
 springBoot4 = "4.0.0"
 
 spring-security-crypto = "7.0.0"
-joda-time = "2.14.1"
+joda-time = "2.14.2"
 junit5 = "5.14.1"
 junit6 = "6.0.1"
 kotlinx-datetime = "0.7.1-0.6.x-compat"
@@ -45,6 +45,10 @@ moneta = "1.4.5"
 hikariCP = "7.0.2"
 logcaptor = "2.12.6"
 maven-publish = "0.35.0"
+
+testcontainers = "2.0.5"
+
+flyway = "12.5.0"
 
 [libraries]
 jvm = { group = "org.jetbrains.kotlin.jvm", name = "org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }
@@ -113,6 +117,17 @@ r2dbc-mysql = { group = "io.asyncer", name = "r2dbc-mysql", version.ref = "mysql
 r2dbc-oracle = { group = "com.oracle.database.r2dbc", name = "oracle-r2dbc", version.ref = "oracle-r2dbc" }
 r2dbc-postgresql = { group = "org.postgresql", name = "r2dbc-postgresql", version.ref = "postgresql-r2dbc" }
 r2dbc-sqlserver = { group = "io.r2dbc", name = "r2dbc-mssql", version.ref = "sqlserver-r2dbc" }
+
+testcontainers-postgresql = { group = "org.testcontainers", name = "testcontainers-postgresql", version.ref = "testcontainers" }
+testcontainers-mysql = { group = "org.testcontainers", name = "testcontainers-mysql", version.ref = "testcontainers" }
+testcontainers-mariadb = { group = "org.testcontainers", name = "testcontainers-mariadb", version.ref = "testcontainers" }
+testcontainers-mssqlserver = { group = "org.testcontainers", name = "testcontainers-mssqlserver", version.ref = "testcontainers" }
+testcontainers-oracle = { group = "org.testcontainers", name = "testcontainers-oracle-xe", version.ref = "testcontainers" }
+
+flyway-postgresql = { group = "org.flywaydb", name = "flyway-database-postgresql", version.ref = "flyway" }
+flyway-mysql = { group = "org.flywaydb", name = "flyway-mysql", version.ref = "flyway" }
+flyway-sqlserver = { group = "org.flywaydb", name = "flyway-sqlserver", version.ref = "flyway" }
+flyway-oracle = { group = "org.flywaydb", name = "flyway-database-oracle", version.ref = "flyway" }
 
 logcaptor = { group = "io.github.hakky54", name = "logcaptor", version.ref = "logcaptor" }
 
