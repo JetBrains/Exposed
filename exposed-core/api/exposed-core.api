@@ -4374,6 +4374,16 @@ public class org/jetbrains/exposed/v1/core/vendors/OracleDialect : org/jetbrains
 public final class org/jetbrains/exposed/v1/core/vendors/OracleDialect$Companion : org/jetbrains/exposed/v1/core/vendors/VendorDialect$DialectNameProvider {
 }
 
+public final class org/jetbrains/exposed/v1/core/vendors/OracleVectorDistanceKt {
+	public static final fun cosineDistance (Lorg/jetbrains/exposed/v1/core/Column;[F)Lorg/jetbrains/exposed/v1/core/Function;
+	public static final fun dotDistance (Lorg/jetbrains/exposed/v1/core/Column;[F)Lorg/jetbrains/exposed/v1/core/Function;
+	public static final fun euclideanDistance (Lorg/jetbrains/exposed/v1/core/Column;[F)Lorg/jetbrains/exposed/v1/core/Function;
+}
+
+public final class org/jetbrains/exposed/v1/core/vendors/OracleVectorExtensionsKt {
+	public static final fun vector (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;I)Lorg/jetbrains/exposed/v1/core/Column;
+}
+
 public class org/jetbrains/exposed/v1/core/vendors/PostgreSQLDialect : org/jetbrains/exposed/v1/core/vendors/VendorDialect {
 	public static final field Companion Lorg/jetbrains/exposed/v1/core/vendors/PostgreSQLDialect$Companion;
 	public fun <init> ()V

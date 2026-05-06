@@ -2,13 +2,14 @@ package org.jetbrains.exposed.v1.core.vendors
 
 import org.jetbrains.exposed.v1.core.ColumnType
 import org.jetbrains.exposed.v1.core.Op
-import org.jetbrains.exposed.v1.core.statements.api.RowApi
 import org.jetbrains.exposed.v1.core.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.v1.core.statements.api.RowApi
 
-class OracleVectorColumnType(val dimensions: Int) : ColumnType<FloatArray>() {
+internal class OracleVectorColumnType(val dimensions: Int) : ColumnType<FloatArray>() {
+
     override fun sqlType() = "VECTOR($dimensions, FLOAT32)"
 
-    override fun readObject(rs: RowApi, index: Int): Any? = rs.getObject(index, FloatArray::class.java, this)
+    override fun readObject(rs: RowApi, index: Int): Any? = rs.getObject(index, FloatArray::class.java)
 
     override fun valueFromDB(value: Any): FloatArray =
         when (value) {
@@ -19,8 +20,10 @@ class OracleVectorColumnType(val dimensions: Int) : ColumnType<FloatArray>() {
             }
         }
 
-    override fun valueToString(value: FloatArray?): String =
-        value?.let { "TO_VECTOR('${it.joinToString(prefix = "[", postfix = "]")}')" } ?: "NULL"
+    override fun valueToString(value: FloatArray?): String = when (value) {
+        is FloatArray -> "TO_VECTOR('${value.joinToString(prefix = "[", postfix = "]")}')"
+        else -> super.valueToString(null)
+    }
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         when (value) {

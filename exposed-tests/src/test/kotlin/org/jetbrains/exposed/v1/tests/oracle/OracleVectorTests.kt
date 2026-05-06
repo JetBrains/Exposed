@@ -12,8 +12,10 @@ import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.expectException
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.sql.SQLException
 import kotlin.math.abs
@@ -21,6 +23,7 @@ import kotlin.math.sqrt
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+@Tag(MISSING_R2DBC_TEST)
 class OracleVectorTests : DatabaseTestsBase() {
     private fun assertDistanceEquals(expected: Double, actual: Double, tolerance: Double = 1e-6) {
         assertTrue(abs(expected - actual) < tolerance, "Expected $expected, got $actual")
@@ -178,10 +181,7 @@ class OracleVectorTests : DatabaseTestsBase() {
         withTables(excludeSettings = TestDB.ALL - TestDB.ORACLE, NullableVectorItems) {
             NullableVectorItems.insert { it[id] = 1; it[embedding] = null }
             NullableVectorItems.insert { it[id] = 2; it[embedding] = floatArrayOf(1f, 0f, 0f) }
-
-            expectException<SQLException> {
-                NullableVectorItems.selectAll().orderBy(NullableVectorItems.id to SortOrder.ASC).toList()
-            }
+            NullableVectorItems.selectAll().orderBy(NullableVectorItems.id to SortOrder.ASC).toList()
         }
     }
 

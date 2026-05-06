@@ -1,20 +1,17 @@
 package org.jetbrains.exposed.v1.core.vendors
 
 import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.DoubleColumnType
 import org.jetbrains.exposed.v1.core.Function
-import org.jetbrains.exposed.v1.core.ColumnType
 import org.jetbrains.exposed.v1.core.QueryBuilder
 
-enum class OracleVectorDistanceMetric { COSINE, EUCLIDEAN, DOT }
+private enum class OracleVectorDistanceMetric { COSINE, EUCLIDEAN, DOT }
 
-class OracleVectorDistance(
+private class OracleVectorDistance(
     private val column: Column<FloatArray>,
     private val target: FloatArray,
     private val metric: OracleVectorDistanceMetric
-) : Function<Double>(object : ColumnType<Double>() {
-    override fun sqlType() = "DOUBLE PRECISION"
-    override fun valueFromDB(value: Any) = (value as Number).toDouble()
-}) {
+) : Function<Double>(DoubleColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         queryBuilder {
             +"VECTOR_DISTANCE("
@@ -26,11 +23,11 @@ class OracleVectorDistance(
     }
 }
 
-fun Column<FloatArray>.cosineDistance(target: FloatArray) =
+fun Column<FloatArray>.cosineDistance(target: FloatArray): Function<Double> =
     OracleVectorDistance(this, target, OracleVectorDistanceMetric.COSINE)
 
-fun Column<FloatArray>.euclideanDistance(target: FloatArray) =
+fun Column<FloatArray>.euclideanDistance(target: FloatArray): Function<Double> =
     OracleVectorDistance(this, target, OracleVectorDistanceMetric.EUCLIDEAN)
 
-fun Column<FloatArray>.dotDistance(target: FloatArray) =
+fun Column<FloatArray>.dotDistance(target: FloatArray): Function<Double> =
     OracleVectorDistance(this, target, OracleVectorDistanceMetric.DOT)
