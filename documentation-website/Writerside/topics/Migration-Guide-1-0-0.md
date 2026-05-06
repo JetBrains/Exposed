@@ -6,6 +6,36 @@ This guide provides instructions on how to migrate from Exposed version 0.61.0 t
 Version 1.0.0 introduces R2DBC support on top of the existing JDBC support. Most of the changes in this release were made
 to accommodate reactive database access while preserving existing functionality.
 
+## Migrating with Claude Code
+
+If your project uses [Claude Code](https://claude.com/claude-code), you can apply the
+mechanical parts of this migration automatically.
+
+### Install
+
+1. Download the skill folder from the Exposed repository:
+   [`.claude/skills/migrate-to-1.0/`](https://github.com/JetBrains/Exposed/tree/main/.claude/skills/migrate-to-1.0).
+2. Copy the entire `migrate-to-1.0/` directory into your project at
+   `<your-project>/.claude/skills/migrate-to-1.0/`.
+
+### Run
+
+In Claude Code, from your project root, invoke:
+
+```
+/migrate-to-1.0
+```
+
+The skill scans your code, proposes a plan, asks you to confirm, and then applies the
+mechanical changes (imports, package renames, `SqlExpressionBuilder` lambda imports,
+build dependency bumps). Anything requiring human judgment — custom `Transaction`
+extensions, custom statements or dialects, the `transaction()` signature change, etc. —
+is reported in a summary at the end so you can address it manually using the rest of
+this guide.
+
+The skill operates only on your working tree; it does not create branches or commits.
+Review the changes with `git diff` and commit when you are satisfied.
+
 ## Import versioning and package renaming
 
 ### Updated imports
