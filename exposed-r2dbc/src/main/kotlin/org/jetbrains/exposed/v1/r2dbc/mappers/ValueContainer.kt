@@ -30,6 +30,15 @@ class NoValueContainer<T> : ValueContainer<T> {
     override fun value(): T = error("No value provided")
 }
 
+private val SHARED_NO_VALUE_CONTAINER = NoValueContainer<Any?>()
+
+/**
+ * Returns the shared [NoValueContainer] singleton representing "no value", avoiding per-call
+ * allocation. Internal hot-path helper used by built-in mappers.
+ */
+@Suppress("UNCHECKED_CAST")
+internal fun <T> sharedNoValueContainer(): ValueContainer<T> = SHARED_NO_VALUE_CONTAINER as ValueContainer<T>
+
 /**
  * Represents a container with a present value.
  *

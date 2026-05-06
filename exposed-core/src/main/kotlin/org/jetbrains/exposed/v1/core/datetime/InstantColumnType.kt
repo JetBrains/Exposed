@@ -67,7 +67,12 @@ abstract class InstantColumnType<T> : ColumnType<T>(), IDateColumnType {
 
     @Suppress("MagicNumber")
     private fun instantValueFromDB(value: Any): Instant = when (value) {
-        is Timestamp -> Instant.fromEpochSeconds(value.time / 1000, value.nanos)
+        // Math.floorDiv (not `/`) is required so pre-epoch Timestamps round-trip correctly.
+        // Timestamp.getTime() is in milliseconds and is negative for pre-epoch values, while
+        // getNanos() is always non-negative (0..999_999_999). Kotlin/JVM `/` truncates toward
+        // zero, so for example -10L / 1000L == 0 — but the correct floor for combining with
+        // a non-negative nanos remainder is -1. See EXPOSED-1019.
+        is Timestamp -> Instant.fromEpochSeconds(Math.floorDiv(value.time, 1000L), value.nanos)
         is String -> parseInstantFromString(value)
         is java.time.LocalDateTime -> {
             value.atZone(ZoneId.systemDefault())
