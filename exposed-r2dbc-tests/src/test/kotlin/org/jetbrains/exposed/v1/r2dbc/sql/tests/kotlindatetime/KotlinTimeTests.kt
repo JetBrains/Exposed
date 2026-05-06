@@ -581,6 +581,38 @@ class KotlinTimeTests : R2dbcDatabaseTestsBase() {
             assertEquals(now, valueFromDb)
         }
     }
+
+    /**
+     * Regression test for EXPOSED-1019.
+     *
+     * `InstantColumnType.instantValueFromDB` converts a `java.sql.Timestamp` into a
+     * `kotlin.time.Instant` with `Instant.fromEpochSeconds(value.time / 1000, value.nanos)`.
+     * `Timestamp.getTime()` is in milliseconds and can be negative for pre-epoch values, but
+     * Kotlin/JVM integer division truncates toward zero rather than flooring, so for example
+     * `-10L / 1000L == 0` (correct value would be `-1`).
+     *
+     * MariaDB is excluded: with its default strict `sql_mode` MariaDB rejects pre-epoch
+     * datetime literals at INSERT with `Incorrect datetime value` (SQL state 22007).
+     */
+    @Test
+    fun testInstantBeforeEpochRoundTrip() {
+        val tester = object : Table("ts_pre_epoch") {
+            val ts = timestamp("ts")
+        }
+
+        withTables(excludeSettings = listOf(TestDB.MARIADB), tester) {
+            val preEpoch = Instant.fromEpochMilliseconds(-10)
+            tester.insert {
+                it[ts] = preEpoch
+            }
+
+            val readBack = tester.selectAll().single()[tester.ts]
+
+            // Expected: 1969-12-31T23:59:59.990Z (-10 ms)
+            // Actual on the bug: 1970-01-01T00:00:00.990Z (+990 ms)
+            assertEquals(preEpoch, readBack)
+        }
+    }
 }
 
 fun <T> assertEqualDateTime(d1: T?, d2: T?) {
