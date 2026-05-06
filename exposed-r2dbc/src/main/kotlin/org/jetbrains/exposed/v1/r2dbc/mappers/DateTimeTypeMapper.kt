@@ -74,7 +74,7 @@ class DateTimeTypeMapper : TypeMapper {
                     )
                 }
             }
-            else -> NoValueContainer()
+            else -> sharedNoValueContainer()
         }
     }
 }

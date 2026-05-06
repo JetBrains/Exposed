@@ -14,24 +14,23 @@ class PrimitiveTypeMapper : TypeMapper {
     @Suppress("MagicNumber")
     override val priority = 0.3
 
-    override val columnTypes: List<KClass<out IColumnType<*>>>
-        get() = listOf(
-            ByteColumnType::class,
-            UByteColumnType::class,
-            ShortColumnType::class,
-            UShortColumnType::class,
-            IntegerColumnType::class,
-            UIntegerColumnType::class,
-            LongColumnType::class,
-            ULongColumnType::class,
-            FloatColumnType::class,
-            DoubleColumnType::class,
-            DecimalColumnType::class,
-            BooleanColumnType::class,
-            CharacterColumnType::class,
-            BasicUuidColumnType::class,
-            StringColumnType::class,
-        )
+    override val columnTypes: List<KClass<out IColumnType<*>>> = listOf(
+        ByteColumnType::class,
+        UByteColumnType::class,
+        ShortColumnType::class,
+        UShortColumnType::class,
+        IntegerColumnType::class,
+        UIntegerColumnType::class,
+        LongColumnType::class,
+        ULongColumnType::class,
+        FloatColumnType::class,
+        DoubleColumnType::class,
+        DecimalColumnType::class,
+        BooleanColumnType::class,
+        CharacterColumnType::class,
+        BasicUuidColumnType::class,
+        StringColumnType::class,
+    )
 
     override fun setValue(
         statement: Statement,

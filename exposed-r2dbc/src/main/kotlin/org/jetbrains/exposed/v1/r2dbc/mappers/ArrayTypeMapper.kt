@@ -20,11 +20,9 @@ class ArrayTypeMapper : TypeMapper {
     @Suppress("MagicNumber")
     override val priority = 0.2
 
-    override val columnTypes: List<KClass<out IColumnType<*>>>
-        get() = listOf(ArrayColumnType::class)
+    override val columnTypes: List<KClass<out IColumnType<*>>> = listOf(ArrayColumnType::class)
 
-    override val dialects: List<KClass<out DatabaseDialect>>
-        get() = listOf() // Support all dialects
+    override val dialects: List<KClass<out DatabaseDialect>> = emptyList() // Support all dialects
 
     override fun setValue(
         statement: Statement,

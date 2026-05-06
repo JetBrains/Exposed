@@ -18,11 +18,10 @@ class BinaryTypeMapper : TypeMapper {
     @Suppress("MagicNumber")
     override val priority = 0.2
 
-    override val columnTypes: List<KClass<out IColumnType<*>>>
-        get() = listOf(
-            BasicBinaryColumnType::class,
-            BlobColumnType::class
-        )
+    override val columnTypes: List<KClass<out IColumnType<*>>> = listOf(
+        BasicBinaryColumnType::class,
+        BlobColumnType::class
+    )
 
     override fun setValue(
         statement: Statement,
