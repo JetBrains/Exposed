@@ -391,48 +391,44 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
 
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> {
         @OptIn(InternalApi::class)
-        val list = mutableListOf(
-            buildString {
-                val tr = currentTransaction()
-                append("ALTER TABLE ${tr.identity(column.table)} ")
-                val colName = tr.identity(column)
-
-                if (columnDiff.autoInc && column.autoIncColumnType != null) {
-                    val sequence = column.autoIncColumnType?.sequence
-                    if (sequence != null) {
-                        append("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()}")
-                        append(", ALTER COLUMN $colName DROP DEFAULT")
-                    } else {
-                        val fallbackSequenceName = fallbackSequenceName(tableName = column.table.tableName, columnName = column.name)
-                        append("ALTER COLUMN $colName SET DEFAULT nextval('$fallbackSequenceName')")
-                    }
-                } else if (columnDiff.autoInc && column.autoIncColumnType == null) {
-                    // based on logic in SchemaUtils.isIncorrectAutoInc this should only be possible if the existing
-                    // column in database is auto-incrementing while defined table is not
-                    append("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()}")
-                    append(", ALTER COLUMN $colName DROP DEFAULT")
+        val transaction = currentTransaction()
+        val colName = transaction.identity(column)
+        val alterColumnParts = buildList {
+            if (columnDiff.autoInc && column.autoIncColumnType != null) {
+                val sequence = column.autoIncColumnType?.sequence
+                if (sequence != null) {
+                    add("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()}")
+                    add("ALTER COLUMN $colName DROP DEFAULT")
                 } else {
-                    append("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()}")
+                    val fallbackSequenceName = fallbackSequenceName(tableName = column.table.tableName, columnName = column.name)
+                    add("ALTER COLUMN $colName SET DEFAULT nextval('$fallbackSequenceName')")
                 }
+            } else if (columnDiff.autoInc && column.autoIncColumnType == null) {
+                // based on logic in SchemaUtils.isIncorrectAutoInc this should only be possible if the existing
+                // column in database is auto-incrementing while defined table is not
+                add("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()}")
+                add("ALTER COLUMN $colName DROP DEFAULT")
+            } else if (columnDiff.type) {
+                add("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()}")
+            }
 
-                if (columnDiff.nullability) {
-                    append(", ALTER COLUMN $colName ")
-                    if (column.columnType.nullable) {
-                        append("DROP ")
-                    } else {
-                        append("SET ")
-                    }
-                    append("NOT NULL")
-                }
-                if (columnDiff.defaults) {
-                    column.dbDefaultValue?.let {
-                        append(", ALTER COLUMN $colName SET DEFAULT ${PostgreSQLDataTypeProvider.processForDefaultValue(it)}")
-                    } ?: run {
-                        append(", ALTER COLUMN $colName DROP DEFAULT")
-                    }
+            if (columnDiff.nullability) {
+                val nullability = if (column.columnType.nullable) "DROP" else "SET"
+                add("ALTER COLUMN $colName $nullability NOT NULL")
+            }
+            if (columnDiff.defaults) {
+                column.dbDefaultValue?.let {
+                    add("ALTER COLUMN $colName SET DEFAULT ${PostgreSQLDataTypeProvider.processForDefaultValue(it)}")
+                } ?: run {
+                    add("ALTER COLUMN $colName DROP DEFAULT")
                 }
             }
-        )
+        }
+
+        val list = mutableListOf<String>()
+        if (alterColumnParts.isNotEmpty()) {
+            list += "ALTER TABLE ${transaction.identity(column.table)} ${alterColumnParts.joinToString()}"
+        }
         if (columnDiff.autoInc && column.autoIncColumnType != null && column.autoIncColumnType?.sequence == null) {
             list.add(
                 buildString {

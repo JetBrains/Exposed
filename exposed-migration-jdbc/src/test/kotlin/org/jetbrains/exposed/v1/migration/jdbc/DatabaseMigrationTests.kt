@@ -11,6 +11,7 @@ import org.jetbrains.exposed.v1.core.dao.id.UIntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.ULongIdTable
 import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.java.UUIDColumnType
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
@@ -408,6 +409,28 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             }
 
             assertEqualLists(MigrationUtils.statementsRequiredForDatabaseMigration(testerWithAnotherDefinition), emptyList())
+        }
+    }
+
+    @Test
+    fun testUuidDefaultExpressionMigrationDoesNotAlterType() {
+        val initialTable = object : IdTable<JavaUUID>("locations") {
+            override val id = javaUUID("id").entityId()
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, initialTable) {
+            val tableWithDefault = object : IdTable<JavaUUID>("locations") {
+                private val randomUuid = CustomFunction<JavaUUID>("gen_random_uuid", UUIDColumnType())
+
+                override val id = javaUUID("id").defaultExpression(randomUuid).entityId()
+                override val primaryKey = PrimaryKey(id)
+            }
+
+            assertEqualLists(
+                listOf("ALTER TABLE locations ALTER COLUMN id SET DEFAULT gen_random_uuid()"),
+                MigrationUtils.statementsRequiredForDatabaseMigration(tableWithDefault, withLogs = false)
+            )
         }
     }
 
