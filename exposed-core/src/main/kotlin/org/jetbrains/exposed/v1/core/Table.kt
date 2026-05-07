@@ -6,6 +6,7 @@ import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.core.statements.api.ExposedBlob
 import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.core.vendors.*
@@ -1159,9 +1160,46 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         isDatabaseGenerated = true
     }
 
-    /** [kotlin.uuid.Uuid] column will auto generate its value on the client side just before an insert. */
+    /**
+     * [kotlin.uuid.Uuid] column will auto generate its value on the client side just before an insert.
+     * By default, the new random Uuid instance will conform to the result of calling [Uuid.generateV4].
+     */
     @JvmName("autoGenerateKotlinUuid")
-    fun Column<Uuid>.autoGenerate(): Column<Uuid> = clientDefault { Uuid.random() }
+    fun Column<Uuid>.autoGenerate(): Column<Uuid> = clientDefault {
+        val tableToCheck = ((table as? Alias<*>)?.delegate ?: table) as? UuidTable
+        // Uuid.generateV4() is synonymous with Uuid.random() but keeping as before
+        if (tableToCheck == null || tableToCheck.id != this) return@clientDefault Uuid.random()
+
+        when (tableToCheck.version) {
+            UuidVersion.V4 -> Uuid.generateV4()
+            UuidVersion.V7 -> Uuid.generateV7()
+        }
+    }
+
+    /**
+     * [kotlin.uuid.Uuid] column will auto generate its value on the client side just before an insert.
+     * The new random Uuid instance will conform to the result of calling the Uuid companion method
+     * associated with the provided [UuidVersion].
+     */
+    fun Column<Uuid>.autoGenerate(uuidVersion: UuidVersion): Column<Uuid> = clientDefault {
+        when (uuidVersion) {
+            UuidVersion.V4 -> Uuid.generateV4()
+            UuidVersion.V7 -> Uuid.generateV7()
+        }
+    }
+
+    /**
+     * [kotlin.uuid.Uuid] instance version.
+     *
+     * See also - [Version numbers](https://www.rfc-editor.org/rfc/rfc9562.html#section-4.2)
+     */
+    enum class UuidVersion {
+        /** Unique version 4 UUID returned by [Uuid.generateV4]. */
+        V4,
+
+        /** Unix Epoch time-based sortable UUID returned by [Uuid.generateV7]. */
+        V7,
+    }
 
     /** [java.util.UUID] column will auto generate its value on the client side just before an insert. */
     fun Column<JavaUUID>.autoGenerate(): Column<JavaUUID> = clientDefault { JavaUUID.randomUUID() }

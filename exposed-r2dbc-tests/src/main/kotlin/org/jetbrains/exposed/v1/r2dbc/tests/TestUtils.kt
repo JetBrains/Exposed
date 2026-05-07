@@ -15,6 +15,7 @@ import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.vendors.DatabaseDialectMetadata
 import java.util.*
+import kotlin.uuid.Uuid
 
 val currentDialectTest: DatabaseDialect get() = TransactionManager.current().db.dialect
 
@@ -99,3 +100,12 @@ internal suspend fun <T : Comparable<T>> Flow<T>.sorted(): List<T> {
 }
 
 internal suspend fun <T> Flow<T>.distinct(): List<T> = this.distinctUntilChanged().toList()
+
+/**
+ * The version of Uuid is always stored in the same place: the most significant 4 bits of the 7th byte;
+ * i.e. the 13th hexadecimal digit in the string representation,
+ */
+@Suppress("MagicNumber")
+fun Uuid.versionNumber(): Int = toLongs { mostSignificantBits, _ ->
+    ((mostSignificantBits shr 12) and 0xF).toInt()
+}

@@ -558,4 +558,22 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             }
         }
     }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun testAutoGenerateV7DoesNotTriggerMigrations() {
+        val testerV4 = object : Table("tester_uuid") {
+            val id = uuid("id").autoGenerate()
+        }
+        val testerV7 = object : Table("tester_uuid") {
+            val id = uuid("id").autoGenerate(UuidVersion.V7)
+        }
+
+        withTables(testerV4) {
+            assertTrue(testerV4.exists())
+
+            val stmt = MigrationUtils.statementsRequiredForDatabaseMigration(testerV7)
+            assertTrue(stmt.isEmpty())
+        }
+    }
 }
