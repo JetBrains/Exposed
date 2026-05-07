@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.core.vendors
 
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.functions.vector.VectorDistanceMetric
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.exceptions.throwUnsupportedException
@@ -153,6 +154,23 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             +":"
             upper?.let { +it.toString() }
             +"]"
+        }
+    }
+
+    override fun vectorDistance(
+        expression: Expression<FloatArray>,
+        targetExpression: Expression<FloatArray>,
+        metric: VectorDistanceMetric,
+        queryBuilder: QueryBuilder
+    ) {
+        queryBuilder {
+            append(expression)
+            when (metric) {
+                VectorDistanceMetric.COSINE -> +" <=> "
+                VectorDistanceMetric.EUCLIDEAN -> +" <-> "
+                VectorDistanceMetric.DOT -> +" <#> "
+            }
+            append(targetExpression)
         }
     }
 

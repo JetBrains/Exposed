@@ -576,4 +576,45 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             assertTrue(stmt.isEmpty())
         }
     }
+
+    private val vectorTypeSupportedDb = setOf(TestDB.ORACLE, TestDB.MARIADB, TestDB.SQLSERVER, TestDB.POSTGRESQL)
+
+    @Test
+    fun testVectorColumnTriggersMigration() {
+        val original = object : Table("vector_items") {
+            val id = integer("id")
+        }
+        val updated = object : Table("vector_items") {
+            val id = integer("id")
+            val embedding = vector("embedding", dimensions = 5)
+        }
+
+        withDb(vectorTypeSupportedDb - TestDB.SQLSERVER) { testDb ->
+            try {
+                if (testDb == TestDB.POSTGRESQL) {
+                    exec("CREATE EXTENSION IF NOT EXISTS vector;")
+                }
+                SchemaUtils.create(original)
+                assertTrue(original.exists())
+
+                val statements = MigrationUtils.statementsRequiredForDatabaseMigration(updated, withLogs = false)
+                assertEquals(1, statements.size)
+                val statement = statements.single()
+                assertTrue(
+                    statement.startsWith("ALTER TABLE") &&
+                        statement.contains("VECTOR", ignoreCase = true) &&
+                        statement.contains("5")
+                )
+
+                exec(statement)
+                val rerun = MigrationUtils.statementsRequiredForDatabaseMigration(updated, withLogs = false)
+                assertTrue(rerun.isEmpty())
+            } finally {
+                SchemaUtils.drop(original)
+                if (testDb == TestDB.POSTGRESQL) {
+                    exec("DROP EXTENSION IF EXISTS vector CASCADE;")
+                }
+            }
+        }
+    }
 }

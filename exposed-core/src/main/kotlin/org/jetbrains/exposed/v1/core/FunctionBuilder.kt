@@ -2,6 +2,8 @@ package org.jetbrains.exposed.v1.core
 
 import org.jetbrains.exposed.v1.core.functions.array.ArrayGet
 import org.jetbrains.exposed.v1.core.functions.array.ArraySlice
+import org.jetbrains.exposed.v1.core.functions.vector.VectorDistance
+import org.jetbrains.exposed.v1.core.functions.vector.VectorDistanceMetric
 
 // General purpose functions
 
@@ -222,3 +224,24 @@ infix operator fun <E, T : List<E>?> ExpressionWithColumnType<T>.get(index: Int)
  */
 fun <E, T : List<E>?> ExpressionWithColumnType<T>.slice(lower: Int? = null, upper: Int? = null): ArraySlice<E, T> =
     ArraySlice(this, lower, upper, this.columnType)
+
+/** Returns the mathematical distance calculated between the two vector expressions, based on cosine similarity. */
+fun ExpressionWithColumnType<FloatArray>.cosineDistance(target: Expression<FloatArray>): VectorDistance =
+    VectorDistance(this, target, VectorDistanceMetric.COSINE)
+
+/** Returns the mathematical distance calculated between this vector expression and a target vector, based on cosine similarity. */
+fun ExpressionWithColumnType<FloatArray>.cosineDistance(target: FloatArray): VectorDistance = cosineDistance(vectorParam(target))
+
+/** Returns the mathematical distance calculated between the two vector expressions, based on euclidean similarity. */
+fun ExpressionWithColumnType<FloatArray>.euclideanDistance(target: Expression<FloatArray>): VectorDistance =
+    VectorDistance(this, target, VectorDistanceMetric.EUCLIDEAN)
+
+/** Returns the mathematical distance calculated between this vector expression and a target vector, based on euclidean similarity. */
+fun ExpressionWithColumnType<FloatArray>.euclideanDistance(target: FloatArray): VectorDistance = euclideanDistance(vectorParam(target))
+
+/** Returns the mathematical distance calculated between the two vector expressions, based on dot product similarity. */
+fun ExpressionWithColumnType<FloatArray>.dotDistance(target: Expression<FloatArray>): VectorDistance =
+    VectorDistance(this, target, VectorDistanceMetric.DOT)
+
+/** Returns the mathematical distance calculated between this vector expression and a target vector, based on dot product similarity. */
+fun ExpressionWithColumnType<FloatArray>.dotDistance(target: FloatArray): VectorDistance = dotDistance(vectorParam(target))

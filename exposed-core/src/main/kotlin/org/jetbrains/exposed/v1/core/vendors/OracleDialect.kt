@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.core.vendors
 
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.functions.vector.VectorDistanceMetric
 import org.jetbrains.exposed.v1.core.statements.MergeStatement
 import org.jetbrains.exposed.v1.core.statements.MergeStatement.ClauseAction.DELETE
 import org.jetbrains.exposed.v1.core.statements.MergeStatement.ClauseAction.INSERT
@@ -197,6 +198,21 @@ internal object OracleFunctionProvider : FunctionProvider() {
         append("Extract(SECOND FROM ")
         append(expr)
         append(")")
+    }
+
+    override fun vectorDistance(
+        expression: Expression<FloatArray>,
+        targetExpression: Expression<FloatArray>,
+        metric: VectorDistanceMetric,
+        queryBuilder: QueryBuilder
+    ) {
+        queryBuilder {
+            +"VECTOR_DISTANCE("
+            append(expression)
+            +", "
+            append(targetExpression)
+            +", ${metric.name})"
+        }
     }
 
     override fun <T> jsonExtract(

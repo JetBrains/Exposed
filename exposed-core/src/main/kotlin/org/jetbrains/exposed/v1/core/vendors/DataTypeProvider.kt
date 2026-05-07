@@ -140,6 +140,11 @@ abstract class DataTypeProvider {
     open fun jsonBType(): String =
         throw UnsupportedByDialectException("This vendor does not support binary JSON data type", currentDialect)
 
+    // Array types
+
+    /** Data type for storing vector data values. */
+    open fun vectorType(): String = "VECTOR"
+
     // Misc.
 
     /** Returns the SQL representation of the specified expression, for it to be used as a column default value. */

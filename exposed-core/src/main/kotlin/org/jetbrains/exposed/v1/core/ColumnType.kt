@@ -1405,6 +1405,152 @@ class ArrayColumnType<T, R : List<Any?>>(
 private fun isArrayOfByteArrays(value: Array<*>) =
     value.all { it is ByteArray }
 
+/**
+ * Column for storing vector values as a `FloatArray`.
+ */
+class VectorColumnType(
+    /** The number of dimensions that the stored vector must have. */
+    val dimensions: Int,
+) : ColumnType<FloatArray>() {
+    override fun sqlType(): String {
+        require(dimensions > 1) { "The number of dimensions must be at minimum 1." }
+        val dialect = currentDialect
+        return buildString {
+            append(dialect.dataTypeProvider.vectorType())
+            append("($dimensions")
+            if (dialect is OracleDialect || dialect is SQLServerDialect) append(", FLOAT32")
+            append(")")
+        }
+    }
+
+    override fun readObject(rs: RowApi, index: Int): Any? = when (currentDialect) {
+        is OracleDialect -> rs.getObject(index, FloatArray::class.java)
+        is SQLServerDialect -> SqlServerVectorBinder.readData(rs, index)
+        is PostgreSQLDialect -> rs.getString(index)
+        else -> super.readObject(rs, index)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun valueFromDB(value: Any): FloatArray = when (value) {
+        is FloatArray -> value
+        is Array<*> -> (value as Array<Float>).toFloatArray()
+        is ByteArray -> value.toFloatArray()
+        is String -> value.trim('[', ']').split(",").map { it.toFloat() }.toFloatArray()
+        else -> error("Unexpected value of type FloatArray: $value of ${value::class.qualifiedName}")
+    }
+
+    override fun nonNullValueToString(value: FloatArray): String {
+        val arrayString = "'${value.joinToString(prefix = "[", postfix = "]")}'"
+        return when (currentDialect) {
+            is MariaDBDialect -> "VEC_FROMTEXT($arrayString)"
+            is OracleDialect, is MysqlDialect -> "TO_VECTOR($arrayString)"
+            else -> arrayString
+        }
+    }
+
+    override fun parameterMarker(value: FloatArray?): String = when (currentDialect) {
+        is PostgreSQLDialect -> "?::vector($dimensions)"
+        else -> super.parameterMarker(value)
+    }
+
+    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+        val dialect = currentDialect
+        val parameterValue = when (value) {
+            is FloatArray if dialect is OracleDialect -> OracleVectorBinder.valueToBind(value)
+            is FloatArray if dialect is SQLServerDialect -> SqlServerVectorBinder.valueToBind(value)
+            is FloatArray if dialect is MysqlDialect -> value.toByteArray()
+            else -> value
+        }
+        super.setParameter(stmt, index, parameterValue)
+    }
+}
+
+/**
+ * `ByteArray` converter for databases that store VECTOR types in binary format and return this in raw form.
+ * The alternative to this conversion would be to perform it on the database-level, for example by "magically"
+ * altering the underlying SELECT query:
+ * - MySQL --> `SELECT VECTOR_TO_STRING(embedding)`
+ * - MariaDB --> `SELECT VEC_TOTEXT(embedding)`
+ * This is a multiplatform alternative to the following solution:
+ *
+ * ```kotlin
+ * fun ByteArray.toFloatArray(): FloatArray {
+ *     val capacity = this.size / 4
+ *     val result = FloatArray(capacity)
+ *     val buffer = ByteBuffer.wrap(this).order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer()
+ *     buffer.get(result)
+ *     return result
+ * }
+ * ```
+ */
+@Suppress("MagicNumber")
+private fun ByteArray.toFloatArray(): FloatArray {
+    val capacity = this.size / 4
+    val result = FloatArray(capacity)
+    repeat(capacity) { i ->
+        val base = i * 4
+        val bits = (this[base + 3].toInt() and 0xFF shl 24) or
+            (this[base + 2].toInt() and 0xFF shl 16) or
+            (this[base + 1].toInt() and 0xFF shl 8) or
+            (this[base].toInt() and 0xFF)
+        result[i] = Float.fromBits(bits)
+    }
+    return result
+}
+
+/**
+ * This is a multiplatform alternative to the following solution:
+ *
+ * ```kotlin
+ * fun FloatArray.toByteArray(): ByteArray {
+ *     val buffer = ByteBuffer.allocate(this.size * 4).order(ByteOrder.LITTLE_ENDIAN)
+ *     this.forEach { value ->
+ *         buffer.putFloat(value)
+ *     }
+ *     return buffer.array()
+ * }
+ * ```
+ */
+@Suppress("MagicNumber")
+private fun FloatArray.toByteArray(): ByteArray {
+    val capacity = this.size * 4
+    val bytes = ByteArray(capacity)
+    repeat(this.size) { i ->
+        val bits = this[i].toRawBits()
+
+        bytes[i * 4] = (bits and 0xff).toByte()
+        bytes[i * 4 + 1] = ((bits shr 8) and 0xff).toByte()
+        bytes[i * 4 + 2] = ((bits shr 16) and 0xff).toByte()
+        bytes[i * 4 + 3] = ((bits shr 24) and 0xff).toByte()
+    }
+    return bytes
+}
+
+/** Custom runtime binder to invoke necessary Oracle-specific classes and methods when preparing a statement. */
+private object OracleVectorBinder {
+    private val vectorClass by lazy { Class.forName("oracle.sql.VECTOR") }
+    private val ofFloat32Values by lazy { vectorClass.getMethod("ofFloat32Values", Any::class.java) }
+
+    fun valueToBind(value: FloatArray): Any = ofFloat32Values.invoke(null, value)
+}
+
+/** Custom runtime binder to invoke necessary MSSQL-specific classes and methods when preparing a statement. */
+private object SqlServerVectorBinder {
+    private val vectorClass by lazy { Class.forName("microsoft.sql.Vector") }
+    private val vectorConstructor by lazy {
+        vectorClass.getConstructor(Int::class.java, Int::class.java, Array<Any>::class.java)
+    }
+    private val getData by lazy { vectorClass.getMethod("getData") }
+
+    @Suppress("MagicNumber")
+    fun valueToBind(value: FloatArray): Any = vectorConstructor.newInstance(value.size, 4, value.toTypedArray())
+
+    fun readData(rs: RowApi, index: Int): Any? {
+        val vector = rs.getObject(index, vectorClass)
+        return if (vector == null) null else getData.invoke(vector)
+    }
+}
+
 // Date/Time columns
 
 /**

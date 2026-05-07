@@ -86,6 +86,7 @@ interface R2dbcRegistryTypeMapping : R2dbcTypeMapping {
                     .register(DateTimeTypeMapper())
                     .register(BinaryTypeMapper())
                     .register(ArrayTypeMapper())
+                    .register(VectorTypeMapper())
                     .register(PostgresSpecificTypeMapper())
                     .register(ValueTypeMapper())
                     .register(DefaultTypeMapper())

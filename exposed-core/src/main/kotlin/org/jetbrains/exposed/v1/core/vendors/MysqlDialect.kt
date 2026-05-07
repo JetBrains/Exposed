@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.core.vendors
 
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.functions.vector.VectorDistanceMetric
 import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.exceptions.throwUnsupportedException
@@ -128,6 +129,21 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
             super.regexp(expr1, pattern, caseSensitive, queryBuilder)
         } else {
             queryBuilder { append(expr1, " REGEXP ", pattern) }
+        }
+    }
+
+    override fun vectorDistance(
+        expression: Expression<FloatArray>,
+        targetExpression: Expression<FloatArray>,
+        metric: VectorDistanceMetric,
+        queryBuilder: QueryBuilder
+    ) {
+        queryBuilder {
+            +"DISTANCE("
+            append(expression)
+            +", "
+            append(targetExpression)
+            +", '${metric.name}')"
         }
     }
 

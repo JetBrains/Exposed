@@ -1097,6 +1097,16 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     fun <E, R : List<Any?>> Table.array(name: String, columnType: ColumnType<E & Any>, maximumCardinality: List<Int>? = null, dimensions: Int): Column<R> =
         registerColumn(name, ArrayColumnType(columnType, maximumCardinality, dimensions))
 
+    /**
+     * Creates a vector column, with the specified [name], for storing elements of a `FloatArray`.
+     *
+     * **Note** This column type is not supported by all databases and drivers. Please check your documentation.
+     *
+     * @param name Name of the column.
+     * @param dimensions The number of dimensions that each stored vector must have.
+     */
+    fun Table.vector(name: String, dimensions: Int): Column<FloatArray> = registerColumn(name, VectorColumnType(dimensions))
+
     // Auto-generated values
 
     /**
