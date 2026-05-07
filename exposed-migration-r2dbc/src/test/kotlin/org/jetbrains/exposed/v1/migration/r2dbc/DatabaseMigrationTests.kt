@@ -36,9 +36,9 @@ import kotlin.test.assertNull
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlin.uuid.toKotlinUuid
+import java.util.UUID as JavaUUID
 import org.jetbrains.exposed.v1.datetime.date as kotlinDatetimeDate
 import org.jetbrains.exposed.v1.javatime.date as javatimeDate
-import java.util.UUID as JavaUUID
 
 class DatabaseMigrationTests : R2dbcDatabaseTestsBase() {
     private val columnTypeChangeUnsupportedDb = TestDB.ALL - TestDB.ALL_H2_V2
