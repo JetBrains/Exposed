@@ -17,6 +17,7 @@ import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcLocalMetadataImpl
 import org.jetbrains.exposed.v1.r2dbc.transactions.R2dbcTransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.vendors.*
+import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -121,6 +122,7 @@ class R2dbcDatabase private constructor(
     override val identifierManager: IdentifierManagerApi by lazy { connectionMetadata { identifierManager } }
 
     companion object {
+        private val logger = LoggerFactory.getLogger(this::class.java)
 
         private val dialectsMetadata = ConcurrentHashMap<String, () -> DatabaseDialectMetadata>()
 
@@ -174,7 +176,10 @@ class R2dbcDatabase private constructor(
                 connectionUrlMode = options.urlMode
                 TransactionManager.registerManager(this, manager(this))
                 // ABOVE should be replaced with BELOW when ThreadLocalTransactionManager is fully deprecated
-                // TransactionManager.registerManager(this, manager(this))
+                // TransactionManager.registerManager(this, manager(this))\
+                runBlocking {
+                    generateSchema(this@apply)
+                }
             }
         }
 
@@ -293,6 +298,21 @@ class R2dbcDatabase private constructor(
         private fun getDriver(url: String) = driverMapping.entries.firstOrNull { (prefix, _) ->
             url.startsWith(prefix)
         }?.value ?: error("Database driver not found for $url")
+
+        @OptIn(InternalApi::class)
+        private suspend fun generateSchema(database: R2dbcDatabase) {
+            if (database.config.ddl == null) {
+                logger.debug("Schema generation not configured")
+                return
+            } else {
+                withTransactionContext(TransactionManager.manager.newTransaction(readOnly = false), {
+                    val exposedTables = database.config.ddl!!.tables
+                    logger.info("Schema generation for tables '{}'", exposedTables.map { it.tableName })
+                    logger.debug("ddl {}", exposedTables.map { it.ddl }.joinToString())
+                    SchemaUtils.create(tables = exposedTables.toTypedArray())
+                })
+            }
+        }
     }
 }
 

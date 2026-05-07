@@ -4,7 +4,6 @@ import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.spring.boot4.Application
-import org.jetbrains.exposed.v1.spring.boot4.DatabaseInitializer
 import org.jetbrains.exposed.v1.spring.boot4.tables.TestTable
 import org.jetbrains.exposed.v1.spring7.transaction.ExposedSpringTransactionAttributeSource
 import org.jetbrains.exposed.v1.spring7.transaction.SpringTransactionManager
@@ -34,11 +33,8 @@ open class ExposedAutoConfigurationTest {
     @Autowired(required = false)
     private var springTransactionManager: SpringTransactionManager? = null
 
-    @Autowired(required = false)
-    private var databaseInitializer: DatabaseInitializer? = null
-
     @Autowired
-    private var databaseConfig: DatabaseConfig? = null
+    private lateinit var databaseConfig: DatabaseConfig
 
     @Autowired
     private var transactionAttributeSource: TransactionAttributeSource? = null
@@ -50,7 +46,7 @@ open class ExposedAutoConfigurationTest {
 
     @Test
     fun `should not create schema`() {
-        assertNull(databaseInitializer)
+        assertNull(databaseConfig.ddl)
     }
 
     @Test
@@ -59,7 +55,7 @@ open class ExposedAutoConfigurationTest {
         assertSame(databaseConfig, expectedConfig)
         assertEquals(
             expectedConfig.maxEntitiesToStoreInCachePerEntity,
-            databaseConfig!!.maxEntitiesToStoreInCachePerEntity
+            databaseConfig.maxEntitiesToStoreInCachePerEntity
         )
     }
 

@@ -28,6 +28,7 @@ interface DatabaseConfig {
     val logTooMuchResultSetsThreshold: Int
     val preserveKeywordCasing: Boolean
     val preserveIdentifierCasing: Boolean
+    val ddl: Ddl?
 
     /**
      * The [CoroutineDispatcher] to be used when determining the scope of Exposed transaction if
@@ -183,6 +184,8 @@ interface DatabaseConfig {
          * Default dispatcher is [Dispatchers.IO].
          */
         var dispatcher: CoroutineDispatcher = IO
+
+        var ddl: Ddl? = null
     }
 
     companion object {
@@ -190,6 +193,7 @@ interface DatabaseConfig {
             val builder = Builder().apply(body)
             require(builder.defaultMaxAttempts > 0) { "defaultMaxAttempts must be set to perform at least 1 attempt." }
 
+            println(builder.ddl)
             @OptIn(InternalApi::class)
             return DatabaseConfigImpl(builder)
         }
@@ -229,6 +233,8 @@ open class DatabaseConfigImpl(private val builder: DatabaseConfig.Builder) : Dat
         get() = builder.logTooMuchResultSetsThreshold
     override val dispatcher: CoroutineDispatcher
         get() = builder.dispatcher
+    override val ddl: Ddl?
+        get() = builder.ddl
 
     @OptIn(ExperimentalKeywordApi::class)
     override val preserveKeywordCasing: Boolean
