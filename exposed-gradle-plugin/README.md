@@ -16,8 +16,8 @@ plugins {
 
 ### Requirements
 
-- Kotlin version 2.1.+
-- Gradle 8.13+
+- Kotlin version 2.2.+
+- Gradle 8.14+
 - JVM 11+
 
 ## Generate migration scripts

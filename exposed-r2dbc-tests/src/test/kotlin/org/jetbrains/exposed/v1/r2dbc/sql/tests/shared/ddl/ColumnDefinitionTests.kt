@@ -11,6 +11,7 @@ import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.r2dbc.Query
+import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcResult
@@ -41,7 +42,7 @@ class ColumnDefinitionTests : R2dbcDatabaseTestsBase() {
         val columnCommentSupportedDB = TestDB.ALL_H2_V2 + TestDB.ALL_MYSQL_MARIADB
 
         withTables(excludeSettings = TestDB.ALL - columnCommentSupportedDB, tester) { testDb ->
-            assertTrue { org.jetbrains.exposed.v1.r2dbc.SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
+            assertTrue { SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
 
             tester.insert { it[amount] = 9 }
             assertEquals(9, tester.selectAll().single()[tester.amount])
@@ -71,7 +72,7 @@ class ColumnDefinitionTests : R2dbcDatabaseTestsBase() {
         }
 
         withTables(TestDB.ALL - TestDB.SQLSERVER, tester) {
-            assertTrue { org.jetbrains.exposed.v1.r2dbc.SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
+            assertTrue { SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
 
             val testEmail = "mysecretemail123@gmail.com"
             tester.insert {
@@ -108,11 +109,11 @@ class ColumnDefinitionTests : R2dbcDatabaseTestsBase() {
                     }
                 }
             }
-            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(tester)
+            SchemaUtils.create(tester)
 
             if (testDb != TestDB.ORACLE) {
                 // Oracle would not work with this use case as special DEFAULT syntax is not registered & causes mismatch
-                assertTrue { org.jetbrains.exposed.v1.r2dbc.SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
+                assertTrue { SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
             }
 
             tester.insert {
@@ -152,7 +153,7 @@ class ColumnDefinitionTests : R2dbcDatabaseTestsBase() {
                 assertEquals(itemA, singleItem)
             }
 
-            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(tester)
+            SchemaUtils.drop(tester)
         }
     }
 
@@ -178,7 +179,7 @@ class ColumnDefinitionTests : R2dbcDatabaseTestsBase() {
             if (testDb == TestDB.MYSQL_V8 || testDb == TestDB.ORACLE) {
                 // H2 metadata query does not return invisible column info
                 // Bug in MariaDB with nullable column - metadata default value returns as NULL - EXPOSED-415
-                assertTrue { org.jetbrains.exposed.v1.r2dbc.SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
+                assertTrue { SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
             }
 
             tester.insert {

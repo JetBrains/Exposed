@@ -601,7 +601,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
                         exec("${createStatement.trimIndent()} $computedName AS ($computation))")
                     }
 
-                    else -> org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(generatedTable)
+                    else -> SchemaUtils.create(generatedTable)
                 }
 
                 assertFailAndRollback("Generated columns are auto-derived and read-only") {
@@ -626,7 +626,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
                 assertNull(result2[generatedTable.amount])
                 assertNull(result2[generatedTable.computedAmount])
             } finally {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(generatedTable)
+                SchemaUtils.drop(generatedTable)
             }
         }
     }

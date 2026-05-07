@@ -9,6 +9,7 @@ import org.jetbrains.exposed.v1.core.isNotNull
 import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.neq
 import org.jetbrains.exposed.v1.core.substring
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
@@ -450,7 +451,7 @@ class JodaTimeMiscTableTest : DatabaseTestsBase() {
                 }
                 commit() // Need commit to persist data before drop tables
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(ZeroDateTimeTable)
+                SchemaUtils.drop(ZeroDateTimeTable)
                 commit()
             }
         }

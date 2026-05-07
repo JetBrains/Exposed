@@ -266,7 +266,7 @@ private fun <ID : Any> List<Entity<ID>>.preloadRelations(
     directRelations.forEach { prop ->
         when (val refObject = getReferenceObjectFromDelegatedProperty(entity, prop)) {
             is Reference<*, *, *> -> {
-                (refObject as Reference<*, *, Entity<*>>).allReferences.let { refColumns ->
+                refObject.allReferences.let { refColumns ->
                     val isSingleIdReference = hasSingleReferenceWithReferee(refColumns)
                     val delegateRefColumn = refObject.reference
                     this.map { entity ->
@@ -287,7 +287,7 @@ private fun <ID : Any> List<Entity<ID>>.preloadRelations(
                 }
             }
             is OptionalReference<*, *, *> -> {
-                (refObject as OptionalReference<*, *, Entity<*>>).allReferences.let { refColumns ->
+                refObject.allReferences.let { refColumns ->
                     val isSingleIdReference = hasSingleReferenceWithReferee(refColumns)
                     val delegateRefColumn = refObject.reference
                     this.mapNotNull { entity ->
@@ -363,8 +363,8 @@ private fun <ID : Any> List<Entity<ID>>.preloadRelations(
     }
 
     if (directRelations.isNotEmpty() && relations.size != directRelations.size) {
-        val remainingRelations = relations.asList() - directRelations
-        directRelations.map { relationProperty ->
+        val remainingRelations = relations.asList() - directRelations.toSet()
+        directRelations.forEach { relationProperty ->
             val relationsToLoad = this.flatMap {
                 when (val relation = (relationProperty as KProperty1<Entity<*>, *>).get(it)) {
                     is SizedIterable<*> -> relation.toList()

@@ -10,6 +10,7 @@ import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.datetime.KotlinLocalDateTimeColumnType
 import org.jetbrains.exposed.v1.datetime.datetime
+import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.batchInsert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
@@ -58,7 +59,7 @@ class SQLServerDefaultsTest : R2dbcDatabaseTestsBase() {
                 assertNotNull(result[temporalTable.sysStart])
                 assertNotNull(result[temporalTable.sysEnd])
             } finally {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(temporalTable)
+                SchemaUtils.drop(temporalTable)
             }
         }
     }

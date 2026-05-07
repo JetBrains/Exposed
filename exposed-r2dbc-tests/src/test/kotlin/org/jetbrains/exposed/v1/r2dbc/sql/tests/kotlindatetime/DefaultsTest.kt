@@ -181,7 +181,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
                 "${"t".inProperCase()} (" +
                 "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()}${
-                    testDb?.let { " PRIMARY KEY" } ?: ""
+                    testDb.let { " PRIMARY KEY" }
                 }, " +
                 "${"s".inProperCase()} $varCharType${testTable.s.constraintNamePart()} DEFAULT 'test' NOT NULL, " +
                 "${"sn".inProperCase()} $varCharType${testTable.sn.constraintNamePart()} DEFAULT 'testNullable' NULL, " +
@@ -326,7 +326,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
         }
 
         withTables(foo) {
-            val actual = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.statementsRequiredToActualizeScheme(foo)
+            val actual = SchemaUtils.statementsRequiredToActualizeScheme(foo)
 
             assertTrue(actual.isEmpty())
         }
@@ -360,7 +360,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
                 "${"t".inProperCase()} (" +
                 "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()}${
-                    testDb.let { " PRIMARY KEY" } ?: ""
+                    testDb.let { " PRIMARY KEY" }
                 }, " +
                 "${"t1".inProperCase()} $timestampWithTimeZoneType${testTable.t1.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
                 "${"t2".inProperCase()} $timestampWithTimeZoneType${testTable.t2.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
@@ -437,7 +437,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
         }
 
         withTables(tester) {
-            val statements = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.addMissingColumnsStatements(tester)
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -451,7 +451,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
         }
 
         withTables(tester) {
-            val statements = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.addMissingColumnsStatements(tester)
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -465,7 +465,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
         }
 
         withTables(tester) {
-            val statements = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.addMissingColumnsStatements(tester)
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -482,7 +482,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
         }
 
         withTables(tester) {
-            val statements = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.addMissingColumnsStatements(tester)
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -498,7 +498,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
         // MariaDB does not support TIMESTAMP WITH TIME ZONE column type
         val unsupportedDatabases = setOf(TestDB.MARIADB, TestDB.MYSQL_V5)
         withTables(excludeSettings = unsupportedDatabases, tester) {
-            val statements = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.addMissingColumnsStatements(tester)
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }

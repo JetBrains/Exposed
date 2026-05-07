@@ -15,7 +15,7 @@ internal class DataSourceSpy(connectionSpy: (Connection) -> Connection) : DataSo
     override fun setLoginTimeout(seconds: Int) = throw NotImplementedError()
     override fun getLoginTimeout(): Int = throw NotImplementedError()
     override fun getParentLogger(): Logger = throw NotImplementedError()
-    override fun <T : Any?> unwrap(iface: Class<T>?): T = throw NotImplementedError()
+    override fun <T> unwrap(iface: Class<T>?): T = throw NotImplementedError()
     override fun isWrapperFor(iface: Class<*>?): Boolean = throw NotImplementedError()
     override fun getConnection(username: String?, password: String?): Connection = throw NotImplementedError()
 }

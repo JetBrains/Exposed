@@ -45,7 +45,7 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
     }
 
     private fun JdbcTransaction.testOnDeleteSetDefault() {
-        org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(Category, Item)
+        SchemaUtils.create(Category, Item)
 
         Category.insert {
             it[id] = DEFAULT_CATEGORY_ID
@@ -77,7 +77,7 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
             Item.selectAll().where { Item.id eq tabboulehId }.single()[Item.categoryId]
         )
 
-        org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(Category, Item)
+        SchemaUtils.drop(Category, Item)
     }
 
     @Test
@@ -255,9 +255,9 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
             }
 
             try {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(parentTester)
+                SchemaUtils.create(parentTester)
                 assertTrue(parentTester.exists())
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(childTester)
+                SchemaUtils.create(childTester)
                 assertTrue(childTester.exists())
 
                 val parentId = parentTester.insertAndGetId {
@@ -273,8 +273,8 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
                 childTester.update({ childTester.id eq childId }) { it[text_col] = "Updated child text" }
                 childTester.deleteWhere { childTester.id eq childId }
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(childTester)
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(parentTester)
+                SchemaUtils.drop(childTester)
+                SchemaUtils.drop(parentTester)
             }
         }
     }

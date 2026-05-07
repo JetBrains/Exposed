@@ -82,7 +82,7 @@ abstract class DatabaseTestsBase {
 
         val registeredDb = dbSettings.db!!
         if (newConfiguration) {
-            dbSettings.db = dbSettings.connect(configure ?: {})
+            dbSettings.db = dbSettings.connect(configure)
         }
         val database = dbSettings.db!!
 
@@ -99,7 +99,7 @@ abstract class DatabaseTestsBase {
         configure: (DatabaseConfig.Builder.() -> Unit)? = null,
         statement: JdbcTransaction.(TestDB) -> Unit
     ) {
-        withConnection(dbSettings, configure) { database, testDb ->
+        withConnection(dbSettings, configure) { database, _ ->
             transaction(database) {
                 maxAttempts = 1
                 registerInterceptor(CurrentTestDBInterceptor)
@@ -184,13 +184,13 @@ abstract class DatabaseTestsBase {
 
         withDb(dialect, configure) {
             if (currentDialectTest.supportsCreateSchema) {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createSchema(*schemas)
+                SchemaUtils.createSchema(*schemas)
                 try {
                     statement()
                     commit() // Need commit to persist data before drop schemas
                 } finally {
                     val cascade = it != TestDB.SQLSERVER
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropSchema(*schemas, cascade = cascade)
+                    SchemaUtils.dropSchema(*schemas, cascade = cascade)
                     commit()
                 }
             }

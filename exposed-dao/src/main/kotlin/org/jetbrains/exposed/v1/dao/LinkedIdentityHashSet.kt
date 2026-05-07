@@ -47,7 +47,7 @@ internal class LinkedIdentityHashSet<T> : MutableSet<T> {
     }
 
     override fun removeAll(elements: Collection<T>): Boolean {
-        val toRemove = set intersect elements
+        val toRemove = set intersect elements.toSet()
         if (toRemove.isEmpty()) return false
         set.removeAll(toRemove)
         list.removeAll(toRemove)
@@ -55,7 +55,7 @@ internal class LinkedIdentityHashSet<T> : MutableSet<T> {
     }
 
     override fun retainAll(elements: Collection<T>): Boolean {
-        return removeAll(set subtract elements)
+        return removeAll(set subtract elements.toSet())
     }
 
     override val size: Int

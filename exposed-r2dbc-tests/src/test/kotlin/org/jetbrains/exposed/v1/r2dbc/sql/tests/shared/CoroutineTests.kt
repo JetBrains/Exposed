@@ -23,6 +23,7 @@ import org.jetbrains.exposed.v1.r2dbc.update
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.RepeatedTest
 import java.util.concurrent.Executors
+import kotlin.time.Duration.Companion.milliseconds
 
 private val singleThreadDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
 
@@ -68,7 +69,7 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
                 kotlin.test.assertEquals(1, result)
             }
 
-            while (!mainJob.isCompleted) delay(100)
+            while (!mainJob.isCompleted) delay(100.milliseconds)
             mainJob.getCompletionExceptionOrNull()?.let { throw it }
             assertEquals(1, Testing.selectAll().where { Testing.id.eq(1) }.single()[Testing.id].value)
         }
@@ -117,7 +118,7 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
                 kotlin.test.assertEquals(2, result, "Failing at end of mainJob")
             }
 
-            while (!mainJob.isCompleted) delay(100)
+            while (!mainJob.isCompleted) delay(100.milliseconds)
             mainJob.getCompletionExceptionOrNull()?.let { throw it }
             assertEqualCollections(listOf(updatedId, originalId), TestingUnique.selectAll().map { it[TestingUnique.id] })
         }
@@ -158,7 +159,7 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
                 kotlin.test.assertEquals(1, result2.await())
             }
 
-            while (!job.isCompleted) delay(100)
+            while (!job.isCompleted) delay(100.milliseconds)
 
             job.getCompletionExceptionOrNull()?.let { throw it }
             assertEquals(1, Testing.selectAll().count())
@@ -205,7 +206,7 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
                 kotlin.test.assertEquals(2, insertResult, "Failing at end of insert job")
             }
 
-            while (!mainJob.isCompleted) delay(100)
+            while (!mainJob.isCompleted) delay(100.milliseconds)
             mainJob.getCompletionExceptionOrNull()?.let { throw it }
             assertEqualCollections(listOf(updatedId, originalId), TestingUnique.selectAll().map { it[TestingUnique.id] })
         }
@@ -245,7 +246,7 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
                 kotlin.test.assertEquals(1, result)
             }
 
-            while (!mainJob.isCompleted) delay(100)
+            while (!mainJob.isCompleted) delay(100.milliseconds)
             mainJob.getCompletionExceptionOrNull()?.let { throw it }
             assertEquals(1, Testing.selectAll().where { Testing.id.eq(1) }.single()[Testing.id].value)
         }
@@ -283,7 +284,7 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
                 kotlin.test.assertEquals(10, result)
             }
 
-            while (!mainJob.isCompleted) delay(100)
+            while (!mainJob.isCompleted) delay(100.milliseconds)
             mainJob.getCompletionExceptionOrNull()?.let { throw it }
             assertEquals(10, Testing.selectAll().count())
         }
@@ -306,7 +307,7 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
                 kotlin.test.assertEquals(15, results.sum())
             }
 
-            while (!mainJob.isCompleted) delay(100)
+            while (!mainJob.isCompleted) delay(100.milliseconds)
             mainJob.getCompletionExceptionOrNull()?.let { throw it }
 
             assertEquals(5L, Testing.selectAll().count())

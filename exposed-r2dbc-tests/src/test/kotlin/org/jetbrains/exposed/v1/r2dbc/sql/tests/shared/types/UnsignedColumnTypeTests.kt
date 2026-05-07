@@ -8,6 +8,7 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
@@ -80,7 +81,7 @@ class UnsignedColumnTypeTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testPreviousUByteColumnTypeWorksWithNewSmallIntType() {
         // MySQL and MariaDB type hasn't changed, and PostgreSQL and Oracle never supported TINYINT
-        withDb(TestDB.ALL_H2_V2 - TestDB.H2_V2_PSQL) { testDb ->
+        withDb(TestDB.ALL_H2_V2 - TestDB.H2_V2_PSQL) {
             try {
                 val tableName = UByteTable.nameInDatabaseCase()
                 val columnName = UByteTable.unsignedByte.nameInDatabaseCase()
@@ -106,7 +107,7 @@ class UnsignedColumnTypeTests : R2dbcDatabaseTestsBase() {
                 val result2 = UByteTable.selectAll().map { it[UByteTable.unsignedByte] }.toList()
                 assertEqualCollections(listOf(number1, number2), result2)
             } finally {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(UByteTable)
+                SchemaUtils.drop(UByteTable)
             }
         }
     }
@@ -183,7 +184,7 @@ class UnsignedColumnTypeTests : R2dbcDatabaseTestsBase() {
                     assertEqualCollections(listOf(number1, number2), result2)
                 }
             } finally {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(UShortTable)
+                SchemaUtils.drop(UShortTable)
             }
         }
     }
@@ -258,7 +259,7 @@ class UnsignedColumnTypeTests : R2dbcDatabaseTestsBase() {
                 val result2 = UIntTable.selectAll().map { it[UIntTable.unsignedInt] }.toList()
                 assertEqualCollections(listOf(number1, number2), result2)
             } finally {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(UIntTable)
+                SchemaUtils.drop(UIntTable)
             }
         }
     }

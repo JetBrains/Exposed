@@ -85,13 +85,13 @@ fun <T : String?> Expression<T>.locate(substring: String): Locate<T> = Locate(th
 // General-Purpose Aggregate Functions
 
 /** Returns the minimum value of this expression across all non-null input values, or `null` if there are no non-null values. */
-fun <T : Any, S : T?> ExpressionWithColumnType<in S>.min(): Min<T, S> = Min<T, S>(this, this.columnType as IColumnType<T>)
+fun <T : Any, S : T?> ExpressionWithColumnType<in S>.min(): Min<T, S> = Min(this, this.columnType as IColumnType<T>)
 
 /** Returns the maximum value of this expression across all non-null input values, or `null` if there are no non-null values. */
-fun <T : Any, S : T?> ExpressionWithColumnType<in S>.max(): Max<T, S> = Max<T, S>(this, this.columnType as IColumnType<T>)
+fun <T : Any, S : T?> ExpressionWithColumnType<in S>.max(): Max<T, S> = Max(this, this.columnType as IColumnType<T>)
 
 /** Returns the average (arithmetic mean) value of this expression across all non-null input values, or `null` if there are no non-null values. */
-fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<S>.avg(scale: Int = 2): Avg<T, S> = Avg<T, S>(this, scale)
+fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<S>.avg(scale: Int = 2): Avg<T, S> = Avg(this, scale)
 
 /** Returns the sum of this expression across all non-null input values, or `null` if there are no non-null values. */
 fun <T> ExpressionWithColumnType<T>.sum(): Sum<T> = Sum(this, this.columnType)
@@ -109,28 +109,28 @@ fun Column<*>.countDistinct(): Count = Count(this, true)
  *
  * @param scale The scale of the decimal column expression returned.
  */
-fun <T : Any?> ExpressionWithColumnType<T>.stdDevPop(scale: Int = 2): StdDevPop<T> = StdDevPop(this, scale)
+fun <T> ExpressionWithColumnType<T>.stdDevPop(scale: Int = 2): StdDevPop<T> = StdDevPop(this, scale)
 
 /**
  * Returns the sample standard deviation of the non-null input values, or `null` if there are no non-null values.
  *
  * @param scale The scale of the decimal column expression returned.
  */
-fun <T : Any?> ExpressionWithColumnType<T>.stdDevSamp(scale: Int = 2): StdDevSamp<T> = StdDevSamp(this, scale)
+fun <T> ExpressionWithColumnType<T>.stdDevSamp(scale: Int = 2): StdDevSamp<T> = StdDevSamp(this, scale)
 
 /**
  * Returns the population variance of the non-null input values (square of the population standard deviation), or `null` if there are no non-null values.
  *
  * @param scale The scale of the decimal column expression returned.
  */
-fun <T : Any?> ExpressionWithColumnType<T>.varPop(scale: Int = 2): VarPop<T> = VarPop(this, scale)
+fun <T> ExpressionWithColumnType<T>.varPop(scale: Int = 2): VarPop<T> = VarPop(this, scale)
 
 /**
  * Returns the sample variance of the non-null input values (square of the sample standard deviation), or `null` if there are no non-null values.
  *
  * @param scale The scale of the decimal column expression returned.
  */
-fun <T : Any?> ExpressionWithColumnType<T>.varSamp(scale: Int = 2): VarSamp<T> = VarSamp(this, scale)
+fun <T> ExpressionWithColumnType<T>.varSamp(scale: Int = 2): VarSamp<T> = VarSamp(this, scale)
 
 // Sequence Manipulation Functions
 
@@ -192,7 +192,7 @@ fun <T, S : T?> coalesce(
     expr: ExpressionWithColumnType<S>,
     alternate: Expression<out T>,
     vararg others: Expression<out T>
-): Coalesce<T, S> = Coalesce<T, S>(expr, alternate, others = others)
+): Coalesce<T, S> = Coalesce(expr, alternate, others = others)
 
 // Value Expressions
 
@@ -208,7 +208,7 @@ fun <R> Expression<*>.castTo(columnType: IColumnType<R & Any>): ExpressionWithCo
  */
 infix operator fun <E, T : List<E>?> ExpressionWithColumnType<T>.get(index: Int): ArrayGet<E, T> {
     return when (this) {
-        is ArrayGet<*, *> -> ArrayGet(this as Expression<T>, index, this.columnType as IColumnType<E & Any>) as ArrayGet<E, T>
+        is ArrayGet<*, *> -> ArrayGet(this as Expression<T>, index, this.columnType as IColumnType<E & Any>)
         else -> ArrayGet(this, index, (this.columnType as ArrayColumnType<E, List<E>>).delegate)
     }
 }

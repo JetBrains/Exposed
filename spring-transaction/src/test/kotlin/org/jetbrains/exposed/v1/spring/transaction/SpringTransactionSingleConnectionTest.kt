@@ -79,9 +79,9 @@ open class SingleConnectionH2TestConfig {
     @Bean
     open fun singleConnectionH2DataSource(): DataSource = SingleConnectionDataSource().apply {
         setDriverClassName("org.h2.Driver")
-        setUrl("jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;")
-        setUsername("sa")
-        setPassword("")
+        url = "jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;"
+        username = "sa"
+        password = ""
         setSuppressClose(true)
     }
 

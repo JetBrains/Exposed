@@ -61,7 +61,7 @@ class Alias<out T : Table>(val delegate: T, val alias: String) : Table() {
     override fun hashCode(): Int = tableNameWithAlias.hashCode()
 
     @Suppress("UNCHECKED_CAST")
-    operator fun <T : Any?> get(original: Column<T>): Column<T> {
+    operator fun <T> get(original: Column<T>): Column<T> {
         // CompositeIdTable id is not a typical database-registered column
         val delegateColumn = if (delegate is CompositeIdTable && original.isEntityIdentifier()) {
             delegate.id
@@ -190,10 +190,10 @@ class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
 
     override val columns: List<Column<*>> = fields.filterIsInstance<Column<*>>()
 
-    operator fun <T : Any?> get(original: Column<T>): Column<T> =
+    operator fun <T> get(original: Column<T>): Column<T> =
         get(original as Expression<T>) as Column<T>
 
-    operator fun <T : Any?> get(original: Expression<T>): Expression<T> {
+    operator fun <T> get(original: Expression<T>): Expression<T> {
         @Suppress("UNCHECKED_CAST")
         return if (original is Column<*>) {
             query.set.source.columns.find { it == original }?.clone() ?: error("Column not found in original table")
@@ -206,7 +206,7 @@ class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
         } as Expression<T>
     }
 
-    operator fun <T : Any?> get(original: ExpressionWithColumnType<T>): ExpressionWithColumnType<T> {
+    operator fun <T> get(original: ExpressionWithColumnType<T>): ExpressionWithColumnType<T> {
         return get(original as Expression<T>) as ExpressionWithColumnType<T>
     }
 

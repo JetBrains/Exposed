@@ -690,7 +690,7 @@ class InsertTests : DatabaseTestsBase() {
                     TestDB.SQLSERVER -> {
                         exec("${createStatement.trimIndent()} $computedName AS ($computation))")
                     }
-                    else -> org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(generatedTable)
+                    else -> SchemaUtils.create(generatedTable)
                 }
 
                 assertFailAndRollback("Generated columns are auto-derived and read-only") {
@@ -715,7 +715,7 @@ class InsertTests : DatabaseTestsBase() {
                 assertNull(result2[generatedTable.amount])
                 assertNull(result2[generatedTable.computedAmount])
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(generatedTable)
+                SchemaUtils.drop(generatedTable)
             }
         }
     }

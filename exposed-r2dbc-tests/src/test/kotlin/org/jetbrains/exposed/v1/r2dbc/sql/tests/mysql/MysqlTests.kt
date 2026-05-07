@@ -98,7 +98,7 @@ class MysqlTests : R2dbcDatabaseTestsBase() {
             val seconds = integer("seconds")
         }
 
-        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_MARIADB, tester) { testDb ->
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_MARIADB, tester) {
             tester.insert { it[seconds] = 1 }
 
             // SLEEP(N) pauses execution for N seconds & returns 0 if no interruption

@@ -46,7 +46,6 @@ internal object H2FunctionProvider : FunctionProvider() {
             H2Dialect.H2MajorVersion.Two -> builder {
                 append("NEXT VALUE FOR ${seq.identifier}")
             }
-            else -> error("Unsupported H2 version")
         }
 
     override fun <T> arraySlice(expression: Expression<T>, lower: Int?, upper: Int?, queryBuilder: QueryBuilder) {

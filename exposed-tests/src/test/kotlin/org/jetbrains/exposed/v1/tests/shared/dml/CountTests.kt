@@ -5,6 +5,7 @@ import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.max
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
@@ -61,7 +62,7 @@ class CountTests : DatabaseTestsBase() {
         }
 
         withSchemas(custom) {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(tester)
+            SchemaUtils.create(tester)
 
             repeat(3) {
                 tester.insert {
@@ -73,7 +74,7 @@ class CountTests : DatabaseTestsBase() {
             assertEquals(1, tester.select(tester.amount).withDistinct().count())
 
             if (currentDialectTest is SQLServerDialect) {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tester)
+                SchemaUtils.drop(tester)
             }
         }
     }

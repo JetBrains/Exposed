@@ -199,7 +199,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         withDb {
             SchemaUtils.createMissingTablesAndColumns(t1)
 
-            val missingStatements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(t2)
+            val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
 
             assertEqualCollections(missingStatements, emptyList())
 
@@ -224,7 +224,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         withDb {
             SchemaUtils.createMissingTablesAndColumns(t1)
 
-            val missingStatements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(t2)
+            val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
 
             assertEqualCollections(missingStatements, emptyList())
 
@@ -321,7 +321,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
                     }
                 }
 
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(table)
+                SchemaUtils.create(table)
                 val actual = SchemaUtils.statementsRequiredToActualizeScheme(table)
                 assertEqualLists(emptyList(), actual)
             } finally {
@@ -431,7 +431,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             try {
                 SchemaUtils.createMissingTablesAndColumns(t1)
 
-                val missingStatements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(t2)
+                val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
 
                 if (testDb !in complexAlterTable) {
                     val alterColumnWord = when (currentDialectTest) {
@@ -460,7 +460,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             try {
                 SchemaUtils.createMissingTablesAndColumns(t2)
 
-                val missingStatements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(t1)
+                val missingStatements = SchemaUtils.addMissingColumnsStatements(t1)
 
                 if (testDb !in complexAlterTable) {
                     val alterColumnWord = when (currentDialectTest) {
@@ -503,7 +503,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
         withDb {
             try {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(table)
+                SchemaUtils.create(table)
                 assertEqualLists(emptyList(), SchemaUtils.statementsRequiredToActualizeScheme(table))
             } finally {
                 SchemaUtils.drop(table)
@@ -719,8 +719,8 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             }
 
             // Should not require to be in the same schema
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createSchema(schema)
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(parentTable, childTable)
+            SchemaUtils.createSchema(schema)
+            SchemaUtils.create(parentTable, childTable)
 
             try {
                 // Try in different schema
@@ -730,7 +730,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
                 // Try in the same schema
                 if (testDb != TestDB.ORACLE) {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.setSchema(schema)
+                    SchemaUtils.setSchema(schema)
                     SchemaUtils.createMissingTablesAndColumns(parentTable, childTable)
                     assertTrue(parentTable.exists())
                     assertTrue(childTable.exists())
