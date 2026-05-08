@@ -5,7 +5,7 @@ detekt = "1.23.8" # When upgrading, also upgrade in detekt.yml and add correspon
 binary-compatibility-validator = "0.18.1"
 docker-compose = "0.17.5"
 kover = "0.9.8"
-kotlinCoroutines = "1.10.2"
+kotlinCoroutines = "1.11.0"
 kotlinxSerialization = "1.11.0"
 
 slf4j = "2.0.9"
