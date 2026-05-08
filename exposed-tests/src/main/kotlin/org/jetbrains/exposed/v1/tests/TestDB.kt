@@ -107,6 +107,10 @@ enum class TestDB(
                 exposedLogger.warn("Exception on deleting ExposedTest user")
             }
             exec("CREATE USER ExposedTest ACCOUNT UNLOCK IDENTIFIED BY 12345")
+            // Next three required for vector data type
+            exec("ALTER USER ExposedTest DEFAULT TABLESPACE USERS")
+            exec("ALTER USER ExposedTest TEMPORARY TABLESPACE TEMP")
+            exec("ALTER USER ExposedTest QUOTA UNLIMITED ON USERS")
             exec("grant all privileges to ExposedTest")
         }
         Unit
