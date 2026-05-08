@@ -359,9 +359,9 @@ abstract class FunctionProvider {
      * @param metric The mathematical formula to use when building the vector function.
      * @param queryBuilder Query builder to append the SQL function to.
      */
-    open fun vectorDistance(
-        expression: Expression<FloatArray>,
-        targetExpression: Expression<FloatArray>,
+    open fun <T> vectorDistance(
+        expression: Expression<T>,
+        targetExpression: Expression<T>,
         metric: VectorDistanceMetric,
         queryBuilder: QueryBuilder
     ) {

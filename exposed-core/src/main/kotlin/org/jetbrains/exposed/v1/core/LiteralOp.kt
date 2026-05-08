@@ -81,7 +81,16 @@ inline fun <reified T : Any, R : List<Any>> arrayLiteral(value: R, dimensions: I
 }
 
 /** Returns the specified [value] as a string literal. */
-fun vectorLiteral(value: FloatArray): LiteralOp<FloatArray> = LiteralOp(VectorColumnType(value.size), value)
+fun vectorLiteral(value: FloatArray): LiteralOp<FloatArray> = LiteralOp(
+    FloatVectorColumnType(value.size, VectorFormat.FLOAT32),
+    value
+)
+
+/** Returns the specified [value] as a string literal. */
+fun vectorLiteral(value: IntArray): LiteralOp<IntArray> = LiteralOp(
+    IntVectorColumnType(value.size, VectorFormat.INT8),
+    value
+)
 
 /** Returns the specified [value] as a literal of type [T]. */
 @Suppress("UNCHECKED_CAST", "ComplexMethod")

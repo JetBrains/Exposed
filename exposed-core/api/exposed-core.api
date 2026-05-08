@@ -183,6 +183,18 @@ public abstract class org/jetbrains/exposed/v1/core/BasicUuidColumnType : org/je
 public final class org/jetbrains/exposed/v1/core/BasicUuidColumnType$Companion {
 }
 
+public abstract class org/jetbrains/exposed/v1/core/BasicVectorColumnType : org/jetbrains/exposed/v1/core/ColumnType {
+	public fun <init> (ILorg/jetbrains/exposed/v1/core/VectorFormat;)V
+	protected abstract fun formatToString (Ljava/lang/Object;)Ljava/lang/String;
+	public final fun getDimensions ()I
+	public final fun getFormat ()Lorg/jetbrains/exposed/v1/core/VectorFormat;
+	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun parameterMarker (Ljava/lang/Object;)Ljava/lang/String;
+	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
+	public fun setParameter (Lorg/jetbrains/exposed/v1/core/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
+	public fun sqlType ()Ljava/lang/String;
+}
+
 public final class org/jetbrains/exposed/v1/core/Between : org/jetbrains/exposed/v1/core/Op, org/jetbrains/exposed/v1/core/ComplexExpression, org/jetbrains/exposed/v1/core/Op$OpBoolean {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)V
 	public final fun getExpr ()Lorg/jetbrains/exposed/v1/core/Expression;
@@ -455,6 +467,7 @@ public final class org/jetbrains/exposed/v1/core/ColumnTypeKt {
 	public static final fun isAutoInc (Lorg/jetbrains/exposed/v1/core/IColumnType;)Z
 	public static final fun resolveColumnType (Lkotlin/reflect/KClass;Lorg/jetbrains/exposed/v1/core/ColumnType;)Lorg/jetbrains/exposed/v1/core/ColumnType;
 	public static synthetic fun resolveColumnType$default (Lkotlin/reflect/KClass;Lorg/jetbrains/exposed/v1/core/ColumnType;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/ColumnType;
+	public static final fun resolveVectorColumnType (Lkotlin/reflect/KClass;ILorg/jetbrains/exposed/v1/core/VectorFormat;)Lorg/jetbrains/exposed/v1/core/BasicVectorColumnType;
 }
 
 public class org/jetbrains/exposed/v1/core/ColumnWithTransform : org/jetbrains/exposed/v1/core/ColumnType {
@@ -901,6 +914,16 @@ public final class org/jetbrains/exposed/v1/core/FloatColumnType : org/jetbrains
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 }
 
+public final class org/jetbrains/exposed/v1/core/FloatVectorColumnType : org/jetbrains/exposed/v1/core/BasicVectorColumnType {
+	public fun <init> (ILorg/jetbrains/exposed/v1/core/VectorFormat;)V
+	public synthetic fun formatToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
+	public fun setParameter (Lorg/jetbrains/exposed/v1/core/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
+	public fun sqlType ()Ljava/lang/String;
+	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueFromDB (Ljava/lang/Object;)[F
+}
+
 public final class org/jetbrains/exposed/v1/core/ForeignKeyConstraint : org/jetbrains/exposed/v1/core/DdlAware {
 	public fun <init> (Ljava/util/Map;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Ljava/lang/String;)V
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Ljava/lang/String;)V
@@ -949,12 +972,15 @@ public final class org/jetbrains/exposed/v1/core/FunctionBuilderKt {
 	public static synthetic fun concat$default (Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Concat;
 	public static final fun cosineDistance (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/functions/vector/VectorDistance;
 	public static final fun cosineDistance (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;[F)Lorg/jetbrains/exposed/v1/core/functions/vector/VectorDistance;
+	public static final fun cosineDistance (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;[I)Lorg/jetbrains/exposed/v1/core/functions/vector/VectorDistance;
 	public static final fun count (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/Count;
 	public static final fun countDistinct (Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/core/Count;
 	public static final fun dotDistance (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/functions/vector/VectorDistance;
 	public static final fun dotDistance (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;[F)Lorg/jetbrains/exposed/v1/core/functions/vector/VectorDistance;
+	public static final fun dotDistance (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;[I)Lorg/jetbrains/exposed/v1/core/functions/vector/VectorDistance;
 	public static final fun euclideanDistance (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/functions/vector/VectorDistance;
 	public static final fun euclideanDistance (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;[F)Lorg/jetbrains/exposed/v1/core/functions/vector/VectorDistance;
+	public static final fun euclideanDistance (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;[I)Lorg/jetbrains/exposed/v1/core/functions/vector/VectorDistance;
 	public static final fun function (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/CustomFunction;
 	public static final fun get (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;I)Lorg/jetbrains/exposed/v1/core/functions/array/ArrayGet;
 	public static final fun groupConcat (Lorg/jetbrains/exposed/v1/core/Expression;Ljava/lang/String;ZLkotlin/Pair;)Lorg/jetbrains/exposed/v1/core/GroupConcat;
@@ -1379,6 +1405,16 @@ public final class org/jetbrains/exposed/v1/core/Index : org/jetbrains/exposed/v
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class org/jetbrains/exposed/v1/core/IntVectorColumnType : org/jetbrains/exposed/v1/core/BasicVectorColumnType {
+	public fun <init> (ILorg/jetbrains/exposed/v1/core/VectorFormat;)V
+	public synthetic fun formatToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
+	public fun setParameter (Lorg/jetbrains/exposed/v1/core/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
+	public fun sqlType ()Ljava/lang/String;
+	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueFromDB (Ljava/lang/Object;)[I
+}
+
 public final class org/jetbrains/exposed/v1/core/IntegerColumnType : org/jetbrains/exposed/v1/core/ColumnType {
 	public fun <init> ()V
 	public fun sqlType ()Ljava/lang/String;
@@ -1553,6 +1589,7 @@ public final class org/jetbrains/exposed/v1/core/LiteralOpKt {
 	public static final fun ulongLiteral-VKZWuLQ (J)Lorg/jetbrains/exposed/v1/core/LiteralOp;
 	public static final fun ushortLiteral-xj2QHRw (S)Lorg/jetbrains/exposed/v1/core/LiteralOp;
 	public static final fun vectorLiteral ([F)Lorg/jetbrains/exposed/v1/core/LiteralOp;
+	public static final fun vectorLiteral ([I)Lorg/jetbrains/exposed/v1/core/LiteralOp;
 }
 
 public final class org/jetbrains/exposed/v1/core/Locate : org/jetbrains/exposed/v1/core/Function {
@@ -1946,6 +1983,7 @@ public final class org/jetbrains/exposed/v1/core/QueryParameterKt {
 	public static final fun ulongParam-VKZWuLQ (J)Lorg/jetbrains/exposed/v1/core/Expression;
 	public static final fun ushortParam-xj2QHRw (S)Lorg/jetbrains/exposed/v1/core/Expression;
 	public static final fun vectorParam ([F)Lorg/jetbrains/exposed/v1/core/Expression;
+	public static final fun vectorParam ([I)Lorg/jetbrains/exposed/v1/core/Expression;
 	public static final fun wrap (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/QueryParameter;
 }
 
@@ -2743,18 +2781,13 @@ public final class org/jetbrains/exposed/v1/core/VarSamp : org/jetbrains/exposed
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 }
 
-public final class org/jetbrains/exposed/v1/core/VectorColumnType : org/jetbrains/exposed/v1/core/ColumnType {
-	public fun <init> (I)V
-	public final fun getDimensions ()I
-	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueToString ([F)Ljava/lang/String;
-	public synthetic fun parameterMarker (Ljava/lang/Object;)Ljava/lang/String;
-	public fun parameterMarker ([F)Ljava/lang/String;
-	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
-	public fun setParameter (Lorg/jetbrains/exposed/v1/core/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
-	public fun sqlType ()Ljava/lang/String;
-	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun valueFromDB (Ljava/lang/Object;)[F
+public final class org/jetbrains/exposed/v1/core/VectorFormat : java/lang/Enum {
+	public static final field FLOAT32 Lorg/jetbrains/exposed/v1/core/VectorFormat;
+	public static final field FLOAT64 Lorg/jetbrains/exposed/v1/core/VectorFormat;
+	public static final field INT8 Lorg/jetbrains/exposed/v1/core/VectorFormat;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/VectorFormat;
+	public static fun values ()[Lorg/jetbrains/exposed/v1/core/VectorFormat;
 }
 
 public final class org/jetbrains/exposed/v1/core/Version {

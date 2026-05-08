@@ -32,11 +32,11 @@ enum class VectorDistanceMetric {
  * Represents an SQL function that returns the mathematical distance between two provided,
  * or stored, vector operands, based on the logic provided  by [VectorDistanceMetric].
  */
-class VectorDistance(
+class VectorDistance<T>(
     /** The vector expression that is accessed. */
-    val expression: Expression<FloatArray>,
+    val expression: Expression<T>,
     /** The second vector expression accessed as the target operand. */
-    val targetExpression: Expression<FloatArray>,
+    val targetExpression: Expression<T>,
     /** The specific mathematical formula to use when calculating the distance. */
     val metric: VectorDistanceMetric
 ) : Function<Double>(DoubleColumnType()) {

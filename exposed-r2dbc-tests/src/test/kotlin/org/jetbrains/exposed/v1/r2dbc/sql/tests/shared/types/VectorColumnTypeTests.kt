@@ -14,6 +14,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFailAndRollback
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.jetbrains.exposed.v1.r2dbc.update
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNull
@@ -33,6 +34,8 @@ class VectorColumnTypeTests : R2dbcDatabaseTestsBase() {
 
     object VectorItems : Table("vector_items") {
         val id = integer("id")
+
+        // simplest default form returns Column<FloatArray> (of format FLOAT32, for db that use it)
         val embedding = vector("embedding", dimensions = 3)
         override val primaryKey = PrimaryKey(id)
     }
@@ -311,6 +314,57 @@ class VectorColumnTypeTests : R2dbcDatabaseTestsBase() {
                 SchemaUtils.drop(VectorItems)
                 if (testDb == TestDB.POSTGRESQL) {
                     exec("DROP EXTENSION IF EXISTS vector CASCADE;")
+                }
+            }
+        }
+    }
+
+    object MultipleVectors : Table("multiple_vectors") {
+        // full declaration form
+        val embedding1 = vector<FloatArray>("embedding1", 5, VectorFormat.FLOAT32)
+
+        // full form but with format left null (ignored or up to db)
+        val embedding2 = vector<IntArray>("embedding2", 5)
+    }
+
+    @Test
+    fun testAlternativeColumnForms() {
+        withDb(TestDB.ORACLE) { testDb ->
+            try {
+                SchemaUtils.create(MultipleVectors)
+
+                val floatVector = floatArrayOf(1.2f, 1.0f, 0f, 3.2f, 1.9f)
+                val intVector = intArrayOf(1, 2, 3, 4, 5)
+                MultipleVectors.insert {
+                    it[embedding1] = floatVector
+                    it[embedding2] = intVector
+                }
+
+                val result = MultipleVectors.selectAll().single()
+                assertContentEquals(result[MultipleVectors.embedding1], floatVector)
+                assertContentEquals(result[MultipleVectors.embedding2], intVector)
+            } finally {
+                SchemaUtils.drop(MultipleVectors)
+            }
+        }
+    }
+
+    @Test
+    fun testInvalidColumnForms() {
+        withDb(vectorTypeSupportedDb) {
+            expectException<IllegalStateException> {
+                object : Table("tester1") {
+                    val embedding = vector<IntArray>("embedding", 3, VectorFormat.FLOAT32)
+                }
+            }
+            expectException<IllegalStateException> {
+                object : Table("tester2") {
+                    val embedding = vector<FloatArray>("embedding", 3, VectorFormat.INT8)
+                }
+            }
+            expectException<IllegalStateException> {
+                object : Table("tester3") {
+                    val embedding = vector<String>("embedding", 3)
                 }
             }
         }

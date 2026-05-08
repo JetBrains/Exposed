@@ -108,7 +108,12 @@ inline fun <reified T : Any, R : List<Any>> arrayParam(value: R, dimensions: Int
 }
 
 /** Returns the specified [value] as a string query parameter. */
-fun vectorParam(value: FloatArray): Expression<FloatArray> = QueryParameter(value, VectorColumnType(value.size))
+fun vectorParam(value: FloatArray): Expression<FloatArray> =
+    QueryParameter(value, FloatVectorColumnType(value.size, VectorFormat.FLOAT32))
+
+/** Returns the specified [value] as a string query parameter. */
+fun vectorParam(value: IntArray): Expression<IntArray> =
+    QueryParameter(value, IntVectorColumnType(value.size, VectorFormat.INT8))
 
 /** Returns the specified [value] as a query parameter of type [T]. */
 @Suppress("UNCHECKED_CAST")

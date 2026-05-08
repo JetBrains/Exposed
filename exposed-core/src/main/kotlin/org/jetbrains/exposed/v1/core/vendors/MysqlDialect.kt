@@ -132,9 +132,9 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         }
     }
 
-    override fun vectorDistance(
-        expression: Expression<FloatArray>,
-        targetExpression: Expression<FloatArray>,
+    override fun <T> vectorDistance(
+        expression: Expression<T>,
+        targetExpression: Expression<T>,
         metric: VectorDistanceMetric,
         queryBuilder: QueryBuilder
     ) {
