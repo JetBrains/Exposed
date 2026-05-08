@@ -115,12 +115,33 @@ open class ULongIdTable(name: String = "", columnName: String = "id", sequenceNa
  * Identity table with a primary key consisting of an auto-generating [kotlin.uuid.Uuid] value.
  *
  * **Note** The specific UUID column type used depends on the database.
- * The stored identity value will be auto-generated on the client side just before insertion of a new row.
+ * The stored identity value will be auto-generated on the client side, just before insertion of a new row,
+ * by calling `Uuid.generateV4()`. If version 7 is wanted instead, use `UuidTable(useGenerateV7 = true)`.
  *
  * @param name Table name. By default, this will be resolved from any class name with a "Table" suffix removed (if present).
  * @param columnName Name for the primary key column. By default, "id" is used.
  */
 open class UuidTable(name: String = "", columnName: String = "id") : IdTable<Uuid>(name) {
+    internal var version: UuidVersion = UuidVersion.V4
+
+    /**
+     * Identity table with a primary key consisting of an auto-generating [kotlin.uuid.Uuid] value.
+     *
+     * **Note** The specific UUID column type used depends on the database.
+     * BY default, the stored identity value will be auto-generated on the client side, just before insertion of a new row,
+     * by calling `Uuid.generateV4()`. If a specific [uuidVersion] is set, the appropriate Uuid companion method will be called,
+     * but only for the `id` column. Other Uuid column(s) registered to this table will not be affected by this setting
+     * and will rely on their own specified version definition.
+     *
+     * @param name Table name. By default, this will be resolved from any class name with a "Table" suffix removed (if present).
+     * @param columnName Name for the primary key column. By default, "id" is used.
+     * @param uuidVersion The specific [UuidVersion] to determine which Uuid companion method to use when generating instances.
+     * Setting this parameter to `UuidVersion.V4` is equivalent to instantiating `UuidTable()` without this argument.
+     */
+    constructor(name: String = "", columnName: String = "id", uuidVersion: UuidVersion) : this(name, columnName) {
+        this.version = uuidVersion
+    }
+
     /** The identity column of this [UuidTable], for storing kotlin.uuid.Uuid values wrapped as [EntityID] instances. */
     final override val id: Column<EntityID<Uuid>> = uuid(columnName).autoGenerate().entityId()
     final override val primaryKey = PrimaryKey(id)

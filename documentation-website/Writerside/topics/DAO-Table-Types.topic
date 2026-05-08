@@ -61,8 +61,9 @@
                     include-lines="3-6,19-23" id="StarWarsFilmsTable-dao-code-block"/>
         <p>
             <snippet id="IntIdTable-id-generation-note">
-                The <code>IntIdTable</code> class automatically generates an auto-incrementing integer <code>id</code>
-                column, which serves as the primary key for the table.
+                The <code>IntIdTable</code> class automatically generates an auto-incrementing integer <code>id</code> column,
+                by chaining <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/auto-increment.html"><code>.autoIncrement()</code></a>
+                , which serves as the primary key for the table.
             </snippet>
             When the table is created, it corresponds to the following
             SQL query:
@@ -85,6 +86,24 @@
             "name" VARCHAR(50) NOT NULL,
             DIRECTOR VARCHAR(50) NOT NULL);
         </code-block>
+        <chapter title="Auto-generating Uuid" id="auto-generating-uuids">
+            <p>
+                The <code>UuidTable</code> class automatically generates a random Kotlin <code>Uuid</code> instance on the client side before an insert,
+                as long as a value is not manually assigned to the column during the operation. By default, this class relies on calls to
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/auto-generate.html"><code>.autoGenerate()</code></a>,
+                which returns a version 4 Uuid from <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.uuid/-uuid/-companion/generate-v4.html"><code>Uuid.generateV4()</code></a>.
+            </p>
+            <p>
+                If you prefer that the <code>UuidTable</code> class uses <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.uuid/-uuid/-companion/generate-v7.html"><code>Uuid.generateV7()</code></a>
+                to automatically generate time-based Uuids, this can be accomplished by providing an argument to the <code>uuidVersion</code> constructor parameter, like
+                <code>UuidTable(uuidVersion = UuidVersion.V7)</code>.
+                This would be the equivalent of chaining <code>.autoGenerate(UuidVersion.V7)</code> directly on a registered Uuid column.
+            </p>
+            <p>
+                The Java <code>UUIDTable</code> class automatically generates a random Java <code>UUID</code> instance by calling <code>UUID.randomUUID()</code>
+                before the insert operation.
+            </p>
+        </chapter>
         <p>
             For more information on defining and configuring tables in Exposed, see <a href="Working-with-Tables.topic"/>.
         </p>

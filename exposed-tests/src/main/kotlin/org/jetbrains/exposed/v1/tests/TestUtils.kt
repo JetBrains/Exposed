@@ -8,6 +8,7 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.vendors.DatabaseDialectMetadata
 import java.util.*
+import kotlin.uuid.Uuid
 
 val currentDialectTest: DatabaseDialect get() = TransactionManager.current().db.dialect
 
@@ -46,3 +47,12 @@ const val NO_R2DBC_SUPPORT = "Test subject not supported by R2DBC"
 
 /** Tag for JDBC tests that will most likely never require a matching R2DBC test. */
 const val NOT_APPLICABLE_TO_R2DBC = "Test subject is not relevant to R2DBC"
+
+/**
+ * The version of Uuid is always stored in the same place: the most significant 4 bits of the 7th byte;
+ * i.e. the 13th hexadecimal digit in the string representation,
+ */
+@Suppress("MagicNumber")
+fun Uuid.versionNumber(): Int = toLongs { mostSignificantBits, _ ->
+    ((mostSignificantBits shr 12) and 0xF).toInt()
+}
