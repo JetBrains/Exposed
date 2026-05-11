@@ -56,7 +56,7 @@
         <toc-element topic="DAO-Relationships.topic"/>
     </toc-element>
     <toc-element toc-title="Tools">
-        <toc-element topic="exposed-gradle-plugin.md"/>
+        <toc-element topic="Exposed-gradle-plugin.md"/>
     </toc-element>
     <toc-element topic="Spring-Boot-integration.md"/>
     <toc-element toc-title="Releases">
