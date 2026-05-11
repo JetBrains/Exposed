@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.v1.tests.oracle
 
-import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.vendors.cosineDistance
 import org.jetbrains.exposed.v1.core.vendors.dotDistance
@@ -134,8 +134,14 @@ class OracleVectorTests : DatabaseTestsBase() {
     @Test
     fun testDistanceTieBreakWithSecondaryOrderById() {
         withTables(excludeSettings = TestDB.ALL - TestDB.ORACLE, VectorItems) {
-            VectorItems.insert { it[id] = 1; it[embedding] = floatArrayOf(1f, 0f, 0f) }
-            VectorItems.insert { it[id] = 2; it[embedding] = floatArrayOf(1f, 0f, 0f) }
+            VectorItems.insert {
+                it[id] = 1
+                it[embedding] = floatArrayOf(1f, 0f, 0f)
+            }
+            VectorItems.insert {
+                it[id] = 2
+                it[embedding] = floatArrayOf(1f, 0f, 0f)
+            }
 
             val distance = VectorItems.embedding.cosineDistance(floatArrayOf(1f, 0f, 0f))
             val rows = VectorItems.select(VectorItems.id, distance)
@@ -151,8 +157,14 @@ class OracleVectorTests : DatabaseTestsBase() {
     @Test
     fun testDistanceWithNegativeAndNonUnitValues() {
         withTables(excludeSettings = TestDB.ALL - TestDB.ORACLE, VectorItems) {
-            VectorItems.insert { it[id] = 1; it[embedding] = floatArrayOf(-2f, 3f, 0.5f) }
-            VectorItems.insert { it[id] = 2; it[embedding] = floatArrayOf(4f, -1f, 2f) }
+            VectorItems.insert {
+                it[id] = 1
+                it[embedding] = floatArrayOf(-2f, 3f, 0.5f)
+            }
+            VectorItems.insert {
+                it[id] = 2
+                it[embedding] = floatArrayOf(4f, -1f, 2f)
+            }
 
             val target = floatArrayOf(-2f, 3f, 0.5f)
             val distance = VectorItems.embedding.euclideanDistance(target)
@@ -167,7 +179,10 @@ class OracleVectorTests : DatabaseTestsBase() {
     @Test
     fun testDimensionMismatchThrows() {
         withTables(excludeSettings = TestDB.ALL - TestDB.ORACLE, VectorItems) {
-            VectorItems.insert { it[id] = 1; it[embedding] = floatArrayOf(1f, 0f, 0f) }
+            VectorItems.insert {
+                it[id] = 1
+                it[embedding] = floatArrayOf(1f, 0f, 0f)
+            }
 
             expectException<SQLException> {
                 val distance = VectorItems.embedding.cosineDistance(floatArrayOf(1f, 0f))
@@ -179,8 +194,14 @@ class OracleVectorTests : DatabaseTestsBase() {
     @Test
     fun testNullableVectorRoundTrip() {
         withTables(excludeSettings = TestDB.ALL - TestDB.ORACLE, NullableVectorItems) {
-            NullableVectorItems.insert { it[id] = 1; it[embedding] = null }
-            NullableVectorItems.insert { it[id] = 2; it[embedding] = floatArrayOf(1f, 0f, 0f) }
+            NullableVectorItems.insert {
+                it[id] = 1
+                it[embedding] = null
+            }
+            NullableVectorItems.insert {
+                it[id] = 2
+                it[embedding] = floatArrayOf(1f, 0f, 0f)
+            }
             NullableVectorItems.selectAll().orderBy(NullableVectorItems.id to SortOrder.ASC).toList()
         }
     }
@@ -205,10 +226,22 @@ class OracleVectorTests : DatabaseTestsBase() {
     @Test
     fun testMultiRowRankingOrder() {
         withTables(excludeSettings = TestDB.ALL - TestDB.ORACLE, VectorItems) {
-            VectorItems.insert { it[id] = 1; it[embedding] = floatArrayOf(1f, 0f, 0f) }
-            VectorItems.insert { it[id] = 2; it[embedding] = floatArrayOf(0.8f, 0.2f, 0f) }
-            VectorItems.insert { it[id] = 3; it[embedding] = floatArrayOf(0f, 1f, 0f) }
-            VectorItems.insert { it[id] = 4; it[embedding] = floatArrayOf(-1f, 0f, 0f) }
+            VectorItems.insert {
+                it[id] = 1
+                it[embedding] = floatArrayOf(1f, 0f, 0f)
+            }
+            VectorItems.insert {
+                it[id] = 2
+                it[embedding] = floatArrayOf(0.8f, 0.2f, 0f)
+            }
+            VectorItems.insert {
+                it[id] = 3
+                it[embedding] = floatArrayOf(0f, 1f, 0f)
+            }
+            VectorItems.insert {
+                it[id] = 4
+                it[embedding] = floatArrayOf(-1f, 0f, 0f)
+            }
 
             val distance = VectorItems.embedding.euclideanDistance(floatArrayOf(1f, 0f, 0f))
             val ids = VectorItems.select(VectorItems.id, distance).orderBy(distance to SortOrder.ASC).map { it[VectorItems.id] }
@@ -220,8 +253,14 @@ class OracleVectorTests : DatabaseTestsBase() {
     @Test
     fun testPrecisionToleranceBoundary() {
         withTables(excludeSettings = TestDB.ALL - TestDB.ORACLE, VectorItems) {
-            VectorItems.insert { it[id] = 1; it[embedding] = floatArrayOf(1f, 1f, 1f) }
-            VectorItems.insert { it[id] = 2; it[embedding] = floatArrayOf(1f, 1f, 1.0001f) }
+            VectorItems.insert {
+                it[id] = 1
+                it[embedding] = floatArrayOf(1f, 1f, 1f)
+            }
+            VectorItems.insert {
+                it[id] = 2
+                it[embedding] = floatArrayOf(1f, 1f, 1.0001f)
+            }
 
             val distance = VectorItems.embedding.euclideanDistance(floatArrayOf(1f, 1f, 1f))
             val rows = VectorItems.select(VectorItems.id, distance).orderBy(distance to SortOrder.ASC).toList()
@@ -235,7 +274,10 @@ class OracleVectorTests : DatabaseTestsBase() {
     @Test
     fun testVectorUpdateRoundTripAndDistance() {
         withTables(excludeSettings = TestDB.ALL - TestDB.ORACLE, VectorItems) {
-            VectorItems.insert { it[id] = 1; it[embedding] = floatArrayOf(0f, 1f, 0f) }
+            VectorItems.insert {
+                it[id] = 1
+                it[embedding] = floatArrayOf(0f, 1f, 0f)
+            }
             VectorItems.update({ VectorItems.id eq 1 }) { it[embedding] = floatArrayOf(1f, 0f, 0f) }
 
             val updated = VectorItems.selectAll().single()[VectorItems.embedding]
