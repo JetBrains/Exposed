@@ -73,6 +73,10 @@ gradlePlugin {
     }
 }
 
+signing {
+    isRequired = gradle.taskGraph.hasTask("publish")
+}
+
 tasks.withType<KotlinCompile>().configureEach {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_11)
