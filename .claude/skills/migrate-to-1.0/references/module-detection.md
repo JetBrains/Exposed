@@ -9,8 +9,7 @@ invocation:
   "usesJdbc":            true | false,
   "usesR2dbc":           true | false,
   "usesDao":             true | false,
-  "usesSpring":          true | false,    // either spring-boot-starter or spring-boot4-starter
-  "usesSpring4":         true | false,    // boot4-starter specifically
+  "usesSpring":          true | false,    // spring-boot-starter
   "usesJson":            true | false,
   "usesKotlinDatetime":  true | false,
   "usesJodatime":        true | false,
@@ -20,6 +19,11 @@ invocation:
   "usesMoney":           true | false
 }
 ```
+
+> `exposed-spring-boot4-starter` is deliberately **not** in the detection table. It only
+> exists in Exposed 1.0+, so a project being migrated from 0.x cannot have it yet. The
+> manual-review note in `build-files.md` advises the user about it as part of the
+> migration target, not as something to detect in the source project.
 
 ## Detection — primary: build-file scan
 
@@ -39,7 +43,6 @@ the corresponding flag to `true`.
 | `exposed-r2dbc`                 | usesR2dbc         |
 | `exposed-dao`                   | usesDao           |
 | `exposed-spring-boot-starter`   | usesSpring        |
-| `exposed-spring-boot4-starter`  | usesSpring, usesSpring4 |
 | `exposed-json`                  | usesJson          |
 | `exposed-kotlin-datetime`       | usesKotlinDatetime |
 | `exposed-jodatime`              | usesJodatime      |

@@ -11,6 +11,11 @@ to accommodate reactive database access while preserving existing functionality.
 If your project uses [Claude Code](https://claude.com/claude-code), you can apply the
 mechanical parts of this migration automatically.
 
+The skill targets the **0.61.0 → 1.0.0** migration specifically — the same scope as this
+guide. If your project is on an older 0.x release (for example 0.55.x or 0.41.x), the
+skill will warn and ask for confirmation before proceeding. The recommended path is to
+upgrade to 0.61.0 first and then re-run the skill.
+
 ### Install
 
 1. Download the skill folder from the Exposed repository:

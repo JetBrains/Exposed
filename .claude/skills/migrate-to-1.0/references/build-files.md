@@ -4,6 +4,13 @@ This file describes the mechanical edits the skill applies to a project's build
 configuration. The skill loads this file during Phase 3 (Apply) after detecting which
 build flavor the project uses.
 
+> **Scope note.** The version-bump regex below matches any pre-1.0 Exposed coordinate
+> (`0.x.y`) so the bump itself is purely mechanical. **The accompanying rename rules**
+> in `package-renames.md`, however, are derived specifically from the 0.61.0 → 1.0.0
+> migration guide. On a project pinned to an older 0.x version (say 0.41.x), the bump
+> still works but the rename coverage may be incomplete and the manual-review list will
+> be noisier. The skill warns the user about a version mismatch in Phase 1.
+
 ## Goals of the build-file edit phase
 
 For every recognized build-file flavor, the skill must:
@@ -133,9 +140,16 @@ If `exposed-migration` is present, replace its `<dependency>` block with two:
 
 After the mechanical edits, add these to the manual-review summary if they apply:
 
-- Any `exposed-spring-boot-starter` usage with a note: "If you also want to migrate to
-  Spring Boot 4, replace this artifact with `exposed-spring-boot4-starter`. Otherwise
-  leave as-is."
+- Any `exposed-spring-boot-starter` usage with a note: "Staying on Spring Boot 3 / Spring
+  Framework 6? Leave this artifact as-is. If you ALSO want to migrate to Spring Boot 4 /
+  Spring Framework 7, this artifact alone is not enough — you'll need to swap it for
+  `exposed-spring-boot4-starter` AND update import paths (e.g.
+  `org.jetbrains.exposed.v1.spring.boot.autoconfigure.ExposedAutoConfiguration` →
+  `org.jetbrains.exposed.v1.spring.boot4.autoconfigure.ExposedAutoConfiguration`).
+  Users of `SpringTransactionManager` directly should also swap the `spring-transaction`
+  dependency for `spring7-transaction`. See the full guidance in the migration guide
+  section **Spring dependencies**:
+  <https://www.jetbrains.com/help/exposed/migration-guide-1-0-0.html#spring-dependencies>."
 - Any version variable that did not match the `exposed`-named-variable rule.
 - Any custom convention plugin / `buildSrc` indirection touched during detection but not
   edited.

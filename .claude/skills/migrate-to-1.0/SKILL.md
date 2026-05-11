@@ -1,17 +1,25 @@
 ---
 name: migrate-to-1.0
-description: "Migrates a Kotlin project from Exposed 0.x to Exposed 1.0. Scans Kotlin sources and build files, applies the mechanical changes documented in the official 1.0 migration guide (package renames, JDBC module moves, SqlExpressionBuilder lambda → top-level imports, build dependency bumps), and produces a report of items that need manual review. Use when the user wants to upgrade an existing Exposed project to 1.0 or mentions migrating from 0.x."
+description: "Migrates a Kotlin project from Exposed 0.61.0 to Exposed 1.0. Scans Kotlin sources and build files, applies the mechanical changes documented in the official 1.0 migration guide (package renames, JDBC module moves, SqlExpressionBuilder lambda → top-level imports, build dependency bumps), and produces a report of items that need manual review. Use when the user wants to upgrade an existing Exposed 0.61.0 project to 1.0; for older 0.x versions the skill emits a compatibility warning and proceeds only with user confirmation."
 user_invocable: true
 ---
 
 # Migrate to Exposed 1.0
 
-Automates the **mechanical** parts of migrating a Kotlin project from Exposed 0.x to
-Exposed 1.0. Anything that requires human judgment is detected and reported in a summary
-at the end so the user can address it manually using the migration guide.
+Automates the **mechanical** parts of migrating a Kotlin project from Exposed **0.61.0**
+to Exposed 1.0. Anything that requires human judgment is detected and reported in a
+summary at the end so the user can address it manually using the migration guide.
+
+**Supported starting version: 0.61.0** (the last pre-1.0 release). The official
+Migration-Guide-1-0-0.md was written specifically for the 0.61.0 → 1.0.0 jump. If the
+detected version is older (e.g. 0.41.x, 0.55.x), the skill warns and asks for explicit
+confirmation before proceeding: the rules will still rewrite the package paths it
+recognises, but APIs introduced between the detected version and 0.61.0 are out of
+scope, and the user should upgrade to 0.61.0 first or expect a noisier manual-review
+list.
 
 The canonical source for what to migrate is the official guide:
-<https://github.com/JetBrains/Exposed/blob/main/documentation-website/Writerside/topics/Migration-Guide-1-0-0.md>
+<https://www.jetbrains.com/help/exposed/migration-guide-1-0-0.html>
 (or the local `Migration-Guide-1-0-0.md` if available).
 
 The reference files in `./references/` encode that guide as machine-applicable rules:
@@ -38,12 +46,54 @@ Load each reference file only when the corresponding phase below needs it.
 
 ## Phase 1 — Discover (read-only)
 
-1. Detect Exposed version. Search these files for `org.jetbrains.exposed:` coordinates:
-    - `gradle/libs.versions.toml`
-    - all `build.gradle.kts` and `build.gradle` in the project (root + submodules)
-    - `pom.xml`
-      If no `0.x` Exposed coordinate is found, **stop here** and report
-      "no migration needed (no Exposed 0.x usage detected)."
+1. Determine whether migration is needed.
+
+   The real signal is whether any source file uses the old `0.x` package paths
+   (`org.jetbrains.exposed.sql.*`, `org.jetbrains.exposed.dao.*`,
+   `org.jetbrains.exposed.r2dbc.sql.*`, …). Version coordinates in build files are a
+   useful hint but don't always reflect reality — projects on a `1.0.0-beta-N` /
+   `1.0.0-rc-N` release already use the `v1.*` namespace and don't need this skill,
+   even though their coordinate isn't strictly `0.x`.
+
+   a. **Source scan:** look for any `import org.jetbrains.exposed.sql.` or
+      `import org.jetbrains.exposed.dao.` (and the R2DBC equivalents) in any `.kt`
+      file under `src/`. Record file:line for use in the rename-scan step below.
+
+   b. **Build-file scan:** look for `org.jetbrains.exposed:` coordinates in
+      `gradle/libs.versions.toml`, every `build.gradle.kts` / `build.gradle`, and
+      `pom.xml`. Record every coordinate version found.
+
+   c. If (a) finds zero old-namespace imports AND (b) finds no pre-1.0 coordinate
+      (everything is either `1.0.0` proper or higher, or no Exposed coordinate at all),
+      **stop here** and report:
+      ```
+      No migration needed. Your project does not use the old `org.jetbrains.exposed.sql.*` /
+      `.dao.*` namespace and the build files do not pin a pre-1.0 release. Projects on
+      `1.0.0-beta-N` / `1.0.0-rc-N` already use the new `v1.*` namespace and don't need
+      this skill.
+      ```
+
+   d. Otherwise, migration applies. Proceed with the version check below.
+
+   **Version check.** The supported starting version is `0.61.0`. If the detected
+   coordinate is something else under `0.x` (e.g. `0.41.x`, `0.55.x`), print the
+   warning below and let the user decide whether to continue:
+   ```
+   ⚠️  Detected Exposed <X.Y.Z>, but this skill targets the 0.61.0 → 1.0.0 migration.
+       Older 0.x versions may use APIs that were renamed or removed before 0.61.0;
+       those changes are NOT covered by this skill. Recommended path:
+         1. Upgrade your project to Exposed 0.61.0 first.
+         2. Re-run this skill.
+       Proceed anyway? The skill will rewrite recognised package paths, but expect a
+       noisier "manual review" list and possibly missed changes.
+   ```
+   If the user declines, exit cleanly. If they confirm, continue but include the
+   version-mismatch warning in the Phase 4 summary.
+
+   Beta/RC of 1.0 with `sql.*` imports somehow still present (e.g. a half-finished
+   manual migration) is also valid input: the source scan in (a) catches it and the
+   skill proceeds without emitting the `0.61.0` warning, since the user is already
+   targeting 1.0.0.
 
 2. Build the project fact table per `references/module-detection.md`.
 
@@ -180,7 +230,7 @@ action:   db is now the first positional parameter; use named args for the rest.
 2. Compile: `./gradlew compileKotlin` (or your project's build command)
 3. Run tests: `./gradlew test`
 4. Address each ⚠️ item using the official migration guide:
-   https://github.com/JetBrains/Exposed/blob/main/documentation-website/Writerside/topics/Migration-Guide-1-0-0.md
+   https://www.jetbrains.com/help/exposed/migration-guide-1-0-0.html
 5. When everything compiles and tests pass, commit:
    `git commit -am "Migrate to Exposed 1.0"`
 ````
