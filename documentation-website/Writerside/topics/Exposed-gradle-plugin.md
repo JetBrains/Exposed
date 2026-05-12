@@ -1,4 +1,15 @@
+<show-structure for="chapter,procedure" depth="2"/>
+
 # Exposed Gradle plugin
+
+<tldr>
+    <p>
+        <b>Required dependencies</b>: <code>org.jetbrains.exposed.plugin</code>
+    </p>
+    <p>
+        <b>Code example</b>: <a href="https://github.com/JetBrains/Exposed/tree/main/documentation-website/Writerside/snippets/exposed-gradle-plugin">exposed-gradle-plugin</a>
+    </p>
+</tldr>
 
 The Exposed Gradle plugin provides build-time tooling for working with Exposed-based database schemas.
 
