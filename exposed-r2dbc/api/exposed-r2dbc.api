@@ -629,6 +629,15 @@ public final class org/jetbrains/exposed/v1/r2dbc/mappers/ValueTypeMapper : org/
 	public fun setValue (Lio/r2dbc/spi/Statement;Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;Lorg/jetbrains/exposed/v1/core/IColumnType;Ljava/lang/Object;I)Z
 }
 
+public final class org/jetbrains/exposed/v1/r2dbc/mappers/VectorTypeMapper : org/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper {
+	public fun <init> ()V
+	public fun getColumnTypes ()Ljava/util/List;
+	public fun getDialects ()Ljava/util/List;
+	public fun getPriority ()D
+	public fun getValue (Lio/r2dbc/spi/Row;Ljava/lang/Class;ILorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/core/IColumnType;)Lorg/jetbrains/exposed/v1/r2dbc/mappers/ValueContainer;
+	public fun setValue (Lio/r2dbc/spi/Statement;Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;Lorg/jetbrains/exposed/v1/core/IColumnType;Ljava/lang/Object;I)Z
+}
+
 public class org/jetbrains/exposed/v1/r2dbc/statements/BatchInsertSuspendExecutable : org/jetbrains/exposed/v1/r2dbc/statements/InsertSuspendExecutable {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;)V
 	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;

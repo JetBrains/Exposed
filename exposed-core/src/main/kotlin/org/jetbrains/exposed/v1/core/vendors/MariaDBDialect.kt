@@ -2,8 +2,10 @@ package org.jetbrains.exposed.v1.core.vendors
 
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.Function
+import org.jetbrains.exposed.v1.core.functions.vector.VectorDistanceMetric
 import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
+import org.jetbrains.exposed.v1.exceptions.throwUnsupportedException
 
 internal object MariaDBDataTypeProvider : MysqlDataTypeProvider() {
     override fun timestampType(): String = if ((currentDialect as? MariaDBDialect)?.isFractionDateTimeSupported() == true) "TIMESTAMP(6)" else "TIMESTAMP"
@@ -39,6 +41,25 @@ internal object MariaDBFunctionProvider : MysqlFunctionProvider() {
         substring: String
     ) = queryBuilder {
         append("LOCATE(\'", substring, "\',", expr, ")")
+    }
+
+    override fun <T> vectorDistance(
+        expression: Expression<T>,
+        targetExpression: Expression<T>,
+        metric: VectorDistanceMetric,
+        queryBuilder: QueryBuilder
+    ) {
+        @OptIn(InternalApi::class)
+        if (metric == VectorDistanceMetric.DOT) {
+            currentTransaction().throwUnsupportedException("MariaDB does not support the DOT vector distance metric.")
+        }
+        queryBuilder {
+            +"VEC_DISTANCE_${metric.name}("
+            append(expression)
+            +", "
+            append(targetExpression)
+            +")"
+        }
     }
 
     override fun update(

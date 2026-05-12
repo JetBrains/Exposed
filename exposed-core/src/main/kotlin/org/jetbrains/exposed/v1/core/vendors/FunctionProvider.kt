@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.core.vendors
 
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.functions.vector.VectorDistanceMetric
 import org.jetbrains.exposed.v1.core.statements.MergeStatement
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
@@ -346,6 +347,26 @@ abstract class FunctionProvider {
     open fun <T> arraySlice(expression: Expression<T>, lower: Int?, upper: Int?, queryBuilder: QueryBuilder) {
         throw UnsupportedByDialectException(
             "There's no generic SQL for ARRAY_SLICE. There must be a vendor specific implementation", currentDialect
+        )
+    }
+
+    /**
+     * SQL function that returns the mathematical distance calculated between two vector expressions,
+     * based on logic provided by the specified distance [metric].
+     *
+     * @param expression Expression from which the left vector operand is taken.
+     * @param targetExpression Expression from which the right vector operand is taken.
+     * @param metric The mathematical formula to use when building the vector function.
+     * @param queryBuilder Query builder to append the SQL function to.
+     */
+    open fun <T> vectorDistance(
+        expression: Expression<T>,
+        targetExpression: Expression<T>,
+        metric: VectorDistanceMetric,
+        queryBuilder: QueryBuilder
+    ) {
+        throw UnsupportedByDialectException(
+            "There's no generic SQL for VECTOR_DISTANCE. There must be a vendor specific implementation", currentDialect
         )
     }
 

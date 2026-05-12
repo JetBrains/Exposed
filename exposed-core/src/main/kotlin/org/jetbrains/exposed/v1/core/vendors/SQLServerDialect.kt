@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.core.vendors
 
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.functions.vector.VectorDistanceMetric
 import org.jetbrains.exposed.v1.core.statements.MergeStatement
 import org.jetbrains.exposed.v1.core.statements.MergeStatement.ClauseAction.DELETE
 import org.jetbrains.exposed.v1.core.statements.MergeStatement.ClauseAction.INSERT
@@ -174,6 +175,22 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
 
     override fun <T> varSamp(expression: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("VAR(", expression, ")")
+    }
+
+    override fun <T> vectorDistance(
+        expression: Expression<T>,
+        targetExpression: Expression<T>,
+        metric: VectorDistanceMetric,
+        queryBuilder: QueryBuilder
+    ) {
+        queryBuilder {
+            +"VECTOR_DISTANCE("
+            +"'${metric.name.lowercase()}', "
+            append(expression)
+            +", "
+            append(targetExpression)
+            +")"
+        }
     }
 
     override fun <T> jsonExtract(

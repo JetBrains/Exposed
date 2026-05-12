@@ -6,6 +6,7 @@ org.jetbrains.exposed.v1.r2dbc.mappers.DateTimeOracleTypeMapper
 org.jetbrains.exposed.v1.r2dbc.mappers.DateTimeTypeMapper
 org.jetbrains.exposed.v1.r2dbc.mappers.BinaryTypeMapper
 org.jetbrains.exposed.v1.r2dbc.mappers.ArrayTypeMapper
+org.jetbrains.exposed.v1.r2dbc.mappers.VectorTypeMapper
 org.jetbrains.exposed.v1.r2dbc.mappers.PostgresSpecificTypeMapper
 org.jetbrains.exposed.v1.r2dbc.mappers.ValueTypeMapper
 org.jetbrains.exposed.v1.r2dbc.mappers.DefaultTypeMapper

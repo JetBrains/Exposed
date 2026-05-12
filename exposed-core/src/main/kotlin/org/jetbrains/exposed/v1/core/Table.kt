@@ -1097,6 +1097,43 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     fun <E, R : List<Any?>> Table.array(name: String, columnType: ColumnType<E & Any>, maximumCardinality: List<Int>? = null, dimensions: Int): Column<R> =
         registerColumn(name, ArrayColumnType(columnType, maximumCardinality, dimensions))
 
+    /**
+     * Creates a vector column, with the specified [name], for storing elements of a `FloatArray`.
+     * By default, this stores vectors with each dimension formatted as 32-bit floating-point numbers.
+     *
+     * **Note** This column type is not supported by all databases and drivers. Please check your documentation.
+     *
+     * @param name Name of the column.
+     * @param dimensions The number of dimensions that each stored vector must have. If set to `null`, the column will
+     * be defined without any dimension, as long as the underlying database supports this.
+     */
+    fun Table.vector(name: String, dimensions: Int?): Column<FloatArray> =
+        registerColumn(name, FloatVectorColumnType(dimensions, VectorFormat.FLOAT32))
+
+    /**
+     * Creates a vector column, with the specified [name], for storing elements of a Kotlin primitive array,
+     * as either a `FloatArray` or an `IntArray`.
+     * By default, this stores vectors with each dimension formatted either as 32-bit floating-point numbers
+     * or as 8-bit integers.
+     *
+     * **Note** This column type is not supported by all databases and drivers, and formats beyond floating-point
+     * may numbers may also not be supported. Please check your documentation.
+     *
+     * @param name Name of the column.
+     * @param dimensions The number of dimensions that each stored vector must have. If set to `null`, the column will
+     * be defined without any dimension, as long as the underlying database supports this.
+     * @param format The dimension format to set when creating the column. Leaving this value as `null` use either
+     * 32-bit floating-point numbers or 8-bit integers, depending on the resolved column type. Databases that do not
+     * support picking a dimension format will ignore any set value.
+     * @throws IllegalStateException If a type of `FloatArray` or `IntArray` is not specified. Please see all
+     * the vector formats for currently supported options.
+     * @see VectorFormat
+     */
+    inline fun <reified T : Any> Table.vector(name: String, dimensions: Int?, format: VectorFormat? = null): Column<T> {
+        @OptIn(InternalApi::class)
+        return registerColumn(name, resolveVectorColumnType(T::class, dimensions, format))
+    }
+
     // Auto-generated values
 
     /**

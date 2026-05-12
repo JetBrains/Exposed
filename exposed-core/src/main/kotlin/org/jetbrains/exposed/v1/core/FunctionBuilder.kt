@@ -2,6 +2,8 @@ package org.jetbrains.exposed.v1.core
 
 import org.jetbrains.exposed.v1.core.functions.array.ArrayGet
 import org.jetbrains.exposed.v1.core.functions.array.ArraySlice
+import org.jetbrains.exposed.v1.core.functions.vector.VectorDistance
+import org.jetbrains.exposed.v1.core.functions.vector.VectorDistanceMetric
 
 // General purpose functions
 
@@ -222,3 +224,33 @@ infix operator fun <E, T : List<E>?> ExpressionWithColumnType<T>.get(index: Int)
  */
 fun <E, T : List<E>?> ExpressionWithColumnType<T>.slice(lower: Int? = null, upper: Int? = null): ArraySlice<E, T> =
     ArraySlice(this, lower, upper, this.columnType)
+
+/** Returns the mathematical distance calculated between the two vector expressions, based on cosine similarity. */
+fun <T> ExpressionWithColumnType<T>.cosineDistance(target: Expression<T>): VectorDistance<T> =
+    VectorDistance(this, target, VectorDistanceMetric.COSINE)
+
+/** Returns the mathematical distance calculated between this vector expression and a target vector, based on cosine similarity. */
+fun ExpressionWithColumnType<FloatArray>.cosineDistance(target: FloatArray): VectorDistance<FloatArray> = cosineDistance(vectorParam(target))
+
+/** Returns the mathematical distance calculated between this vector expression and a target vector, based on cosine similarity. */
+fun ExpressionWithColumnType<IntArray>.cosineDistance(target: IntArray): VectorDistance<IntArray> = cosineDistance(vectorParam(target))
+
+/** Returns the mathematical distance calculated between the two vector expressions, based on euclidean similarity. */
+fun <T> ExpressionWithColumnType<T>.euclideanDistance(target: Expression<T>): VectorDistance<T> =
+    VectorDistance(this, target, VectorDistanceMetric.EUCLIDEAN)
+
+/** Returns the mathematical distance calculated between this vector expression and a target vector, based on euclidean similarity. */
+fun ExpressionWithColumnType<FloatArray>.euclideanDistance(target: FloatArray): VectorDistance<FloatArray> = euclideanDistance(vectorParam(target))
+
+/** Returns the mathematical distance calculated between this vector expression and a target vector, based on euclidean similarity. */
+fun ExpressionWithColumnType<IntArray>.euclideanDistance(target: IntArray): VectorDistance<IntArray> = euclideanDistance(vectorParam(target))
+
+/** Returns the mathematical distance calculated between the two vector expressions, based on dot product similarity. */
+fun <T> ExpressionWithColumnType<T>.dotDistance(target: Expression<T>): VectorDistance<T> =
+    VectorDistance(this, target, VectorDistanceMetric.DOT)
+
+/** Returns the mathematical distance calculated between this vector expression and a target vector, based on dot product similarity. */
+fun ExpressionWithColumnType<FloatArray>.dotDistance(target: FloatArray): VectorDistance<FloatArray> = dotDistance(vectorParam(target))
+
+/** Returns the mathematical distance calculated between this vector expression and a target vector, based on dot product similarity. */
+fun ExpressionWithColumnType<IntArray>.dotDistance(target: IntArray): VectorDistance<IntArray> = dotDistance(vectorParam(target))

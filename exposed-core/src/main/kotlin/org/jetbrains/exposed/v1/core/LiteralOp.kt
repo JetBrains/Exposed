@@ -80,6 +80,18 @@ inline fun <reified T : Any, R : List<Any>> arrayLiteral(value: R, dimensions: I
     return LiteralOp(ArrayColumnType(delegateType ?: resolveColumnType(T::class), dimensions = dimensions), value)
 }
 
+/** Returns the specified [value] as a string literal. */
+fun vectorLiteral(value: FloatArray): LiteralOp<FloatArray> = LiteralOp(
+    FloatVectorColumnType(value.size, VectorFormat.FLOAT32),
+    value
+)
+
+/** Returns the specified [value] as a string literal. */
+fun vectorLiteral(value: IntArray): LiteralOp<IntArray> = LiteralOp(
+    IntVectorColumnType(value.size, VectorFormat.INT8),
+    value
+)
+
 /** Returns the specified [value] as a literal of type [T]. */
 @Suppress("UNCHECKED_CAST", "ComplexMethod")
 fun <T, S : T?> ExpressionWithColumnType<S>.asLiteral(value: T): LiteralOp<T> = when {

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+    SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Vector" id="Vector-types">
+    <show-structure for="chapter" depth="2"/>
+    <tldr>
+        <p>
+            <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-core</code>
+        </p>
+        <include from="lib.topic" element-id="jdbc-supported"/>
+        <include from="lib.topic" element-id="r2dbc-supported"/>
+    </tldr>
+    <p>
+        Exposed provides support for vector data types, allowing you to store and query high-dimensional embeddings directly
+        within your database, as well as to run AI-powered similarity searches. Oracle, SQL Server, MySQL, and MariaDB
+        all support explicit vector types, with PostgreSQL providing the type through the open-source extension
+        <a href="https://github.com/pgvector/pgvector">pgvector</a>.
+    </p>
+
+    <chapter title="Supported types" id="supported-types">
+        <p>
+            The <code>exposed-core</code> module supports three main ways to define vector columns using the
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/vector.html">
+                <code>.vector()</code>
+            </a>
+            method:
+        </p>
+        <list>
+            <li>
+                <p>The most common vector definition that accepts <code>FloatArray</code> values and allows you to define
+                    dimensions:</p>
+                <code-block lang="kotlin">
+                    val embedding = vector("embedding", dimensions = 3)
+                </code-block>
+                This will set the dimensions format as using 32-bit floating-point numbers, if your
+                database supports explicit formats.
+            </li>
+            <li>
+                <p>Vector definition with type inference that sets the underlying format. Currently, the only options
+                    available are <code>FloatArray</code> and <code>IntArray</code>:</p>
+                <code-block lang="kotlin"><![CDATA[
+                    val embedding = vector<IntArray>("embedding", 99)
+                ]]></code-block>
+                By default, <code>FloatArray</code> will set a 32-bit floating-point number format, while <code>IntArray</code>
+                will set an 8-bit integer format.
+            </li>
+            <li>
+                <p>Full vector definition with control over the accepted input type, the dimensions, and the underlying format:</p>
+                <code-block lang="kotlin"><![CDATA[
+                    val embedding = vector<FloatArray>("embedding", 2049, VectorFormat.FLOAT64)
+                ]]></code-block>
+                This is useful, for example, when an alternative floating-point format is required, like for 64-bit numbers.
+            </li>
+        </list>
+        <note>
+            <p>A <code>null</code> value can be passed to the <code>dimensions</code> parameter, to define a column with variable length vectors.
+                Not all databases support this functionality though. Please check your documentation before choosing this.</p>
+        </note>
+    </chapter>
+
+    <chapter title="Basic usage" id="basic-usage">
+        <p>
+            Vector columns store and retrieve data as Kotlin primitive arrays, either <code>FloatArray</code> or <code>IntArray</code>,
+            providing a natural way to work with vector data in your code.
+        </p>
+        <p>You can define vector columns within a table definition as follows:</p>
+        <code-block lang="kotlin"><![CDATA[
+            object MultipleVectors : Table("multiple_vectors") {
+                val ve1 = vector("ve1", dimensions = 3)
+                val ve2 = vector<IntArray>("ve2", 3)
+                val ve3 = vector<FloatArray>("ve3", 3, format = VectorFormat.FLOAT64)
+            }
+        ]]></code-block>
+        <p>Here's an example of inserting data into vector columns:</p>
+        <code-block lang="kotlin"><![CDATA[
+            MultipleVectors.insert {
+                it[ve1] = floatArrayOf(1f, 0f, 0f)
+                it[ve2] = intArrayOf(10, 11, 12)
+                it[ve3] = floatArrayOf(0.234f, 0.345f, 0.567f)
+            }
+        ]]></code-block>
+    </chapter>
+    <chapter title="PostgreSQL usage" id="postgresql-vectors">
+        <p>PostgreSQL provides support for the vector data type through the installation of the <a href="https://github.com/pgvector/pgvector">pgvector</a>
+        extension. Exposed assumes that this extension has already been enabled at some point prior to table creation or use of a vector column:</p>
+        <code-block lang="sql">
+            CREATE EXTENSION IF NOT EXISTS vector;
+        </code-block>
+        <p>If this is not the case, usage of the column will result in a database exception.</p>
+    </chapter>
+
+    <chapter title="Vector functions" id="vector-functions">
+        <p>Exposed provides vector distance functions with results being calculated based on the following distance similarity options:</p>
+        <list>
+            <li>Cosine</li>
+            <li>Euclidean</li>
+            <li>Dot product</li>
+        </list>
+        <p>Here's an example of querying vector data using a distance function:</p>
+        <code-block lang="kotlin">
+            val distance = MultipleVectors.ve1.cosineDistance(floatArrayOf(0f, 1f, 0f)).alias("cd")
+            MultipleVectors
+                .select(distance)
+                .where { MultipleVectors.ve2.euclideanDistance(intArrayOf(1, 1, 1)) less 5 }
+                .orderBy(distance to SortOrder.ASC)
+                .toList()
+        </code-block>
+        <note>
+            <p>Not all databases support all available distance metrics. Please check your documentation before using them.</p>
+        </note>
+    </chapter>
+</topic>
