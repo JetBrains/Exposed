@@ -1765,6 +1765,9 @@ fun <T : Any> resolveColumnType(
     )
 }
 
+/**
+ * @suppress
+ */
 @InternalApi
 @Suppress("UNCHECKED_CAST")
 fun <T : Any> resolveVectorColumnType(
