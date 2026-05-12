@@ -54,6 +54,10 @@
                 This is useful, for example, when an alternative floating-point format is required, like for 64-bit numbers.
             </li>
         </list>
+        <note>
+            <p>A <code>null</code> value can be passed to the <code>dimensions</code> parameter, to define a column with variable length vectors.
+                Not all databases support this functionality though. Please check your documentation before choosing this.</p>
+        </note>
     </chapter>
 
     <chapter title="Basic usage" id="basic-usage">

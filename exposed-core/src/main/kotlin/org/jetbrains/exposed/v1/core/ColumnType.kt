@@ -1427,25 +1427,33 @@ enum class VectorFormat {
  * Base column for storing vector values in various dimension formats.
  */
 abstract class BasicVectorColumnType<T>(
-    /** The number of dimensions that the stored vector must have. */
-    val dimensions: Int,
+    /**
+     * The number of dimensions that the stored vector must have. If `null` is set, the column will be defined without
+     * any dimension, as long as the underlying database supports it.
+     */
+    val dimensions: Int?,
     /** The dimension format to specify. Databases that do not support this will ignore any value. */
     val format: VectorFormat,
 ) : ColumnType<T>() {
     override fun sqlType(): String {
-        require(dimensions > 1) { "The number of dimensions must be at minimum 1." }
+        require(dimensions == null || dimensions > 1) { "The specified dimensions must be at minimum 1." }
 
         val dialect = currentDialect
+        if (dimensions == null && (dialect is SQLServerDialect || dialect is MariaDBDialect)) {
+            error("The database ${dialect.name} does not support vectors of undefined dimensions")
+        }
         if (dialect is SQLServerDialect && format != VectorFormat.FLOAT32) {
             error("SQL Server only supports the FLOAT32 base type for dimensions.")
         }
 
         return buildString {
             append(dialect.dataTypeProvider.vectorType())
-            append("($dimensions")
-            if (dialect is OracleDialect) append(", ${format.name}")
-            if (dialect is SQLServerDialect) append(", ${format.name.lowercase()}")
-            append(")")
+            when {
+                dialect is OracleDialect -> append("(${dimensions ?: "*"}, ${format.name})")
+                dialect is SQLServerDialect -> append("($dimensions, ${format.name.lowercase()})")
+                dimensions != null -> append("($dimensions)")
+                // if dimension is null, column will just be defined as VECTOR (if supported by db)
+            }
         }
     }
 
@@ -1468,7 +1476,7 @@ abstract class BasicVectorColumnType<T>(
     }
 
     override fun parameterMarker(value: T?): String = when (currentDialect) {
-        is PostgreSQLDialect -> "?::vector($dimensions)"
+        is PostgreSQLDialect -> "?::vector${dimensions?.let { "($it)" } ?: ""}"
         else -> super.parameterMarker(value)
     }
 
@@ -1487,7 +1495,7 @@ abstract class BasicVectorColumnType<T>(
  * Column for storing vector values as a `FloatArray`.
  */
 class FloatVectorColumnType(
-    dimensions: Int,
+    dimensions: Int?,
     format: VectorFormat,
 ) : BasicVectorColumnType<FloatArray>(dimensions, format) {
 
@@ -1528,7 +1536,7 @@ class FloatVectorColumnType(
  * Column for storing vector values as an `IntArray`.
  */
 class IntVectorColumnType(
-    dimensions: Int,
+    dimensions: Int?,
     format: VectorFormat,
 ) : BasicVectorColumnType<IntArray>(dimensions, format) {
 
@@ -1761,7 +1769,7 @@ fun <T : Any> resolveColumnType(
 @Suppress("UNCHECKED_CAST")
 fun <T : Any> resolveVectorColumnType(
     klass: KClass<T>,
-    dimensions: Int,
+    dimensions: Int?,
     format: VectorFormat?,
 ): BasicVectorColumnType<T> {
     val type = when (klass) {

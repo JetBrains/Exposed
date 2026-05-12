@@ -1104,9 +1104,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * **Note** This column type is not supported by all databases and drivers. Please check your documentation.
      *
      * @param name Name of the column.
-     * @param dimensions The number of dimensions that each stored vector must have.
+     * @param dimensions The number of dimensions that each stored vector must have. If set to `null`, the column will
+     * be defined without any dimension, as long as the underlying database supports this.
      */
-    fun Table.vector(name: String, dimensions: Int): Column<FloatArray> =
+    fun Table.vector(name: String, dimensions: Int?): Column<FloatArray> =
         registerColumn(name, FloatVectorColumnType(dimensions, VectorFormat.FLOAT32))
 
     /**
@@ -1119,7 +1120,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * may numbers may also not be supported. Please check your documentation.
      *
      * @param name Name of the column.
-     * @param dimensions The number of dimensions that each stored vector must have.
+     * @param dimensions The number of dimensions that each stored vector must have. If set to `null`, the column will
+     * be defined without any dimension, as long as the underlying database supports this.
      * @param format The dimension format to set when creating the column. Leaving this value as `null` use either
      * 32-bit floating-point numbers or 8-bit integers, depending on the resolved column type. Databases that do not
      * support picking a dimension format will ignore any set value.
@@ -1127,7 +1129,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * the vector formats for currently supported options.
      * @see VectorFormat
      */
-    inline fun <reified T : Any> Table.vector(name: String, dimensions: Int, format: VectorFormat? = null): Column<T> {
+    inline fun <reified T : Any> Table.vector(name: String, dimensions: Int?, format: VectorFormat? = null): Column<T> {
         @OptIn(InternalApi::class)
         return registerColumn(name, resolveVectorColumnType(T::class, dimensions, format))
     }

@@ -253,6 +253,50 @@ class VectorColumnTypeTests : R2dbcDatabaseTestsBase() {
     }
 
     @Test
+    fun testVectorWithUndefinedDimension() {
+        val noDimTester = object : Table("no_dim_vector_items") {
+            val id = integer("id")
+            val embedding = vector("embedding", dimensions = null)
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withDb(vectorTypeSupportedDb) { testDb ->
+            try {
+                if (testDb == TestDB.POSTGRESQL) {
+                    exec("CREATE EXTENSION IF NOT EXISTS vector;")
+                }
+                if (testDb == TestDB.SQLSERVER || testDb == TestDB.MARIADB) {
+                    expectException<IllegalStateException> {
+                        SchemaUtils.create(noDimTester)
+                    }
+                } else {
+                    SchemaUtils.create(noDimTester)
+                    val smallArray = floatArrayOf(1f, 0f, 0f)
+                    val mediumArray = floatArrayOf(1f, 2f, 3f, 4f, 5f, 6f, 7f)
+                    noDimTester.insert {
+                        it[id] = 1
+                        it[embedding] = smallArray
+                    }
+                    noDimTester.insert {
+                        it[id] = 2
+                        it[embedding] = mediumArray
+                    }
+
+                    val result1 = noDimTester.selectAll().where { noDimTester.id eq 1 }.single()[noDimTester.embedding]
+                    assertContentEquals(result1, smallArray)
+                    val result2 = noDimTester.selectAll().where { noDimTester.id eq 2 }.single()[noDimTester.embedding]
+                    assertContentEquals(result2, mediumArray)
+                }
+            } finally {
+                SchemaUtils.drop(noDimTester)
+                if (testDb == TestDB.POSTGRESQL) {
+                    exec("DROP EXTENSION IF EXISTS vector CASCADE;")
+                }
+            }
+        }
+    }
+
+    @Test
     fun testMultiRowRankingOrder() {
         withVectorTableAndData(
             secondArray = floatArrayOf(0.8f, 0.2f, 0f),
@@ -329,7 +373,7 @@ class VectorColumnTypeTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testAlternativeColumnForms() {
-        withDb(TestDB.ORACLE) { testDb ->
+        withDb(setOf(TestDB.ORACLE, TestDB.MARIADB)) { testDb ->
             try {
                 SchemaUtils.create(MultipleVectors)
 
