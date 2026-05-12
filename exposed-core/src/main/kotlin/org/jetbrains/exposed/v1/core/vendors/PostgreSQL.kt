@@ -408,7 +408,7 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
                 // column in database is auto-incrementing while defined table is not
                 add("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()}")
                 add("ALTER COLUMN $colName DROP DEFAULT")
-            } else if (columnDiff.type) {
+            } else if (columnDiff.type || columnDiff.sizeAndScale) {
                 add("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()}")
             }
 
