@@ -9,7 +9,7 @@ kotlinCoroutines = "1.11.0"
 kotlinxSerialization = "1.11.0"
 
 slf4j = "2.0.9"
-log4j2 = "2.24.3"
+log4j2 = "2.26.0"
 
 h2_v2 = "2.4.240"
 mariaDB = "3.5.6"
