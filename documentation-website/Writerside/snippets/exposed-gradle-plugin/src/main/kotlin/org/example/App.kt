@@ -1,0 +1,23 @@
+package org.example
+
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+
+val h2db = Database.connect(
+    url = "jdbc:h2:file:./data/exampledb;DB_CLOSE_DELAY=-1;",
+    driver = "org.h2.Driver",
+    user = "sa",
+    password = ""
+)
+
+fun main() {
+    simulateExistingDatabase(h2db)
+}
+
+fun simulateExistingDatabase(database: Database) {
+    transaction(database) {
+        exec("DROP TABLE IF EXISTS USERS")
+        exec("CREATE TABLE IF NOT EXISTS USERS (ID UUID NOT NULL, EMAIL VARCHAR(320) NOT NULL)")
+        exec("INSERT INTO USERS (EMAIL, ID) VALUES ('root1@root.com', '05fb3246-9387-4d04-a27f-fa0107c33883')")
+    }
+}
