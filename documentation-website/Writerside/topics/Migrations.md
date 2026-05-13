@@ -15,13 +15,29 @@
     </p>
 </tldr>
 
-Managing database schema changes is a critical part of application development. Exposed offers several tools to help with schema migrations, allowing you to
-evolve your database alongside your codebase.
+Managing database schema changes is a critical part of application development. Exposed supports two approaches to
+schema migrations:
+
+* The [Exposed Gradle plugin](Exposed-gradle-plugin.md) provides a higher-level workflow for generating migration scripts by comparing your Exposed
+  table definitions with an existing database schema.
+* The `SchemaUtils` and `MigrationUtils` APIs provide lower-level building blocks for custom migration and schema validation workflows that can be used directly in
+  Kotlin code.
+
+> This topic describes the migration APIs provided by `SchemaUtils` and `MigrationUtils`.
+> 
+> For a Gradle-based workflow that generates migration scripts automatically, see [Exposed Gradle plugin](Exposed-gradle-plugin.md).
+> 
+{style="tip"}
+
+## Using the migrations API
 
 While Exposed provides basic migration support through `SchemaUtils`,
 the `MigrationUtils` methods from either the `exposed-migration-jdbc` or `exposed-migration-r2dbc` packages
-provide a more structured and production-ready way to manage schema changes. They allow you to [inspect differences](#aligning-the-database-schema) between the current
-database state and your defined table schema and to generate or apply migration scripts accordingly.
+provide a more structured and production-ready way to manage schema changes. They allow you to do the following:
+* [Inspect differences](#aligning-the-database-schema) between the current database state and your defined table schema.
+* [Generate SQL migration statements](#generate-all-required-statements).
+* [Generate migration scripts](#generate-a-migration-script).
+* [Validate database schema state](#validating-the-database-schema).
 
 ## Adding dependencies
 
@@ -269,13 +285,14 @@ level and can be disabled by setting `withLogs` to `false`:
 
 While Exposed's migration tools are powerful, there are some limitations:
 
-- You must still implement and manage your own migration flow.
-- Automatic migration execution is not provided — scripts must be run manually or integrated into your deployment process. This limitation is already addressed in the 
-[Gradle migration plugin feature request](#gradle-plugin).
+* Exposed does not apply generated migration scripts automatically to your target database.
+  You must integrate migration execution into your existing workflow, such as Flyway, Liquibase, or manual execution.
 > For an example of manual execution
 > with Flyway, see the [`exposed-migrations` sample project](https://github.com/JetBrains/Exposed/tree/main/documentation-website/Writerside/snippets/exposed-migrations).
-- Some database-specific behaviors, such as SQLite's limited `ALTER TABLE` support, may lead to partial or failed migrations if not reviewed.
-- Destructive operations like `DROP COLUMN` or `DROP SEQUENCE` can be included — caution is advised.
+> 
+{style="tip"}
+* Some database-specific behaviors, such as SQLite's limited `ALTER TABLE` support, may lead to partial or failed migrations if not reviewed.
+* Destructive operations like `DROP COLUMN` or `DROP SEQUENCE` can be included — caution is advised.
 
 We recommend that you always manually review generated diffs or scripts before applying them to a live database.
 
@@ -287,6 +304,8 @@ It is up to you to review the generated SQL and avoid attempting migrations that
 fail at runtime.
 
 > For more information on this restriction, refer to the [SQLite documentation](https://www.sqlite.org/lang_altertable.html#alter_table_add_column). 
+>
+{style="tip"}
 
 ### PostgreSQL
 
@@ -358,11 +377,6 @@ comment string value in the future will not trigger a migration statement. If yo
 method instead, the string value will be properly compared with the comment retrieved from the database.
 
 ## Feature requests
-
-### Gradle plugin
-
-A Gradle plugin to simplify SQL migrations is in development. A proposed design for Flyway integration has been presented and is actively being implemented. To show
-interest or get involved, see the [YouTrack issue for creating the migration Gradle plugin](https://youtrack.jetbrains.com/issue/EXPOSED-755/Create-a-migration-Gradle-plugin).
 
 ### Maven and Liquibase integration
 

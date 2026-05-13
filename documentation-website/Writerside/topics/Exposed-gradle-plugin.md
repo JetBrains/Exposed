@@ -307,5 +307,16 @@ The plugin supports the following database container images:
 | SQL Server | `mcr.microsoft.com/mssql/server`, `mcr.microsoft.com/mssql/server:2025-latest`, or other tags |
 | Oracle     | Images starting with `container-registry.oracle.com/`,`gvenzl/oracle-` or `oracle/`           |
 
+## Next steps
 
+The Exposed Gradle plugin generates migration scripts, but it does not apply them to your database automatically.
 
+After generating migration scripts, review and apply them using your existing database migration workflow. For example,
+you can:
+
+* Apply migrations using tools such as [Flyway](https://www.red-gate.com/products/flyway/) or [Liquibase](https://www.liquibase.com/liquibase-secure).
+* Execute scripts manually using your database client.
+* Run scripts from the [IntelliJ IDEA Database tool window](https://www.jetbrains.com/help/idea/database-tool-window.html).
+* Integrate migration execution into your CI/CD pipeline.
+
+After applying the generated scripts, your database schema should match your current Exposed table definitions.
