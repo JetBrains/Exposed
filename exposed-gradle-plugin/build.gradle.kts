@@ -1,5 +1,6 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.gradle.plugin.compatibility.compatibility
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -69,6 +70,11 @@ gradlePlugin {
             implementationClass = "org.jetbrains.exposed.v1.gradle.plugin.ExposedGradlePlugin"
             description = "Exposed Gradle Plugin configures the generation of migration scripts for applications that use Exposed"
             tags = setOf("exposed", "kotlin", "sql", "database", "orm")
+            compatibility {
+                features {
+                    configurationCache = true
+                }
+            }
         }
     }
 }
