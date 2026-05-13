@@ -24,13 +24,6 @@ include("exposed-r2dbc-tests")
 include("exposed-jdbc-r2dbc-tests")
 include("exposed-gradle-plugin")
 
-// Route Maven Central through Google Cloud Storage's official mirror to avoid
-// the HTTP 429 rate-limit errors TeamCity has been hitting on direct fetches
-// from repo.maven.apache.org. The GCS mirror absorbs traffic at a different
-// scale and has been confirmed to work reliably from both internal and
-// external agents. mavenCentral() is kept as a fallback for the (rare) case
-// where the mirror is missing an artifact (Gradle iterates repos on 404 but
-// not on 429, so the mirror needs to be first).
 pluginManagement {
     repositories {
         google()
@@ -45,19 +38,5 @@ dependencyResolutionManagement {
         google()
         maven("https://maven-central-eu.storage-download.googleapis.com/maven2/")
         mavenCentral()
-    }
-}
-
-plugins {
-    id("org.gradle.toolchains.foojay-resolver") version "1.0.0"
-}
-
-toolchainManagement {
-    jvm {
-        javaRepositories {
-            repository("foojay") {
-                resolverClass.set(org.gradle.toolchains.foojay.FoojayToolchainResolver::class.java)
-            }
-        }
     }
 }
