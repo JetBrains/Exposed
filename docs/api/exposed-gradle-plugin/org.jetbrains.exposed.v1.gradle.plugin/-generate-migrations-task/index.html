@@ -1,0 +1,1379 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>GenerateMigrationsTask</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
+                    exposed
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">1.3.0
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":exposed-gradle-plugin/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":exposed-gradle-plugin/main" data-filter=":exposed-gradle-plugin/main">
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    exposed
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="exposed-gradle-plugin::org.jetbrains.exposed.v1.gradle.plugin/GenerateMigrationsTask///PointingToDeclaration//-1129373318">
+  <div class="breadcrumbs"><a href="../../index.html">exposed-gradle-plugin</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.v1.gradle.plugin</a><span class="delimiter">/</span><span class="current">GenerateMigrationsTask</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Generate</span><wbr><span>Migrations</span><wbr><span><span>Task</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="index.html">GenerateMigrationsTask</a> : <span data-unresolved-link="org.gradle.api/DefaultTask///PointingToDeclaration/">DefaultTask</span></div><p class="paragraph">Task for generating SQL migration scripts from Exposed table definitions. Uses the Gradle Workers API for better isolation and parallel execution.</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="tableheader">Constructors</h2>
+        <div class="table"><a data-name="712356326%2FConstructors%2F-1129373318" anchor-label="GenerateMigrationsTask" id="712356326%2FConstructors%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-generate-migrations-task.html"><span>Generate</span><wbr><span>Migrations</span><wbr><span><span>Task</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="712356326%2FConstructors%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="tableheader">Properties</h2>
+        <div class="table"><a data-name="1015733915%2FProperties%2F-1129373318" anchor-label="actions" id="1015733915%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1015733915%2FProperties%2F-1129373318"><span><span>actions</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1015733915%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">var </span><a href="index.html#1015733915%2FProperties%2F-1129373318">actions</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><span data-unresolved-link="org.gradle.api/Action///PointingToDeclaration/">Action</span><span class="token operator">&lt;</span><span class="token keyword">in </span><span data-unresolved-link="org.gradle.api/Task///PointingToDeclaration/">Task</span><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1950580337%2FProperties%2F-1129373318" anchor-label="ant" id="1950580337%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1950580337%2FProperties%2F-1129373318"><span><span>ant</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1950580337%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#1950580337%2FProperties%2F-1129373318">ant</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api/AntBuilder///PointingToDeclaration/">AntBuilder</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="883333400%2FProperties%2F-1129373318" anchor-label="asDynamicObject" id="883333400%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#883333400%2FProperties%2F-1129373318"><span>as</span><wbr><span>Dynamic</span><wbr><span><span>Object</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="883333400%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/Internal///PointingToDeclaration/"><span class="token annotation builtin">Internal</span></span></div></div><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#883333400%2FProperties%2F-1129373318">asDynamicObject</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.internal.metaobject/DynamicObject///PointingToDeclaration/">DynamicObject</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2132116472%2FProperties%2F-1129373318" anchor-label="classpath" id="2132116472%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="classpath.html"><span><span>classpath</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2132116472%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/InputFiles///PointingToDeclaration/"><span class="token annotation builtin">InputFiles</span></span></div></div><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="classpath.html">classpath</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.file/ConfigurableFileCollection///PointingToDeclaration/">ConfigurableFileCollection</span></div><div class="brief "><p class="paragraph">Optional classpath that is scanned for Exposed table definitions. Defaults to the project's runtime classpath.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1300515813%2FProperties%2F-1129373318" anchor-label="convention" id="1300515813%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1300515813%2FProperties%2F-1129373318"><span><span>convention</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1300515813%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/Internal///PointingToDeclaration/"><span class="token annotation builtin">Internal</span></span></div></div><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="index.html#1300515813%2FProperties%2F-1129373318">convention</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.plugins/Convention///PointingToDeclaration/">Convention</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="372891919%2FProperties%2F-1129373318" anchor-label="databasePassword" id="372891919%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="database-password.html"><span>database</span><wbr><span><span>Password</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="372891919%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/Input///PointingToDeclaration/"><span class="token annotation builtin">Input</span></span></div><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/Optional///PointingToDeclaration/"><span class="token annotation builtin">Optional</span></span></div></div><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="database-password.html">databasePassword</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.provider/Property///PointingToDeclaration/">Property</span><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Optional password for the database connection, which should be considered as the current schema.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1440718463%2FProperties%2F-1129373318" anchor-label="databaseUrl" id="-1440718463%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="database-url.html"><span>database</span><wbr><span><span>Url</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1440718463%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/Input///PointingToDeclaration/"><span class="token annotation builtin">Input</span></span></div><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/Optional///PointingToDeclaration/"><span class="token annotation builtin">Optional</span></span></div></div><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="database-url.html">databaseUrl</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.provider/Property///PointingToDeclaration/">Property</span><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Optional URL for the database connection, which should be considered as the current schema.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1426535519%2FProperties%2F-1129373318" anchor-label="databaseUser" id="1426535519%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="database-user.html"><span>database</span><wbr><span><span>User</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1426535519%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/Input///PointingToDeclaration/"><span class="token annotation builtin">Input</span></span></div><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/Optional///PointingToDeclaration/"><span class="token annotation builtin">Optional</span></span></div></div><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="database-user.html">databaseUser</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.provider/Property///PointingToDeclaration/">Property</span><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Optional username for the database connection, which should be considered as the current schema.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2028768562%2FProperties%2F-1129373318" anchor-label="dependsOn" id="2028768562%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#2028768562%2FProperties%2F-1129373318"><span>depends</span><wbr><span><span>On</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2028768562%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#2028768562%2FProperties%2F-1129373318">dependsOn</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-set/index.html">Set</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="877501180%2FProperties%2F-1129373318" anchor-label="description" id="877501180%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#877501180%2FProperties%2F-1129373318"><span><span>description</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="877501180%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">var </span><a href="index.html#877501180%2FProperties%2F-1129373318">description</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1428106845%2FProperties%2F-1129373318" anchor-label="destroyables" id="-1428106845%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1428106845%2FProperties%2F-1129373318"><span><span>destroyables</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1428106845%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#-1428106845%2FProperties%2F-1129373318">destroyables</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.tasks/TaskDestroyables///PointingToDeclaration/">TaskDestroyables</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="916532936%2FProperties%2F-1129373318" anchor-label="didWork" id="916532936%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#916532936%2FProperties%2F-1129373318"><span>did</span><wbr><span><span>Work</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="916532936%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">var </span><a href="index.html#916532936%2FProperties%2F-1129373318">didWork</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="591655127%2FProperties%2F-1129373318" anchor-label="enabled" id="591655127%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#591655127%2FProperties%2F-1129373318"><span><span>enabled</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="591655127%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">var </span><a href="index.html#591655127%2FProperties%2F-1129373318">enabled</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1890814734%2FProperties%2F-1129373318" anchor-label="extensions" id="1890814734%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1890814734%2FProperties%2F-1129373318"><span><span>extensions</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1890814734%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#1890814734%2FProperties%2F-1129373318">extensions</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.plugins/ExtensionContainer///PointingToDeclaration/">ExtensionContainer</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-446711868%2FProperties%2F-1129373318" anchor-label="fileDirectory" id="-446711868%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="file-directory.html"><span>file</span><wbr><span><span>Directory</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-446711868%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/OutputDirectory///PointingToDeclaration/"><span class="token annotation builtin">OutputDirectory</span></span></div></div><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="file-directory.html">fileDirectory</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.file/DirectoryProperty///PointingToDeclaration/">DirectoryProperty</span></div><div class="brief "><p class="paragraph">Directory where the generated migration scripts will be stored. Defaults to <code class="lang-kotlin">src/main/resources/db/migration</code>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="191859250%2FProperties%2F-1129373318" anchor-label="fileExtension" id="191859250%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="file-extension.html"><span>file</span><wbr><span><span>Extension</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="191859250%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/Input///PointingToDeclaration/"><span class="token annotation builtin">Input</span></span></div><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/Optional///PointingToDeclaration/"><span class="token annotation builtin">Optional</span></span></div></div><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="file-extension.html">fileExtension</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.provider/Property///PointingToDeclaration/">Property</span><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Optional file extension for migration scripts. Defaults to ".sql".</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="363428887%2FProperties%2F-1129373318" anchor-label="filePrefix" id="363428887%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="file-prefix.html"><span>file</span><wbr><span><span>Prefix</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="363428887%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/Input///PointingToDeclaration/"><span class="token annotation builtin">Input</span></span></div><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/Optional///PointingToDeclaration/"><span class="token annotation builtin">Optional</span></span></div></div><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="file-prefix.html">filePrefix</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.provider/Property///PointingToDeclaration/">Property</span><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Optional prefix for migration script names. Defaults to "V".</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="322595404%2FProperties%2F-1129373318" anchor-label="fileSeparator" id="322595404%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="file-separator.html"><span>file</span><wbr><span><span>Separator</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="322595404%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/Input///PointingToDeclaration/"><span class="token annotation builtin">Input</span></span></div><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/Optional///PointingToDeclaration/"><span class="token annotation builtin">Optional</span></span></div></div><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="file-separator.html">fileSeparator</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.provider/Property///PointingToDeclaration/">Property</span><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Optional separator for migration script names. Defaults to "__".</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1946026882%2FProperties%2F-1129373318" anchor-label="fileVersionFormat" id="1946026882%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="file-version-format.html"><span>file</span><wbr><span>Version</span><wbr><span><span>Format</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1946026882%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/Input///PointingToDeclaration/"><span class="token annotation builtin">Input</span></span></div><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/Optional///PointingToDeclaration/"><span class="token annotation builtin">Optional</span></span></div></div><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="file-version-format.html">fileVersionFormat</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.provider/Property///PointingToDeclaration/">Property</span><span class="token operator">&lt;</span><a href="../-version-format/index.html">VersionFormat</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Optional version format for migration script names. Defaults to using the full current timestamp (with seconds) in the format YYYYMMDDHHMMSS.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1104218907%2FProperties%2F-1129373318" anchor-label="finalizedBy" id="1104218907%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1104218907%2FProperties%2F-1129373318"><span>finalized</span><wbr><span><span>By</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1104218907%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#1104218907%2FProperties%2F-1129373318">finalizedBy</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.tasks/TaskDependency///PointingToDeclaration/">TaskDependency</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1995952017%2FProperties%2F-1129373318" anchor-label="fullFileName" id="-1995952017%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="full-file-name.html"><span>full</span><wbr><span>File</span><wbr><span><span>Name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1995952017%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/Internal///PointingToDeclaration/"><span class="token annotation builtin">Internal</span></span></div></div><span class="token keyword">var </span><a href="full-file-name.html">fullFileName</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2131696153%2FProperties%2F-1129373318" anchor-label="group" id="2131696153%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#2131696153%2FProperties%2F-1129373318"><span><span>group</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2131696153%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">var </span><a href="index.html#2131696153%2FProperties%2F-1129373318">group</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1154374483%2FProperties%2F-1129373318" anchor-label="identityPath" id="1154374483%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1154374483%2FProperties%2F-1129373318"><span>identity</span><wbr><span><span>Path</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1154374483%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#1154374483%2FProperties%2F-1129373318">identityPath</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.util/Path///PointingToDeclaration/">Path</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1232486157%2FProperties%2F-1129373318" anchor-label="impliesSubProjects" id="-1232486157%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1232486157%2FProperties%2F-1129373318"><span>implies</span><wbr><span>Sub</span><wbr><span><span>Projects</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1232486157%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">var </span><a href="index.html#-1232486157%2FProperties%2F-1129373318">impliesSubProjects</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-169715367%2FProperties%2F-1129373318" anchor-label="inputs" id="-169715367%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-169715367%2FProperties%2F-1129373318"><span><span>inputs</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-169715367%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#-169715367%2FProperties%2F-1129373318">inputs</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.internal/TaskInputsInternal///PointingToDeclaration/">TaskInputsInternal</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1956237210%2FProperties%2F-1129373318" anchor-label="isCompatibleWithConfigurationCache" id="-1956237210%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1956237210%2FProperties%2F-1129373318"><span>is</span><wbr><span>Compatible</span><wbr><span>With</span><wbr><span>Configuration</span><wbr><span><span>Cache</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1956237210%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#-1956237210%2FProperties%2F-1129373318">isCompatibleWithConfigurationCache</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-685189299%2FProperties%2F-1129373318" anchor-label="isEnabled" id="-685189299%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-685189299%2FProperties%2F-1129373318"><span>is</span><wbr><span><span>Enabled</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-685189299%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/Internal///PointingToDeclaration/"><span class="token annotation builtin">Internal</span></span></div></div><span class="token keyword">open </span><span class="token keyword">var </span><a href="index.html#-685189299%2FProperties%2F-1129373318">isEnabled</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1322490778%2FProperties%2F-1129373318" anchor-label="isHasCustomActions" id="1322490778%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1322490778%2FProperties%2F-1129373318"><span>is</span><wbr><span>Has</span><wbr><span>Custom</span><wbr><span><span>Actions</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1322490778%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#1322490778%2FProperties%2F-1129373318">isHasCustomActions</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1860079279%2FProperties%2F-1129373318" anchor-label="lifecycleDependencies" id="-1860079279%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1860079279%2FProperties%2F-1129373318"><span>lifecycle</span><wbr><span><span>Dependencies</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1860079279%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/Internal///PointingToDeclaration/"><span class="token annotation builtin">Internal</span></span></div></div><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#-1860079279%2FProperties%2F-1129373318">lifecycleDependencies</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.internal.tasks/TaskDependencyInternal///PointingToDeclaration/">TaskDependencyInternal</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="940287868%2FProperties%2F-1129373318" anchor-label="localState" id="940287868%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#940287868%2FProperties%2F-1129373318"><span>local</span><wbr><span><span>State</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="940287868%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#940287868%2FProperties%2F-1129373318">localState</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.tasks/TaskLocalState///PointingToDeclaration/">TaskLocalState</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="947036050%2FProperties%2F-1129373318" anchor-label="logger" id="947036050%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#947036050%2FProperties%2F-1129373318"><span><span>logger</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="947036050%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#947036050%2FProperties%2F-1129373318">logger</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.logging/Logger///PointingToDeclaration/">Logger</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-83071367%2FProperties%2F-1129373318" anchor-label="logging" id="-83071367%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-83071367%2FProperties%2F-1129373318"><span><span>logging</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-83071367%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#-83071367%2FProperties%2F-1129373318">logging</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.logging/LoggingManager///PointingToDeclaration/">LoggingManager</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1144861032%2FProperties%2F-1129373318" anchor-label="mustRunAfter" id="1144861032%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1144861032%2FProperties%2F-1129373318"><span>must</span><wbr><span>Run</span><wbr><span><span>After</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1144861032%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#1144861032%2FProperties%2F-1129373318">mustRunAfter</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.tasks/TaskDependency///PointingToDeclaration/">TaskDependency</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1528909769%2FProperties%2F-1129373318" anchor-label="name" id="-1528909769%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1528909769%2FProperties%2F-1129373318"><span><span>name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1528909769%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#-1528909769%2FProperties%2F-1129373318">name</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-233302803%2FProperties%2F-1129373318" anchor-label="onlyIf" id="-233302803%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-233302803%2FProperties%2F-1129373318"><span>only</span><wbr><span><span>If</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-233302803%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#-233302803%2FProperties%2F-1129373318">onlyIf</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.specs/Spec///PointingToDeclaration/">Spec</span><span class="token operator">&lt;</span><span class="token keyword">in </span><span data-unresolved-link="org.gradle.api.internal/TaskInternal///PointingToDeclaration/">TaskInternal</span><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1166557606%2FProperties%2F-1129373318" anchor-label="outputs" id="1166557606%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1166557606%2FProperties%2F-1129373318"><span><span>outputs</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1166557606%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#1166557606%2FProperties%2F-1129373318">outputs</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.internal/TaskOutputsInternal///PointingToDeclaration/">TaskOutputsInternal</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1908283427%2FProperties%2F-1129373318" anchor-label="path" id="-1908283427%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1908283427%2FProperties%2F-1129373318"><span><span>path</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1908283427%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#-1908283427%2FProperties%2F-1129373318">path</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1171901441%2FProperties%2F-1129373318" anchor-label="project" id="-1171901441%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1171901441%2FProperties%2F-1129373318"><span><span>project</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1171901441%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#-1171901441%2FProperties%2F-1129373318">project</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api/Project///PointingToDeclaration/">Project</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="171852596%2FProperties%2F-1129373318" anchor-label="reasonNotToTrackState" id="171852596%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#171852596%2FProperties%2F-1129373318"><span>reason</span><wbr><span>Not</span><wbr><span>To</span><wbr><span>Track</span><wbr><span><span>State</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="171852596%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#171852596%2FProperties%2F-1129373318">reasonNotToTrackState</a><span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Optional.html">Optional</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1280133512%2FProperties%2F-1129373318" anchor-label="reasonTaskIsIncompatibleWithConfigurationCache" id="-1280133512%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1280133512%2FProperties%2F-1129373318"><span>reason</span><wbr><span>Task</span><wbr><span>Is</span><wbr><span>Incompatible</span><wbr><span>With</span><wbr><span>Configuration</span><wbr><span><span>Cache</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1280133512%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#-1280133512%2FProperties%2F-1129373318">reasonTaskIsIncompatibleWithConfigurationCache</a><span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Optional.html">Optional</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2067984135%2FProperties%2F-1129373318" anchor-label="requiredServices" id="-2067984135%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-2067984135%2FProperties%2F-1129373318"><span>required</span><wbr><span><span>Services</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2067984135%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#-2067984135%2FProperties%2F-1129373318">requiredServices</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.internal.tasks/TaskRequiredServices///PointingToDeclaration/">TaskRequiredServices</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-374855260%2FProperties%2F-1129373318" anchor-label="sharedResources" id="-374855260%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-374855260%2FProperties%2F-1129373318"><span>shared</span><wbr><span><span>Resources</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-374855260%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#-374855260%2FProperties%2F-1129373318">sharedResources</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><span data-unresolved-link="org.gradle.internal.resources/ResourceLock///PointingToDeclaration/">ResourceLock</span><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1949611454%2FProperties%2F-1129373318" anchor-label="shouldRunAfter" id="1949611454%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1949611454%2FProperties%2F-1129373318"><span>should</span><wbr><span>Run</span><wbr><span><span>After</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1949611454%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#1949611454%2FProperties%2F-1129373318">shouldRunAfter</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.tasks/TaskDependency///PointingToDeclaration/">TaskDependency</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="632347996%2FProperties%2F-1129373318" anchor-label="standardOutputCapture" id="632347996%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#632347996%2FProperties%2F-1129373318"><span>standard</span><wbr><span>Output</span><wbr><span><span>Capture</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="632347996%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#632347996%2FProperties%2F-1129373318">standardOutputCapture</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.internal.logging/StandardOutputCapture///PointingToDeclaration/">StandardOutputCapture</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1622205511%2FProperties%2F-1129373318" anchor-label="state" id="1622205511%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1622205511%2FProperties%2F-1129373318"><span><span>state</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1622205511%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#1622205511%2FProperties%2F-1129373318">state</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.internal.tasks/TaskStateInternal///PointingToDeclaration/">TaskStateInternal</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="115414004%2FProperties%2F-1129373318" anchor-label="tablesPackage" id="115414004%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="tables-package.html"><span>tables</span><wbr><span><span>Package</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="115414004%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/Input///PointingToDeclaration/"><span class="token annotation builtin">Input</span></span></div></div><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="tables-package.html">tablesPackage</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.provider/Property///PointingToDeclaration/">Property</span><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Package name where Exposed tables definitions are located.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1790393428%2FProperties%2F-1129373318" anchor-label="taskActions" id="-1790393428%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1790393428%2FProperties%2F-1129373318"><span>task</span><wbr><span><span>Actions</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1790393428%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#-1790393428%2FProperties%2F-1129373318">taskActions</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><span data-unresolved-link="org.gradle.api.internal.tasks/InputChangesAwareTaskAction///PointingToDeclaration/">InputChangesAwareTaskAction</span><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1652046508%2FProperties%2F-1129373318" anchor-label="taskDependencies" id="-1652046508%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1652046508%2FProperties%2F-1129373318"><span>task</span><wbr><span><span>Dependencies</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1652046508%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#-1652046508%2FProperties%2F-1129373318">taskDependencies</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.internal.tasks/TaskDependencyInternal///PointingToDeclaration/">TaskDependencyInternal</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="280488947%2FProperties%2F-1129373318" anchor-label="taskIdentity" id="280488947%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#280488947%2FProperties%2F-1129373318"><span>task</span><wbr><span><span>Identity</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="280488947%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#280488947%2FProperties%2F-1129373318">taskIdentity</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.internal.project.taskfactory/TaskIdentity///PointingToDeclaration/">TaskIdentity</span><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1251477914%2FProperties%2F-1129373318" anchor-label="temporaryDir" id="-1251477914%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1251477914%2FProperties%2F-1129373318"><span>temporary</span><wbr><span><span>Dir</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1251477914%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#-1251477914%2FProperties%2F-1129373318">temporaryDir</a><span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/File.html">File</a><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1641460682%2FProperties%2F-1129373318" anchor-label="temporaryDirFactory" id="-1641460682%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1641460682%2FProperties%2F-1129373318"><span>temporary</span><wbr><span>Dir</span><wbr><span><span>Factory</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1641460682%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#-1641460682%2FProperties%2F-1129373318">temporaryDirFactory</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.internal/Factory///PointingToDeclaration/">Factory</span><span class="token operator">&lt;</span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/File.html">File</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-752186733%2FProperties%2F-1129373318" anchor-label="testContainersImageName" id="-752186733%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="test-containers-image-name.html"><span>test</span><wbr><span>Containers</span><wbr><span>Image</span><wbr><span><span>Name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-752186733%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/Input///PointingToDeclaration/"><span class="token annotation builtin">Input</span></span></div><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/Optional///PointingToDeclaration/"><span class="token annotation builtin">Optional</span></span></div></div><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="test-containers-image-name.html">testContainersImageName</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.provider/Property///PointingToDeclaration/">Property</span><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Optional Docker image name for when using TestContainers to apply existing scripts before generating new ones.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1095970121%2FProperties%2F-1129373318" anchor-label="timeout" id="-1095970121%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1095970121%2FProperties%2F-1129373318"><span><span>timeout</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1095970121%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="index.html#-1095970121%2FProperties%2F-1129373318">timeout</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.provider/Property///PointingToDeclaration/">Property</span><span class="token operator">&lt;</span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html">Duration</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-748458940%2FProperties%2F-1129373318" anchor-label="useUpperCaseDescription" id="-748458940%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="use-upper-case-description.html"><span>use</span><wbr><span>Upper</span><wbr><span>Case</span><wbr><span><span>Description</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-748458940%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/Input///PointingToDeclaration/"><span class="token annotation builtin">Input</span></span></div><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="org.gradle.api.tasks/Optional///PointingToDeclaration/"><span class="token annotation builtin">Optional</span></span></div></div><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="use-upper-case-description.html">useUpperCaseDescription</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.provider/Property///PointingToDeclaration/">Property</span><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Optional flag for whether the descriptive part of migration script names should be all in upper-case. Defaults to true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="300658228%2FProperties%2F-1129373318" anchor-label="workerExecutor" id="300658228%2FProperties%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="worker-executor.html"><span>worker</span><wbr><span><span>Executor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="300658228%2FProperties%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@get:</span><span data-unresolved-link="javax.inject/Inject///PointingToDeclaration/"><span class="token annotation builtin">Inject</span></span></div></div><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="worker-executor.html">workerExecutor</a><span class="token operator">: </span><span data-unresolved-link="org.gradle.workers/WorkerExecutor///PointingToDeclaration/">WorkerExecutor</span></div><div class="brief "><p class="paragraph">The task's executor instance that accepts submitted work.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="188617930%2FFunctions%2F-1129373318" anchor-label="acceptServiceReferences" id="188617930%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#188617930%2FFunctions%2F-1129373318"><span>accept</span><wbr><span>Service</span><wbr><span><span>References</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="188617930%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#188617930%2FFunctions%2F-1129373318"><span class="token function">acceptServiceReferences</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">serviceReferences<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-set/index.html">Set</a><span class="token operator">&lt;</span><span data-unresolved-link="org.gradle.api.internal.tasks.properties/ServiceReferenceSpec///PointingToDeclaration/">ServiceReferenceSpec</span><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1462751566%2FFunctions%2F-1129373318" anchor-label="appendParallelSafeAction" id="-1462751566%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1462751566%2FFunctions%2F-1129373318"><span>append</span><wbr><span>Parallel</span><wbr><span>Safe</span><wbr><span><span>Action</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1462751566%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-1462751566%2FFunctions%2F-1129373318"><span class="token function">appendParallelSafeAction</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">action<span class="token operator">: </span><span data-unresolved-link="org.gradle.api/Action///PointingToDeclaration/">Action</span><span class="token operator">&lt;</span><span class="token keyword">in </span><span data-unresolved-link="org.gradle.api/Task///PointingToDeclaration/">Task</span><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1889203034%2FFunctions%2F-1129373318" anchor-label="compareTo" id="1889203034%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1889203034%2FFunctions%2F-1129373318"><span>compare</span><wbr><span><span>To</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1889203034%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">operator </span><span class="token keyword">fun </span><a href="index.html#1889203034%2FFunctions%2F-1129373318"><span class="token function">compareTo</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">otherTask<span class="token operator">: </span><span data-unresolved-link="org.gradle.api/Task///PointingToDeclaration/">Task</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1886814229%2FFunctions%2F-1129373318" anchor-label="configure" id="1886814229%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1886814229%2FFunctions%2F-1129373318"><span><span>configure</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1886814229%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#1886814229%2FFunctions%2F-1129373318"><span class="token function">configure</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">closure<span class="token operator">: </span><span data-unresolved-link="groovy.lang/Closure///PointingToDeclaration/">Closure</span><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="org.gradle.api/Task///PointingToDeclaration/">Task</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-565644514%2FFunctions%2F-1129373318" anchor-label="dependsOn" id="-565644514%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-565644514%2FFunctions%2F-1129373318"><span>depends</span><wbr><span><span>On</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-565644514%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-565644514%2FFunctions%2F-1129373318"><span class="token function">dependsOn</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>paths<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="org.gradle.api/Task///PointingToDeclaration/">Task</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1970347937%2FFunctions%2F-1129373318" anchor-label="doFirst" id="1970347937%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1589791980%2FFunctions%2F-1129373318"><span>do</span><wbr><span><span>First</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1970347937%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-1589791980%2FFunctions%2F-1129373318"><span class="token function">doFirst</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">action<span class="token operator">: </span><span data-unresolved-link="groovy.lang/Closure///PointingToDeclaration/">Closure</span><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="org.gradle.api/Task///PointingToDeclaration/">Task</span><span class="token operator">?</span></div><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-2112619851%2FFunctions%2F-1129373318"><span class="token function">doFirst</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">action<span class="token operator">: </span><span data-unresolved-link="org.gradle.api/Action///PointingToDeclaration/">Action</span><span class="token operator">&lt;</span><span class="token keyword">in </span><span data-unresolved-link="org.gradle.api/Task///PointingToDeclaration/">Task</span><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="org.gradle.api/Task///PointingToDeclaration/">Task</span><span class="token operator">?</span></div><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#1368558320%2FFunctions%2F-1129373318"><span class="token function">doFirst</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">actionName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">action<span class="token operator">: </span><span data-unresolved-link="org.gradle.api/Action///PointingToDeclaration/">Action</span><span class="token operator">&lt;</span><span class="token keyword">in </span><span data-unresolved-link="org.gradle.api/Task///PointingToDeclaration/">Task</span><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="org.gradle.api/Task///PointingToDeclaration/">Task</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-463979931%2FFunctions%2F-1129373318" anchor-label="doLast" id="-463979931%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#270489760%2FFunctions%2F-1129373318"><span>do</span><wbr><span><span>Last</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-463979931%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#270489760%2FFunctions%2F-1129373318"><span class="token function">doLast</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">action<span class="token operator">: </span><span data-unresolved-link="groovy.lang/Closure///PointingToDeclaration/">Closure</span><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="org.gradle.api/Task///PointingToDeclaration/">Task</span><span class="token operator">?</span></div><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#1632609705%2FFunctions%2F-1129373318"><span class="token function">doLast</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">action<span class="token operator">: </span><span data-unresolved-link="org.gradle.api/Action///PointingToDeclaration/">Action</span><span class="token operator">&lt;</span><span class="token keyword">in </span><span data-unresolved-link="org.gradle.api/Task///PointingToDeclaration/">Task</span><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="org.gradle.api/Task///PointingToDeclaration/">Task</span><span class="token operator">?</span></div><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-952239388%2FFunctions%2F-1129373318"><span class="token function">doLast</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">actionName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">action<span class="token operator">: </span><span data-unresolved-link="org.gradle.api/Action///PointingToDeclaration/">Action</span><span class="token operator">&lt;</span><span class="token keyword">in </span><span data-unresolved-link="org.gradle.api/Task///PointingToDeclaration/">Task</span><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="org.gradle.api/Task///PointingToDeclaration/">Task</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="608322429%2FFunctions%2F-1129373318" anchor-label="doNotTrackState" id="608322429%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#608322429%2FFunctions%2F-1129373318"><span>do</span><wbr><span>Not</span><wbr><span>Track</span><wbr><span><span>State</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="608322429%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#608322429%2FFunctions%2F-1129373318"><span class="token function">doNotTrackState</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">reasonNotToTrackState<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-74705529%2FFunctions%2F-1129373318" anchor-label="finalizedBy" id="-74705529%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-74705529%2FFunctions%2F-1129373318"><span>finalized</span><wbr><span><span>By</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-74705529%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-74705529%2FFunctions%2F-1129373318"><span class="token function">finalizedBy</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>paths<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="org.gradle.api/Task///PointingToDeclaration/">Task</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-527579381%2FFunctions%2F-1129373318" anchor-label="generateMigrations" id="-527579381%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="generate-migrations.html"><span>generate</span><wbr><span><span>Migrations</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-527579381%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="generate-migrations.html"><span class="token function">generateMigrations</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Submits a <a href="../-generate-migrations-worker/index.html">GenerateMigrationsWorker</a> work to be executed in isolated contexts.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1491241998%2FFunctions%2F-1129373318" anchor-label="getConvention" id="1491241998%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1491241998%2FFunctions%2F-1129373318"><span>get</span><wbr><span><span>Convention</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1491241998%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="org.gradle.api.tasks/Internal///PointingToDeclaration/"><span class="token annotation builtin">Internal</span></span></div></div><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#1491241998%2FFunctions%2F-1129373318"><span class="token function"><strike>getConvention</strike></span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.plugins/Convention///PointingToDeclaration/">Convention</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="225124062%2FFunctions%2F-1129373318" anchor-label="hasProperty" id="225124062%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#225124062%2FFunctions%2F-1129373318"><span>has</span><wbr><span><span>Property</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="225124062%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#225124062%2FFunctions%2F-1129373318"><span class="token function">hasProperty</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">propertyName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-987655597%2FFunctions%2F-1129373318" anchor-label="hasTaskActions" id="-987655597%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-987655597%2FFunctions%2F-1129373318"><span>has</span><wbr><span>Task</span><wbr><span><span>Actions</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-987655597%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-987655597%2FFunctions%2F-1129373318"><span class="token function">hasTaskActions</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="869427322%2FFunctions%2F-1129373318" anchor-label="mustRunAfter" id="869427322%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#869427322%2FFunctions%2F-1129373318"><span>must</span><wbr><span>Run</span><wbr><span><span>After</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="869427322%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#869427322%2FFunctions%2F-1129373318"><span class="token function">mustRunAfter</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>paths<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="org.gradle.api/Task///PointingToDeclaration/">Task</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2031213384%2FFunctions%2F-1129373318" anchor-label="notCompatibleWithConfigurationCache" id="2031213384%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#2031213384%2FFunctions%2F-1129373318"><span>not</span><wbr><span>Compatible</span><wbr><span>With</span><wbr><span>Configuration</span><wbr><span><span>Cache</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2031213384%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#2031213384%2FFunctions%2F-1129373318"><span class="token function">notCompatibleWithConfigurationCache</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">reason<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-632618962%2FFunctions%2F-1129373318" anchor-label="onlyIf" id="-632618962%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1374204489%2FFunctions%2F-1129373318"><span>only</span><wbr><span><span>If</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-632618962%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#1374204489%2FFunctions%2F-1129373318"><span class="token function">onlyIf</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">onlyIfClosure<span class="token operator">: </span><span data-unresolved-link="groovy.lang/Closure///PointingToDeclaration/">Closure</span><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-1435460708%2FFunctions%2F-1129373318"><span class="token function">onlyIf</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">spec<span class="token operator">: </span><span data-unresolved-link="org.gradle.api.specs/Spec///PointingToDeclaration/">Spec</span><span class="token operator">&lt;</span><span class="token keyword">in </span><span data-unresolved-link="org.gradle.api/Task///PointingToDeclaration/">Task</span><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-541327017%2FFunctions%2F-1129373318"><span class="token function">onlyIf</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">onlyIfReason<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">spec<span class="token operator">: </span><span data-unresolved-link="org.gradle.api.specs/Spec///PointingToDeclaration/">Spec</span><span class="token operator">&lt;</span><span class="token keyword">in </span><span data-unresolved-link="org.gradle.api/Task///PointingToDeclaration/">Task</span><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1421374998%2FFunctions%2F-1129373318" anchor-label="prependParallelSafeAction" id="1421374998%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1421374998%2FFunctions%2F-1129373318"><span>prepend</span><wbr><span>Parallel</span><wbr><span>Safe</span><wbr><span><span>Action</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1421374998%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#1421374998%2FFunctions%2F-1129373318"><span class="token function">prependParallelSafeAction</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">action<span class="token operator">: </span><span data-unresolved-link="org.gradle.api/Action///PointingToDeclaration/">Action</span><span class="token operator">&lt;</span><span class="token keyword">in </span><span data-unresolved-link="org.gradle.api/Task///PointingToDeclaration/">Task</span><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-426323884%2FFunctions%2F-1129373318" anchor-label="property" id="-426323884%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-426323884%2FFunctions%2F-1129373318"><span><span>property</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-426323884%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-426323884%2FFunctions%2F-1129373318"><span class="token function">property</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">propertyName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1796920005%2FFunctions%2F-1129373318" anchor-label="setDependsOn" id="1796920005%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1796920005%2FFunctions%2F-1129373318"><span>set</span><wbr><span>Depends</span><wbr><span><span>On</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1796920005%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#1796920005%2FFunctions%2F-1129373318"><span class="token function">setDependsOn</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">dependsOn<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-iterable/index.html">Iterable</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-686319044%2FFunctions%2F-1129373318" anchor-label="setFinalizedBy" id="-686319044%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-686319044%2FFunctions%2F-1129373318"><span>set</span><wbr><span>Finalized</span><wbr><span><span>By</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-686319044%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-686319044%2FFunctions%2F-1129373318"><span class="token function">setFinalizedBy</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">finalizedByTasks<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-iterable/index.html">Iterable</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="470282119%2FFunctions%2F-1129373318" anchor-label="setFullFileName" id="470282119%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="set-full-file-name.html"><span>set</span><wbr><span>Full</span><wbr><span>File</span><wbr><span><span>Name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="470282119%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="set-full-file-name.html"><span class="token function">setFullFileName</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">name<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Optional command line argument that overrides any filename configurations declared in the build file. Passing an argument to this option means all migration statements will be stored in a single generated file with the specified <a href="set-full-file-name.html">name</a>, which should include the required extension as well.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1090007731%2FFunctions%2F-1129373318" anchor-label="setMustRunAfter" id="-1090007731%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1090007731%2FFunctions%2F-1129373318"><span>set</span><wbr><span>Must</span><wbr><span>Run</span><wbr><span><span>After</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1090007731%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-1090007731%2FFunctions%2F-1129373318"><span class="token function">setMustRunAfter</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">mustRunAfterTasks<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-iterable/index.html">Iterable</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1735509358%2FFunctions%2F-1129373318" anchor-label="setOnlyIf" id="1735509358%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-60475465%2FFunctions%2F-1129373318"><span>set</span><wbr><span>Only</span><wbr><span><span>If</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1735509358%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-60475465%2FFunctions%2F-1129373318"><span class="token function">setOnlyIf</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">onlyIfClosure<span class="token operator">: </span><span data-unresolved-link="groovy.lang/Closure///PointingToDeclaration/">Closure</span><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-2052114678%2FFunctions%2F-1129373318"><span class="token function">setOnlyIf</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">spec<span class="token operator">: </span><span data-unresolved-link="org.gradle.api.specs/Spec///PointingToDeclaration/">Spec</span><span class="token operator">&lt;</span><span class="token keyword">in </span><span data-unresolved-link="org.gradle.api/Task///PointingToDeclaration/">Task</span><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-1407777723%2FFunctions%2F-1129373318"><span class="token function">setOnlyIf</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">onlyIfReason<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">spec<span class="token operator">: </span><span data-unresolved-link="org.gradle.api.specs/Spec///PointingToDeclaration/">Spec</span><span class="token operator">&lt;</span><span class="token keyword">in </span><span data-unresolved-link="org.gradle.api/Task///PointingToDeclaration/">Task</span><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1033150374%2FFunctions%2F-1129373318" anchor-label="setProperty" id="-1033150374%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1033150374%2FFunctions%2F-1129373318"><span>set</span><wbr><span><span>Property</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1033150374%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-1033150374%2FFunctions%2F-1129373318"><span class="token function">setProperty</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">name<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">value<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1384597769%2FFunctions%2F-1129373318" anchor-label="setShouldRunAfter" id="-1384597769%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1384597769%2FFunctions%2F-1129373318"><span>set</span><wbr><span>Should</span><wbr><span>Run</span><wbr><span><span>After</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1384597769%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-1384597769%2FFunctions%2F-1129373318"><span class="token function">setShouldRunAfter</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">shouldRunAfterTasks<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-iterable/index.html">Iterable</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="62693008%2FFunctions%2F-1129373318" anchor-label="shouldRunAfter" id="62693008%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#62693008%2FFunctions%2F-1129373318"><span>should</span><wbr><span>Run</span><wbr><span><span>After</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="62693008%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#62693008%2FFunctions%2F-1129373318"><span class="token function">shouldRunAfter</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>paths<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="org.gradle.api.tasks/TaskDependency///PointingToDeclaration/">TaskDependency</span><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1237082499%2FFunctions%2F-1129373318" anchor-label="usesService" id="1237082499%2FFunctions%2F-1129373318" data-filterable-set=":exposed-gradle-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-gradle-plugin/main" data-filterable-set=":exposed-gradle-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1237082499%2FFunctions%2F-1129373318"><span>uses</span><wbr><span><span>Service</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1237082499%2FFunctions%2F-1129373318"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-gradle-plugin/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#1237082499%2FFunctions%2F-1129373318"><span class="token function">usesService</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">service<span class="token operator">: </span><span data-unresolved-link="org.gradle.api.provider/Provider///PointingToDeclaration/">Provider</span><span class="token operator">&lt;</span><span class="token keyword">out </span><span data-unresolved-link="org.gradle.api.services/BuildService///PointingToDeclaration/">BuildService</span><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2026 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
