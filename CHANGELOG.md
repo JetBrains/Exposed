@@ -6,6 +6,8 @@ Features:
 * feat: EXPOSED-984 Support generateV7() and generateV4() on UuidTable and column autoGenerate() by @bog-walk in https://github.com/JetBrains/Exposed/pull/2796
 * feat: EXPOSED-999 Adding Oracle Vector Data Type by @psilberk in https://github.com/JetBrains/Exposed/pull/2786
 * feat: EXPOSED-1023 Extend VECTOR data type to other supporting databases  by @bog-walk in https://github.com/JetBrains/Exposed/pull/2802
+* chore: Migration from 0.61.0 to 1.0.0 version Claude skill by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2800
+* chore: context7 config by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2787
 
 Fixes:
 * fix: [EXPOSED-1010] Multiple duplicate calls to metadata retrieval methods during migration by @bog-walk in https://github.com/JetBrains/Exposed/pull/2773
@@ -22,17 +24,16 @@ Docs:
 Performance:
 * perf: R2DBC - Performance issue in R2dbcRegistryTypeMappingImpl by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2788
 
-Infrastructure:
+  Infrastructure:
+* kotlin 2.3.20
+* kotlinx-serialization 1.11.0
+* kotlinCoroutines 1.11.0
 * sqlite-jdbc 3.53.1.0
 * springFramework6 6.2.18
 * postgresql 42.7.11
 * joda-time 2.14.2
 * r2dbc-mysql 1.4.2
 * testcontainers 2.0.5
-* flyway 12.5.0
-* kotlin 2.3.20
-* kotlinx-serialization 1.11.0
-* kotlinCoroutines 1.11.0
 * log4j2 2.26.0
 * flyway 12.6.0
 
