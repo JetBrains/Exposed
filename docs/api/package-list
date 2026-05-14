@@ -8,6 +8,7 @@ org.jetbrains.exposed.v1.core.dao.id.java
 org.jetbrains.exposed.v1.core.datetime
 org.jetbrains.exposed.v1.core.functions.array
 org.jetbrains.exposed.v1.core.functions.math
+org.jetbrains.exposed.v1.core.functions.vector
 org.jetbrains.exposed.v1.core.java
 org.jetbrains.exposed.v1.core.ops
 org.jetbrains.exposed.v1.core.statements
@@ -23,6 +24,8 @@ module:exposed-dao
 org.jetbrains.exposed.v1.dao
 org.jetbrains.exposed.v1.dao.exceptions
 org.jetbrains.exposed.v1.dao.java
+module:exposed-gradle-plugin
+org.jetbrains.exposed.v1.gradle.plugin
 module:exposed-java-time
 org.jetbrains.exposed.v1.javatime
 module:exposed-jdbc
