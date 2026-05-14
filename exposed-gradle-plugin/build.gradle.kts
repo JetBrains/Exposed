@@ -12,7 +12,7 @@ plugins {
 }
 
 group = "org.jetbrains.exposed.plugin"
-version = "1.2.0"
+version = "1.3.0"
 description = "Exposed Gradle plugin"
 
 repositories {
