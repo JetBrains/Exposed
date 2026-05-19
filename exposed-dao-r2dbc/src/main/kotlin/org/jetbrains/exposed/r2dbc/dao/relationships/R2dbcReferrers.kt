@@ -1,11 +1,12 @@
 package org.jetbrains.exposed.r2dbc.dao.relationships
 
-import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.r2dbc.dao.R2dbcEntity
 import org.jetbrains.exposed.r2dbc.dao.R2dbcEntityClass
 import org.jetbrains.exposed.r2dbc.dao.entityCache
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.r2dbc.SizedIterable
+import org.jetbrains.exposed.v1.r2dbc.emptySized
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import kotlin.reflect.KProperty
 
@@ -25,13 +26,13 @@ class R2dbcReferrers<ParentID : Any, in Parent : R2dbcEntity<ParentID>, ChildID 
     }
 
     @Suppress("NestedBlockDepth", "ForbiddenComment")
-    operator fun getValue(thisRef: Parent, property: KProperty<*>): suspend () -> List<Child> {
+    operator fun getValue(thisRef: Parent, property: KProperty<*>): suspend () -> SizedIterable<Child> {
         // Return a suspend lambda that will load the referrers when invoked
         return {
             // Check if entity ID is available
             if (thisRef.id._value == null) {
                 // TODO should it be error?
-                emptyList()
+                emptySized()
             } else {
                 val transaction = TransactionManager.currentOrNull()
 
@@ -39,9 +40,10 @@ class R2dbcReferrers<ParentID : Any, in Parent : R2dbcEntity<ParentID>, ChildID 
                 if (transaction == null) {
                     if (thisRef.hasInReferenceCache(reference)) {
                         val cached = thisRef.getReferenceFromCache<Any?>(reference)
+                        @Suppress("UNCHECKED_CAST")
                         when (cached) {
-                            is List<*> -> cached as List<Child>
-                            null -> emptyList()
+                            is SizedIterable<*> -> cached as SizedIterable<Child>
+                            null -> emptySized()
                             else -> error("Cached referrer has unexpected type: ${cached::class}")
                         }
                     } else {
@@ -57,15 +59,14 @@ class R2dbcReferrers<ParentID : Any, in Parent : R2dbcEntity<ParentID>, ChildID 
                     } as REF
 
                     // Build the query for child entities
-                    val query: suspend () -> List<Child> = {
-                        val resultRows = factory.find { reference eq refValue }.toList()
-                        resultRows.map { factory.wrapRow(it) }
+                    val query: suspend () -> SizedIterable<Child> = {
+                        factory.find { reference eq refValue }
                     }
 
                     // Execute query with caching if enabled
                     val result = if (cache) {
                         @Suppress("UNCHECKED_CAST")
-                        transaction.entityCache.getOrPutReferrers<ParentID>(reference, thisRef.id, query) as List<Child>
+                        (transaction.entityCache.getOrPutReferrers(reference, thisRef.id, query))
                     } else {
                         query()
                     }

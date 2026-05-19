@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.r2dbc.dao
 
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.singleOrNull
 import org.jetbrains.exposed.r2dbc.dao.exceptions.R2dbcEntityNotFoundException
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.ColumnSet
@@ -10,6 +11,9 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.r2dbc.Query
+import org.jetbrains.exposed.v1.r2dbc.SizedIterable
+import org.jetbrains.exposed.v1.r2dbc.mapLazy
+import org.jetbrains.exposed.v1.r2dbc.select
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import kotlin.reflect.KFunction
@@ -74,26 +78,95 @@ abstract class R2dbcEntityClass<ID : Any, out T : R2dbcEntity<ID>>(
         val cached = testCache(id)
         if (cached != null) return cached
 
-        val row = find { table.id eq id }.firstOrNull()
-        return row?.let { wrapRow(it) }
+        return find { table.id eq id }.firstOrNull()
+    }
+
+    suspend fun findByIdAndUpdate(id: ID, block: (it: T) -> Unit): T? {
+        val result = find(table.id eq R2dbcDaoEntityID(id, table)).forUpdate().firstOrNull() ?: return null
+        block(result)
+        return result
+    }
+
+    suspend fun findSingleByAndUpdate(op: Op<Boolean>, block: (it: T) -> Unit): T? {
+        val result = find(op).forUpdate().singleOrNull() ?: return null
+        block(result)
+        return result
     }
 
     fun testCache(id: EntityID<ID>): T? = warmCache().find(this, id)
 
-    open fun all(): Query {
-        warmCache()
-        return table.selectAll()
+    suspend fun reload(entity: R2dbcEntity<ID>, flush: Boolean = false): T? {
+        if (flush) {
+            if (entity.isNewEntity()) {
+                TransactionManager.current().entityCache.flushInserts(table)
+            } else {
+                entity.flush()
+            }
+        }
+        removeFromCache(entity)
+        return if (entity.id._value != null) findById(entity.id) else null
     }
 
-    fun find(op: Op<Boolean>): Query {
-        warmCache()
-        return searchQuery(op)
+    // It actually doesn't do 'invalidation', because it's suspend operation, but this method
+    // is used on setting value to the entity
+    internal open fun invalidateEntityInCache(o: R2dbcEntity<ID>) {
+        val sameDatabase = TransactionManager.current().db == o.db
+        if (!sameDatabase) return
+
+        val cache = warmCache()
+
+        // TODO could I reverse this condition in the way to check which state of entity should
+        //  throw error, rather than which should not.
+        if (cache.isEntityInInitializationState(o)) return
+        if (cache.isScheduledForInsert(o)) return
+        if (cache.isStoredInData(o)) return
+
+        // Not in any tracked state. Either the entity has been deleted in the current
+        // transaction, or it was loaded in a different transaction and has not been
+        // `attach`-ed here. Both are user bugs — fail loudly.
+        //
+        // R2DBC cannot mirror JDBC's `get(o.id)` "verify-and-adopt" shortcut because
+        // Column.setValue is not a suspend operator and cannot query the database.
+        throw R2dbcEntityNotFoundException(o.id, this)
     }
 
-    fun find(op: () -> Op<Boolean>): Query = find(op())
+    /**
+     * This method is used in r2dbc now for the case when one entity is
+     * reused between transactions. In jdbc it's not needed, because there on 'setValue'
+     * we could attach it implicitly, but in r2dbc 'setValue' on entity is non-suspendable,
+     * so we can't do that, and user must do that explicitly.
+     *
+     * I still don't like reusing entities between transactions as a pattern, probably it should
+     * be deprecated, but it sounds like a bad idea in terms of API changes (even on major versions),
+     * because it could be used by many users.
+     */
+    suspend fun attach(entity: R2dbcEntity<ID>) {
+        val cache = warmCache()
+        if (cache.find(this, entity.id) != null) return
+
+        // Verify the row still exists — also stores a fresh instance in the cache as a side effect.
+        findById(entity.id) ?: throw R2dbcEntityNotFoundException(entity.id, this)
+
+        // Overwrite the freshly-loaded instance with the caller's reference so that subsequent
+        // writes on `entity` flow through the same cache entry (mirrors JDBC's `warmCache().store(o)`).
+        cache.store(entity)
+    }
+
+    open fun all(): SizedIterable<T> = wrapRows(table.selectAll().notForUpdate())
+
+    fun find(op: Op<Boolean>): SizedIterable<T> {
+        warmCache()
+        return wrapRows(searchQuery(op))
+    }
+
+    fun find(op: () -> Op<Boolean>): SizedIterable<T> = find(op())
 
     open fun searchQuery(op: Op<Boolean>): Query =
-        dependsOnTables.selectAll().where { op }.notForUpdate()
+        dependsOnTables.select(dependsOnColumns).where { op }.notForUpdate()
+
+    fun wrapRows(rows: SizedIterable<ResultRow>): SizedIterable<T> = rows mapLazy {
+        wrapRow(it)
+    }
 
     @Suppress("MemberVisibilityCanBePrivate")
     fun wrapRow(row: ResultRow): T {
