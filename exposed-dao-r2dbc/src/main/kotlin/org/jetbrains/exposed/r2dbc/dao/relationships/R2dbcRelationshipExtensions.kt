@@ -76,3 +76,17 @@ infix fun <ParentID : Any, Parent : R2dbcEntity<ParentID>, ChildID : Any, Child 
     R2dbcEntityClass<ParentID, Parent>.optionalBackReferencedOnSuspend(reference: Column<REF?>): R2dbcOptionalBackReference<ParentID, Parent, ChildID, Child, REF> {
     return R2dbcOptionalBackReference(reference, this)
 }
+
+/**
+ * Overload for referencing a non-nullable column as an optional back reference.
+ *
+ * The child entity's referencing column is required (non-nullable) but, from the parent
+ * side, the relationship is still optional: a child row may or may not exist. This mirrors
+ * JDBC's `optionalBackReferencedOn(Column<REF>)` overload.
+ */
+@Suppress("UNCHECKED_CAST")
+@JvmName("optionalBackReferencedOnSuspendNonNullable")
+infix fun <ParentID : Any, Parent : R2dbcEntity<ParentID>, ChildID : Any, Child : R2dbcEntity<ChildID>, REF : Any>
+    R2dbcEntityClass<ParentID, Parent>.optionalBackReferencedOnSuspend(reference: Column<REF>): R2dbcOptionalBackReference<ParentID, Parent, ChildID, Child, REF> {
+    return R2dbcOptionalBackReference(reference as Column<REF?>, this)
+}
