@@ -24,6 +24,7 @@ include("exposed-r2dbc-tests")
 include("exposed-jdbc-r2dbc-tests")
 include("exposed-migration-plugin-core")
 include("exposed-gradle-plugin")
+include("exposed-maven-plugin")
 
 pluginManagement {
     repositories {
