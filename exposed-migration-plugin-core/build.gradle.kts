@@ -1,6 +1,5 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
-import org.gradle.plugin.compatibility.compatibility
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -8,12 +7,11 @@ plugins {
     kotlin("jvm")
 
     alias(libs.plugins.dokka)
-    alias(libs.plugins.gradle.plugin.publish)
 }
 
 group = "org.jetbrains.exposed.plugin"
 version = "1.3.0"
-description = "Exposed Gradle plugin"
+description = "Exposed migration plugin core (build-tool-agnostic)"
 
 repositories {
     mavenCentral()
@@ -28,11 +26,8 @@ kotlin {
 }
 
 dependencies {
-    implementation(gradleApi())
-
     implementation(project(":exposed-jdbc"))
     implementation(project(":exposed-migration-jdbc"))
-    implementation(project(":exposed-migration-plugin-core"))
 
     implementation(libs.kotlin.stdlib)
 
@@ -54,30 +49,9 @@ dependencies {
     implementation(libs.oracle)
     implementation(libs.mssql)
 
-    testImplementation(gradleTestKit())
     testImplementation(libs.junit5)
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(kotlin("test-junit5"))
-}
-
-gradlePlugin {
-    website = "https://www.jetbrains.com/exposed/"
-    vcsUrl = "https://github.com/JetBrains/Exposed"
-
-    plugins {
-        create("exposed").apply {
-            id = "org.jetbrains.exposed.plugin"
-            displayName = "Exposed Gradle Plugin"
-            implementationClass = "org.jetbrains.exposed.v1.gradle.plugin.ExposedGradlePlugin"
-            description = "Exposed Gradle Plugin configures the generation of migration scripts for applications that use Exposed"
-            tags = setOf("exposed", "kotlin", "sql", "database", "orm")
-            compatibility {
-                features {
-                    configurationCache = true
-                }
-            }
-        }
-    }
 }
 
 signing {
@@ -98,10 +72,6 @@ tasks.withType<Test>().configureEach {
     if (JavaVersion.VERSION_1_8 > JavaVersion.current()) {
         jvmArgs("-XX:MaxPermSize=256m")
     }
-
-    // Needed for JDK 17 + ProjectBuilder; otherwise first test always fails with 'Could not inject synthetic classes'
-    // https://github.com/gradle/gradle/issues/18647
-    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED")
 
     testLogging {
         events.addAll(listOf(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED))
