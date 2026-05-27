@@ -3,7 +3,7 @@ package org.jetbrains.exposed.v1.gradle.plugin.migrations
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.jetbrains.exposed.v1.gradle.plugin.MigrationsExtension
-import org.jetbrains.exposed.v1.gradle.plugin.VersionFormat
+import org.jetbrains.exposed.v1.migration.plugin.core.VersionFormat
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

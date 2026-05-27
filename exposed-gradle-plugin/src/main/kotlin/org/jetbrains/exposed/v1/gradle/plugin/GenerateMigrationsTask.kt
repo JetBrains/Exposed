@@ -12,6 +12,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 import org.gradle.workers.WorkerExecutor
+import org.jetbrains.exposed.v1.migration.plugin.core.VersionFormat
 import javax.inject.Inject
 
 /**
