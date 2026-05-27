@@ -28,7 +28,7 @@ public abstract interface class org/jetbrains/exposed/v1/gradle/plugin/GenerateM
 	public abstract fun getFileExtension ()Ljava/lang/String;
 	public abstract fun getFilePrefix ()Ljava/lang/String;
 	public abstract fun getFileSeparator ()Ljava/lang/String;
-	public abstract fun getFileVersionFormat ()Lorg/jetbrains/exposed/v1/gradle/plugin/VersionFormat;
+	public abstract fun getFileVersionFormat ()Lorg/jetbrains/exposed/v1/migration/plugin/core/VersionFormat;
 	public abstract fun getFullFileName ()Ljava/lang/String;
 	public abstract fun getTablesPackage ()Ljava/lang/String;
 	public abstract fun getTestContainersImageName ()Ljava/lang/String;
@@ -41,7 +41,7 @@ public abstract interface class org/jetbrains/exposed/v1/gradle/plugin/GenerateM
 	public abstract fun setFileExtension (Ljava/lang/String;)V
 	public abstract fun setFilePrefix (Ljava/lang/String;)V
 	public abstract fun setFileSeparator (Ljava/lang/String;)V
-	public abstract fun setFileVersionFormat (Lorg/jetbrains/exposed/v1/gradle/plugin/VersionFormat;)V
+	public abstract fun setFileVersionFormat (Lorg/jetbrains/exposed/v1/migration/plugin/core/VersionFormat;)V
 	public abstract fun setFullFileName (Ljava/lang/String;)V
 	public abstract fun setTablesPackage (Ljava/lang/String;)V
 	public abstract fun setTestContainersImageName (Ljava/lang/String;)V
@@ -73,11 +73,6 @@ public abstract class org/jetbrains/exposed/v1/gradle/plugin/GenerateMigrationsW
 	public fun execute ()V
 }
 
-public final class org/jetbrains/exposed/v1/gradle/plugin/GenerateMigrationsWorker$GradleLogger : org/jetbrains/exposed/v1/core/SqlLogger {
-	public fun <init> (Lorg/jetbrains/exposed/v1/gradle/plugin/GenerateMigrationsWorker;)V
-	public fun log (Lorg/jetbrains/exposed/v1/core/statements/StatementContext;Lorg/jetbrains/exposed/v1/core/Transaction;)V
-}
-
 public class org/jetbrains/exposed/v1/gradle/plugin/MigrationsExtension {
 	public static final field Companion Lorg/jetbrains/exposed/v1/gradle/plugin/MigrationsExtension$Companion;
 	public static final field NAME Ljava/lang/String;
@@ -96,17 +91,5 @@ public class org/jetbrains/exposed/v1/gradle/plugin/MigrationsExtension {
 }
 
 public final class org/jetbrains/exposed/v1/gradle/plugin/MigrationsExtension$Companion {
-}
-
-public final class org/jetbrains/exposed/v1/gradle/plugin/VersionFormat : java/lang/Enum {
-	public static final field MAJOR_MINOR Lorg/jetbrains/exposed/v1/gradle/plugin/VersionFormat;
-	public static final field MAJOR_ONLY Lorg/jetbrains/exposed/v1/gradle/plugin/VersionFormat;
-	public static final field MAJOR_TIMESTAMP Lorg/jetbrains/exposed/v1/gradle/plugin/VersionFormat;
-	public static final field MAJOR_TIMESTAMP_WITHOUT_SECONDS Lorg/jetbrains/exposed/v1/gradle/plugin/VersionFormat;
-	public static final field TIMESTAMP_ONLY Lorg/jetbrains/exposed/v1/gradle/plugin/VersionFormat;
-	public static final field TIMESTAMP_WITHOUT_SECONDS Lorg/jetbrains/exposed/v1/gradle/plugin/VersionFormat;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/gradle/plugin/VersionFormat;
-	public static fun values ()[Lorg/jetbrains/exposed/v1/gradle/plugin/VersionFormat;
 }
 

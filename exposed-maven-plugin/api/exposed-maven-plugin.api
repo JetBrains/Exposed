@@ -1,0 +1,38 @@
+public final class org/jetbrains/exposed/v1/maven/plugin/GenerateMigrationMojo : org/apache/maven/plugin/AbstractMojo {
+	public field fileDirectory Ljava/io/File;
+	public field tablesPackage Ljava/lang/String;
+	public fun <init> ()V
+	public fun execute ()V
+	public final fun getDatabasePassword ()Ljava/lang/String;
+	public final fun getDatabaseUrl ()Ljava/lang/String;
+	public final fun getDatabaseUser ()Ljava/lang/String;
+	public final fun getDebug ()Z
+	public final fun getFileDirectory ()Ljava/io/File;
+	public final fun getFileExtension ()Ljava/lang/String;
+	public final fun getFilePrefix ()Ljava/lang/String;
+	public final fun getFileSeparator ()Ljava/lang/String;
+	public final fun getFileVersionFormat ()Lorg/jetbrains/exposed/v1/migration/plugin/core/VersionFormat;
+	public final fun getFullFileName ()Ljava/lang/String;
+	public final fun getTablesPackage ()Ljava/lang/String;
+	public final fun getTestContainersImageName ()Ljava/lang/String;
+	public final fun getUseUpperCaseDescription ()Z
+	public final fun setDatabasePassword (Ljava/lang/String;)V
+	public final fun setDatabaseUrl (Ljava/lang/String;)V
+	public final fun setDatabaseUser (Ljava/lang/String;)V
+	public final fun setDebug (Z)V
+	public final fun setFileDirectory (Ljava/io/File;)V
+	public final fun setFileExtension (Ljava/lang/String;)V
+	public final fun setFilePrefix (Ljava/lang/String;)V
+	public final fun setFileSeparator (Ljava/lang/String;)V
+	public final fun setFileVersionFormat (Lorg/jetbrains/exposed/v1/migration/plugin/core/VersionFormat;)V
+	public final fun setFullFileName (Ljava/lang/String;)V
+	public final fun setTablesPackage (Ljava/lang/String;)V
+	public final fun setTestContainersImageName (Ljava/lang/String;)V
+	public final fun setUseUpperCaseDescription (Z)V
+}
+
+public class org/jetbrains/exposed/v1/maven/plugin/HelpMojo : org/apache/maven/plugin/AbstractMojo {
+	public fun <init> ()V
+	public fun execute ()V
+}
+
