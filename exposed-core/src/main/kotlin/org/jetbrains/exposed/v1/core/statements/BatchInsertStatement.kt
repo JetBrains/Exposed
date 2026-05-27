@@ -96,6 +96,12 @@ open class BatchInsertStatement(
     private fun allColumnsInDataSet() = allColumnsInDataSet +
         (data.lastOrNull()?.keys ?: throw BatchDataInconsistentException("No data provided for inserting into ${table.tableName}"))
 
+    /**
+     * Cached argument rows for all currently registered batches.
+     *
+     * `null` indicates that the arguments have not yet been materialized, or that the cache has been invalidated after
+     * the statement was modified. Reading this property materializes the arguments from the current batch data.
+     */
     override var arguments: List<List<Pair<Column<*>, Any?>>>? = null
         get() = field ?: run {
             val columnsToInsert = (allColumnsInDataSet() + clientDefaultColumns()).toSet()
