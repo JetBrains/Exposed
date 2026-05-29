@@ -49,7 +49,7 @@ gradle-plugin-publish = "2.1.1"
 
 testcontainers = "2.0.5"
 
-flyway = "12.6.0"
+flyway = "12.7.0"
 
 [libraries]
 jvm = { group = "org.jetbrains.kotlin.jvm", name = "org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }
