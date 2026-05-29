@@ -6,6 +6,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") apply true
+    alias(libs.plugins.serialization)
 }
 
 kotlin {
@@ -37,6 +38,11 @@ dependencies {
     implementation(project(":exposed-r2dbc"))
     implementation(project(":exposed-dao-r2dbc"))
     implementation(project(":exposed-r2dbc-tests"))
+    testImplementation(project(":exposed-java-time"))
+    testImplementation(project(":exposed-kotlin-datetime"))
+    testImplementation(project(":exposed-jodatime"))
+    testImplementation(project(":exposed-json"))
+    testImplementation(project(":exposed-crypt"))
 
     implementation(libs.slf4j)
     implementation(libs.log4j.slf4j.impl)

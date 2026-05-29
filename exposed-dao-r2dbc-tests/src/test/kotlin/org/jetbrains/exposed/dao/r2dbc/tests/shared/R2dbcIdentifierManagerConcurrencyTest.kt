@@ -1,30 +1,14 @@
-package org.jetbrains.exposed.v1.tests.shared
+package org.jetbrains.exposed.dao.r2dbc.tests.shared
 
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
-import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.junit.jupiter.api.Test
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertTrue
 
-/**
- * Regression test for issue #1704.
- *
- * A single [IdentifierManagerApi] is shared across every transaction / coroutine on a Database,
- * so its 5 internal identifier caches are accessed concurrently during SQL preparation. Before
- * the fix those caches were plain [java.util.LinkedHashMap] instances and once a bucket grew past
- * 8 entries `HashMap.treeifyBin` would throw `ClassCastException` under contention. This test
- * pulls the live [IdentifierManagerApi] off a real database and hammers all four cache-backed
- * entry points from a thread pool, failing if any worker sees an exception.
- *
- * The concurrent section runs outside any transaction, which is representative: the identifier
- * manager is a process-wide singleton on the Database and is routinely read from background
- * threads (DataLoader batches, async statement preparation) that don't own the current
- * transaction thread-local.
- */
-class IdentifierManagerConcurrencyTest : DatabaseTestsBase() {
-
+class R2dbcIdentifierManagerConcurrencyTest : R2dbcDatabaseTestsBase() {
     @Test
     fun identifierManagerCachesSurviveConcurrentResolution() {
         withDb { testDb ->
