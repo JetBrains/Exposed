@@ -20,7 +20,6 @@ import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.statements.toExecutable
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentTestDB
@@ -447,7 +446,6 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     // https://github.com/JetBrains/Exposed/issues/192
-    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testInsertWithColumnNamedWithKeyword() {
         withTables(OrderedDataTable) {
@@ -635,7 +633,6 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testOptReferenceAllowsNullValues() {
         withTables(EntityTests.Posts) {
