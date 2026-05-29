@@ -1,9 +1,7 @@
 package org.jetbrains.exposed.r2dbc.dao
 
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.flow.toList
@@ -11,34 +9,15 @@ import org.jetbrains.exposed.r2dbc.dao.exceptions.R2dbcEntityNotFoundException
 import org.jetbrains.exposed.r2dbc.dao.relationships.R2dbcBackReference
 import org.jetbrains.exposed.r2dbc.dao.relationships.R2dbcOptionalBackReference
 import org.jetbrains.exposed.r2dbc.dao.relationships.R2dbcReferrers
-import org.jetbrains.exposed.v1.core.Column
-import org.jetbrains.exposed.v1.core.ColumnSet
-import org.jetbrains.exposed.v1.core.ColumnTransformer
-import org.jetbrains.exposed.v1.core.ColumnWithTransform
-import org.jetbrains.exposed.v1.core.Expression
-import org.jetbrains.exposed.v1.core.ExpressionWithColumnType
-import org.jetbrains.exposed.v1.core.Join
-import org.jetbrains.exposed.v1.core.JoinType
-import org.jetbrains.exposed.v1.core.Op
-import org.jetbrains.exposed.v1.core.ResultRow
-import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.core.columnTransformer
-import org.jetbrains.exposed.v1.core.count
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
-import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.core.inList
-import org.jetbrains.exposed.v1.r2dbc.Query
-import org.jetbrains.exposed.v1.r2dbc.SizedCollection
-import org.jetbrains.exposed.v1.r2dbc.SizedIterable
-import org.jetbrains.exposed.v1.r2dbc.emptySized
-import org.jetbrains.exposed.v1.r2dbc.mapLazy
-import org.jetbrains.exposed.v1.r2dbc.select
-import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.*
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.primaryConstructor
 
+@Suppress("TooManyFunctions")
 abstract class R2dbcEntityClass<ID : Any, out T : R2dbcEntity<ID>>(
     val table: IdTable<ID>,
     entityType: Class<T>? = null,
@@ -218,6 +197,43 @@ abstract class R2dbcEntityClass<ID : Any, out T : R2dbcEntity<ID>>(
         entity._readValues = ResultRow.createAndFillValues(unwrapColumnValues(columnToValue))
 
         return entity
+    }
+
+    fun wrapRow(row: ResultRow, alias: Alias<IdTable<*>>): T {
+        require(alias.delegate == table) { "Alias for a wrong table ${alias.delegate.tableName} while ${table.tableName} expected" }
+        val newFieldsMapping = row.fieldIndex.mapNotNull { (exp, _) ->
+            val column = exp as? Column<*>
+            val value = row[exp]
+            val originalColumn = column?.let { alias.originalColumn(it) }
+            when {
+                originalColumn != null -> originalColumn to value
+                column?.table == alias.delegate -> null
+                else -> exp to value
+            }
+        }.toMap()
+
+        return wrapRow(ResultRow.createAndFillValues(unwrapColumnValues(newFieldsMapping)))
+    }
+
+    fun wrapRow(row: ResultRow, alias: QueryAlias): T {
+        require(alias.columns.any { (it.table as Alias<*>).delegate == table }) { "QueryAlias doesn't have any column from ${table.tableName} table" }
+        val originalColumns = alias.query.set.source.columns
+        val newFieldsMapping = row.fieldIndex.mapNotNull { (exp, _) ->
+            val value = row[exp]
+            when (exp) {
+                is Column if exp.table is Alias<*> -> {
+                    val delegate = (exp.table as Alias<*>).delegate
+                    val column = originalColumns.single {
+                        delegate == it.table && exp.name == it.name
+                    }
+                    column to value
+                }
+                is Column if exp.table == table -> null
+                else -> exp to value
+            }
+        }.toMap()
+
+        return wrapRow(ResultRow.createAndFillValues(unwrapColumnValues(newFieldsMapping)))
     }
 
     fun wrap(id: EntityID<ID>, row: ResultRow?): T {

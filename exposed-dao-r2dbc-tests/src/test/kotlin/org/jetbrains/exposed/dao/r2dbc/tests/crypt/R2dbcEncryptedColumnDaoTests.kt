@@ -1,26 +1,31 @@
-package org.jetbrains.exposed.v1.crypt
+package org.jetbrains.exposed.dao.r2dbc.tests.crypt
 
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.singleOrNull
+import org.jetbrains.exposed.r2dbc.dao.IntR2dbcEntity
+import org.jetbrains.exposed.r2dbc.dao.IntR2dbcEntityClass
+import org.jetbrains.exposed.r2dbc.dao.entityCache
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.dao.IntEntity
-import org.jetbrains.exposed.v1.dao.IntEntityClass
-import org.jetbrains.exposed.v1.dao.entityCache
-import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
-import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.shared.assertEquals
-import org.junit.jupiter.api.Test
+import org.jetbrains.exposed.v1.crypt.Algorithms
+import org.jetbrains.exposed.v1.crypt.encryptedBinary
+import org.jetbrains.exposed.v1.crypt.encryptedVarchar
+import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
+import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.junit.jupiter.api.assertNotNull
+import kotlin.test.Test
 
-class EncryptedColumnDaoTests : DatabaseTestsBase() {
+class R2dbcEncryptedColumnDaoTests : R2dbcDatabaseTestsBase() {
     object TestTable : IntIdTable() {
         val varchar = encryptedVarchar("varchar", 100, Algorithms.AES_256_PBE_GCM("passwd", "12345678"))
         val binary = encryptedBinary("binary", 100, Algorithms.AES_256_PBE_GCM("passwd", "12345678"))
     }
 
-    class ETest(id: EntityID<Int>) : IntEntity(id) {
-        companion object : IntEntityClass<ETest>(TestTable)
+    class ETest(id: EntityID<Int>) : IntR2dbcEntity(id) {
+        companion object : IntR2dbcEntityClass<ETest>(TestTable)
 
         var varchar by TestTable.varchar
         var binary by TestTable.binary
@@ -31,7 +36,7 @@ class EncryptedColumnDaoTests : DatabaseTestsBase() {
         val varcharValue = "varchar"
         val binaryValue = "binary".toByteArray()
 
-        fun JdbcTransaction.assertNotNullWithCorrectFields(actualEntity: ETest?) {
+        fun R2dbcTransaction.assertNotNullWithCorrectFields(actualEntity: ETest?) {
             assertNotNull(actualEntity)
             assertEquals(varcharValue, actualEntity.varchar)
             assertEquals(binaryValue.contentToString(), actualEntity.binary.contentToString())
