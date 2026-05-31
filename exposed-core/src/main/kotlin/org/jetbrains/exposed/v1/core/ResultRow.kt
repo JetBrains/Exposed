@@ -17,7 +17,7 @@ class ResultRow(
     @OptIn(InternalApi::class)
     private val database: DatabaseApi? = currentTransactionOrNull()?.db
 
-    private val lookUpCache = ResultRowCache()
+    private val lookUpCache = ResultRowCache(fieldIndex)
 
     /**
      * Retrieves the value of a given expression on this row.
@@ -195,28 +195,83 @@ class ResultRow(
     }
 
     /**
-     * [ResultRowCache] caches the values on reads by `expression`. The value cached by pair of `expression` itself and `columnType` of that expression.
-     * It solves the problem of "equal" expression with different column type (like the same column with original type and [EntityIDColumnType])
+     * [ResultRowCache] caches converted values on reads, keyed by expression identity and column type.
+     *
+     * Design: a fixed-size array (one slot per fieldIndex position) covers the common case with zero
+     * object allocations on cache hits. A lazy overflow HashMap handles the rare case where the same
+     * field-index slot is observed through two different column-type views — e.g. a plain `Column<Int>`
+     * and the wrapping `Column<EntityID<Int>>` that share the same table+name (and are therefore
+     * `equals()`-equal) but carry different [IColumnType] instances and produce different converted values.
      */
-    private class ResultRowCache {
-        private val values: MutableMap<Pair<Expression<*>, IColumnType<*>?>, Any?> = mutableMapOf()
+    private class ResultRowCache(private val fieldIndex: Map<Expression<*>, Int>) {
+        companion object {
+            // Sentinel distinguishing "slot not yet populated" from a legitimately cached null.
+            private val UNCACHED = object {}
+        }
+
+        // Primary cache: indexed by fieldIndex position.
+        private val cacheData = Array<Any?>(fieldIndex.size) { UNCACHED }
+        // Column type stored alongside each primary-cache slot for type-conflict detection.
+        private val cacheType = arrayOfNulls<IColumnType<*>>(fieldIndex.size)
+        // Overflow: only allocated when a type-view conflict is encountered (rare in practice).
+        private var overflow: HashMap<Pair<Expression<*>, IColumnType<*>?>, Any?>? = null
 
         /**
-         * Wrapping function that accept the expression and target function.
-         * The function would be called if the value not found in the cache.
+         * Returns the cached value for [expression], computing and storing it via [initializer] on a miss.
          *
-         * @param expression is the key of caching
-         * @param initializer function that returns the new value if the cache missed
+         * Hot path (common columns): single array-bounds check + array read — no object allocation.
+         * Overflow path (type-view conflict or expression absent from fieldIndex): falls back to a
+         * lazily-created HashMap with a [Pair] key, preserving the original semantics.
          */
-        fun <T> cached(expression: Expression<*>, initializer: () -> T): T = values.getOrPut(key(expression), initializer) as T
+        fun <T> cached(expression: Expression<*>, initializer: () -> T): T {
+            val colType = (expression as? Column<*>)?.columnType
+            val index = fieldIndex[expression]
+
+            if (index != null) {
+                val current = cacheData[index]
+                when {
+                    current === UNCACHED -> {
+                        // First access for this slot: populate the primary cache.
+                        val value = initializer()
+                        cacheData[index] = value
+                        cacheType[index] = colType
+                        return value
+                    }
+                    cacheType[index] == colType -> {
+                        // Cache hit: same slot, same column-type view.
+                        @Suppress("UNCHECKED_CAST")
+                        return current as T
+                    }
+                    // else: type-view conflict — fall through to overflow.
+                }
+            }
+
+            // Overflow path: expression not directly resolvable to a primary slot, or slot already
+            // holds a value for a different column-type view of the same field index.
+            val key = expression to colType
+            val ovf = overflow ?: HashMap<Pair<Expression<*>, IColumnType<*>?>, Any?>().also { overflow = it }
+            @Suppress("UNCHECKED_CAST")
+            return ovf.getOrPut(key, initializer) as T
+        }
 
         /**
-         * Remove the value by expression
+         * Invalidates the cached value for [expression].
          *
-         * @param expression is the key of caching
+         * This clears the primary slot for [expression]'s field index and removes the single overflow
+         * entry keyed by exactly `(expression, expression.columnType)`. It does **not** invalidate
+         * overflow entries belonging to *other* column-type views of the same field index. For example,
+         * after `set(entityIdCol, …)` the raw-id view cached under `(rawIdCol, IntegerColumnType)` is
+         * left untouched, so a subsequent `row[rawIdCol]` may return the pre-set value. This matches the
+         * pre-cache per-key invalidation semantics — it is a known limitation, not a regression.
          */
-        fun remove(expression: Expression<*>) = values.remove(key(expression))
-
-        private fun key(expression: Expression<*>): Pair<Expression<*>, IColumnType<*>?> = expression to (expression as? Column<*>)?.columnType
+        fun remove(expression: Expression<*>) {
+            val index = fieldIndex[expression]
+            if (index != null) {
+                cacheData[index] = UNCACHED
+            }
+            if (overflow != null) {
+                overflow!!.remove(expression to (expression as? Column<*>)?.columnType)
+            }
+        }
     }
 }
