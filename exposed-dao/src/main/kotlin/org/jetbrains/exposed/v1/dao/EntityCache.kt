@@ -46,20 +46,8 @@ class EntityCache(private val transaction: Transaction) {
      */
     var maxEntitiesToStore = transaction.db.config.maxEntitiesToStoreInCachePerEntity
         set(value) {
-            val wasUnlimited = field == Int.MAX_VALUE
             val diff = value - field
             field = value
-            if (wasUnlimited && value != Int.MAX_VALUE) {
-                // Plain LinkedHashMaps were used while eviction was disabled; replace them with
-                // LimitedHashMaps so that subsequent puts respect the new finite limit.
-                for ((table, map) in data.entries.toList()) {
-                    if (map !is LimitedHashMap<*, *>) {
-                        val limited = LimitedHashMap<Any, Entity<*>>()
-                        limited.putAll(map as Map<Any, Entity<*>>)
-                        data[table] = limited
-                    }
-                }
-            }
             if (diff < 0) {
                 data.values.forEach { map ->
                     val sizeExceed = map.size - value
@@ -76,16 +64,8 @@ class EntityCache(private val transaction: Transaction) {
 
     private fun getMap(f: EntityClass<*, *>): MutableMap<Any, Entity<*>> = getMap(f.table)
 
-    /**
-     * Returns the per-table entity map, creating it on first access.
-     *
-     * When eviction is disabled ([maxEntitiesToStore] == [Int.MAX_VALUE]) a plain [LinkedHashMap] is used
-     * rather than a [LimitedHashMap]: this preserves insertion-order iteration (relied upon by `findAll()`/`all()`)
-     * while still avoiding the per-insert virtual call to `removeEldestEntry` that [LinkedHashMap]'s eviction
-     * subclass incurs. Otherwise a [LimitedHashMap] enforces the configured cap.
-     */
     private fun getMap(table: IdTable<*>): MutableMap<Any, Entity<*>> = data.getOrPut(table) {
-        if (maxEntitiesToStore == Int.MAX_VALUE) LinkedHashMap() else LimitedHashMap()
+        LimitedHashMap()
     }
 
     /**
