@@ -13,7 +13,7 @@ Between scenarios, **apply the generated SQL to `data/mydb`** via IntelliJ's Dat
 
 ```bash
 cd samples/exposed-gradle-plugin-test
-./gradlew generateMigrations --rerun
+./gradlew generateMigrations
 # Expected:
 #   # Exposed Migrations Generated 2 migrations:
 #     * V<ts>__CREATE_TABLE_USERS.sql
@@ -195,7 +195,7 @@ Make any trivial schema change (e.g., add `val description = text("description")
 
 **Setup:**
 ```bash
-rm src/main/resources/db/migration/*.sql
+rm -f src/main/resources/db/migration/*.sql
 touch src/main/resources/db/migration/.gitkeep
 ```
 

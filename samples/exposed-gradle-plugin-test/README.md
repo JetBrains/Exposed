@@ -14,7 +14,7 @@ Uses JDBC + H2 (file-based) in "production" mode (direct `databaseUrl`), not Tes
 
 ## Running against an unreleased build of the plugin
 
-This sample references `org.jetbrains.exposed.plugin:1.3.0` from Maven Central. If you're running it against a pre-release build of Exposed (e.g., from a branch), publish locally first and add `mavenLocal()` to the `pluginManagement` and `dependencyResolutionManagement` blocks in `settings.gradle.kts`:
+This sample applies `org.jetbrains.exposed.plugin` at `1.3.0` — the plugin marker is resolved from the Gradle Plugin Portal (declared in `pluginManagement`) and its Exposed dependencies from Maven Central, both publicly available, so no extra setup is needed. If you're running it against a pre-release build of Exposed (e.g., from a branch), publish locally first and add `mavenLocal()` to the `pluginManagement` and `dependencyResolutionManagement` blocks in `settings.gradle.kts`:
 
 ```bash
 # from the repository root
