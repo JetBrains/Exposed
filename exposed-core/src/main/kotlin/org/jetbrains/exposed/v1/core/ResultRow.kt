@@ -203,10 +203,10 @@ class ResultRow(
      * and the wrapping `Column<EntityID<Int>>` that share the same table+name (and are therefore
      * `equals()`-equal) but carry different [IColumnType] instances and produce different converted values.
      *
-     * The backing arrays are allocated lazily on the first value read: rows that are constructed but never
-     * read through value-conversion — e.g. write-only DAO rows, or rows discarded before any column is
-     * accessed — allocate nothing. [cacheType] must be tracked for every populated slot (it validates the
-     * column-type view on every cache hit, not just on conflicts), so it shares [cacheData]'s lifecycle.
+     * The backing arrays are allocated eagerly with the row. [cacheType] is consulted on every cache hit
+     * (not just conflicts) to validate the column-type view, so it must be tracked for every populated slot
+     * and shares [cacheData]'s lifecycle. Keeping both as final fields gives the read hot path a tight,
+     * branch-free shape (final-field reads + array access, no null checks).
      */
     private class ResultRowCache(private val fieldIndex: Map<Expression<*>, Int>) {
         companion object {
@@ -214,12 +214,11 @@ class ResultRow(
             private val UNCACHED = Any()
         }
 
-        // Primary cache, indexed by fieldIndex position. Lazily allocated on the first read.
-        private var cacheData: Array<Any?>? = null
+        // Primary cache: indexed by fieldIndex position.
+        private val cacheData = Array<Any?>(fieldIndex.size) { UNCACHED }
 
-        // Column type stored alongside each primary-cache slot for type-conflict detection. Shares
-        // cacheData's lazy lifecycle: non-null whenever cacheData is non-null.
-        private var cacheType: Array<IColumnType<*>?>? = null
+        // Column type stored alongside each primary-cache slot for type-conflict detection.
+        private val cacheType = arrayOfNulls<IColumnType<*>>(fieldIndex.size)
 
         // Overflow: only allocated when a type-view conflict is encountered (rare in practice).
         private var overflow: HashMap<Pair<Expression<*>, IColumnType<*>?>, Any?>? = null
@@ -227,27 +226,25 @@ class ResultRow(
         /**
          * Returns the cached value for [expression], computing and storing it via [initializer] on a miss.
          *
-         * Hot path (common columns): single array-bounds check + array read — no object allocation once
-         * the backing arrays exist. Overflow path (type-view conflict or expression absent from fieldIndex):
-         * falls back to a lazily-created HashMap with a [Pair] key, preserving the original semantics.
+         * Hot path (common columns): single array-bounds check + array read — no object allocation.
+         * Overflow path (type-view conflict or expression absent from fieldIndex): falls back to a
+         * lazily-created HashMap with a [Pair] key, preserving the original semantics.
          */
         fun <T> cached(expression: Expression<*>, initializer: () -> T): T {
             val colType = (expression as? Column<*>)?.columnType
             val index = fieldIndex[expression]
 
             if (index != null) {
-                val data = cacheData ?: Array<Any?>(fieldIndex.size) { UNCACHED }.also { cacheData = it }
-                val current = data[index]
+                val current = cacheData[index]
                 when {
                     current === UNCACHED -> {
                         // First access for this slot: populate the primary cache.
                         val value = initializer()
-                        data[index] = value
-                        val types = cacheType ?: arrayOfNulls<IColumnType<*>>(fieldIndex.size).also { cacheType = it }
-                        types[index] = colType
+                        cacheData[index] = value
+                        cacheType[index] = colType
                         return value
                     }
-                    cacheType?.get(index) == colType -> {
+                    cacheType[index] == colType -> {
                         // Cache hit: same slot, same column-type view.
                         @Suppress("UNCHECKED_CAST")
                         return current as T
@@ -277,7 +274,7 @@ class ResultRow(
         fun remove(expression: Expression<*>) {
             val index = fieldIndex[expression]
             if (index != null) {
-                cacheData?.set(index, UNCACHED)
+                cacheData[index] = UNCACHED
             }
             overflow?.remove(expression to (expression as? Column<*>)?.columnType)
         }
