@@ -10,7 +10,6 @@ Uses JDBC + H2 (file-based) in "production" mode (direct `databaseUrl`), not Tes
 - `src/main/kotlin/com/example/tables/` — Exposed `Table` definitions the plugin scans.
 - `src/main/resources/db/migration/` — generated migration scripts land here.
 - `data/` — H2 database file acting as the "current schema" the plugin diffs against. **Gitignored.**
-- `TEST_GUIDE.md` — step-by-step walkthrough of the plugin's features (start here after reading this file).
 
 ## Running against an unreleased build of the plugin
 
@@ -29,7 +28,24 @@ This sample applies `org.jetbrains.exposed.plugin` at `1.3.0` — the plugin mar
 
 **The plugin does NOT apply migrations.** In production you'd hand them to Flyway/Liquibase; here you apply them manually to keep the sample small.
 
-## Applying migrations between scenarios (in IntelliJ)
+## Try it
+
+```bash
+cd samples/exposed-gradle-plugin-sample
+./gradlew generateMigrations
+```
+
+Against the (implicitly created) empty H2 database, this generates one `CREATE TABLE` migration per `Table` object:
+
+```
+# Exposed Migrations Generated 2 migrations:
+  * V<ts>__CREATE_TABLE_USERS.sql
+  * V<ts>__CREATE_TABLE_CITIES.sql
+```
+
+Apply those to `data/mydb` (see below), then evolve the schema — for example add `val age = integer("age").nullable()` to `Users` and re-run `generateMigrations` to get an `ALTER TABLE ... ADD COLUMN` migration. Adjusting `filePrefix`, `fileVersionFormat`, `fileSeparator`, `useUpperCaseDescription`, and `fileExtension` in `build.gradle.kts` changes how the generated files are named.
+
+## Applying migrations (in IntelliJ)
 
 1. **Database tool window** → **+** → **Data Source** → **H2**.
 2. URL: `jdbc:h2:file:<absolute-path-to-sample>/data/mydb`, user `sa`, empty password.

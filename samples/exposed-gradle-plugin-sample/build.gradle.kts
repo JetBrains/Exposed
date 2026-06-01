@@ -1,4 +1,4 @@
-// Uncomment alongside the fileVersionFormat default below (see TEST_GUIDE.md):
+// Uncomment alongside the fileVersionFormat default below:
 // import org.jetbrains.exposed.v1.gradle.plugin.VersionFormat
 
 plugins {
@@ -30,7 +30,7 @@ exposed {
         databaseUser.set("sa")
         databasePassword.set("")
 
-        // Defaults — uncomment and tweak per scenario:
+        // Defaults — uncomment and tweak to change generated file naming:
         // filePrefix.set("V")
         // fileVersionFormat.set(VersionFormat.TIMESTAMP_ONLY)
         // fileSeparator.set("__")

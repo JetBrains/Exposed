@@ -11,4 +11,4 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "exposed-gradle-plugin-test"
+rootProject.name = "exposed-gradle-plugin-sample"
