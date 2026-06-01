@@ -7,7 +7,11 @@ import org.jetbrains.exposed.r2dbc.dao.entityCache
 import org.jetbrains.exposed.r2dbc.dao.flushCache
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.EntityIDColumnType
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.dao.id.CompositeID
+import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.r2dbc.LazySizedIterable
 import org.jetbrains.exposed.v1.r2dbc.SizedCollection
@@ -124,6 +128,13 @@ private suspend fun <ID : Any> List<R2dbcEntity<ID>>.preloadReference(
 ): List<R2dbcEntity<*>> {
     val reference = accessor.reference
     val factory = accessor.factory
+
+    // Composite-FK: fall back to a per-child `findById(CompositeID)` (N+1 but populates the
+    // entity cache; bulk fetch with `compoundOr` is left for a follow-up).
+    accessor.references?.let { refs ->
+        return preloadCompositeReference(this, factory, reference as Column<Any?>, refs)
+    }
+
     val refIds = mapNotNull { entity -> entity.lookupRefValue(reference) }
     if (refIds.isEmpty()) return emptyList()
 
@@ -153,6 +164,11 @@ private suspend fun <ID : Any> List<R2dbcEntity<ID>>.preloadOptionalReference(
 ): List<R2dbcEntity<*>> {
     val reference = accessor.reference as Column<Any?>
     val factory = accessor.factory
+
+    accessor.references?.let { refs ->
+        return preloadCompositeReference(this, factory, reference, refs)
+    }
+
     val refIds = mapNotNull { entity -> entity.lookupRefValue(reference) }
 
     val referee = reference.referee ?: return emptyList()
@@ -176,6 +192,48 @@ private suspend fun <ID : Any> List<R2dbcEntity<ID>>.preloadOptionalReference(
     }
 
     return loadedParents
+}
+
+/**
+ * Composite-FK preload: iterate each child, build the composite parent id from its FK columns,
+ * and fetch via [R2dbcEntityClass.findById]. Each fetched parent is stored in the transaction's
+ * entity cache (by `findById`) and pinned on the child's per-entity reference cache.
+ *
+ * TODO ALIGN_WITH_JDBC: JDBC uses `warmUpOptByCompositeReferences` to bulk-fetch with one query
+ *  (a compound OR of per-child AND clauses). Until that's ported we issue one query per child.
+ */
+@Suppress("UNCHECKED_CAST")
+private suspend fun <ID : Any> preloadCompositeReference(
+    children: List<R2dbcEntity<ID>>,
+    factory: R2dbcEntityClass<Any, R2dbcEntity<Any>>,
+    reference: Column<Any?>,
+    references: Map<Column<*>, Column<*>>
+): List<R2dbcEntity<*>> {
+    val loaded = mutableListOf<R2dbcEntity<*>>()
+    children.forEach { child ->
+        // Collect raw FK column values up-front so we can short-circuit when any of them is null
+        // (CompositeID's builder rejects empty mappings, so we must avoid even constructing it).
+        val rawValues = references.map { (childColumn, parentColumn) ->
+            val raw = child.writeValues[childColumn as Column<Any?>]
+                ?: child._readValues?.getOrNull(childColumn)
+            Triple(childColumn, parentColumn, raw)
+        }
+        if (rawValues.any { it.third == null }) {
+            child.storeReferenceInCache(reference, null)
+            return@forEach
+        }
+        val parentIdValue = CompositeID { id ->
+            rawValues.forEach { (childColumn, parentColumn, raw) ->
+                val pid = parentColumn as Column<EntityID<Any>>
+                // Unwrap EntityID when child column stores a raw value.
+                id[pid] = if (raw is EntityID<*> && childColumn.columnType !is EntityIDColumnType<*>) raw._value!! else raw!!
+            }
+        }
+        val parent = factory.findById(parentIdValue as Any) ?: return@forEach
+        child.storeReferenceInCache(reference, parent)
+        loaded += parent
+    }
+    return loaded
 }
 
 private fun normalizeRefKey(value: Any): Any = (value as? EntityID<*>)?.value ?: value
@@ -202,6 +260,15 @@ private suspend fun <ID : Any> List<R2dbcEntity<ID>>.preloadReferrers(
 ): List<R2dbcEntity<*>> {
     val refColumn = referrers.reference
     val factory = referrers.factory
+    val allReferences = referrers.allReferences
+
+    // Composite-FK fall-through — fetch children per-parent with a compound AND condition.
+    // TODO ALIGN_WITH_JDBC: JDBC's `warmUpReferences` uses `compoundOr` of per-parent ANDs to do
+    //  a single bulk query; we issue one query per parent here.
+    val isComposite = allReferences.size > 1 || allReferences.values.firstOrNull()?.table is CompositeIdTable
+    if (isComposite) {
+        return preloadCompositeReferrers(this, factory, refColumn, allReferences, referrers.getOrderByExpressions())
+    }
 
     val referee = refColumn.referee ?: return emptyList()
 
@@ -259,6 +326,58 @@ private suspend fun <ID : Any> List<R2dbcEntity<ID>>.preloadReferrers(
     }
 
     return loadedChildren
+}
+
+/**
+ * Composite-FK variant of [preloadReferrers]. For each parent in [parents], builds a per-parent
+ * compound AND condition over all child→parent FK pairs, fetches the matching children, and
+ * pins them into both the transaction's referrers cache and the parent's per-entity reference
+ * cache. Mirrors JDBC's composite branch in `Referrers.getValue` (References.kt:152–157).
+ *
+ * TODO ALIGN_WITH_JDBC: JDBC's `warmUpReferences` consolidates this into a single bulk query via
+ *  `compoundOr` of per-parent ANDs. Until that's ported we issue one query per parent.
+ */
+@Suppress("UNCHECKED_CAST")
+private suspend fun <ID : Any> preloadCompositeReferrers(
+    parents: List<R2dbcEntity<ID>>,
+    factory: R2dbcEntityClass<Any, R2dbcEntity<Any>>,
+    refColumn: Column<*>,
+    references: Map<Column<*>, Column<*>>,
+    orderBy: Array<Pair<org.jetbrains.exposed.v1.core.Expression<*>, org.jetbrains.exposed.v1.core.SortOrder>>
+): List<R2dbcEntity<*>> {
+    val cache = TransactionManager.current().entityCache
+    val allLoaded = mutableListOf<R2dbcEntity<*>>()
+
+    for (parent in parents) {
+        if (parent.id._value == null) continue
+
+        // Build the per-child-column→parent-value map for this parent.
+        var anyNull = false
+        val childToParentValue: List<Pair<Column<*>, Any?>> = references.map { (childColumn, parentColumn) ->
+            val raw = parent.writeValues[parentColumn as Column<Any?>]
+                ?: parent._readValues?.getOrNull(parentColumn)
+            if (raw == null) anyNull = true
+            val value = if (raw is EntityID<*> && childColumn.columnType !is EntityIDColumnType<*>) raw._value else raw
+            childColumn to value
+        }
+        if (anyNull) continue
+
+        // Skip the fetch if the referrers cache slot is already populated for this parent.
+        if (cache.getReferrers<R2dbcEntity<Any>>(parent.id, refColumn) != null) continue
+
+        @Suppress("SpreadOperator")
+        val children = factory.find {
+            childToParentValue.map { (childColumn, value) ->
+                (childColumn as Column<Any?>) eq value
+            }.reduce { acc, next -> acc and next }
+        }.orderBy(*orderBy).toList()
+
+        cache.getOrPutReferrers(refColumn, parent.id) { SizedCollection(children) }
+        parent.storeReferenceInCache(refColumn, SizedCollection(children))
+        allLoaded += children
+    }
+
+    return allLoaded
 }
 
 private suspend fun <ID : Any> List<R2dbcEntity<ID>>.preloadInnerTableLink(

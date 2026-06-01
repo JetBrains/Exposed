@@ -73,6 +73,13 @@ abstract class R2dbcEntityClass<ID : Any, out T : R2dbcEntity<ID>>(
 
     protected open fun createInstance(entityId: EntityID<ID>, row: ResultRow?): T = entityCtor(entityId)
 
+    /**
+     * Gets an [R2dbcEntity] by its raw [id] value. Mirrors JDBC's `EntityClass.findById(ID)` —
+     * wraps the value in an [EntityID] (or [CompositeID]-backed [R2dbcDaoEntityID]) before
+     * delegating to the [EntityID][findById] overload below.
+     */
+    suspend fun findById(id: ID): T? = findById(R2dbcDaoEntityID(id, table))
+
     open suspend fun findById(id: EntityID<ID>): T? {
         val cached = testCache(id)
         if (cached != null) return cached
@@ -268,40 +275,20 @@ abstract class R2dbcEntityClass<ID : Any, out T : R2dbcEntity<ID>>(
     }
 
     /**
-     * One-to-many reference. R2DBC counterpart of JDBC's `referrersOn`.
-     */
-    // TODO ALIGN_WITH_JDBC: the relationship DSL is suffixed `*Suspend` (referrersOnSuspend,
-    //  optionalReferrersOnSuspend, backReferencedOnSuspend, optionalBackReferencedOnSuspend) to
-    //  disambiguate from the JDBC names that return entities directly. Once a unified naming
-    //  scheme is agreed across modules, drop the suffix here.
-    @Suppress("UNCHECKED_CAST")
-    infix fun <TargetID : Any, Target : R2dbcEntity<TargetID>, REF> R2dbcEntityClass<TargetID, Target>.referrersOnSuspend(
-        column: Column<REF>
-    ): R2dbcReferrers<ID, R2dbcEntity<ID>, TargetID, Target, REF> =
-        R2dbcReferrers(column, this, cache = true)
-
-    /** Two-argument form to control caching behaviour. */
-    fun <TargetID : Any, Target : R2dbcEntity<TargetID>, REF> R2dbcEntityClass<TargetID, Target>.referrersOnSuspend(
-        column: Column<REF>,
-        cache: Boolean
-    ): R2dbcReferrers<ID, R2dbcEntity<ID>, TargetID, Target, REF> =
-        R2dbcReferrers(column, this, cache)
-
-    /**
      * Optional one-to-many reference. R2DBC counterpart of JDBC's `optionalReferrersOn`.
      */
     infix fun <TargetID : Any, Target : R2dbcEntity<TargetID>, REF : Any>
         R2dbcEntityClass<TargetID, Target>.optionalReferrersOnSuspend(
-            column: Column<REF?>
-        ): R2dbcReferrers<ID, R2dbcEntity<ID>, TargetID, Target, REF?> =
+        column: Column<REF?>
+    ): R2dbcReferrers<ID, R2dbcEntity<ID>, TargetID, Target, REF?> =
         R2dbcReferrers(column, this, cache = true)
 
     /** Two-argument form to control caching behaviour. */
     fun <TargetID : Any, Target : R2dbcEntity<TargetID>, REF : Any>
         R2dbcEntityClass<TargetID, Target>.optionalReferrersOnSuspend(
-            column: Column<REF?>,
-            cache: Boolean
-        ): R2dbcReferrers<ID, R2dbcEntity<ID>, TargetID, Target, REF?> =
+        column: Column<REF?>,
+        cache: Boolean
+    ): R2dbcReferrers<ID, R2dbcEntity<ID>, TargetID, Target, REF?> =
         R2dbcReferrers(column, this, cache)
 
     /**
@@ -309,8 +296,8 @@ abstract class R2dbcEntityClass<ID : Any, out T : R2dbcEntity<ID>>(
      */
     infix fun <TargetID : Any, Target : R2dbcEntity<TargetID>, REF>
         R2dbcEntityClass<TargetID, Target>.backReferencedOnSuspend(
-            column: Column<REF>
-        ): R2dbcBackReference<TargetID, Target, ID, R2dbcEntity<ID>, REF> =
+        column: Column<REF>
+    ): R2dbcBackReference<TargetID, Target, ID, R2dbcEntity<ID>, REF> =
         R2dbcBackReference(column, this)
 
     /**
@@ -318,8 +305,8 @@ abstract class R2dbcEntityClass<ID : Any, out T : R2dbcEntity<ID>>(
      */
     infix fun <TargetID : Any, Target : R2dbcEntity<TargetID>, REF>
         R2dbcEntityClass<TargetID, Target>.optionalBackReferencedOnSuspend(
-            column: Column<REF?>
-        ): R2dbcOptionalBackReference<TargetID, Target, ID, R2dbcEntity<ID>, REF> =
+        column: Column<REF?>
+    ): R2dbcOptionalBackReference<TargetID, Target, ID, R2dbcEntity<ID>, REF> =
         R2dbcOptionalBackReference(column, this)
 
     /**
@@ -330,9 +317,78 @@ abstract class R2dbcEntityClass<ID : Any, out T : R2dbcEntity<ID>>(
     @JvmName("optionalBackReferencedOnSuspendNonNullable")
     infix fun <TargetID : Any, Target : R2dbcEntity<TargetID>, REF : Any>
         R2dbcEntityClass<TargetID, Target>.optionalBackReferencedOnSuspend(
-            column: Column<REF>
-        ): R2dbcOptionalBackReference<TargetID, Target, ID, R2dbcEntity<ID>, REF> =
+        column: Column<REF>
+    ): R2dbcOptionalBackReference<TargetID, Target, ID, R2dbcEntity<ID>, REF> =
         R2dbcOptionalBackReference(column as Column<REF?>, this)
+
+    @Suppress("UNCHECKED_CAST")
+    infix fun <TargetID : Any, Target : R2dbcEntity<TargetID>, REF> R2dbcEntityClass<TargetID, Target>.referrersOnSuspend(
+        column: Column<REF>
+    ): R2dbcReferrers<ID, R2dbcEntity<ID>, TargetID, Target, REF> =
+        R2dbcReferrers(column, this, cache = true)
+
+    /** Two-argument form to control caching behaviour. */
+    fun <TargetID : Any, Target : R2dbcEntity<TargetID>, REF>
+        R2dbcEntityClass<TargetID, Target>.referrersOnSuspend(
+        column: Column<REF>,
+        cache: Boolean
+    ): R2dbcReferrers<ID, R2dbcEntity<ID>, TargetID, Target, REF> =
+        R2dbcReferrers(column, this, cache)
+
+
+    /** Composite-FK form of [referrersOnSuspend]. R2DBC counterpart of JDBC's `referrersOn(IdTable<*>)`. */
+    @Suppress("UNCHECKED_CAST")
+    infix fun <TargetID : Any, Target : R2dbcEntity<TargetID>>
+        R2dbcEntityClass<TargetID, Target>.referrersOnSuspend(
+        table: IdTable<*>
+    ): R2dbcReferrers<ID, R2dbcEntity<ID>, TargetID, Target, Any> {
+        val tableFK = this@R2dbcEntityClass.getCompositeForeignKey(table)
+        val delegate = tableFK.from.first() as Column<Any>
+        return R2dbcReferrers(delegate, this, cache = true, references = tableFK.references)
+    }
+
+    /** Composite-FK form of [optionalReferrersOnSuspend]. R2DBC counterpart of JDBC's `optionalReferrersOn(IdTable<*>)`. */
+    @Suppress("UNCHECKED_CAST")
+    infix fun <TargetID : Any, Target : R2dbcEntity<TargetID>>
+        R2dbcEntityClass<TargetID, Target>.optionalReferrersOnSuspend(
+        table: IdTable<*>
+    ): R2dbcReferrers<ID, R2dbcEntity<ID>, TargetID, Target, Any?> {
+        val tableFK = this@R2dbcEntityClass.getCompositeForeignKey(table)
+        val delegate = tableFK.from.first() as Column<Any?>
+        return R2dbcReferrers(delegate, this, cache = true, references = tableFK.references)
+    }
+
+    /** Composite-FK form of [backReferencedOnSuspend]. R2DBC counterpart of JDBC's `backReferencedOn(IdTable<*>)`. */
+    @Suppress("UNCHECKED_CAST")
+    infix fun <TargetID : Any, Target : R2dbcEntity<TargetID>>
+        R2dbcEntityClass<TargetID, Target>.backReferencedOnSuspend(
+        table: IdTable<*>
+    ): R2dbcBackReference<TargetID, Target, ID, R2dbcEntity<ID>, Any> {
+        val tableFK = this@R2dbcEntityClass.getCompositeForeignKey(table)
+        val delegate = tableFK.from.first() as Column<Any>
+        return R2dbcBackReference(delegate, this, references = tableFK.references)
+    }
+
+    /** Composite-FK form of [optionalBackReferencedOnSuspend]. R2DBC counterpart of JDBC's `optionalBackReferencedOn(IdTable<*>)`. */
+    @Suppress("UNCHECKED_CAST")
+    infix fun <TargetID : Any, Target : R2dbcEntity<TargetID>>
+        R2dbcEntityClass<TargetID, Target>.optionalBackReferencedOnSuspend(
+        table: IdTable<*>
+    ): R2dbcOptionalBackReference<TargetID, Target, ID, R2dbcEntity<ID>, Any> {
+        val tableFK = this@R2dbcEntityClass.getCompositeForeignKey(table)
+        val delegate = tableFK.from.first() as Column<Any?>
+        return R2dbcOptionalBackReference(delegate, this, references = tableFK.references)
+    }
+
+    /**
+     * Returns the child table's [ForeignKeyConstraint] that matches the primary key columns defined on the table
+     * associated with this [R2dbcEntityClass]. Mirrors JDBC's `EntityClass.getCompositeForeignKey`.
+     */
+    internal fun getCompositeForeignKey(table: IdTable<*>): ForeignKeyConstraint =
+        table.foreignKeys.firstOrNull { it.target == this.table.idColumns }
+            ?: error(
+                "Table ${table.tableName} does not hold a composite FK constraint matching ${this.table.tableName}'s primary key."
+            )
 
     @Suppress("UNCHECKED_CAST")
     suspend fun <SID : Any> warmUpLinkedReferences(

@@ -22,12 +22,14 @@ private suspend fun R2dbcEntity<*>.ensureIdFlushed() {
 
 class R2dbcBackReference<ParentID : Any, out Parent : R2dbcEntity<ParentID>, ChildID : Any, in Child : R2dbcEntity<ChildID>, REF>(
     reference: Column<REF>,
-    factory: R2dbcEntityClass<ParentID, Parent>
+    factory: R2dbcEntityClass<ParentID, Parent>,
+    references: Map<Column<*>, Column<*>>? = null
 ) {
     internal val delegate = R2dbcReferrers<ChildID, Child, ParentID, Parent, REF>(
         reference,
         factory,
-        cache = true
+        cache = true,
+        references = references
     )
 
     operator fun getValue(thisRef: Child, property: KProperty<*>): suspend () -> Parent {
@@ -42,12 +44,14 @@ class R2dbcBackReference<ParentID : Any, out Parent : R2dbcEntity<ParentID>, Chi
 
 class R2dbcOptionalBackReference<ParentID : Any, out Parent : R2dbcEntity<ParentID>, ChildID : Any, in Child : R2dbcEntity<ChildID>, REF>(
     reference: Column<REF?>,
-    factory: R2dbcEntityClass<ParentID, Parent>
+    factory: R2dbcEntityClass<ParentID, Parent>,
+    references: Map<Column<*>, Column<*>>? = null
 ) {
     internal val delegate = R2dbcReferrers<ChildID, Child, ParentID, Parent, REF?>(
         reference,
         factory,
-        cache = true
+        cache = true,
+        references = references
     )
 
     operator fun getValue(thisRef: Child, property: KProperty<*>): suspend () -> Parent? {

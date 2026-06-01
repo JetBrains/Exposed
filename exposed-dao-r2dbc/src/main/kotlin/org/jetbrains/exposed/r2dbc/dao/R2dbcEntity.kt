@@ -4,6 +4,7 @@ import org.jetbrains.exposed.r2dbc.dao.exceptions.R2dbcEntityNotFoundException
 import org.jetbrains.exposed.r2dbc.dao.relationships.R2dbcInnerTableLink
 import org.jetbrains.exposed.v1.core.AutoIncColumnType
 import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.CompositeColumn
 import org.jetbrains.exposed.v1.core.EntityIDColumnType
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
@@ -71,6 +72,29 @@ open class R2dbcEntity<ID : Any>(val id: EntityID<ID>) {
                 if (entityCache.data[entityTable].orEmpty().contains(entity.id._value)) {
                     entityCache.scheduleUpdate(klass, entity)
                 }
+            }
+        }
+    }
+
+    /**
+     * Property delegate for [CompositeColumn] — reads each underlying column's value via [Column.lookup]
+     * and reassembles them via [CompositeColumn.restoreValueFromParts]. Mirrors JDBC's `Entity` operator.
+     */
+    operator fun <T> CompositeColumn<T>.getValue(o: R2dbcEntity<ID>, desc: KProperty<*>): T {
+        val values = this.getRealColumns().associateWith { it.lookup() }
+        return this.restoreValueFromParts(values)
+    }
+
+    /**
+     * Property delegate for [CompositeColumn] — splits [value] into its real-column parts via
+     * [CompositeColumn.getRealColumnsWithValues] and writes each part through [Column.setValue].
+     * Mirrors JDBC's `Entity` operator.
+     */
+    operator fun <T> CompositeColumn<T>.setValue(o: R2dbcEntity<ID>, desc: KProperty<*>, value: T) {
+        with(o) {
+            this@setValue.getRealColumnsWithValues(value).forEach { (column, partValue) ->
+                @Suppress("UNCHECKED_CAST")
+                (column as Column<Any?>).setValue(o, desc, partValue)
             }
         }
     }

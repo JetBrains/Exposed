@@ -6,6 +6,7 @@ import org.jetbrains.exposed.r2dbc.dao.R2dbcEntityClass
 import org.jetbrains.exposed.r2dbc.dao.entityCache
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.EntityIDColumnType
+import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.eq
@@ -16,7 +17,12 @@ import kotlin.reflect.KProperty
 class SuspendAccessor<ID : Any, Parent : R2dbcEntity<ID>, REF : Any>(
     internal val reference: Column<REF>,
     internal val factory: R2dbcEntityClass<ID, @UnsafeVariance Parent>,
-    internal val entity: R2dbcEntity<*>
+    internal val entity: R2dbcEntity<*>,
+    /**
+     * Composite-FK child→parent column map. `null` for single-column references — in that case
+     * [set] uses `reference.referee` directly.
+     */
+    internal val references: Map<Column<*>, Column<*>>? = null
 ) {
     /**
      * getValue operator - returns this accessor which has invoke() and set operations.
@@ -40,23 +46,26 @@ class SuspendAccessor<ID : Any, Parent : R2dbcEntity<ID>, REF : Any>(
             error("Cannot link entities from different databases")
         }
 
-        // Store the reference value - extract from the referenced column
-        @Suppress("UNCHECKED_CAST")
-        val refValue = when {
-            reference.referee == factory.table.id -> {
-                // Reference points to the primary key - use the entity's ID
-                value.id as REF
+        if (references != null) {
+            copyCompositeFkValues(entity, value, references)
+        } else {
+            // Single-column reference (original logic).
+            @Suppress("UNCHECKED_CAST")
+            val refValue = when {
+                reference.referee == factory.table.id -> {
+                    // Reference points to the primary key - use the entity's ID
+                    value.id as REF
+                }
+                reference.referee?.table == factory.table -> {
+                    // Reference points to another column in the entity's table
+                    val refereeColumn = reference.referee!!
+                    // Try to get value from writeValues first, then readValues
+                    (value.writeValues[refereeColumn as Column<Any?>] ?: value._readValues?.get(refereeColumn)) as REF
+                }
+                else -> error("Reference column ${reference.name} does not point to any column in ${factory.table.tableName}")
             }
-            reference.referee?.table == factory.table -> {
-                // Reference points to another column in the entity's table
-                val refereeColumn = reference.referee!!
-                // Try to get value from writeValues first, then readValues
-                (value.writeValues[refereeColumn as Column<Any?>] ?: value._readValues?.get(refereeColumn)) as REF
-            }
-            else -> error("Reference column ${reference.name} does not point to any column in ${factory.table.tableName}")
+            entity.writeValues[reference as Column<Any?>] = refValue
         }
-
-        entity.writeValues[reference as Column<Any?>] = refValue
 
         // Schedule update if entity has been flushed
         if (entity.id._value != null) {
@@ -80,6 +89,16 @@ class SuspendAccessor<ID : Any, Parent : R2dbcEntity<ID>, REF : Any>(
             return entity.getReferenceFromCache(reference)
         }
 
+        if (references != null) {
+            // Composite-FK lookup — build a CompositeID from the child's columns mapped to the
+            // parent's referee columns, then `findById`. Mirrors JDBC's `Reference.getValue`
+            // composite branch (References.kt:152–161).
+            val parentEntity = lookupCompositeParent(factory, entity, references)
+                ?: error("Referenced entity not found for composite FK from ${reference.name}")
+            entity.storeReferenceInCache(reference, parentEntity)
+            return parentEntity
+        }
+
         // TODO incapsulate this logic inside entity to avoid checking for different fields outside.
         @Suppress("UNCHECKED_CAST")
         val refValue: REF = (entity.writeValues[reference as Column<Any?>] as? REF)
@@ -98,7 +117,9 @@ class SuspendAccessor<ID : Any, Parent : R2dbcEntity<ID>, REF : Any>(
 class OptionalSuspendAccessor<ID : Any, Parent : R2dbcEntity<ID>, REF : Any>(
     internal val reference: Column<REF?>,
     internal val factory: R2dbcEntityClass<ID, @UnsafeVariance Parent>,
-    internal val entity: R2dbcEntity<*>
+    internal val entity: R2dbcEntity<*>,
+    /** Composite-FK child→parent column map. `null` for single-column references. */
+    internal val references: Map<Column<*>, Column<*>>? = null
 ) {
     operator fun getValue(thisRef: Any?, property: KProperty<*>): OptionalSuspendAccessor<ID, Parent, REF> {
         return this
@@ -111,26 +132,31 @@ class OptionalSuspendAccessor<ID : Any, Parent : R2dbcEntity<ID>, REF : Any>(
                 error("Cannot link entities from different databases")
             }
 
-            // Store the reference value - extract from the referenced column
-            @Suppress("UNCHECKED_CAST")
-            val refValue = when {
-                reference.referee == factory.table.id -> {
-                    // Reference points to the primary key - use the entity's ID
-                    value.id as REF
+            if (references != null) {
+                copyCompositeFkValues(entity, value, references)
+            } else {
+                @Suppress("UNCHECKED_CAST")
+                val refValue = when {
+                    reference.referee == factory.table.id -> value.id as REF
+                    reference.referee?.table == factory.table -> {
+                        val refereeColumn = reference.referee!!
+                        (value.writeValues[refereeColumn as Column<Any?>] ?: value._readValues?.get(refereeColumn)) as REF
+                    }
+                    else -> error("Reference column ${reference.name} does not point to any column in ${factory.table.tableName}")
                 }
-                reference.referee?.table == factory.table -> {
-                    // Reference points to another column in the entity's table
-                    val refereeColumn = reference.referee!!
-                    // Try to get value from writeValues first, then readValues
-                    (value.writeValues[refereeColumn as Column<Any?>] ?: value._readValues?.get(refereeColumn)) as REF
-                }
-                else -> error("Reference column ${reference.name} does not point to any column in ${factory.table.tableName}")
+                entity.writeValues[reference as Column<Any?>] = refValue
             }
-
-            entity.writeValues[reference as Column<Any?>] = refValue
         } else {
-            // Clear the reference
-            entity.writeValues[reference as Column<Any?>] = null
+            if (references != null) {
+                // Clear every child column when clearing a composite reference.
+                references.keys.forEach { childColumn ->
+                    @Suppress("UNCHECKED_CAST")
+                    entity.writeValues[childColumn as Column<Any?>] = null
+                }
+            } else {
+                // Clear the (single) reference
+                entity.writeValues[reference as Column<Any?>] = null
+            }
         }
 
         // Schedule update if entity has been flushed
@@ -154,6 +180,22 @@ class OptionalSuspendAccessor<ID : Any, Parent : R2dbcEntity<ID>, REF : Any>(
             return entity.getReferenceFromCache(reference)
         }
 
+        if (references != null) {
+            // Composite-FK: if ANY of the FK columns is null on the child, the optional reference
+            // is considered absent (mirrors JDBC's CompositeID/null branch).
+            val anyNull = references.keys.any { childColumn ->
+                val v = entity.writeValues[childColumn as Column<Any?>] ?: entity._readValues?.getOrNull(childColumn)
+                v == null
+            }
+            if (anyNull) {
+                entity.storeReferenceInCache(reference, null)
+                return null
+            }
+            val parentEntity = lookupCompositeParent(factory, entity, references)
+            entity.storeReferenceInCache(reference, parentEntity)
+            return parentEntity
+        }
+
         @Suppress("UNCHECKED_CAST")
         val refValue: REF? = (entity.writeValues[reference as Column<Any?>] as? REF)
             ?: (entity._readValues?.let { row -> row[reference] } as? REF)
@@ -169,6 +211,55 @@ class OptionalSuspendAccessor<ID : Any, Parent : R2dbcEntity<ID>, REF : Any>(
 
         return parentEntity
     }
+}
+
+
+private fun copyCompositeFkValues(
+    child: R2dbcEntity<*>,
+    parent: R2dbcEntity<*>,
+    references: Map<Column<*>, Column<*>>
+) {
+    references.forEach { (childColumn, parentColumn) ->
+        @Suppress("UNCHECKED_CAST")
+        val parentRaw: Any? = parent.writeValues[parentColumn as Column<Any?>]
+            ?: parent._readValues?.getOrNull(parentColumn)
+        // Unwrap `EntityID` when the child column stores a raw value
+        val value = if (parentRaw is EntityID<*> && childColumn.columnType !is EntityIDColumnType<*>) {
+            parentRaw._value
+        } else {
+            parentRaw
+        }
+        @Suppress("UNCHECKED_CAST")
+        child.writeValues[childColumn as Column<Any?>] = value
+    }
+}
+
+/**
+ * Composite-FK lookup used by [SuspendAccessor.invoke] / [OptionalSuspendAccessor.invoke] when the
+ * accessor was built from an `IdTable<*>`-shaped DSL entry point. Constructs a [CompositeID] by
+ * mapping each child column to its referee parent column, then delegates to `factory.findById`.
+ *
+ * Mirrors the `CompositeID` branch of JDBC's `Reference.getValue` (References.kt:157–161).
+ */
+@Suppress("UNCHECKED_CAST")
+private suspend fun <ID : Any, Parent : R2dbcEntity<ID>> lookupCompositeParent(
+    factory: R2dbcEntityClass<ID, @UnsafeVariance Parent>,
+    child: R2dbcEntity<*>,
+    references: Map<Column<*>, Column<*>>
+): Parent? {
+    val parentIdValue = CompositeID { id ->
+        references.forEach { (childColumn, parentColumn) ->
+            val rawChild = child.writeValues[childColumn as Column<Any?>]
+                ?: child._readValues?.getOrNull(childColumn)
+                ?: error("Composite-FK child column ${childColumn.name} has no value on ${child.id}")
+            // `parentColumn` is an EntityID column on the parent's id table; wrap the raw child
+            // value into an `EntityID<*>` so `CompositeID` accepts it.
+            val parentIdColumn = parentColumn as Column<EntityID<Any>>
+            val parentValueRaw = (rawChild as? EntityID<*>)?.value ?: rawChild
+            id[parentIdColumn] = parentValueRaw
+        }
+    }
+    return factory.findById(parentIdValue as ID)
 }
 
 /**
