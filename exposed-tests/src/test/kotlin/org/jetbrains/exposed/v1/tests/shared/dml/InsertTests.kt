@@ -838,4 +838,52 @@ class InsertTests : DatabaseTestsBase() {
             assertEquals(1, defaultsOnlyTable.selectAll().where { defaultsOnlyInserted }.count())
         }
     }
+
+    // Verifies that the flat-array backing in BatchInsertStatement handles large batches correctly.
+    @Test
+    fun testBatchInsertFlatArrayLargeBatch() {
+        val tbl = object : Table("flat_array_large") {
+            val id = integer("id")
+            val name = varchar("name", 64)
+            val value = integer("value")
+        }
+        withTables(tbl) {
+            val rowCount = 500
+            tbl.batchInsert(1..rowCount) { n ->
+                this[tbl.id] = n
+                this[tbl.name] = "row_$n"
+                this[tbl.value] = n * 2
+            }
+            val count = tbl.selectAll().count()
+            assertEquals(rowCount.toLong(), count)
+            val rows = tbl.selectAll().toList()
+            rows.forEach { row ->
+                val id = row[tbl.id]
+                assertEquals("row_$id", row[tbl.name])
+                assertEquals(id * 2, row[tbl.value])
+            }
+        }
+    }
+
+    // Verifies that a nullable column absent from some rows is handled correctly by the flat-array map.
+    @Test
+    fun testBatchInsertFlatArrayWithNullableColumnVariation() {
+        val tbl = object : Table("flat_array_nullable") {
+            val id = integer("id")
+            val required = varchar("required", 64)
+            val optional = varchar("optional", 64).nullable()
+        }
+        withTables(tbl) {
+            tbl.batchInsert(listOf(1, 2, 3)) { n ->
+                this[tbl.id] = n
+                this[tbl.required] = "req_$n"
+                if (n % 2 == 0) this[tbl.optional] = "opt_$n"
+            }
+            val rows = tbl.selectAll().orderBy(tbl.id).toList()
+            assertEquals(3, rows.size)
+            assertNull(rows[0][tbl.optional])
+            assertEquals("opt_2", rows[1][tbl.optional])
+            assertNull(rows[2][tbl.optional])
+        }
+    }
 }

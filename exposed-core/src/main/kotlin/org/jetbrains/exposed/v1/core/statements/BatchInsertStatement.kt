@@ -22,6 +22,121 @@ open class BatchInsertStatement(
     ignore: Boolean = false,
     val shouldReturnGeneratedValues: Boolean = true
 ) : InsertStatement<List<ResultRow>>(table, ignore) {
+
+    // Sentinel stored in FlatRowMap.storage slots that were not explicitly set by the user.
+    // Distinct from null so we can differentiate "set to null" from "not set".
+    private val ABSENT: Any = object { override fun toString() = "ABSENT" }
+
+    // Shared column registry — populated on first committed batch and grown if new columns appear later.
+    private val batchColumns = ArrayList<Column<*>>()
+    private val columnIndexMap = LinkedHashMap<Column<*>, Int>()
+
+    /**
+     * A [MutableMap] backed by a flat [Array] for cache-friendly per-row value storage.
+     *
+     * All instances within a single [BatchInsertStatement] share the same [columnIndexMap] and [batchColumns]
+     * from the outer class. The [storage] array is the only per-row allocation (plus this object itself),
+     * eliminating the per-entry [Map.Entry] allocations that [LinkedHashMap] would require.
+     *
+     * Columns that were not explicitly set for this row hold the private [ABSENT] sentinel so that
+     * [containsKey] correctly returns `false` for them, preserving the same semantics as a map that
+     * simply does not contain that key.
+     */
+    private inner class FlatRowMap(sourceValues: Map<Column<*>, Any?>) : AbstractMutableMap<Column<*>, Any?>() {
+
+        val storage: Array<Any?>
+
+        init {
+            // Register any columns not yet tracked (first batch sets them all; later batches
+            // may add new nullable columns, which is supported but rare).
+            for (col in sourceValues.keys) {
+                if (col !in columnIndexMap) {
+                    columnIndexMap[col] = batchColumns.size
+                    batchColumns.add(col)
+                }
+            }
+            storage = Array(batchColumns.size) { i ->
+                val col = batchColumns[i]
+                if (sourceValues.containsKey(col)) sourceValues[col] else ABSENT
+            }
+        }
+
+        // Returns null for columns not in this row (idx out of range) or marked ABSENT.
+        override fun get(key: Column<*>): Any? {
+            val idx = columnIndexMap[key] ?: return null
+            if (idx >= storage.size) return null
+            val v = storage[idx]
+            return if (v === ABSENT) null else v
+        }
+
+        // A column "contains" a value only when the user explicitly set it (not ABSENT).
+        override fun containsKey(key: Column<*>): Boolean {
+            val idx = columnIndexMap[key] ?: return false
+            if (idx >= storage.size) return false
+            return storage[idx] !== ABSENT
+        }
+
+        override fun put(key: Column<*>, value: Any?): Any? {
+            val idx = columnIndexMap[key] ?: return null
+            if (idx >= storage.size) return null
+            val old = storage[idx]
+            storage[idx] = value
+            return if (old === ABSENT) null else old
+        }
+
+        override val size: Int
+            get() = storage.count { it !== ABSENT }
+
+        // Keys are the columns that were explicitly set (non-ABSENT) in this row.
+        override val keys: MutableSet<Column<*>>
+            get() {
+                val result = LinkedHashSet<Column<*>>(size)
+                batchColumns.forEachIndexed { i, col ->
+                    if (i < storage.size && storage[i] !== ABSENT) result.add(col)
+                }
+                return result
+            }
+
+        override val entries: MutableSet<MutableMap.MutableEntry<Column<*>, Any?>>
+            get() = object : AbstractMutableSet<MutableMap.MutableEntry<Column<*>, Any?>>() {
+                override val size get() = this@FlatRowMap.size
+
+                override fun add(element: MutableMap.MutableEntry<Column<*>, Any?>) =
+                    throw UnsupportedOperationException()
+
+                override fun iterator() = object : MutableIterator<MutableMap.MutableEntry<Column<*>, Any?>> {
+                    private var i = advanceTo(0)
+
+                    private fun advanceTo(start: Int): Int {
+                        var idx = start
+                        while (idx < storage.size && storage[idx] === ABSENT) idx++
+                        return idx
+                    }
+
+                    override fun hasNext() = i < storage.size
+
+                    override fun next(): MutableMap.MutableEntry<Column<*>, Any?> {
+                        val colIdx = i
+                        val col = batchColumns[colIdx]
+                        i = advanceTo(i + 1)
+                        return object : MutableMap.MutableEntry<Column<*>, Any?> {
+                            override val key = col
+                            override val value: Any?
+                                get() = storage[colIdx].let { if (it === ABSENT) null else it }
+
+                            override fun setValue(newValue: Any?): Any? {
+                                val old = storage[colIdx]
+                                storage[colIdx] = newValue
+                                return if (old === ABSENT) null else old
+                            }
+                        }
+                    }
+
+                    override fun remove() = throw UnsupportedOperationException()
+                }
+            }
+    }
+
     /** @suppress */
     @InternalApi
     val data = ArrayList<MutableMap<Column<*>, Any?>>()
@@ -47,7 +162,7 @@ open class BatchInsertStatement(
         @OptIn(InternalApi::class)
         if (data.isNotEmpty()) {
             validateLastBatch()
-            data[data.size - 1] = LinkedHashMap(values)
+            data[data.size - 1] = FlatRowMap(values)
             allColumnsInDataSet.addAll(values.keys)
             values.clear()
             hasBatchedValues = true
