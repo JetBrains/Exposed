@@ -237,14 +237,14 @@ data class CheckConstraint(
     }
 
     companion object {
+        @OptIn(InternalApi::class)
         fun from(table: Table, name: String, op: Op<Boolean>): CheckConstraint {
             require(name.isNotBlank()) { "Check constraint name cannot be blank" }
-            @OptIn(InternalApi::class)
             val tr = currentTransaction()
             val identifierManager = tr.db.identifierManager
             val tableName = tr.identity(table)
             val checkOpSQL = op.toString().replace("$tableName.", "")
-            return CheckConstraint(tableName, identifierManager.cutIfNecessaryAndQuote(name), checkOpSQL)
+            return CheckConstraint(tableName, identifierManager.cutIfNecessaryAndQuote(name).inProperCase(), checkOpSQL)
         }
     }
 }
