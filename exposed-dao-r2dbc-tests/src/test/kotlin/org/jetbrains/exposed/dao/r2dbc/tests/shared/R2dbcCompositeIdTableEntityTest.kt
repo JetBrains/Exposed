@@ -1,35 +1,60 @@
-package org.jetbrains.exposed.v1.tests.shared.entities
+package org.jetbrains.exposed.dao.r2dbc.tests.shared
 
-import org.jetbrains.exposed.v1.core.*
+import io.r2dbc.spi.IsolationLevel
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.single
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.dao.r2dbc.tests.currentTestDB
+import org.jetbrains.exposed.r2dbc.dao.CompositeR2dbcEntity
+import org.jetbrains.exposed.r2dbc.dao.CompositeR2dbcEntityClass
+import org.jetbrains.exposed.r2dbc.dao.flushCache
+import org.jetbrains.exposed.r2dbc.dao.IntR2dbcEntity
+import org.jetbrains.exposed.r2dbc.dao.IntR2dbcEntityClass
+import org.jetbrains.exposed.r2dbc.dao.R2dbcEntity
+import org.jetbrains.exposed.r2dbc.dao.entityCache
+import org.jetbrains.exposed.r2dbc.dao.relationships.load
+import org.jetbrains.exposed.r2dbc.dao.relationships.optionalReferencedOnSuspend
+import org.jetbrains.exposed.r2dbc.dao.relationships.referencedOnSuspend
+import org.jetbrains.exposed.r2dbc.dao.relationships.with
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.alias
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.dao.*
-import org.jetbrains.exposed.v1.jdbc.*
-import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
-import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
-import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.NO_R2DBC_SUPPORT
-import org.jetbrains.exposed.v1.tests.TestDB
-import org.jetbrains.exposed.v1.tests.currentTestDB
-import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
-import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
-import org.jetbrains.exposed.v1.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.tests.shared.assertTrue
-import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.jupiter.api.Tag
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.idParam
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.isNotNull
+import org.jetbrains.exposed.v1.core.like
+import org.jetbrains.exposed.v1.core.neq
+import org.jetbrains.exposed.v1.core.notInList
+import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
+import org.jetbrains.exposed.v1.r2dbc.deleteWhere
+import org.jetbrains.exposed.v1.r2dbc.exists
+import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
+import org.jetbrains.exposed.v1.r2dbc.select
+import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualCollections
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
+import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
 import org.junit.jupiter.api.Test
-import java.sql.Connection
+import org.junit.jupiter.api.assertNotNull
+import org.junit.jupiter.api.assertNull
 import kotlin.test.assertIs
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.uuid.Uuid
 
-// SQLite excluded from most tests as it only allows auto-increment on single column PKs.
-// SQL Server is sometimes excluded because it doesn't allow inserting explicit values for identity columns.
-class CompositeIdTableEntityTest : DatabaseTestsBase() {
-    // CompositeIdTable with 2 key columns - int & uuid (both db-generated)
+class R2dbcCompositeIdTableEntityTest : R2dbcDatabaseTestsBase() {
     object Publishers : CompositeIdTable("publishers") {
         val pubId = integer("pub_id").autoIncrement().entityId()
         val isbn = uuid("isbn_code").autoGenerate().entityId()
@@ -38,13 +63,13 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
         override val primaryKey = PrimaryKey(pubId, isbn)
     }
 
-    class Publisher(id: EntityID<CompositeID>) : CompositeEntity(id) {
-        companion object : CompositeEntityClass<Publisher>(Publishers)
+    class Publisher(id: EntityID<CompositeID>) : CompositeR2dbcEntity(id) {
+        companion object : CompositeR2dbcEntityClass<Publisher>(Publishers)
 
         var name by Publishers.name
-        val authors by Author referrersOn Authors
-        val office by Office optionalBackReferencedOn Offices
-        val allOffices by Office optionalReferrersOn Offices
+        val authors by Author referrersOnSuspend Authors
+        val office by Office optionalBackReferencedOnSuspend Offices
+        val allOffices by Office optionalReferrersOnSuspend Offices
     }
 
     // IntIdTable with 1 key columns - int (db-generated)
@@ -59,10 +84,10 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
         }
     }
 
-    class Author(id: EntityID<Int>) : IntEntity(id) {
-        companion object : IntEntityClass<Author>(Authors)
+    class Author(id: EntityID<Int>) : IntR2dbcEntity(id) {
+        companion object : IntR2dbcEntityClass<Author>(Authors)
 
-        var publisher by Publisher referencedOn Authors
+        val publisher by Publisher referencedOnSuspend Authors
         var penName by Authors.penName
     }
 
@@ -75,12 +100,12 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
         override val primaryKey = PrimaryKey(bookId)
     }
 
-    class Book(id: EntityID<CompositeID>) : CompositeEntity(id) {
-        companion object : CompositeEntityClass<Book>(Books)
+    class Book(id: EntityID<CompositeID>) : CompositeR2dbcEntity(id) {
+        companion object : CompositeR2dbcEntityClass<Book>(Books)
 
         var title by Books.title
-        var author by Author optionalReferencedOn Books.author
-        val review by Review backReferencedOn Reviews
+        val author by Author optionalReferencedOnSuspend Books.author
+        val review by Review backReferencedOnSuspend Reviews
     }
 
     // CompositeIdTable with 2 key columns - string & long (neither db-generated)
@@ -96,10 +121,12 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
         }
     }
 
-    class Review(id: EntityID<CompositeID>) : CompositeEntity(id) {
-        companion object : CompositeEntityClass<Review>(Reviews)
+    class Review(id: EntityID<CompositeID>) : CompositeR2dbcEntity(id) {
+        companion object : CompositeR2dbcEntityClass<Review>(Reviews)
 
-        var book by Book referencedOn Reviews
+        // R2DBC: relationship is mutated via `book set bookValue` (infix) on the accessor;
+        // see memory note about the "Suspend" accessor pattern.
+        val book by Book referencedOnSuspend Reviews
     }
 
     // CompositeIdTable with 3 key columns - string, string, & int (none db-generated)
@@ -118,18 +145,18 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
         }
     }
 
-    class Office(id: EntityID<CompositeID>) : CompositeEntity(id) {
-        companion object : CompositeEntityClass<Office>(Offices)
+    class Office(id: EntityID<CompositeID>) : CompositeR2dbcEntity(id) {
+        companion object : CompositeR2dbcEntityClass<Office>(Offices)
 
         var staff by Offices.staff
-        var publisher by Publisher optionalReferencedOn Offices
+        val publisher by Publisher optionalReferencedOnSuspend Offices
     }
 
     private val allTables = arrayOf(Publishers, Authors, Books, Reviews, Offices)
 
     @Test
     fun testCreateAndDropCompositeIdTable() {
-        withDb(excludeSettings = listOf(TestDB.SQLITE)) {
+        withDb {
             try {
                 SchemaUtils.create(tables = allTables)
 
@@ -155,7 +182,9 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
             expectException<IllegalStateException> {
                 // but trying to use id property requires idColumns not being empty
-                missingIdsTable.select(missingIdsTable.id).toList()
+                runBlocking {
+                    missingIdsTable.select(missingIdsTable.id).toList()
+                }
             }
 
             SchemaUtils.drop(missingIdsTable)
@@ -164,7 +193,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
     @Test
     fun testInsertAndSelectUsingDAO() {
-        withTables(excludeSettings = listOf(TestDB.SQLITE), Publishers) {
+        withTables(Publishers) {
             val p1 = Publisher.new {
                 name = "Publisher A"
             }
@@ -189,9 +218,10 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
         }
     }
 
+
     @Test
     fun testInsertAndSelectUsingDSL() {
-        withTables(excludeSettings = listOf(TestDB.SQLITE), Publishers) {
+        withTables(Publishers) {
             Publishers.insert {
                 it[name] = "Publisher A"
             }
@@ -233,7 +263,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
     @Test
     fun testInsertWithCompositeIdAutoGeneratedPartsUsingDAO() {
         // it seems that SQLServer does not support partial generation of ID
-        withTables(excludeSettings = listOf(TestDB.SQLITE, TestDB.SQLSERVER), Publishers) {
+        withTables(excludeSettings = listOf(TestDB.SQLSERVER), Publishers) {
             // test missing autoGenerated Uuid
             val p1 = Publisher.new(
                 CompositeID {
@@ -262,26 +292,33 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
         }
     }
 
+
     @Test
     fun testInsertWithCompositeIdAutoGeneratedPartsAndMissingNotGeneratedPartUsingDAO() {
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tables = allTables) {
+        withTables(tables = allTables) {
             val publisherA = Publisher.new {
                 name = "Publisher A"
             }
+            // R2DBC: composite-FK `set` reads the parent's id columns from its writeValues/_readValues
+            // (it can't do JDBC's sync `value.id.value` lazy-flush because `set` is non-suspend).
+            // Flush the parent before linking it from the child.
+            flushCache()
             val authorA = Author.new {
-                publisher = publisherA
+                publisher set publisherA
                 penName = "Author A"
             }
+            flushCache() // it's really annoying
             val bookA = Book.new {
                 title = "Book A"
-                author = authorA
+                author set authorA
             }
+            flushCache()
             val compositeID = CompositeID {
                 it[Reviews.rank] = 10L
             }
             expectException<IllegalStateException> {
                 Review.new(compositeID) {
-                    book = bookA
+                    book set bookA
                 }
             }
         }
@@ -289,7 +326,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
     @Test
     fun testInsertAndGetCompositeIds() {
-        withTables(excludeSettings = listOf(TestDB.SQLITE, TestDB.SQLSERVER), Publishers) {
+        withTables(excludeSettings = listOf(TestDB.SQLSERVER), Publishers) {
             // insert individual components
             val id1: EntityID<CompositeID> = Publishers.insertAndGetId {
                 it[pubId] = 725
@@ -350,7 +387,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
     @Test
     fun testInsertUsingManualCompositeIds() {
-        withTables(excludeSettings = listOf(TestDB.SQLITE, TestDB.SQLSERVER), Publishers) {
+        withTables(excludeSettings = listOf(TestDB.SQLSERVER), Publishers) {
             // manual using DSL
             Publishers.insert {
                 it[pubId] = 725
@@ -368,6 +405,9 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
             val p2Id = Publisher.new(fullId) {
                 name = "Publisher B"
             }.id
+            // R2DBC: id.value is non-suspend, so the composite id must be populated explicitly
+            // via flushCache (JDBC's `id.value` getter implicitly triggers `invokeOnNoValue`).
+            flushCache()
             assertEquals(611, p2Id.value[Publishers.pubId].value)
             assertEquals(611, Publisher.findById(p2Id)?.id?.value?.get(Publishers.pubId)?.value)
         }
@@ -375,7 +415,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
     @Test
     fun testFindByCompositeId() {
-        withTables(excludeSettings = listOf(TestDB.SQLITE, TestDB.SQLSERVER), Publishers) {
+        withTables(excludeSettings = listOf(TestDB.SQLSERVER), Publishers) {
             val id1: EntityID<CompositeID> = Publishers.insertAndGetId {
                 it[pubId] = 725
                 it[isbn] = Uuid.random()
@@ -389,6 +429,10 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
             val id2: EntityID<CompositeID> = Publisher.new {
                 name = "Publisher B"
             }.id
+            // R2DBC: `id2.value` is non-suspend and can't lazy-flush like JDBC's
+            // `DaoEntityID.invokeOnNoValue`. Flush explicitly so the generated composite id
+            // is populated before the `id.value[...]` access on the next lines.
+            flushCache()
 
             val p2 = Publisher.findById(id2)
             assertNotNull(p2)
@@ -403,9 +447,10 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
         }
     }
 
+
     @Test
     fun testFindWithDSLBuilder() {
-        withTables(excludeSettings = listOf(TestDB.SQLITE), Publishers) {
+        withTables( Publishers) {
             val p1 = Publisher.new {
                 name = "Publisher A"
             }
@@ -424,7 +469,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
     @Test
     fun testUpdateCompositeEntity() {
-        withTables(excludeSettings = listOf(TestDB.SQLITE), Publishers) {
+        withTables( Publishers) {
             val p1 = Publisher.new {
                 name = "Publisher A"
             }
@@ -437,7 +482,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
     @Test
     fun testDeleteCompositeEntity() {
-        withTables(excludeSettings = listOf(TestDB.SQLITE), Publishers) {
+        withTables( Publishers) {
             val p1 = Publisher.new {
                 name = "Publisher A"
             }
@@ -467,31 +512,10 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
         override val primaryKey = PrimaryKey(zipCode, name)
     }
 
-    class Town(id: EntityID<CompositeID>) : CompositeEntity(id) {
-        companion object : CompositeEntityClass<Town>(Towns)
+    class Town(id: EntityID<CompositeID>) : CompositeR2dbcEntity(id) {
+        companion object : CompositeR2dbcEntityClass<Town>(Towns)
 
         var population by Towns.population
-    }
-
-    @Tag(NO_R2DBC_SUPPORT)
-    @Test
-    fun testCompositeIdTableWithSQLite() {
-        withTables(excludeSettings = TestDB.ALL - TestDB.SQLITE, Towns) {
-            val townAId = Towns.insertAndGetId {
-                it[zipCode] = "1A2 3B4"
-                it[name] = "Town A"
-            }
-            val townBIdValue = CompositeID {
-                it[Towns.zipCode] = "5C6 7D8"
-                it[Towns.name] = "Town B"
-            }
-            Town.new(townBIdValue) {
-                population = 123456789
-            }
-
-            assertEquals(2, Town.all().count())
-            assertEquals(townAId, Town.find { Towns.id neq townBIdValue and Towns.population.isNull() }.single().id)
-        }
     }
 
     @Test
@@ -544,16 +568,16 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 it[Towns.name] = "Town A"
             }
 
-            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelSuspendTransaction(transactionIsolation = IsolationLevel.SERIALIZABLE) {
                 Town.new(id) {
                     population = 1000
                 }
             }
-            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelSuspendTransaction(transactionIsolation = IsolationLevel.SERIALIZABLE) {
                 val town = Town[id]
                 town.population = 2000
             }
-            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelSuspendTransaction(transactionIsolation = IsolationLevel.SERIALIZABLE) {
                 val town = Town[id]
                 assertEquals(2000, town.population)
             }
@@ -562,32 +586,37 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
     @Test
     fun testInsertAndSelectReferencedEntities() {
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tables = allTables) {
+        withTables( tables = allTables) {
             val publisherA = Publisher.new {
                 name = "Publisher A"
             }
+            // R2DBC: composite-FK `set` reads the parent's PK columns from writeValues/_readValues;
+            // it can't sync-flush like JDBC. Flush each parent before linking it from a child.
+            flushCache()
             val authorA = Author.new {
-                publisher = publisherA
+                publisher set publisherA
                 penName = "Author A"
             }
             val authorB = Author.new {
-                publisher = publisherA
+                publisher set publisherA
                 penName = "Author B"
             }
+            flushCache()
             val bookA = Book.new {
                 title = "Book A"
-                author = authorB
+                author set authorB
             }
             Book.new {
                 title = "Book B"
-                author = authorB
+                author set authorB
             }
+            flushCache()
             val reviewIdValue = CompositeID {
                 it[Reviews.content] = "Not bad"
                 it[Reviews.rank] = 12345
             }
             val reviewA: Review = Review.new(reviewIdValue) {
-                book = bookA
+                book set bookA
             }
             val officeAIdValue = CompositeID {
                 it[Offices.zipCode] = "1A2 3B4"
@@ -601,33 +630,35 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 it[Offices.areaCode] = 456
             }
             val officeB = Office.new(officeBIdValue) {
-                publisher = publisherA
+                publisher set publisherA
             }
+            flushCache()
 
-            // child entity references
-            assertEquals(publisherA.id.value[Publishers.pubId], authorA.publisher.id.value[Publishers.pubId])
-            assertEquals(publisherA, authorA.publisher)
-            assertEquals(publisherA, authorB.publisher)
-            assertEquals(publisherA, bookA.author?.publisher)
-            assertEquals(authorB, bookA.author)
-            assertEquals(bookA.id, reviewA.book.id)
-            assertEquals(authorB, reviewA.book.author)
-            assertNull(officeA.publisher)
-            assertEquals(publisherA, officeB.publisher)
+            // child entity references — R2DBC accessors are suspend lambdas, so each `.publisher`
+            // / `.author` / `.book` etc. needs `()` to actually fetch the related entity.
+            assertEquals(publisherA.id.value[Publishers.pubId], authorA.publisher().id.value[Publishers.pubId])
+            assertEquals(publisherA, authorA.publisher())
+            assertEquals(publisherA, authorB.publisher())
+            assertEquals(publisherA, bookA.author()?.publisher())
+            assertEquals(authorB, bookA.author())
+            assertEquals(bookA.id, reviewA.book().id)
+            assertEquals(authorB, reviewA.book().author())
+            assertNull(officeA.publisher())
+            assertEquals(publisherA, officeB.publisher())
 
             // parent entity references
-            assertEquals(reviewA, bookA.review)
-            assertEqualCollections(publisherA.authors.toList(), listOf(authorA, authorB))
-            assertNotNull(publisherA.office)
+            assertEquals(reviewA, bookA.review())
+            assertEqualCollections(publisherA.authors().toList(), listOf(authorA, authorB))
+            assertNotNull(publisherA.office())
             // if multiple children reference parent, backReferencedOn & optBackReferencedOn save last one
-            assertEquals(officeB, publisherA.office)
-            assertEqualCollections(publisherA.allOffices.toList(), listOf(officeB))
+            assertEquals(officeB, publisherA.office())
+            assertEqualCollections(publisherA.allOffices().toList(), listOf(officeB))
         }
     }
 
     @Test
     fun testInListWithCompositeIdEntities() {
-        withTables(excludeSettings = listOf(TestDB.SQLITE), Publishers) {
+        withTables( Publishers) {
             val id1: EntityID<CompositeID> = Publishers.insertAndGetId {
                 it[name] = "Publisher A"
             }
@@ -651,16 +682,18 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
     @Test
     fun testPreloadReferencedOn() {
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tables = allTables) {
+        withTables( tables = allTables) {
             val publisherA = Publisher.new {
                 name = "Publisher A"
             }
+            // R2DBC: composite-FK `set` needs the parent flushed first; see testInsertAndSelectReferencedEntities.
+            flushCache()
             val authorA = Author.new {
-                publisher = publisherA
+                publisher set publisherA
                 penName = "Author A"
             }
             Author.new {
-                publisher = publisherA
+                publisher set publisherA
                 penName = "Author B"
             }
             val officeAIdValue = CompositeID {
@@ -675,12 +708,12 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 it[Offices.areaCode] = 456
             }
             val officeB = Office.new(officeBIdValue) {
-                publisher = publisherA
+                publisher set publisherA
             }
 
             commit()
 
-            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelSuspendTransaction(transactionIsolation = IsolationLevel.SERIALIZABLE) {
                 maxAttempts = 1
                 // preload referencedOn - child to single parent
                 Author.find { Authors.id eq authorA.id }.first().load(Author::publisher)
@@ -689,7 +722,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 assertEquals(publisherA.id, Publisher.testCache(foundAuthor.readCompositeIDValues(Publishers))?.id)
             }
 
-            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelSuspendTransaction(transactionIsolation = IsolationLevel.SERIALIZABLE) {
                 maxAttempts = 1
                 // preload optionalReferencedOn - child to single parent?
                 Office.all().with(Office::publisher)
@@ -706,10 +739,12 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
     @Test
     fun testPreloadBackReferencedOn() {
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tables = allTables) {
+        withTables( tables = allTables) {
             val publisherA = Publisher.new {
                 name = "Publisher A"
             }
+            // R2DBC: composite-FK `set` needs the parent flushed first.
+            flushCache()
             val officeAIdValue = CompositeID {
                 it[Offices.zipCode] = "1A2 3B4"
                 it[Offices.name] = "Office A"
@@ -722,36 +757,37 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 it[Offices.areaCode] = 456
             }
             val officeB = Office.new(officeBIdValue) {
-                publisher = publisherA
+                publisher set publisherA
             }
             val bookA = Book.new {
                 title = "Book A"
             }
+            flushCache()
             val reviewIdValue = CompositeID {
                 it[Reviews.content] = "Not bad"
                 it[Reviews.rank] = 12345
             }
             val reviewA: Review = Review.new(reviewIdValue) {
-                book = bookA
+                book set bookA
             }
 
             commit()
 
-            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelSuspendTransaction(transactionIsolation = IsolationLevel.SERIALIZABLE) {
                 maxAttempts = 1
                 // preload backReferencedOn - parent to single child
                 val cache = TransactionManager.current().entityCache
                 Book.find { Books.id eq bookA.id }.first().load(Book::review)
-                val result = cache.getReferrers<Review>(bookA.id, Reviews.book)?.map { it.id }.orEmpty()
+                val result = cache.getReferrers<Review>(bookA.id, Reviews.book)?.map { it.id }?.toList().orEmpty()
                 assertEqualLists(listOf(reviewA.id), result)
             }
 
-            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelSuspendTransaction(transactionIsolation = IsolationLevel.SERIALIZABLE) {
                 maxAttempts = 1
                 // preload optionalBackReferencedOn - parent to single child?
                 val cache = TransactionManager.current().entityCache
                 Publisher.find { Publishers.id eq publisherA.id }.first().load(Publisher::office)
-                val result = cache.getReferrers<Office>(publisherA.id, Offices.publisherId)?.map { it.id }.orEmpty()
+                val result = cache.getReferrers<Office>(publisherA.id, Offices.publisherId)?.map { it.id }?.toList().orEmpty()
                 assertEqualLists(listOf(officeB.id), result)
             }
         }
@@ -759,16 +795,18 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
     @Test
     fun testPreloadReferrersOn() {
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tables = allTables) {
+        withTables( tables = allTables) {
             val publisherA = Publisher.new {
                 name = "Publisher A"
             }
+            // R2DBC: composite-FK `set` needs the parent flushed first.
+            flushCache()
             val authorA = Author.new {
-                publisher = publisherA
+                publisher set publisherA
                 penName = "Author A"
             }
             val authorB = Author.new {
-                publisher = publisherA
+                publisher set publisherA
                 penName = "Author B"
             }
             val officeAIdValue = CompositeID {
@@ -783,32 +821,32 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 it[Offices.areaCode] = 456
             }
             val officeB = Office.new(officeBIdValue) {
-                publisher = publisherA
+                publisher set publisherA
             }
 
             commit()
 
-            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelSuspendTransaction(transactionIsolation = IsolationLevel.SERIALIZABLE) {
                 maxAttempts = 1
                 // preload referrersOn - parent to multiple children
                 val cache = TransactionManager.current().entityCache
                 Publisher.find { Publishers.id eq publisherA.id }.first().load(Publisher::authors)
-                val result = cache.getReferrers<Author>(publisherA.id, Authors.publisherId)?.map { it.id }.orEmpty()
+                val result = cache.getReferrers<Author>(publisherA.id, Authors.publisherId)?.map { it.id }?.toList().orEmpty()
                 assertEqualLists(listOf(authorA.id, authorB.id), result)
             }
 
-            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelSuspendTransaction(transactionIsolation = IsolationLevel.SERIALIZABLE) {
                 maxAttempts = 1
                 // preload optionalReferrersOn - parent to multiple children?
                 val cache = TransactionManager.current().entityCache
                 Publisher.all().with(Publisher::allOffices)
-                val result = cache.getReferrers<Office>(publisherA.id, Offices.publisherId)?.map { it.id }.orEmpty()
+                val result = cache.getReferrers<Office>(publisherA.id, Offices.publisherId)?.map { it.id }?.toList().orEmpty()
                 assertEqualLists(listOf(officeB.id), result)
             }
         }
     }
 
-    private fun Entity<*>.readCompositeIDValues(table: CompositeIdTable): EntityID<CompositeID> {
+    private fun R2dbcEntity<*>.readCompositeIDValues(table: CompositeIdTable): EntityID<CompositeID> {
         val referenceColumns = this.klass.table.foreignKeys.single().references
         return EntityID(
             CompositeID {
