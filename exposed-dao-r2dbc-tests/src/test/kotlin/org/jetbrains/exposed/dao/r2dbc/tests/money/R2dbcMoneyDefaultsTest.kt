@@ -1,20 +1,22 @@
-package org.jetbrains.exposed.v1.money
+package org.jetbrains.exposed.dao.r2dbc.tests.money
 
+import kotlinx.coroutines.flow.toList
 import org.javamoney.moneta.Money
+import org.jetbrains.exposed.r2dbc.dao.IntR2dbcEntity
+import org.jetbrains.exposed.r2dbc.dao.IntR2dbcEntityClass
+import org.jetbrains.exposed.r2dbc.dao.flushCache
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.dao.IntEntity
-import org.jetbrains.exposed.v1.dao.IntEntityClass
-import org.jetbrains.exposed.v1.dao.flushCache
-import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
-import org.jetbrains.exposed.v1.tests.shared.assertEquals
-import org.junit.jupiter.api.Test
+import org.jetbrains.exposed.v1.money.compositeMoney
+import org.jetbrains.exposed.v1.money.nullable
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualCollections
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.junit.jupiter.api.assertNull
 import java.math.BigDecimal
-import kotlin.test.assertNull
+import kotlin.test.Test
 
-class MoneyDefaultsTest : DatabaseTestsBase() {
-
+class R2dbcMoneyDefaultsTest : R2dbcDatabaseTestsBase() {
     object TableWithDBDefault : IntIdTable() {
         val defaultValue: Money = Money.of(BigDecimal.ONE, "USD")
 
@@ -25,7 +27,7 @@ class MoneyDefaultsTest : DatabaseTestsBase() {
         val clientDefault = integer("clientDefault").clientDefault { cIndex++ }
     }
 
-    class DBDefault(id: EntityID<Int>) : IntEntity(id) {
+    class DBDefault(id: EntityID<Int>) : IntR2dbcEntity(id) {
         var field by TableWithDBDefault.field
         var t1 by TableWithDBDefault.t1
         var t2 by TableWithDBDefault.t2
@@ -43,8 +45,9 @@ class MoneyDefaultsTest : DatabaseTestsBase() {
             return true
         }
 
-        companion object : IntEntityClass<DBDefault>(TableWithDBDefault)
+        companion object : IntR2dbcEntityClass<DBDefault>(TableWithDBDefault)
     }
+
 
     @Test
     fun testDefaultsWithExplicit() {

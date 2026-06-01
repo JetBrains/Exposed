@@ -7,6 +7,8 @@ import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.EntityIDColumnType
 import org.jetbrains.exposed.v1.core.Expression
 import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.r2dbc.SizedIterable
@@ -17,7 +19,8 @@ import kotlin.reflect.KProperty
 class R2dbcReferrers<ParentID : Any, in Parent : R2dbcEntity<ParentID>, ChildID : Any, out Child : R2dbcEntity<ChildID>, REF>(
     val reference: Column<REF>,
     val factory: R2dbcEntityClass<ChildID, Child>,
-    val cache: Boolean
+    val cache: Boolean,
+    references: Map<Column<*>, Column<*>>? = null
 ) {
     /** The set of columns and their [SortOrder] for ordering referred entities in one-to-many relationship. */
     private val orderByExpressions = linkedSetOf<Pair<Expression<*>, SortOrder>>()
@@ -25,11 +28,23 @@ class R2dbcReferrers<ParentID : Any, in Parent : R2dbcEntity<ParentID>, ChildID 
     /** Returns the order by expressions as an array. */
     internal fun getOrderByExpressions(): Array<Pair<Expression<*>, SortOrder>> = orderByExpressions.toTypedArray()
 
-    init {
+    /**
+     * Full child→parent column mapping for the relationship. Single-column references derive this from
+     * `reference.referee` lazily; composite-FK references pass the full map explicitly. Mirrors JDBC's
+     * `Referrers.allReferences`.
+     *
+     * TODO ALIGN_WITH_JDBC: not yet consumed at runtime — `getValue` below still issues a single-column
+     *  `WHERE reference = value`. JDBC switches to `compoundAnd` of `eq`s when this map has multiple
+     *  entries (see `References.kt`).
+     */
+    @Suppress("unused")
+    val allReferences: Map<Column<*>, Column<*>> = references ?: run {
         reference.referee ?: error("Column $reference is not a reference")
         if (factory.table != reference.table) {
             error("Column $reference and factory ${factory.table.tableName} point to different tables")
         }
+        @Suppress("UNCHECKED_CAST")
+        mapOf(reference as Column<*> to reference.referee!!)
     }
 
     @Suppress("NestedBlockDepth", "SpreadOperator")
@@ -58,18 +73,45 @@ class R2dbcReferrers<ParentID : Any, in Parent : R2dbcEntity<ParentID>, ChildID 
                 transaction.entityCache.flush()
             }
 
-            val referee = reference.referee!!
-            val refereeValue = with(thisRef) { referee.lookup() }
+            val isComposite = allReferences.size > 1 || allReferences.values.firstOrNull()?.table is CompositeIdTable
+            val query: suspend () -> SizedIterable<Child> = if (!isComposite) {
+                // Single-column referrers (original path).
+                val referee = reference.referee!!
+                val refereeValue = with(thisRef) { referee.lookup() }
 
-            val needsEntityIdUnwrap = reference.columnType !is EntityIDColumnType<*> &&
-                referee.columnType is EntityIDColumnType<*> && refereeValue is EntityID<*>
+                val needsEntityIdUnwrap = reference.columnType !is EntityIDColumnType<*> &&
+                    referee.columnType is EntityIDColumnType<*> && refereeValue is EntityID<*>
 
-            @Suppress("UNCHECKED_CAST")
-            val refValue = if (needsEntityIdUnwrap) refereeValue.value as REF else refereeValue as REF
+                @Suppress("UNCHECKED_CAST")
+                val refValue = if (needsEntityIdUnwrap) refereeValue.value as REF else refereeValue as REF
+                ;{
+                    factory.find { reference eq refValue }
+                        .orderBy(*orderByExpressions.toTypedArray())
+                }
+            } else {
+                // Composite-FK referrers: build a compound AND of equalities, one per child→parent
+                // column pair. Mirrors JDBC's composite branch in `Referrers.getValue`
+                // (References.kt:149–156).
+                val parentValuesByChildColumn = allReferences.map { (childColumn, parentColumn) ->
+                    @Suppress("UNCHECKED_CAST")
+                    val parentValueRaw = with(thisRef) { (parentColumn as Column<Any?>).lookup() }
+                    // Unwrap EntityID when the child column stores a raw value.
+                    val parentValue = if (parentValueRaw is EntityID<*> && childColumn.columnType !is EntityIDColumnType<*>) {
+                        parentValueRaw._value
+                    } else {
+                        parentValueRaw
+                    }
+                    childColumn to parentValue
+                }
 
-            val query: suspend () -> SizedIterable<Child> = {
-                factory.find { reference eq refValue }
-                    .orderBy(*orderByExpressions.toTypedArray())
+                ;{
+                    factory.find {
+                        @Suppress("UNCHECKED_CAST")
+                        parentValuesByChildColumn.map { (childColumn, value) ->
+                            (childColumn as Column<Any?>) eq value
+                        }.reduce { acc, next -> acc and next }
+                    }.orderBy(*orderByExpressions.toTypedArray())
+                }
             }
 
             val result = if (cache) {

@@ -43,11 +43,13 @@ dependencies {
     testImplementation(project(":exposed-jodatime"))
     testImplementation(project(":exposed-json"))
     testImplementation(project(":exposed-crypt"))
+    testImplementation(project(":exposed-money"))
 
     implementation(libs.slf4j)
     implementation(libs.log4j.slf4j.impl)
     implementation(libs.log4j.api)
     implementation(libs.log4j.core)
+    testImplementation(libs.moneta)
 
     testRuntimeOnly(libs.r2dbc.pool)
     testImplementation(libs.r2dbc.h2) {
