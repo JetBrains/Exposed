@@ -1,16 +1,20 @@
-package org.jetbrains.exposed.v1.core
+package org.jetbrains.exposed.v1.tests
 
+import org.jetbrains.exposed.v1.core.EntityIDColumnType
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
-import kotlin.test.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Unit tests for [ResultRow] cache behaviour.
  *
  * These tests run without a database connection by constructing rows via
- * [ResultRow.createAndFillValues] or the primary constructor directly.
+ * [ResultRow.createAndFillValues].
  */
 class ResultRowCacheTest {
 
@@ -43,7 +47,7 @@ class ResultRowCacheTest {
         val second = row[Users.name]
         assertEquals(first, second)
         // Both reads must return identical references (cached object, not recomputed)
-        assert(first === second) { "Expected cache hit to return the same instance" }
+        assertTrue(first === second, "Expected cache hit to return the same instance")
     }
 
     @Test
@@ -85,12 +89,11 @@ class ResultRowCacheTest {
         val rawIdCol = (entityIdCol.columnType as EntityIDColumnType<Int>).idColumn
 
         // Confirm the two columns are equals()-equal (same table + name) but NOT identical.
-        assert(entityIdCol == rawIdCol) {
+        assertTrue(
+            entityIdCol == rawIdCol,
             "EntityID column and its idColumn must be equals()-equal for this test to be meaningful"
-        }
-        assert(entityIdCol !== rawIdCol) {
-            "They must be different object instances"
-        }
+        )
+        assertTrue(entityIdCol !== rawIdCol, "They must be different object instances")
 
         // Store the raw DB value (an Int, as it comes out of the JDBC layer before type conversion).
         val row = ResultRow.createAndFillValues(mapOf(entityIdCol to 42))
@@ -138,10 +141,12 @@ class ResultRowCacheTest {
 
     @Test
     fun `independent columns are cached and retrieved independently`() {
-        val row = ResultRow.createAndFillValues(mapOf(
-            Users.id to 1,
-            Users.name to "Dana"
-        ))
+        val row = ResultRow.createAndFillValues(
+            mapOf(
+                Users.id to 1,
+                Users.name to "Dana"
+            )
+        )
         assertEquals(1, row[Users.id].value)
         assertEquals("Dana", row[Users.name])
 
