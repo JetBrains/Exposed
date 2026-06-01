@@ -4,16 +4,19 @@ package org.jetbrains.exposed.samples.spring.support
 
 import org.jetbrains.exposed.samples.spring.domain.UserEntity
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
-import org.springframework.boot.ApplicationArguments
-import org.springframework.boot.ApplicationRunner
+import org.springframework.beans.factory.InitializingBean
 import org.springframework.stereotype.Component
-import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.support.TransactionTemplate
 
 @Component
-@Transactional
-class SchemaInitialize : ApplicationRunner {
+class SchemaInitialize(
+    private val transactionManager: PlatformTransactionManager
+) : InitializingBean {
 
-    override fun run(args: ApplicationArguments) {
-        SchemaUtils.create(UserEntity)
+    override fun afterPropertiesSet() {
+        TransactionTemplate(transactionManager).execute {
+            SchemaUtils.create(UserEntity)
+        }
     }
 }
