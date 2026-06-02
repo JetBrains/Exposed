@@ -3,6 +3,7 @@ package org.jetbrains.exposed.v1.r2dbc.statements
 import io.r2dbc.spi.R2dbcException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.statements.ReturningStatement
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
@@ -21,13 +22,16 @@ open class ReturningSuspendExecutable(
 ) : SuspendExecutable<ResultApi, ReturningStatement>, Flow<ResultRow> {
     override suspend fun R2dbcPreparedStatementApi.executeInternal(transaction: R2dbcTransaction): R2dbcResult = executeQuery()
 
+    @OptIn(InternalApi::class)
     override suspend fun collect(collector: FlowCollector<ResultRow>) {
         val fieldIndex = statement.returningExpressions.withIndex()
             .associateBy({ it.value }, { it.index })
+        // Row-invariant for this result set, so build it once and share across every row.
+        val columnTypes = ResultRow.columnTypesOf(fieldIndex)
         val rs = TransactionManager.current().execQuery(this)
         try {
             rs.mapRows {
-                ResultRow.create(it, fieldIndex)
+                ResultRow.create(it, fieldIndex, columnTypes)
             }.collect { rr -> rr?.let { collector.emit(it) } }
         } catch (cause: R2dbcException) {
             throw ExposedR2dbcException(cause, statement.getContexts(), TransactionManager.current())

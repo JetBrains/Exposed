@@ -9,15 +9,31 @@ import org.jetbrains.exposed.v1.core.transactions.currentTransactionOrNull
 import org.jetbrains.exposed.v1.core.vendors.withDialect
 
 /** A row of data representing a single record retrieved from a database result set. */
-class ResultRow(
+class ResultRow private constructor(
     /** Mapping of the expressions stored on this row to their index positions. */
     val fieldIndex: Map<Expression<*>, Int>,
-    private val data: Array<Any?> = arrayOfNulls<Any?>(fieldIndex.size)
+    private val data: Array<Any?>,
+    // Column type per field-index slot, used by the value cache for type-view validation. May be shared
+    // across all rows of a result set (it is row-invariant), so it is passed in rather than rebuilt per row.
+    columnTypes: Array<IColumnType<*>?>
 ) {
+    /**
+     * Creates a [ResultRow] for [fieldIndex], with values stored in [data].
+     *
+     * The per-slot column types are derived from [fieldIndex] for this row. High-volume callers that
+     * create many rows for the same [fieldIndex] should instead use the [create] factory with a shared
+     * column-type array to avoid rebuilding it per row.
+     */
+    @OptIn(InternalApi::class)
+    constructor(
+        fieldIndex: Map<Expression<*>, Int>,
+        data: Array<Any?> = arrayOfNulls<Any?>(fieldIndex.size)
+    ) : this(fieldIndex, data, columnTypesOf(fieldIndex))
+
     @OptIn(InternalApi::class)
     private val database: DatabaseApi? = currentTransactionOrNull()?.db
 
-    private val lookUpCache = ResultRowCache(fieldIndex)
+    private val lookUpCache = ResultRowCache(fieldIndex, columnTypes)
 
     /**
      * Retrieves the value of a given expression on this row.
@@ -146,8 +162,20 @@ class ResultRow(
 
     companion object {
         /** Creates a [ResultRow] storing all expressions in [fieldsIndex] with their values retrieved from a [RowApi]. */
-        fun create(rs: RowApi, fieldsIndex: Map<Expression<*>, Int>): ResultRow {
-            return ResultRow(fieldsIndex).apply {
+        @OptIn(InternalApi::class)
+        fun create(rs: RowApi, fieldsIndex: Map<Expression<*>, Int>): ResultRow =
+            create(rs, fieldsIndex, columnTypesOf(fieldsIndex))
+
+        /**
+         * Creates a [ResultRow] storing all expressions in [fieldsIndex] with their values retrieved from a [RowApi],
+         * reusing a pre-built [columnTypes] array (one entry per field-index slot, see [columnTypesOf]).
+         *
+         * Intended for result-set iterators that create many rows for the same [fieldsIndex]: building
+         * [columnTypes] once and passing it here avoids re-deriving it for every row.
+         */
+        @InternalApi
+        fun create(rs: RowApi, fieldsIndex: Map<Expression<*>, Int>, columnTypes: Array<IColumnType<*>?>): ResultRow {
+            return ResultRow(fieldsIndex, arrayOfNulls(fieldsIndex.size), columnTypes).apply {
                 fieldsIndex.forEach { (field, index) ->
                     val columnType: IColumnType<out Any>? = (field as? ExpressionWithColumnType)?.columnType
                     val value = if (columnType != null) {
@@ -158,6 +186,21 @@ class ResultRow(
                     data[index] = value
                 }
             }
+        }
+
+        /**
+         * Builds the per-slot column-type array consumed by the value cache: for each `(expression, index)`
+         * in [fieldsIndex], slot `index` holds `expression`'s [IColumnType] (or `null` for non-column
+         * expressions). The result is row-invariant for a given [fieldsIndex] and is safe to share across
+         * all rows of a result set.
+         */
+        @InternalApi
+        fun columnTypesOf(fieldsIndex: Map<Expression<*>, Int>): Array<IColumnType<*>?> {
+            val columnTypes = arrayOfNulls<IColumnType<*>>(fieldsIndex.size)
+            fieldsIndex.forEach { (expression, index) ->
+                columnTypes[index] = (expression as? Column<*>)?.columnType
+            }
+            return columnTypes
         }
 
         /** Creates a [ResultRow] using the expressions and values provided by [data]. */
@@ -197,18 +240,20 @@ class ResultRow(
     /**
      * [ResultRowCache] caches converted values on reads, keyed by expression identity and column type.
      *
-     * Design: a fixed-size array (one slot per fieldIndex position) covers the common case with zero
-     * object allocations on cache hits. A lazy overflow HashMap handles the rare case where the same
-     * field-index slot is observed through two different column-type views — e.g. a plain `Column<Int>`
+     * Design: a fixed-size [cacheData] array (one slot per fieldIndex position) covers the common case
+     * with zero object allocations on cache hits. A lazy overflow HashMap handles the rare case where the
+     * same field-index slot is observed through two different column-type views — e.g. a plain `Column<Int>`
      * and the wrapping `Column<EntityID<Int>>` that share the same table+name (and are therefore
      * `equals()`-equal) but carry different [IColumnType] instances and produce different converted values.
      *
-     * The backing arrays are allocated eagerly with the row. [cacheType] is consulted on every cache hit
-     * (not just conflicts) to validate the column-type view, so it must be tracked for every populated slot
-     * and shares [cacheData]'s lifecycle. Keeping both as final fields gives the read hot path a tight,
-     * branch-free shape (final-field reads + array access, no null checks).
+     * [columnTypes] holds the canonical (projected) column type for each slot and is consulted on every
+     * read to validate the column-type view. It is row-invariant for a given fieldIndex, so it is supplied
+     * by the caller and may be shared across all rows of a result set — only [cacheData] is per-row.
      */
-    private class ResultRowCache(private val fieldIndex: Map<Expression<*>, Int>) {
+    private class ResultRowCache(
+        private val fieldIndex: Map<Expression<*>, Int>,
+        private val columnTypes: Array<IColumnType<*>?>
+    ) {
         companion object {
             // Sentinel distinguishing "slot not yet populated" from a legitimately cached null.
             private val UNCACHED = Any()
@@ -217,44 +262,36 @@ class ResultRow(
         // Primary cache: indexed by fieldIndex position.
         private val cacheData = Array<Any?>(fieldIndex.size) { UNCACHED }
 
-        // Column type stored alongside each primary-cache slot for type-conflict detection.
-        private val cacheType = arrayOfNulls<IColumnType<*>>(fieldIndex.size)
-
         // Overflow: only allocated when a type-view conflict is encountered (rare in practice).
         private var overflow: HashMap<Pair<Expression<*>, IColumnType<*>?>, Any?>? = null
 
         /**
          * Returns the cached value for [expression], computing and storing it via [initializer] on a miss.
          *
-         * Hot path (common columns): single array-bounds check + array read — no object allocation.
-         * Overflow path (type-view conflict or expression absent from fieldIndex): falls back to a
-         * lazily-created HashMap with a [Pair] key, preserving the original semantics.
+         * Hot path (common columns): single array-bounds check + array read — no object allocation. A read
+         * lands in the primary slot only when its column type matches the slot's canonical [columnTypes]
+         * entry; a non-canonical view of the same field index (e.g. the raw `idColumn` of an `EntityID`
+         * column) falls through to the overflow map, preserving distinct converted values.
          */
         fun <T> cached(expression: Expression<*>, initializer: () -> T): T {
             val colType = (expression as? Column<*>)?.columnType
             val index = fieldIndex[expression]
 
-            if (index != null) {
+            if (index != null && columnTypes[index] == colType) {
                 val current = cacheData[index]
-                when {
-                    current === UNCACHED -> {
-                        // First access for this slot: populate the primary cache.
-                        val value = initializer()
-                        cacheData[index] = value
-                        cacheType[index] = colType
-                        return value
-                    }
-                    cacheType[index] == colType -> {
-                        // Cache hit: same slot, same column-type view.
-                        @Suppress("UNCHECKED_CAST")
-                        return current as T
-                    }
-                    // else: type-view conflict — fall through to overflow.
+                if (current === UNCACHED) {
+                    // First access for this canonical slot: populate the primary cache.
+                    val value = initializer()
+                    cacheData[index] = value
+                    return value
                 }
+                // Cache hit: same slot, same column-type view.
+                @Suppress("UNCHECKED_CAST")
+                return current as T
             }
 
-            // Overflow path: expression not directly resolvable to a primary slot, or slot already
-            // holds a value for a different column-type view of the same field index.
+            // Overflow path: expression not directly resolvable to a primary slot, or a non-canonical
+            // column-type view of the same field index.
             val key = expression to colType
             val ovf = overflow ?: HashMap<Pair<Expression<*>, IColumnType<*>?>, Any?>().also { overflow = it }
             @Suppress("UNCHECKED_CAST")

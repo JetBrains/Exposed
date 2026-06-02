@@ -156,15 +156,18 @@ sealed class SetOperation(
     private val queryToExecute: SuspendExecutable<ResultApi, SetOperation>
         get() = this
 
+    @OptIn(InternalApi::class)
     override suspend fun collect(collector: FlowCollector<ResultRow>) {
         val fieldIndex = set.realFields.toSet()
             .mapIndexed { index, expression -> expression to index }
             .toMap()
+        // Row-invariant for this result set, so build it once and share across every row.
+        val columnTypes = ResultRow.columnTypesOf(fieldIndex)
         val tx = TransactionManager.current()
         val rs = tx.execQuery(queryToExecute)
 
         rs.mapRows { row ->
-            val value = ResultRow.create(row, fieldIndex)
+            val value = ResultRow.create(row, fieldIndex, columnTypes)
             trackResultSet(tx)
             value
         }.collect { rr -> rr?.let { collector.emit(it) } }
