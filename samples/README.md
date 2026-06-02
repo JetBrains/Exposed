@@ -6,3 +6,4 @@ This section contains samples for different cases of using Exposed.
 - [exposed-ktor-r2dbc](exposed-ktor-r2dbc): Backend application built using Ktor, Exposed, and PostgreSQL R2DBC.
 - [exposed-spring](exposed-spring): Spring Boot 3 based project with CRUD (Create, Read, Update, Delete) operations.
 - [exposed-migration](exposed-migration): Application illustrating how to generate migration scripts with Exposed.
+- [exposed-gradle-plugin-sample](exposed-gradle-plugin-sample): Project demonstrating the Exposed Gradle plugin and its `generateMigrations` task.
