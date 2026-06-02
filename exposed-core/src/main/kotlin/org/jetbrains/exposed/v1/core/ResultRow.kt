@@ -238,7 +238,8 @@ class ResultRow private constructor(
     }
 
     /**
-     * [ResultRowCache] caches converted values on reads, keyed by expression identity and column type.
+     * [ResultRowCache] caches converted values on reads, indexed by each expression's position in
+     * [fieldIndex] and guarded by its column type.
      *
      * Design: a fixed-size [cacheData] array (one slot per fieldIndex position) covers the common case
      * with zero object allocations on cache hits. A lazy overflow HashMap handles the rare case where the

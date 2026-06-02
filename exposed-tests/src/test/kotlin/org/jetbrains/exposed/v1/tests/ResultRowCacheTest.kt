@@ -1,20 +1,25 @@
 package org.jetbrains.exposed.v1.tests
 
 import org.jetbrains.exposed.v1.core.EntityIDColumnType
+import org.jetbrains.exposed.v1.core.Expression
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.statements.api.RowApi
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 /**
  * Unit tests for [ResultRow] cache behaviour.
  *
- * These tests run without a database connection by constructing rows via
- * [ResultRow.createAndFillValues].
+ * Most tests run without a database connection by constructing rows via
+ * [ResultRow.createAndFillValues]; the shared-column-type tests use the
+ * [ResultRow.create] factory with a stub [RowApi].
  */
 class ResultRowCacheTest {
 
@@ -154,5 +159,49 @@ class ResultRowCacheTest {
         // id cache must be unaffected by the name mutation.
         assertEquals(1, row[Users.id].value)
         assertEquals("Eve", row[Users.name])
+    }
+
+    // ---------------------------------------------------------------------------
+    // Shared column-type array (the per-result-set optimization)
+    //
+    // The query iterators build the column-type array once via columnTypesOf and pass it to every
+    // row's create(). These tests lock in that the shared path behaves identically to the per-row path.
+    // ---------------------------------------------------------------------------
+
+    /** Minimal [RowApi] that returns pre-set raw values by one-based column index. */
+    private class StubRow(private val values: Array<Any?>) : RowApi {
+        override fun getObject(index: Int): Any? = values[index - 1]
+        override fun getObject(name: String): Any? = error("not used")
+        override fun <T> getObject(index: Int, type: Class<T>): T? = error("not used")
+        override fun <T> getObject(name: String, type: Class<T>): T? = error("not used")
+        override fun getString(index: Int): String? = values[index - 1]?.toString()
+    }
+
+    @OptIn(InternalApi::class)
+    @Test
+    fun `columnTypesOf maps each slot to its projected column type`() {
+        val fieldIndex = mapOf<Expression<*>, Int>(Users.id to 0, Users.name to 1)
+        val types = ResultRow.columnTypesOf(fieldIndex)
+        assertEquals(2, types.size)
+        assertSame(Users.id.columnType, types[0])
+        assertSame(Users.name.columnType, types[1])
+    }
+
+    @OptIn(InternalApi::class)
+    @Test
+    fun `shared column-type array yields the same typed values as the per-row path`() {
+        val entityIdCol = Users.id
+        val rawIdCol = (entityIdCol.columnType as EntityIDColumnType<Int>).idColumn
+        val fieldIndex = mapOf<Expression<*>, Int>(entityIdCol to 0, Users.name to 1)
+
+        // Build a row through the shared-types factory the query iterators use.
+        val sharedTypes = ResultRow.columnTypesOf(fieldIndex)
+        val row = ResultRow.create(StubRow(arrayOf<Any?>(42, "Alice")), fieldIndex, sharedTypes)
+
+        // Canonical (projected) views hit the primary slot.
+        assertEquals(42, row[entityIdCol].value)
+        assertEquals("Alice", row[Users.name])
+        // The raw idColumn is a non-canonical view of the same slot and must still resolve to a plain Int.
+        assertEquals(42, row[rawIdCol])
     }
 }
