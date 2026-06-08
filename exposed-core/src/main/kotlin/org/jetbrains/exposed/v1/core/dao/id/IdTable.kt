@@ -116,7 +116,7 @@ open class ULongIdTable(name: String = "", columnName: String = "id", sequenceNa
  *
  * **Note** The specific UUID column type used depends on the database.
  * The stored identity value will be auto-generated on the client side, just before insertion of a new row,
- * by calling `Uuid.generateV4()`. If version 7 is wanted instead, use `UuidTable(useGenerateV7 = true)`.
+ * by calling `Uuid.generateV4()`. If version 7 is wanted instead, use `UuidTable(uuidVersion = UuidVersion.V7)`.
  *
  * @param name Table name. By default, this will be resolved from any class name with a "Table" suffix removed (if present).
  * @param columnName Name for the primary key column. By default, "id" is used.
