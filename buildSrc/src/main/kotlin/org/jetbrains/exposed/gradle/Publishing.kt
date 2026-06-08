@@ -9,6 +9,15 @@ infix fun <T> Property<T>.by(value: T) {
     set(value)
 }
 
+/**
+ * Whether this project publishes a Maven artifact.
+ *
+ * The root build applies the Maven Publish plugin to exactly the modules that are released, so its
+ * presence is the source of truth for publish state. Prefer this over a hand-maintained list of module
+ * names, which silently goes stale whenever a module is added.
+ */
+fun Project.publishesMavenArtifact(): Boolean = plugins.hasPlugin("maven-publish")
+
 fun MavenPom.configureMavenCentralMetadata(project: Project) {
     name by project.name
     description by "Exposed, an ORM framework for Kotlin"
