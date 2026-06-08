@@ -30,6 +30,7 @@ dependencies {
 tasks.withType<KotlinCompile>().configureEach {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
+        freeCompilerArgs.add("-opt-in=org.jetbrains.exposed.r2dbc.dao.ExperimentalR2dbcDaoApi")
     }
 }
 

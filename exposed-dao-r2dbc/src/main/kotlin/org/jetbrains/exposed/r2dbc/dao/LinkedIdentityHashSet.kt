@@ -11,7 +11,7 @@ internal class LinkedIdentityHashSet<T> : MutableSet<T> {
     }
 
     override fun addAll(elements: Collection<T>): Boolean {
-        val toAdd = elements.filter { it !in set } // Maintain order
+        val toAdd = elements.filter { it !in set }
         if (toAdd.isEmpty()) return false
         set.addAll(toAdd)
         list.addAll(toAdd)
@@ -43,19 +43,32 @@ internal class LinkedIdentityHashSet<T> : MutableSet<T> {
     }
 
     override fun remove(element: T): Boolean {
-        return set.remove(element).also { if (it) list.remove(element) }
+        return set.remove(element).also { if (it) removeFromListByIdentity(element) }
     }
 
     override fun removeAll(elements: Collection<T>): Boolean {
-        val toRemove = set intersect elements
-        if (toRemove.isEmpty()) return false
-        set.removeAll(toRemove)
-        list.removeAll(toRemove)
-        return true
+        var changed = false
+        for (e in elements) if (remove(e)) changed = true
+        return changed
     }
 
     override fun retainAll(elements: Collection<T>): Boolean {
-        return removeAll(set subtract elements)
+        val toKeep: MutableSet<T> = Collections.newSetFromMap(IdentityHashMap())
+        toKeep.addAll(elements)
+        val toRemove = list.filter { it !in toKeep }
+        if (toRemove.isEmpty()) return false
+        for (e in toRemove) remove(e)
+        return true
+    }
+
+    private fun removeFromListByIdentity(element: T) {
+        val iter = list.iterator()
+        while (iter.hasNext()) {
+            if (iter.next() === element) {
+                iter.remove()
+                return
+            }
+        }
     }
 
     override val size: Int

@@ -2,8 +2,8 @@ package org.jetbrains.exposed.dao.r2dbc.tests.json
 
 import kotlinx.coroutines.flow.single
 import kotlinx.serialization.json.Json
-import org.jetbrains.exposed.r2dbc.dao.IntR2dbcEntity
-import org.jetbrains.exposed.r2dbc.dao.IntR2dbcEntityClass
+import org.jetbrains.exposed.r2dbc.dao.IntEntity
+import org.jetbrains.exposed.r2dbc.dao.IntEntityClass
 import org.jetbrains.exposed.v1.core.IntegerColumnType
 import org.jetbrains.exposed.v1.core.castTo
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -11,7 +11,6 @@ import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.json.extract
-import org.jetbrains.exposed.v1.json.json
 import org.jetbrains.exposed.v1.json.jsonb
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
@@ -32,7 +31,7 @@ class R2bdcJsonBColumnTests : R2dbcDatabaseTestsBase() {
             val dataA = DataHolder(User("Admin", "Alpha"), 10, true, null)
             val newUser = dataEntity.new {
                 jsonBColumn = dataA
-            }
+            }.flush()
 
             assertEquals(dataA, dataEntity.findById(newUser.id)?.jsonBColumn)
 
@@ -44,7 +43,7 @@ class R2bdcJsonBColumnTests : R2dbcDatabaseTestsBase() {
             assertEquals(updatedUser, dataEntity.all().single().jsonBColumn)
 
             if (testDb !in TestDB.ALL_H2_V2) {
-                dataEntity.new { jsonBColumn = dataA }
+                dataEntity.new { jsonBColumn = dataA }.flush()
                 val loginCount = if (currentDialectTest is PostgreSQLDialect) {
                     JsonTestsData.JsonBTable.jsonBColumn.extract<Int>("logins").castTo(IntegerColumnType())
                 } else {
@@ -61,8 +60,8 @@ class R2bdcJsonBColumnTests : R2dbcDatabaseTestsBase() {
         val user = jsonb<User>("json_column", Json.Default)
     }
 
-    class MyEntity(id: EntityID<Int>) : IntR2dbcEntity(id) {
-        companion object : IntR2dbcEntityClass<MyEntity>(MyTable)
+    class MyEntity(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<MyEntity>(MyTable)
 
         var name by MyTable.name
         var user by MyTable.user
@@ -75,7 +74,7 @@ class R2bdcJsonBColumnTests : R2dbcDatabaseTestsBase() {
             entity = MyEntity.new {
                 name = "Test"
                 user = User("Pro", "Alpha")
-            }
+            }.flush()
         }
 
         // Should be able to read fields despite having no transaction

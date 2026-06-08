@@ -2,8 +2,8 @@ package org.jetbrains.exposed.dao.r2dbc.tests.money
 
 import kotlinx.coroutines.flow.toList
 import org.javamoney.moneta.Money
-import org.jetbrains.exposed.r2dbc.dao.IntR2dbcEntity
-import org.jetbrains.exposed.r2dbc.dao.R2dbcEntityClass
+import org.jetbrains.exposed.r2dbc.dao.EntityClass
+import org.jetbrains.exposed.r2dbc.dao.IntEntity
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.eq
@@ -19,7 +19,7 @@ import javax.money.MonetaryAmount
 
 private const val AMOUNT_SCALE = 5
 
-class R2dbcMoneyTests : R2dbcDatabaseTestsBase() {
+class MoneyTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testSearchByCompositeColumn() {
         val money = Money.of(BigDecimal.TEN, "USD")
@@ -48,7 +48,7 @@ class R2dbcMoneyTests : R2dbcDatabaseTestsBase() {
     }
 }
 
-class AccountDao(id: EntityID<Int>) : IntR2dbcEntity(id) {
+class AccountDao(id: EntityID<Int>) : IntEntity(id) {
 
     val money: MonetaryAmount? by Account.composite_money
 
@@ -56,7 +56,7 @@ class AccountDao(id: EntityID<Int>) : IntR2dbcEntity(id) {
 
     val amount: BigDecimal? by Account.composite_money.amount
 
-    companion object : R2dbcEntityClass<Int, AccountDao>(Account)
+    companion object : EntityClass<Int, AccountDao>(Account)
 }
 
 object Account : IntIdTable("AccountTable") {

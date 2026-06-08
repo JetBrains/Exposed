@@ -1785,4 +1785,16 @@ class EntityTests : DatabaseTestsBase() {
             flushCache()
         }
     }
+
+    @Test
+    fun testForIds() {
+        withTables(Humans) {
+            val h1 = Human.new { h = "h1" }.id.value
+            val h2 = Human.new { h = "h2" }.id.value
+            Human.new { h = "h3" }
+
+            val byIds = Human.forIds(listOf(h1, h2)).toList()
+            assertEquals(setOf("h1", "h2"), byIds.map { it.h }.toSet())
+        }
+    }
 }

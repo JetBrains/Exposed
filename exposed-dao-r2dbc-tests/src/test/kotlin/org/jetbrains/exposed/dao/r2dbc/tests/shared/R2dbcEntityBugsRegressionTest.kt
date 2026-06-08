@@ -1,13 +1,15 @@
+@file: Suppress("MatchingDeclarationName", "Filename", "ClassNaming")
+
 package org.jetbrains.exposed.dao.r2dbc.tests.shared
 
-import org.jetbrains.exposed.r2dbc.dao.IntR2dbcEntity
-import org.jetbrains.exposed.r2dbc.dao.IntR2dbcEntityClass
-import org.jetbrains.exposed.r2dbc.dao.LongR2dbcEntity
-import org.jetbrains.exposed.r2dbc.dao.LongR2dbcEntityClass
-import org.jetbrains.exposed.r2dbc.dao.R2dbcEntity
-import org.jetbrains.exposed.r2dbc.dao.R2dbcEntityClass
-import org.jetbrains.exposed.r2dbc.dao.relationships.referencedOnSuspend
 import kotlinx.coroutines.flow.first
+import org.jetbrains.exposed.r2dbc.dao.Entity
+import org.jetbrains.exposed.r2dbc.dao.EntityClass
+import org.jetbrains.exposed.r2dbc.dao.IntEntity
+import org.jetbrains.exposed.r2dbc.dao.IntEntityClass
+import org.jetbrains.exposed.r2dbc.dao.LongEntity
+import org.jetbrains.exposed.r2dbc.dao.LongEntityClass
+import org.jetbrains.exposed.r2dbc.dao.NewEntity
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
@@ -39,26 +41,26 @@ class `Table id not in Record Test issue 1341` : R2dbcDatabaseTestsBase() {
         override val primaryKey = PrimaryKey(id)
     }
 
-    class Names(id: EntityID<Int>) : IntR2dbcEntity(id) {
+    class Names(id: EntityID<Int>) : IntEntity(id) {
         var first: String by NamesTable.first
         var second: String by NamesTable.second
 
-        companion object : IntR2dbcEntityClass<Names>(NamesTable)
+        companion object : IntEntityClass<Names>(NamesTable)
     }
 
-    class Accounts(id: EntityID<Int>) : IntR2dbcEntity(id) {
-        val name by Names referencedOnSuspend AccountsTable.name
+    class Accounts(id: EntityID<Int>) : IntEntity(id) {
+        val name by Names referencedOn AccountsTable.name
 
-        companion object : R2dbcEntityClass<Int, Accounts>(AccountsTable) {
+        companion object : EntityClass<Int, Accounts>(AccountsTable) {
 
-            fun new(accountName: Pair<String, String>): Accounts {
+            suspend fun new(accountName: Pair<String, String>): NewEntity<Int, Accounts> {
                 val newName = Names.new {
                     first = accountName.first
                     second = accountName.second
-                }
+                }.flush()
 
                 return new {
-                    this.name set newName
+                    this.name.set(newName)
                 }
             }
         }
@@ -67,26 +69,25 @@ class `Table id not in Record Test issue 1341` : R2dbcDatabaseTestsBase() {
     @Test
     fun testRegression() {
         withTables(NamesTable, AccountsTable) {
-            val account = Accounts.new("first" to "second")
+            val account = Accounts.new("first" to "second").flush()
             assertEquals("first", account.name().first)
             assertEquals("second", account.name().second)
         }
     }
 }
 
-
 class `Text id loosed on insert issue 1379` : R2dbcDatabaseTestsBase() {
-    abstract class TextEntity(id: EntityID<String>) : R2dbcEntity<String>(id)
+    abstract class TextEntity(id: EntityID<String>) : Entity<String>(id)
 
-    abstract class TextEntityClass<out E : TextEntity>(table: IdTable<String>, entityType: Class<E>? = null) : R2dbcEntityClass<String, E>(table, entityType)
+    abstract class TextEntityClass<out E : TextEntity>(table: IdTable<String>, entityType: Class<E>? = null) : EntityClass<String, E>(table, entityType)
 
     open class TextIdTable(name: String = "", columnName: String = "id") : IdTable<String>(name) {
         final override val id: Column<EntityID<String>> = text(columnName).entityId()
         final override val primaryKey = PrimaryKey(id)
     }
 
-    class Obj1(id: EntityID<Long>) : LongR2dbcEntity(id) {
-        companion object : LongR2dbcEntityClass<Obj1>(Table1)
+    class Obj1(id: EntityID<Long>) : LongEntity(id) {
+        companion object : LongEntityClass<Obj1>(Table1)
 
         var a by Table1.a
     }
@@ -95,7 +96,7 @@ class `Text id loosed on insert issue 1379` : R2dbcDatabaseTestsBase() {
         companion object : TextEntityClass<Obj2>(Table2)
 
         var a by Table2.a
-        val ref by Obj1 referencedOnSuspend Table2.ref
+        val ref by Obj1 referencedOn Table2.ref
     }
 
     object Table2 : TextIdTable() {
@@ -113,31 +114,30 @@ class `Text id loosed on insert issue 1379` : R2dbcDatabaseTestsBase() {
         withTables(runTests, Table1, Table2) {
             val obj1 = Obj1.new {
                 a = "hello world!"
-            }
+            }.flush()
 
             Obj2.new("test") {
                 a = "bye world!"
-                ref set obj1
-            }
+                ref.set(obj1)
+            }.flush()
         }
     }
 }
-
 
 class EntityCacheNotUpdatedOnCommitIssue1380 : R2dbcDatabaseTestsBase() {
     object TestTable : IntIdTable() {
         val value = integer("value")
     }
 
-    class TestEntity(id: EntityID<Int>) : IntR2dbcEntity(id) {
+    class TestEntity(id: EntityID<Int>) : IntEntity(id) {
         var value by TestTable.value
 
-        companion object : IntR2dbcEntityClass<TestEntity>(TestTable)
+        companion object : IntEntityClass<TestEntity>(TestTable)
     }
 
     @Test fun testRegression() {
         withTables(TestTable) {
-            val entity1 = TestEntity.new { value = 1 }
+            val entity1 = TestEntity.new { value = 1 }.flush()
 
             assertNotNull(TestEntity.findById(entity1.id))
             TestEntity.findById(entity1.id)?.delete()

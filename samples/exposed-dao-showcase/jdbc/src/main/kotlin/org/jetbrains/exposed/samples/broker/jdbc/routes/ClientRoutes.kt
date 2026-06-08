@@ -51,8 +51,11 @@ fun Application.clientRoutes() {
                         }
                     )
                 }
-                if (detail != null) call.respond(detail)
-                else call.respond(HttpStatusCode.NotFound, "Client not found")
+                if (detail != null) {
+                    call.respond(detail)
+                } else {
+                    call.respond(HttpStatusCode.NotFound, "Client not found")
+                }
             }
 
             get("{id}/trades") {
@@ -73,8 +76,11 @@ fun Application.clientRoutes() {
                         )
                     }
                 }
-                if (trades != null) call.respond(trades)
-                else call.respond(HttpStatusCode.NotFound, "Client not found")
+                if (trades != null) {
+                    call.respond(trades)
+                } else {
+                    call.respond(HttpStatusCode.NotFound, "Client not found")
+                }
             }
         }
     }

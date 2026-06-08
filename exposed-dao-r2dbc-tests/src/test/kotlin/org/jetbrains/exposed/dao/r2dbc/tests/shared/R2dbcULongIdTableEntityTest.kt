@@ -4,9 +4,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
-import org.jetbrains.exposed.r2dbc.dao.ULongR2dbcEntity
-import org.jetbrains.exposed.r2dbc.dao.ULongR2dbcEntityClass
-import org.jetbrains.exposed.r2dbc.dao.relationships.referencedOnSuspend
+import org.jetbrains.exposed.r2dbc.dao.ULongEntity
+import org.jetbrains.exposed.r2dbc.dao.ULongEntityClass
 import org.jetbrains.exposed.r2dbc.dao.relationships.with
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -17,7 +16,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.junit.jupiter.api.Test
 
-class R2dbcULongIdTableEntityTest : R2dbcDatabaseTestsBase() {
+class ULongIdTableEntityTest : R2dbcDatabaseTestsBase() {
 
     @Test
     fun `create tables`() {
@@ -30,19 +29,19 @@ class R2dbcULongIdTableEntityTest : R2dbcDatabaseTestsBase() {
     @Test
     fun `create records`() {
         withTables(ULongIdTables.People) {
-            val mumbai = ULongIdTables.City.new { name = "Mumbai" }
-            val pune = ULongIdTables.City.new { name = "Pune" }
+            val mumbai = ULongIdTables.City.new { name = "Mumbai" }.flush()
+            val pune = ULongIdTables.City.new { name = "Pune" }.flush()
             ULongIdTables.Person.new {
                 name = "David D'souza"
-                city set mumbai
+                city.set(mumbai)
             }
             ULongIdTables.Person.new {
                 name = "Tushar Mumbaikar"
-                city set mumbai
+                city.set(mumbai)
             }
             ULongIdTables.Person.new {
                 name = "Tanu Arora"
-                city set pune
+                city.set(pune)
             }
 
             val allCities = ULongIdTables.City.all().map { it.name }.toList()
@@ -59,20 +58,20 @@ class R2dbcULongIdTableEntityTest : R2dbcDatabaseTestsBase() {
     @Test
     fun `update and delete records`() {
         withTables(ULongIdTables.People) {
-            val mumbai = ULongIdTables.City.new { name = "Mumbai" }
-            val pune = ULongIdTables.City.new { name = "Pune" }
+            val mumbai = ULongIdTables.City.new { name = "Mumbai" }.flush()
+            val pune = ULongIdTables.City.new { name = "Pune" }.flush()
             ULongIdTables.Person.new {
                 name = "David D'souza"
-                city set mumbai
+                city.set(mumbai)
             }
             ULongIdTables.Person.new {
                 name = "Tushar Mumbaikar"
-                city set mumbai
+                city.set(mumbai)
             }
             val tanu = ULongIdTables.Person.new {
                 name = "Tanu Arora"
-                city set pune
-            }
+                city.set(pune)
+            }.flush()
 
             tanu.delete()
             pune.delete()
@@ -109,14 +108,14 @@ class R2dbcULongIdTableEntityTest : R2dbcDatabaseTestsBase() {
 
             // lazy loaded referrersOn
             val city1 = ULongIdTables.City.all().single()
-            val towns = city1.towns()
+            val towns = city1.towns
             assertEquals(cId, towns.first().city().id)
 
             // eager loaded referrersOn
             val city1WithTowns =
                 ULongIdTables.City.all().with(ULongIdTables.City::towns)
                     .single()
-            assertEquals(tId, city1WithTowns.towns().first().id)
+            assertEquals(tId, city1WithTowns.towns.first().id)
         }
     }
 }
@@ -126,11 +125,11 @@ object ULongIdTables {
         val name = varchar("name", 50)
     }
 
-    class City(id: EntityID<ULong>) : ULongR2dbcEntity(id) {
-        companion object : ULongR2dbcEntityClass<City>(Cities)
+    class City(id: EntityID<ULong>) : ULongEntity(id) {
+        companion object : ULongEntityClass<City>(Cities)
 
         var name by Cities.name
-        val towns by Town referrersOnSuspend Towns.cityId
+        val towns by Town referrersOn Towns.cityId
     }
 
     object People : ULongIdTable() {
@@ -138,20 +137,20 @@ object ULongIdTables {
         val cityId = reference("city_id", Cities)
     }
 
-    class Person(id: EntityID<ULong>) : ULongR2dbcEntity(id) {
-        companion object : ULongR2dbcEntityClass<Person>(People)
+    class Person(id: EntityID<ULong>) : ULongEntity(id) {
+        companion object : ULongEntityClass<Person>(People)
 
         var name by People.name
-        val city by City referencedOnSuspend People.cityId
+        val city by City referencedOn People.cityId
     }
 
     object Towns : ULongIdTable("towns") {
         val cityId: Column<ULong> = ulong("city_id").references(Cities.id)
     }
 
-    class Town(id: EntityID<ULong>) : ULongR2dbcEntity(id) {
-        companion object : ULongR2dbcEntityClass<Town>(Towns)
+    class Town(id: EntityID<ULong>) : ULongEntity(id) {
+        companion object : ULongEntityClass<Town>(Towns)
 
-        val city by City referencedOnSuspend Towns.cityId
+        val city by City referencedOn Towns.cityId
     }
 }

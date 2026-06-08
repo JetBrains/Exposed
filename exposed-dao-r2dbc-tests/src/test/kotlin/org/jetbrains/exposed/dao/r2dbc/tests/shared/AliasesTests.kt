@@ -3,7 +3,6 @@ package org.jetbrains.exposed.dao.r2dbc.tests.shared
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.singleOrNull
 import org.jetbrains.exposed.r2dbc.dao.entityCache
-import org.jetbrains.exposed.r2dbc.dao.flushCache
 import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
@@ -17,9 +16,8 @@ class AliasesTests : R2dbcDatabaseTestsBase() {
         withTables(EntityTestsData.XTable, EntityTestsData.YTable) {
             val entity1 = EntityTestsData.XEntity.new {
                 this.b1 = false
-            }
+            }.flush()
 
-            flushCache()
             entityCache.clear()
 
             val alias = EntityTestsData.XTable.alias("xAlias")
@@ -35,9 +33,8 @@ class AliasesTests : R2dbcDatabaseTestsBase() {
         withTables(EntityTestsData.XTable, EntityTestsData.YTable) {
             val entity1 = EntityTestsData.XEntity.new {
                 this.b1 = false
-            }
+            }.flush()
 
-            flushCache()
             entityCache.clear()
 
             val alias = EntityTestsData.XTable.selectAll().alias("xAlias")

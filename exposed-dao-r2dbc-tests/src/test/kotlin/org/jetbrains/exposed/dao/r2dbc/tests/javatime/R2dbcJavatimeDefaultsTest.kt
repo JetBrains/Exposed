@@ -2,14 +2,13 @@ package org.jetbrains.exposed.dao.r2dbc.tests.javatime
 
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
-import org.jetbrains.exposed.r2dbc.dao.IntR2dbcEntity
-import org.jetbrains.exposed.r2dbc.dao.IntR2dbcEntityClass
-import org.jetbrains.exposed.r2dbc.dao.R2dbcEntity
-import org.jetbrains.exposed.r2dbc.dao.R2dbcEntityClass
+import org.jetbrains.exposed.r2dbc.dao.Entity
+import org.jetbrains.exposed.r2dbc.dao.EntityClass
+import org.jetbrains.exposed.r2dbc.dao.IntEntity
+import org.jetbrains.exposed.r2dbc.dao.IntEntityClass
 import org.jetbrains.exposed.r2dbc.dao.flushCache
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.CustomFunction
-import org.jetbrains.exposed.v1.core.Table.PrimaryKey
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
@@ -46,7 +45,7 @@ import kotlin.test.fail
 private val dbTimestampNow: CustomFunction<OffsetDateTime>
     get() = object : CustomFunction<OffsetDateTime>("now", JavaOffsetDateTimeColumnType()) {}
 
-class R2dbcJavatimeDefaultsTest : R2dbcDatabaseTestsBase() {
+class JavatimeDefaultsTest : R2dbcDatabaseTestsBase() {
     object TableWithDBDefault : IntIdTable() {
         var cIndex = 0
         val field = varchar("field", 100)
@@ -54,7 +53,7 @@ class R2dbcJavatimeDefaultsTest : R2dbcDatabaseTestsBase() {
         val clientDefault = integer("clientDefault").clientDefault { cIndex++ }
     }
 
-    class DBDefault(id: EntityID<Int>) : IntR2dbcEntity(id) {
+    class DBDefault(id: EntityID<Int>) : IntEntity(id) {
         var field by TableWithDBDefault.field
         var t1 by TableWithDBDefault.t1
         var clientDefault by TableWithDBDefault.clientDefault
@@ -65,7 +64,7 @@ class R2dbcJavatimeDefaultsTest : R2dbcDatabaseTestsBase() {
 
         override fun hashCode(): Int = id.value.hashCode()
 
-        companion object : IntR2dbcEntityClass<DBDefault>(TableWithDBDefault)
+        companion object : IntEntityClass<DBDefault>(TableWithDBDefault)
     }
 
     object DefaultTimestampTable : IntIdTable("test_table") {
@@ -73,8 +72,8 @@ class R2dbcJavatimeDefaultsTest : R2dbcDatabaseTestsBase() {
             timestampWithTimeZone("timestamp").defaultExpression(dbTimestampNow)
     }
 
-    class DefaultTimestampEntity(id: EntityID<Int>) : R2dbcEntity<Int>(id) {
-        companion object : R2dbcEntityClass<Int, DefaultTimestampEntity>(DefaultTimestampTable)
+    class DefaultTimestampEntity(id: EntityID<Int>) : Entity<Int>(id) {
+        companion object : EntityClass<Int, DefaultTimestampEntity>(DefaultTimestampTable)
 
         var timestamp: OffsetDateTime by DefaultTimestampTable.timestamp
     }
@@ -83,11 +82,11 @@ class R2dbcJavatimeDefaultsTest : R2dbcDatabaseTestsBase() {
     fun testDefaultsWithExplicit01() {
         withTables(TableWithDBDefault) {
             val created = listOf(
-                DBDefault.new { field = "1" },
+                DBDefault.new { field = "1" }.flush(),
                 DBDefault.new {
                     field = "2"
                     t1 = LocalDateTime.now().minusDays(5)
-                }
+                }.flush()
             )
             commit()
             created.forEach {
@@ -106,11 +105,9 @@ class R2dbcJavatimeDefaultsTest : R2dbcDatabaseTestsBase() {
                 DBDefault.new {
                     field = "2"
                     t1 = LocalDateTime.now().minusDays(5)
-                },
-                DBDefault.new { field = "1" }
+                }.flush(),
+                DBDefault.new { field = "1" }.flush()
             )
-
-            flushCache()
             // R2DBC: INSERT/RETURNING doesn't bring back `defaultExpression` columns (`t1`), and
             // `Column.getValue` is non-suspend so it can't lazy-load like JDBC does. Refresh
             // explicitly so `created[i].t1` (read by `equals`) has a value to compare.
@@ -125,9 +122,8 @@ class R2dbcJavatimeDefaultsTest : R2dbcDatabaseTestsBase() {
     fun testDefaultsInvokedOnlyOncePerEntity() {
         withTables(TableWithDBDefault) {
             TableWithDBDefault.cIndex = 0
-            val db1 = DBDefault.new { field = "1" }
-            val db2 = DBDefault.new { field = "2" }
-            flushCache()
+            val db1 = DBDefault.new { field = "1" }.flush()
+            val db2 = DBDefault.new { field = "2" }.flush()
             assertEquals(0, db1.clientDefault)
             assertEquals(1, db2.clientDefault)
             assertEquals(2, TableWithDBDefault.cIndex)
@@ -138,8 +134,8 @@ class R2dbcJavatimeDefaultsTest : R2dbcDatabaseTestsBase() {
     fun testDefaultsCanBeOverridden() {
         withTables(TableWithDBDefault) {
             TableWithDBDefault.cIndex = 0
-            val db1 = DBDefault.new { field = "1" }
-            val db2 = DBDefault.new { field = "2" }
+            val db1 = DBDefault.new { field = "1" }.initializedEntity
+            val db2 = DBDefault.new { field = "2" }.initializedEntity
             db1.clientDefault = 12345
             flushCache()
             assertEquals(12345, db1.clientDefault)
@@ -154,7 +150,7 @@ class R2dbcJavatimeDefaultsTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testCustomDefaultTimestampFunctionWithEntity() {
         withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES - TestDB.MYSQL_V8 - TestDB.ALL_H2_V2, DefaultTimestampTable) {
-            val entity = DefaultTimestampEntity.new {}
+            val entity = DefaultTimestampEntity.new {}.flush()
             // R2DBC: `defaultExpression(dbTimestampNow)` is evaluated by the DB and isn't part of
             // the INSERT's resultedValues, so `entity.timestamp` has no cached value yet. Flush and
             // refresh so the row is loaded back from the DB (JDBC does this implicitly on read).
@@ -175,22 +171,22 @@ class R2dbcJavatimeDefaultsTest : R2dbcDatabaseTestsBase() {
         override val primaryKey: PrimaryKey = PrimaryKey(id)
     }
 
-    class TableWithDefaultValueEntity(id: EntityID<Int>) : R2dbcEntity<Int>(id) {
+    class TableWithDefaultValueEntity(id: EntityID<Int>) : Entity<Int>(id) {
         var value by TableWithDefaultValue.value
         var valueWithDefault by TableWithDefaultValue.valueWithDefault
 
-        companion object : R2dbcEntityClass<Int, TableWithDefaultValueEntity>(TableWithDefaultValue)
+        companion object : EntityClass<Int, TableWithDefaultValueEntity>(TableWithDefaultValue)
     }
 
     @Test
     fun testExplicitInsertionOfDefaultValuesWithIdTable() {
         withTables(TableWithDefaultValue) {
-            TableWithDefaultValueEntity.new(5) {
+            val entity = TableWithDefaultValueEntity.new(5) {
                 value = 94
                 valueWithDefault = TableWithDefaultValue.DEFAULT_VALUE
-            }.run {
-                assertTrue(this.writeValues.values.contains(TableWithDefaultValue.DEFAULT_VALUE))
-            }
+            }.initializedEntity
+            assertTrue(entity.writeValues.values.contains(TableWithDefaultValue.DEFAULT_VALUE))
+            flushCache()
         }
     }
 }

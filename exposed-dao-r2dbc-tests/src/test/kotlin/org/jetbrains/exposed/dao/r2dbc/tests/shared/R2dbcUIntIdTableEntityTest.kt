@@ -4,9 +4,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
-import org.jetbrains.exposed.r2dbc.dao.UIntR2dbcEntity
-import org.jetbrains.exposed.r2dbc.dao.UIntR2dbcEntityClass
-import org.jetbrains.exposed.r2dbc.dao.relationships.referencedOnSuspend
+import org.jetbrains.exposed.r2dbc.dao.UIntEntity
+import org.jetbrains.exposed.r2dbc.dao.UIntEntityClass
 import org.jetbrains.exposed.r2dbc.dao.relationships.with
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -17,7 +16,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import kotlin.test.Test
 
-class R2dbcUIntIdTableEntityTest : R2dbcDatabaseTestsBase() {
+class UIntIdTableEntityTest : R2dbcDatabaseTestsBase() {
 
     @Test
     fun `create tables`() {
@@ -30,19 +29,19 @@ class R2dbcUIntIdTableEntityTest : R2dbcDatabaseTestsBase() {
     @Test
     fun `create records`() {
         withTables(UIntIdTables.Cities, UIntIdTables.People) {
-            val mumbai = UIntIdTables.City.new { name = "Mumbai" }
-            val pune = UIntIdTables.City.new { name = "Pune" }
+            val mumbai = UIntIdTables.City.new { name = "Mumbai" }.flush()
+            val pune = UIntIdTables.City.new { name = "Pune" }.flush()
             UIntIdTables.Person.new {
                 name = "David D'souza"
-                city set mumbai
+                city.set(mumbai)
             }
             UIntIdTables.Person.new {
                 name = "Tushar Mumbaikar"
-                city set mumbai
+                city.set(mumbai)
             }
             UIntIdTables.Person.new {
                 name = "Tanu Arora"
-                city set pune
+                city.set(pune)
             }
 
             val allCities = UIntIdTables.City.all().map { it.name }.toList()
@@ -59,20 +58,20 @@ class R2dbcUIntIdTableEntityTest : R2dbcDatabaseTestsBase() {
     @Test
     fun `update and delete records`() {
         withTables(UIntIdTables.Cities, UIntIdTables.People) {
-            val mumbai = UIntIdTables.City.new { name = "Mumbai" }
-            val pune = UIntIdTables.City.new { name = "Pune" }
+            val mumbai = UIntIdTables.City.new { name = "Mumbai" }.flush()
+            val pune = UIntIdTables.City.new { name = "Pune" }.flush()
             UIntIdTables.Person.new {
                 name = "David D'souza"
-                city set mumbai
+                city.set(mumbai)
             }
             UIntIdTables.Person.new {
                 name = "Tushar Mumbaikar"
-                city set mumbai
+                city.set(mumbai)
             }
             val tanu = UIntIdTables.Person.new {
                 name = "Tanu Arora"
-                city set pune
-            }
+                city.set(pune)
+            }.flush()
 
             tanu.delete()
             pune.delete()
@@ -107,12 +106,12 @@ class R2dbcUIntIdTableEntityTest : R2dbcDatabaseTestsBase() {
 
             // lazy loaded referrersOn
             val city1 = UIntIdTables.City.all().single()
-            val towns = city1.towns()
+            val towns = city1.towns
             assertEquals(cId, towns.first().city().id)
 
             // eager loaded referrersOn
             val city1WithTowns = UIntIdTables.City.all().with(UIntIdTables.City::towns).single()
-            assertEquals(tId, city1WithTowns.towns().first().id)
+            assertEquals(tId, city1WithTowns.towns.first().id)
         }
     }
 }
@@ -122,11 +121,11 @@ object UIntIdTables {
         val name = varchar("name", 50)
     }
 
-    class City(id: EntityID<UInt>) : UIntR2dbcEntity(id) {
-        companion object : UIntR2dbcEntityClass<City>(Cities)
+    class City(id: EntityID<UInt>) : UIntEntity(id) {
+        companion object : UIntEntityClass<City>(Cities)
 
         var name by Cities.name
-        val towns by Town referrersOnSuspend Towns.cityId
+        val towns by Town referrersOn Towns.cityId
     }
 
     object People : UIntIdTable() {
@@ -134,20 +133,20 @@ object UIntIdTables {
         val cityId = reference("city_id", Cities)
     }
 
-    class Person(id: EntityID<UInt>) : UIntR2dbcEntity(id) {
-        companion object : UIntR2dbcEntityClass<Person>(People)
+    class Person(id: EntityID<UInt>) : UIntEntity(id) {
+        companion object : UIntEntityClass<Person>(People)
 
         var name by People.name
-        val city by City referencedOnSuspend People.cityId
+        val city by City referencedOn People.cityId
     }
 
     object Towns : UIntIdTable("towns") {
         val cityId: Column<UInt> = uinteger("city_id").references(Cities.id)
     }
 
-    class Town(id: EntityID<UInt>) : UIntR2dbcEntity(id) {
-        companion object : UIntR2dbcEntityClass<Town>(Towns)
+    class Town(id: EntityID<UInt>) : UIntEntity(id) {
+        companion object : UIntEntityClass<Town>(Towns)
 
-        val city by City referencedOnSuspend Towns.cityId
+        val city by City referencedOn Towns.cityId
     }
 }

@@ -2,8 +2,8 @@ package org.jetbrains.exposed.dao.r2dbc.tests.json
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import org.jetbrains.exposed.r2dbc.dao.IntR2dbcEntity
-import org.jetbrains.exposed.r2dbc.dao.IntR2dbcEntityClass
+import org.jetbrains.exposed.r2dbc.dao.IntEntity
+import org.jetbrains.exposed.r2dbc.dao.IntEntityClass
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.json.json
@@ -18,14 +18,14 @@ object JsonTestsData {
         val jsonBColumn = jsonb<DataHolder>("j_b_column", Json.Default)
     }
 
-    class JsonEntity(id: EntityID<Int>) : IntR2dbcEntity(id) {
-        companion object : IntR2dbcEntityClass<JsonEntity>(JsonTable)
+    class JsonEntity(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<JsonEntity>(JsonTable)
 
         var jsonColumn by JsonTable.jsonColumn
     }
 
-    class JsonBEntity(id: EntityID<Int>) : IntR2dbcEntity(id) {
-        companion object : IntR2dbcEntityClass<JsonBEntity>(JsonBTable)
+    class JsonBEntity(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<JsonBEntity>(JsonBTable)
 
         var jsonBColumn by JsonBTable.jsonBColumn
     }

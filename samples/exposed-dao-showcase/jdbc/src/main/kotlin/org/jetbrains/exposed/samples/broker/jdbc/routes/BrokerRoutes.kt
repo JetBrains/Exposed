@@ -57,8 +57,11 @@ fun Application.brokerRoutes() {
                         }
                     )
                 }
-                if (detail != null) call.respond(detail)
-                else call.respond(HttpStatusCode.NotFound, "Broker not found")
+                if (detail != null) {
+                    call.respond(detail)
+                } else {
+                    call.respond(HttpStatusCode.NotFound, "Broker not found")
+                }
             }
         }
     }

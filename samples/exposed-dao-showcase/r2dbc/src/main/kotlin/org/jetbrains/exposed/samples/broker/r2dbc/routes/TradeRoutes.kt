@@ -7,11 +7,10 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlin.time.Clock
-import org.jetbrains.exposed.r2dbc.dao.flushCache
 import org.jetbrains.exposed.samples.broker.r2dbc.model.dto.*
 import org.jetbrains.exposed.samples.broker.r2dbc.model.entities.*
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
+import kotlin.time.Clock
 
 fun Application.tradeRoutes() {
     routing {
@@ -28,16 +27,14 @@ fun Application.tradeRoutes() {
                     }
 
                     val trade = Trade.new {
-                        this.client set client
-                        this.instrument set instrument
-                        this.portfolio set portfolio
+                        this.client(client)
+                        this.instrument(instrument)
+                        this.portfolio(portfolio)
                         this.type = dto.type
                         this.quantity = dto.quantity
                         this.price = dto.price.toBigDecimal()
                         this.executedAt = Clock.System.now()
-                    }
-
-                    flushCache()
+                    }.flush()
 
                     TradeDetailDTO(
                         id = trade.id.value,

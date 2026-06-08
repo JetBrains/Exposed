@@ -1,18 +1,19 @@
 package org.jetbrains.exposed.dao.r2dbc.tests.shared
 
 import io.r2dbc.spi.IsolationLevel
+import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.flow.toList
-import org.jetbrains.exposed.r2dbc.dao.CompositeR2dbcEntity
-import org.jetbrains.exposed.r2dbc.dao.CompositeR2dbcEntityClass
-import org.jetbrains.exposed.r2dbc.dao.IntR2dbcEntity
-import org.jetbrains.exposed.r2dbc.dao.IntR2dbcEntityClass
-import org.jetbrains.exposed.r2dbc.dao.R2dbcEntity
-import org.jetbrains.exposed.r2dbc.dao.R2dbcEntityClass
-import org.jetbrains.exposed.r2dbc.dao.UuidR2dbcEntity
-import org.jetbrains.exposed.r2dbc.dao.UuidR2dbcEntityClass
+import org.jetbrains.exposed.r2dbc.dao.CompositeEntity
+import org.jetbrains.exposed.r2dbc.dao.CompositeEntityClass
+import org.jetbrains.exposed.r2dbc.dao.Entity
+import org.jetbrains.exposed.r2dbc.dao.EntityClass
+import org.jetbrains.exposed.r2dbc.dao.IntEntity
+import org.jetbrains.exposed.r2dbc.dao.IntEntityClass
+import org.jetbrains.exposed.r2dbc.dao.UuidEntity
+import org.jetbrains.exposed.r2dbc.dao.UuidEntityClass
 import org.jetbrains.exposed.r2dbc.dao.entityCache
-import org.jetbrains.exposed.r2dbc.dao.relationships.R2dbcInnerTableLinkAccessor
+import org.jetbrains.exposed.r2dbc.dao.relationships.InnerTableLinkAccessor
 import org.jetbrains.exposed.r2dbc.dao.relationships.with
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.ReferenceOption
@@ -25,6 +26,7 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.UuidTable
+import org.jetbrains.exposed.v1.r2dbc.SizedCollection
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualCollections
@@ -77,27 +79,27 @@ object ViaTestData {
     val allTables: Array<Table> = arrayOf(NumbersTable, StringsTable, ConnectionTable, ConnectionAutoIncTable)
 }
 
-class VNumber(id: EntityID<Uuid>) : UuidR2dbcEntity(id) {
+class VNumber(id: EntityID<Uuid>) : UuidEntity(id) {
     var number by ViaTestData.NumbersTable.number
-    val connectedStrings by VString viaSuspend ViaTestData.ConnectionTable
-    val connectedAutoStrings by VString viaSuspend ViaTestData.ConnectionAutoIncTable
+    var connectedStrings by VString via ViaTestData.ConnectionTable
+    var connectedAutoStrings by VString via ViaTestData.ConnectionAutoIncTable
 
-    companion object : UuidR2dbcEntityClass<VNumber>(ViaTestData.NumbersTable)
+    companion object : UuidEntityClass<VNumber>(ViaTestData.NumbersTable)
 }
 
-class VString(id: EntityID<Long>) : R2dbcEntity<Long>(id) {
+class VString(id: EntityID<Long>) : Entity<Long>(id) {
     var text by ViaTestData.StringsTable.text
 
-    companion object : R2dbcEntityClass<Long, VString>(ViaTestData.StringsTable)
+    companion object : EntityClass<Long, VString>(ViaTestData.StringsTable)
 }
 
-class R2dbcViaTest : R2dbcDatabaseTestsBase() {
+class ViaTest : R2dbcDatabaseTestsBase() {
     private suspend fun VNumber.testWithBothTables(valuesToSet: List<VString>, body: suspend (ViaTestData.IConnectionTable, List<ResultRow>) -> Unit) {
         listOf(ViaTestData.ConnectionTable, ViaTestData.ConnectionAutoIncTable).forEach { t ->
             if (t == ViaTestData.ConnectionTable) {
-                connectedStrings set valuesToSet
+                connectedStrings = SizedCollection(valuesToSet)
             } else {
-                connectedAutoStrings set valuesToSet
+                connectedAutoStrings = SizedCollection(valuesToSet)
             }
 
             val result = t.selectAll().toList()
@@ -108,8 +110,8 @@ class R2dbcViaTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testConnection01() {
         withTables(*ViaTestData.allTables) {
-            val n = VNumber.new { number = 10 }
-            val s = VString.new { text = "aaa" }
+            val n = VNumber.new { number = 10 }.flush()
+            val s = VString.new { text = "aaa" }.flush()
             n.testWithBothTables(listOf(s)) { table, result ->
                 val row = result.single()
                 assertEquals(n.id, row[table.numId])
@@ -121,10 +123,10 @@ class R2dbcViaTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testConnection02() {
         withTables(*ViaTestData.allTables) {
-            val n1 = VNumber.new { number = 1 }
-            val n2 = VNumber.new { number = 2 }
-            val s1 = VString.new { text = "aaa" }
-            val s2 = VString.new { text = "bbb" }
+            val n1 = VNumber.new { number = 1 }.flush()
+            val n2 = VNumber.new { number = 2 }.flush()
+            val s1 = VString.new { text = "aaa" }.flush()
+            val s2 = VString.new { text = "bbb" }.flush()
 
             n1.testWithBothTables(listOf(s1, s2)) { table, row ->
                 assertEquals(2, row.count())
@@ -138,24 +140,24 @@ class R2dbcViaTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testConnection03() {
         withTables(*ViaTestData.allTables) {
-            val n1 = VNumber.new { number = 1 }
-            val n2 = VNumber.new { number = 2 }
-            val s1 = VString.new { text = "aaa" }
-            val s2 = VString.new { text = "bbb" }
+            val n1 = VNumber.new { number = 1 }.flush()
+            val n2 = VNumber.new { number = 2 }.flush()
+            val s1 = VString.new { text = "aaa" }.flush()
+            val s2 = VString.new { text = "bbb" }.flush()
 
             n1.testWithBothTables(listOf(s1, s2)) { _, _ -> }
             n2.testWithBothTables(listOf(s1, s2)) { _, row ->
                 assertEquals(4, row.count())
-                assertEqualCollections(n1.connectedStrings(), listOf(s1, s2))
-                assertEqualCollections(n2.connectedStrings(), listOf(s1, s2))
+                assertEqualCollections(n1.connectedStrings, listOf(s1, s2))
+                assertEqualCollections(n2.connectedStrings, listOf(s1, s2))
             }
 
             n1.testWithBothTables(emptyList()) { table, row ->
                 assertEquals(2, row.count())
                 assertEquals(n2.id, row[0][table.numId])
                 assertEquals(n2.id, row[1][table.numId])
-                assertEqualCollections(n1.connectedStrings(), emptyList())
-                assertEqualCollections(n2.connectedStrings(), listOf(s1, s2))
+                assertEqualCollections(n1.connectedStrings, emptyList())
+                assertEqualCollections(n2.connectedStrings, listOf(s1, s2))
             }
         }
     }
@@ -163,22 +165,22 @@ class R2dbcViaTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testConnection04() {
         withTables(*ViaTestData.allTables) {
-            val n1 = VNumber.new { number = 1 }
-            val n2 = VNumber.new { number = 2 }
-            val s1 = VString.new { text = "aaa" }
-            val s2 = VString.new { text = "bbb" }
+            val n1 = VNumber.new { number = 1 }.flush()
+            val n2 = VNumber.new { number = 2 }.flush()
+            val s1 = VString.new { text = "aaa" }.flush()
+            val s2 = VString.new { text = "bbb" }.flush()
 
             n1.testWithBothTables(listOf(s1, s2)) { _, _ -> }
             n2.testWithBothTables(listOf(s1, s2)) { _, row ->
                 assertEquals(4, row.count())
-                assertEqualCollections(n1.connectedStrings(), listOf(s1, s2))
-                assertEqualCollections(n2.connectedStrings(), listOf(s1, s2))
+                assertEqualCollections(n1.connectedStrings, listOf(s1, s2))
+                assertEqualCollections(n2.connectedStrings, listOf(s1, s2))
             }
 
             n1.testWithBothTables(listOf(s1)) { _, row ->
                 assertEquals(3, row.count())
-                assertEqualCollections(n1.connectedStrings(), listOf(s1))
-                assertEqualCollections(n2.connectedStrings(), listOf(s1, s2))
+                assertEqualCollections(n1.connectedStrings, listOf(s1))
+                assertEqualCollections(n2.connectedStrings, listOf(s1, s2))
             }
         }
     }
@@ -192,12 +194,12 @@ class R2dbcViaTest : R2dbcDatabaseTestsBase() {
         val child = reference("child_user_id", NodesTable)
     }
 
-    class Node(id: EntityID<Int>) : IntR2dbcEntity(id) {
-        companion object : IntR2dbcEntityClass<Node>(NodesTable)
+    class Node(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<Node>(NodesTable)
 
         var name by NodesTable.name
-        val parents by Node.viaSuspend(NodeToNodes.child, NodeToNodes.parent)
-        val children by Node.viaSuspend(NodeToNodes.parent, NodeToNodes.child)
+        var parents by Node.via(NodeToNodes.child, NodeToNodes.parent)
+        var children by Node.via(NodeToNodes.parent, NodeToNodes.child)
 
         override fun equals(other: Any?): Boolean = (other as? Node)?.id == id
 
@@ -207,28 +209,30 @@ class R2dbcViaTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testHierarchicalReferences() {
         withTables(NodesTable, NodeToNodes) {
-            val root = Node.new { name = "root" }
-            val child1 = Node.new {
+            val child1 = Node.newAndFlush {
                 name = "child1"
+                parents = SizedCollection(
+                    Node.newAndFlush { name = "root" }
+                )
             }
-            // TODO at the current moment it's not possible to set this value inside `new()`, becuase `new(){}` block is non suspend
-            child1.parents set listOf(root)
 
-            assertEquals(0L, root.parents().count())
-            assertEquals(1L, root.children().count())
+            val root = child1.parents.single()
 
-            val child2 = Node.new { name = "child2" }
-            root.children set listOf(child1, child2)
+            assertEquals(0L, root.parents.count())
+            assertEquals(1L, root.children.count())
 
-            assertEquals(root, child1.parents().singleOrNull())
-            assertEquals(root, child2.parents().singleOrNull())
+            val child2 = Node.new { name = "child2" }.flush()
+            root.children = SizedCollection(listOf(child1, child2))
+
+            assertEquals(root, child1.parents.singleOrNull())
+            assertEquals(root, child2.parents.singleOrNull())
         }
     }
 
     @Test
     fun testRefresh() {
         withTables(*ViaTestData.allTables) {
-            val s = VString.new { text = "ccc" }.apply {
+            val s = VString.new { text = "ccc" }.flush().apply {
                 refresh(true)
             }
             assertEquals("ccc", s.text)
@@ -238,24 +242,21 @@ class R2dbcViaTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testWarmUpOnHierarchicalEntities() {
         withTables(NodesTable, NodeToNodes) {
-            val child1 = Node.new { name = "child1" }
-            val child2 = Node.new { name = "child1" }
-            val root1 = Node.new {
+            val child1 = Node.newAndFlush { name = "child1" }
+            val child2 = Node.newAndFlush { name = "child1" }
+            val root1 = Node.newAndFlush {
                 name = "root1"
+                children = SizedCollection(child1)
             }
-            // TODO same problem with `new(){}` block
-            root1.children set listOf(child1)
-
-            val root2 = Node.new {
+            val root2 = Node.newAndFlush {
                 name = "root2"
+                children = SizedCollection(child1, child2)
             }
-            // TODO same problem with `new(){}` block
-            root2.children set listOf(child1, child2)
 
             entityCache.clear(flush = true)
 
             suspend fun checkChildrenReferences(node: Node, values: List<Node>) {
-                val sourceColumn = (Node::children.apply { isAccessible = true }.getDelegate(node) as R2dbcInnerTableLinkAccessor<*, *, *, *>).link.sourceColumn
+                val sourceColumn = (Node::children.apply { isAccessible = true }.getDelegate(node) as InnerTableLinkAccessor<*, *, *, *>).link.sourceColumn
                 val children = entityCache.getReferrers<Node>(node.id, sourceColumn)
                 assertEqualLists(children?.toList().orEmpty(), values)
             }
@@ -267,7 +268,7 @@ class R2dbcViaTest : R2dbcDatabaseTestsBase() {
             checkChildrenReferences(root2, listOf(child1, child2))
 
             suspend fun checkParentsReferences(node: Node, values: List<Node>) {
-                val sourceColumn = (Node::parents.apply { isAccessible = true }.getDelegate(node) as R2dbcInnerTableLinkAccessor<*, *, *, *>).link.sourceColumn
+                val sourceColumn = (Node::parents.apply { isAccessible = true }.getDelegate(node) as InnerTableLinkAccessor<*, *, *, *>).link.sourceColumn
                 val children = entityCache.getReferrers<Node>(node.id, sourceColumn)
                 assertEqualLists(children?.toList().orEmpty(), values)
             }
@@ -280,12 +281,12 @@ class R2dbcViaTest : R2dbcDatabaseTestsBase() {
         }
     }
 
-    class NodeOrdered(id: EntityID<Int>) : IntR2dbcEntity(id) {
-        companion object : IntR2dbcEntityClass<NodeOrdered>(NodesTable)
+    class NodeOrdered(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<NodeOrdered>(NodesTable)
 
         var name by NodesTable.name
-        val parents by NodeOrdered.viaSuspend(NodeToNodes.child, NodeToNodes.parent)
-        val children by NodeOrdered.viaSuspend(NodeToNodes.parent, NodeToNodes.child) orderBy (NodesTable.name to SortOrder.ASC)
+        var parents by NodeOrdered.via(NodeToNodes.child, NodeToNodes.parent)
+        var children by NodeOrdered.via(NodeToNodes.parent, NodeToNodes.child) orderBy (NodesTable.name to SortOrder.ASC)
 
         override fun equals(other: Any?): Boolean = (other as? NodeOrdered)?.id == id
 
@@ -295,16 +296,15 @@ class R2dbcViaTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testOrderBy() {
         withTables(NodesTable, NodeToNodes) {
-            val root = NodeOrdered.new { name = "root" }
+            val root = NodeOrdered.new { name = "root" }.flush()
             listOf("#3", "#0", "#2", "#4", "#1").forEach {
                 val n = NodeOrdered.new {
                     name = it
-                }
-                // TODO same problem with `new(){}` block
-                n.parents set listOf(root)
+                    parents = SizedCollection(listOf(root))
+                }.flush()
             }
 
-            root.children().toList().forEachIndexed { index, node ->
+            root.children.toList().forEachIndexed { index, node ->
                 assertEquals("#$index", node.name)
             }
         }
@@ -314,11 +314,11 @@ class R2dbcViaTest : R2dbcDatabaseTestsBase() {
         val name = varchar("name", 50)
     }
 
-    class Project(id: EntityID<Int>) : IntR2dbcEntity(id) {
-        companion object : IntR2dbcEntityClass<Project>(Projects)
+    class Project(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<Project>(Projects)
 
         var name by Projects.name
-        val tasks by Task viaSuspend ProjectTasks
+        var tasks by Task via ProjectTasks
     }
 
     object ProjectTasks : CompositeIdTable("project_tasks") {
@@ -334,8 +334,8 @@ class R2dbcViaTest : R2dbcDatabaseTestsBase() {
         }
     }
 
-    class ProjectTask(id: EntityID<CompositeID>) : CompositeR2dbcEntity(id) {
-        companion object : CompositeR2dbcEntityClass<ProjectTask>(ProjectTasks)
+    class ProjectTask(id: EntityID<CompositeID>) : CompositeEntity(id) {
+        companion object : CompositeEntityClass<ProjectTask>(ProjectTasks)
 
         var approved by ProjectTasks.approved
     }
@@ -344,8 +344,8 @@ class R2dbcViaTest : R2dbcDatabaseTestsBase() {
         val title = varchar("title", 64)
     }
 
-    class Task(id: EntityID<Int>) : IntR2dbcEntity(id) {
-        companion object : IntR2dbcEntityClass<Task>(Tasks)
+    class Task(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<Task>(Tasks)
 
         var title by Tasks.title
         val approved by ProjectTasks.approved
@@ -354,30 +354,30 @@ class R2dbcViaTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testAdditionalLinkDataUsingCompositeIdInnerTable() {
         withTables(Projects, Tasks, ProjectTasks) {
-            val p1 = Project.new { name = "Project 1" }
-            val p2 = Project.new { name = "Project 2" }
-            val t1 = Task.new { title = "Task 1" }
-            val t2 = Task.new { title = "Task 2" }
-            val t3 = Task.new { title = "Task 3" }
+            val p1 = Project.new { name = "Project 1" }.flush()
+            val p2 = Project.new { name = "Project 2" }.flush()
+            val t1 = Task.new { title = "Task 1" }.flush()
+            val t2 = Task.new { title = "Task 2" }.flush()
+            val t3 = Task.new { title = "Task 3" }.flush()
 
             ProjectTask.new(
                 CompositeID {
                     it[ProjectTasks.task] = t1.id
                     it[ProjectTasks.project] = p1.id
                 }
-            ) { approved = true }
+            ) { approved = true }.flush()
             ProjectTask.new(
                 CompositeID {
                     it[ProjectTasks.task] = t2.id
                     it[ProjectTasks.project] = p2.id
                 }
-            ) { approved = false }
+            ) { approved = false }.flush()
             ProjectTask.new(
                 CompositeID {
                     it[ProjectTasks.task] = t3.id
                     it[ProjectTasks.project] = p2.id
                 }
-            ) { approved = false }
+            ) { approved = false }.flush()
 
             commit()
 

@@ -3,18 +3,20 @@
 package org.jetbrains.exposed.samples.broker.r2dbc.routes
 
 import io.ktor.http.*
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.toList
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.r2dbc.dao.flushCache
 import org.jetbrains.exposed.r2dbc.dao.relationships.load
 import org.jetbrains.exposed.samples.broker.r2dbc.model.dto.*
 import org.jetbrains.exposed.samples.broker.r2dbc.model.entities.*
 import org.jetbrains.exposed.samples.broker.r2dbc.model.tables.Tags
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.r2dbc.SizedCollection
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 
 fun Application.instrumentRoutes() {
@@ -27,8 +29,7 @@ fun Application.instrumentRoutes() {
                         ticker = dto.ticker
                         name = dto.name
                         type = dto.type
-                    }
-                    flushCache()
+                    }.flush()
                     InstrumentDTO(instrument.id.value, instrument.ticker, instrument.name, instrument.type)
                 }
                 call.respond(HttpStatusCode.Created, result)
@@ -42,7 +43,7 @@ fun Application.instrumentRoutes() {
                             ticker = inst.ticker,
                             name = inst.name,
                             type = inst.type,
-                            tags = inst.tags().toList().map { it.name }
+                            tags = inst.tags.toList().map { it.name }
                         )
                     }
                 }
@@ -60,11 +61,14 @@ fun Application.instrumentRoutes() {
                         ticker = inst.ticker,
                         name = inst.name,
                         type = inst.type,
-                        tags = inst.tags().toList().map { it.name }
+                        tags = inst.tags.map { it.name }.toList()
                     )
                 }
-                if (detail != null) call.respond(detail)
-                else call.respond(HttpStatusCode.NotFound, "Instrument not found")
+                if (detail != null) {
+                    call.respond(detail)
+                } else {
+                    call.respond(HttpStatusCode.NotFound, "Instrument not found")
+                }
             }
 
             put("{id}/tags") {
@@ -76,20 +80,23 @@ fun Application.instrumentRoutes() {
                         ?: return@suspendTransaction null
                     val tags = dto.tags.map { tagName ->
                         Tag.find { Tags.name eq tagName }.firstOrNull()
-                            ?: Tag.new { name = tagName }.also { flushCache() }
+                            ?: Tag.new { name = tagName }.flush()
                     }
-                    instrument.tags set tags
+                    instrument.tags = SizedCollection(tags)
                     flushCache()
                     InstrumentDetailDTO(
                         id = instrument.id.value,
                         ticker = instrument.ticker,
                         name = instrument.name,
                         type = instrument.type,
-                        tags = instrument.tags().toList().map { it.name }
+                        tags = instrument.tags.map { it.name }.toList()
                     )
                 }
-                if (result != null) call.respond(result)
-                else call.respond(HttpStatusCode.NotFound, "Instrument not found")
+                if (result != null) {
+                    call.respond(result)
+                } else {
+                    call.respond(HttpStatusCode.NotFound, "Instrument not found")
+                }
             }
         }
     }

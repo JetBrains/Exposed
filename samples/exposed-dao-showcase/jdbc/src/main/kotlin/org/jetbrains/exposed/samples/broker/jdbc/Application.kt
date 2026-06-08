@@ -1,4 +1,5 @@
 @file:Suppress("InvalidPackageDeclaration")
+
 package org.jetbrains.exposed.samples.broker.jdbc
 
 import io.ktor.server.application.*

@@ -3,16 +3,15 @@
 package org.jetbrains.exposed.samples.broker.r2dbc.routes
 
 import io.ktor.http.*
-import kotlinx.coroutines.flow.toList
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlin.time.Clock
-import org.jetbrains.exposed.r2dbc.dao.flushCache
+import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.samples.broker.r2dbc.model.dto.*
 import org.jetbrains.exposed.samples.broker.r2dbc.model.entities.*
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
+import kotlin.time.Clock
 
 fun Application.portfolioRoutes() {
     routing {
@@ -24,10 +23,9 @@ fun Application.portfolioRoutes() {
                         ?: error("Client ${dto.clientId} not found")
                     val portfolio = Portfolio.new {
                         name = dto.name
-                        this.client set client
+                        this.client.set(client)
                         createdAt = Clock.System.now()
-                    }
-                    flushCache()
+                    }.flush()
                     PortfolioDTO(portfolio.id.value, portfolio.name, portfolio.client().id.value)
                 }
                 call.respond(HttpStatusCode.Created, result)
@@ -42,7 +40,7 @@ fun Application.portfolioRoutes() {
                         id = portfolio.id.value,
                         name = portfolio.name,
                         createdAt = portfolio.createdAt.toString(),
-                        trades = portfolio.trades().toList().map { trade ->
+                        trades = portfolio.trades.toList().map { trade ->
                             TradeDetailDTO(
                                 id = trade.id.value,
                                 instrumentTicker = trade.instrument().ticker,
@@ -56,8 +54,11 @@ fun Application.portfolioRoutes() {
                         }
                     )
                 }
-                if (detail != null) call.respond(detail)
-                else call.respond(HttpStatusCode.NotFound, "Portfolio not found")
+                if (detail != null) {
+                    call.respond(detail)
+                } else {
+                    call.respond(HttpStatusCode.NotFound, "Portfolio not found")
+                }
             }
         }
     }
