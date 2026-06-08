@@ -60,8 +60,11 @@ fun Application.instrumentRoutes() {
                         tags = inst.tags.map { it.name }
                     )
                 }
-                if (detail != null) call.respond(detail)
-                else call.respond(HttpStatusCode.NotFound, "Instrument not found")
+                if (detail != null) {
+                    call.respond(detail)
+                } else {
+                    call.respond(HttpStatusCode.NotFound, "Instrument not found")
+                }
             }
 
             put("{id}/tags") {
@@ -84,8 +87,11 @@ fun Application.instrumentRoutes() {
                         tags = instrument.tags.map { it.name }
                     )
                 }
-                if (result != null) call.respond(result)
-                else call.respond(HttpStatusCode.NotFound, "Instrument not found")
+                if (result != null) {
+                    call.respond(result)
+                } else {
+                    call.respond(HttpStatusCode.NotFound, "Instrument not found")
+                }
             }
         }
     }

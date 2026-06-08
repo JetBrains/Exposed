@@ -27,7 +27,7 @@ val TEST_DIALECTS: HashSet<String> = System.getProperty(
 
 private val registeredOnShutdown = HashSet<TestDB>()
 
-internal var currentTestDB by nullableTransactionScope<TestDB>()
+var currentTestDB by nullableTransactionScope<TestDB>()
 
 @ParameterizedClass(name = "name: {2}, container: {0}, dialect: {1}", allowZeroInvocations = true)
 @MethodSource("data")

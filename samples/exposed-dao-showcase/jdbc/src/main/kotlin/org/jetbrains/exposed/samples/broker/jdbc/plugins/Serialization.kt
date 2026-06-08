@@ -1,4 +1,5 @@
 @file:Suppress("InvalidPackageDeclaration")
+
 package org.jetbrains.exposed.samples.broker.jdbc.plugins
 
 import io.ktor.serialization.kotlinx.json.*

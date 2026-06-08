@@ -71,6 +71,7 @@ dependencies {
     // Include test modules to ensure their tests are executed and coverage is collected
     kover(project(":exposed-tests"))
     kover(project(":exposed-r2dbc-tests"))
+    kover(project(":exposed-dao-r2dbc-tests"))
 }
 
 repositories {
@@ -79,7 +80,7 @@ repositories {
 }
 
 val sampleProjects = setOf("exposed-dao-showcase-jdbc", "exposed-dao-showcase-r2dbc")
-val unpublishedProjects = setOf("exposed-tests", "exposed-r2dbc-tests", "exposed-jdbc-r2dbc-tests", "exposed-dao-r2dbc-tests", "exposed-dao-r2dbc") + sampleProjects
+val unpublishedProjects = setOf("exposed-tests", "exposed-r2dbc-tests", "exposed-jdbc-r2dbc-tests", "exposed-dao-r2dbc-tests") + sampleProjects
 
 allprojects {
     if (this.name !in unpublishedProjects && this != rootProject) {
@@ -98,7 +99,7 @@ allprojects {
 
 apiValidation {
     ignoredProjects.addAll(
-        listOf("exposed-tests", "exposed-bom", "exposed-r2dbc-tests", "exposed-jdbc-r2dbc-tests", "exposed-version-catalog", "exposed-dao-r2dbc-tests", "exposed-dao-r2dbc")  + sampleProjects
+        listOf("exposed-tests", "exposed-bom", "exposed-r2dbc-tests", "exposed-jdbc-r2dbc-tests", "exposed-version-catalog", "exposed-dao-r2dbc-tests") + sampleProjects
     )
 }
 

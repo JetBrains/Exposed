@@ -19,17 +19,13 @@ dependencies {
     api(project(":exposed-core"))
     api(project(":exposed-r2dbc"))
 
-    api(libs.r2dbc.spi)
-    api(libs.kotlinx.coroutines.reactive)
-
     implementation(libs.slf4j)
-
-    compileOnly(libs.r2dbc.postgresql)
 }
 
 tasks.withType<KotlinCompile>().configureEach {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
+        freeCompilerArgs.add("-opt-in=org.jetbrains.exposed.v1.dao.r2dbc.ExperimentalR2dbcDaoApi")
     }
 }
 

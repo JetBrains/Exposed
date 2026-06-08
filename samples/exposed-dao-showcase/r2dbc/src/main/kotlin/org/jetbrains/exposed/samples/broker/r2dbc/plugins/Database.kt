@@ -3,8 +3,8 @@
 package org.jetbrains.exposed.samples.broker.r2dbc.plugins
 
 import io.ktor.server.application.*
-import org.jetbrains.exposed.r2dbc.dao.EntityHook
 import org.jetbrains.exposed.samples.broker.r2dbc.model.tables.*
+import org.jetbrains.exposed.v1.dao.r2dbc.EntityHook
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction

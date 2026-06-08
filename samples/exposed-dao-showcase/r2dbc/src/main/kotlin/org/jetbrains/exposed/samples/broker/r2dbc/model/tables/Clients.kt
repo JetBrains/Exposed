@@ -4,6 +4,7 @@ package org.jetbrains.exposed.samples.broker.r2dbc.model.tables
 
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 
+@Suppress("MagicNumber")
 object Clients : IntIdTable("clients") {
     val name = varchar("name", 128)
     val email = varchar("email", 256).uniqueIndex()
