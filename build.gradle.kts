@@ -78,7 +78,8 @@ repositories {
     mavenCentral()
 }
 
-val unpublishedProjects = setOf("exposed-tests", "exposed-r2dbc-tests", "exposed-jdbc-r2dbc-tests", "exposed-dao-r2dbc-tests", "exposed-dao-r2dbc")
+val sampleProjects = setOf("exposed-dao-showcase-jdbc", "exposed-dao-showcase-r2dbc")
+val unpublishedProjects = setOf("exposed-tests", "exposed-r2dbc-tests", "exposed-jdbc-r2dbc-tests", "exposed-dao-r2dbc-tests", "exposed-dao-r2dbc") + sampleProjects
 
 allprojects {
     if (this.name !in unpublishedProjects && this != rootProject) {
@@ -97,11 +98,12 @@ allprojects {
 
 apiValidation {
     ignoredProjects.addAll(
-        listOf("exposed-tests", "exposed-bom", "exposed-r2dbc-tests", "exposed-jdbc-r2dbc-tests", "exposed-version-catalog", "exposed-dao-r2dbc-tests", "exposed-dao-r2dbc")
+        listOf("exposed-tests", "exposed-bom", "exposed-r2dbc-tests", "exposed-jdbc-r2dbc-tests", "exposed-version-catalog", "exposed-dao-r2dbc-tests", "exposed-dao-r2dbc")  + sampleProjects
     )
 }
 
 subprojects {
+    if (name in sampleProjects) return@subprojects
     configureDetekt()
 
     dependencies {
@@ -115,7 +117,7 @@ subprojects {
 }
 
 subprojects {
-    if (name == "exposed-bom" || name == "exposed-version-catalog") return@subprojects
+    if (name == "exposed-bom" || name == "exposed-version-catalog" || name in sampleProjects) return@subprojects
 
     apply(plugin = rootProject.libs.plugins.jvm.get().pluginId)
     apply(plugin = rootProject.libs.plugins.kover.get().pluginId)
