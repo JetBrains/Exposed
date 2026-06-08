@@ -3,15 +3,14 @@
 package org.jetbrains.exposed.samples.broker.r2dbc.routes
 
 import io.ktor.http.*
-import kotlinx.coroutines.flow.toList
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import org.jetbrains.exposed.r2dbc.dao.flushCache
-import org.jetbrains.exposed.r2dbc.dao.relationships.load
+import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.samples.broker.r2dbc.model.dto.*
 import org.jetbrains.exposed.samples.broker.r2dbc.model.entities.*
+import org.jetbrains.exposed.v1.dao.r2dbc.relationships.load
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 
 fun Application.clientRoutes() {
@@ -25,9 +24,8 @@ fun Application.clientRoutes() {
                     val client = Client.new {
                         name = dto.name
                         email = dto.email
-                        this.broker set broker
+                        this.broker.set(broker)
                     }
-                    flushCache()
                     ClientDTO(client.id.value, client.name, client.email, client.broker().id.value)
                 }
                 call.respond(HttpStatusCode.Created, result)
@@ -47,13 +45,16 @@ fun Application.clientRoutes() {
                         broker = client.broker().let { b ->
                             BrokerDTO(b.id.value, b.name, b.licenseNumber)
                         },
-                        portfolios = client.portfolios().toList().map {
+                        portfolios = client.portfolios.toList().map {
                             PortfolioSummaryDTO(it.id.value, it.name, it.createdAt.toString())
                         }
                     )
                 }
-                if (detail != null) call.respond(detail)
-                else call.respond(HttpStatusCode.NotFound, "Client not found")
+                if (detail != null) {
+                    call.respond(detail)
+                } else {
+                    call.respond(HttpStatusCode.NotFound, "Client not found")
+                }
             }
 
             get("{id}/trades") {
@@ -61,7 +62,7 @@ fun Application.clientRoutes() {
                     ?: return@get call.respond(HttpStatusCode.BadRequest, "Invalid ID")
                 val trades = suspendTransaction {
                     val client = Client.findById(id) ?: return@suspendTransaction null
-                    client.trades().toList().map { trade ->
+                    client.trades.toList().map { trade ->
                         TradeDetailDTO(
                             id = trade.id.value,
                             instrumentTicker = trade.instrument().ticker,
@@ -74,8 +75,11 @@ fun Application.clientRoutes() {
                         )
                     }
                 }
-                if (trades != null) call.respond(trades)
-                else call.respond(HttpStatusCode.NotFound, "Client not found")
+                if (trades != null) {
+                    call.respond(trades)
+                } else {
+                    call.respond(HttpStatusCode.NotFound, "Client not found")
+                }
             }
         }
     }
