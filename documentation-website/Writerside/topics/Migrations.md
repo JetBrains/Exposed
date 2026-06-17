@@ -18,16 +18,14 @@
 Managing database schema changes is a critical part of application development. Exposed supports two approaches to
 schema migrations:
 
-* The [Exposed Gradle plugin](Exposed-gradle-plugin.md) and the [Exposed Maven plugin](Exposed-maven-plugin.md) provide
-  higher-level workflows for generating migration scripts by comparing your Exposed table definitions with an existing
-  database schema.
+* The [Exposed Gradle plugin](Exposed-gradle-plugin.md) provides a higher-level workflow for generating migration scripts by comparing your Exposed
+  table definitions with an existing database schema.
 * The `SchemaUtils` and `MigrationUtils` APIs provide lower-level building blocks for custom migration and schema validation workflows that can be used directly in
   Kotlin code.
 
 > This topic describes the migration APIs provided by `SchemaUtils` and `MigrationUtils`.
 > 
-> For build-tool-driven workflows that generate migration scripts automatically, see the
-> [Exposed Gradle plugin](Exposed-gradle-plugin.md) or the [Exposed Maven plugin](Exposed-maven-plugin.md).
+> For a Gradle-based workflow that generates migration scripts automatically, see [Exposed Gradle plugin](Exposed-gradle-plugin.md).
 > 
 {style="tip"}
 
