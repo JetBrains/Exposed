@@ -53,8 +53,9 @@ public final class org/jetbrains/exposed/v1/jdbc/EmptySizedIterable : java/util/
 }
 
 public final class org/jetbrains/exposed/v1/jdbc/Except : org/jetbrains/exposed/v1/jdbc/SetOperation {
-	public fun <init> (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery;)V
-	public fun copy ()Lorg/jetbrains/exposed/v1/jdbc/Intersect;
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Z)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun copy ()Lorg/jetbrains/exposed/v1/jdbc/Except;
 	public synthetic fun copy ()Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
 	public fun getOperationName ()Ljava/lang/String;
 	public synthetic fun withDistinct (Z)Lorg/jetbrains/exposed/v1/core/AbstractQuery;
@@ -86,7 +87,8 @@ public final class org/jetbrains/exposed/v1/jdbc/ExposedConnectionImpl : org/jet
 }
 
 public final class org/jetbrains/exposed/v1/jdbc/Intersect : org/jetbrains/exposed/v1/jdbc/SetOperation {
-	public fun <init> (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery;)V
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Z)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun copy ()Lorg/jetbrains/exposed/v1/jdbc/Intersect;
 	public synthetic fun copy ()Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
 	public synthetic fun withDistinct (Z)Lorg/jetbrains/exposed/v1/core/AbstractQuery;
@@ -332,7 +334,8 @@ public final class org/jetbrains/exposed/v1/jdbc/SchemaUtils : org/jetbrains/exp
 
 public abstract class org/jetbrains/exposed/v1/jdbc/SetOperation : org/jetbrains/exposed/v1/core/AbstractQuery, org/jetbrains/exposed/v1/jdbc/SizedIterable, org/jetbrains/exposed/v1/jdbc/statements/BlockingExecutable {
 	public static final field Companion Lorg/jetbrains/exposed/v1/jdbc/SetOperation$Companion;
-	public synthetic fun <init> (Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery;ZLkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun count ()J
 	public fun empty ()Z
 	public synthetic fun execute (Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;)Ljava/lang/Object;
@@ -347,6 +350,7 @@ public abstract class org/jetbrains/exposed/v1/jdbc/SetOperation : org/jetbrains
 	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
 	public fun getStatement ()Lorg/jetbrains/exposed/v1/jdbc/SetOperation;
 	protected final fun getTransaction ()Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
+	public final fun getWrapInParentheses ()Z
 	public fun isAlwaysBatch ()Z
 	public fun iterator ()Ljava/util/Iterator;
 	public fun limit (I)Lorg/jetbrains/exposed/v1/jdbc/SetOperation;
@@ -367,10 +371,14 @@ public final class org/jetbrains/exposed/v1/jdbc/SetOperation$Companion {
 }
 
 public final class org/jetbrains/exposed/v1/jdbc/SetOperationsKt {
-	public static final fun except (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/jdbc/Query;)Lorg/jetbrains/exposed/v1/jdbc/Except;
-	public static final fun intersect (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/jdbc/Query;)Lorg/jetbrains/exposed/v1/jdbc/Intersect;
-	public static final fun union (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/jdbc/Query;)Lorg/jetbrains/exposed/v1/jdbc/Union;
-	public static final fun unionAll (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/jdbc/Query;)Lorg/jetbrains/exposed/v1/jdbc/UnionAll;
+	public static final fun except (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/jdbc/Query;Z)Lorg/jetbrains/exposed/v1/jdbc/Except;
+	public static synthetic fun except$default (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/jdbc/Query;ZILjava/lang/Object;)Lorg/jetbrains/exposed/v1/jdbc/Except;
+	public static final fun intersect (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/jdbc/Query;Z)Lorg/jetbrains/exposed/v1/jdbc/Intersect;
+	public static synthetic fun intersect$default (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/jdbc/Query;ZILjava/lang/Object;)Lorg/jetbrains/exposed/v1/jdbc/Intersect;
+	public static final fun union (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/jdbc/Query;Z)Lorg/jetbrains/exposed/v1/jdbc/Union;
+	public static synthetic fun union$default (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/jdbc/Query;ZILjava/lang/Object;)Lorg/jetbrains/exposed/v1/jdbc/Union;
+	public static final fun unionAll (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/jdbc/Query;Z)Lorg/jetbrains/exposed/v1/jdbc/UnionAll;
+	public static synthetic fun unionAll$default (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/jdbc/Query;ZILjava/lang/Object;)Lorg/jetbrains/exposed/v1/jdbc/UnionAll;
 }
 
 public final class org/jetbrains/exposed/v1/jdbc/SizedCollection : org/jetbrains/exposed/v1/jdbc/SizedIterable {
@@ -407,7 +415,8 @@ public final class org/jetbrains/exposed/v1/jdbc/SizedIterable$DefaultImpls {
 }
 
 public final class org/jetbrains/exposed/v1/jdbc/Union : org/jetbrains/exposed/v1/jdbc/SetOperation {
-	public fun <init> (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery;)V
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Z)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun copy ()Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
 	public fun copy ()Lorg/jetbrains/exposed/v1/jdbc/Union;
 	public synthetic fun withDistinct (Z)Lorg/jetbrains/exposed/v1/core/AbstractQuery;
@@ -415,7 +424,8 @@ public final class org/jetbrains/exposed/v1/jdbc/Union : org/jetbrains/exposed/v
 }
 
 public final class org/jetbrains/exposed/v1/jdbc/UnionAll : org/jetbrains/exposed/v1/jdbc/SetOperation {
-	public fun <init> (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery;)V
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Z)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun copy ()Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
 	public fun copy ()Lorg/jetbrains/exposed/v1/jdbc/UnionAll;
 	public synthetic fun withDistinct (Z)Lorg/jetbrains/exposed/v1/core/AbstractQuery;
