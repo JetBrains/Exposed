@@ -3,6 +3,7 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.types
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.functions.math.RoundFunction
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.select
 import org.jetbrains.exposed.v1.r2dbc.selectAll
@@ -290,6 +291,8 @@ class NumericColumnTypesTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
+    @Suppress("MaximumLineLength")
     @Test
     fun testCustomCheckConstraintName() {
         val tester = object : Table("tester") {
@@ -310,12 +313,12 @@ class NumericColumnTypesTests : R2dbcDatabaseTestsBase() {
                     "${tester.ushort.nameInDatabaseCase()} ${tester.ushort.columnType} NOT NULL, " +
                     "${tester.integer.nameInDatabaseCase()} ${tester.integer.columnType} NOT NULL, " +
                     "${tester.uinteger.nameInDatabaseCase()} ${tester.uinteger.columnType} NOT NULL, " +
-                    "CONSTRAINT custom_byte_check CHECK (${tester.byte.nameInDatabaseCase()} BETWEEN ${Byte.MIN_VALUE} AND ${Byte.MAX_VALUE}), " +
-                    "CONSTRAINT custom_ubyte_check CHECK (${tester.ubyte.nameInDatabaseCase()} BETWEEN 0 AND ${UByte.MAX_VALUE}), " +
-                    "CONSTRAINT custom_short_check CHECK (${tester.short.nameInDatabaseCase()} BETWEEN ${Short.MIN_VALUE} AND ${Short.MAX_VALUE}), " +
-                    "CONSTRAINT custom_ushort_check CHECK (${tester.ushort.nameInDatabaseCase()} BETWEEN 0 AND ${UShort.MAX_VALUE}), " +
-                    "CONSTRAINT custom_integer_check CHECK (${tester.integer.nameInDatabaseCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE}), " +
-                    "CONSTRAINT custom_uinteger_check CHECK (${tester.uinteger.nameInDatabaseCase()} BETWEEN 0 AND ${UInt.MAX_VALUE}))",
+                    "CONSTRAINT ${"custom_byte_check".inProperCase()} CHECK (${tester.byte.nameInDatabaseCase()} BETWEEN ${Byte.MIN_VALUE} AND ${Byte.MAX_VALUE}), " +
+                    "CONSTRAINT ${"custom_ubyte_check".inProperCase()} CHECK (${tester.ubyte.nameInDatabaseCase()} BETWEEN 0 AND ${UByte.MAX_VALUE}), " +
+                    "CONSTRAINT ${"custom_short_check".inProperCase()} CHECK (${tester.short.nameInDatabaseCase()} BETWEEN ${Short.MIN_VALUE} AND ${Short.MAX_VALUE}), " +
+                    "CONSTRAINT ${"custom_ushort_check".inProperCase()} CHECK (${tester.ushort.nameInDatabaseCase()} BETWEEN 0 AND ${UShort.MAX_VALUE}), " +
+                    "CONSTRAINT ${"custom_integer_check".inProperCase()} CHECK (${tester.integer.nameInDatabaseCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE}), " +
+                    "CONSTRAINT ${"custom_uinteger_check".inProperCase()} CHECK (${tester.uinteger.nameInDatabaseCase()} BETWEEN 0 AND ${UInt.MAX_VALUE}))",
                 tester.ddl
             )
         }
