@@ -57,7 +57,6 @@
     </toc-element>
     <toc-element toc-title="Tools">
         <toc-element topic="Exposed-gradle-plugin.md"/>
-        <toc-element topic="Exposed-maven-plugin.md"/>
     </toc-element>
     <toc-element topic="Spring-Boot-integration.md"/>
     <toc-element toc-title="Releases">
