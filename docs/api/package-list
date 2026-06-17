@@ -42,8 +42,6 @@ module:exposed-json
 org.jetbrains.exposed.v1.json
 module:exposed-kotlin-datetime
 org.jetbrains.exposed.v1.datetime
-module:exposed-maven-plugin
-org.jetbrains.exposed.v1.maven.plugin
 module:exposed-migration-core
 org.jetbrains.exposed.v1.migration.core
 module:exposed-migration-jdbc
