@@ -35,7 +35,7 @@ import kotlin.time.Clock
  *
  * Consumed by:
  *  - `exposed-gradle-plugin`'s `GenerateMigrationsWorker`
- *  - the forthcoming `exposed-maven-plugin` mojo
+ *  - `exposed-maven-plugin`'s `GenerateMigrationMojo`
  *
  * Pure JVM; no Gradle or Maven types appear on its API surface.
  */

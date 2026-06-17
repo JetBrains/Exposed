@@ -134,6 +134,7 @@ class GenerateMigrationMojo : AbstractMojo() {
                 }
 
                 override fun debug(message: String) {
+                    if (!isDebugEnabled) return
                     getLog().debug(message)
                 }
 
