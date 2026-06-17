@@ -12,6 +12,7 @@ import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.dao.flushCache
+import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
@@ -670,6 +671,39 @@ class DefaultsTest : DatabaseTestsBase() {
             val timestamp = DefaultTimestampTable.selectAll().first()[DefaultTimestampTable.timestamp]
 
             assertEquals(timestamp, entity[DefaultTimestampTable.timestamp])
+        }
+    }
+
+    @Test
+    fun testTimestampWithDistantFutureDefault() {
+        val tester = object : Table("tester") {
+            // Kotlin DISTANT_FUTURE == +100000-01-01T00:00:00Z
+            val status_end = timestamp("status_end").default(Instant.DISTANT_FUTURE)
+            val activity_end = timestamp("activity_end").clientDefault { Instant.DISTANT_FUTURE }
+        }
+
+        withDb { testDb ->
+            // Stored range for these DB (& SQL Server) has maximum year 9999
+            if (testDb == TestDB.ORACLE || testDb in TestDB.ALL_MYSQL_MARIADB) {
+                // Out-of-range TS value not even acceptable as just default value
+                expectException<ExposedSQLException> { SchemaUtils.create(tester) }
+            } else {
+                SchemaUtils.create(tester)
+
+                if (testDb == TestDB.SQLSERVER) {
+                    // TS value is only checked whether out-of-range on insert
+                    expectException<ExposedSQLException> { tester.insert { } }
+                } else {
+                    tester.insert { }
+
+                    val results = tester.selectAll().singleOrNull()
+                    assertNotNull(results)
+                    assertEquals(Instant.DISTANT_FUTURE, results[tester.status_end])
+                    assertEquals(Instant.DISTANT_FUTURE, results[tester.activity_end])
+                }
+
+                SchemaUtils.drop(tester)
+            }
         }
     }
 }
