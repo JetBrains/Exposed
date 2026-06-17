@@ -19,11 +19,12 @@ import kotlin.test.assertTrue
 
 class QueryTimeoutTest : R2dbcDatabaseTestsBase() {
 
+    /** Generates a db-specific statement that delays for [timeout] seconds. The provided [timeout] should not exceed a value of 9. */
     private fun generateTimeoutStatements(db: TestDB, timeout: Int): String {
         return when (db) {
             in TestDB.ALL_MYSQL_MARIADB -> "SELECT 1 = 0 WHERE SLEEP($timeout);"
             in TestDB.ALL_POSTGRES -> "SELECT pg_sleep($timeout);"
-            TestDB.SQLSERVER -> "WAITFOR DELAY '00:00:$timeout';"
+            TestDB.SQLSERVER -> "WAITFOR DELAY '00:00:0$timeout';"
             else -> throw NotImplementedError()
         }
     }
@@ -106,5 +107,36 @@ class QueryTimeoutTest : R2dbcDatabaseTestsBase() {
 
         logCaptor.clearLogs()
         logCaptor.close()
+    }
+
+    @Test
+    fun testTransactionTimeoutWithDefaults() = runTest {
+        Assumptions.assumeTrue(timeoutTestDBList.containsAll(TestDB.enabledDialects()))
+
+        val dialect = TestDB.enabledDialects().first()
+        val db = dialect.connect {
+            defaultQueryTimeout = 1
+        }
+
+        val statementWithDelay = generateTimeoutStatements(dialect, 3)
+
+        // transaction block should use default DatabaseConfig values when no property is set
+        try {
+            suspendTransaction(db = db) {
+                exec(statementWithDelay)
+                Assertions.fail("Should have thrown a timeout or cancelled statement exception")
+            }
+        } catch (cause: ExposedR2dbcException) {
+            assertTrue(cause.cause is R2dbcNonTransientResourceException || cause.cause is R2dbcTimeoutException)
+        }
+
+        // property set in transaction block should override default DatabaseConfig
+        suspendTransaction(db = db) {
+            queryTimeout = 8
+
+            exec(statementWithDelay)
+        }
+
+        TransactionManager.closeAndUnregister(db)
     }
 }
