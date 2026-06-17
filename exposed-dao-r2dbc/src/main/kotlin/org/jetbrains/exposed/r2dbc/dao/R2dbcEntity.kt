@@ -1,0 +1,301 @@
+package org.jetbrains.exposed.r2dbc.dao
+
+import org.jetbrains.exposed.r2dbc.dao.exceptions.R2dbcEntityNotFoundException
+import org.jetbrains.exposed.r2dbc.dao.relationships.R2dbcInnerTableLink
+import org.jetbrains.exposed.v1.core.AutoIncColumnType
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.CompositeColumn
+import org.jetbrains.exposed.v1.core.EntityIDColumnType
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.dao.id.CompositeID
+import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
+import org.jetbrains.exposed.v1.r2dbc.deleteWhere
+import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.r2dbc.update
+import kotlin.collections.get
+import kotlin.properties.Delegates
+import kotlin.reflect.KProperty
+
+open class R2dbcEntity<ID : Any>(val id: EntityID<ID>) {
+
+    /** The associated [R2dbcEntityClass] that manages this [R2dbcEntity] instance. */
+    var klass: R2dbcEntityClass<ID, R2dbcEntity<ID>> by Delegates.notNull()
+        internal set
+
+    /** The [R2dbcDatabase] associated with the record mapped to this [R2dbcEntity] instance. */
+    var db: R2dbcDatabase by Delegates.notNull()
+        internal set
+
+    val writeValues = LinkedHashMap<Column<Any?>, Any?>()
+
+    @Suppress("VariableNaming")
+    var _readValues: ResultRow? = null
+
+    val readValues: ResultRow
+        get() = _readValues ?: error("Entity is not initialized yet. Call flush() or reload the entity from the database.")
+
+    private val referenceCache by lazy { HashMap<Column<*>, Any?>() }
+
+    operator fun <T> Column<T>.getValue(o: R2dbcEntity<ID>, desc: KProperty<*>): T = lookup()
+
+    fun <T> Column<T>.lookup(): T = when {
+        writeValues.containsKey(this as Column<out Any?>) -> writeValues[this as Column<out Any?>] as T
+        id._value == null && _readValues?.hasValue(this)?.not() ?: true -> {
+            when {
+                isDatabaseGenerated() -> error(
+                    "Cannot access database-generated column $name before flush. " +
+                        "Call suspend flush() first to retrieve generated values."
+                )
+                else -> defaultValueFun?.invoke() as T
+            }
+        }
+        else -> readValues[this]
+    }
+
+    operator fun <T> Column<T>.setValue(entity: R2dbcEntity<ID>, desc: KProperty<*>, value: T) {
+        klass.invalidateEntityInCache(entity)
+        val currentValue = _readValues?.getOrNull(this)
+        if (writeValues.containsKey(this as Column<out Any?>) || currentValue != value) {
+            val entityCache = TransactionManager.current().entityCache
+
+            val valueTypeMismatch = value is EntityID<*> && value.table is CompositeIdTable && this.columnType !is EntityIDColumnType<*>
+            writeValues[this as Column<Any?>] = if (valueTypeMismatch) (value as EntityID<*>)._value else value
+
+            if (entity.id._value != null) {
+                @Suppress("UNCHECKED_CAST")
+                val entityTable = this.table as? IdTable<Any> ?: klass.table as IdTable<Any>
+                if (entityCache.data[entityTable].orEmpty().contains(entity.id._value)) {
+                    entityCache.scheduleUpdate(klass, entity)
+                }
+            }
+        }
+    }
+
+    /**
+     * Property delegate for [CompositeColumn] — reads each underlying column's value via [Column.lookup]
+     * and reassembles them via [CompositeColumn.restoreValueFromParts]. Mirrors JDBC's `Entity` operator.
+     */
+    operator fun <T> CompositeColumn<T>.getValue(o: R2dbcEntity<ID>, desc: KProperty<*>): T {
+        val values = this.getRealColumns().associateWith { it.lookup() }
+        return this.restoreValueFromParts(values)
+    }
+
+    /**
+     * Property delegate for [CompositeColumn] — splits [value] into its real-column parts via
+     * [CompositeColumn.getRealColumnsWithValues] and writes each part through [Column.setValue].
+     * Mirrors JDBC's `Entity` operator.
+     */
+    operator fun <T> CompositeColumn<T>.setValue(o: R2dbcEntity<ID>, desc: KProperty<*>, value: T) {
+        with(o) {
+            this@setValue.getRealColumnsWithValues(value).forEach { (column, partValue) ->
+                @Suppress("UNCHECKED_CAST")
+                (column as Column<Any?>).setValue(o, desc, partValue)
+            }
+        }
+    }
+
+    /**
+     * Property delegate for [EntityFieldWithTransform] — reads the raw column value via [Column.getValue]
+     * and runs it through the transformer's `wrap` function (with optional memoization).
+     */
+    operator fun <Unwrapped, Wrapped> EntityFieldWithTransform<Unwrapped, Wrapped>.getValue(o: R2dbcEntity<ID>, desc: KProperty<*>): Wrapped =
+        wrap(column.getValue(o, desc))
+
+    /**
+     * Property delegate for [EntityFieldWithTransform] — runs the supplied value through the transformer's
+     * `unwrap` function and writes it back to the original column via [Column.setValue].
+     */
+    operator fun <Unwrapped, Wrapped> EntityFieldWithTransform<Unwrapped, Wrapped>.setValue(o: R2dbcEntity<ID>, desc: KProperty<*>, value: Wrapped) {
+        column.setValue(o, desc, unwrap(value))
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    internal fun writeIdColumnValue(table: IdTable<*>, value: EntityID<*>) {
+        (value._value as? CompositeID)?.let { id ->
+            writeCompositeIdColumnValue(table, id)
+            value._value = null
+        } ?: run {
+            writeValues[table.id as Column<Any?>] = value
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun writeCompositeIdColumnValue(table: IdTable<*>, id: CompositeID) {
+        table.idColumns.forEach { column ->
+            val wrappedIdColumnType = (column.columnType as EntityIDColumnType<*>).idColumn.columnType
+            if (wrappedIdColumnType !is AutoIncColumnType<*> && column.defaultValueFun == null && column !in id) {
+                error("Required column $column is not set to composite id")
+            }
+            if (column in id) { // so we skip autoincrement columns and autogenerated columns
+                id[column as Column<EntityID<Any>>]?.let {
+                    writeValues[column as Column<Any?>] = it
+                }
+            }
+        }
+    }
+
+    internal suspend fun isNewEntity(): Boolean {
+        val cache = TransactionManager.current().entityCache
+        return cache.inserts[klass.table]?.contains(this) ?: false
+    }
+
+    fun storeWrittenValues() {
+        // Move write values to read values
+        if (_readValues != null) {
+            for ((c, v) in writeValues) {
+                _readValues!![c] = v
+            }
+            // Clear _readValues if not all columns are loaded
+            if (klass.dependsOnColumns.any { it.table == klass.table && !_readValues!!.hasValue(it) }) {
+                _readValues = null
+            }
+        }
+        // Clear write values
+        writeValues.clear()
+    }
+
+    @Suppress("ForbiddenComment")
+    open suspend fun flush(batch: R2dbcEntityBatchUpdate? = null): Boolean {
+        if (isNewEntity()) {
+            TransactionManager.current().entityCache.flushInserts(klass.table)
+            return true
+        }
+        if (writeValues.isNotEmpty()) {
+            if (batch == null) {
+                val table = klass.table
+
+                @Suppress("VariableNaming")
+                val _writeValues = writeValues.toMap()
+                storeWrittenValues()
+
+                val transaction = TransactionManager.current()
+
+                @Suppress("UNCHECKED_CAST")
+                transaction.registerChange(klass as R2dbcEntityClass<*, R2dbcEntity<*>>, id, EntityChangeType.Updated)
+
+                executeAsPartOfEntityLifecycle {
+                    table.update({ table.id eq id }) {
+                        for ((c, v) in _writeValues) {
+                            it[c] = v
+                        }
+                    }
+                }
+            } else {
+                batch.addBatch(this)
+                for ((c, v) in writeValues) {
+                    batch[c] = v
+                }
+                storeWrittenValues()
+            }
+
+            return true
+        }
+        return false
+    }
+
+    open suspend fun delete() {
+        val table = klass.table
+        val entityId = this.id
+        // TODO should we insert before and then remove
+        //  (extra requests, but probably correctness could be better)
+        if (!isNewEntity()) {
+            val transaction = TransactionManager.current()
+
+            @Suppress("UNCHECKED_CAST")
+            transaction.registerChange(klass as R2dbcEntityClass<*, R2dbcEntity<*>>, entityId, EntityChangeType.Removed)
+
+            executeAsPartOfEntityLifecycle {
+                table.deleteWhere { table.id eq entityId }
+            }
+        }
+
+        klass.removeFromCache(this)
+    }
+
+    internal fun hasInReferenceCache(ref: Column<*>): Boolean {
+        return ref in referenceCache
+    }
+
+    internal fun <T> getReferenceFromCache(ref: Column<*>): T {
+        return referenceCache[ref] as T
+    }
+
+    internal fun storeReferenceInCache(ref: Column<*>, value: Any?) {
+        if (db.config.keepLoadedReferencesOutOfTransaction) {
+            referenceCache[ref] = value
+        }
+    }
+
+    open suspend fun refresh(flush: Boolean = false) {
+        val transaction = TransactionManager.current()
+        val cache = transaction.entityCache
+
+        val isNewEntity = isNewEntity()
+        when {
+            isNewEntity && flush -> cache.flushInserts(klass.table)
+            flush -> flush()
+            isNewEntity -> throw R2dbcEntityNotFoundException(this.id, this.klass)
+            else -> writeValues.clear()
+        }
+
+        klass.removeFromCache(this)
+        val reloaded = klass[id]
+        cache.store(this)
+        _readValues = reloaded.readValues
+        db = transaction.db
+    }
+
+    /**
+     * Registers an intermediate [table] as a many-to-many link between this entity's table and
+     * the target [R2dbcEntityClass]. The source and target columns are inferred from the
+     * intermediate table's foreign keys.
+     *
+     * Counterpart of JDBC's `via`. Named `viaSuspend` to match the rest of the R2DBC DAO API.
+     */
+    // TODO ALIGN_WITH_JDBC: name diverges from JDBC's `via`; revisit if/when the relationship DSL
+    //  is unified across the JDBC and R2DBC DAO modules.
+    infix fun <TID : Any, Target : R2dbcEntity<TID>> R2dbcEntityClass<TID, Target>.viaSuspend(
+        table: Table
+    ): R2dbcInnerTableLink<ID, R2dbcEntity<ID>, TID, Target> =
+        R2dbcInnerTableLink(
+            table = table,
+            sourceTable = this@R2dbcEntity.id.table,
+            target = this@viaSuspend
+        )
+
+    /**
+     * Registers an intermediate table as a many-to-many link with explicitly specified
+     * [sourceColumn] and [targetColumn] — use this when the intermediate table has multiple
+     * references into the same entity's table and the defaults cannot be inferred.
+     */
+    // TODO similar to jdbc, but not covered with tests yet
+    fun <TID : Any, Target : R2dbcEntity<TID>> R2dbcEntityClass<TID, Target>.viaSuspend(
+        sourceColumn: Column<EntityID<ID>>,
+        targetColumn: Column<EntityID<TID>>
+    ): R2dbcInnerTableLink<ID, R2dbcEntity<ID>, TID, Target> =
+        R2dbcInnerTableLink(
+            table = sourceColumn.table,
+            sourceTable = this@R2dbcEntity.id.table,
+            target = this@viaSuspend,
+            _sourceColumn = sourceColumn,
+            _targetColumn = targetColumn
+        )
+}
+
+class R2dbcEntityBatchUpdate {
+    private val entities = mutableListOf<R2dbcEntity<*>>()
+    private val values = mutableMapOf<Column<Any?>, Any?>()
+
+    internal fun addBatch(entity: R2dbcEntity<*>) {
+        entities.add(entity)
+    }
+
+    operator fun set(column: Column<Any?>, value: Any?) {
+        values[column] = value
+    }
+}

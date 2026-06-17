@@ -22,7 +22,13 @@ include("exposed-migration-r2dbc")
 include("exposed-r2dbc")
 include("exposed-r2dbc-tests")
 include("exposed-jdbc-r2dbc-tests")
+include("exposed-dao-r2dbc")
+include("exposed-dao-r2dbc-tests")
 include("exposed-gradle-plugin")
+include("exposed-dao-showcase-jdbc")
+project(":exposed-dao-showcase-jdbc").projectDir = file("samples/exposed-dao-showcase/jdbc")
+include("exposed-dao-showcase-r2dbc")
+project(":exposed-dao-showcase-r2dbc").projectDir = file("samples/exposed-dao-showcase/r2dbc")
 
 pluginManagement {
     repositories {
