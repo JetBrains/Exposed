@@ -62,6 +62,7 @@ class PrimitiveTypeMapper : TypeMapper {
             is UUIDColumnType -> java.util.UUID::class.java
             is CharacterColumnType -> java.lang.String::class.java
             is BooleanColumnType -> java.lang.Boolean::class.java
+            is StringColumnType -> java.lang.String::class.java
             else -> return false
         }
         statement.bindNull(index - 1, columnValueType)
