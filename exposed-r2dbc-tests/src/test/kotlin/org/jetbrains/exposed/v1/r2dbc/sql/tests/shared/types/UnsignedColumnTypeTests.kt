@@ -3,11 +3,13 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.types
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
@@ -21,6 +23,10 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.junit.jupiter.api.Test
 
 class UnsignedColumnTypeTests : R2dbcDatabaseTestsBase() {
+    object MixedCaseUIntTable : Table() {
+        val unsignedCol = uinteger("unsignedCol")
+    }
+
     object UByteTable : Table("ubyte_table") {
         val unsignedByte = ubyte("ubyte")
     }
@@ -35,6 +41,18 @@ class UnsignedColumnTypeTests : R2dbcDatabaseTestsBase() {
 
     object ULongTable : Table("ulong_table") {
         val unsignedLong = ulong("ulong")
+    }
+
+    @OptIn(InternalApi::class)
+    @Test
+    fun testUnsignedCheckConstraintNameUsesProperCase() {
+        withTables(excludeSettings = TestDB.ALL_MYSQL_MARIADB, MixedCaseUIntTable) {
+            val checkConstraints = MixedCaseUIntTable.checkConstraints()
+            val checkName = checkConstraints.single().checkName
+            val expectedName = "chk_MixedCaseUInt_unsigned_integer_unsignedCol".inProperCase()
+            val unquotedCheckName = checkName.trim('"', '\'', '`')
+            assertEquals(expectedName, unquotedCheckName)
+        }
     }
 
     @Test
