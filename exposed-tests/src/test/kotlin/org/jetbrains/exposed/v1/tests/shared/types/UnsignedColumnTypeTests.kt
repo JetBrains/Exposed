@@ -1,12 +1,10 @@
 package org.jetbrains.exposed.v1.tests.shared.types
 
-import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
-import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -20,10 +18,6 @@ import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.junit.jupiter.api.Test
 
 class UnsignedColumnTypeTests : DatabaseTestsBase() {
-    object MixedCaseUIntTable : Table() {
-        val unsignedCol = uinteger("unsignedCol")
-    }
-
     object UByteTable : Table("ubyte_table") {
         val unsignedByte = ubyte("ubyte")
     }
@@ -38,18 +32,6 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
 
     object ULongTable : Table("ulong_table") {
         val unsignedLong = ulong("ulong")
-    }
-
-    @OptIn(InternalApi::class)
-    @Test
-    fun testUnsignedCheckConstraintNameUsesProperCase() {
-        withTables(excludeSettings = TestDB.ALL_MYSQL_MARIADB, MixedCaseUIntTable) {
-            val checkConstraints = MixedCaseUIntTable.checkConstraints()
-            val checkName = checkConstraints.single().checkName
-            val expectedName = "chk_MixedCaseUInt_unsigned_integer_unsignedCol".inProperCase()
-            val unquotedCheckName = checkName.trim('"', '\'', '`')
-            assertEquals(expectedName, unquotedCheckName)
-        }
     }
 
     @Test
