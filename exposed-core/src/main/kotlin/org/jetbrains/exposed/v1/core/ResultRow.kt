@@ -33,6 +33,9 @@ class ResultRow private constructor(
     @OptIn(InternalApi::class)
     private val database: DatabaseApi? = currentTransactionOrNull()?.db
 
+    // Per-row memo of converted values: caches the result of converting a slot's raw data[] value through an
+    // expression's column type, so repeated reads of the same expression don't re-run valueFromDB. Populated
+    // lazily on get/getOrNull and invalidated by set (see ResultRowCache). Does not store raw values — data[] does.
     private val lookUpCache = ResultRowCache(fieldIndex, columnTypes)
 
     /**
@@ -176,29 +179,31 @@ class ResultRow private constructor(
         @InternalApi
         fun create(rs: RowApi, fieldsIndex: Map<Expression<*>, Int>, columnTypes: Array<IColumnType<*>?>): ResultRow {
             return ResultRow(fieldsIndex, arrayOfNulls(fieldsIndex.size), columnTypes).apply {
-                fieldsIndex.forEach { (field, index) ->
+                for ((field, slot) in fieldsIndex) {
                     val columnType: IColumnType<out Any>? = (field as? ExpressionWithColumnType)?.columnType
                     val value = if (columnType != null) {
-                        columnType.readObject(rs, index + 1)
+                        columnType.readObject(rs, slot + 1)
                     } else {
-                        rs.getObject(index + 1)
+                        rs.getObject(slot + 1)
                     }
-                    data[index] = value
+                    data[slot] = value
                 }
             }
         }
 
         /**
-         * Builds the per-slot column-type array consumed by the value cache: for each `(expression, index)`
-         * in [fieldsIndex], slot `index` holds `expression`'s [IColumnType] (or `null` for non-column
+         * Builds the per-slot column-type array consumed by the value cache: for each `(expression, slot)`
+         * in [fieldsIndex], that `slot` holds `expression`'s [IColumnType] (or `null` for non-column
          * expressions). The result is row-invariant for a given [fieldsIndex] and is safe to share across
          * all rows of a result set.
          */
         @InternalApi
         fun columnTypesOf(fieldsIndex: Map<Expression<*>, Int>): Array<IColumnType<*>?> {
             val columnTypes = arrayOfNulls<IColumnType<*>>(fieldsIndex.size)
-            fieldsIndex.forEach { (expression, index) ->
-                columnTypes[index] = (expression as? Column<*>)?.columnType
+            // fieldsIndex maps each expression to its slot; place each type at that slot
+            // (by the map's stored position, not iteration order).
+            for ((expression, slot) in fieldsIndex) {
+                columnTypes[slot] = (expression as? Column<*>)?.columnType
             }
             return columnTypes
         }
@@ -275,6 +280,9 @@ class ResultRow private constructor(
          * column) falls through to the overflow map, preserving distinct converted values.
          */
         fun <T> cached(expression: Expression<*>, initializer: () -> T): T {
+            // Column.equals compares table+name and ignores columnType, so an EntityID column and its raw idColumn
+            // are equal -> they share one fieldIndex slot and one stored raw value. columnType is therefore the only
+            // thing separating their converted values (Int 5 vs EntityID(5)), which is why the cache keys on it here.
             val colType = (expression as? Column<*>)?.columnType
             val index = fieldIndex[expression]
 
