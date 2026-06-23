@@ -1,10 +1,12 @@
 package org.jetbrains.exposed.v1.tests.shared.types
 
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -18,6 +20,13 @@ import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.junit.jupiter.api.Test
 
 class UnsignedColumnTypeTests : DatabaseTestsBase() {
+    // Table without explicit name — Kotlin class name "MixedCaseUIntTable" is used
+    // (resolved to "MixedCaseUInt" after Table suffix removal),
+    // which has mixed casing to verify CHECK constraint names use inProperCase().
+    object MixedCaseUIntTable : Table() {
+        val unsignedCol = uinteger("unsignedCol")
+    }
+
     object UByteTable : Table("ubyte_table") {
         val unsignedByte = ubyte("ubyte")
     }
@@ -227,6 +236,20 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
                 val outOfRangeValue = UInt.MAX_VALUE.toLong() + 1L
                 exec("""INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)""")
             }
+        }
+    }
+
+    @OptIn(InternalApi::class)
+    @Test
+    fun testUnsignedCheckConstraintNameUsesProperCase() {
+        // MySQL/MariaDB use the UNSIGNED type instead of a CHECK constraint
+        withTables(excludeSettings = TestDB.ALL_MYSQL_MARIADB, MixedCaseUIntTable) {
+            val checkConstraints = MixedCaseUIntTable.checkConstraints()
+            val checkName = checkConstraints.single().checkName
+            val expectedName = "chk_MixedCaseUInt_unsigned_integer_unsignedCol".inProperCase()
+            // Constraint name may be quoted by cutIfNecessaryAndQuote, so strip quotes for comparison
+            val unquotedCheckName = checkName.trim('"', '\'', '`')
+            assertEquals(expectedName, unquotedCheckName)
         }
     }
 
