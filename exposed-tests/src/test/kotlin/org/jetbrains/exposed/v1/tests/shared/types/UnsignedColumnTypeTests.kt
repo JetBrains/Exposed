@@ -242,8 +242,8 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
     @OptIn(InternalApi::class)
     @Test
     fun testUnsignedCheckConstraintNameUsesProperCase() {
-        withTables(MixedCaseUIntTable) {
-            if (currentDialectTest is MysqlDialect) return@withTables // MySQL uses UNSIGNED type instead of CHECK
+        // MySQL/MariaDB use the UNSIGNED type instead of a CHECK constraint
+        withTables(excludeSettings = TestDB.ALL_MYSQL_MARIADB, MixedCaseUIntTable) {
             val checkConstraints = MixedCaseUIntTable.checkConstraints()
             val checkName = checkConstraints.single().checkName
             val expectedName = "chk_MixedCaseUInt_unsigned_integer_unsignedCol".inProperCase()

@@ -144,6 +144,7 @@ class CreateTableTests : DatabaseTestsBase() {
 
     @OptIn(InternalApi::class)
     @Test
+    @Suppress("MaximumLineLength")
     fun testCreateTableWithSingleColumnPrimaryKey() {
         val stringPKTable = object : Table("string_pk_table") {
             val column1 = varchar("column_1", 30)
@@ -173,7 +174,7 @@ class CreateTableTests : DatabaseTestsBase() {
                     intColumnDescription +
                     when (testDb) {
                         TestDB.SQLITE, TestDB.ORACLE ->
-                            ", CONSTRAINT chk_int_pk_table_signed_integer_column_1 CHECK (${"column_1".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                            ", CONSTRAINT ${"chk_int_pk_table_signed_integer_column_1".inProperCase()} CHECK (${"column_1".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
                         else -> ""
                     } +
                     ")",
@@ -184,6 +185,7 @@ class CreateTableTests : DatabaseTestsBase() {
 
     @OptIn(InternalApi::class)
     @Test
+    @Suppress("MaximumLineLength")
     fun primaryKeyCreateTableTest() {
         val account = object : Table("Account") {
             val id1 = integer("id1")
@@ -202,8 +204,8 @@ class CreateTableTests : DatabaseTestsBase() {
                     "CONSTRAINT pk_$tableName PRIMARY KEY ($id1ProperName, $id2ProperName)" +
                     when (testDb) {
                         TestDB.SQLITE, TestDB.ORACLE ->
-                            ", CONSTRAINT chk_Account_signed_integer_id1 CHECK (${"id1".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
-                                ", CONSTRAINT chk_Account_signed_integer_id2 CHECK (${"id2".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                            ", CONSTRAINT ${"chk_Account_signed_integer_id1".inProperCase()} CHECK (${"id1".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
+                                ", CONSTRAINT ${"chk_Account_signed_integer_id2".inProperCase()} CHECK (${"id2".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
                         else -> ""
                     } +
                     ")",
@@ -214,6 +216,7 @@ class CreateTableTests : DatabaseTestsBase() {
 
     @OptIn(InternalApi::class)
     @Test
+    @Suppress("MaximumLineLength")
     fun primaryKeyWithConstraintNameCreateTableTest() {
         val pkConstraintName = "PKConstraintName"
 
@@ -229,8 +232,8 @@ class CreateTableTests : DatabaseTestsBase() {
                     "CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName, $id2ProperName)" +
                     when (testDb) {
                         TestDB.SQLITE, TestDB.ORACLE ->
-                            ", CONSTRAINT chk_Person_signed_integer_id1 CHECK (${"id1".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
-                                ", CONSTRAINT chk_Person_signed_integer_id2 CHECK (${"id2".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                            ", CONSTRAINT ${"chk_Person_signed_integer_id1".inProperCase()} CHECK (${"id1".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
+                                ", CONSTRAINT ${"chk_Person_signed_integer_id2".inProperCase()} CHECK (${"id2".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
                         else -> ""
                     } +
                     ")",
@@ -348,6 +351,7 @@ class CreateTableTests : DatabaseTestsBase() {
 
     @OptIn(InternalApi::class)
     @Test
+    @Suppress("MaximumLineLength")
     fun createTableWithExplicitForeignKeyName1() {
         val fkName = "MyForeignKey1"
         val parent = object : LongIdTable("parent1") {}
@@ -370,7 +374,7 @@ class CreateTableTests : DatabaseTestsBase() {
                     " FOREIGN KEY (${t.identity(child.parentId)})" +
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.id)})" +
                     if (testDb == TestDB.ORACLE) {
-                        ", CONSTRAINT chk_child1_signed_long_id CHECK (${this.identity(parent.id)} BETWEEN ${Long.MIN_VALUE} AND ${Long.MAX_VALUE})"
+                        ", CONSTRAINT ${"chk_child1_signed_long_id".inProperCase()} CHECK (${this.identity(parent.id)} BETWEEN ${Long.MIN_VALUE} AND ${Long.MAX_VALUE})"
                     } else {
                         ""
                     } +
@@ -399,7 +403,7 @@ class CreateTableTests : DatabaseTestsBase() {
                 " FOREIGN KEY (${this.identity(child.parentId)})" +
                 " REFERENCES ${this.identity(parent)}(${this.identity(parent.id)})" +
                 if (testDb == TestDB.ORACLE) {
-                    ", CONSTRAINT chk_Child_signed_long_id CHECK (${this.identity(parent.id)} BETWEEN ${Long.MIN_VALUE} AND ${Long.MAX_VALUE})"
+                    ", CONSTRAINT ${"chk_Child_signed_long_id".inProperCase()} CHECK (${this.identity(parent.id)} BETWEEN ${Long.MIN_VALUE} AND ${Long.MAX_VALUE})"
                 } else {
                     ""
                 } +
@@ -427,7 +431,7 @@ class CreateTableTests : DatabaseTestsBase() {
                 " FOREIGN KEY (${this.identity(child.parentId)})" +
                 " REFERENCES ${this.identity(parent)}(${this.identity(parent.id)})" +
                 if (testDb == TestDB.ORACLE) {
-                    ", CONSTRAINT chk_Child2_signed_long_id CHECK (${this.identity(parent.id)} BETWEEN ${Long.MIN_VALUE} AND ${Long.MAX_VALUE})"
+                    ", CONSTRAINT ${"chk_Child2_signed_long_id".inProperCase()} CHECK (${this.identity(parent.id)} BETWEEN ${Long.MIN_VALUE} AND ${Long.MAX_VALUE})"
                 } else {
                     ""
                 } +
@@ -438,6 +442,7 @@ class CreateTableTests : DatabaseTestsBase() {
 
     @OptIn(InternalApi::class)
     @Test
+    @Suppress("MaximumLineLength")
     fun createTableWithExplicitForeignKeyName2() {
         val fkName = "MyForeignKey2"
         val parent = object : LongIdTable("parent2") {
@@ -462,7 +467,7 @@ class CreateTableTests : DatabaseTestsBase() {
                     " FOREIGN KEY (${t.identity(child.parentId)})" +
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.uniqueId)})" +
                     if (testDb == TestDB.ORACLE) {
-                        ", CONSTRAINT chk_child2_signed_long_id CHECK (${this.identity(parent.id)} BETWEEN ${Long.MIN_VALUE} AND ${Long.MAX_VALUE})"
+                        ", CONSTRAINT ${"chk_child2_signed_long_id".inProperCase()} CHECK (${this.identity(parent.id)} BETWEEN ${Long.MIN_VALUE} AND ${Long.MAX_VALUE})"
                     } else {
                         ""
                     } +
@@ -474,6 +479,7 @@ class CreateTableTests : DatabaseTestsBase() {
 
     @OptIn(InternalApi::class)
     @Test
+    @Suppress("MaximumLineLength")
     fun createTableWithExplicitForeignKeyName3() {
         val fkName = "MyForeignKey3"
         val parent = object : LongIdTable("parent3") {}
@@ -496,7 +502,7 @@ class CreateTableTests : DatabaseTestsBase() {
                     " FOREIGN KEY (${t.identity(child.parentId)})" +
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.id)})" +
                     if (testDb == TestDB.ORACLE) {
-                        ", CONSTRAINT chk_child3_signed_long_id CHECK (${this.identity(parent.id)} BETWEEN ${Long.MIN_VALUE} AND ${Long.MAX_VALUE})"
+                        ", CONSTRAINT ${"chk_child3_signed_long_id".inProperCase()} CHECK (${this.identity(parent.id)} BETWEEN ${Long.MIN_VALUE} AND ${Long.MAX_VALUE})"
                     } else {
                         ""
                     } +
@@ -508,6 +514,7 @@ class CreateTableTests : DatabaseTestsBase() {
 
     @OptIn(InternalApi::class)
     @Test
+    @Suppress("MaximumLineLength")
     fun createTableWithExplicitForeignKeyName4() {
         val fkName = "MyForeignKey4"
         val parent = object : LongIdTable() {
@@ -533,7 +540,7 @@ class CreateTableTests : DatabaseTestsBase() {
                     " FOREIGN KEY (${t.identity(child.parentId)})" +
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.uniqueId)})" +
                     if (testDb == TestDB.ORACLE) {
-                        ", CONSTRAINT chk_child4_signed_long_id CHECK (${this.identity(parent.id)} BETWEEN ${Long.MIN_VALUE} AND ${Long.MAX_VALUE})"
+                        ", CONSTRAINT ${"chk_child4_signed_long_id".inProperCase()} CHECK (${this.identity(parent.id)} BETWEEN ${Long.MIN_VALUE} AND ${Long.MAX_VALUE})"
                     } else {
                         ""
                     } +
@@ -545,6 +552,7 @@ class CreateTableTests : DatabaseTestsBase() {
 
     @OptIn(InternalApi::class)
     @Test
+    @Suppress("MaximumLineLength")
     fun createTableWithExplicitCompositeForeignKeyName1() {
         val fkName = "MyForeignKey1"
         val parent = object : Table("parent1") {
@@ -579,8 +587,8 @@ class CreateTableTests : DatabaseTestsBase() {
                     " ON DELETE CASCADE$updateCascadePart" +
                     when (testDb) {
                         TestDB.SQLITE, TestDB.ORACLE ->
-                            ", CONSTRAINT chk_child1_signed_integer_id_a CHECK (${"id_a".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
-                                ", CONSTRAINT chk_child1_signed_integer_id_b CHECK (${"id_b".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                            ", CONSTRAINT ${"chk_child1_signed_integer_id_a".inProperCase()} CHECK (${"id_a".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
+                                ", CONSTRAINT ${"chk_child1_signed_integer_id_b".inProperCase()} CHECK (${"id_b".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
                         else -> ""
                     } +
                     ")"
@@ -591,6 +599,7 @@ class CreateTableTests : DatabaseTestsBase() {
 
     @OptIn(InternalApi::class)
     @Test
+    @Suppress("MaximumLineLength")
     fun createTableWithExplicitCompositeForeignKeyName2() {
         val fkName = "MyForeignKey2"
         val parent = object : Table("parent2") {
@@ -625,8 +634,8 @@ class CreateTableTests : DatabaseTestsBase() {
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.idA)}, ${t.identity(parent.idB)})" +
                     when (testDb) {
                         TestDB.SQLITE, TestDB.ORACLE ->
-                            ", CONSTRAINT chk_child2_signed_integer_id_a CHECK (${"id_a".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
-                                ", CONSTRAINT chk_child2_signed_integer_id_b CHECK (${"id_b".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                            ", CONSTRAINT ${"chk_child2_signed_integer_id_a".inProperCase()} CHECK (${"id_a".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
+                                ", CONSTRAINT ${"chk_child2_signed_integer_id_b".inProperCase()} CHECK (${"id_b".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
                         else -> ""
                     } +
                     ")"
@@ -648,8 +657,8 @@ class CreateTableTests : DatabaseTestsBase() {
                     " ON DELETE SET DEFAULT" +
                     when (testDb) {
                         TestDB.SQLITE ->
-                            ", CONSTRAINT chk_Item_signed_integer_id CHECK (id BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
-                                ", CONSTRAINT chk_Item_signed_integer_categoryId CHECK (categoryId BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                            ", CONSTRAINT ${"chk_Item_signed_integer_id".inProperCase()} CHECK (id BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
+                                ", CONSTRAINT ${"chk_Item_signed_integer_categoryId".inProperCase()} CHECK (categoryId BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
                         else -> ""
                     } +
                     ")"
