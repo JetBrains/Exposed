@@ -39,22 +39,24 @@
             </li>
             <li>A <a href="https://www.oracle.com/java/technologies/downloads/">Java Development Kit (JDK)</a>, version 8 or higher.</li>
             <li>An integrated development environment (IDE), such as <a href="https://www.jetbrains.com/idea/">
-                IntelliJ IDEA Ultimate
-            </a>.  <p>
+                IntelliJ IDEA
+            </a>.
+                <note>
                 We recommend that you install
                 <a href="https://www.jetbrains.com/idea/">
                     IntelliJ IDEA Ultimate
                 </a>
-                which comes with built-in
+                , which comes with built-in
                 <a href="https://www.jetbrains.com/pages/intellij-idea-databases/">
                     database tools
                 </a>
-                and the
+                and supports
                 <a href="https://plugins.jetbrains.com/plugin/24367-exposed">
-                    Exposed plugin
+                    the Exposed plugin
                 </a>
-                for code completion and inspections. However, you can use another IDE of your choice.
-            </p></li>
+                . The Exposed plugin provides code completion, inspections, and allows you to generate tables and
+                entities from an existing schema.
+            </note></li>
         </list>
 
     </chapter>

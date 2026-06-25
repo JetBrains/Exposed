@@ -19,6 +19,13 @@
         </chapter>
     </chapter>
     <chapter title="Defining tables" id="defining-tables">
+        <!-- TODO Add link to IDEA docs -->
+        <note>
+            In IntelliJ IDEA Ultimate, you can use
+            <a href="https://plugins.jetbrains.com/plugin/24367-exposed">the Exposed plugin</a> to generate
+            table definitions from an existing database schema. For more information, see
+            the <a href="">Exposed plugin documentation</a>.
+        </note>
         <p>
             A database table is represented by an object inherited from a <code>Table</code> class.
         </p>
@@ -657,5 +664,4 @@
             This will generate the SQL necessary to create the table based on your definition.
         </p>
     </chapter>
-
 </topic>
