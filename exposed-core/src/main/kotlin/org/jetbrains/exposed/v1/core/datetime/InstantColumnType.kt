@@ -54,14 +54,14 @@ abstract class InstantColumnType<T> : ColumnType<T>(), IDateColumnType {
                 } else {
                     MYSQL_TIMESTAMP_FORMAT
                 }
-                "'${formatter.format(localDateTime)}'"
+                "'${formatter.formatAndTrimStart(localDateTime)}'"
             }
-            is SQLiteDialect -> "'${ORACLE_SQLITE_TIMESTAMP_FORMAT.format(localDateTime)}'"
+            is SQLiteDialect -> "'${ORACLE_SQLITE_TIMESTAMP_FORMAT.formatAndTrimStart(localDateTime)}'"
             is OracleDialect -> {
-                val formatted = ORACLE_SQLITE_TIMESTAMP_FORMAT.format(localDateTime)
+                val formatted = ORACLE_SQLITE_TIMESTAMP_FORMAT.formatAndTrimStart(localDateTime)
                 "TO_TIMESTAMP('$formatted', 'YYYY-MM-DD HH24:MI:SS.FF3')"
             }
-            else -> "'${DEFAULT_TIMESTAMP_FORMAT.format(localDateTime)}'"
+            else -> "'${DEFAULT_TIMESTAMP_FORMAT.formatAndTrimStart(localDateTime)}'"
         }
     }
 
@@ -106,15 +106,15 @@ abstract class InstantColumnType<T> : ColumnType<T>(), IDateColumnType {
         @OptIn(InternalApi::class)
         @Suppress("MagicNumber")
         return when (val dialect = currentDialect) {
-            is SQLiteDialect -> ORACLE_SQLITE_TIMESTAMP_FORMAT.format(localDateTime)
+            is SQLiteDialect -> ORACLE_SQLITE_TIMESTAMP_FORMAT.formatAndTrimStart(localDateTime)
             is MysqlDialect if (
                 dialect !is MariaDBDialect &&
                     !currentTransaction().db.version.covers(8, 0)
                 ) -> {
                 if (dialect.isFractionDateTimeSupported()) {
-                    MYSQL_TIMESTAMP_FRACTION_FORMAT.format(localDateTime)
+                    MYSQL_TIMESTAMP_FRACTION_FORMAT.formatAndTrimStart(localDateTime)
                 } else {
-                    MYSQL_TIMESTAMP_FORMAT.format(localDateTime)
+                    MYSQL_TIMESTAMP_FORMAT.formatAndTrimStart(localDateTime)
                 }
             }
             else -> localDateTime.toSqlTimestamp()
@@ -128,14 +128,16 @@ abstract class InstantColumnType<T> : ColumnType<T>(), IDateColumnType {
 
         return when {
             dialect is PostgreSQLDialect -> {
-                val formatted = ORACLE_SQLITE_TIMESTAMP_FORMAT.format(localDateTime)
+                val formatted = ORACLE_SQLITE_TIMESTAMP_FORMAT.formatAndTrimStart(localDateTime)
                 "'${formatted.trimEnd('0').trimEnd('.')}'::timestamp without time zone"
             }
             dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> {
-                val formatted = ORACLE_SQLITE_TIMESTAMP_FORMAT.format(localDateTime)
+                val formatted = ORACLE_SQLITE_TIMESTAMP_FORMAT.formatAndTrimStart(localDateTime)
                 "'${formatted.trimEnd('0').trimEnd('.')}'"
             }
             else -> super.nonNullValueAsDefaultString(value)
         }
     }
+
+    private fun DateTimeFormat<LocalDateTime>.formatAndTrimStart(value: LocalDateTime): String = format(value).trimStart('+')
 }
