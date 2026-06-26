@@ -353,9 +353,21 @@ transaction(db = db) {
 ### `queryTimeout`
 
 Use `queryTimeout` to set the number of seconds to wait
-for each statement in the block to execute before timing out:
+for each statement in the block to execute before timing out.
+
+If not set, any default value provided in
+[`DatabaseConfig`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-database-config/index.html)
+will be used instead:
 
 ```kotlin
+val db = Database.connect(
+    datasource = datasource,
+    databaseConfig = DatabaseConfig {
+        defaultQueryTimeout = 1
+    }
+)
+
+// property set in transaction block overrides default DatabaseConfig
 transaction {
     queryTimeout = 3
     try {

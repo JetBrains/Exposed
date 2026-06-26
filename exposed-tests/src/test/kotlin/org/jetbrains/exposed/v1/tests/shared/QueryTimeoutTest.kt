@@ -6,11 +6,13 @@ import nl.altindag.log.LogCaptor
 import org.jetbrains.exposed.v1.core.exposedLogger
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.INCOMPLETE_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.postgresql.util.PSQLException
@@ -23,11 +25,12 @@ import java.sql.SQLTimeoutException
  */
 class QueryTimeoutTest : DatabaseTestsBase() {
 
+    /** Generates a db-specific statement that delays for [timeout] seconds. The provided [timeout] should not exceed a value of 9. */
     private fun generateTimeoutStatements(db: TestDB, timeout: Int): String {
         return when (db) {
             in TestDB.ALL_MYSQL_MARIADB -> "SELECT SLEEP($timeout) = 0;"
             in TestDB.ALL_POSTGRES -> "SELECT pg_sleep($timeout);"
-            TestDB.SQLSERVER -> "WAITFOR DELAY '00:00:$timeout';"
+            TestDB.SQLSERVER -> "WAITFOR DELAY '00:00:0$timeout';"
             else -> throw NotImplementedError()
         }
     }
@@ -129,5 +132,33 @@ class QueryTimeoutTest : DatabaseTestsBase() {
 
         logCaptor.clearLogs()
         logCaptor.close()
+    }
+
+    @Test
+    fun testTransactionTimeoutWithDefaults() {
+        Assumptions.assumeTrue(timeoutTestDBList.containsAll(TestDB.enabledDialects()))
+
+        val dialect = TestDB.enabledDialects().first()
+        val db = dialect.connect {
+            defaultQueryTimeout = 1
+        }
+
+        val statementWithDelay = generateTimeoutStatements(dialect, 3)
+
+        // transaction block should use default DatabaseConfig values when no property is set
+        transaction(db = db) {
+            expectException<ExposedSQLException> {
+                exec(statementWithDelay)
+            }
+        }
+
+        // property set in transaction block should override default DatabaseConfig
+        transaction(db = db) {
+            queryTimeout = 8
+
+            exec(statementWithDelay)
+        }
+
+        TransactionManager.closeAndUnregister(db)
     }
 }

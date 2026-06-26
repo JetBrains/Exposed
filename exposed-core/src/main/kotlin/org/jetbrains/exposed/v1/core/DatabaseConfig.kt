@@ -20,6 +20,7 @@ interface DatabaseConfig {
     val defaultMinRetryDelay: Long
     val defaultMaxRetryDelay: Long
     val defaultReadOnly: Boolean
+    val defaultQueryTimeout: Int
     val warnLongQueriesDuration: Long?
     val maxEntitiesToStoreInCachePerEntity: Int
     val keepLoadedReferencesOutOfTransaction: Boolean
@@ -100,6 +101,13 @@ interface DatabaseConfig {
          * Default state is false.
          */
         var defaultReadOnly: Boolean = false
+
+        /**
+         * How many seconds the driver should wait for a statement to execute in a transaction before timing out.
+         * Note that not all drivers implement this limit. For more information, refer to the relevant driver documentation.
+         * Default timeout is 0.
+         */
+        var defaultQueryTimeout: Int = 0
 
         /**
          * Threshold in milliseconds to log queries which exceed the threshold with WARN level.
@@ -215,6 +223,8 @@ open class DatabaseConfigImpl(private val builder: DatabaseConfig.Builder) : Dat
         get() = builder.defaultMaxRetryDelay
     override val defaultReadOnly: Boolean
         get() = builder.defaultReadOnly
+    override val defaultQueryTimeout: Int
+        get() = builder.defaultQueryTimeout
     override val warnLongQueriesDuration: Long?
         get() = builder.warnLongQueriesDuration
     override val maxEntitiesToStoreInCachePerEntity: Int

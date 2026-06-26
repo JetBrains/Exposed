@@ -276,6 +276,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfigImpl : org/
 	public fun getDefaultMaxAttempts ()I
 	public fun getDefaultMaxRetryDelay ()J
 	public fun getDefaultMinRetryDelay ()J
+	public fun getDefaultQueryTimeout ()I
 	public fun getDefaultR2dbcIsolationLevel ()Lio/r2dbc/spi/IsolationLevel;
 	public fun getDefaultReadOnly ()Z
 	public fun getDefaultSchema ()Lorg/jetbrains/exposed/v1/core/Schema;
