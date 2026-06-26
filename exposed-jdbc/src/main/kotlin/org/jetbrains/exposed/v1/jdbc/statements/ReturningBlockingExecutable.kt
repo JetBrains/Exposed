@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.jdbc.statements
 
 import org.jetbrains.exposed.v1.core.Expression
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.statements.ReturningStatement
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
@@ -28,10 +29,15 @@ open class ReturningBlockingExecutable(
         override val fieldIndex = statement.returningExpressions.withIndex()
             .associateBy({ it.value }, { it.index })
 
+        // Row-invariant for this result set, so build it once and share across every row.
+        @OptIn(InternalApi::class)
+        private val columnTypes = ResultRow.columnTypesOf(fieldIndex)
+
         init {
             hasNext = result.next()
         }
 
-        override fun createResultRow(): ResultRow = ResultRow.create(JdbcResult(result), fieldIndex)
+        @OptIn(InternalApi::class)
+        override fun createResultRow(): ResultRow = ResultRow.create(JdbcResult(result), fieldIndex, columnTypes)
     }
 }

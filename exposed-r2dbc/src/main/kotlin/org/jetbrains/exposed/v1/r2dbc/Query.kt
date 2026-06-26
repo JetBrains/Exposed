@@ -308,16 +308,19 @@ open class Query(
             }
         }
 
+    @OptIn(InternalApi::class)
     override suspend fun collect(collector: FlowCollector<ResultRow>) {
         val fieldIndex = set.realFields.toSet()
             .mapIndexed { index, expression -> expression to index }
             .toMap()
+        // Row-invariant for this result set, so build it once and share across every row.
+        val columnTypes = ResultRow.columnTypesOf(fieldIndex)
         val tx = TransactionManager.current()
         val rs = tx.execQuery(queryToExecute)
 
         try {
             rs.mapRows {
-                val resultRow = ResultRow.create(it, fieldIndex)
+                val resultRow = ResultRow.create(it, fieldIndex, columnTypes)
                 trackResultSet(tx)
                 resultRow
             }.collect { rr -> rr?.let { collector.emit(it) } }

@@ -313,12 +313,17 @@ open class Query(
             .mapIndexed { index, expression -> expression to index }
             .toMap()
 
+        // Row-invariant for this result set, so build it once and share across every row.
+        @OptIn(InternalApi::class)
+        private val columnTypes = ResultRow.columnTypesOf(fieldIndex)
+
         init {
             hasNext = result.next()
             if (hasNext) trackResultSet(transaction)
         }
 
-        override fun createResultRow(): ResultRow = ResultRow.create(JdbcResult(result), fieldIndex)
+        @OptIn(InternalApi::class)
+        override fun createResultRow(): ResultRow = ResultRow.create(JdbcResult(result), fieldIndex, columnTypes)
     }
 
     companion object {
