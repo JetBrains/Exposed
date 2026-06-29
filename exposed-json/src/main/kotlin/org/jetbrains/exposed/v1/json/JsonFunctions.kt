@@ -74,7 +74,7 @@ inline fun <reified T : Any> ExpressionWithColumnType<*>.extract(
 inline fun <reified T : Any, E : T?> ExpressionWithColumnType<E>.castToJson(): CastToJson<E> {
     @Suppress("UNCHECKED_CAST")
     val columnType = (
-        columnType as? JsonColumnType<E>
+        columnType as? JsonColumnType<E & Any>
             ?: JsonColumnType(
                 { Json.encodeToString(serializer<T>(), it) },
                 { Json.decodeFromString(serializer<T>(), it) }
