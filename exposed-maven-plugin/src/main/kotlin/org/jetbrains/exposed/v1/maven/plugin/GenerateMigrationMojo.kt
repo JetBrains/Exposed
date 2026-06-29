@@ -1,6 +1,10 @@
 package org.jetbrains.exposed.v1.maven.plugin
 
 import org.apache.maven.plugin.AbstractMojo
+import org.apache.maven.plugin.MojoExecutionException
+import org.apache.maven.plugin.MojoFailureException
+import org.apache.maven.plugins.annotations.Execute
+import org.apache.maven.plugins.annotations.LifecyclePhase
 import org.apache.maven.plugins.annotations.Mojo
 import org.apache.maven.plugins.annotations.Parameter
 import org.apache.maven.plugins.annotations.ResolutionScope
@@ -22,6 +26,7 @@ import java.net.URL
     requiresDependencyResolution = ResolutionScope.RUNTIME,
     threadSafe = true,
 )
+@Execute(phase = LifecyclePhase.COMPILE)
 class GenerateMigrationMojo : AbstractMojo() {
 
     /**
@@ -125,6 +130,8 @@ class GenerateMigrationMojo : AbstractMojo() {
         get() = project.runtimeClasspathElements
             .map { File(it).toURI().toURL() }
 
+    // Suppress detekt warning here because we want to wrap all exceptions. Complete Stacktrace can still be seen with `-X` Maven option.
+    @Suppress("TooGenericExceptionCaught")
     override fun execute() {
         val migrationGenerator = MigrationGenerator(
             config = migrationConfig,
@@ -141,7 +148,14 @@ class GenerateMigrationMojo : AbstractMojo() {
                 override val isDebugEnabled: Boolean = debug
             }
         )
-        migrationGenerator.generate()
+
+        try {
+            migrationGenerator.generate()
+        } catch (e: IllegalArgumentException) {
+            throw MojoFailureException("Unable to generate migration, likely due to misconfiguration: ${e.message}", e)
+        } catch (e: Exception) {
+            throw MojoExecutionException("Unable to generate migration: ${e.message}", e)
+        }
     }
 
     private val migrationConfig: MigrationConfig
