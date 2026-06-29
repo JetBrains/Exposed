@@ -14,6 +14,7 @@ import org.jetbrains.exposed.v1.migration.plugin.core.MigrationGenerator
 import org.jetbrains.exposed.v1.migration.plugin.core.MigrationLogger
 import org.jetbrains.exposed.v1.migration.plugin.core.VersionFormat
 import java.io.File
+import java.io.IOException
 import java.net.URL
 
 /**
@@ -153,6 +154,10 @@ class GenerateMigrationMojo : AbstractMojo() {
             migrationGenerator.generate()
         } catch (e: IllegalArgumentException) {
             throw MojoFailureException("Unable to generate migration, likely due to misconfiguration: ${e.message}", e)
+        } catch (e: IOException) {
+            throw MojoFailureException("Invalid migration file path configuration: ${e.message}", e)
+        } catch (e: ClassNotFoundException) {
+            throw MojoFailureException("Tables package not found on classpath: ${e.message}", e)
         } catch (e: Exception) {
             throw MojoExecutionException("Unable to generate migration: ${e.message}", e)
         }
