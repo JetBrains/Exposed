@@ -42,7 +42,7 @@ class ExposedGradlePlugin : Plugin<Project> {
 
     companion object {
         /** The Exposed plugin version, which should be equal to the Exposed version used in a project. */
-        const val VERSION: String = "1.3.0"
+        const val VERSION: String = "1.3.1"
 
         /** The group name used for Exposed tasks. */
         const val TASK_GROUP: String = "Exposed"
