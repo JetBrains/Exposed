@@ -55,6 +55,7 @@ abstract class Transaction : UserDataHolder(), TransactionInterface {
      * Note that not all drivers implement this limit. For more information, refer to the relevant driver documentation.
      */
     var queryTimeout: Int? = null
+        get() = field ?: db.config.defaultQueryTimeout
 
     /** The unique ID for this transaction. */
     val transactionId by lazy { UUID.randomUUID().toString() }
