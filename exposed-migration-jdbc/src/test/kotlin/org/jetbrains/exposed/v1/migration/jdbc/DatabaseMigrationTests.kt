@@ -640,4 +640,30 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             }
         }
     }
+
+    object MixedCaseUIntTable : Table() {
+        val unsignedCol = uinteger("unsignedCol")
+    }
+
+    @OptIn(InternalApi::class)
+    @Test
+    fun testUnsignedCheckConstraintNameCaseRegression() {
+        withDb(excludeSettings = TestDB.ALL_MYSQL_MARIADB) {
+            val previousConstraintName = "chk_MixedCaseUInt_unsigned_integer_unsignedCol"
+            val currentDdl = MixedCaseUIntTable.createStatement().single()
+            val currentCheckClause = currentDdl.substringAfter("CHECK ")
+            val previousDdl =
+                "${currentDdl.substringBefore(" CONSTRAINT ")} CONSTRAINT $previousConstraintName CHECK $currentCheckClause"
+
+            try {
+                exec(previousDdl)
+                commit()
+
+                val rerun = MigrationUtils.statementsRequiredForDatabaseMigration(MixedCaseUIntTable, withLogs = false)
+                assertTrue(rerun.isEmpty())
+            } finally {
+                SchemaUtils.drop(MixedCaseUIntTable)
+            }
+        }
+    }
 }

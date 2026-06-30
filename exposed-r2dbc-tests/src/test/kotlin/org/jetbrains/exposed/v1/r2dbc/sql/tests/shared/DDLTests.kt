@@ -112,6 +112,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         )
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testKeywordIdentifiersWithoutOptOut() {
         val keywords = listOf("data", "public", "key", "constraint")
@@ -137,7 +138,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             @Suppress("MaximumLineLength")
             val expectedCreate =
                 "CREATE TABLE ${addIfNotExistsIfSupported()}$tableName (" + "$publicName ${keywordTable.public.columnType.sqlType()} NOT NULL, " + "$dataName ${keywordTable.data.columnType.sqlType()} NOT NULL, " + "$constraintName ${keywordTable.constraint.columnType.sqlType()} NOT NULL" + when (testDb) {
-                    TestDB.ORACLE -> """, CONSTRAINT chk_data_signed_integer_key CHECK ("key" BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"""
+                    TestDB.ORACLE -> """, CONSTRAINT ${"chk_data_signed_integer_key".inProperCase()} CHECK ("key" BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"""
                     else -> ""
                 } + ")"
             assertEquals(expectedCreate, keywordTable.ddl.single())
@@ -172,6 +173,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
 
     @OptIn(InternalApi::class)
     @Test
+    @Suppress("MaximumLineLength")
     fun unnamedTableWithQuotesSQL() {
         withTables(tables = arrayOf(unnamedTable)) { testDb ->
             val q = db.identifierManager.quoteString
@@ -190,7 +192,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
                     "$tableName " +
                     "(${"id".inProperCase()} $integerType PRIMARY KEY, $q${"name".inProperCase()}$q $varCharType NOT NULL" +
                     when (testDb) {
-                        TestDB.ORACLE -> ", CONSTRAINT chk_unnamedTable$1_signed_integer_id CHECK (ID BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                        TestDB.ORACLE -> ", CONSTRAINT ${"chk_unnamedTable$1_signed_integer_id".inProperCase()} CHECK (ID BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
                         else -> ""
                     } + ")",
                 unnamedTable.ddl
@@ -234,6 +236,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
 
     @OptIn(InternalApi::class)
     @Test
+    @Suppress("MaximumLineLength")
     fun tableWithDifferentColumnTypesSQL02() {
         val testTable = object : Table("with_different_column_types") {
             val id = integer("id")
@@ -253,8 +256,8 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             val primaryKeyConstraint = "CONSTRAINT pk_with_different_column_types PRIMARY KEY (${"id".inProperCase()}, $q${"name".inProperCase()}$q)"
             val checkConstraint = when (testDb) {
                 TestDB.ORACLE ->
-                    ", CONSTRAINT chk_with_different_column_types_signed_integer_id CHECK (ID BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
-                        ", CONSTRAINT chk_with_different_column_types_signed_integer_age CHECK (AGE BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                    ", CONSTRAINT ${"chk_with_different_column_types_signed_integer_id".inProperCase()} CHECK (ID BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
+                        ", CONSTRAINT ${"chk_with_different_column_types_signed_integer_age".inProperCase()} CHECK (AGE BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
                 else -> ""
             }
 
