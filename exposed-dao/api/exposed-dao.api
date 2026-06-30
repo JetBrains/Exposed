@@ -243,7 +243,7 @@ public final class org/jetbrains/exposed/v1/dao/InnerTableLink : kotlin/properti
 	public final fun getTarget ()Lorg/jetbrains/exposed/v1/dao/EntityClass;
 	public final fun getTargetColumn ()Lorg/jetbrains/exposed/v1/core/Column;
 	public synthetic fun getValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;)Ljava/lang/Object;
-	public fun getValue (Lorg/jetbrains/exposed/v1/dao/Entity;Lkotlin/reflect/KProperty;)Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
+	public fun getValue (Lorg/jetbrains/exposed/v1/dao/Entity;Lkotlin/reflect/KProperty;)Lorg/jetbrains/exposed/v1/jdbc/MutableSizedIterable;
 	public final fun orderBy (Ljava/util/List;)Lorg/jetbrains/exposed/v1/dao/InnerTableLink;
 	public final fun orderBy (Lkotlin/Pair;)Lorg/jetbrains/exposed/v1/dao/InnerTableLink;
 	public final fun orderBy (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/dao/InnerTableLink;
