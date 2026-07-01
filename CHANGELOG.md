@@ -1,3 +1,28 @@
+# 1.3.1
+
+Infrastructure:
+* Flyway 12.10.0
+* sqlite-jdbc 3.53.2.0
+* oracle-ojdbc11 23.26.2.0.0
+* Spring Framework(6) 6.2.19
+* r2dbc-mssql 1.0.5.RELEASE
+* r2dbc-postgresql 1.1.2.RELEASE
+* postgresql-jdbc 42.7.12
+
+Bug fixes:
+* fix: EXPOSED-1030 Nullable Strings are not handled by the PrimitiveTypeMapper by @renatomrcosta in https://github.com/JetBrains/Exposed/pull/2814
+* fix: EXPOSED-995 Spring Boot starter native runtime failure missing reflection hint for some column types by @bog-walk in https://github.com/JetBrains/Exposed/pull/2833
+* fix: Apply inProperCase() to CHECK constraint names by @rasharab in https://github.com/JetBrains/Exposed/pull/2826
+* fix: EXPOSED-644 Can't use Instant.DISTANT_FUTURE as default value by @bog-walk in https://github.com/JetBrains/Exposed/pull/2832
+
+Performance:
+* perf: Replace ResultRow LinkedHashMap cache with a single array by @inemtsev in https://github.com/JetBrains/Exposed/pull/2824
+
+Docs:
+* docs: EXPOSED-1031 Strengthened KDoc for InsertStatement and BatchInsertStatement by @kchung1995 in https://github.com/JetBrains/Exposed/pull/2816
+* docs: Add exposed-gradle-plugin sample by @e5l in https://github.com/JetBrains/Exposed/pull/2823
+* docs: EXPOSED-1035 Fix UuidTable KDoc parameter mismatch by @wsdf25867 in https://github.com/JetBrains/Exposed/pull/2830
+
 # 1.3.0
 
 Features:
@@ -24,7 +49,7 @@ Docs:
 Performance:
 * perf: R2DBC - Performance issue in R2dbcRegistryTypeMappingImpl by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2788
 
-  Infrastructure:
+Infrastructure:
 * kotlin 2.3.20
 * kotlinx-serialization 1.11.0
 * kotlinCoroutines 1.11.0

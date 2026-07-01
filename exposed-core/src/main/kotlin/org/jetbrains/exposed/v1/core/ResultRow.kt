@@ -175,6 +175,7 @@ class ResultRow private constructor(
          *
          * Intended for result-set iterators that create many rows for the same [fieldsIndex]: building
          * [columnTypes] once and passing it here avoids re-deriving it for every row.
+         * @suppress
          */
         @InternalApi
         fun create(rs: RowApi, fieldsIndex: Map<Expression<*>, Int>, columnTypes: Array<IColumnType<*>?>): ResultRow {
@@ -196,6 +197,7 @@ class ResultRow private constructor(
          * in [fieldsIndex], that `slot` holds `expression`'s [IColumnType] (or `null` for non-column
          * expressions). The result is row-invariant for a given [fieldsIndex] and is safe to share across
          * all rows of a result set.
+         * @suppress
          */
         @InternalApi
         fun columnTypesOf(fieldsIndex: Map<Expression<*>, Int>): Array<IColumnType<*>?> {

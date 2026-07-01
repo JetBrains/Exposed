@@ -8,6 +8,7 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.statements.api.RowApi
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -21,6 +22,7 @@ import kotlin.test.assertTrue
  * [ResultRow.createAndFillValues]; the shared-column-type tests use the
  * [ResultRow.create] factory with a stub [RowApi].
  */
+@Tag(MISSING_R2DBC_TEST)
 class ResultRowCacheTest {
 
     // ---------------------------------------------------------------------------
