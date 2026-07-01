@@ -39,6 +39,7 @@ dependencies {
     dokka(projects.exposed.exposedSpringBoot4Starter)
     dokka(projects.exposed.springTransaction)
     dokka(projects.exposed.spring7Transaction)
+    dokka(projects.exposed.exposedDaoR2dbc)
 
     // Kover aggregated coverage dependencies
     // Include all source modules for coverage aggregation
@@ -60,6 +61,7 @@ dependencies {
     kover(project(":exposed-migration-jdbc"))
     kover(project(":exposed-migration-r2dbc"))
     kover(project(":exposed-r2dbc"))
+    kover(project(":exposed-dao-r2dbc"))
 
     // Include test modules to ensure their tests are executed and coverage is collected
     kover(project(":exposed-tests"))
@@ -71,12 +73,11 @@ repositories {
     mavenCentral()
 }
 
+val sampleProjects = setOf("exposed-dao-showcase-jdbc", "exposed-dao-showcase-r2dbc")
+val unpublishedProjects = setOf("exposed-tests", "exposed-r2dbc-tests", "exposed-jdbc-r2dbc-tests", "exposed-dao-r2dbc-tests", "exposed-dao-r2dbc") + sampleProjects
+
 allprojects {
-    if (this.name != "exposed-tests" &&
-        this.name != "exposed-r2dbc-tests" &&
-        this.name != "exposed-jdbc-r2dbc-tests" &&
-        this != rootProject
-    ) {
+    if (this.name !in unpublishedProjects && this != rootProject) {
         apply(plugin = "com.vanniktech.maven.publish")
         apply(plugin = "signing")
         this@allprojects.mavenPublishing {
@@ -91,10 +92,11 @@ allprojects {
 }
 
 apiValidation {
-    ignoredProjects.addAll(listOf("exposed-tests", "exposed-bom", "exposed-r2dbc-tests", "exposed-jdbc-r2dbc-tests"))
+    ignoredProjects.addAll(listOf("exposed-tests", "exposed-bom", "exposed-r2dbc-tests", "exposed-jdbc-r2dbc-tests", "exposed-dao-r2dbc-tests") + sampleProjects)
 }
 
 subprojects {
+    if (name in sampleProjects) return@subprojects
     configureDetekt()
 
     dependencies {
@@ -103,7 +105,7 @@ subprojects {
 }
 
 subprojects {
-    if (name == "exposed-bom") return@subprojects
+    if (name == "exposed-bom" || name in sampleProjects) return@subprojects
 
     apply(plugin = rootProject.libs.plugins.jvm.get().pluginId)
     apply(plugin = rootProject.libs.plugins.kover.get().pluginId)

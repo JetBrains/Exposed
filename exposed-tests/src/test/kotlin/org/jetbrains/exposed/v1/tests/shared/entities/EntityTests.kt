@@ -12,11 +12,13 @@ import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
-import org.jetbrains.exposed.v1.tests.shared.*
-import org.junit.jupiter.api.Tag
+import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
+import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
+import org.jetbrains.exposed.v1.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.tests.shared.assertFalse
+import org.jetbrains.exposed.v1.tests.shared.expectException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import java.sql.Connection
@@ -97,7 +99,6 @@ object EntityTestsData {
     }
 }
 
-@Tag(MISSING_R2DBC_TEST)
 @Suppress("LargeClass")
 class EntityTests : DatabaseTestsBase() {
     @Test
@@ -121,6 +122,8 @@ class EntityTests : DatabaseTestsBase() {
             assertEquals(b.b2, false, "b.b2 mismatched")
 
             b.y = y
+
+            println("b.y: ${b.y}")
 
             assertFalse(b.y!!.x)
             assertNotNull(y.b)
@@ -1780,6 +1783,18 @@ class EntityTests : DatabaseTestsBase() {
             entityB.value = 4
 
             flushCache()
+        }
+    }
+
+    @Test
+    fun testForIds() {
+        withTables(Humans) {
+            val h1 = Human.new { h = "h1" }.id.value
+            val h2 = Human.new { h = "h2" }.id.value
+            Human.new { h = "h3" }
+
+            val byIds = Human.forIds(listOf(h1, h2)).toList()
+            assertEquals(setOf("h1", "h2"), byIds.map { it.h }.toSet())
         }
     }
 }
