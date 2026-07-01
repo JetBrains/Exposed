@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.gradle.plugin
 
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
+import org.jetbrains.exposed.v1.migration.plugin.core.VersionFormat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull

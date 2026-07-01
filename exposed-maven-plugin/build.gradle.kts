@@ -1,6 +1,5 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
-import org.gradle.plugin.compatibility.compatibility
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -8,12 +7,12 @@ plugins {
     kotlin("jvm")
 
     alias(libs.plugins.dokka)
-    alias(libs.plugins.gradle.plugin.publish)
+    alias(libs.plugins.maven.plugin.development)
 }
 
 group = "org.jetbrains.exposed.plugin"
-version = "1.3.1"
-description = "Exposed Gradle plugin"
+version = "1.3.0"
+description = "Exposed Maven Plugin"
 
 repositories {
     mavenCentral()
@@ -28,13 +27,15 @@ kotlin {
 }
 
 dependencies {
-    implementation(gradleApi())
-
     implementation(project(":exposed-jdbc"))
     implementation(project(":exposed-migration-jdbc"))
     implementation(project(":exposed-migration-plugin-core"))
 
     implementation(libs.kotlin.stdlib)
+
+    implementation(libs.maven.api)
+    implementation(libs.maven.core)
+    implementation(libs.maven.annotations)
 
     implementation(libs.flyway.postgresql)
     implementation(libs.flyway.mysql)
@@ -54,30 +55,13 @@ dependencies {
     implementation(libs.oracle)
     implementation(libs.mssql)
 
-    testImplementation(gradleTestKit())
     testImplementation(libs.junit5)
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(kotlin("test-junit5"))
 }
 
-gradlePlugin {
-    website = "https://www.jetbrains.com/exposed/"
-    vcsUrl = "https://github.com/JetBrains/Exposed"
-
-    plugins {
-        create("exposed").apply {
-            id = "org.jetbrains.exposed.plugin"
-            displayName = "Exposed Gradle Plugin"
-            implementationClass = "org.jetbrains.exposed.v1.gradle.plugin.ExposedGradlePlugin"
-            description = "Exposed Gradle Plugin configures the generation of migration scripts for applications that use Exposed"
-            tags = setOf("exposed", "kotlin", "sql", "database", "orm")
-            compatibility {
-                features {
-                    configurationCache = true
-                }
-            }
-        }
-    }
+mavenPlugin {
+    helpMojoPackage = "org.jetbrains.exposed.v1.maven.plugin"
 }
 
 signing {
@@ -88,9 +72,13 @@ tasks.withType<KotlinCompile>().configureEach {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_11)
     }
+    if (name == "compileKotlin") {
+        destinationDirectory.set(layout.buildDirectory.dir("classes/java/main"))
+    }
 }
 
 tasks.withType<JavaCompile>().configureEach {
+    sourceCompatibility = "11"
     targetCompatibility = "11"
 }
 
@@ -98,10 +86,6 @@ tasks.withType<Test>().configureEach {
     if (JavaVersion.VERSION_1_8 > JavaVersion.current()) {
         jvmArgs("-XX:MaxPermSize=256m")
     }
-
-    // Needed for JDK 17 + ProjectBuilder; otherwise first test always fails with 'Could not inject synthetic classes'
-    // https://github.com/gradle/gradle/issues/18647
-    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED")
 
     testLogging {
         events.addAll(listOf(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED))
