@@ -68,21 +68,13 @@ class Database private constructor(
 
     override val fullVersion: String by lazy { metadata { databaseProductVersion } }
 
-    override val supportsAlterTableWithAddColumn: Boolean by lazy(
-        LazyThreadSafetyMode.NONE
-    ) { metadata { supportsAlterTableWithAddColumn } }
+    override val supportsAlterTableWithAddColumn: Boolean by lazy { metadata { supportsAlterTableWithAddColumn } }
 
-    override val supportsAlterTableWithDropColumn: Boolean by lazy(
-        LazyThreadSafetyMode.NONE
-    ) { metadata { supportsAlterTableWithDropColumn } }
+    override val supportsAlterTableWithDropColumn: Boolean by lazy { metadata { supportsAlterTableWithDropColumn } }
 
-    override val supportsMultipleResultSets: Boolean by lazy(
-        LazyThreadSafetyMode.NONE
-    ) { metadata { supportsMultipleResultSets } }
+    override val supportsMultipleResultSets: Boolean by lazy { metadata { supportsMultipleResultSets } }
 
-    override val supportsSelectForUpdate: Boolean by lazy(
-        LazyThreadSafetyMode.NONE
-    ) { metadata { supportsSelectForUpdate } }
+    override val supportsSelectForUpdate: Boolean by lazy { metadata { supportsSelectForUpdate } }
 
     override val identifierManager: IdentifierManagerApi by lazy { metadata { identifierManager } }
 
