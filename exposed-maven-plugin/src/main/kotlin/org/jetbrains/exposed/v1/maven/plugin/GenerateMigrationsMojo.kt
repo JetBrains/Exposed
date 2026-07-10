@@ -9,6 +9,7 @@ import org.apache.maven.plugins.annotations.Mojo
 import org.apache.maven.plugins.annotations.Parameter
 import org.apache.maven.plugins.annotations.ResolutionScope
 import org.apache.maven.project.MavenProject
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.plugin.core.migration.MigrationConfig
 import org.jetbrains.exposed.v1.plugin.core.migration.MigrationGenerator
 import org.jetbrains.exposed.v1.plugin.core.migration.MigrationLogger
@@ -28,6 +29,7 @@ import java.net.URL
     threadSafe = true,
 )
 @Execute(phase = LifecyclePhase.COMPILE)
+@OptIn(InternalApi::class)
 class GenerateMigrationsMojo : AbstractMojo() {
 
     /**
@@ -170,9 +172,6 @@ class GenerateMigrationsMojo : AbstractMojo() {
             fileDirectory = fileDirectory,
             filePrefix = filePrefix,
             fileVersionFormat = fileVersionFormat,
-            fileSeparator = fileSeparator,
-            useUpperCaseDescription = useUpperCaseDescription,
-            fileExtension = fileExtension,
             fullFileName = fullFileName,
             databaseUrl = databaseUrl,
             databaseUser = databaseUser,
