@@ -3,9 +3,9 @@ package org.jetbrains.exposed.v1.gradle.plugin
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.workers.WorkAction
-import org.jetbrains.exposed.v1.migration.plugin.core.MigrationConfig
-import org.jetbrains.exposed.v1.migration.plugin.core.MigrationGenerator
-import org.jetbrains.exposed.v1.migration.plugin.core.MigrationLogger
+import org.jetbrains.exposed.v1.plugin.core.migration.MigrationConfig
+import org.jetbrains.exposed.v1.plugin.core.migration.MigrationGenerator
+import org.jetbrains.exposed.v1.plugin.core.migration.MigrationLogger
 
 /**
  * Represents the implementation of a unit of work to be used when submitting work to the migrations extension work executor.

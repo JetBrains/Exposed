@@ -1,4 +1,4 @@
-public final class org/jetbrains/exposed/v1/maven/plugin/GenerateMigrationMojo : org/apache/maven/plugin/AbstractMojo {
+public final class org/jetbrains/exposed/v1/maven/plugin/GenerateMigrationsMojo : org/apache/maven/plugin/AbstractMojo {
 	public field fileDirectory Ljava/io/File;
 	public field tablesPackage Ljava/lang/String;
 	public fun <init> ()V
@@ -11,7 +11,7 @@ public final class org/jetbrains/exposed/v1/maven/plugin/GenerateMigrationMojo :
 	public final fun getFileExtension ()Ljava/lang/String;
 	public final fun getFilePrefix ()Ljava/lang/String;
 	public final fun getFileSeparator ()Ljava/lang/String;
-	public final fun getFileVersionFormat ()Lorg/jetbrains/exposed/v1/migration/plugin/core/VersionFormat;
+	public final fun getFileVersionFormat ()Lorg/jetbrains/exposed/v1/plugin/core/migration/VersionFormat;
 	public final fun getFullFileName ()Ljava/lang/String;
 	public final fun getTablesPackage ()Ljava/lang/String;
 	public final fun getTestContainersImageName ()Ljava/lang/String;
@@ -24,7 +24,7 @@ public final class org/jetbrains/exposed/v1/maven/plugin/GenerateMigrationMojo :
 	public final fun setFileExtension (Ljava/lang/String;)V
 	public final fun setFilePrefix (Ljava/lang/String;)V
 	public final fun setFileSeparator (Ljava/lang/String;)V
-	public final fun setFileVersionFormat (Lorg/jetbrains/exposed/v1/migration/plugin/core/VersionFormat;)V
+	public final fun setFileVersionFormat (Lorg/jetbrains/exposed/v1/plugin/core/migration/VersionFormat;)V
 	public final fun setFullFileName (Ljava/lang/String;)V
 	public final fun setTablesPackage (Ljava/lang/String;)V
 	public final fun setTestContainersImageName (Ljava/lang/String;)V

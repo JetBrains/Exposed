@@ -7,7 +7,7 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.SourceSetContainer
 import org.jetbrains.exposed.v1.gradle.plugin.ExposedGradlePlugin.Companion.TASK_GROUP
-import org.jetbrains.exposed.v1.migration.plugin.core.VersionFormat
+import org.jetbrains.exposed.v1.plugin.core.migration.VersionFormat
 import javax.inject.Inject
 
 /**

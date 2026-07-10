@@ -32,7 +32,7 @@ dependencies {
 
     implementation(project(":exposed-jdbc"))
     implementation(project(":exposed-migration-jdbc"))
-    implementation(project(":exposed-migration-plugin-core"))
+    implementation(project(":exposed-plugin-core"))
 
     implementation(libs.kotlin.stdlib)
 

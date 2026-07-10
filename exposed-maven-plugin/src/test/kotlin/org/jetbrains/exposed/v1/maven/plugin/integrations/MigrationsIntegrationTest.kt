@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.v1.maven.plugin.integrations
 
 import org.apache.maven.project.MavenProject
-import org.jetbrains.exposed.v1.maven.plugin.GenerateMigrationMojo
+import org.jetbrains.exposed.v1.maven.plugin.GenerateMigrationsMojo
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -12,7 +12,7 @@ import java.io.File
 /**
  * In-process integration test for the Exposed Maven plugin.
  *
- * Exercises the full [GenerateMigrationMojo.execute] path against a real H2 in-memory database,
+ * Exercises the full [GenerateMigrationsMojo.execute] path against a real H2 in-memory database,
  * using the surrounding JVM's classpath as the scanning target. This is intentionally
  * lighter than spawning Maven via maven-invoker; the plugin descriptor itself is verified by
  * the gradlex `maven-plugin-development` build step.
@@ -24,7 +24,7 @@ class MigrationsIntegrationTest {
 
     @Test
     fun generatesZeroMigrationsForEmptyPackage() {
-        val mojo = GenerateMigrationMojo().apply {
+        val mojo = GenerateMigrationsMojo().apply {
             tablesPackage = "com.example.nonexistent"
             fileDirectory = migrationsDir
             databaseUrl = "jdbc:h2:mem:testDb;DB_CLOSE_DELAY=-1;"
@@ -45,7 +45,7 @@ class MigrationsIntegrationTest {
 
     @Test
     fun failsWhenTablesPackageMissing() {
-        val mojo = GenerateMigrationMojo().apply {
+        val mojo = GenerateMigrationsMojo().apply {
             fileDirectory = migrationsDir
             databaseUrl = "jdbc:h2:mem:testDb;DB_CLOSE_DELAY=-1;"
             databaseUser = ""
@@ -64,7 +64,7 @@ class MigrationsIntegrationTest {
 
     @Test
     fun failsWhenNeitherDatabaseNorTestcontainersConfigured() {
-        val mojo = GenerateMigrationMojo().apply {
+        val mojo = GenerateMigrationsMojo().apply {
             tablesPackage = "com.example.nonexistent"
             fileDirectory = migrationsDir
         }
@@ -82,8 +82,8 @@ class MigrationsIntegrationTest {
         }
     }
 
-    private fun injectProject(mojo: GenerateMigrationMojo, project: MavenProject) {
-        val field = GenerateMigrationMojo::class.java.getDeclaredField("project")
+    private fun injectProject(mojo: GenerateMigrationsMojo, project: MavenProject) {
+        val field = GenerateMigrationsMojo::class.java.getDeclaredField("project")
         field.isAccessible = true
         field.set(mojo, project)
     }

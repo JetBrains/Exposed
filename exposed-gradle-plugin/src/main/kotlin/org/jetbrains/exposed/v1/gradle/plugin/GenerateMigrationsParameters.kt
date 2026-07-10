@@ -2,7 +2,7 @@ package org.jetbrains.exposed.v1.gradle.plugin
 
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.workers.WorkParameters
-import org.jetbrains.exposed.v1.migration.plugin.core.VersionFormat
+import org.jetbrains.exposed.v1.plugin.core.migration.VersionFormat
 import java.net.URL
 
 /**

@@ -7,12 +7,7 @@ plugins {
     kotlin("jvm")
 
     alias(libs.plugins.dokka)
-    alias(libs.plugins.maven.plugin.development)
 }
-
-group = "org.jetbrains.exposed.plugin"
-version = "1.3.1"
-description = "Exposed Maven Plugin"
 
 repositories {
     mavenCentral()
@@ -20,22 +15,13 @@ repositories {
 
 kotlin {
     jvmToolchain(17)
-
-    compilerOptions {
-        optIn.add("kotlin.time.ExperimentalTime")
-    }
 }
 
 dependencies {
     implementation(project(":exposed-jdbc"))
     implementation(project(":exposed-migration-jdbc"))
-    implementation(project(":exposed-plugin-core"))
 
     implementation(libs.kotlin.stdlib)
-
-    implementation(libs.maven.api)
-    implementation(libs.maven.core)
-    implementation(libs.maven.annotations)
 
     implementation(libs.flyway.postgresql)
     implementation(libs.flyway.mysql)
@@ -48,37 +34,18 @@ dependencies {
     implementation(libs.testcontainers.mssqlserver)
     implementation(libs.testcontainers.oracle)
 
-    implementation(libs.h2)
-    implementation(libs.mysql)
-    implementation(libs.postgre)
-    implementation(libs.mariadb)
-    implementation(libs.oracle)
-    implementation(libs.mssql)
-
     testImplementation(libs.junit5)
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(kotlin("test-junit5"))
-}
-
-mavenPlugin {
-    helpMojoPackage = "org.jetbrains.exposed.v1.maven.plugin"
-}
-
-signing {
-    isRequired = gradle.taskGraph.hasTask("publish")
 }
 
 tasks.withType<KotlinCompile>().configureEach {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_11)
     }
-    if (name == "compileKotlin") {
-        destinationDirectory.set(layout.buildDirectory.dir("classes/java/main"))
-    }
 }
 
 tasks.withType<JavaCompile>().configureEach {
-    sourceCompatibility = "11"
     targetCompatibility = "11"
 }
 

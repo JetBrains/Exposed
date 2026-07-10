@@ -24,7 +24,7 @@ dependencies {
     dokka(projects.exposed.exposedCore)
     dokka(projects.exposed.exposedCrypt)
     dokka(projects.exposed.exposedDao)
-    dokka(projects.exposed.exposedMigrationCore)
+    dokka(projects.exposed.exposedPluginCore)
     dokka(projects.exposed.exposedGradlePlugin)
     dokka(projects.exposed.exposedMavenPlugin)
     dokka(projects.exposed.exposedJavaTime)
@@ -46,7 +46,9 @@ dependencies {
     // Include all source modules for coverage aggregation
     kover(project(":exposed-core"))
     kover(project(":exposed-dao"))
+    kover(project(":exposed-plugin-core"))
     kover(project(":exposed-gradle-plugin"))
+    kover(project(":exposed-maven-plugin"))
     kover(project(":exposed-jodatime"))
     kover(project(":exposed-java-time"))
     kover(project(":spring-transaction"))

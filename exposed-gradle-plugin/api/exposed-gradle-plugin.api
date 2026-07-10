@@ -28,7 +28,7 @@ public abstract interface class org/jetbrains/exposed/v1/gradle/plugin/GenerateM
 	public abstract fun getFileExtension ()Ljava/lang/String;
 	public abstract fun getFilePrefix ()Ljava/lang/String;
 	public abstract fun getFileSeparator ()Ljava/lang/String;
-	public abstract fun getFileVersionFormat ()Lorg/jetbrains/exposed/v1/migration/plugin/core/VersionFormat;
+	public abstract fun getFileVersionFormat ()Lorg/jetbrains/exposed/v1/plugin/core/migration/VersionFormat;
 	public abstract fun getFullFileName ()Ljava/lang/String;
 	public abstract fun getTablesPackage ()Ljava/lang/String;
 	public abstract fun getTestContainersImageName ()Ljava/lang/String;
@@ -41,7 +41,7 @@ public abstract interface class org/jetbrains/exposed/v1/gradle/plugin/GenerateM
 	public abstract fun setFileExtension (Ljava/lang/String;)V
 	public abstract fun setFilePrefix (Ljava/lang/String;)V
 	public abstract fun setFileSeparator (Ljava/lang/String;)V
-	public abstract fun setFileVersionFormat (Lorg/jetbrains/exposed/v1/migration/plugin/core/VersionFormat;)V
+	public abstract fun setFileVersionFormat (Lorg/jetbrains/exposed/v1/plugin/core/migration/VersionFormat;)V
 	public abstract fun setFullFileName (Ljava/lang/String;)V
 	public abstract fun setTablesPackage (Ljava/lang/String;)V
 	public abstract fun setTestContainersImageName (Ljava/lang/String;)V
