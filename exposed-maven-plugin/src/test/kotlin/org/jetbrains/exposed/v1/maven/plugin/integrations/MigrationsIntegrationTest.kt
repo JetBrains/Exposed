@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.v1.maven.plugin.integrations
 
+import org.apache.maven.plugin.MojoFailureException
 import org.apache.maven.project.MavenProject
 import org.jetbrains.exposed.v1.maven.plugin.GenerateMigrationsMojo
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -70,7 +71,7 @@ class MigrationsIntegrationTest {
         }
         injectProject(mojo, projectWithTestClasspath())
 
-        assertThrows<IllegalArgumentException> {
+        assertThrows<MojoFailureException> {
             mojo.execute()
         }
     }
