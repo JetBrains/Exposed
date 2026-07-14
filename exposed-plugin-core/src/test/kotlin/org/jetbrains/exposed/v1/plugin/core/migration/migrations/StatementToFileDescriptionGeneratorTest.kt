@@ -1,6 +1,6 @@
-package org.jetbrains.exposed.v1.gradle.plugin.migrations
+package org.jetbrains.exposed.v1.plugin.core.migration.migrations
 
-import org.jetbrains.exposed.v1.gradle.plugin.statementToFileDescription
+import org.jetbrains.exposed.v1.plugin.core.migration.statementToFileDescription
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 

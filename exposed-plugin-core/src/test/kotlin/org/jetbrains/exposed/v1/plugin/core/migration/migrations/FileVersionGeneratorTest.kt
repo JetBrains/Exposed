@@ -1,7 +1,7 @@
-package org.jetbrains.exposed.v1.gradle.plugin.migrations
+package org.jetbrains.exposed.v1.plugin.core.migration.migrations
 
-import org.jetbrains.exposed.v1.gradle.plugin.VersionFormat
-import org.jetbrains.exposed.v1.gradle.plugin.nextVersion
+import org.jetbrains.exposed.v1.plugin.core.migration.VersionFormat
+import org.jetbrains.exposed.v1.plugin.core.migration.nextVersion
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull

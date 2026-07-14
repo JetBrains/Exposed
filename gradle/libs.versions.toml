@@ -46,6 +46,9 @@ hikariCP = "7.0.2"
 logcaptor = "2.12.6"
 maven-publish = "0.35.0"
 gradle-plugin-publish = "2.1.1"
+maven-plugin-development = "1.0.3"
+maven-api = "3.9.16"
+maven-annotations = "3.15.2"
 
 testcontainers = "2.0.5"
 
@@ -132,6 +135,10 @@ flyway-oracle = { group = "org.flywaydb", name = "flyway-database-oracle", versi
 
 logcaptor = { group = "io.github.hakky54", name = "logcaptor", version.ref = "logcaptor" }
 
+maven-api = { group = "org.apache.maven", name = "maven-plugin-api", version.ref = "maven-api" }
+maven-core = { group = "org.apache.maven", name = "maven-core", version.ref = "maven-api" }
+maven-annotations = { group = "org.apache.maven.plugin-tools", name = "maven-plugin-annotations", version.ref = "maven-annotations" }
+
 [plugins]
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -142,3 +149,4 @@ docker-compose = { id = "com.avast.gradle.docker-compose", version.ref = "docker
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 maven-publish = { id = "com.vanniktech.maven.publish" }
 gradle-plugin-publish = { id = "com.gradle.plugin-publish", version.ref = "gradle-plugin-publish" }
+maven-plugin-development = { id = "org.gradlex.maven-plugin-development", version.ref = "maven-plugin-development" }

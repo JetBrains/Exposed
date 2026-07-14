@@ -121,7 +121,10 @@ private fun Project.createDbTestTaskByDialect(db: TestDb, taskName: String, dial
                 // exclude all test classes in Plugin modules:
                 // exposed-gradle-plugin
                 exclude(
+                    "org/jetbrains/exposed/v1/plugin/core/*",
                     "org/jetbrains/exposed/v1/gradle/plugin/*",
+                    "org/jetbrains/exposed/v1/maven/plugin/*",
+
                 )
                 isFailOnNoMatchingTests = false
             }
