@@ -84,6 +84,30 @@ class TestMavenProject private constructor(
     private val sourceCodeOptions: SourceCodeOptions = SourceCodeOptions(),
     private val exposedMigrations: ExposedMigrationsConfig = ExposedMigrationsConfig(),
 ) : AutoCloseable {
+
+    /**
+     * DSL for creating a test Maven project and running Maven goals on it.
+     * Example Usage:
+     * ```kotlin
+     * @Test
+     * fun `test generate basic migrations`() = TestMavenProject("tmp") {
+     *     configure { // configure values in pom
+     *         migrationsConfig {
+     *             databaseUrl = "jdbc:h2:mem:test"
+     *             databaseUser = "sa"
+     *             databasePassword = "sa"
+     *         }
+     *     }
+     *
+     *     verify {
+     *         // execute the goal and verify the result
+     *         val result = executeGoal(MavenGoal.GenerateMigrations)
+     *         assertIs<MavenProcessResult.Success>(result)
+     *         assertEquals(2, migrations.size)
+     *     }
+     * }
+     * ```
+     */
     companion object {
         operator fun invoke(tempDirLocation: String, block: TestMavenProject.() -> Unit = {}) {
             TestMavenProject(tempDirLocation).apply {
