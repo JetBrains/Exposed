@@ -12,15 +12,21 @@ import kotlin.io.path.walk
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 
+@DslMarker
+annotation class TestMavenProjectDsl
+
+@TestMavenProjectDsl
 data class Versions(
     var kotlinVersion: String = "2.4.10",
     var exposedVersion: String = "1.3.1",
 )
 
+@TestMavenProjectDsl
 data class SourceCodeOptions(
     var packageName: String = "com.example.tables",
 )
 
+@TestMavenProjectDsl
 data class ExposedMigrationsConfig(
     var tablesPackage: String = "com.example.tables",
     var fileDirectory: String? = null,
@@ -46,8 +52,13 @@ data class Migration(val name: String, val content: String) {
         }
     }
 
+    context(_: VerificationScope)
     fun nameEquals(other: Migration) = name == other.name
+
+    context(_: VerificationScope)
     fun assertEquals(other: Migration) = assertEquals(other.content, content)
+
+    context(_: VerificationScope)
     fun contains(other: Migration) = assertContains(other.content, content)
 }
 
@@ -62,6 +73,10 @@ sealed interface MavenProcessResult {
     data class MavenExecutableNotFound(val output: String) : MavenProcessResult
 }
 
+class VerificationScope
+class ConfigurationScope
+
+@TestMavenProjectDsl
 class TestMavenProject private constructor(
     private var tmpDirLocation: String,
     private var cleanup: Boolean = true,
@@ -69,7 +84,6 @@ class TestMavenProject private constructor(
     private val sourceCodeOptions: SourceCodeOptions = SourceCodeOptions(),
     private val exposedMigrations: ExposedMigrationsConfig = ExposedMigrationsConfig(),
 ) : AutoCloseable {
-
     companion object {
         operator fun invoke(tempDirLocation: String, block: TestMavenProject.() -> Unit = {}) {
             TestMavenProject(tempDirLocation).apply {
@@ -89,29 +103,12 @@ class TestMavenProject private constructor(
     lateinit var sourceCodePackage: Path
         private set
 
+    context(_: VerificationScope)
     val migrations
         get() = migrationsDir.walk(PathWalkOption.BREADTH_FIRST)
             .map { Migration(it.name, it.readText()) }
             .toList()
 
-
-    fun generate(): Path {
-        tmpDir = Files.createDirectories(Paths.get(tmpDirLocation))
-        val mavenProjectGenerator = MavenProjectGenerator(
-            configuration = this,
-            tmpDir = tmpDir,
-            versions = versions,
-            sourceCodeOptions = sourceCodeOptions,
-            exposedMigrations = exposedMigrations,
-        )
-        mavenProjectGenerator.generate()
-
-        sourceSetDir = mavenProjectGenerator.sourceSetDir
-        migrationsDir = mavenProjectGenerator.migrationsDir
-        sourceCodePackage = mavenProjectGenerator.sourceCodePackage
-
-        return tmpDir
-    }
 
     override fun close() {
         if (cleanup) {
@@ -119,18 +116,35 @@ class TestMavenProject private constructor(
         }
     }
 
+    context(_: ConfigurationScope)
     fun migrationsConfig(block: ExposedMigrationsConfig.() -> Unit) {
         exposedMigrations.block()
     }
 
+    context(_: ConfigurationScope)
     fun sourceCode(block: SourceCodeOptions.() -> Unit) {
         sourceCodeOptions.block()
     }
 
+    context(_: ConfigurationScope)
     fun versions(block: Versions.() -> Unit) {
         versions.block()
     }
 
+    fun configure(block: context(ConfigurationScope) TestMavenProject.() -> Unit) {
+        context(ConfigurationScope()) {
+            block()
+        }
+    }
+
+    fun verify(block: context(VerificationScope) TestMavenProject.() -> Unit) {
+        generate()
+        context(VerificationScope()) {
+            block()
+        }
+    }
+
+    context(_: VerificationScope)
     fun executeGoal(goal: MavenGoal): MavenProcessResult {
         val mavenExecutable = resolveMavenExecutable()
             ?: return MavenProcessResult.MavenExecutableNotFound(
@@ -169,42 +183,25 @@ class TestMavenProject private constructor(
         }
     }
 
-    private fun resolveMavenExecutable(): Path? {
-        System.getenv("MAVEN_EXECUTABLE")
-            ?.takeIf { it.isNotBlank() }
-            ?.let { Paths.get(it) }
-            ?.takeIf { Files.isExecutable(it) }
-            ?.let { return it }
+    private fun generate(): Path {
+        tmpDir = Files.createDirectories(Paths.get(tmpDirLocation))
+        val mavenProjectGenerator = MavenProjectGenerator(
+            tmpDir = tmpDir,
+            versions = versions,
+            sourceCodeOptions = sourceCodeOptions,
+            exposedMigrations = exposedMigrations,
+        )
+        mavenProjectGenerator.generate()
 
-        val executableName = if (System.getProperty("os.name").startsWith("Windows", ignoreCase = true)) {
-            "mvn.cmd"
-        } else {
-            "mvn"
-        }
+        sourceSetDir = mavenProjectGenerator.sourceSetDir
+        migrationsDir = mavenProjectGenerator.migrationsDir
+        sourceCodePackage = mavenProjectGenerator.sourceCodePackage
 
-        System.getenv("PATH")
-            .orEmpty()
-            .split(File.pathSeparator)
-            .asSequence()
-            .filter { it.isNotBlank() }
-            .map { Paths.get(it).resolve(executableName) }
-            .firstOrNull { Files.isExecutable(it) }
-            ?.let { return it }
-
-        listOf("MAVEN_HOME", "M2_HOME")
-            .asSequence()
-            .mapNotNull { System.getenv(it) }
-            .filter { it.isNotBlank() }
-            .map { Paths.get(it).resolve("bin").resolve(executableName) }
-            .firstOrNull { Files.isExecutable(it) }
-            ?.let { return it }
-
-        return null
+        return tmpDir
     }
 }
 
 private class MavenProjectGenerator(
-    private val configuration: TestMavenProject,
     private val tmpDir: Path,
     private val versions: Versions,
     private val sourceCodeOptions: SourceCodeOptions,
@@ -294,4 +291,37 @@ private class MavenProjectGenerator(
             }
         }
     }
+}
+
+private fun resolveMavenExecutable(): Path? {
+    System.getenv("MAVEN_EXECUTABLE")
+        ?.takeIf { it.isNotBlank() }
+        ?.let { Paths.get(it) }
+        ?.takeIf { Files.isExecutable(it) }
+        ?.let { return it }
+
+    val executableName = if (System.getProperty("os.name").startsWith("Windows", ignoreCase = true)) {
+        "mvn.cmd"
+    } else {
+        "mvn"
+    }
+
+    System.getenv("PATH")
+        .orEmpty()
+        .split(File.pathSeparator)
+        .asSequence()
+        .filter { it.isNotBlank() }
+        .map { Paths.get(it).resolve(executableName) }
+        .firstOrNull { Files.isExecutable(it) }
+        ?.let { return it }
+
+    listOf("MAVEN_HOME", "M2_HOME")
+        .asSequence()
+        .mapNotNull { System.getenv(it) }
+        .filter { it.isNotBlank() }
+        .map { Paths.get(it).resolve("bin").resolve(executableName) }
+        .firstOrNull { Files.isExecutable(it) }
+        ?.let { return it }
+
+    return null
 }

@@ -96,3 +96,7 @@ tasks.withType<Test>().configureEach {
 
     useJUnitPlatform()
 }
+val compileTestKotlin: KotlinCompile by tasks
+compileTestKotlin.compilerOptions {
+    freeCompilerArgs.set(listOf("-XXLanguage:+ContextParameters"))
+}

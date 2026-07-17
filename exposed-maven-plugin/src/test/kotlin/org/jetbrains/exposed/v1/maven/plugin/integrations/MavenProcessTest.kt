@@ -11,14 +11,18 @@ class MavenProcessTest {
 
     @Test
     fun `test generate basic migrations`() = TestMavenProject("tmp") {
-        migrationsConfig {
-            databaseUrl = "jdbc:h2:mem:test"
-            databaseUser = "sa"
-            databasePassword = "sa"
+        configure {
+            migrationsConfig {
+                databaseUrl = "jdbc:h2:mem:test"
+                databaseUser = "sa"
+                databasePassword = "sa"
+            }
         }
-        generate()
-        val result = executeGoal(MavenGoal.GenerateMigrations)
-        assertIs<MavenProcessResult.Success>(result)
-        assertEquals(2, migrations.size)
+
+        verify {
+            val result = executeGoal(MavenGoal.GenerateMigrations)
+            assertIs<MavenProcessResult.Success>(result)
+            assertEquals(2, migrations.size)
+        }
     }
 }
