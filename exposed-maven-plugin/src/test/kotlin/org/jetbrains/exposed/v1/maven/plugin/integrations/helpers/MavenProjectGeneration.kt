@@ -6,6 +6,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.PathWalkOption
+import kotlin.io.path.name
 import kotlin.io.path.readText
 import kotlin.io.path.walk
 import kotlin.test.assertContains
@@ -35,16 +36,17 @@ data class ExposedMigrationsConfig(
     var testContainersImage: String? = null,
 )
 
-@JvmInline
-value class Migration(val content: String) {
+data class Migration(val name: String, val content: String) {
     companion object {
         fun fromResources(path: String): Migration {
             val content = this::class.java.getResource(path)?.readText()
+            val name = path.substringAfterLast('/')
             requireNotNull(content) { "Migration file not found in resources at $path" }
-            return Migration(content)
+            return Migration(name, content)
         }
     }
 
+    fun nameEquals(other: Migration) = name == other.name
     fun assertEquals(other: Migration) = assertEquals(other.content, content)
     fun contains(other: Migration) = assertContains(other.content, content)
 }
@@ -89,8 +91,7 @@ class TestMavenProject private constructor(
 
     val migrations
         get() = migrationsDir.walk(PathWalkOption.BREADTH_FIRST)
-            .map { it.readText() }
-            .map { Migration(it) }
+            .map { Migration(it.name, it.readText()) }
             .toList()
 
 
