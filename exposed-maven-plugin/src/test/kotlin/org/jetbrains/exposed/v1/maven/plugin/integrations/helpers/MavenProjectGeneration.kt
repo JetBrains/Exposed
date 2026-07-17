@@ -67,6 +67,17 @@ class TestMavenProject private constructor(
     private val sourceCodeOptions: SourceCodeOptions = SourceCodeOptions(),
     private val exposedMigrations: ExposedMigrationsConfig = ExposedMigrationsConfig(),
 ) : AutoCloseable {
+
+    companion object {
+        operator fun invoke(tempDirLocation: String, block: TestMavenProject.() -> Unit = {}) {
+            TestMavenProject(tempDirLocation).apply {
+                use {
+                    block()
+                }
+            }
+        }
+    }
+
     lateinit var tmpDir: Path
         private set
     lateinit var sourceSetDir: Path
@@ -82,15 +93,6 @@ class TestMavenProject private constructor(
             .map { Migration(it) }
             .toList()
 
-    companion object {
-        operator fun invoke(tempDirLocation: String, block: TestMavenProject.() -> Unit = {}) {
-            TestMavenProject(tempDirLocation).apply {
-                use {
-                    block()
-                }
-            }
-        }
-    }
 
     fun generate(): Path {
         tmpDir = Files.createDirectories(Paths.get(tmpDirLocation))
