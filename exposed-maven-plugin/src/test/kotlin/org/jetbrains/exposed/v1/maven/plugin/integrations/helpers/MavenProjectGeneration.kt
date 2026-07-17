@@ -61,11 +61,11 @@ sealed interface MavenProcessResult {
 }
 
 class TestMavenProject private constructor(
-    var tmpDirLocation: String,
-    var cleanup: Boolean = true,
-    val versions: Versions = Versions(),
-    val sourceCodeOptions: SourceCodeOptions = SourceCodeOptions(),
-    val exposedMigrations: ExposedMigrationsConfig = ExposedMigrationsConfig(),
+    private var tmpDirLocation: String,
+    private var cleanup: Boolean = true,
+    private val versions: Versions = Versions(),
+    private val sourceCodeOptions: SourceCodeOptions = SourceCodeOptions(),
+    private val exposedMigrations: ExposedMigrationsConfig = ExposedMigrationsConfig(),
 ) : AutoCloseable {
     lateinit var tmpDir: Path
         private set
@@ -94,7 +94,13 @@ class TestMavenProject private constructor(
 
     fun generate(): Path {
         tmpDir = Files.createDirectories(Paths.get(tmpDirLocation))
-        val mavenProjectGenerator = MavenProjectGenerator(this, tmpDir)
+        val mavenProjectGenerator = MavenProjectGenerator(
+            configuration = this,
+            tmpDir = tmpDir,
+            versions = versions,
+            sourceCodeOptions = sourceCodeOptions,
+            exposedMigrations = exposedMigrations,
+        )
         mavenProjectGenerator.generate()
 
         sourceSetDir = mavenProjectGenerator.sourceSetDir
@@ -197,6 +203,9 @@ class TestMavenProject private constructor(
 private class MavenProjectGenerator(
     private val configuration: TestMavenProject,
     private val tmpDir: Path,
+    private val versions: Versions,
+    private val sourceCodeOptions: SourceCodeOptions,
+    private val exposedMigrations: ExposedMigrationsConfig,
 ) {
     private val mustacheFactory = DefaultMustacheFactory("template")
 
@@ -223,8 +232,8 @@ private class MavenProjectGenerator(
         val mustache = mustacheFactory.compile("pom.xml")
         Files.newBufferedWriter(tmpDir.resolve("pom.xml")).use { pomWriter ->
             val context = mapOf(
-                "versions" to configuration.versions,
-                "exposedMigrations" to configuration.exposedMigrations,
+                "versions" to versions,
+                "exposedMigrations" to exposedMigrations,
             )
             mustache.execute(pomWriter, context)
         }
@@ -240,7 +249,7 @@ private class MavenProjectGenerator(
     }
 
     private fun mkMigrationsDir(): Path {
-        val fileDirectory = configuration.exposedMigrations.fileDirectory
+        val fileDirectory = exposedMigrations.fileDirectory
         return if (fileDirectory == null) {
             Files.createDirectories(
                 tmpDir
@@ -262,7 +271,7 @@ private class MavenProjectGenerator(
     }
 
     private fun mkPackages(): Path {
-        val sourceCodePackage = configuration.sourceCodeOptions.packageName
+        val sourceCodePackage = sourceCodeOptions.packageName
             .split('.')
             .fold(sourceSetDir) { path, s -> path.resolve(s) }
         return Files.createDirectories(sourceCodePackage)
@@ -278,7 +287,7 @@ private class MavenProjectGenerator(
         File(sourceFilesUrl.toURI()).walkTopDown().filter { it.isFile }.toList().forEach {
             val mustache = mustacheFactory.compile("sourceFiles/${it.name}")
             Files.newBufferedWriter(sourceCodePackage.resolve(it.name)).use { fileWriter ->
-                mustache.execute(fileWriter, mapOf("packageName" to configuration.sourceCodeOptions.packageName))
+                mustache.execute(fileWriter, mapOf("packageName" to sourceCodeOptions.packageName))
             }
         }
     }
