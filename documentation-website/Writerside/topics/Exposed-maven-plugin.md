@@ -45,7 +45,7 @@ To generate migration scripts based on the difference between your existing data
 definitions, invoke the `generate-migration` goal:
 
 ```bash
-mvn exposed:generate-migration
+mvn exposed:generate-migrations
 ```
 
 Generated files are written to the [configured output directory](#file-directory).
@@ -62,10 +62,10 @@ configuration. For example, to generate migrations during the `process-classes` 
     <version>%exposed_version%</version>
     <executions>
         <execution>
-            <id>generate-migration</id>
+            <id>generate-migrations</id>
             <phase>process-classes</phase>
             <goals>
-                <goal>generate-migration</goal>
+                <goal>generate-migrations</goal>
             </goals>
         </execution>
     </executions>
@@ -126,14 +126,14 @@ To configure a `Testcontainers` connection, set the `testContainersImageName` pa
 
 ### Override parameters from the command line
 
-Every plugin parameter can be overridden on the command line using the matching `exposed.<name>` system property:
+Every plugin parameter can be overridden on the command line using the matching `exposed.migrations.<name>` system property:
 
 ```bash
-mvn exposed:generate-migration \
-    -Dexposed.tablesPackage=com.example.db.tables \
-    -Dexposed.databaseUrl=jdbc:postgresql://localhost:5432/mydb \
-    -Dexposed.databaseUser=postgres \
-    -Dexposed.databasePassword=password
+mvn exposed:generate-migrations \
+    -Dexposed.migrations.tablesPackage=com.example.db.tables \
+    -Dexposed.migrations.databaseUrl=jdbc:postgresql://localhost:5432/mydb \
+    -Dexposed.migrations.databaseUser=postgres \
+    -Dexposed.migrations.databasePassword=password
 ```
 
 ## Additional configuration
@@ -287,14 +287,14 @@ If the plugin cannot derive a standard description, it falls back to a generic n
 
 ### Override the generated filename
 
-You can override the generated filename by passing the `exposed.filename` system property to the `generate-migration`
+You can override the generated filename by passing the `exposed.migrations.filename` system property to the `generate-migration`
 goal:
 
 ```bash
-mvn exposed:generate-migration -Dexposed.filename=V0__initialize_schema.sql
+mvn exposed:generate-migrations -Dexpose.migrations.filename=V0__initialize_schema.sql
 ```
 
-> When `exposed.filename` is specified, the plugin generates a single migration script containing all migration
+> When `exposed.migrations.filename` is specified, the plugin generates a single migration script containing all migration
 > statements, even if the schema diff affects multiple tables.
 >
 {style="note"}
