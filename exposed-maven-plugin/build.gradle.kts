@@ -56,6 +56,7 @@ dependencies {
     implementation(libs.mssql)
 
     testImplementation(libs.junit5)
+    testImplementation(libs.mustache)
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(kotlin("test-junit5"))
 }
