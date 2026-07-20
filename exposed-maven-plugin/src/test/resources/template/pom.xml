@@ -119,9 +119,9 @@
                     <databasePassword>{{databasePassword}}</databasePassword>
                     {{/databasePassword}}
 
-                    {{#testContainersImage}}
-                    <testContainersImage>{{testContainersImage}}</testContainersImage>
-                    {{/testContainersImage}}
+                    {{#testContainersImageName}}
+                    <testContainersImageName>{{testContainersImageName}}</testContainersImageName>
+                    {{/testContainersImageName}}
 
                     {{/exposedMigrations}}
                     <debug>true</debug>

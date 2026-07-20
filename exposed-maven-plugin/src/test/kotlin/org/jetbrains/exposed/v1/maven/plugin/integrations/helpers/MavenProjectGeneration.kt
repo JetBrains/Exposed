@@ -1,10 +1,12 @@
 package org.jetbrains.exposed.v1.maven.plugin.integrations.helpers
 
 import com.github.mustachejava.DefaultMustacheFactory
+import org.jetbrains.exposed.v1.plugin.core.migration.VersionFormat
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.concurrent.TimeUnit
 import kotlin.io.path.PathWalkOption
 import kotlin.io.path.name
 import kotlin.io.path.readText
@@ -31,7 +33,7 @@ data class ExposedMigrationsConfig(
     var tablesPackage: String = "com.example.tables",
     var fileDirectory: String? = null,
     var filePrefix: String? = null,
-    var fileVersionFormat: String? = null,
+    var fileVersionFormat: VersionFormat? = null,
     var fileSeparator: String? = null,
     var useUpperCaseDescription: Boolean = true,
     var fileExtension: String? = null,
@@ -39,7 +41,24 @@ data class ExposedMigrationsConfig(
     var databaseUrl: String? = null,
     var databaseUser: String? = null,
     var databasePassword: String? = null,
-    var testContainersImage: String? = null,
+    var testContainersImageName: String? = null,
+    var existingMigrations: ExistingMigrations = ExistingMigrations(),
+) {
+    fun withExistingMigrations() = withExistingMigrations {
+        cities = true
+        users = true
+    }
+
+    fun withExistingMigrations(block: ExistingMigrations.() -> Unit) {
+        existingMigrations.block()
+    }
+}
+
+@TestMavenProjectDsl
+data class ExistingMigrations(
+    var dialect: String = "h2",
+    var cities: Boolean = false,
+    var users: Boolean = false,
 )
 
 data class Migration(val name: String, val content: String) {
@@ -70,7 +89,6 @@ sealed interface MavenProcessResult {
     data class Success(val output: String) : MavenProcessResult
     data class Failure(val output: String, val exitCode: Int) : MavenProcessResult
     data class Interrupted(val exception: InterruptedException) : MavenProcessResult
-    data class MavenExecutableNotFound(val output: String) : MavenProcessResult
 }
 
 class VerificationScope
@@ -171,23 +189,22 @@ class TestMavenProject private constructor(
     context(_: VerificationScope)
     fun executeGoal(goal: MavenGoal): MavenProcessResult {
         val mavenExecutable = resolveMavenExecutable()
-            ?: return MavenProcessResult.MavenExecutableNotFound(
-                output = """
+            ?: error(
+                """
                         Maven executable was not found.
 
-                        The integration test needs Maven to run the generated test project.
                         Tried:
                         - MAVEN_EXECUTABLE
                         - mvn from PATH
                         - MAVEN_HOME/bin/mvn
                         - M2_HOME/bin/mvn
+                        - mvn resolved from the login shell
 
                         Current PATH:
                         ${System.getenv("PATH").orEmpty()}
 
                         To fix this, either install Maven and make `mvn` available on PATH,
-                        or set MAVEN_EXECUTABLE to the absolute path of the Maven executable.
-                """.trimIndent(),
+                        or set MAVEN_EXECUTABLE to the absolute path of the Maven executable                """.trimIndent(),
             )
         try {
             val process = ProcessBuilder()
@@ -248,6 +265,7 @@ private class MavenProjectGenerator(
         writePom()
         sourceSetDir = mkSourceSet()
         migrationsDir = mkMigrationsDir()
+        copyMigrationFiles()
         sourceCodePackage = mkPackages()
         writeSourceFiles()
     }
@@ -292,6 +310,24 @@ private class MavenProjectGenerator(
         } else {
             Files.createDirectories(Paths.get(fileDirectory))
         }
+    }
+
+    private fun copyMigrationFiles() {
+        val migrationsFilesUrl = this::class.java.classLoader.getResource("template/migrations/${exposedMigrations.existingMigrations.dialect}")
+        requireNotNull(migrationsFilesUrl) {
+            "Expected migrations resources to be found in src/test/resources/template/migrations/h2"
+        }
+        File(migrationsFilesUrl.toURI()).walkTopDown()
+            .filter { it.isFile }
+            .filter {
+                with(exposedMigrations.existingMigrations) {
+                    cities && "cities" in it.name.lowercase() || users && "users" in it.name.lowercase()
+                }
+            }
+            .toList()
+            .forEach {
+                Files.copy(it.toPath(), migrationsDir.resolve(it.name))
+            }
     }
 
     private fun mkPackages(): Path {
@@ -347,5 +383,46 @@ private fun resolveMavenExecutable(): Path? {
         .firstOrNull { Files.isExecutable(it) }
         ?.let { return it }
 
+    resolveMavenExecutableFromLoginShell()
+        ?.let { return it }
+
     return null
+}
+
+private fun resolveMavenExecutableFromLoginShell(): Path? {
+    if (System.getProperty("os.name").startsWith("Windows", ignoreCase = true)) {
+        return null
+    }
+
+    val shells = sequenceOf(
+        System.getenv("SHELL"),
+        "/bin/zsh",
+        "/bin/bash",
+        "/usr/bin/bash",
+    )
+        .filterNotNull()
+        .distinct()
+        .filter { Files.isExecutable(Paths.get(it)) }
+
+    return shells.firstNotNullOfOrNull { shell ->
+        runCatching {
+            val process = ProcessBuilder(shell, "-lc", "command -v mvn")
+                .redirectErrorStream(true)
+                .start()
+
+            if (!process.waitFor(5, TimeUnit.SECONDS) || process.exitValue() != 0) {
+                process.destroyForcibly()
+                return@runCatching null
+            }
+
+            process.inputStream
+                .bufferedReader()
+                .use { it.readText() }
+                .lineSequence()
+                .map { it.trim() }
+                .firstOrNull { it.isNotBlank() }
+                ?.let { Paths.get(it) }
+                ?.takeIf { Files.isExecutable(it) }
+        }.getOrNull()
+    }
 }
