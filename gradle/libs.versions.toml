@@ -52,7 +52,7 @@ maven-annotations = "3.15.2"
 
 testcontainers = "2.0.5"
 
-flyway = "12.11.0"
+flyway = "13.0.0"
 
 [libraries]
 jvm = { group = "org.jetbrains.kotlin.jvm", name = "org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }
