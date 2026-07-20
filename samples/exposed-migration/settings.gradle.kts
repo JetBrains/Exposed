@@ -2,7 +2,6 @@ rootProject.name = "exposed-migration"
 
 dependencyResolutionManagement {
     repositories {
-        mavenLocal()
         mavenCentral()
     }
     versionCatalogs {

@@ -2,7 +2,6 @@ rootProject.name = "exposed-ktor-crud"
 
 dependencyResolutionManagement {
     repositories {
-        mavenLocal()
         mavenCentral()
     }
     versionCatalogs {

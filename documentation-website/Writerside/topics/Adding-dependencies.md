@@ -79,6 +79,89 @@ common setups:
   </tab>
 </tabs>
 
+## Use a version catalog
+
+If you use a [Gradle version catalog](https://docs.gradle.org/current/userguide/platforms.html#sec:sharing-catalogs),
+you can import the published `exposed-version-catalog` instead of listing each Exposed coordinate by hand.
+The catalog provides a type-safe accessor for every Exposed module and keeps their versions aligned.
+
+Import the catalog in your `settings.gradle.kts`:
+
+<tabs>
+  <tab title="Kotlin Gradle">
+    <code-block lang="kotlin">
+    dependencyResolutionManagement {
+        repositories {
+            mavenCentral()
+        }
+        versionCatalogs {
+            create("exposedLibs") {
+                from("org.jetbrains.exposed:exposed-version-catalog:%exposed_version%")
+            }
+        }
+    }
+    </code-block>
+  </tab>
+  <tab title="Groovy Gradle">
+    <code-block lang="groovy">
+    dependencyResolutionManagement {
+        repositories {
+            mavenCentral()
+        }
+        versionCatalogs {
+            create("exposedLibs") {
+                from("org.jetbrains.exposed:exposed-version-catalog:%exposed_version%")
+            }
+        }
+    }
+    </code-block>
+  </tab>
+</tabs>
+
+Then reference the modules through the catalog accessors in your Gradle build script:
+
+<tabs>
+  <tab title="Kotlin Gradle">
+    <code-block lang="kotlin">
+    dependencies {
+        implementation(exposedLibs.core)
+        implementation(exposedLibs.jdbc)
+        implementation(exposedLibs.dao) // Optional
+    }
+    </code-block>
+  </tab>
+  <tab title="Groovy Gradle">
+    <code-block lang="groovy">
+    dependencies {
+        implementation exposedLibs.core
+        implementation exposedLibs.jdbc
+        implementation exposedLibs.dao // Optional
+    }
+    </code-block>
+  </tab>
+</tabs>
+
+The accessor for each module is its name with the `exposed-` prefix removed and any dashes turned into nested
+accessors. For example, `exposed-kotlin-datetime` becomes `exposedLibs.kotlin.datetime`. All modules share the
+same `exposed` version, which you can override for the whole catalog in one place:
+
+<code-block lang="kotlin">
+versionCatalogs {
+    create("exposedLibs") {
+        from("org.jetbrains.exposed:exposed-version-catalog:%exposed_version%")
+        version("exposed", "%exposed_version%")
+    }
+}
+</code-block>
+
+> The catalog is imported under the name `exposedLibs` rather than `exposed` to avoid a clash with the
+> [](Exposed-gradle-plugin.md), which registers a project extension named `exposed`. If you don't apply that
+> plugin, you can name the catalog `exposed` and use accessors such as `exposed.core`.
+> {style="note"}
+
+> Version catalogs are a Gradle feature. Maven users should declare dependencies directly, as shown above.
+> {style="note"}
+
 ## Modules
 
 Exposed consists of multiple modules, grouped into the following categories:

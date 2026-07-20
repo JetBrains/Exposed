@@ -2,7 +2,6 @@ rootProject.name = "exposed-spring"
 
 dependencyResolutionManagement {
     repositories {
-        mavenLocal()
         mavenCentral()
     }
     versionCatalogs {
