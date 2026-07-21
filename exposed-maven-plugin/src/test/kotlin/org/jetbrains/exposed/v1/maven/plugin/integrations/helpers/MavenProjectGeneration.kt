@@ -35,7 +35,7 @@ data class ExposedMigrationsConfig(
     var filePrefix: String? = null,
     var fileVersionFormat: VersionFormat? = null,
     var fileSeparator: String? = null,
-    var useUpperCaseDescription: Boolean = true,
+    var useUpperCaseDescription: String? = null,
     var fileExtension: String? = null,
     var fullFileName: String? = null,
     var databaseUrl: String? = null,

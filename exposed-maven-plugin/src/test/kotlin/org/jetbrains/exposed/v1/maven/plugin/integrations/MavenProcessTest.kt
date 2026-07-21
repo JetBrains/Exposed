@@ -51,7 +51,7 @@ class MavenProcessTest {
         configure {
             migrationsConfig {
                 h2()
-                useUpperCaseDescription = false
+                useUpperCaseDescription = "false"
             }
         }
 
@@ -61,7 +61,7 @@ class MavenProcessTest {
             assertEquals(2, migrations.size)
             assertTrue {
                 migrations
-                    .map { it.name }
+                    .map { it.name.drop(1) }
                     .all { it == it.lowercase() }
             }
         }
@@ -72,7 +72,7 @@ class MavenProcessTest {
         configure {
             migrationsConfig {
                 h2()
-                fileExtension = "ddl"
+                fileExtension = ".ddl"
             }
         }
         verify {
