@@ -63,7 +63,7 @@ open class BatchInsertStatement(
         allColumnsInDataSet.clear()
         data.flatMapTo(allColumnsInDataSet) { it.keys }
         values.clear()
-        values.putAll(data.last())
+        data.lastOrNull()?.let(values::putAll)
         arguments = null
         hasBatchedValues = data.isNotEmpty()
     }

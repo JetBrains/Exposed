@@ -31,6 +31,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -224,6 +225,17 @@ class InsertTests : R2dbcDatabaseTestsBase() {
             val batchesSize = cities.selectAll().count()
 
             assertEquals(0, batchesSize)
+        }
+    }
+
+    @Test
+    fun testRemoveOnlyBatch() {
+        val statement = BatchInsertStatement(DMLTestsData.Cities)
+
+        statement[DMLTestsData.Cities.name] = "Test"
+        statement.addBatch()
+        assertDoesNotThrow("Removing the only batch should not restore values from empty data") {
+            statement.removeLastBatch()
         }
     }
 

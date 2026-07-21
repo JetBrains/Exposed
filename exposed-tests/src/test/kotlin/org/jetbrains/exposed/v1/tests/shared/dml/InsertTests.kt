@@ -32,6 +32,7 @@ import org.jetbrains.exposed.v1.tests.shared.expectException
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import java.sql.SQLException
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -220,6 +221,17 @@ class InsertTests : DatabaseTestsBase() {
             val batchesSize = cities.selectAll().count()
 
             assertEquals(0, batchesSize)
+        }
+    }
+
+    @Test
+    fun testRemoveOnlyBatch() {
+        val statement = BatchInsertStatement(DMLTestsData.Cities)
+
+        statement[DMLTestsData.Cities.name] = "Test"
+        statement.addBatch()
+        assertDoesNotThrow("Removing the only batch should not restore values from empty data") {
+            statement.removeLastBatch()
         }
     }
 
