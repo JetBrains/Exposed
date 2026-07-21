@@ -172,7 +172,6 @@ class MavenProcessTest {
                     .all { "###" in it }
             }
         }
-
     }
 
     @Test
@@ -209,7 +208,6 @@ class MavenProcessTest {
             }
         }
     }
-
 
     @Test
     fun `it should generate only migrations that are needed when runnign in testcontainer`() = TestMavenProject("tmp") {

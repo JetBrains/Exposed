@@ -1,4 +1,4 @@
-package {{packageName}}
+package com.example.tables
 
 import org.jetbrains.exposed.v1.core.Table
 
