@@ -13,6 +13,7 @@ import kotlin.io.path.readText
 import kotlin.io.path.walk
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.fail
 
 @DslMarker
 annotation class TestMavenProjectDsl
@@ -88,7 +89,13 @@ sealed class MavenGoal(val goal: String) {
 sealed interface MavenProcessResult {
     data class Success(val output: String) : MavenProcessResult
     data class Failure(val output: String, val exitCode: Int) : MavenProcessResult
+
     data class Interrupted(val exception: InterruptedException) : MavenProcessResult
+
+    fun assertSuccess() = when (this) {
+        is Success -> this
+        else -> fail("Expected success, but got $this")
+    }
 }
 
 class VerificationScope

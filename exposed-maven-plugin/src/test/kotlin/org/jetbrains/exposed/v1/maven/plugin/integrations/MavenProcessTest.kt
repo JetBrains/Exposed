@@ -25,8 +25,7 @@ class MavenProcessTest {
         }
 
         verify {
-            val result = executeGoal(MavenGoal.GenerateMigrations)
-            assertIs<MavenProcessResult.Success>(result)
+            executeGoal(MavenGoal.GenerateMigrations).assertSuccess()
             assertEquals(2, migrations.size)
         }
     }
@@ -56,8 +55,7 @@ class MavenProcessTest {
         }
 
         verify {
-            val result = executeGoal(MavenGoal.GenerateMigrations)
-            assertIs<MavenProcessResult.Success>(result)
+            executeGoal(MavenGoal.GenerateMigrations).assertSuccess()
             assertEquals(2, migrations.size)
             assertTrue {
                 migrations
@@ -76,8 +74,7 @@ class MavenProcessTest {
             }
         }
         verify {
-            val result = executeGoal(MavenGoal.GenerateMigrations)
-            assertIs<MavenProcessResult.Success>(result)
+            executeGoal(MavenGoal.GenerateMigrations).assertSuccess()
             assertEquals(2, migrations.size)
             assertTrue {
                 migrations
@@ -96,8 +93,7 @@ class MavenProcessTest {
             }
         }
         verify {
-            val result = executeGoal(MavenGoal.GenerateMigrations)
-            assertIs<MavenProcessResult.Success>(result)
+            executeGoal(MavenGoal.GenerateMigrations).assertSuccess()
             assertEquals(2, migrations.size)
             assertTrue {
                 migrations
@@ -116,8 +112,7 @@ class MavenProcessTest {
             }
         }
         verify {
-            val result = executeGoal(MavenGoal.GenerateMigrations)
-            assertIs<MavenProcessResult.Success>(result)
+            executeGoal(MavenGoal.GenerateMigrations).assertSuccess()
             assertEquals(1, migrations.size)
             assertTrue {
                 migrations
@@ -138,8 +133,7 @@ class MavenProcessTest {
         }
 
         verify {
-            val result = executeGoal(MavenGoal.GenerateMigrations)
-            assertIs<MavenProcessResult.Success>(result)
+            executeGoal(MavenGoal.GenerateMigrations).assertSuccess()
             assertEquals(2, migrations.size)
             val now = OffsetDateTime.now()
             val expected = "%04d%02d%02d".format(
@@ -164,8 +158,7 @@ class MavenProcessTest {
             }
         }
         verify {
-            val result = executeGoal(MavenGoal.GenerateMigrations)
-            assertIs<MavenProcessResult.Success>(result)
+            executeGoal(MavenGoal.GenerateMigrations).assertSuccess()
             assertTrue {
                 migrations
                     .map { it.name }
@@ -182,8 +175,7 @@ class MavenProcessTest {
                 tablesPackage = "something.wrong"
             }
             verify {
-                val result = executeGoal(MavenGoal.GenerateMigrations)
-                assertIs<MavenProcessResult.Success>(result)
+                executeGoal(MavenGoal.GenerateMigrations).assertSuccess()
                 assertEquals(0, migrations.size)
             }
         }
@@ -202,8 +194,7 @@ class MavenProcessTest {
             }
             verify {
                 assertEquals(2, migrations.size)
-                val result = executeGoal(MavenGoal.GenerateMigrations)
-                assertIs<MavenProcessResult.Success>(result)
+                executeGoal(MavenGoal.GenerateMigrations).assertSuccess()
                 assertEquals(2, migrations.size)
             }
         }
@@ -222,8 +213,7 @@ class MavenProcessTest {
             }
             verify {
                 assertEquals(1, migrations.size)
-                val result = executeGoal(MavenGoal.GenerateMigrations)
-                assertIs<MavenProcessResult.Success>(result)
+                executeGoal(MavenGoal.GenerateMigrations).assertSuccess()
                 assertEquals(2, migrations.size)
             }
         }
