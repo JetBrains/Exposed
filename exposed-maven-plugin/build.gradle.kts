@@ -97,15 +97,15 @@ tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }
 
-tasks.test {
-    exclude("**/*ProcessTest.class")
-}
-
 val testProcess by tasks.registering(Test::class) {
     group = "verification"
     description = "Runs test classes ending in ProcessTest."
 
     include("**/*ProcessTest.class")
+}
+
+tasks.withType<Test>().matching { it.name != testProcess.name }.configureEach {
+    exclude("**/*ProcessTest.class")
 }
 val compileTestKotlin: KotlinCompile by tasks
 compileTestKotlin.compilerOptions {
