@@ -224,6 +224,15 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testRemoveOnlyBatch() {
+        val statement = BatchInsertStatement(DMLTestsData.Cities)
+
+        statement[DMLTestsData.Cities.name] = "Test"
+        statement.addBatch()
+        statement.removeLastBatch()
+    }
+
+    @Test
     fun testGeneratedKey01() {
         withTables(DMLTestsData.Cities) {
             val id = DMLTestsData.Cities.insert {
