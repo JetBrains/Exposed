@@ -1,4 +1,3 @@
-import io.gitlab.arturbosch.detekt.Detekt
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -100,9 +99,4 @@ tasks.withType<Test>().configureEach {
 val compileTestKotlin: KotlinCompile by tasks
 compileTestKotlin.compilerOptions {
     freeCompilerArgs.set(listOf("-XXLanguage:+ContextParameters"))
-}
-
-tasks.withType<Detekt>().configureEach {
-    // Detekt's bundled parser can't handle context parameter syntax (context(_: X)).
-    exclude("**/MavenProjectGeneration.kt")
 }

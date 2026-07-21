@@ -1,4 +1,5 @@
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
+import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.exposed.gradle.configureDetekt
 import org.jetbrains.exposed.gradle.configureMavenCentralMetadata
 import org.jetbrains.exposed.gradle.testDb
@@ -103,6 +104,11 @@ subprojects {
 
     dependencies {
         detektPlugins(rootProject.libs.detekt.formatting)
+    }
+
+    tasks.withType<Detekt>().configureEach {
+        // Detekt's bundled parser can't handle context parameter syntax (context(_: X)).
+        exclude("**/MavenProjectGeneration.kt")
     }
 }
 
