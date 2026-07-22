@@ -132,31 +132,32 @@ class JSONandJSONBExamples {
      INSERT INTO tasks (project)
      VALUES (JSONB('{"name":"Main","language":"Java","active":true}'))
      */
-    fun insertJSONBSqlite() {
-        TasksTable.insert {
-            it[project] = Project("Main", "Java", true)
-        }
-    }
+//    fun insertJSONBSqlite() {
+//        TasksTable.insert {
+//            it[project] = Project("Main", "Java", true)
+//        }
+//    }
 
     /*
      Generated SQL:
 
      SELECT JSON(tasks.project) ptext FROM tasks
      */
-    fun selectJSONBSqlite() {
-        val projectText = TasksTable.project.alias("ptext")
-        val projects = TasksTable.select(projectText).map { it[projectText] }
-        println(projects) // [Project(name=Main, language=Java, active=true)]
-    }
+//    fun selectJSONBSqlite() {
+//        val projectText = TasksTable.project.alias("ptext")
+//        val projects = TasksTable.select(projectText).map { it[projectText] }
+//        println(projects) // [Project(name=Main, language=Java, active=true)]
+//    }
+//
+//    fun useJsonCast() {
+//        ProjectsTable.select(
+//            // assumes this column is a JSONB column of type <Project>
+//            ProjectsTable.projects.castToJson(),
+//            // assumes this column stores valid string input like "{"group":"A","id":"a"}"
+//            ProjectsTable.groupId.castToJson<GroupId>()
+//        ).toList()
+//    }
 
-    fun useJsonCast() {
-        ProjectsTable.select(
-            // assumes this column is a JSONB column of type <Project>
-            ProjectsTable.projects.castToJson(),
-            // assumes this column stores valid string input like "{"group":"A","id":"a"}"
-            ProjectsTable.groupId.castToJson<GroupId>()
-        ).toList()
-    }
 }
 
 /*
@@ -167,12 +168,12 @@ class JSONandJSONBExamples {
     project BLOB DEFAULT (JSONB('{"name":"Main","language":"Kotlin","active":true}')) NOT NULL
  )
  */
-object TasksTable : Table("tasks") {
-    val complete = bool("complete").default(false)
-    val project = jsonb<Project>("project", Json.Default)
-        .default(Project("Main", "Kotlin", true))
-}
-
-object TasksRawTable : Table("tasks_raw") {
-    val project = jsonb<Project>("project", Json.Default, castToJsonFormat = false)
-}
+//object TasksTable : Table("tasks") {
+//    val complete = bool("complete").default(false)
+//    val project = jsonb<Project>("project", Json.Default)
+//        .default(Project("Main", "Kotlin", true))
+//}
+//
+//object TasksRawTable : Table("tasks_raw") {
+//    val project = jsonb<Project>("project", Json.Default, castToJsonFormat = false)
+//}

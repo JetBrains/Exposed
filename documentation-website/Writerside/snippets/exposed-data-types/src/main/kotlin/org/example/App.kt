@@ -10,11 +10,10 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 val jsonExamples = JSONandJSONBExamples()
 val enumExamples = EnumerationExamples()
 val binaryExamples = BinaryExamples()
-val dateTimeExamples = DateTimeExamples()
 
 fun main() {
 //    runMySQLExamples()
-    runPostgreSQLExamples()
+//    runPostgreSQLExamples()
     runH2Examples()
 }
 
@@ -29,16 +28,12 @@ fun runMySQLExamples() {
         addLogger(StdOutSqlLogger)
         SchemaUtils.create(TeamsTable)
         SchemaUtils.create(TeamProjectsTable)
-        SchemaUtils.create(DateTimeExamples.Events)
+        runKotlinDateTimeExamples()
         jsonExamples.example()
         jsonExamples.useExtract()
         jsonExamples.useContains()
         jsonExamples.useContainsWithPath()
         jsonArraysExamples()
-//        dateTimeExamples.dateExample()
-//        dateTimeExamples.timeExample()
-//        dateTimeExamples.datetimeExample()
-//        dateTimeExamples.timestampExample()
         binaryExamples.basicUsage()
 //        binaryExamples.parameterBinding()
     }
@@ -54,14 +49,10 @@ fun runH2Examples() {
     transaction(h2Db) {
         addLogger(StdOutSqlLogger)
         SchemaUtils.create(TeamsTable)
-        SchemaUtils.create(DateTimeExamples.Events)
+        runKotlinDateTimeExamples()
         jsonExamples.example()
         enumExamples.createTableWithExistingEnumColumn()
         enumExamples.insertEnumIntoTableWithExistingEnumColumn()
-        dateTimeExamples.dateExample()
-        dateTimeExamples.timeExample()
-        dateTimeExamples.datetimeExample()
-        dateTimeExamples.timestampExample()
         binaryExamples.basicUsage()
         binaryExamples.parameterBinding()
     }
@@ -79,14 +70,10 @@ fun runPostgreSQLExamples() {
         addLogger(StdOutSqlLogger)
         SchemaUtils.create(TeamsTable)
         SchemaUtils.create(TeamProjectsTable)
-        SchemaUtils.create(DateTimeExamples.Events)
 //        enumExamples.createTableWithEnumColumn()
         binaryExamples.basicUsage()
         binaryExamples.parameterBinding()
-        dateTimeExamples.dateExample()
-        dateTimeExamples.timeExample()
-        dateTimeExamples.datetimeExample()
-        dateTimeExamples.timestampExample()
+        runKotlinDateTimeExamples()
     }
 }
 
@@ -98,4 +85,25 @@ fun runJSONandJSONBExamples() {
 fun jsonArraysExamples() {
     SchemaUtils.create(TeamProjectsTable)
     jsonExamples.insertJSONArrays()
+}
+
+fun runKotlinDateTimeExamples() {
+    val dateTimeExamples = KotlinDateTimeExamples()
+
+    SchemaUtils.create(KotlinDateTimeExamples.Events)
+    dateTimeExamples.insertEvent()
+}
+
+fun runJavaTimeExamples() {
+    val dateTimeExamples = JavaTimeExamples()
+
+    SchemaUtils.create(JavaTimeExamples.JavaTimeEvents)
+    dateTimeExamples.insertEvent()
+}
+
+fun runJodaTimeExamples() {
+    val dateTimeExamples = JodaTimeExamples()
+
+    SchemaUtils.create(JodaTimeExamples.JodaTimeEvents)
+    dateTimeExamples.insertEvent()
 }
