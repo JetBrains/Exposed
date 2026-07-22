@@ -1,3 +1,4 @@
+import kotlinx.kover.gradle.plugin.dsl.KoverProjectExtension
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -106,6 +107,17 @@ val testProcess by tasks.registering(Test::class) {
 
 tasks.withType<Test>().matching { it.name != testProcess.name }.configureEach {
     exclude("**/*ProcessTest.class")
+}
+
+// Kover auto-schedules *every* Test task in the project when a kover*Report/koverVerify
+// task runs, ignoring the include/exclude filters above. Without this, `testProcess`
+// gets executed (and can fail CI) as a side effect of `clean build koverHtmlReport`.
+extensions.configure<KoverProjectExtension> {
+    currentProject {
+        instrumentation {
+            disabledForTestTasks.add(testProcess.name)
+        }
+    }
 }
 val compileTestKotlin: KotlinCompile by tasks
 compileTestKotlin.compilerOptions {
