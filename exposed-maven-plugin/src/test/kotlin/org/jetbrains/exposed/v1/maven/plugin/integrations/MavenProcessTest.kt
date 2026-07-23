@@ -36,12 +36,12 @@ class MavenProcessTest {
             migrationsConfig {
                 testContainersImageName = "postgres:14"
             }
+        }
 
-            verify {
-                val result = executeGoal(MavenGoal.GenerateMigrations)
-                assertIs<MavenProcessResult.Success>(result)
-                assertEquals(2, migrations.size)
-            }
+        verify {
+            val result = executeGoal(MavenGoal.GenerateMigrations)
+            assertIs<MavenProcessResult.Success>(result)
+            assertEquals(2, migrations.size)
         }
     }
 
@@ -73,6 +73,7 @@ class MavenProcessTest {
                 fileExtension = ".ddl"
             }
         }
+
         verify {
             executeGoal(MavenGoal.GenerateMigrations).assertSuccess()
             assertEquals(2, migrations.size)
@@ -92,6 +93,7 @@ class MavenProcessTest {
                 filePrefix = "VVV1"
             }
         }
+
         verify {
             executeGoal(MavenGoal.GenerateMigrations).assertSuccess()
             assertEquals(2, migrations.size)
@@ -111,6 +113,7 @@ class MavenProcessTest {
                 fullFileName = "goblins_are_great.sql"
             }
         }
+
         verify {
             executeGoal(MavenGoal.GenerateMigrations).assertSuccess()
             assertEquals(1, migrations.size)
@@ -157,6 +160,7 @@ class MavenProcessTest {
                 fileSeparator = "###"
             }
         }
+
         verify {
             executeGoal(MavenGoal.GenerateMigrations).assertSuccess()
             assertTrue {
@@ -174,10 +178,11 @@ class MavenProcessTest {
                 h2()
                 tablesPackage = "something.wrong"
             }
-            verify {
-                executeGoal(MavenGoal.GenerateMigrations).assertSuccess()
-                assertEquals(0, migrations.size)
-            }
+        }
+
+        verify {
+            executeGoal(MavenGoal.GenerateMigrations).assertSuccess()
+            assertEquals(0, migrations.size)
         }
     }
 
@@ -192,11 +197,12 @@ class MavenProcessTest {
                     users = true
                 }
             }
-            verify {
-                assertEquals(2, migrations.size)
-                executeGoal(MavenGoal.GenerateMigrations).assertSuccess()
-                assertEquals(2, migrations.size)
-            }
+        }
+
+        verify {
+            assertEquals(2, migrations.size)
+            executeGoal(MavenGoal.GenerateMigrations).assertSuccess()
+            assertEquals(2, migrations.size)
         }
     }
 
@@ -211,11 +217,12 @@ class MavenProcessTest {
                     users = false
                 }
             }
-            verify {
-                assertEquals(1, migrations.size)
-                executeGoal(MavenGoal.GenerateMigrations).assertSuccess()
-                assertEquals(2, migrations.size)
-            }
+        }
+
+        verify {
+            assertEquals(1, migrations.size)
+            executeGoal(MavenGoal.GenerateMigrations).assertSuccess()
+            assertEquals(2, migrations.size)
         }
     }
 
