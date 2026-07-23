@@ -17,7 +17,7 @@ import kotlin.test.assertTrue
 class MavenProcessTest {
 
     @Test
-    fun `it should generate migrations using h2`() = TestMavenProject("tmp") {
+    fun `it should generate migrations using h2`() = TestMavenProject {
         configure {
             migrationsConfig {
                 h2()
@@ -31,7 +31,7 @@ class MavenProcessTest {
     }
 
     @Test
-    fun `it should generate migrations using testcontainers`() = TestMavenProject("tmp") {
+    fun `it should generate migrations using testcontainers`() = TestMavenProject {
         configure {
             migrationsConfig {
                 testContainersImageName = "postgres:14"
@@ -46,7 +46,7 @@ class MavenProcessTest {
     }
 
     @Test
-    fun `it should generate lowercase migration names`() = TestMavenProject("tmp") {
+    fun `it should generate lowercase migration names`() = TestMavenProject {
         configure {
             migrationsConfig {
                 h2()
@@ -66,7 +66,7 @@ class MavenProcessTest {
     }
 
     @Test
-    fun `it should generate migrations with custom file extension`() = TestMavenProject("tmp") {
+    fun `it should generate migrations with custom file extension`() = TestMavenProject {
         configure {
             migrationsConfig {
                 h2()
@@ -86,7 +86,7 @@ class MavenProcessTest {
     }
 
     @Test
-    fun `it should generate migrations with custom prefix`() = TestMavenProject("tmp") {
+    fun `it should generate migrations with custom prefix`() = TestMavenProject {
         configure {
             migrationsConfig {
                 h2()
@@ -106,7 +106,7 @@ class MavenProcessTest {
     }
 
     @Test
-    fun `it should generate a single migration with exact name when fullFileName was configured`() = TestMavenProject("tmp") {
+    fun `it should generate a single migration with exact name when fullFileName was configured`() = TestMavenProject {
         configure {
             migrationsConfig {
                 h2()
@@ -126,7 +126,7 @@ class MavenProcessTest {
     }
 
     @Test
-    fun `it should generate migrations that adhere to file version format`() = TestMavenProject("tmp") {
+    fun `it should generate migrations that adhere to file version format`() = TestMavenProject {
         configure {
             migrationsConfig {
                 h2()
@@ -172,7 +172,7 @@ class MavenProcessTest {
     }
 
     @Test
-    fun `it should generate no migrations if it doesn't find any tables to generate`() = TestMavenProject("tmp") {
+    fun `it should generate no migrations if it doesn't find any tables to generate`() = TestMavenProject {
         configure {
             migrationsConfig {
                 h2()
@@ -187,14 +187,13 @@ class MavenProcessTest {
     }
 
     @Test
-    fun `it should generate no migrations if none are needed when running in testcontainers`() = TestMavenProject("tmp") {
+    fun `it should generate no migrations if none are needed when running in testcontainers`() = TestMavenProject {
         configure {
             migrationsConfig {
                 testContainersImageName = "postgres:14"
                 withExistingMigrations {
                     dialect = "pg"
-                    cities = true
-                    users = true
+                    allMigrations()
                 }
             }
         }
@@ -207,7 +206,7 @@ class MavenProcessTest {
     }
 
     @Test
-    fun `it should generate only migrations that are needed when runnign in testcontainer`() = TestMavenProject("tmp") {
+    fun `it should generate only migrations that are needed when running in Testcontainer`() = TestMavenProject {
         configure {
             migrationsConfig {
                 testContainersImageName = "postgres:14"

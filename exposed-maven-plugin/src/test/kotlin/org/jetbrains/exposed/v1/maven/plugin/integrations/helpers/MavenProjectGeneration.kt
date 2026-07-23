@@ -11,8 +11,8 @@ import kotlin.io.path.PathWalkOption
 import kotlin.io.path.name
 import kotlin.io.path.readText
 import kotlin.io.path.walk
+import kotlin.random.Random
 import kotlin.test.assertContains
-import kotlin.test.assertEquals
 import kotlin.test.fail
 
 @DslMarker
@@ -45,10 +45,6 @@ data class ExposedMigrationsConfig(
     var testContainersImageName: String? = null,
     var existingMigrations: ExistingMigrations = ExistingMigrations(),
 ) {
-    fun withExistingMigrations() = withExistingMigrations {
-        cities = true
-        users = true
-    }
 
     fun withExistingMigrations(block: ExistingMigrations.() -> Unit) {
         existingMigrations.block()
@@ -60,24 +56,14 @@ data class ExistingMigrations(
     var dialect: String = "h2",
     var cities: Boolean = false,
     var users: Boolean = false,
-)
+) {
+    fun allMigrations() {
+        cities = true
+        users = true
+    }
+}
 
 data class Migration(val name: String, val content: String) {
-    companion object {
-        fun fromResources(path: String): Migration {
-            val content = this::class.java.getResource(path)?.readText()
-            val name = path.substringAfterLast('/')
-            requireNotNull(content) { "Migration file not found in resources at $path" }
-            return Migration(name, content)
-        }
-    }
-
-    context(_: VerificationScope)
-    fun nameEquals(other: Migration) = name == other.name
-
-    context(_: VerificationScope)
-    fun assertEquals(other: Migration) = assertEquals(other.content, content)
-
     context(_: VerificationScope)
     fun contains(other: Migration) = assertContains(other.content, content)
 }
@@ -115,7 +101,7 @@ class TestMavenProject private constructor(
      * Example Usage:
      * ```kotlin
      * @Test
-     * fun `test generate basic migrations`() = TestMavenProject("tmp") {
+     * fun `test generate basic migrations`() = TestMavenProject {
      *     configure { // configure values in pom
      *         migrationsConfig {
      *             databaseUrl = "jdbc:h2:mem:test"
@@ -134,8 +120,8 @@ class TestMavenProject private constructor(
      * ```
      */
     companion object {
-        operator fun invoke(tempDirLocation: String, block: TestMavenProject.() -> Unit = {}) {
-            TestMavenProject(tempDirLocation).apply {
+        operator fun invoke(tempDirLocation: String? = null, block: TestMavenProject.() -> Unit = {}) {
+            TestMavenProject(tempDirLocation ?: randomProjectDirName()).apply {
                 use {
                     block()
                 }
@@ -168,11 +154,6 @@ class TestMavenProject private constructor(
     context(_: ConfigurationScope)
     fun migrationsConfig(block: ExposedMigrationsConfig.() -> Unit) {
         exposedMigrations.block()
-    }
-
-    context(_: ConfigurationScope)
-    fun sourceCode(block: SourceCodeOptions.() -> Unit) {
-        sourceCodeOptions.block()
     }
 
     context(_: ConfigurationScope)
@@ -232,7 +213,7 @@ class TestMavenProject private constructor(
     }
 
     private fun generate(): Path {
-        tmpDir = Files.createDirectories(Paths.get(tmpDirLocation))
+        tmpDir = Files.createTempDirectory(tmpDirLocation)
         val mavenProjectGenerator = MavenProjectGenerator(
             tmpDir = tmpDir,
             versions = versions,
@@ -433,3 +414,5 @@ private fun resolveMavenExecutableFromLoginShell(): Path? {
         }.getOrNull()
     }
 }
+
+private fun randomProjectDirName() = "exposed-maven-plugin-test-${Random.nextInt(10000)}"
