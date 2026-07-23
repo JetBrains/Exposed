@@ -36,6 +36,12 @@
                 <include from="DAO-Table-Types.topic" element-id="StarWarsFilmsTable-dao-code-block"/>
             </tab>
         </tabs>
+        <note>
+            In IntelliJ IDEA Ultimate, you can use
+            <a href="https://plugins.jetbrains.com/plugin/24367-exposed">the Exposed plugin</a> to generate
+            entities from your table definitions. For more information, see
+            the <a href="https://www.jetbrains.com/help/idea/exposed.html">Exposed plugin documentation</a>.
+        </note>
         <chapter id="entity-type" title="Entity type">
             <p>
                 The entity type determines how the <code>Entity</code> class interacts with the table’s primary key.

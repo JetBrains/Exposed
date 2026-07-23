@@ -57,6 +57,7 @@
     </toc-element>
     <toc-element toc-title="Tools">
         <toc-element topic="Exposed-gradle-plugin.md"/>
+        <toc-element toc-title="Exposed IntelliJ IDEA plugin" href="https://www.jetbrains.com/help/idea/exposed.html" />
     </toc-element>
     <toc-element topic="Spring-Boot-integration.md"/>
     <toc-element toc-title="Releases">
