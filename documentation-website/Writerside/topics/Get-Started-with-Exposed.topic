@@ -51,7 +51,7 @@
                     database tools
                 </a>
                 and supports
-                <a href="https://plugins.jetbrains.com/plugin/24367-exposed">
+                <a href="https://www.jetbrains.com/help/idea/exposed.html">
                     the Exposed plugin
                 </a>
                 . The Exposed plugin provides code completion, inspections, and allows you to generate tables and

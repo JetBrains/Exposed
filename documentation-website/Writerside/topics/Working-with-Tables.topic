@@ -19,12 +19,6 @@
         </chapter>
     </chapter>
     <chapter title="Defining tables" id="defining-tables">
-        <note>
-            In IntelliJ IDEA Ultimate, you can use the
-            <a href="https://plugins.jetbrains.com/plugin/24367-exposed">Exposed plugin</a> to generate
-            table definitions from an existing database schema. For more information, see
-            the <a href="https://www.jetbrains.com/help/idea/exposed.html">Exposed plugin documentation</a>.
-        </note>
         <p>
             A database table is represented by an object inherited from a <code>Table</code> class.
         </p>
@@ -72,6 +66,12 @@
                 <include from="DAO-Table-Types.topic" element-id="StarWarsFilmsTable-dao-sql" />
             </tab>
         </tabs>
+        <note>
+            In IntelliJ IDEA Ultimate, you can use the
+            <a href="https://plugins.jetbrains.com/plugin/24367-exposed">Exposed plugin</a> to generate
+            table definitions from an existing database schema. For more information, see
+            the <a href="https://www.jetbrains.com/help/idea/exposed.html">Exposed plugin documentation</a>.
+        </note>
         <chapter title="Configuring a custom table name" id="name-from-object">
             <p>
                 By default, Exposed generates the table name from the full class name.
