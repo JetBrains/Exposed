@@ -2,8 +2,10 @@ package org.jetbrains.exposed.v1.tests.h2
 
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.tests.LogDbInTestName
+import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.sql.DriverManager
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -32,6 +34,7 @@ import kotlin.test.assertTrue
  * initialize exactly once, i.e. open exactly one connection per flag, no matter how many threads
  * race the first access.
  */
+@Tag(NOT_APPLICABLE_TO_R2DBC)
 class DatabaseMetadataConcurrencyTest : LogDbInTestName() {
 
     @Test
