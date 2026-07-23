@@ -82,6 +82,11 @@ sealed interface MavenProcessResult {
         is Success -> this
         else -> fail("Expected success, but got $this")
     }
+
+    fun assertFailure() = when (this) {
+        is Failure -> this
+        else -> fail("Expected failure, but got $this")
+    }
 }
 
 class VerificationScope

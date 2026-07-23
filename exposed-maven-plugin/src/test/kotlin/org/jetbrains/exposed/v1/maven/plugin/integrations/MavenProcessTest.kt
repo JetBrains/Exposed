@@ -17,6 +17,15 @@ import kotlin.test.assertTrue
 class MavenProcessTest {
 
     @Test
+    fun `it should fail with message if misconfigured`() = TestMavenProject {
+        configure { }
+        verify {
+            val failure = executeGoal(MavenGoal.GenerateMigrations).assertFailure()
+            assertTrue { failure.output.contains("Unable to generate migration, likely due to misconfiguration") }
+        }
+    }
+
+    @Test
     fun `it should generate migrations using h2`() = TestMavenProject {
         configure {
             migrationsConfig {
