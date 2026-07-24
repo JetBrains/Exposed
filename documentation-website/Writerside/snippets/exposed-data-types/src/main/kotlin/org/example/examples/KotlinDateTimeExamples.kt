@@ -33,6 +33,7 @@ class KotlinDateTimeExamples {
         val startDate = date("start_date")
         val startTime = time("start_time").nullable()
         val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
+
         @OptIn(ExperimentalTime::class)
         val lastModified = timestamp("last_modified")
         val scheduledAt = timestampWithTimeZone("scheduled_at")
