@@ -285,7 +285,7 @@ data class Index(
                 if (columns.isNotEmpty()) append('_')
                 append(f.joinToString("_") { it.toString().substringBefore("(").lowercase() })
             }
-            if (unique) {
+            if (unique && currentDialect !is SQLiteDialect) {
                 append("_unique")
             }
         }.inProperCase()

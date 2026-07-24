@@ -29,6 +29,7 @@ interface DatabaseConfig {
     val logTooMuchResultSetsThreshold: Int
     val preserveKeywordCasing: Boolean
     val preserveIdentifierCasing: Boolean
+    val modifyIndexIfOnlyNameDiffers: Boolean
 
     /**
      * The [CoroutineDispatcher] to be used when determining the scope of Exposed transaction if
@@ -185,6 +186,16 @@ interface DatabaseConfig {
         var preserveIdentifierCasing: Boolean = false
 
         /**
+         * When migration methods compare an index in a database with an index defined in a table object,
+         * any that have the same columns and uniqueness, but a different name, do not trigger generation of
+         * CREATE/ALTER/DROP SQL statements. By default, details of the index mismatch are only logged.
+         *
+         * Toggling this setting to `true` will additionally generate the appropriate SQL to drop the index with the
+         * old name and create an equivalent index with the new name.
+         */
+        var modifyIndexIfOnlyNameDiffers: Boolean = false
+
+        /**
          * The [CoroutineDispatcher] to be used when determining the scope of Exposed transaction if
          * It is run in a context with no dispatcher. It could be, for instance, a Ktor route or a standalone Kotlin script.
          *
@@ -246,4 +257,7 @@ open class DatabaseConfigImpl(private val builder: DatabaseConfig.Builder) : Dat
 
     override val preserveIdentifierCasing: Boolean
         get() = builder.preserveIdentifierCasing
+
+    override val modifyIndexIfOnlyNameDiffers: Boolean
+        get() = builder.modifyIndexIfOnlyNameDiffers
 }

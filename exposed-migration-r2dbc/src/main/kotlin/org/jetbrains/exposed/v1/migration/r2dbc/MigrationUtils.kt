@@ -195,11 +195,13 @@ object MigrationUtils : MigrationUtilityApi() {
 
         val foreignKeyConstraints = currentDialectMetadata.columnConstraints(*tables).keys
         val existingIndices = currentDialectMetadata.existingIndices(*tables)
+        val modifyIndexIfOnlyNameDiffers = TransactionManager.current().db.config.modifyIndexIfOnlyNameDiffers
 
         @OptIn(InternalApi::class)
         val toDrop = existingIndices.filterAndLogMissingAndUnmappedIndices(
             existingFKConstraints = foreignKeyConstraints,
             withDropIndices = true,
+            withModifyOnNameDiffer = modifyIndexIfOnlyNameDiffers,
             withLogs = withLogs,
             tables = tables
         ).second
@@ -247,9 +249,14 @@ object MigrationUtils : MigrationUtilityApi() {
         } else {
             emptyMap()
         }
+        val modifyIndexIfOnlyNameDiffers = TransactionManager.current().db.config.modifyIndexIfOnlyNameDiffers
 
         val filteredIndices = existingIndices.filterAndLogMissingAndUnmappedIndices(
-            foreignKeyConstraints.keys, withDropIndices = true, withLogs, tables = tables
+            foreignKeyConstraints.keys,
+            withDropIndices = true,
+            withModifyOnNameDiffer = modifyIndexIfOnlyNameDiffers,
+            withLogs,
+            tables = tables
         )
         val (createMissing, dropUnmapped) = filteredIndices
 

@@ -637,6 +637,7 @@ public abstract interface class org/jetbrains/exposed/v1/core/DatabaseConfig {
 	public abstract fun getKeepLoadedReferencesOutOfTransaction ()Z
 	public abstract fun getLogTooMuchResultSetsThreshold ()I
 	public abstract fun getMaxEntitiesToStoreInCachePerEntity ()I
+	public abstract fun getModifyIndexIfOnlyNameDiffers ()Z
 	public abstract fun getPreserveIdentifierCasing ()Z
 	public abstract fun getPreserveKeywordCasing ()Z
 	public abstract fun getSqlLogger ()Lorg/jetbrains/exposed/v1/core/SqlLogger;
@@ -659,6 +660,7 @@ public class org/jetbrains/exposed/v1/core/DatabaseConfig$Builder {
 	public final fun getKeepLoadedReferencesOutOfTransaction ()Z
 	public final fun getLogTooMuchResultSetsThreshold ()I
 	public final fun getMaxEntitiesToStoreInCachePerEntity ()I
+	public final fun getModifyIndexIfOnlyNameDiffers ()Z
 	public final fun getPreserveIdentifierCasing ()Z
 	public final fun getPreserveKeywordCasing ()Z
 	public final fun getSqlLogger ()Lorg/jetbrains/exposed/v1/core/SqlLogger;
@@ -677,6 +679,7 @@ public class org/jetbrains/exposed/v1/core/DatabaseConfig$Builder {
 	public final fun setKeepLoadedReferencesOutOfTransaction (Z)V
 	public final fun setLogTooMuchResultSetsThreshold (I)V
 	public final fun setMaxEntitiesToStoreInCachePerEntity (I)V
+	public final fun setModifyIndexIfOnlyNameDiffers (Z)V
 	public final fun setPreserveIdentifierCasing (Z)V
 	public final fun setPreserveKeywordCasing (Z)V
 	public final fun setSqlLogger (Lorg/jetbrains/exposed/v1/core/SqlLogger;)V
@@ -704,6 +707,7 @@ public class org/jetbrains/exposed/v1/core/DatabaseConfigImpl : org/jetbrains/ex
 	public fun getKeepLoadedReferencesOutOfTransaction ()Z
 	public fun getLogTooMuchResultSetsThreshold ()I
 	public fun getMaxEntitiesToStoreInCachePerEntity ()I
+	public fun getModifyIndexIfOnlyNameDiffers ()Z
 	public fun getPreserveIdentifierCasing ()Z
 	public fun getPreserveKeywordCasing ()Z
 	public fun getSqlLogger ()Lorg/jetbrains/exposed/v1/core/SqlLogger;
@@ -2099,7 +2103,7 @@ public abstract class org/jetbrains/exposed/v1/core/SchemaUtilityApi {
 	protected final fun filterAndLogExcessConstraints (Ljava/util/Map;Z)Ljava/util/List;
 	protected final fun filterAndLogExcessIndices (Ljava/util/Map;Z)Ljava/util/List;
 	protected final fun filterAndLogMissingAndUnmappedCheckConstraints (Ljava/util/Map;Z[Lorg/jetbrains/exposed/v1/core/Table;)Lkotlin/Pair;
-	protected final fun filterAndLogMissingAndUnmappedIndices (Ljava/util/Map;Ljava/util/Set;ZZ[Lorg/jetbrains/exposed/v1/core/Table;)Lkotlin/Pair;
+	protected final fun filterAndLogMissingAndUnmappedIndices (Ljava/util/Map;Ljava/util/Set;ZZZ[Lorg/jetbrains/exposed/v1/core/Table;)Lkotlin/Pair;
 	protected final fun hasCycle (Ljava/util/List;)Z
 	protected final fun log (Ljava/util/Collection;Ljava/lang/String;Z)V
 	protected final fun logTimeSpent (Ljava/lang/String;ZLkotlin/jvm/functions/Function0;)Ljava/lang/Object;

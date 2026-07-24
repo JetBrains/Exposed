@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.v1.migration.r2dbc
 
+import nl.altindag.log.LogCaptor
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.exposedLogger
 import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.r2dbc.exists
 import org.jetbrains.exposed.v1.r2dbc.insert
@@ -11,6 +13,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.junit.jupiter.api.Test
 import kotlin.test.expect
+import kotlin.text.contains
 
 class IndexConstraintsTests : R2dbcDatabaseTestsBase() {
     @Test
@@ -193,6 +196,46 @@ class IndexConstraintsTests : R2dbcDatabaseTestsBase() {
             assertEquals(2, statements.size)
             assertEquals(1, statements.map { it.lowercase() }.filter { it.contains(" indexOnlyInDbIdx".lowercase()) }.size)
             assertEquals(1, statements.map { it.lowercase() }.filter { it.contains(" columnWithIndexOnlyInDbIdx".lowercase()) }.size)
+        }
+    }
+
+    @Test
+    fun testIndexWithSameColumnsButDifferentName() {
+        val oldTester = object : Table("index_tester") {
+            val firstName = varchar("first_name", 32)
+            val lastName = varchar("last_name", 32)
+            val codeName = varchar("code_name", 32).uniqueIndex("custom_code_name_idx")
+            init {
+                uniqueIndex(firstName, lastName)
+            }
+        }
+        val newTester = object : Table("index_tester") {
+            val firstName = varchar("first_name", 32)
+            val lastName = varchar("last_name", 32)
+            val codeName = varchar("code_name", 32).uniqueIndex("new_code_name_idx")
+            init {
+                uniqueIndex("custom_full_name_idx", firstName, lastName)
+            }
+        }
+
+        val logCaptor = LogCaptor.forName(exposedLogger.name)
+        // default config retains original behavior of only logging that there is an index name mismatch
+        withTables(oldTester) {
+            assertTrue(MigrationUtils.statementsRequiredForDatabaseMigration(oldTester, withLogs = false).isEmpty())
+
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(newTester, withLogs = true)
+            assertTrue(statements.isEmpty())
+            assertEquals(2, logCaptor.infoLogs.count { it.contains("differs only in name") })
+        }
+        logCaptor.clearLogs()
+        logCaptor.close()
+
+        withTables(oldTester, configure = { modifyIndexIfOnlyNameDiffers = true }) {
+            assertTrue(MigrationUtils.statementsRequiredForDatabaseMigration(oldTester, withLogs = false).isEmpty())
+
+            // name changes should now trigger add + drop pairs for both indexes
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(newTester, withLogs = false)
+            assertEquals(4, statements.size)
         }
     }
 }

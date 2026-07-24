@@ -209,14 +209,16 @@ abstract class SchemaUtilityApi {
      * in a table object. and returns those that are defined on a table with more than one of this constraint.
      * If [withLogs] is `true`, the corresponding statements for these indices will also be logged.
      *
-     * @return Pair of CREATE statements for missing indices and, if [withDropIndices] is `true`, DROP statements ofr
-     * unmapped indices; if [withDropIndices] is `false`, the second value will be an empty list.
+     * @return Pair of CREATE statements for missing indices and, if [withDropIndices] is `true`, DROP statements for
+     * unmapped indices; if [withDropIndices] is `false`, the second value will be an empty list. Any generated DROP
+     * statements will include those for indexes that differ only by name, only if [withModifyOnNameDiffer] is `true`.
      * @suppress
      */
     @InternalApi
     protected fun Map<Table, List<Index>>.filterAndLogMissingAndUnmappedIndices(
         existingFKConstraints: Set<Pair<Table, LinkedHashSet<Column<*>>>>,
         withDropIndices: Boolean,
+        withModifyOnNameDiffer: Boolean,
         withLogs: Boolean,
         vararg tables: Table
     ): Pair<List<Index>, List<Index>> {
@@ -233,6 +235,14 @@ abstract class SchemaUtilityApi {
             this
         }
 
+        // H2: named indexes retrieved from metadata are appended with a suffix like "_INDEX_5"
+        // Oracle: custom index name undergoes upper-case folding by db
+        fun Index.nameOnlyDiffersByDBChange(other: Index): Boolean = when (currentDialect) {
+            is H2Dialect -> indexName.substringBeforeLast("_INDEX_").inProperCase() == other.indexName.inProperCase()
+            is OracleDialect -> indexName == other.indexName.inProperCase()
+            else -> false
+        }
+
         fun Table.existingIndices() = this@filterAndLogMissingAndUnmappedIndices[this].orEmpty()
             .filterForeignKeys()
             .filterInternalIndices()
@@ -240,6 +250,7 @@ abstract class SchemaUtilityApi {
         fun Table.mappedIndices() = this.indices.filterForeignKeys().filterInternalIndices()
         val missingIndices = HashSet<Index>()
         val unMappedIndices = HashMap<String, MutableSet<Index>>()
+        // stores indexes that will be ignored from create/drop lists, because they only differ in name equality
         val nameDiffers = HashSet<Index>()
         tables.forEach { table ->
             val existingTableIndices = table.existingIndices()
@@ -252,8 +263,12 @@ abstract class SchemaUtilityApi {
                             "-> in mapping ${mappedIndex.indexName}"
                     )
                 }
-                nameDiffers.add(index)
-                nameDiffers.add(mappedIndex)
+                if (!withModifyOnNameDiffer || index.nameOnlyDiffersByDBChange(mappedIndex)) {
+                    // add/ignore indexes where only name differs, only if global flag is set to not modify these indexes;
+                    // always ignore H2 indexes where name only differs by extra suffix
+                    nameDiffers.add(index)
+                    nameDiffers.add(mappedIndex)
+                }
             }
             unMappedIndices
                 .getOrPut(table.nameInDatabaseCase()) { hashSetOf() }

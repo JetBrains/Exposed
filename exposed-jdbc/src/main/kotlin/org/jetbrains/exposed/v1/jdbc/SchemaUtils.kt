@@ -397,7 +397,11 @@ object SchemaUtils : SchemaUtilityApi() {
 
         @OptIn(InternalApi::class)
         return existingIndices.filterAndLogMissingAndUnmappedIndices(
-            foreignKeyConstraints, withDropIndices = false, withLogs, tables = tables
+            foreignKeyConstraints,
+            withDropIndices = false,
+            withModifyOnNameDiffer = false,
+            withLogs,
+            tables = tables
         ).first
     }
 
