@@ -1,6 +1,7 @@
 [//]: # (title: Date and time types)
 
 <show-structure for="chapter,procedure" depth="2"/>
+<var name="example_name" value="exposed-data-types"/>
 
 <tldr>
     <p>
@@ -8,14 +9,17 @@
         <code>org.jetbrains.exposed:exposed-java-time</code>, or
         <code>org.jetbrains.exposed:exposed-jodatime</code>
     </p>
+    <include from="lib.topic" element-id="code_example"/>
     <include from="lib.topic" element-id="jdbc-supported"/>
     <include from="lib.topic" element-id="r2dbc-supported"/>
 </tldr>
 
-Exposed provides comprehensive support for date and time operations through three additional [modules](#modules). Each
+Exposed provides comprehensive support for date and time operations through dedicated [modules](#add-dependency). Each
 module is based on a different date-time library, offering different features and type support.
 
-## Modules
+## Add a dependency {id="add-dependency"}
+
+Before using date and time column types or functions, add one of the following modules to your build file:
 
 | Module                                                                                                                                    | Based on                                                                                | Use                                                                                                                                                              |
 |-------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -23,10 +27,16 @@ module is based on a different date-time library, offering different features an
 | [`exposed-java-time`](https://jetbrains.github.io/Exposed/api/exposed-java-time/org.jetbrains.exposed.v1.javatime/index.html)             | [Java 8 Time](https://docs.oracle.com/javase/8/docs/api/java/time/package-summary.html) | Good choice when integrating with Java code or when you need Java 8 Time API compatibility.                                                                      |
 | [`exposed-jodatime`](https://jetbrains.github.io/Exposed/api/exposed-jodatime/org.jetbrains.exposed.v1.jodatime/index.html)               | [Joda-Time](https://www.joda.org/joda-time/)                                            | Legacy support, includes additional functions for extracting time parts (year, month, day, hour, minute, second). Consider using newer modules for new projects. |
 
+The following example shows the dependency declaration for `exposed-kotlin-datetime`:
+<var name="artifact_name" value="xposed-kotlin-datetime">
+<include from="lib.topic" element-id="add-dependency" />
+
+Replace `exposed-kotlin-datetime` with `exposed-java-time` or `exposed-jodatime` if your project uses the Java Time or 
+Joda-Time APIs instead.
 
 ## Basic usage
 
-To define date and time columns, use the column functions provided by your selected [date-time module](#modules).
+To define date and time columns, use the column functions provided by your selected [date-time module](#add-dependency).
 The following examples define columns for common date and time types:
 
 <tabs group="date-time-module">
