@@ -9,6 +9,10 @@ plugins {
     alias(libs.plugins.dokka)
 }
 
+group = "org.jetbrains.exposed.plugin"
+version = "1.3.1"
+description = "Exposed Plugin Core"
+
 repositories {
     mavenCentral()
 }
