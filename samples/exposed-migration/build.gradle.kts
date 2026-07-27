@@ -1,4 +1,3 @@
-val exposedVersion: String by project
 val h2Version: String by project
 val flywayVersion: String by project
 
@@ -20,15 +19,11 @@ kotlin {
     }
 }
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
-    implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
-    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
-    implementation("org.jetbrains.exposed:exposed-migration-core:$exposedVersion")
-    implementation("org.jetbrains.exposed:exposed-migration-jdbc:$exposedVersion")
+    implementation(exposedLibs.core)
+    implementation(exposedLibs.jdbc)
+    implementation(exposedLibs.migration.core)
+    implementation(exposedLibs.migration.jdbc)
 
     implementation("com.h2database:h2:$h2Version")
 

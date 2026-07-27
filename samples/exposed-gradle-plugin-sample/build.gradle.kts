@@ -3,16 +3,12 @@
 
 plugins {
     kotlin("jvm") version "2.3.20"
-    id("org.jetbrains.exposed.plugin") version "1.3.1"
-}
-
-repositories {
-    mavenCentral()
+    id("org.jetbrains.exposed.plugin") version "1.3.2"
 }
 
 dependencies {
-    implementation("org.jetbrains.exposed:exposed-core:1.3.1")
-    implementation("org.jetbrains.exposed:exposed-jdbc:1.3.1")
+    implementation(exposedLibs.core)
+    implementation(exposedLibs.jdbc)
     implementation("com.h2database:h2:2.3.232")
     implementation("org.slf4j:slf4j-simple:2.0.13")
 }

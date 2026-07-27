@@ -95,7 +95,9 @@ allprojects {
 }
 
 apiValidation {
-    ignoredProjects.addAll(listOf("exposed-tests", "exposed-bom", "exposed-r2dbc-tests", "exposed-jdbc-r2dbc-tests"))
+    ignoredProjects.addAll(
+        listOf("exposed-tests", "exposed-bom", "exposed-r2dbc-tests", "exposed-jdbc-r2dbc-tests", "exposed-version-catalog")
+    )
 }
 
 subprojects {
@@ -107,7 +109,7 @@ subprojects {
 }
 
 subprojects {
-    if (name == "exposed-bom") return@subprojects
+    if (name == "exposed-bom" || name == "exposed-version-catalog") return@subprojects
 
     apply(plugin = rootProject.libs.plugins.jvm.get().pluginId)
     apply(plugin = rootProject.libs.plugins.kover.get().pluginId)
