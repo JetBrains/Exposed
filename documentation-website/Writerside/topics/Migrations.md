@@ -380,9 +380,8 @@ method instead, the string value will be properly compared with the comment retr
 
 ## Feature requests
 
-### Maven and Liquibase integration
+### Liquibase integration
 
-Exposed does not currently offer a Maven plugin or Liquibase integration — share your interest to help shape future support:
+Exposed does not currently offer a Liquibase integration — share your interest to help shape future support:
 
-- [Upvote or comment on the Maven plugin feature request](https://youtrack.jetbrains.com/issue/EXPOSED-758/Create-a-migration-plugin-for-Maven-build-tool)
 - [Join the discussion for Liquibase extension support](https://youtrack.jetbrains.com/issue/EXPOSED-757/Allow-use-of-migration-plugin-with-Liquibase)
