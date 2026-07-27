@@ -42,6 +42,7 @@ junit6 = "6.0.1"
 kotlinx-datetime = "0.7.1-0.6.x-compat"
 javax-money = "1.1"
 moneta = "1.4.5"
+mustache = "0.9.10"
 hikariCP = "7.0.2"
 logcaptor = "2.12.6"
 maven-publish = "0.35.0"
@@ -78,6 +79,7 @@ junit6 = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "j
 junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher" }
 javax-money = { group = "javax.money", name = "money-api", version.ref = "javax-money" }
 moneta = { group = "org.javamoney", name = "moneta", version.ref = "moneta" }
+mustache = { group = "com.github.spullara.mustache.java", name = "compiler", version.ref = "mustache" }
 
 spring-boot3-starter-jdbc = { group = "org.springframework.boot", name = "spring-boot-starter-jdbc", version.ref = "springBoot3" }
 spring-boot3-autoconfigure = { group = "org.springframework.boot", name = "spring-boot-autoconfigure", version.ref = "springBoot3" }
