@@ -1,0 +1,55 @@
+# Version catalog is a central place for you to declare and version dependencies
+# https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
+# https://docs.gradle.org/current/userguide/platforms.html#sub::toml-dependencies-format
+
+[versions]
+kotlin = "2.2.0"
+kotlinxDatetime = "0.6.2"
+kotlinxSerializationJSON = "1.8.1"
+kotlinxCoroutines = "1.10.2"
+springBootVersion = "3.5.3"
+springDependencyManagement = "1.1.7"
+graalvmNativeVersion = "0.10.6"
+exposed = "1.0.0-beta-4"
+mysqlR2dbc = "1.4.1"
+slf4jVersion = "2.0.17"
+logbackVersion = "1.5.18"
+
+[libraries]
+kotlinGradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+kotlinxDatetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
+kotlinxSerialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJSON" }
+kotlinxCoroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
+kotlinxCoroutinesReactor = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-reactor", version.ref = "kotlinxCoroutines"  }
+springBootStarterWebFlux = { module = "org.springframework.boot:spring-boot-starter-webflux" }
+springBootStarterDataR2dbc = { module = "org.springframework.boot:spring-boot-starter-data-r2dbc" }
+jacksonModuleKotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin" }
+kotlinReflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
+springBootStarterTest = { module = "org.springframework.boot:spring-boot-starter-test" }
+kotlinTestJunit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5" }
+junitPlatformLauncher = { module = "org.junit.platform:junit-platform-launcher" }
+exposedSpringbootStarter = { group = "org.jetbrains.exposed", name = "exposed-spring-boot-starter", version.ref = "exposed" }
+exposedR2dbc = { module = "org.jetbrains.exposed:exposed-r2dbc", version.ref = "exposed" }
+r2dbcMysql = { group = "io.asyncer", name = "r2dbc-mysql", version.ref = "mysqlR2dbc" }
+springBootStarterReactorNetty = { group = "org.springframework.boot", name = "spring-boot-starter-reactor-netty" }
+reactorKotlinExtensions = { group = "io.projectreactor.kotlin", name = "reactor-kotlin-extensions" }
+reactorTest = { group = "io.projectreactor", name = "reactor-test" }
+kotlinxCoroutinesTest = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test" }
+springBootStarterJetty = { group = "org.springframework.boot", name = "spring-boot-starter-jetty" }
+
+
+
+slf4jApi = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4jVersion" }
+logback = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logbackVersion" }
+# Libraries can be bundled together for easier import
+[bundles]
+kotlinxEcosystem = ["kotlinxDatetime", "kotlinxSerialization", "kotlinxCoroutines"]
+
+[plugins]
+kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin"  }
+kotlinSluginSpring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
+orgSpringframeworkBoot = { id = "org.springframework.boot", version.ref = "springBootVersion" }
+ioSpringDependencyManagement = { id = "io.spring.dependency-management", version.ref = "springDependencyManagement" }
+orgGraalvmBuildtoolsNative = { id = "org.graalvm.buildtools.native", version.ref = "graalvmNativeVersion" }
+kotlinPluginSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+conventionKotlinJvm = { id = "buildsrc.convention.kotlin-jvm" }
