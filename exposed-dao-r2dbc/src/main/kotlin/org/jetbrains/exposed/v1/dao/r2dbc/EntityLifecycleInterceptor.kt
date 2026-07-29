@@ -112,10 +112,9 @@ class EntityLifecycleInterceptor : GlobalSuspendStatementInterceptor {
         val entityCache = transaction.entityCache
         entityCache.clearReferrersCache()
 
-        // Clear writeValues and readValues for all entities before clearing the cache to prevent
-        // stale data from being carried over into a new transaction. Ideally, at this stage,
-        // values from writeValues should not have been transferred to readValues yet, but we clear
-        // both for reliability to ensure complete cleanup.
+        // Clear writeValues and readValues before clearing the cache, so stale data cannot be
+        // carried over into a new transaction. Both are cleared even though writeValues should not
+        // have reached readValues at this point.
         //
         // TODO ALIGN_WITH_JDBC: when ImmutableCachedEntityClass is ported, preserve its _readValues here.
         entityCache.data.values.forEach { entityMap ->

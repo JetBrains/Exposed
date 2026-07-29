@@ -1,7 +1,7 @@
 plugins {
-    kotlin("jvm")
+    alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.ktor)
-    alias(libs.plugins.serialization)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 group = "org.jetbrains.exposed.samples"
@@ -18,10 +18,10 @@ dependencies {
     implementation(libs.ktor.server.config.yaml)
     implementation(libs.ktor.serialization.kotlinx.json)
 
-    implementation(project(":exposed-core"))
-    implementation(project(":exposed-r2dbc"))
-    implementation(project(":exposed-dao-r2dbc"))
-    implementation(project(":exposed-kotlin-datetime"))
+    implementation(libs.exposed.core)
+    implementation(libs.exposed.r2dbc)
+    implementation(libs.exposed.dao.r2dbc)
+    implementation(libs.exposed.kotlin.datetime)
 
     implementation(libs.r2dbc.h2)
 

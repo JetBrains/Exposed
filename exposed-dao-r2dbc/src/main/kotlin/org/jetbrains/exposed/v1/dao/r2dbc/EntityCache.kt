@@ -40,7 +40,8 @@ class EntityCache(private val transaction: R2dbcTransaction) {
 
     internal val referrers = ConcurrentHashMap<Column<*>, MutableMap<EntityID<*>, SizedIterable<*>>>()
 
-    // It's needed to make settning references synchronous
+    // Queued rather than executed so that assigning a `via` relation stays non-suspend:
+    // a property setter cannot suspend, so the link writes are drained on flush instead.
     internal val pendingInnerTableLinkUpdates = mutableListOf<suspend () -> Unit>()
 
     /**

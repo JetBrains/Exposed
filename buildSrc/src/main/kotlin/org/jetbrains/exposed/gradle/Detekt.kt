@@ -12,7 +12,8 @@ fun Project.configureDetekt() {
     configure<DetektExtension> {
         source.from(
             files(
-                "$rootDir/documentation-website/Writerside/snippets"
+                "$rootDir/documentation-website/Writerside/snippets",
+                "$rootDir/samples"
             )
         )
 

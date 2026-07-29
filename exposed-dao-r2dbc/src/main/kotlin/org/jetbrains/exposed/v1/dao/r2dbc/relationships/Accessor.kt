@@ -19,11 +19,10 @@ import kotlin.reflect.KProperty
  *
  * This is an R2DBC-specific shape that has no exact JDBC counterpart: in JDBC, the property delegate's
  * `getValue` directly returns the parent entity, whereas R2DBC needs a suspending lookup. The accessor
- * is exposed as a `val` and supports three usage patterns:
+ * is exposed as a `val` and supports two usage patterns:
  *
- * - `entity.ref()` — async get via [invoke].
- * - `entity.ref.set(parent)` — write via method call.
- * - `entity.ref(parent)` — write via [invoke] with an argument.
+ * - `entity.ref()` — suspending read via [invoke].
+ * - `entity.ref.set(parent)` — write.
  *
  * This sidesteps Kotlin's delegation protocol constraint that `getValue` and `setValue` must agree on
  * the property type — which would require `setValue` to itself be a `suspend operator`, which Kotlin
@@ -40,14 +39,7 @@ class Accessor<ID : Any, Parent : Entity<ID>, REF : Any>(
      */
     internal val references: Map<Column<*>, Column<*>>? = null
 ) {
-    /**
-     * getValue operator - returns this accessor which has invoke() and set operations.
-     *
-     * This enables these patterns:
-     * - `person.city()` - Async get via invoke()
-     * - `person.city.set(cityEntity)` - Set via method call
-     * - `person.city(cityEntity)` - Set via invoke with argument
-     */
+    /** Property delegate operator — returns this accessor itself, used to expose [invoke] / [set]. */
     operator fun getValue(thisRef: Any?, property: KProperty<*>): Accessor<ID, Parent, REF> {
         return this
     }
@@ -56,7 +48,6 @@ class Accessor<ID : Any, Parent : Entity<ID>, REF : Any>(
     fun set(value: Parent) {
         entity.requireTrackedByCurrentTransaction()
 
-        // Validate entities are from same database
         if (entity.db != value.db) {
             error("Cannot link entities from different databases")
         }
@@ -64,15 +55,12 @@ class Accessor<ID : Any, Parent : Entity<ID>, REF : Any>(
         if (references != null) {
             copyCompositeFkValues(entity, value, references)
         } else {
-            // Single-column reference (original logic).
             @Suppress("UNCHECKED_CAST")
             val refValue = when {
                 reference.referee == factory.table.id -> {
-                    // Reference points to the primary key - use the entity's ID
                     value.id as REF
                 }
                 reference.referee?.table == factory.table -> {
-                    // Reference points to another column in the entity's table
                     val refereeColumn = reference.referee!!
                     value.resolveColumnValue(refereeColumn) as REF
                 }
@@ -81,7 +69,6 @@ class Accessor<ID : Any, Parent : Entity<ID>, REF : Any>(
             entity.writeValues[reference as Column<Any?>] = refValue
         }
 
-        // Schedule update if entity has been flushed
         if (entity.id._value != null) {
             val entityCache = TransactionManager.current().entityCache
 
@@ -94,12 +81,8 @@ class Accessor<ID : Any, Parent : Entity<ID>, REF : Any>(
             }
         }
 
-        // Store in reference cache
         entity.storeReferenceInCache(reference, value)
     }
-
-    /** Invoke-with-argument form of [set] — `entity.ref(parent)`. */
-    operator fun invoke(value: Parent) = set(value)
 
     /**
      * Suspending read of the referenced parent entity. Looks up the entity from the cache, or otherwise
@@ -113,9 +96,8 @@ class Accessor<ID : Any, Parent : Entity<ID>, REF : Any>(
         }
 
         if (references != null) {
-            // Composite-FK lookup — build a CompositeID from the child's columns mapped to the
-            // parent's referee columns, then `findById`. Mirrors JDBC's `Reference.getValue`
-            // composite branch (References.kt:152–161).
+            // Build a CompositeID from the child's columns mapped to the parent's referee columns,
+            // then `findById`. Mirrors JDBC's composite branch in `Reference.getValue`.
             val parentEntity = lookupCompositeParent(factory, entity, references)
                 ?: error("Referenced entity not found for composite FK from ${reference.name}")
             entity.storeReferenceInCache(reference, parentEntity)
@@ -159,7 +141,6 @@ class OptionalAccessor<ID : Any, Parent : Entity<ID>, REF : Any>(
         entity.requireTrackedByCurrentTransaction()
 
         if (value != null) {
-            // Validate entities are from same database
             if (entity.db != value.db) {
                 error("Cannot link entities from different databases")
             }
@@ -180,18 +161,15 @@ class OptionalAccessor<ID : Any, Parent : Entity<ID>, REF : Any>(
             }
         } else {
             if (references != null) {
-                // Clear every child column when clearing a composite reference.
                 references.keys.forEach { childColumn ->
                     @Suppress("UNCHECKED_CAST")
                     entity.writeValues[childColumn as Column<Any?>] = null
                 }
             } else {
-                // Clear the (single) reference
                 entity.writeValues[reference as Column<Any?>] = null
             }
         }
 
-        // Schedule update if entity has been flushed
         if (entity.id._value != null) {
             val entityCache = TransactionManager.current().entityCache
 
@@ -206,9 +184,6 @@ class OptionalAccessor<ID : Any, Parent : Entity<ID>, REF : Any>(
 
         entity.storeReferenceInCache(reference, value)
     }
-
-    /** Invoke-with-argument form of [set] — `entity.ref(parent)` or `entity.ref(null)`. */
-    operator fun invoke(value: Parent?) = set(value)
 
     /**
      * Suspending read of the optionally referenced parent entity. Returns `null` when the underlying

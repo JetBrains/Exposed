@@ -28,10 +28,6 @@ include("exposed-maven-plugin")
 include("exposed-version-catalog")
 include("exposed-dao-r2dbc")
 include("exposed-dao-r2dbc-tests")
-include("exposed-dao-showcase-jdbc")
-project(":exposed-dao-showcase-jdbc").projectDir = file("samples/exposed-dao-showcase/jdbc")
-include("exposed-dao-showcase-r2dbc")
-project(":exposed-dao-showcase-r2dbc").projectDir = file("samples/exposed-dao-showcase/r2dbc")
 
 pluginManagement {
     repositories {
