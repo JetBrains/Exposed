@@ -18,17 +18,15 @@ kotlin {
 dependencies {
     api(project(":exposed-core"))
     api(project(":exposed-r2dbc"))
-
-    implementation(libs.slf4j)
 }
 
 tasks.withType<KotlinCompile>().configureEach {
     compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_17)
+        jvmTarget.set(JvmTarget.JVM_11)
         freeCompilerArgs.add("-opt-in=org.jetbrains.exposed.v1.dao.r2dbc.ExperimentalR2dbcDaoApi")
     }
 }
 
 tasks.withType<JavaCompile>().configureEach {
-    targetCompatibility = "17"
+    targetCompatibility = "11"
 }

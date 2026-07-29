@@ -1,4 +1,4 @@
-@file:Suppress("InvalidPackageDeclaration")
+@file:Suppress("InvalidPackageDeclaration", "MagicNumber")
 
 package org.jetbrains.exposed.samples.broker.r2dbc.routes
 
@@ -32,7 +32,11 @@ fun Application.seedRoutes() {
                 // an eager creation in between would flush these tags early and split the batch.
                 val (tagTech, tagFinance, tagEnergy, tagIndex) =
                     listOf("tech", "finance", "energy", "index")
-                        .map { tagName -> Tag.newDeferred { name = tagName } }
+                        .map { tagName ->
+                            Tag.newDeferred {
+                                name = tagName
+                            }
+                        }
                         .asFlow()
                         .flattenConcat()
                         .toList()

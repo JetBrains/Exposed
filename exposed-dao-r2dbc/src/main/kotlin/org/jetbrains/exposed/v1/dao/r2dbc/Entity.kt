@@ -170,7 +170,6 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
 
     /** Transfers initial column-value mappings from [writeValues] to [readValues] and clears the former once complete. */
     fun storeWrittenValues() {
-        // Move write values to read values
         if (_readValues != null) {
             for ((c, v) in writeValues) {
                 _readValues!![c] = v
@@ -180,7 +179,6 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
                 _readValues = null
             }
         }
-        // Clear write values
         writeValues.clear()
     }
 
