@@ -79,11 +79,13 @@ repositories {
     mavenCentral()
 }
 
-val sampleProjects = setOf("exposed-dao-showcase-jdbc", "exposed-dao-showcase-r2dbc")
-val unpublishedProjects = setOf("exposed-tests", "exposed-r2dbc-tests", "exposed-jdbc-r2dbc-tests", "exposed-dao-r2dbc-tests") + sampleProjects
-
 allprojects {
-    if (this.name !in unpublishedProjects && this != rootProject) {
+    if (this.name != "exposed-tests" &&
+        this.name != "exposed-r2dbc-tests" &&
+        this.name != "exposed-jdbc-r2dbc-tests" &&
+        this.name != "exposed-dao-r2dbc-tests" &&
+        this != rootProject
+    ) {
         apply(plugin = "com.vanniktech.maven.publish")
         apply(plugin = "signing")
         this@allprojects.mavenPublishing {
@@ -99,12 +101,11 @@ allprojects {
 
 apiValidation {
     ignoredProjects.addAll(
-        listOf("exposed-tests", "exposed-bom", "exposed-r2dbc-tests", "exposed-jdbc-r2dbc-tests", "exposed-version-catalog", "exposed-dao-r2dbc-tests") + sampleProjects
+        listOf("exposed-tests", "exposed-bom", "exposed-r2dbc-tests", "exposed-jdbc-r2dbc-tests", "exposed-version-catalog", "exposed-dao-r2dbc-tests")
     )
 }
 
 subprojects {
-    if (name in sampleProjects) return@subprojects
     configureDetekt()
 
     dependencies {
@@ -118,7 +119,7 @@ subprojects {
 }
 
 subprojects {
-    if (name == "exposed-bom" || name == "exposed-version-catalog" || name in sampleProjects) return@subprojects
+    if (name == "exposed-bom" || name == "exposed-version-catalog") return@subprojects
 
     apply(plugin = rootProject.libs.plugins.jvm.get().pluginId)
     apply(plugin = rootProject.libs.plugins.kover.get().pluginId)

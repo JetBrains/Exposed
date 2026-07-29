@@ -1,4 +1,4 @@
-@file:Suppress("InvalidPackageDeclaration")
+@file:Suppress("InvalidPackageDeclaration", "MagicNumber")
 
 package org.jetbrains.exposed.samples.broker.jdbc.model.tables
 

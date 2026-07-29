@@ -335,10 +335,9 @@ class EntityReferenceCacheTest : R2dbcDatabaseTestsBase() {
     }
 
     /**
-     * Reading a `via` relation with no transaction in context and nothing in the reference cache is a
-     * usage error, and must be reported as one. The reference cache is only populated when
-     * `keepLoadedReferencesOutOfTransaction` is enabled, and handing back the raw cache entry would
-     * yield `null` typed as a non-null `SizedIterable`, surfacing later as an opaque NPE.
+     * The reference cache is only populated when `keepLoadedReferencesOutOfTransaction` is enabled, so
+     * handing back the raw cache entry here would yield `null` typed as a non-null `SizedIterable` and
+     * surface later as an opaque NPE. Hence the explicit error.
      */
     @Test
     fun `test via reference out of transaction without cache reports a usage error`() = runTest {
