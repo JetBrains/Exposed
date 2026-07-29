@@ -320,7 +320,8 @@ Any detected changes to table and column constraints generally result in the gen
 The type of change that generates these migration statements depends on the type of constraint:
 
 - [`ForeignKeyConstraint`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-foreign-key-constraint/index.html) detects mismatches in name, update rule, or delete rule.
-- [`Index`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-index/index.html) detects mismatches in name, uniqueness, or columns involved. Differences in index type, index function, or filter conditions will not be detected.
+- [`Index`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-index/index.html) detects mismatches in uniqueness or columns involved. Differences in index type, index function, or filter conditions will not be detected.
+  By default, a mismatch in index name alone is also detected, but it is only logged (if logs are enabled during migration script generation).
 - [`CheckConstraint`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-check-constraint/index.html) detects mismatches in name only. Differences in the boolean expression or condition used by this constraint will not be detected.
 
 ### Column change detection
