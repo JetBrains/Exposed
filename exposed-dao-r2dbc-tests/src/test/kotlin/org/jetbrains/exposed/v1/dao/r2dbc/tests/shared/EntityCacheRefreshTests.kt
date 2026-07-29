@@ -152,12 +152,8 @@ class EntityCacheRefreshTests : R2dbcDatabaseTestsBase() {
     }
 
     /**
-     * This test verifies that when users manually create a partial SELECT
-     * (selecting only some columns) and call wrapRow(), the method performs a selective merge:
-     * - Columns in the partial SELECT are updated with fresh data
-     * - Columns not in the partial SELECT retain their previously cached values
-     *
-     * This ensures that manual DSL queries combined with wrapRow() work correctly.
+     * `wrapRow()` on a hand-written partial SELECT merges selectively: columns present in the query
+     * are refreshed, columns absent from it keep their previously cached values.
      */
     @Test
     fun testManualPartialSelectMergesWithCachedColumns() {

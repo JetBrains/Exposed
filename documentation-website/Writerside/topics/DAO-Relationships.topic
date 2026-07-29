@@ -7,10 +7,11 @@
     <show-structure for="chapter" depth="2" />
     <tldr>
         <p>
-            <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-dao</code>
+            <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-dao</code> (JDBC),
+            <code>org.jetbrains.exposed:exposed-dao-r2dbc</code> (R2DBC)
         </p>
         <include from="lib.topic" element-id="jdbc-supported"/>
-        <include from="lib.topic" element-id="r2dbc-not-supported"/>
+        <include from="lib.topic" element-id="r2dbc-limited-support"/>
         <p><b>Code example</b>:
             <a href="https://github.com/JetBrains/Exposed/tree/main/documentation-website/Writerside/snippets/exposed-dao-relationships/">
                 exposed-dao-relationships
@@ -415,6 +416,149 @@
                     val description = text("name", eagerLoading=true)
                 }
             </code-block>
+        </chapter>
+    </chapter>
+    <chapter title="R2DBC differences" id="r2dbc-differences">
+        <include from="lib.topic" element-id="r2dbc-dao-experimental"/>
+        <p>
+            All the relationship builders keep their names — <code>referencedOn</code>,
+            <code>optionalReferencedOn</code>, <code>referrersOn</code>, <code>optionalReferrersOn</code>,
+            <code>backReferencedOn</code>, <code>optionalBackReferencedOn</code>, and <code>via</code> — along with
+            their <code>Column</code> and <code>IdTable</code> overloads. How you read and write them changes.
+        </p>
+        <chapter title="References become val" id="r2dbc-reference-accessors">
+            <p>
+                Reading a reference has to suspend, and a property getter cannot. So <code>referencedOn</code> and
+                <code>optionalReferencedOn</code> return an accessor instead of the entity: declare the property as
+                <code>val</code>, read it by invoking it, and write it with <code>set()</code>.
+            </p>
+            <tabs group="connectivity">
+                <tab id="jdbc-rel-ref" title="JDBC" group-key="jdbc">
+                    <code-block lang="kotlin"><![CDATA[
+                        class UserRatingEntity(id: EntityID<Int>) : IntEntity(id) {
+                            companion object : IntEntityClass<UserRatingEntity>(UserRatingsTable)
+
+                            var value by UserRatingsTable.value
+                            var film by StarWarsFilmEntity referencedOn UserRatingsTable.film
+                        }
+
+                        val film = rating.film
+                        rating.film = otherFilm
+                    ]]>
+                    </code-block>
+                </tab>
+                <tab id="r2dbc-rel-ref" title="R2DBC" group-key="r2dbc">
+                    <code-block lang="kotlin"><![CDATA[
+                        class UserRatingEntity(id: EntityID<Int>) : IntEntity(id) {
+                            companion object : IntEntityClass<UserRatingEntity>(UserRatingsTable)
+
+                            var value by UserRatingsTable.value
+                            val film by StarWarsFilmEntity referencedOn UserRatingsTable.film
+                        }
+
+                        val film = rating.film()
+                        rating.film.set(otherFilm)
+                    ]]>
+                    </code-block>
+                </tab>
+            </tabs>
+            <p>
+                Leaving the property as <code>var</code> fails to compile with
+                <code>Property delegate must have a 'setValue(...)' method</code>.
+            </p>
+            <warning>
+                Reading without the parentheses also compiles. <code>val f = rating.film</code> gives you the
+                accessor, not the film. Always write <code>rating.film()</code>.
+            </warning>
+            <p>
+                <a href="#optional-reference">Optional references</a> work the same way, and the read returns
+                <code>null</code> when the column is null:
+            </p>
+            <code-block lang="kotlin"><![CDATA[
+                class UserRatingWithOptionalUserEntity(id: EntityID<Int>) : IntEntity(id) {
+                    companion object : IntEntityClass<UserRatingWithOptionalUserEntity>(UserRatingsWithOptionalUserTable)
+
+                    val user by UserEntity optionalReferencedOn UserRatingsWithOptionalUserTable.user
+                }
+
+                val user = rating.user()      // UserEntity?
+                rating.user.set(null)
+            ]]>
+            </code-block>
+            <p>
+                <a href="#back-reference">Back references</a> are also read by invoking:
+                <code>user1.rating()</code>.
+            </p>
+        </chapter>
+        <chapter title="Referrers are flows" id="r2dbc-referrers">
+            <p>
+                <a href="#reverse-access">Referrer collections</a> are <code>SizedIterable</code>, which extends
+                <code>kotlinx.coroutines.flow.Flow</code> in <code>exposed-r2dbc</code>. Collect before using
+                operators that produce a collection:
+            </p>
+            <tabs group="connectivity">
+                <tab id="jdbc-rel-referrers" title="JDBC" group-key="jdbc">
+                    <code-block lang="kotlin"><![CDATA[
+                        val ratings = film.ratings.map { it.value }
+                        val total = film.ratings.count()
+                    ]]>
+                    </code-block>
+                </tab>
+                <tab id="r2dbc-rel-referrers" title="R2DBC" group-key="r2dbc">
+                    <code-block lang="kotlin"><![CDATA[
+                        val ratings = film.ratings.toList().map { it.value }
+                        val total = film.ratings.count()
+                    ]]>
+                    </code-block>
+                </tab>
+            </tabs>
+            <p>
+                <a href="#ordered-reference">Ordered references</a> are unchanged: <code>orderBy</code> still applies
+                to referrers and to <code>via</code> relations.
+            </p>
+        </chapter>
+        <chapter title="Many-to-many references are unchanged" id="r2dbc-via">
+            <p>
+                <a href="#many-to-many-reference"><code>via</code></a> is the one relationship whose shape does not
+                change. The property stays a <code>var</code>, and assignment still takes a
+                <code>SizedCollection</code>. Only reading the collection needs <code>.toList()</code>:
+            </p>
+            <code-block lang="kotlin"><![CDATA[
+                class StarWarsFilmEntity(id: EntityID<Int>) : IntEntity(id) {
+                    companion object : IntEntityClass<StarWarsFilmEntity>(StarWarsFilmsTable)
+
+                    var actors by ActorEntity via StarWarsFilmActorsTable
+                }
+
+                film.actors = SizedCollection(listOf(actor1, actor2))
+                val names = film.actors.toList().map { it.firstname }
+            ]]>
+            </code-block>
+        </chapter>
+        <chapter title="Eager loading" id="r2dbc-eager-loading">
+            <p>
+                <a href="#eager-loading"><code>load()</code></a> and <code>with()</code> keep their names but are
+                suspending, and move into the <code>relationships</code> subpackage. <code>with()</code> gains an
+                overload that accepts a <code>SizedIterable</code>, so it can be applied to a query result directly.
+            </p>
+            <tabs group="connectivity">
+                <tab id="jdbc-rel-load" title="JDBC" group-key="jdbc">
+                    <code-block lang="kotlin"><![CDATA[
+                        import org.jetbrains.exposed.v1.dao.load
+
+                        film.load(StarWarsFilmEntity::ratings)
+                    ]]>
+                    </code-block>
+                </tab>
+                <tab id="r2dbc-rel-load" title="R2DBC" group-key="r2dbc">
+                    <code-block lang="kotlin"><![CDATA[
+                        import org.jetbrains.exposed.v1.dao.r2dbc.relationships.load
+
+                        film.load(StarWarsFilmEntity::ratings)
+                    ]]>
+                    </code-block>
+                </tab>
+            </tabs>
         </chapter>
     </chapter>
 </topic>

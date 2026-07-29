@@ -27,9 +27,9 @@ fun Application.tradeRoutes() {
                     }
 
                     val trade = Trade.new {
-                        this.client(client)
-                        this.instrument(instrument)
-                        this.portfolio(portfolio)
+                        this.client.set(client)
+                        this.instrument.set(instrument)
+                        this.portfolio.set(portfolio)
                         this.type = dto.type
                         this.quantity = dto.quantity
                         this.price = dto.price.toBigDecimal()

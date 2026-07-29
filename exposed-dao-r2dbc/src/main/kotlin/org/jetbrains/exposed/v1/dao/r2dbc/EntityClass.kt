@@ -82,8 +82,17 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
     /**
      * Creates a new [Entity] instance with the fields set in the [init] block, schedules its insert into the
      * entity cache **without** flushing, and returns a cold [Flow] that emits exactly the created entity.
-     * The pending inserts are flushed on the first collection of the returned flow (or on transaction commit
-     * if the flow is never collected).
+     *
+     * **Discarding the flow does not cancel the insert.** The entity is scheduled when [newDeferred] is
+     * called, not when the flow is collected, so it is written either way. The pending insert is flushed at
+     * the first of:
+     * - collection of the returned flow;
+     * - any other statement executed in the same transaction — a query flushes the entities of the tables it
+     *   reads, while an insert, update, upsert, delete or DDL statement flushes everything pending;
+     * - the transaction's commit.
+     *
+     * Collecting therefore controls *when* the insert is issued, and is the only way to obtain the hydrated
+     * entity; it does not control *whether* the row is written.
      *
      * Intended for batching: scheduling several entities via [newDeferred] and then collecting them together
      * results in a single flush covering all pending inserts.
@@ -99,9 +108,17 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * Use `flattenConcat` rather than `merge` — `merge` gives no ordering guarantee, so the
      * collected list would not follow the order the entities were scheduled in.
      *
+     * The flow is bound to the transaction that created it: the pending insert lives in that
+     * transaction's entity cache, so collecting the flow anywhere else cannot flush it. Rather than
+     * report a success it did not produce, such a collection throws [IllegalStateException] — by then
+     * the insert has either already happened at commit time, or, if that transaction rolled back,
+     * never happened at all.
+     *
      * @param init Block where the entity's fields can be set. Must be non-suspending, since scheduling is
      *   performed synchronously.
      * @return A cold [Flow] that emits the created entity on first collection.
+     * @throws IllegalStateException on collection, if the current transaction is not the one that
+     *   created the flow, or if there is no transaction in context.
      */
     open fun newDeferred(init: T.() -> Unit): Flow<T> = newDeferred(null, init)
 
@@ -111,11 +128,28 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * @param id The id of the entity. Set this to `null` if it should be automatically generated.
      * @param init Block where the entity's fields can be set. Must be non-suspending.
      * @return A cold [Flow] that emits the created entity on first collection.
+     * @throws IllegalStateException on collection, if the current transaction is not the one that
+     *   created the flow, or if there is no transaction in context.
      */
     open fun newDeferred(id: ID?, init: T.() -> Unit): Flow<T> {
         val prototype = scheduleNewSync(id, init)
+        // Only the id is captured, never the transaction itself: the flow may outlive the transaction,
+        // and holding it would keep its connection and entity cache reachable.
+        val schedulingTransactionId = TransactionManager.current().transactionId
         return flow {
-            TransactionManager.current().entityCache.flush()
+            val transaction = TransactionManager.currentOrNull()
+                ?: error(
+                    "The flow returned by newDeferred() must be collected inside the transaction that created " +
+                        "the entity, but no transaction is in context. The insert was scheduled in the entity " +
+                        "cache of transaction $schedulingTransactionId and is unreachable from here."
+                )
+            check(transaction.transactionId == schedulingTransactionId) {
+                "The flow returned by newDeferred() must be collected inside the transaction that created the " +
+                    "entity. The insert was scheduled in transaction $schedulingTransactionId but collection " +
+                    "happened in transaction ${transaction.transactionId}, whose entity cache knows nothing " +
+                    "about it."
+            }
+            transaction.entityCache.flush()
             emit(prototype)
         }
     }
@@ -260,8 +294,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
         return if (entity.id._value != null) findById(entity.id) else null
     }
 
-    // It actually doesn't do 'invalidation', because it's suspend operation, but this method
-    // is used on setting value to the entity
+    /** Named after JDBC's counterpart, but only verifies — reloading the row would have to suspend. */
     internal open fun invalidateEntityInCache(o: Entity<ID>) {
         val sameDatabase = TransactionManager.current().db == o.db
         if (!sameDatabase) return
