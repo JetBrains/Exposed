@@ -118,16 +118,44 @@ object Events : Table() {
 
 ## Supported types
 
-Each date-time module provides its own set of types. Below are the details for each supported type across all modules:
+Each date-time module provides its own set of types. Select a module to see its supported types and API links:
 
-| Column type                                              | Database type              | Kotlin type                      | Java type                  | Joda-Time type            |
-|----------------------------------------------------------|----------------------------|----------------------------------|----------------------------|---------------------------|
-| [`date()`](#date-type)                                   | `DATE`                     | `kotlinx.datetime.LocalDate`     | `java.time.LocalDate`      | `org.joda.time.DateTime`  |
-| [`time()`](#time-type)                                   | `TIME`                     | `kotlinx.datetime.LocalTime`     | `java.time.LocalTime`      | `org.joda.time.LocalTime` |
-| [`datetime()`](#datetime-type)                           | `DATETIME`                 | `kotlinx.datetime.LocalDateTime` | `java.time.LocalDateTime`  | `org.joda.time.DateTime`  |
-| [`timestamp()`](#timestamp-type)                         | `TIMESTAMP`                | `kotlin.time.Instant`            | `java.time.Instant`        | —                         |
-| [`timestampWithTimeZone()`](#timestampWithTimeZone-type) | `TIMESTAMP WITH TIME ZONE` | `java.time.OffsetDateTime`       | `java.time.OffsetDateTime` | `org.joda.time.DateTime`  |
-| [`duration()`](#duration-type)                           | `BIGINT`                   | `kotlin.time.Duration`           | `java.time.Duration`       | —                         |
+<tabs group="date-time-module">
+<tab title="exposed-kotlin-datetime" group-key="exposed-kotlin-datetime">
+
+| Column type                                              | Database type              | Kotlin type                      | API                                                                                                                                                          |
+|----------------------------------------------------------|----------------------------|----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`date()`](#date-type)                                   | `DATE`                     | `kotlinx.datetime.LocalDate`     | [`date()`](https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.datetime/date.html)                                      |
+| [`time()`](#time-type)                                   | `TIME`                     | `kotlinx.datetime.LocalTime`     | [`time()`](https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.datetime/time.html)                                      |
+| [`datetime()`](#datetime-type)                           | `DATETIME`                 | `kotlinx.datetime.LocalDateTime` | [`datetime()`](https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.datetime/datetime.html)                              |
+| [`timestamp()`](#timestamp-type)                         | `TIMESTAMP`                | `kotlin.time.Instant`            | [`timestamp()`](https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.datetime/timestamp.html)                            |
+| [`timestampWithTimeZone()`](#timestampWithTimeZone-type) | `TIMESTAMP WITH TIME ZONE` | `java.time.OffsetDateTime`       | [`timestampWithTimeZone()`](https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.datetime/timestamp-with-time-zone.html) |
+| [`duration()`](#duration-type)                           | `BIGINT`                   | `kotlin.time.Duration`           | [`duration()`](https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.datetime/duration.html)                              |
+
+</tab>
+<tab title="exposed-java-time" group-key="exposed-java-time">
+
+| Column type                                              | Database type              | Java type                  | API                                                                                                                                                    |
+|----------------------------------------------------------|----------------------------|----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`date()`](#date-type)                                   | `DATE`                     | `java.time.LocalDate`      | [`date()`](https://jetbrains.github.io/Exposed/api/exposed-java-time/org.jetbrains.exposed.v1.javatime/date.html)                                      |
+| [`time()`](#time-type)                                   | `TIME`                     | `java.time.LocalTime`      | [`time()`](https://jetbrains.github.io/Exposed/api/exposed-java-time/org.jetbrains.exposed.v1.javatime/time.html)                                      |
+| [`datetime()`](#datetime-type)                           | `DATETIME`                 | `java.time.LocalDateTime`  | [`datetime()`](https://jetbrains.github.io/Exposed/api/exposed-java-time/org.jetbrains.exposed.v1.javatime/datetime.html)                              |
+| [`timestamp()`](#timestamp-type)                         | `TIMESTAMP`                | `java.time.Instant`        | [`timestamp()`](https://jetbrains.github.io/Exposed/api/exposed-java-time/org.jetbrains.exposed.v1.javatime/timestamp.html)                            |
+| [`timestampWithTimeZone()`](#timestampWithTimeZone-type) | `TIMESTAMP WITH TIME ZONE` | `java.time.OffsetDateTime` | [`timestampWithTimeZone()`](https://jetbrains.github.io/Exposed/api/exposed-java-time/org.jetbrains.exposed.v1.javatime/timestamp-with-time-zone.html) |
+| [`duration()`](#duration-type)                           | `BIGINT`                   | `java.time.Duration`       | [`duration()`](https://jetbrains.github.io/Exposed/api/exposed-java-time/org.jetbrains.exposed.v1.javatime/duration.html)                              |
+
+</tab>
+<tab title="exposed-jodatime" group-key="exposed-jodatime">
+
+| Column type                                              | Database type              | Joda-Time type            | API                                                                                                                                                   |
+|----------------------------------------------------------|----------------------------|---------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`date()`](#date-type)                                   | `DATE`                     | `org.joda.time.DateTime`  | [`date()`](https://jetbrains.github.io/Exposed/api/exposed-jodatime/org.jetbrains.exposed.v1.jodatime/date.html)                                      |
+| [`time()`](#time-type)                                   | `TIME`                     | `org.joda.time.LocalTime` | [`time()`](https://jetbrains.github.io/Exposed/api/exposed-jodatime/org.jetbrains.exposed.v1.jodatime/time.html)                                      |
+| [`datetime()`](#datetime-type)                           | `DATETIME`                 | `org.joda.time.DateTime`  | [`datetime()`](https://jetbrains.github.io/Exposed/api/exposed-jodatime/org.jetbrains.exposed.v1.jodatime/datetime.html)                              |
+| [`timestampWithTimeZone()`](#timestampWithTimeZone-type) | `TIMESTAMP WITH TIME ZONE` | `org.joda.time.DateTime`  | [`timestampWithTimeZone()`](https://jetbrains.github.io/Exposed/api/exposed-jodatime/org.jetbrains.exposed.v1.jodatime/timestamp-with-time-zone.html) |
+
+</tab>
+</tabs>
 
 > Some types may differ for specific database dialects. Refer to your database documentation for exact type mappings.
 > 
