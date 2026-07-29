@@ -17,9 +17,7 @@
 Exposed provides comprehensive support for date and time operations through dedicated [modules](#add-dependency). Each
 module is based on a different date-time library, offering different features and type support.
 
-## Add a dependency {id="add-dependency"}
-
-Before using date and time column types or functions, add one of the following modules to your build file:
+## Modules
 
 | Module                                                                                                                                    | Based on                                                                                | Use                                                                                         |
 |-------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
@@ -27,20 +25,34 @@ Before using date and time column types or functions, add one of the following m
 | [`exposed-java-time`](https://jetbrains.github.io/Exposed/api/exposed-java-time/org.jetbrains.exposed.v1.javatime/index.html)             | [Java 8 Time](https://docs.oracle.com/javase/8/docs/api/java/time/package-summary.html) | Good choice when integrating with Java code or when you need Java 8 Time API compatibility. |
 | [`exposed-jodatime`](https://jetbrains.github.io/Exposed/api/exposed-jodatime/org.jetbrains.exposed.v1.jodatime/index.html)               | [Joda-Time](https://www.joda.org/joda-time/)                                            | Legacy support. Consider using newer modules for new projects.                              |
 
-The following example shows the dependency declaration for `exposed-kotlin-datetime`:
-<var name="artifact_name" value="exposed-kotlin-datetime">
-<include from="lib.topic" element-id="add-dependency" />
+## Add a dependency {id="add-dependency"}
 
-Replace `exposed-kotlin-datetime` with `exposed-java-time` or `exposed-jodatime` if your project uses the Java Time or 
-Joda-Time APIs instead.
+Before using date and time column types or functions, add your chosen date-time module to your build file:
+
+<tabs group="date-time-module">
+<tab title="exposed-kotlin-datetime" group-key="exposed-kotlin-datetime">
+<var name="artifact_name" value="exposed-kotlin-datetime" />
+<include from="lib.topic" element-id="add-dependency"/>
+</tab>
+
+<tab title="exposed-java-time" group-key="exposed-java-time">
+<var name="artifact_name" value="exposed-java-time"/>
+<include from="lib.topic" element-id="add-dependency"/>
+</tab>
+
+<tab title="exposed-jodatime" group-key="exposed-jodatime">
+<var name="artifact_name" value="exposed-jodatime"/>
+<include from="lib.topic" element-id="add-dependency"/>
+</tab>
+</tabs>
 
 ## Basic usage
 
-To define date and time columns, use the column functions provided by your selected [date-time module](#add-dependency).
+To define date and time columns, use the column functions provided by your selected [date-time module](#modules).
 The following examples define columns for common date and time types:
 
 <tabs group="date-time-module">
-<tab title="exposed-kotlin-datetime" id="exposed-kotlin-datetime" group-key="exposed-kotlin-datetime">
+<tab title="exposed-kotlin-datetime" group-key="exposed-kotlin-datetime">
 
 ```kotlin
 import org.jetbrains.exposed.v1.core.Table
@@ -60,10 +72,8 @@ object Events : Table() {
     override val primaryKey = PrimaryKey(id)
 }
 ```
-
 </tab>
-
-<tab title="exposed-java-time" id="exposed-java-time" group-key="exposed-java-time">
+<tab title="exposed-java-time" group-key="exposed-java-time">
 
 ```kotlin
 import org.jetbrains.exposed.v1.core.Table
@@ -85,7 +95,7 @@ object Events : Table() {
 ```
 
 </tab>
-<tab title="exposed-jodatime" id="exposed-jodatime" group-key="exposed-jodatime">
+<tab title="exposed-java-time" group-key="exposed-jodatime">
 
 ```kotlin
 import org.jetbrains.exposed.v1.core.Table
@@ -103,7 +113,6 @@ object Events : Table() {
     override val primaryKey = PrimaryKey(id)
 }
 ```
-
 </tab>
 </tabs>
 
@@ -111,14 +120,14 @@ object Events : Table() {
 
 Each date-time module provides its own set of types. Below are the details for each supported type across all modules:
 
-| Column type                                              | Database type              | Kotlin type                  | Java type                  | Joda-Time type            |
-|----------------------------------------------------------|----------------------------|------------------------------|----------------------------|---------------------------|
-| [`date()`](#date-type)                                   | `DATE`                     | `kotlinx.datetime.LocalDate` | `java.time.LocalDate`      | `org.joda.time.DateTime`  |
-| [`time()`](#time-type)                                   | `TIME`                     | `kotlinx.datetime.LocalTime` | `java.time.LocalTime`      | `org.joda.time.LocalTime` |
-| [`datetime()`](#datetime-type)                           | `DATETIME`                 | `kotlinx.datetime.Instant`   | `java.time.LocalDateTime`  | `org.joda.time.DateTime`  |
-| [`timestamp()`](#timestamp-type)                         | `TIMESTAMP`                | `kotlinx.datetime.Instant`   | `java.time.Instant`        | —                         |
-| [`timestampWithTimeZone()`](#timestampWithTimeZone-type) | `TIMESTAMP WITH TIME ZONE` | `java.time.OffsetDateTime`   | `java.time.OffsetDateTime` | `org.joda.time.DateTime`  |
-| [`duration()`](#duration-type)                           | `BIGINT`                   | `kotlin.time.Duration`       | `java.time.Duration`       | —                         |
+| Column type                                              | Database type              | Kotlin type                      | Java type                  | Joda-Time type            |
+|----------------------------------------------------------|----------------------------|----------------------------------|----------------------------|---------------------------|
+| [`date()`](#date-type)                                   | `DATE`                     | `kotlinx.datetime.LocalDate`     | `java.time.LocalDate`      | `org.joda.time.DateTime`  |
+| [`time()`](#time-type)                                   | `TIME`                     | `kotlinx.datetime.LocalTime`     | `java.time.LocalTime`      | `org.joda.time.LocalTime` |
+| [`datetime()`](#datetime-type)                           | `DATETIME`                 | `kotlinx.datetime.LocalDateTime` | `java.time.LocalDateTime`  | `org.joda.time.DateTime`  |
+| [`timestamp()`](#timestamp-type)                         | `TIMESTAMP`                | `kotlin.time.Instant`            | `java.time.Instant`        | —                         |
+| [`timestampWithTimeZone()`](#timestampWithTimeZone-type) | `TIMESTAMP WITH TIME ZONE` | `java.time.OffsetDateTime`       | `java.time.OffsetDateTime` | `org.joda.time.DateTime`  |
+| [`duration()`](#duration-type)                           | `BIGINT`                   | `kotlin.time.Duration`           | `java.time.Duration`       | —                         |
 
 > Some types may differ for specific database dialects. Refer to your database documentation for exact type mappings.
 > 
@@ -143,7 +152,6 @@ Events.insert {
     it[startDate] = LocalDate(1990, 1, 1)
 }
 ```
-
 </tab>
 <tab title="exposed-java-time" group-key="exposed-java-time">
 
@@ -154,7 +162,6 @@ Events.insert {
     it[startDate] = LocalDate.of(1990, 1, 1)
 }
 ```
-
 </tab>
 <tab title="exposed-jodatime" group-key="exposed-jodatime">
 
@@ -165,7 +172,6 @@ Events.insert {
     it[startDate] = DateTime(1990, 1, 1, 0, 0, 0)
 }
 ```
-
 </tab>
 </tabs>
 
@@ -188,7 +194,6 @@ Events.insert {
     it[startTime] = LocalTime(9, 0) // 09:00
 }
 ```
-
 </tab>
 <tab title="exposed-java-time" group-key="exposed-java-time">
 
@@ -199,7 +204,6 @@ Events.insert {
     it[startTime] = LocalTime.of(9, 0) // 09:00
 }
 ```
-
 </tab>
 <tab title="exposed-jodatime" group-key="exposed-jodatime">
 
@@ -210,7 +214,6 @@ Events.insert {
     it[startTime] = LocalTime(9, 0) // 09:00
 }
 ```
-
 </tab>
 </tabs>
 
@@ -237,7 +240,6 @@ Events.insert {
     it[createdAt] = Clock.System.now().toLocalDateTime(TimeZone.UTC)
 }
 ```
-
 </tab>
 <tab title="exposed-java-time" group-key="exposed-java-time">
 
@@ -248,7 +250,6 @@ Events.insert {
     it[createdAt] = LocalDateTime.now()
 }
 ```
-
 </tab>
 <tab title="exposed-jodatime" group-key="exposed-jodatime">
 
@@ -259,7 +260,6 @@ Events.insert {
     it[createdAt] = DateTime.now()
 }
 ```
-
 </tab>
 </tabs>
 
@@ -284,7 +284,6 @@ Events.insert {
     it[lastModified] = Clock.System.now()
 }
 ```
-
 </tab>
 <tab title="exposed-java-time" group-key="exposed-java-time">
 
@@ -295,7 +294,6 @@ Events.insert {
     it[lastModified] = Instant.now()
 }
 ```
-
 </tab>
 </tabs>
 
@@ -315,12 +313,12 @@ val scheduledAt = timestampWithTimeZone("scheduled_at")
 ```kotlin
 import kotlin.time.Clock
 import kotlin.time.toJavaInstant
+import java.time.ZoneOffset
 
 Events.insert {
     it[scheduledAt] = Clock.System.now().toJavaInstant().atOffset(ZoneOffset.UTC)
 }
 ```
-
 </tab>
 <tab title="exposed-java-time" group-key="exposed-java-time">
 
@@ -332,7 +330,6 @@ Events.insert {
     it[scheduledAt] = OffsetDateTime.now(ZoneOffset.UTC)
 }
 ```
-
 </tab>
 <tab title="exposed-jodatime" group-key="exposed-jodatime">
 
@@ -344,7 +341,6 @@ Events.insert {
     it[scheduledAt] = DateTime.now().withZone(DateTimeZone.UTC)
 }
 ```
-
 </tab>
 </tabs>
 
@@ -371,7 +367,6 @@ Events.insert {
     it[period] = 4.hours
 }
 ```
-
 </tab>
 <tab title="exposed-java-time" group-key="exposed-java-time">
 
@@ -382,7 +377,6 @@ Events.insert {
     it[period] = Duration.ofHours(4)
 }
 ```
-
 </tab>
 </tabs>
 
@@ -404,44 +398,23 @@ clauses.
 
 The following functions are available for the date and time types supported by each Exposed date-time module:
 
-<deflist type="medium">
-<def id="year">
-<title><code>.year()</code></title>
-
-Returns the year as an `Int`.
-
-</def>
-<def id="month">
-<title><code>.month()</code></title>
-
-Returns the month of the year (`1`–`12`).
-
-</def>
-<def id="day">
-<title><code>.day()</code></title>
-
-Returns the day of the month (`1`–`31`).
-
-</def>
-<def id="hour">
-<title><code>.hour()</code></title>
-
-Returns the hour of the day (`0`–`23`).
-
-</def>
-<def id="minute">
-<title><code>.minute()</code></title>
-
-Returns the minute of the hour (`0`–`59`).
-
-</def>
-<def id="second">
-<title><code>.second()</code></title>
-
-Returns the second of the minute (`0`–`59`).
-
-</def>
-</deflist>
+<tabs group="date-time-module">
+<tab title="exposed-kotlin-datetime" group-key="exposed-kotlin-datetime">
+<var name="date_time_api_module" value="exposed-kotlin-datetime"/>
+<var name="date_time_api_package" value="org.jetbrains.exposed.v1.datetime"/>
+<include from="lib.topic" element-id="date-time-components"/>
+</tab>
+<tab title="exposed-java-time" group-key="exposed-java-time">
+<var name="date_time_api_module" value="exposed-java-time"/>
+<var name="date_time_api_package" value="org.jetbrains.exposed.v1.javatime"/>
+<include from="lib.topic" element-id="date-time-components"/>
+</tab>
+<tab title="exposed-jodatime" group-key="exposed-jodatime">
+<var name="date_time_api_module" value="exposed-jodatime"/>
+<var name="date_time_api_package" value="org.jetbrains.exposed.v1.jodatime"/>
+<include from="lib.topic" element-id="date-time-components"/>
+</tab>
+</tabs>
 
 For example, the following query selects all events that start in June:
 
@@ -453,7 +426,6 @@ import org.jetbrains.exposed.v1.datetime.month
 
 Events.selectAll().where { Events.startDate.month() eq 6 }
 ```
-
 </tab>
 <tab title="exposed-java-time" group-key="exposed-java-time">
 
@@ -462,7 +434,6 @@ import org.jetbrains.exposed.v1.javatime.month
 
 Events.selectAll().where { Events.startDate.month() eq 6 }
 ```
-
 </tab>
 <tab title="exposed-jodatime" group-key="exposed-jodatime">
 
@@ -471,7 +442,6 @@ import org.jetbrains.exposed.v1.jodatime.month
 
 Events.selectAll().where { Events.startDate.month() eq 6 }
 ```
-
 </tab>
 </tabs>
 
@@ -480,24 +450,112 @@ Events.selectAll().where { Events.startDate.month() eq 6 }
 
 Exposed provides the following expressions for retrieving the current date and time from the database server:
 
+<tabs group="date-time-module">
+<tab title="exposed-kotlin-datetime" group-key="exposed-kotlin-datetime">
 <deflist type="medium">
-<def id="CurrentDate">
-<title><code>CurrentDate</code></title>
-Returns the current date.
-</def>
-<def id="CurrentTime">
-<title><code>CurrentTime</code></title>
-Returns the current time.
-</def>
-<def id="CurrentTimestamp">
-<title><code>CurrentTimestamp</code></title>
-Returns the current date and time.
+<def id="CurrentDateKotlinDatetime">
+<title>
+<a href="https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.datetime/-current-date/index.html">
+<code>CurrentDate</code>
+</a>
+</title>
 
-> `CurrentTimestamp` is not supported by `exposed-jodatime`.
-> 
-{style="warning"}
+Returns the current date as `kotlinx.datetime.LocalDate`.
+</def>
+<def id="CurrentDateTimeKotlinDatetime">
+<title>
+<a href="https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.datetime/-current-date-time/index.html">
+<code>CurrentDateTime</code>
+</a>
+</title>
+
+Returns the current date and time as `kotlinx.datetime.LocalDateTime`.
+</def>
+<def id="CurrentTimestampKotlinDatetime">
+<title>
+<a href="https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.datetime/-current-timestamp/index.html">
+<code>CurrentTimestamp</code>
+</a>
+</title>
+
+Returns the current date and time as `kotlin.time.Instant`.
+</def>
+<def id="CurrentTimestampWithTimeZoneKotlinDatetime">
+<title>
+<a href="https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.datetime/-current-timestamp-with-time-zone/index.html">
+<code>CurrentTimestampWithTimeZone</code>
+</a>
+</title>
+
+Returns the current date and time with timezone as `java.time.OffsetDateTime`.
 </def>
 </deflist>
+</tab>
+
+<tab title="exposed-java-time" group-key="exposed-java-time">
+<deflist type="medium">
+<def id="CurrentDateJavaTime">
+<title>
+<a href="https://jetbrains.github.io/Exposed/api/exposed-java-time/org.jetbrains.exposed.v1.javatime/-current-date/index.html">
+<code>CurrentDate</code>
+</a>
+</title>
+
+Returns the current date as `java.time.LocalDate`.
+</def>
+<def id="CurrentDateTimeJavaTime">
+<title>
+<a href="https://jetbrains.github.io/Exposed/api/exposed-java-time/org.jetbrains.exposed.v1.javatime/-current-date-time/index.html">
+<code>CurrentDateTime</code>
+</a>
+</title>
+
+Returns the current date and time as `java.time.LocalDateTime`.
+</def>
+<def id="CurrentTimestampJavaTime">
+<title>
+<a href="https://jetbrains.github.io/Exposed/api/exposed-java-time/org.jetbrains.exposed.v1.javatime/-current-timestamp/index.html">
+<code>CurrentTimestamp</code>
+</a>
+</title>
+
+Returns the current date and time as `java.time.Instant`.
+</def>
+<def id="CurrentTimestampWithTimeZoneJavaTime">
+<title>
+<a href="https://jetbrains.github.io/Exposed/api/exposed-java-time/org.jetbrains.exposed.v1.javatime/-current-timestamp-with-time-zone/index.html">
+<code>CurrentTimestampWithTimeZone</code>
+</a>
+</title>
+
+Returns the current date and time with timezone as `java.time.OffsetDateTime`.
+</def>
+</deflist>
+</tab>
+
+<tab title="exposed-jodatime" group-key="exposed-jodatime">
+<deflist type="medium">
+<def id="CurrentDateJodaTime">
+<title>
+<a href="https://jetbrains.github.io/Exposed/api/exposed-jodatime/org.jetbrains.exposed.v1.jodatime/-current-date/index.html">
+<code>CurrentDate</code>
+</a>
+</title>
+
+Returns the current date as `org.joda.time.DateTime`.
+</def>
+<def id="CurrentDateTimeJodaTime">
+<title>
+<a href="https://jetbrains.github.io/Exposed/api/exposed-jodatime/org.jetbrains.exposed.v1.jodatime/-current-date-time/index.html">
+<code>CurrentDateTime</code>
+</a>
+</title>
+
+Returns the current date and time as `org.joda.time.DateTime`.
+</def>
+</deflist>
+</tab>
+</tabs>
 
 For example, these expressions can be used as default expressions when defining table columns:
 
@@ -508,11 +566,10 @@ For example, these expressions can be used as default expressions when defining 
 import org.jetbrains.exposed.v1.datetime.CurrentDate
 
 object Events : Table() {
-    val createdAt = datetime("created_at")
-        .defaultExpression(CurrentDateTime)
+    val startDate = date("start_date")
+        .defaultExpression(CurrentDate)
 }
 ```
-
 </tab>
 <tab title="exposed-java-time" group-key="exposed-java-time">
 
@@ -520,11 +577,10 @@ object Events : Table() {
 import org.jetbrains.exposed.v1.javatime.CurrentDate
 
 object Events : Table() {
-    val createdAt = datetime("created_at")
-        .defaultExpression(CurrentDateTime)
+    val startDate = date("start_date")
+        .defaultExpression(CurrentDate)
 }
 ```
-
 </tab>
 <tab title="exposed-jodatime" group-key="exposed-jodatime">
 
@@ -532,14 +588,15 @@ object Events : Table() {
 import org.jetbrains.exposed.v1.jodatime.CurrentDate
 
 object Events : Table() {
-    val createdAt = datetime("created_at")
-        .defaultExpression(CurrentDateTime)
+    val startDate = date("start_date")
+        .defaultExpression(CurrentDate)
 }
 ```
-
 </tab>
 </tabs>
 
+The object `CurrentDate` defines the SQL function `CURRENT_DATE` as the column default on table creation. The exact date
+function used may differ for specific database dialects.
 
-These expressions are evaluated by the database when the SQL statement is executed. As a result, the returned values
-reflect the database server's current date and time.
+The database evaluates these expressions when the SQL statement is executed. As a result, the returned values reflect
+the database server's current date and time.
