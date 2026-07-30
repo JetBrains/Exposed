@@ -295,7 +295,7 @@ open class TransactionManagerAttributeSourceTestConfig {
     )
 
     @Bean
-    open fun transactionAttributeSource() = ExposedSpringReactiveTransactionAttributeSource()
+    open fun transactionAttributeSource() = ExposedSpringTransactionAttributeSource()
 
     @Bean
     open fun testRollback() = TestRollback()
@@ -315,11 +315,6 @@ open class TestRollback {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     open suspend fun transactionWithRequiresNew(block: suspend TestRollback.() -> Unit) {
-        block()
-    }
-
-    @Transactional(propagation = Propagation.NESTED)
-    open suspend fun transactionWithNested(block: suspend TestRollback.() -> Unit) {
         block()
     }
 

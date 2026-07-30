@@ -9,6 +9,7 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.RepeatedTest
 import org.springframework.test.annotation.Commit
 import kotlin.test.assertEquals
+import kotlin.time.Duration.Companion.milliseconds
 
 open class SpringCoroutineTest : SpringReactiveTransactionTestBase() {
     object Testing : Table("COROUTINE_TESTING") {
@@ -27,7 +28,7 @@ open class SpringCoroutineTest : SpringReactiveTransactionTestBase() {
 
             val mainJob = GlobalScope.async {
                 // @CoroutinesTimeout is not compatible with @Transactional
-                val results = withTimeout(1000) {
+                val results = withTimeout(1000.milliseconds) {
                     (1..5).map { indx ->
                         async(Dispatchers.IO) {
                             suspendTransaction {
