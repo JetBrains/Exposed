@@ -4,7 +4,6 @@ import io.r2dbc.spi.Connection
 import io.r2dbc.spi.ConnectionFactory
 import io.r2dbc.spi.IsolationLevel
 import io.r2dbc.spi.R2dbcException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.mono
 import org.jetbrains.exposed.v1.core.InternalApi
@@ -133,8 +132,7 @@ class SpringReactiveTransactionManager(
                 }
             }
 
-            // force new coroutine to start in current thread so that potential callbacks can access correct stack
-            val newConnectionMono: Mono<Boolean> = mono(Dispatchers.Unconfined) {
+            val newConnectionMono: Mono<Boolean> = mono {
                 if (trxObject.connectionHolder == null || trxObject.isExposedNestedTransactionAllowed) {
                     @Suppress("UNCHECKED_CAST")
                     val actualConnection = (newTransaction.connection().activeConnection() as Publisher<out Connection>).awaitSingle()
@@ -188,8 +186,7 @@ class SpringReactiveTransactionManager(
 
         synchronizationManager.getResourceOrNull() ?: error("No synchronized transaction to commit")
 
-        // force new coroutine to start in current thread so that doCleanupOnCompletion can access correct stack
-        return mono(Dispatchers.Unconfined) {
+        return mono {
             trxObject.commit()
 
             null
@@ -204,8 +201,7 @@ class SpringReactiveTransactionManager(
 
         synchronizationManager.getResourceOrNull() ?: error("No synchronized transaction to rollback")
 
-        // force new coroutine to start in current thread so that doCleanupOnCompletion can access correct stack
-        return mono(Dispatchers.Unconfined) {
+        return mono {
             trxObject.rollback()
 
             null
@@ -237,8 +233,7 @@ class SpringReactiveTransactionManager(
                 }
             }
 
-            // force new coroutine to start in current thread so that future callbacks can access correct stack
-            mono(Dispatchers.Unconfined) {
+            mono {
                 completedTransaction?.close()
 
                 null

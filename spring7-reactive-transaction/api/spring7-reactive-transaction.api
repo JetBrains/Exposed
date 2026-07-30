@@ -1,4 +1,4 @@
-public final class org/jetbrains/exposed/v1/spring7/reactive/transaction/ExposedSpringReactiveTransactionAttributeSource : org/springframework/transaction/interceptor/TransactionAttributeSource {
+public final class org/jetbrains/exposed/v1/spring7/reactive/transaction/ExposedSpringTransactionAttributeSource : org/springframework/transaction/interceptor/TransactionAttributeSource {
 	public fun <init> ()V
 	public fun <init> (Lorg/springframework/transaction/interceptor/TransactionAttributeSource;Ljava/util/List;)V
 	public synthetic fun <init> (Lorg/springframework/transaction/interceptor/TransactionAttributeSource;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
