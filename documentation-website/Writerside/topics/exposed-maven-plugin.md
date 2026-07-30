@@ -25,7 +25,7 @@ table definitions with an existing database schema.
 
 ## Installation
 
-To install the plugin, add it to the `<build><plugins>` section of your `pom.xml`:
+To install the plugin, add it to the `<build><plugins>` section of your <path>pom.xml</path> file:
 
 ```xml
 <build>
@@ -74,7 +74,7 @@ configuration. For example, to generate migrations during the `process-classes` 
 
 ## Configuration
 
-Configure the plugin using the `<configuration>` block inside the plugin entry in your `pom.xml`.
+Configure the plugin using the `<configuration>` block inside the plugin entry in your <path>pom.xml</path> file.
 
 At minimum, configure the following parameters:
 
@@ -126,7 +126,7 @@ To configure a `Testcontainers` connection, set the `testContainersImageName` pa
 
 ### Override parameters from the command line
 
-Every plugin parameter can be overridden on the command line using the matching `exposed.migrations.<name>` system property:
+To override any plugin parameter on the command line, use the matching `exposed.migrations.<name>` system property:
 
 ```bash
 mvn exposed:generate-migrations \

@@ -1,7 +1,7 @@
 # Exposed Maven Plugin
 
 A Maven project that shows how to generate a migration script using the Exposed Maven plugin extension for migrations.
-The files are referenced in the [Exposed Maven plugin](../../topics/Exposed-maven-plugin.md) topic.
+The files are referenced in the [Exposed Maven plugin](../../topics/exposed-maven-plugin.md) topic.
 
 ## Build
 
