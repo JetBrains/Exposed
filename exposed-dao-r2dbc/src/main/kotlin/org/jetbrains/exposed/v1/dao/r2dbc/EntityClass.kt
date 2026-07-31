@@ -322,11 +322,15 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * done explicitly before mutating the entity.
      *
      * **Behavior:**
-     * - Verifies that the row still exists in the database (throws [EntityNotFoundException] if not).
-     * - Stores the caller's entity instance in the current transaction's cache, so subsequent
-     *   property reads/writes go through this cache entry.
-     * - If the entity is already present in the current cache (e.g. already attached or loaded
-     *   in this transaction), does nothing.
+     * - If [entity] is already the instance this transaction tracks, does nothing.
+     * - If nothing is tracked for that id, verifies that the row still exists in the database
+     *   (throws [EntityNotFoundException] if not) and stores [entity].
+     * - If a *different* instance of the same row is tracked, [entity] replaces it, so that subsequent
+     *   property reads and writes go through the caller's instance. Two instances of one row arise
+     *   routinely — for example when this transaction also loads the row itself — and the replaced
+     *   instance is only a cache entry, so discarding it is harmless. Unless it has unflushed changes,
+     *   in which case replacing it would silently drop them and this throws instead; pass [force] to
+     *   discard them deliberately.
      *
      * **Flush behavior:**
      * After attaching and modifying an entity, there is no need to call `flush()` explicitly —
@@ -342,17 +346,30 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * }
      * ```
      *
+     * @param entity The entity to track in the current transaction.
+     * @param force Replace a tracked instance even when it holds unflushed changes, discarding them.
      * @throws EntityNotFoundException if the row no longer exists in the database.
+     * @throws IllegalStateException if another instance of the same row is tracked with unflushed
+     *   changes and [force] is `false`.
      */
-    suspend fun attach(entity: Entity<ID>) {
+    suspend fun attach(entity: Entity<ID>, force: Boolean = false) {
         val cache = warmCache()
-        if (cache.find(this, entity.id) != null) return
+        val tracked = cache.find(this, entity.id)
 
-        // Verify the row still exists — also stores a fresh instance in the cache as a side effect.
-        findById(entity.id) ?: throw EntityNotFoundException(entity.id, this)
+        if (tracked === entity) return
 
-        // Overwrite the freshly-loaded instance with the caller's reference so that subsequent
-        // writes on `entity` flow through the same cache entry (mirrors JDBC's `warmCache().store(o)`).
+        if (tracked == null) {
+            // Verify the row still exists — also stores a fresh instance in the cache as a side effect,
+            // which the store below then overwrites with the caller's reference.
+            findById(entity.id) ?: throw EntityNotFoundException(entity.id, this)
+        } else if (tracked.writeValues.isNotEmpty() && !force) {
+            error(
+                "Another instance of ${entity.id} is already tracked in this transaction and has unflushed " +
+                    "changes. Attaching would discard them — flush that instance first, or pass `force = true` " +
+                    "to overwrite it."
+            )
+        }
+
         cache.store(entity)
     }
 
