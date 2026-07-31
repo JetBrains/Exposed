@@ -100,7 +100,8 @@ public abstract class org/jetbrains/exposed/v1/dao/r2dbc/EntityClass {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Ljava/lang/Class;Lkotlin/jvm/functions/Function1;)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Ljava/lang/Class;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun all ()Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
-	public final fun attach (Lorg/jetbrains/exposed/v1/dao/r2dbc/Entity;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun attach (Lorg/jetbrains/exposed/v1/dao/r2dbc/Entity;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun attach$default (Lorg/jetbrains/exposed/v1/dao/r2dbc/EntityClass;Lorg/jetbrains/exposed/v1/dao/r2dbc/Entity;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun backReferencedOn (Lorg/jetbrains/exposed/v1/dao/r2dbc/EntityClass;Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/dao/r2dbc/relationships/BackReference;
 	public final fun backReferencedOn (Lorg/jetbrains/exposed/v1/dao/r2dbc/EntityClass;Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;)Lorg/jetbrains/exposed/v1/dao/r2dbc/relationships/BackReference;
 	public final fun count (Lorg/jetbrains/exposed/v1/core/Op;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
