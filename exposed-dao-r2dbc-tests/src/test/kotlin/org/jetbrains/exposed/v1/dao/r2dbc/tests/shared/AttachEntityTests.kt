@@ -13,7 +13,9 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class AttachEntityTests : R2dbcDatabaseTestsBase() {
 
@@ -252,6 +254,74 @@ class AttachEntityTests : R2dbcDatabaseTestsBase() {
                 item.name = "changed"
                 Item.attach(item)
                 assertEquals("changed", item.name)
+            }
+        }
+    }
+
+    @Test
+    fun testAttachReplacesACleanTrackedInstance() {
+        withTables(Items) {
+            val carriedOver = newTransaction {
+                maxAttempts = 1
+                Item.new { name = "original" }
+            }
+
+            newTransaction {
+                maxAttempts = 1
+                val tracked = assertNotNull(Item.findById(carriedOver.id))
+                assertTrue(carriedOver !== tracked, "expected two instances of the same row")
+
+                Item.attach(carriedOver)
+                carriedOver.name = "changed"
+            }
+
+            newTransaction {
+                maxAttempts = 1
+                assertEquals("changed", Items.selectAll().single()[Items.name])
+            }
+        }
+    }
+
+    @Test
+    fun testAttachRejectsReplacingATrackedInstanceWithUnflushedChanges() {
+        withTables(Items) {
+            val carriedOver = newTransaction {
+                maxAttempts = 1
+                Item.new { name = "original" }
+            }
+
+            newTransaction {
+                maxAttempts = 1
+                val tracked = assertNotNull(Item.findById(carriedOver.id))
+                tracked.name = "pending"
+
+                expectException<IllegalStateException> {
+                    Item.attach(carriedOver)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testAttachForceReplacesATrackedInstanceWithUnflushedChanges() {
+        withTables(Items) {
+            val carriedOver = newTransaction {
+                maxAttempts = 1
+                Item.new { name = "original" }
+            }
+
+            newTransaction {
+                maxAttempts = 1
+                val tracked = assertNotNull(Item.findById(carriedOver.id))
+                tracked.name = "discarded"
+
+                Item.attach(carriedOver, force = true)
+                carriedOver.name = "kept"
+            }
+
+            newTransaction {
+                maxAttempts = 1
+                assertEquals("kept", Items.selectAll().single()[Items.name])
             }
         }
     }
