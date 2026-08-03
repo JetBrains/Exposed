@@ -99,4 +99,57 @@
             </tab>
         </tabs>
     </snippet>
+
+    <snippet id="date-time-components">
+        <deflist type="medium">
+            <def id="%date_time_api_module%-year">
+                <title>
+                    <a href="https://jetbrains.github.io/Exposed/api/%date_time_api_module%/%date_time_api_package%/year.html">
+                        <code>.year()</code>
+                    </a>
+                </title>
+                Returns the year as an <code>Int</code>.
+            </def>
+            <def id="%date_time_api_module%-month">
+                <title>
+                    <a href="https://jetbrains.github.io/Exposed/api/%date_time_api_module%/%date_time_api_package%/month.html">
+                        <code>.month()</code>
+                    </a>
+                </title>
+                Returns the month of the year (<code>1</code>–<code>12</code>).
+            </def>
+            <def id="%date_time_api_module%-day">
+                <title>
+                    <a href="https://jetbrains.github.io/Exposed/api/%date_time_api_module%/%date_time_api_package%/day.html">
+                        <code>.day()</code>
+                    </a>
+                </title>
+                Returns the day of the month (<code>1</code>–<code>31</code>).
+            </def>
+            <def id="%date_time_api_module%-hour">
+                <title>
+                    <a href="https://jetbrains.github.io/Exposed/api/%date_time_api_module%/%date_time_api_package%/hour.html">
+                        <code>.hour()</code>
+                    </a>
+                </title>
+                Returns the hour of the day (<code>0</code>–<code>23</code>).
+            </def>
+            <def id="%date_time_api_module%-minute">
+                <title>
+                    <a href="https://jetbrains.github.io/Exposed/api/%date_time_api_module%/%date_time_api_package%/minute.html">
+                        <code>.minute()</code>
+                    </a>
+                </title>
+                Returns the minute of the hour (<code>0</code>–<code>59</code>).
+            </def>
+            <def id="%date_time_api_module%-second">
+                <title>
+                    <a href="https://jetbrains.github.io/Exposed/api/%date_time_api_module%/%date_time_api_package%/second.html">
+                        <code>.second()</code>
+                    </a>
+                </title>
+                Returns the second of the minute (<code>0</code>–<code>59</code>).
+            </def>
+        </deflist>
+    </snippet>
 </topic>

@@ -26,6 +26,8 @@ dependencies {
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.kotlin.datetime)
+    implementation(libs.exposed.java.time)
+    implementation(libs.exposed.jodatime)
     implementation(libs.exposed.json)
     implementation(libs.h2)
     implementation(libs.slf4j)

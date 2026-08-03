@@ -25,7 +25,7 @@
             <toc-element topic="Array-types.topic"/>
             <toc-element topic="Binary-types.topic"/>
             <toc-element topic="Enumeration-types.topic"/>
-            <toc-element topic="Date-and-time-types.topic"/>
+            <toc-element topic="date-and-time-types.md"/>
             <toc-element topic="JSON-And-JSONB-types.topic"/>
             <toc-element topic="Vector-types.topic"/>
             <toc-element topic="Custom-data-types.topic"/>
