@@ -81,7 +81,7 @@ common setups:
 
 ## Use a version catalog
 
-If you use a [Gradle version catalog](https://docs.gradle.org/current/userguide/platforms.html#sec:sharing-catalogs),
+If you use a [Gradle version catalog](https://docs.gradle.org/current/userguide/version_catalogs.html#sec:importing-published-catalog),
 you can import the published `exposed-version-catalog` instead of listing each Exposed coordinate by hand.
 The catalog provides a type-safe accessor for every Exposed module and keeps their versions aligned.
 
@@ -142,8 +142,14 @@ Then reference the modules through the catalog accessors in your Gradle build sc
 </tabs>
 
 The accessor for each module is its name with the `exposed-` prefix removed and any dashes turned into nested
-accessors. For example, `exposed-kotlin-datetime` becomes `exposedLibs.kotlin.datetime`. All modules share the
-same `exposed` version, which you can override for the whole catalog in one place:
+accessors. For example, `exposed-kotlin-datetime` becomes `exposedLibs.kotlin.datetime`.
+
+> {style="note"}
+
+> Version catalogs are a Gradle feature. Maven users should declare dependencies directly, as shown above.
+> {style="note"}
+
+All modules share the same `exposed` version, which you can override for the whole catalog in one place:
 
 <code-block lang="kotlin">
 versionCatalogs {
@@ -157,10 +163,6 @@ versionCatalogs {
 > The catalog is imported under the name `exposedLibs` rather than `exposed` to avoid a clash with the
 > [](Exposed-gradle-plugin.md), which registers a project extension named `exposed`. If you don't apply that
 > plugin, you can name the catalog `exposed` and use accessors such as `exposed.core`.
-> {style="note"}
-
-> Version catalogs are a Gradle feature. Maven users should declare dependencies directly, as shown above.
-> {style="note"}
 
 ## Modules
 
