@@ -24,3 +24,37 @@ fun Table.encryptedVarchar(name: String, cipherTextLength: Int, encryptor: Encry
  */
 fun Table.encryptedBinary(name: String, cipherByteLength: Int, encryptor: Encryptor): Column<ByteArray> =
     registerColumn(name, EncryptedBinaryColumnType(encryptor, cipherByteLength))
+
+/**
+ * Transforms this character column into one that stores one-way hashed values, using the provided [hasher].
+ *
+ * ```kotlin
+ * val passwordHasher = BCryptHasher()
+ *
+ * object Users : IntIdTable() {
+ *     val password = text("password").hashed(passwordHasher)
+ * }
+ *
+ * Users.insert { it[password] = passwordHasher.hash("s3cret") }
+ *
+ * val user = Users.selectAll().where { Users.id eq id }.single()
+ * val granted = user[Users.password].matches(submittedPassword)
+ * ```
+ *
+ * @param hasher [Hasher] responsible for hashing values and for verifying them against stored hashes
+ * @return A new column holding [Hashed] values.
+ */
+fun Column<String>.hashed(hasher: Hasher): Column<Hashed> =
+    with(table) { this@hashed.transform(HashingTransformer(hasher)) }
+
+/**
+ * Transforms this nullable character column into one that stores one-way hashed values, using the provided
+ * [hasher], and leaving `null` values untouched.
+ *
+ * @param hasher [Hasher] responsible for hashing values and for verifying them against stored hashes
+ * @return A new nullable column holding [Hashed] values.
+ * @see hashed
+ */
+@JvmName("hashedNullable")
+fun Column<String?>.hashed(hasher: Hasher): Column<Hashed?> =
+    with(table) { this@hashed.transform(NullableHashingTransformer(hasher)) }
