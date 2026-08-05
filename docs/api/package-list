@@ -42,6 +42,8 @@ module:exposed-json
 org.jetbrains.exposed.v1.json
 module:exposed-kotlin-datetime
 org.jetbrains.exposed.v1.datetime
+module:exposed-maven-plugin
+org.jetbrains.exposed.v1.maven.plugin
 module:exposed-migration-core
 org.jetbrains.exposed.v1.migration.core
 module:exposed-migration-jdbc
@@ -50,6 +52,8 @@ module:exposed-migration-r2dbc
 org.jetbrains.exposed.v1.migration.r2dbc
 module:exposed-money
 org.jetbrains.exposed.v1.money
+module:exposed-plugin-core
+org.jetbrains.exposed.v1.plugin.core.migration
 module:exposed-r2dbc
 org.jetbrains.exposed.v1.r2dbc
 org.jetbrains.exposed.v1.r2dbc.mappers

@@ -21,7 +21,7 @@ annotation class TestMavenProjectDsl
 @TestMavenProjectDsl
 data class Versions(
     var kotlinVersion: String = "2.4.10",
-    var exposedVersion: String = "1.3.1",
+    var exposedVersion: String = "1.4.0",
 )
 
 @TestMavenProjectDsl
