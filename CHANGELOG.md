@@ -1,3 +1,39 @@
+# 1.4.0
+
+Infrastructure:
+* log4j2 2.26.1
+* postgresql-jdbc 42.7.13
+* flyway 13.1.0
+* kover 0.9.9
+* r2dbc-mysql 1.4.3
+* sqlite-jdbc 3.53.2.1
+* SpringFramework 7.0.8
+* SpringBoot 4.1.0
+* joda-time 2.14.3
+* ojdbc11 23.26.3.0.0
+
+Features:
+* feat: EXPOSED-1032 Add query timeout as a global configuration  by @bog-walk in https://github.com/JetBrains/Exposed/pull/2834
+* feat: EXPOSED-758 Add Exposed Maven plugin for migration script generation by @frederikpietzko in https://github.com/JetBrains/Exposed/pull/2817
+* feat: Add `exposed-version-catalog` for managing dependencies by @e5l in https://github.com/JetBrains/Exposed/pull/2856
+
+Bug fixes:
+* fix: Maven Plugin Config Mapping by @frederikpietzko in https://github.com/JetBrains/Exposed/pull/2855
+* fix: Prevent NoSuchElementException when removing the only batch from BatchInsertStatement by @cfcromn in https://github.com/JetBrains/Exposed/pull/2859
+* fix: EXPOSED-1028 Return defensive copy from ExposedSpringTransactionAttributeSource by @yurano in https://github.com/JetBrains/Exposed/pull/2812
+* fix: Use thread-safe lazy initialization for JDBC Database capability flags by @Develop-KIM in https://github.com/JetBrains/Exposed/pull/2853
+* fix: Fix version catalog docs and versions by @e5l in https://github.com/JetBrains/Exposed/pull/2874
+
+Docs:
+* docs: Fix documentation typos by @Martonveghcode in https://github.com/JetBrains/Exposed/pull/2850
+* docs: Fix dependency issue of mysql-connector-j by @Abdulrahman-AL-Sabagh in https://github.com/JetBrains/Exposed/pull/2849
+* docs: EXPOSED-976 Add mentions and links to the Exposed plugin  by @vnikolova in https://github.com/JetBrains/Exposed/pull/2844
+* docs: Add `route` to import statements in ProjectRoutes configuration for exposed-ktor-r2dbc sample by @VGoncharova in https://github.com/JetBrains/Exposed/pull/2864
+* docs: Add sample springboot3-exposed-r2dbc by @myfaverate in https://github.com/JetBrains/Exposed/pull/2511
+* docs: Edit index migrations docs to specify what changes trigger SQL generation by @bog-walk in https://github.com/JetBrains/Exposed/pull/2871
+* docs: Add documentation to website for Exposed Maven plugin by @frederikpietzko in https://github.com/JetBrains/Exposed/pull/2838
+* docs: EXPOSED-1037 Update the date and time types topic by @vnikolova in https://github.com/JetBrains/Exposed/pull/2863
+
 # 1.3.1
 
 Infrastructure:
