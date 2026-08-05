@@ -3,7 +3,13 @@ package org.jetbrains.exposed.v1.crypt
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder
 
 /**
- * [Argon2Hasher] requires BouncyCastle (`org.bouncycastle:bcprov-jdk18on`) on the runtime classpath, which `exposed-crypt`
+ * [Hasher] that uses the Argon2id algorithm, the first choice recommended by OWASP, salting each value
+ * individually.
+ *
+ * Encoded values follow the PHC string format and are 97 characters long with the default parameters, varying
+ * with [saltLength], [hashLength], and the printed length of the remaining parameters.
+ *
+ * This requires BouncyCastle (`org.bouncycastle:bcprov-jdk18on`) on the runtime classpath, which `exposed-crypt`
  * does not depend on; constructing it throws an [IllegalStateException] if BouncyCastle is missing.
  *
  * @param saltLength Length in bytes of the randomly generated salt
@@ -11,7 +17,6 @@ import org.springframework.security.crypto.argon2.Argon2PasswordEncoder
  * @param parallelism Number of lanes used by the algorithm
  * @param memory Amount of memory in kibibytes used by the algorithm
  * @param iterations Number of passes over the memory
- * @sample org.jetbrains.exposed.v1.crypt.hashed
  */
 class Argon2Hasher(
     saltLength: Int = DEFAULT_SALT_LENGTH,

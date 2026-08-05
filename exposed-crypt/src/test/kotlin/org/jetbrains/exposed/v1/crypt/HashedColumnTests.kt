@@ -13,6 +13,7 @@ import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -26,8 +27,31 @@ class HashedColumnTests : DatabaseTestsBase() {
 
         const val PASSWORD = "s3cret"
         const val WRONG_PASSWORD = "s3cr3t"
+        const val RECOVERY_CODE = "r3covery"
 
         const val TESTER_TABLE = "HashedTester"
+    }
+
+    @Test
+    fun testColumnDeclaredWithoutAHasherHashesWithBCrypt() {
+        val tester = object : IntIdTable(TESTER_TABLE) {
+            val password = text("password").hashed()
+            val recoveryCode = varchar("recovery_code", 60).nullable().hashed()
+        }
+
+        withTables(tester) {
+            tester.insert {
+                it[password] = tester.password.hash(PASSWORD)
+                it[recoveryCode] = tester.recoveryCode.hash(RECOVERY_CODE)
+            }
+
+            val stored = tester.selectAll().single()
+            assertTrue(stored[tester.password].matches(PASSWORD))
+            assertFalse(stored[tester.password].matches(WRONG_PASSWORD))
+            assertTrue(assertNotNull(stored[tester.recoveryCode]).matches(RECOVERY_CODE))
+
+            assertTrue(BCryptHasher().matches(PASSWORD, stored[tester.password].encodedValue))
+        }
     }
 
     @Test
@@ -58,6 +82,22 @@ class HashedColumnTests : DatabaseTestsBase() {
             assertTrue(stored[tester.password].matches(PASSWORD))
             assertFalse(stored[tester.password].matches(WRONG_PASSWORD))
             assertNull(stored[tester.recoveryCode])
+        }
+    }
+
+    @Test
+    fun testColumnHashesWhenTheHashingTransformIsNotTheOutermostOne() {
+        val hasher = BCryptHasher(strength = TEST_BCRYPT_STRENGTH)
+        val tester = object : IntIdTable(TESTER_TABLE) {
+            val password = text("password").hashed(hasher).transform(wrap = { it }, unwrap = { it })
+        }
+
+        withTables(tester) {
+            tester.insert { it[password] = tester.password.hash(PASSWORD) }
+
+            val stored = tester.selectAll().single()[tester.password]
+            assertTrue(stored.matches(PASSWORD))
+            assertFalse(stored.matches(WRONG_PASSWORD))
         }
     }
 

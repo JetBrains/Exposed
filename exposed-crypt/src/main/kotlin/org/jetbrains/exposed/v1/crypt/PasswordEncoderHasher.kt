@@ -21,7 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder
  * To hash with something that is not a `PasswordEncoder` at all, implement [Hasher] directly.
  */
 open class PasswordEncoderHasher(
-    private val passwordEncoder: PasswordEncoder
+    protected val passwordEncoder: PasswordEncoder
 ) : Hasher {
     override fun hash(plainText: String): Hashed = Hashed(
         this,
