@@ -12,6 +12,7 @@ import org.jetbrains.exposed.v1.dao.r2dbc.entityCache
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
 import kotlin.test.Test
 
 class ColumnWithTransformTest : R2dbcDatabaseTestsBase() {
@@ -53,6 +54,29 @@ class ColumnWithTransformTest : R2dbcDatabaseTestsBase() {
 
             assertEquals(TransformDataHolder(120), entity.simple)
             assertEquals(TransformDataHolder(240), entity.chained)
+        }
+    }
+
+    @Test
+    fun testTransformedValueSurvivesCommit() {
+        withTables(TransformTable) {
+            val entity = inTopLevelSuspendTransaction(null) {
+                maxAttempts = 1
+                TransformEntity.new {
+                    simple = TransformDataHolder(120)
+                    chained = TransformDataHolder(240)
+                }
+            }
+
+            inTopLevelSuspendTransaction(null) {
+                maxAttempts = 1
+                TransformEntity.attach(entity)
+                entity.simple = TransformDataHolder(121)
+                entity.chained = TransformDataHolder(241)
+            }
+
+            assertEquals(TransformDataHolder(121), entity.simple)
+            assertEquals(TransformDataHolder(241), entity.chained)
         }
     }
 

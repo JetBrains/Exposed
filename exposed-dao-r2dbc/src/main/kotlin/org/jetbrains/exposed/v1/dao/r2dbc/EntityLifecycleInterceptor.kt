@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.dao.r2dbc
 
 import org.jetbrains.exposed.v1.core.AbstractQuery
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Key
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.statements.*
@@ -9,6 +10,7 @@ import org.jetbrains.exposed.v1.core.transactions.transactionScope
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.statements.GlobalSuspendStatementInterceptor
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcPreparedStatementApi
+import org.jetbrains.exposed.v1.r2dbc.withTransactionContext
 
 private var isExecutedWithinEntityLifecycle by transactionScope { false }
 
@@ -47,7 +49,7 @@ class EntityLifecycleInterceptor : GlobalSuspendStatementInterceptor {
             }
 
             is DeleteStatement -> {
-                transaction.flushCache()
+                transaction.flushChain()
                 transaction.entityCache.removeTablesReferrers(statement.targetsSet.targetTables(), false)
                 if (!isExecutedWithinEntityLifecycle) {
                     statement.targets.filterIsInstance<IdTable<*>>().forEach {
@@ -57,7 +59,7 @@ class EntityLifecycleInterceptor : GlobalSuspendStatementInterceptor {
             }
 
             is UpsertStatement<*>, is BatchUpsertStatement -> {
-                transaction.flushCache()
+                transaction.flushChain()
                 transaction.entityCache.removeTablesReferrers(statement.targets, true)
                 if (!isExecutedWithinEntityLifecycle) {
                     statement.targets.filterIsInstance<IdTable<*>>().forEach {
@@ -67,7 +69,7 @@ class EntityLifecycleInterceptor : GlobalSuspendStatementInterceptor {
             }
 
             is InsertStatement<*> -> {
-                transaction.flushCache()
+                transaction.flushChain()
                 transaction.entityCache.removeTablesReferrers(listOf(statement.table), true)
             }
 
@@ -75,7 +77,7 @@ class EntityLifecycleInterceptor : GlobalSuspendStatementInterceptor {
             }
 
             is UpdateStatement -> {
-                transaction.flushCache()
+                transaction.flushChain()
                 transaction.entityCache.removeTablesReferrers(statement.targetsSet.targetTables(), false)
                 if (!isExecutedWithinEntityLifecycle) {
                     statement.targets.filterIsInstance<IdTable<*>>().forEach {
@@ -85,7 +87,7 @@ class EntityLifecycleInterceptor : GlobalSuspendStatementInterceptor {
             }
 
             else -> {
-                if (statement.type.group == StatementGroup.DDL) transaction.flushCache()
+                if (statement.type.group == StatementGroup.DDL) transaction.flushChain()
             }
         }
     }
@@ -104,40 +106,44 @@ class EntityLifecycleInterceptor : GlobalSuspendStatementInterceptor {
         transaction.flushCache()
         transaction.alertSubscribers()
         transaction.flushCache()
+
         // TODO ALIGN_WITH_JDBC: call `EntityCache.invalidateGlobalCaches(created + createdByHooks)`
         //  once `ImmutableCachedEntityClass` exists in R2DBC.
+    }
+
+    override suspend fun afterCommit(transaction: R2dbcTransaction) {
+        transaction.entityCache.promoteUncommittedState()
     }
 
     override suspend fun beforeRollback(transaction: R2dbcTransaction) {
         val entityCache = transaction.entityCache
         entityCache.clearReferrersCache()
 
-        // Clear writeValues and readValues before clearing the cache, so stale data cannot be
-        // carried over into a new transaction. Both are cleared even though writeValues should not
-        // have reached readValues at this point.
-        //
         // TODO ALIGN_WITH_JDBC: when ImmutableCachedEntityClass is ported, preserve its _readValues here.
-        entityCache.data.values.forEach { entityMap ->
-            entityMap.values.forEach { entity ->
-                entity.writeValues.clear()
-                entity._readValues = null
-            }
-        }
-        entityCache.updates.values.forEach { entitySet ->
-            entitySet.forEach { entity ->
-                entity.writeValues.clear()
-                entity._readValues = null
-            }
-        }
+        entityCache.discardUncommittedState()
 
-        entityCache.data.clear()
         entityCache.inserts.clear()
         entityCache.updates.clear()
+        entityCache.pendingInnerTableLinkUpdates.clear()
     }
 
     private suspend fun R2dbcTransaction.flushEntities(query: AbstractQuery<*>) {
-        // Flush data before executing query or results may be unpredictable
         val tables = query.targets.filterIsInstance(IdTable::class.java).toSet()
-        entityCache.flush(tables)
+        flushChain(tables)
     }
+}
+
+@OptIn(InternalApi::class)
+private suspend fun R2dbcTransaction.flushChain(tables: Iterable<IdTable<*>>? = null) {
+    for (scope in generateSequence(this) { it.outerTransaction }.toList().asReversed()) {
+        if (scope === this) {
+            scope.flushScope(tables)
+        } else {
+            withTransactionContext(scope) { scope.flushScope(tables) }
+        }
+    }
+}
+
+private suspend fun R2dbcTransaction.flushScope(tables: Iterable<IdTable<*>>?) {
+    if (tables == null) entityCache.flush() else entityCache.flush(tables)
 }

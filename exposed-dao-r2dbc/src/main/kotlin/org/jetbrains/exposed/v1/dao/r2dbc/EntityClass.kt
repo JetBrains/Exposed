@@ -200,14 +200,16 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
         return prototype
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun applyColumnDefaults(prototype: T) {
         val readValues = prototype._readValues!!
-        val writeValues = prototype.writeValues
+        val entityCache = warmCache()
         table.columns.filter { col ->
-            col.defaultValueFun != null && col !in writeValues && readValues.hasValue(col)
+            col.defaultValueFun != null &&
+                entityCache.stagedValue(prototype, col as Column<Any?>) === NoStagedValue &&
+                readValues.hasValue(col)
         }.forEach { col ->
-            @Suppress("UNCHECKED_CAST")
-            writeValues[col as Column<Any?>] = readValues[col]
+            prototype.stageWrite(col as Column<Any?>, readValues[col])
         }
     }
 
@@ -355,14 +357,9 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
     suspend fun attach(entity: Entity<ID>, force: Boolean = false) {
         val cache = warmCache()
         val tracked = cache.find(this, entity.id)
-
         if (tracked === entity) return
 
-        if (tracked == null) {
-            // Verify the row still exists — also stores a fresh instance in the cache as a side effect,
-            // which the store below then overwrites with the caller's reference.
-            findById(entity.id) ?: throw EntityNotFoundException(entity.id, this)
-        } else if (tracked.writeValues.isNotEmpty() && !force) {
+        if (tracked != null && cache.dirtyValues(tracked).isNotEmpty() && !force) {
             error(
                 "Another instance of ${entity.id} is already tracked in this transaction and has unflushed " +
                     "changes. Attaching would discard them — flush that instance first, or pass `force = true` " +
@@ -370,7 +367,33 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
             )
         }
 
+        findById(entity.id) ?: throw EntityNotFoundException(entity.id, this)
+
         cache.store(entity)
+    }
+
+    /**
+     * The inverse of [attach]: stops tracking [entity], so that this transaction no longer treats it as
+     * representing a row it is responsible for.
+     *
+     * Reads keep working and return the entity's committed values; writes throw
+     * [EntityNotFoundException], the same as for an entity that was never attached. The entity will not be
+     * flushed when the transaction commits.
+     *
+     * Tracking is a property of the whole transaction chain, so this detaches from any enclosing transaction
+     * too. Nothing already sent to the database is undone — if a write was flushed and then the entity
+     * detached, the row keeps the new value while the entity reports the old one.
+     *
+     * Does nothing if [entity] is not tracked, so it is safe to call twice. Unlike [attach] this needs no
+     * database access and does not suspend.
+     *
+     * @param entity The entity to stop tracking.
+     * @param force Detach even if it means discarding values that have not been committed.
+     * @throws IllegalStateException if [entity] holds uncommitted values and [force] is `false`, or if its
+     *   row was created by a transaction that is still open — use [Entity.delete] to withdraw such a row.
+     */
+    fun detach(entity: Entity<ID>, force: Boolean = false) {
+        warmCache().detach(entity, force)
     }
 
     /** Gets all the [Entity] instances associated with this [EntityClass]. */
@@ -423,6 +446,8 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
     @Suppress("MemberVisibilityCanBePrivate")
     fun wrapRow(row: ResultRow): T {
         val entity = wrap(row[table.id], row)
+
+        if (warmCache().stageFreshRow(entity, row)) return entity
 
         if (entity._readValues == null) {
             entity._readValues = row
@@ -1100,14 +1125,15 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun <R> List<T>.groupByReference(refColumn: Column<R>): Map<R, List<T>> =
-        groupBy { it.readValues[refColumn] }
+        groupBy { it.resolveColumnValue(refColumn) as R }
 
     @Suppress("UNCHECKED_CAST")
     private fun <R> List<T>.groupByReference(refColumns: Map<Column<*>, Column<*>>): Map<R, List<T>> =
         groupBy { entity ->
             getCompositeID {
-                refColumns.map { (child, parent) -> parent to entity.readValues[child] }
+                refColumns.map { (child, parent) -> parent to entity.resolveColumnValue(child) }
             } as R
         }
 

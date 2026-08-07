@@ -66,7 +66,7 @@ class Accessor<ID : Any, Parent : Entity<ID>, REF : Any>(
                 }
                 else -> error("Reference column ${reference.name} does not point to any column in ${factory.table.tableName}")
             }
-            entity.writeValues[reference as Column<Any?>] = refValue
+            entity.stageWrite(reference as Column<Any?>, refValue)
         }
 
         if (entity.id._value != null) {
@@ -157,16 +157,16 @@ class OptionalAccessor<ID : Any, Parent : Entity<ID>, REF : Any>(
                     }
                     else -> error("Reference column ${reference.name} does not point to any column in ${factory.table.tableName}")
                 }
-                entity.writeValues[reference as Column<Any?>] = refValue
+                entity.stageWrite(reference as Column<Any?>, refValue)
             }
         } else {
             if (references != null) {
                 references.keys.forEach { childColumn ->
                     @Suppress("UNCHECKED_CAST")
-                    entity.writeValues[childColumn as Column<Any?>] = null
+                    entity.stageWrite(childColumn as Column<Any?>, null)
                 }
             } else {
-                entity.writeValues[reference as Column<Any?>] = null
+                entity.stageWrite(reference as Column<Any?>, null)
             }
         }
 
@@ -229,7 +229,7 @@ class OptionalAccessor<ID : Any, Parent : Entity<ID>, REF : Any>(
  * Rejects a write to an entity that the current transaction does not track.
  *
  * Plain column writes get this check from `Entity.setValue`, but reference writes assign
- * [Entity.writeValues] directly and would otherwise discard the assignment silently: the
+ * [Entity.stageWrite] directly and would otherwise discard the assignment silently: the
  * `scheduleUpdate` that follows only fires for entities already stored in the cache, so an
  * unattached entity would report success while nothing reaches the database.
  */
@@ -245,14 +245,13 @@ private fun copyCompositeFkValues(
 ) {
     references.forEach { (childColumn, parentColumn) ->
         val parentRaw: Any? = parent.resolveColumnValue(parentColumn)
-        // Unwrap `EntityID` when the child column stores a raw value
         val value = if (parentRaw is EntityID<*> && childColumn.columnType !is EntityIDColumnType<*>) {
             parentRaw._value
         } else {
             parentRaw
         }
         @Suppress("UNCHECKED_CAST")
-        child.writeValues[childColumn as Column<Any?>] = value
+        child.stageWrite(childColumn as Column<Any?>, value)
     }
 }
 
