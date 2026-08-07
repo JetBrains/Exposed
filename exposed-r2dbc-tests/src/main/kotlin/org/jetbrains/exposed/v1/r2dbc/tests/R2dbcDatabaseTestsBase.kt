@@ -89,11 +89,12 @@ abstract class R2dbcDatabaseTestsBase {
         }
         val database = dbSettings.db!!
 
-        statement(database, dbSettings)
-
-        // revert any new configuration to not be carried over to the next test in suite
-        if (configure != null) {
-            dbSettings.db = registeredDb
+        try {
+            statement(database, dbSettings)
+        } finally {
+            if (configure != null) {
+                dbSettings.db = registeredDb
+            }
         }
     }
 

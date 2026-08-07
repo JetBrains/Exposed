@@ -480,6 +480,41 @@ class EntityTests : R2dbcDatabaseTestsBase() {
     }
 
     @Test
+    fun testClearedOptionalReferenceIsVisibleBeforeCommit() {
+        withTables(Boards, Posts, Categories) {
+            val board = Board.new { name = "irrelevant" }
+            val post = Post.new { this.board.set(board) }
+            flushCache()
+            assertEquals(board.id, assertNotNull(post.board()).id)
+
+            post.board.set(null)
+            assertNull(post.board())
+
+            flushCache()
+            assertNull(post.board())
+        }
+    }
+
+    @Test
+    fun testMovingChildInvalidatesBothParentsReferrers() {
+        withTables(Boards, Posts, Categories) {
+            val board1 = Board.new { name = "board1" }
+            val board2 = Board.new { name = "board2" }
+            val post = Post.new { this.board.set(board1) }
+            flushCache()
+
+            assertEquals(listOf(post.id), board1.posts.toList().map { it.id })
+            assertEquals(emptyList(), board2.posts.toList().map { it.id })
+
+            post.board.set(board2)
+            flushCache()
+
+            assertEquals(emptyList(), board1.posts.toList().map { it.id })
+            assertEquals(listOf(post.id), board2.posts.toList().map { it.id })
+        }
+    }
+
+    @Test
     fun testInsertNonChildWithoutFlush() {
         withTables(Boards, Posts, Categories) {
             val board = Board.new { name = "irrelevant" }

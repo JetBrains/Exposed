@@ -2,34 +2,56 @@ package org.jetbrains.exposed.v1.dao.r2dbc
 
 import kotlinx.coroutines.flow.firstOrNull
 import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.Key
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.core.transactions.transactionScope
+import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.r2dbc.LazySizedCollection
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.SizedIterable
 import org.jetbrains.exposed.v1.r2dbc.batchInsert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
+import java.util.IdentityHashMap
 import java.util.LinkedHashMap
 import java.util.concurrent.ConcurrentHashMap
 
-/** The current [EntityCache] for [this][R2dbcTransaction] scope, or a new instance if none exists. */
-@ExperimentalR2dbcDaoApi
-val R2dbcTransaction.entityCache: EntityCache by transactionScope {
-    EntityCache(this as R2dbcTransaction)
+private val entityCacheKey = Key<EntityCache>()
+
+@OptIn(InternalApi::class)
+internal fun currentR2dbcTransactionOrNull(): R2dbcTransaction? {
+    // It's small optimization to avoid searching in the list.
+    // Probably could be deleted, performance should be rechecked.
+    return ThreadLocalTransactionsStack.getTransactionOrNull() as? R2dbcTransaction
+        ?: TransactionManager.currentOrNull()
 }
+
+/**
+ * The [EntityCache] belonging to the transaction, created on first access.
+ */
+@ExperimentalR2dbcDaoApi
+val R2dbcTransaction.entityCache: EntityCache
+    get() = getOrCreate(entityCacheKey) { EntityCache(this) }
 
 /**
  * Class responsible for the storage of [Entity] instances in a specific [transaction].
  */
 @ExperimentalR2dbcDaoApi
 class EntityCache(private val transaction: R2dbcTransaction) {
-    /** The mapping of [IdTable]s to associated [Entity] instances (as a mapping of entity id values to entities). */
-    val data = ConcurrentHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>()
+    private val identityMap = ConcurrentHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>()
+
+    /**
+     * The mapping of [IdTable]s to associated [Entity] instances (as a mapping of entity id values to entities).
+     *
+     * Owned by the session and stored inside root transaction.
+     */
+    val data: ConcurrentHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>
+        get() = sessionScope.identityMap
 
     @Volatile
     private var flushingEntities = false
@@ -40,9 +62,25 @@ class EntityCache(private val transaction: R2dbcTransaction) {
 
     internal val referrers = ConcurrentHashMap<Column<*>, MutableMap<EntityID<*>, SizedIterable<*>>>()
 
-    // Queued rather than executed so that assigning a `via` relation stays non-suspend:
-    // a property setter cannot suspend, so the link writes are drained on flush instead.
+    /** Link writes queued because a `via` setter cannot suspend, and drained on flush. */
     internal val pendingInnerTableLinkUpdates = mutableListOf<suspend () -> Unit>()
+
+    /** Uncommitted column values, kept off the entity so a rollback drops exactly what this scope staged. */
+    private val staged = IdentityHashMap<Entity<*>, StagedValues>()
+
+    /** Entities whose row this transaction created; a rollback drops the row and evicts the instance. */
+    private val createdInScope = LinkedIdentityHashSet<Entity<*>>()
+
+    /** The enclosing scope, which a savepoint-nested transaction reads through to. */
+    private val outerScope: EntityCache?
+        get() = transaction.outerTransaction?.entityCache
+
+    /** This scope and its enclosing ones, innermost first. */
+    private val scopeChain: Sequence<EntityCache>
+        get() = generateSequence(this) { it.outerScope }
+
+    /** The top-level transaction's cache, which owns everything the chain shares. */
+    private val sessionScope: EntityCache by lazy { outerScope?.sessionScope ?: this }
 
     /**
      * Searches this [EntityCache] for an [Entity] by its [EntityID] value using its associated [EntityClass] as the key.
@@ -52,45 +90,21 @@ class EntityCache(private val transaction: R2dbcTransaction) {
     fun <ID : Any, T : Entity<ID>> find(f: EntityClass<ID, T>, id: EntityID<ID>): T? =
         // Mirrors JDBC's `EntityCache.find`. Unlike JDBC we can't dereference `id.value` blindly
         // (it would throw on an un-flushed entity), so the first lookup is gated by `id._value`.
-        (id._value?.let { getMap(f)[it] as T? })
-            ?: inserts[f.table]?.firstOrNull { it.id == id } as? T
-            ?: initializingEntities.firstOrNull { it.klass == f && it.id == id } as? T
-
-    private fun getMap(f: EntityClass<*, *>): MutableMap<Any, Entity<*>> = getMap(f.table)
+        (id._value?.let { getMap(f.table)[it] as T? })
+            ?: scopeChain.firstNotNullOfOrNull { scope ->
+                scope.inserts[f.table]?.firstOrNull { it.id == id } as? T
+                    ?: scope.initializingEntities.firstOrNull { it.klass == f && it.id == id } as? T
+            }
 
     private fun getMap(table: IdTable<*>): MutableMap<Any, Entity<*>> = data.getOrPut(table) {
-        LimitedHashMap()
+        LinkedHashMap()
     }
 
-    private inner class LimitedHashMap<K, V> : LinkedHashMap<K, V>() {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<K, V>?): Boolean {
-            return size > maxEntitiesToStore
-        }
-    }
-
-    /**
-     * The amount of entities to store in this [EntityCache] per [Entity] class.
-     *
-     * By default, this value is configured by `DatabaseConfig.maxEntitiesToStoreInCachePerEntity`,
-     * which defaults to storing all entities.
-     *
-     * On setting a new value, all data stored in the cache will be adjusted to the new size. If the new value
-     * is less than the current cache size by N, the first N entities stored will be removed. If the new value
-     * is greater than the current cache size, the adjusted cache will only be filled with more entities after
-     * they are retrieved, for example by calling [EntityClass.all].
-     */
-    var maxEntitiesToStore = transaction.db.config.maxEntitiesToStoreInCachePerEntity
-        set(value) {
-            val diff = value - field
-            field = value
-            if (diff < 0) {
-                data.values.forEach { it.trimToFirst(value) }
-            }
-        }
-
-    /** Stores the specified [Entity] in this cache using its associated [EntityClass] as the key. */
-    fun <ID : Any, T : Entity<ID>> store(f: EntityClass<ID, T>, o: T) {
-        getMap(f)[o.id.value] = o
+    /** Removes [entity] only if it is the instance currently mapped; another may have taken its place. */
+    private fun removeFromIdentityMap(entity: Entity<*>) {
+        val id = entity.id._value ?: return
+        val map = data[entity.klass.table] ?: return
+        if (map[id] === entity) map.remove(id)
     }
 
     /**
@@ -102,11 +116,128 @@ class EntityCache(private val transaction: R2dbcTransaction) {
         getMap(o.klass.table)[o.id.value] = o
     }
 
+    /**
+     * [entity]'s staged value for [column], or [NoStagedValue] if no scope in the chain holds one.
+     * The innermost scope wins, and within a scope an unissued assignment beats an issued one.
+     */
+    internal fun stagedValue(entity: Entity<*>, column: Column<Any?>): Any? {
+        var scope: EntityCache? = this
+        while (scope != null) {
+            val values = scope.staged[entity]
+            if (values != null) {
+                val staged = values.valueOrNone(column)
+                if (staged !== NoStagedValue) return staged
+            }
+            scope = scope.outerScope
+        }
+        return NoStagedValue
+    }
+
+    /** Records [value] as [entity]'s value for [column], to be sent to the database on the next flush. */
+    internal fun stageWrite(entity: Entity<*>, column: Column<Any?>, value: Any?) {
+        if (column.referee != null) {
+            val stagedPrevious = stagedValue(entity, column)
+            val previous = if (stagedPrevious === NoStagedValue) entity._readValues?.getOrNull(column) else stagedPrevious
+            val staleParents = listOfNotNull(value, previous).filterIsInstance<EntityID<*>>()
+
+            for (scope in scopeChain) {
+                val columnReferrers = scope.referrers[column] ?: continue
+                staleParents.forEach { columnReferrers.remove(it) }
+            }
+        }
+
+        staged.acquire(entity, transaction).dirty[column] = value
+    }
+
+    internal fun isDirty(entity: Entity<*>, column: Column<Any?>): Boolean =
+        staged[entity]?.dirty?.containsKey(column) == true
+
+    internal fun dirtyValues(entity: Entity<*>): Map<Column<Any?>, Any?> = staged[entity]?.dirty.orEmpty()
+
+    internal fun markFlushed(entity: Entity<*>) {
+        staged[entity]?.let {
+            it.flushed.putAll(it.dirty)
+            it.dirty.clear()
+        }
+    }
+
+    internal fun discardDirty(entity: Entity<*>) {
+        staged[entity]?.dirty?.clear()
+    }
+
+    internal fun forget(entity: Entity<*>) {
+        staged.release(entity)
+        createdInScope.remove(entity)
+    }
+
+    /**
+     * Stops tracking [entity]: reads fall back to its committed values and writes throw. Safe to call twice.
+     *
+     * @throws IllegalStateException if it holds uncommitted values and [force] is `false`, or its row was
+     *   created by a transaction that is still open.
+     */
+    internal fun detach(entity: Entity<*>, force: Boolean) {
+        check(!wasCreatedInScope(entity)) {
+            "Cannot detach ${entity.id}: its row was created by a transaction that is still open, which owns " +
+                "whether that row comes to exist at all. Use delete() to withdraw it instead."
+        }
+        check(force || !holdsUncommittedValues(entity)) {
+            "Cannot detach ${entity.id}: it holds values that have not been committed, and detaching would " +
+                "drop them. Commit first, or pass `force = true` to discard them."
+        }
+
+        removeFromIdentityMap(entity)
+        forget(entity)
+        updates[entity.klass.table]?.remove(entity)
+    }
+
+    private fun markCreatedInTheCurrentScope(entity: Entity<*>) {
+        createdInScope.add(entity)
+    }
+
+    private fun holdsUncommittedValues(entity: Entity<*>): Boolean =
+        scopeChain.any { entity in it.staged }
+
+    private fun wasCreatedInScope(entity: Entity<*>): Boolean =
+        scopeChain.any { entity in it.createdInScope }
+
+    /**
+     * Takes a freshly fetched [row] into this scope's staged values when [entity] already holds uncommitted
+     * ones, since the row then reflects writes no transaction has committed. Reports whether it did.
+     */
+    internal fun stageFreshRow(entity: Entity<*>, row: ResultRow): Boolean {
+        if (!holdsUncommittedValues(entity)) return false
+
+        staged.acquire(entity, transaction).stageRow(row)
+        return true
+    }
+
+    internal fun promoteUncommittedState() {
+        val outer = outerScope
+        if (outer != null) {
+            staged.forEach { (entity, values) ->
+                val target = outer.staged.acquire(entity, outer.transaction)
+                target.flushed.putAll(values.flushed)
+                target.dirty.putAll(values.dirty)
+            }
+            outer.createdInScope.addAll(createdInScope)
+        } else {
+            staged.forEach { (entity, values) -> entity.updateByCommittedValues(values.flushed + values.dirty) }
+        }
+        staged.releaseAll()
+        createdInScope.clear()
+    }
+
+    internal fun discardUncommittedState() {
+        createdInScope.forEach { entity ->
+            removeFromIdentityMap(entity)
+        }
+        staged.releaseAll()
+        createdInScope.clear()
+    }
+
     /** Removes the specified [Entity] from this [EntityCache] using its associated [table] as the key. */
     fun <ID : Any, T : Entity<ID>> remove(table: IdTable<ID>, o: T) {
-        // Mirrors JDBC's `EntityCache.remove`. Guard around `id._value`: in R2DBC an un-flushed
-        // entity's `id.value` would throw (no `invokeOnNoValue` flush), so just skip — the entity
-        // can't be in `data` yet.
         o.id._value?.let { getMap(table).remove(it) }
     }
 
@@ -123,13 +254,11 @@ class EntityCache(private val transaction: R2dbcTransaction) {
 
     private val initializingEntities = LinkedIdentityHashSet<Entity<*>>()
 
-    internal fun <ID : Any> isEntityInInitializationState(entity: Entity<ID>): Boolean {
-        return initializingEntities.contains(entity)
-    }
+    internal fun <ID : Any> isEntityInInitializationState(entity: Entity<ID>): Boolean =
+        scopeChain.any { entity in it.initializingEntities }
 
-    internal fun <ID : Any> isScheduledForInsert(entity: Entity<ID>): Boolean {
-        return inserts[entity.klass.table]?.contains(entity) ?: false
-    }
+    internal fun <ID : Any> isScheduledForInsert(entity: Entity<ID>): Boolean =
+        scopeChain.any { it.inserts[entity.klass.table]?.contains(entity) == true }
 
     internal fun <ID : Any> isStoredInData(entity: Entity<ID>): Boolean {
         val value = entity.id._value ?: return false
@@ -149,6 +278,7 @@ class EntityCache(private val transaction: R2dbcTransaction) {
 
     /** Stores the specified [Entity] in this [EntityCache] as scheduled to be inserted into the database. */
     fun <ID : Any> scheduleInsert(klass: EntityClass<ID, Entity<ID>>, entity: Entity<ID>) {
+        markCreatedInTheCurrentScope(entity)
         inserts.getOrPut(klass.table) { LinkedIdentityHashSet() }.add(entity)
     }
 
@@ -189,6 +319,8 @@ class EntityCache(private val transaction: R2dbcTransaction) {
         data.clear()
         inserts.clear()
         updates.clear()
+        staged.releaseAll()
+        createdInScope.clear()
         pendingInnerTableLinkUpdates.clear()
         clearReferrersCache()
     }
@@ -266,8 +398,6 @@ class EntityCache(private val transaction: R2dbcTransaction) {
     }
 
     private suspend fun executePendingInnerTableLinkUpdates() {
-        // Flush all remaining inserts/updates first — the deferred link operations
-        // need entities from arbitrary tables to have IDs.
         val remainingInserts = inserts.keys.toList()
         for (table in SchemaUtils.sortTablesByReferences(remainingInserts).filterIsInstance<IdTable<*>>()) {
             flushInserts(table)
@@ -284,25 +414,33 @@ class EntityCache(private val transaction: R2dbcTransaction) {
         }
     }
 
+    /**
+     * Drops cached referrer lists a write to [tables] may have invalidated, across the whole scope chain
+     * since it shares one connection. Over-invalidating only costs a re-query.
+     */
     internal fun removeTablesReferrers(tables: Collection<Table>, isInsert: Boolean) {
         val insertedTablesSet = tables.toSet()
         val columnsToInvalidate = tables.flatMapTo(hashSetOf()) { table ->
             table.columns.mapNotNull { column -> column.takeIf { it.referee != null } }
         }
 
-        columnsToInvalidate.forEach {
-            referrers.remove(it)
-        }
+        for (scope in scopeChain) {
+            val scopeReferrers = scope.referrers
 
-        referrers.keys.filter { refColumn ->
-            when {
-                isInsert -> false
-                refColumn.referee?.table in insertedTablesSet -> true
-                refColumn.table.columns.any { it.referee?.table in tables } -> true
-                else -> false
+            columnsToInvalidate.forEach {
+                scopeReferrers.remove(it)
             }
-        }.forEach {
-            referrers.remove(it)
+
+            scopeReferrers.keys.filter { refColumn ->
+                when {
+                    isInsert -> false
+                    refColumn.referee?.table in insertedTablesSet -> true
+                    refColumn.table.columns.any { it.referee?.table in tables } -> true
+                    else -> false
+                }
+            }.forEach {
+                scopeReferrers.remove(it)
+            }
         }
     }
 
@@ -318,17 +456,19 @@ class EntityCache(private val transaction: R2dbcTransaction) {
             // Snapshot writeValues before the batchInsert reads them, so we can merge
             // client-set values back into `_readValues` for drivers that only return
             // generated columns.
-            val writeValuesSnapshots = currentBatch.map { it.writeValues.toMap() }
+            val stagedSnapshots = currentBatch.map { LinkedHashMap(dirtyValues(it)) }
 
-            val genRows = table.batchInsert(currentBatch) { entry ->
-                for ((c, v) in entry.writeValues) {
-                    this[c] = v
+            val genRows = executeAsPartOfEntityLifecycle {
+                table.batchInsert(currentBatch) { entry ->
+                    for ((c, v) in dirtyValues(entry)) {
+                        this[c] = v
+                    }
                 }
             }
 
             currentBatch.forEachIndexed { idx, entity ->
                 val resultRow = genRows[idx]
-                adoptInsertResult(entity, resultRow, writeValuesSnapshots[idx], table)
+                adoptInsertResult(entity, resultRow, stagedSnapshots[idx], table)
             }
         }
 
@@ -339,12 +479,13 @@ class EntityCache(private val transaction: R2dbcTransaction) {
         entities: List<Entity<*>>,
         table: IdTable<*>
     ): Pair<List<Entity<*>>, List<Entity<*>>> {
-        val firstEntityColumns = entities.first().writeValues.keys
+        val firstEntityColumns = dirtyValues(entities.first()).keys
         return entities.partition { entity ->
-            val refereeFromSameTableAlreadyCreated = entity.writeValues.none { (key, value) ->
+            val values = dirtyValues(entity)
+            val refereeFromSameTableAlreadyCreated = values.none { (key, value) ->
                 key.referee == table.id && value is EntityID<*> && value._value == null
             }
-            val columnSetAlignedWithFirstEntity = entity.writeValues.keys == firstEntityColumns
+            val columnSetAlignedWithFirstEntity = values.keys == firstEntityColumns
             refereeFromSameTableAlreadyCreated && columnSetAlignedWithFirstEntity
         }
     }
@@ -353,7 +494,7 @@ class EntityCache(private val transaction: R2dbcTransaction) {
     private suspend fun <ID : Any> adoptInsertResult(
         entity: Entity<*>,
         resultRow: ResultRow,
-        writeValuesSnapshot: Map<Column<Any?>, Any?>,
+        stagedSnapshot: Map<Column<Any?>, Any?>,
         table: IdTable<ID>
     ) {
         val entityId = entity.id as EntityID<ID>
@@ -362,25 +503,20 @@ class EntityCache(private val transaction: R2dbcTransaction) {
             entityId._value = generatedId.value
             entity.writeIdColumnValue(entity.klass.table, generatedId)
         }
-        entity._readValues = resultRow
 
-        // R2DBC drivers commonly return only generated columns, leaving `_readValues` missing
-        // client-set values. Merge them in so subsequent reads see a complete row.
-        val readValues = entity._readValues
-        if (readValues != null) {
-            for ((col, value) in writeValuesSnapshot) {
-                if (!readValues.hasValue(col)) readValues[col] = value
-            }
+        for ((column, value) in unwrapColumnValues(stagedSnapshot)) {
+            if (!resultRow.hasValue(column)) resultRow[column] = value
         }
 
-        // If any table column is still missing (e.g. a database-side `defaultExpression` that the
-        // INSERT didn't return), re-SELECT the row.
-        if (table.columns.any { entity._readValues?.hasValue(it) != true }) {
-            val freshRow = table.selectAll().where { table.id eq entityId }.firstOrNull()
-            if (freshRow != null) entity._readValues = freshRow
+        val row = if (table.columns.any { !resultRow.hasValue(it) }) {
+            table.selectAll().where { table.id eq entityId }.firstOrNull() ?: resultRow
+        } else {
+            resultRow
         }
 
-        entity.writeValues.clear()
+        val values = staged.acquire(entity, transaction)
+        values.dirty.clear()
+        values.stageRow(row)
 
         store(entity)
         transaction.registerChange(entity.klass, entity.id, EntityChangeType.Created)
@@ -398,23 +534,5 @@ suspend fun R2dbcTransaction.flushCache(): List<Entity<*>> {
         val newEntities = inserts.flatMap { it.value }
         flush()
         return newEntities
-    }
-}
-
-/**
- * Drops entries from the front of this map until its [size] is at most [maxSize].
- *
- * Extracted from `EntityCache.maxEntitiesToStore`'s setter so the setter reads as intent
- * ("trim each per-table map to the new max") rather than carrying the iterator mechanics inline.
- * Relies on insertion-order iteration of the per-table cache (see [EntityCache.LimitedHashMap])
- * to evict the oldest entries first.
- */
-private fun <K, V> MutableMap<K, V>.trimToFirst(maxSize: Int) {
-    val sizeExceed = size - maxSize
-    if (sizeExceed <= 0) return
-    val iterator = iterator()
-    repeat(sizeExceed) {
-        iterator.next()
-        iterator.remove()
     }
 }

@@ -23,7 +23,6 @@ public class org/jetbrains/exposed/v1/dao/r2dbc/Entity {
 	public final fun getValue (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/dao/r2dbc/Entity;Lkotlin/reflect/KProperty;)Ljava/lang/Object;
 	public final fun getValue (Lorg/jetbrains/exposed/v1/core/CompositeColumn;Lorg/jetbrains/exposed/v1/dao/r2dbc/Entity;Lkotlin/reflect/KProperty;)Ljava/lang/Object;
 	public final fun getValue (Lorg/jetbrains/exposed/v1/dao/r2dbc/EntityFieldWithTransform;Lorg/jetbrains/exposed/v1/dao/r2dbc/Entity;Lkotlin/reflect/KProperty;)Ljava/lang/Object;
-	public final fun getWriteValues ()Ljava/util/LinkedHashMap;
 	public final fun get_readValues ()Lorg/jetbrains/exposed/v1/core/ResultRow;
 	public final fun lookup (Lorg/jetbrains/exposed/v1/core/Column;)Ljava/lang/Object;
 	public fun refresh (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -32,7 +31,6 @@ public class org/jetbrains/exposed/v1/dao/r2dbc/Entity {
 	public final fun setValue (Lorg/jetbrains/exposed/v1/core/CompositeColumn;Lorg/jetbrains/exposed/v1/dao/r2dbc/Entity;Lkotlin/reflect/KProperty;Ljava/lang/Object;)V
 	public final fun setValue (Lorg/jetbrains/exposed/v1/dao/r2dbc/EntityFieldWithTransform;Lorg/jetbrains/exposed/v1/dao/r2dbc/Entity;Lkotlin/reflect/KProperty;Ljava/lang/Object;)V
 	public final fun set_readValues (Lorg/jetbrains/exposed/v1/core/ResultRow;)V
-	public final fun storeWrittenValues ()V
 	public final fun via (Lorg/jetbrains/exposed/v1/dao/r2dbc/EntityClass;Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/dao/r2dbc/relationships/InnerTableLink;
 	public final fun via (Lorg/jetbrains/exposed/v1/dao/r2dbc/EntityClass;Lorg/jetbrains/exposed/v1/core/Table;)Lorg/jetbrains/exposed/v1/dao/r2dbc/relationships/InnerTableLink;
 }
@@ -54,15 +52,12 @@ public final class org/jetbrains/exposed/v1/dao/r2dbc/EntityCache {
 	public final fun flush (Ljava/lang/Iterable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun flush (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getData ()Ljava/util/concurrent/ConcurrentHashMap;
-	public final fun getMaxEntitiesToStore ()I
 	public final fun getOrPutReferrers (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getReferrers (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
 	public final fun remove (Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Lorg/jetbrains/exposed/v1/dao/r2dbc/Entity;)V
 	public final fun scheduleInsert (Lorg/jetbrains/exposed/v1/dao/r2dbc/EntityClass;Lorg/jetbrains/exposed/v1/dao/r2dbc/Entity;)V
 	public final fun scheduleUpdate (Lorg/jetbrains/exposed/v1/dao/r2dbc/EntityClass;Lorg/jetbrains/exposed/v1/dao/r2dbc/Entity;)V
-	public final fun setMaxEntitiesToStore (I)V
 	public final fun store (Lorg/jetbrains/exposed/v1/dao/r2dbc/Entity;)V
-	public final fun store (Lorg/jetbrains/exposed/v1/dao/r2dbc/EntityClass;Lorg/jetbrains/exposed/v1/dao/r2dbc/Entity;)V
 }
 
 public final class org/jetbrains/exposed/v1/dao/r2dbc/EntityCacheKt {
@@ -107,6 +102,8 @@ public abstract class org/jetbrains/exposed/v1/dao/r2dbc/EntityClass {
 	public final fun count (Lorg/jetbrains/exposed/v1/core/Op;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun count$default (Lorg/jetbrains/exposed/v1/dao/r2dbc/EntityClass;Lorg/jetbrains/exposed/v1/core/Op;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	protected fun createInstance (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;Lorg/jetbrains/exposed/v1/core/ResultRow;)Lorg/jetbrains/exposed/v1/dao/r2dbc/Entity;
+	public final fun detach (Lorg/jetbrains/exposed/v1/dao/r2dbc/Entity;Z)V
+	public static synthetic fun detach$default (Lorg/jetbrains/exposed/v1/dao/r2dbc/EntityClass;Lorg/jetbrains/exposed/v1/dao/r2dbc/Entity;ZILjava/lang/Object;)V
 	public final fun find (Lkotlin/jvm/functions/Function0;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
 	public final fun find (Lorg/jetbrains/exposed/v1/core/Op;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
 	public final fun findById (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
