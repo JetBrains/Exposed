@@ -9,7 +9,6 @@ import kotlinx.coroutines.reactor.mono
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.exposedLogger
-import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.core.transactions.currentTransactionOrNull
 import org.jetbrains.exposed.v1.core.transactions.transactionScope
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
@@ -73,8 +72,7 @@ class SpringReactiveTransactionManager(
                 .doOnSuccess {
                     trxObject.connectionHolder = null
 
-                    @OptIn(InternalApi::class)
-                    ThreadLocalTransactionsStack.popTransaction()
+                    SpringReactiveTransactionsStack.popTransaction()
                 }
         }
     }
@@ -89,8 +87,7 @@ class SpringReactiveTransactionManager(
 
             synchronizationManager.bindResource(connectionFactory, suspendedObject)
 
-            @OptIn(InternalApi::class)
-            ThreadLocalTransactionsStack.pushTransaction(suspendedObject.transaction)
+            SpringReactiveTransactionsStack.pushTransaction(suspendedObject.transaction)
 
             Mono.empty()
         }
@@ -147,10 +144,6 @@ class SpringReactiveTransactionManager(
 
             Mono
                 .just(newTransaction)
-                .doOnSuccess {
-                    @OptIn(InternalApi::class)
-                    ThreadLocalTransactionsStack.pushTransaction(newTransaction)
-                }
                 .then(newConnectionMono)
                 .doOnSuccess {
                     if (definition.timeout != TransactionDefinition.TIMEOUT_DEFAULT) {
@@ -164,13 +157,12 @@ class SpringReactiveTransactionManager(
                         synchronizationManager.unbindResourceIfPossible(connectionFactory) as? ExposedHolderObject
 
                         synchronizationManager.bindResource(connectionFactory, trxObject.connectionHolder!!)
+
+                        SpringReactiveTransactionsStack.pushTransaction(newTransaction)
                     }
                 }
                 .doOnError { ex ->
                     trxObject.connectionHolder = null
-
-                    @OptIn(InternalApi::class)
-                    ThreadLocalTransactionsStack.popTransaction()
 
                     throw CannotCreateTransactionException("Could not open R2DBC Connection for transaction", ex)
                 }
@@ -219,11 +211,9 @@ class SpringReactiveTransactionManager(
                 clearStatements(it)
             }
 
-            @OptIn(InternalApi::class)
-            ThreadLocalTransactionsStack.popTransaction()
-
             if (trxObject.isNewConnectionHolder) {
                 val previous = synchronizationManager.unbindResource(connectionFactory) as ExposedHolderObject
+                SpringReactiveTransactionsStack.popUntilSynced(previous.transaction)
 
                 // otherwise a PROPAGATION_NESTED transaction would incorrectly have the context of its
                 // now closed inner transaction used when doCommit() or doRollback() is later invoked

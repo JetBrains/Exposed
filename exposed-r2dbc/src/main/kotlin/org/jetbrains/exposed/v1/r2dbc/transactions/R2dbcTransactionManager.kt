@@ -73,6 +73,7 @@ internal fun R2dbcTransactionManager.createTransactionContext(transaction: Trans
  * @return The current [R2dbcTransaction] from the stack, or null if no transaction exists
  * @throws [IllegalStateException] If the transaction in the stack is not an [R2dbcTransaction]
  */
+@OptIn(InternalApi::class)
 internal fun R2dbcTransactionManager.getCurrentStackTransaction(): R2dbcTransaction? {
     @OptIn(InternalApi::class)
     val transaction = TransactionsHolderProvider.holder.getTransactionOrNull(db)
