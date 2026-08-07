@@ -6,6 +6,7 @@ import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.dao.r2dbc.IntEntity
 import org.jetbrains.exposed.v1.dao.r2dbc.IntEntityClass
 import org.jetbrains.exposed.v1.dao.r2dbc.exceptions.EntityNotFoundException
+import org.jetbrains.exposed.v1.dao.r2dbc.flushCache
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
@@ -323,6 +324,111 @@ class AttachEntityTests : R2dbcDatabaseTestsBase() {
                 maxAttempts = 1
                 assertEquals("kept", Items.selectAll().single()[Items.name])
             }
+        }
+    }
+
+    @Test
+    fun testDetachedEntityIsReadableButNotWritable() {
+        withTables(Items) {
+            val item = newTransaction {
+                maxAttempts = 1
+                Item.new { name = "original" }
+            }
+
+            newTransaction {
+                maxAttempts = 1
+                Item.attach(item)
+                Item.detach(item)
+
+                assertEquals("original", item.name)
+                expectException<EntityNotFoundException> { item.name = "changed" }
+            }
+        }
+    }
+
+    @Test
+    fun testReattachAfterDetach() {
+        withTables(Items) {
+            val item = newTransaction {
+                maxAttempts = 1
+                Item.new { name = "original" }
+            }
+
+            newTransaction {
+                maxAttempts = 1
+                Item.attach(item)
+                Item.detach(item)
+                expectException<EntityNotFoundException> { item.name = "unreachable" }
+
+                Item.attach(item)
+                item.name = "changed"
+            }
+
+            newTransaction {
+                maxAttempts = 1
+                assertEquals("changed", Items.selectAll().single()[Items.name])
+            }
+        }
+    }
+
+    @Test
+    fun testDetachIsIdempotent() {
+        withTables(Items) {
+            val item = newTransaction {
+                maxAttempts = 1
+                Item.new { name = "original" }
+            }
+
+            newTransaction {
+                maxAttempts = 1
+                Item.attach(item)
+                Item.detach(item)
+                Item.detach(item)
+
+                assertEquals("original", item.name)
+            }
+        }
+    }
+
+    @Test
+    fun testDetachRefusesToDiscardUncommittedValues() {
+        withTables(Items) {
+            val item = newTransaction {
+                maxAttempts = 1
+                Item.new { name = "original" }
+            }
+
+            newTransaction {
+                maxAttempts = 1
+                Item.attach(item)
+                item.name = "pending"
+
+                expectException<IllegalStateException> { Item.detach(item) }
+
+                Item.detach(item, force = true)
+            }
+
+            newTransaction {
+                maxAttempts = 1
+                assertEquals("original", Items.selectAll().single()[Items.name])
+            }
+        }
+    }
+
+    /**
+     * A row this transaction created has no committed state to fall back on, so detaching it would leave an
+     * unreadable entity behind and an insert nobody owns. Withdrawing it is what `delete()` is for.
+     */
+    @Test
+    fun testDetachRefusesAnEntityThisTransactionCreated() {
+        withTables(Items) {
+            val item = Item.new { name = "fresh" }
+
+            expectException<IllegalStateException> { Item.detach(item) }
+            expectException<IllegalStateException> { Item.detach(item, force = true) }
+
+            flushCache()
+            expectException<IllegalStateException> { Item.detach(item) }
         }
     }
 }

@@ -24,7 +24,6 @@ import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
-import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.Assumptions
@@ -45,13 +44,10 @@ class EntityCacheTests : R2dbcDatabaseTestsBase() {
     }
 
     @Test
-    fun testGlobalEntityCacheLimit() = runTest {
+    fun testEntitiesAreServedFromCacheUntilCleared() = runTest {
         Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         val entitiesCount = 25
-        val cacheSize = 10
-        val db = TestDB.H2_V2.connect {
-            maxEntitiesToStoreInCachePerEntity = cacheSize
-        }
+        val db = TestDB.H2_V2.connect()
 
         suspendTransaction(db) {
             try {
@@ -63,116 +59,25 @@ class EntityCacheTests : R2dbcDatabaseTestsBase() {
                     }
                 }
 
-                val allEntities = TestEntity.all().toList()
-                assertEquals(entitiesCount, allEntities.size)
-                val allCachedEntities = entityCache.findAll(TestEntity)
-                assertEquals(cacheSize, allCachedEntities.size)
-                assertEqualCollections(allEntities.drop(entitiesCount - cacheSize), allCachedEntities)
+                val entityIds = TestTable.selectAll().map { it[TestTable.id] }.toList()
+                val initialStatementCount = statementCount
+                entityIds.forEach {
+                    TestEntity[it]
+                }
+                // All read from cache
+                assertEquals(initialStatementCount, statementCount)
+
+                entityCache.clear()
+                // One query is enough to load all of them back
+                TestEntity.all().toList()
+
+                entityIds.forEach {
+                    TestEntity[it]
+                }
+                assertEquals(initialStatementCount + 1, statementCount)
             } finally {
                 SchemaUtils.drop(TestTable)
             }
-        }
-    }
-
-    @Test
-    fun testGlobalEntityCacheLimitZero() = runTest {
-        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
-        val entitiesCount = 25
-        val db = TestDB.H2_V2.connect()
-        val dbNoCache = TestDB.H2_V2.connect {
-            maxEntitiesToStoreInCachePerEntity = 10
-        }
-
-        val entityIds = suspendTransaction(db) {
-            SchemaUtils.create(TestTable)
-
-            repeat(entitiesCount) {
-                TestEntity.new {
-                    value = Random.nextInt()
-                }
-            }
-
-            val entityIds = TestTable.selectAll().map { it[TestTable.id] }.toList()
-            val initialStatementCount = statementCount
-            entityIds.forEach {
-                TestEntity[it]
-            }
-            // All read from cache
-            assertEquals(initialStatementCount, statementCount)
-
-            entityCache.clear()
-            // Load all into cache
-            TestEntity.all().toList()
-
-            entityIds.forEach {
-                TestEntity[it]
-            }
-            assertEquals(initialStatementCount + 1, statementCount)
-            entityIds
-        }
-
-        suspendTransaction(dbNoCache) {
-            debug = true
-            TestEntity.all().toList()
-            assertEquals(1, statementCount)
-            val initialStatementCount = statementCount
-            entityIds.forEach {
-                TestEntity[it]
-            }
-            assertEquals(initialStatementCount + entitiesCount, statementCount)
-            SchemaUtils.drop(TestTable)
-        }
-    }
-
-    @Test
-    fun testPerTransactionEntityCacheLimit() {
-        val entitiesCount = 25
-        val cacheSize = 10
-        withTables(TestTable) {
-            entityCache.maxEntitiesToStore = 10
-
-            repeat(entitiesCount) {
-                TestEntity.new {
-                    value = Random.nextInt()
-                }
-            }
-
-            val allEntities = TestEntity.all().toList()
-            assertEquals(entitiesCount, allEntities.size)
-            val allCachedEntities = entityCache.findAll(TestEntity)
-            assertEquals(cacheSize, allCachedEntities.size)
-            assertEqualCollections(allEntities.drop(entitiesCount - cacheSize), allCachedEntities)
-        }
-    }
-
-    @Test
-    fun changeEntityCacheMaxEntitiesToStoreInMiddleOfTransaction() {
-        withTables(TestTable) {
-            repeat(20) {
-                TestEntity.new {
-                    value = Random.nextInt()
-                }
-            }
-            entityCache.clear()
-
-            TestEntity.all().limit(15).toList()
-            assertEquals(15, entityCache.findAll(TestEntity).size)
-
-            entityCache.maxEntitiesToStore = 18
-            TestEntity.all().toList()
-            assertEquals(18, entityCache.findAll(TestEntity).size)
-
-            // Resize current cache
-            entityCache.maxEntitiesToStore = 10
-            assertEquals(10, entityCache.findAll(TestEntity).size)
-
-            entityCache.maxEntitiesToStore = 18
-            TestEntity.all().toList()
-            assertEquals(18, entityCache.findAll(TestEntity).size)
-
-            // Disable cache
-            entityCache.maxEntitiesToStore = 0
-            assertEquals(0, entityCache.findAll(TestEntity).size)
         }
     }
 
@@ -266,10 +171,9 @@ class EntityCacheTests : R2dbcDatabaseTestsBase() {
                         entity.value = 1
 
                         exposedLogger.info(
-                            "Updating entity id={} invocation={}  writeValuesSize={}",
+                            "Updating entity id={} invocation={}",
                             entities[index].id,
-                            statementInvocationNumber.incrementAndGet(),
-                            entities[index].writeValues.size
+                            statementInvocationNumber.incrementAndGet()
                         )
                     }
                 }
@@ -277,7 +181,7 @@ class EntityCacheTests : R2dbcDatabaseTestsBase() {
 
             entities.forEach {
                 suspendTransaction(transactionIsolation = IsolationLevel.SERIALIZABLE, db = db1) {
-                    exposedLogger.info("DAO state after update: {} value={} writeValuesSize={}", it.id, it.value, it.writeValues.size)
+                    exposedLogger.info("DAO state after update: {} value={}", it.id, it.value)
                 }
             }
 
