@@ -3846,17 +3846,6 @@ public abstract class org/jetbrains/exposed/v1/core/transactions/DatabasesManage
 	public fun setDefaultDatabase (Lorg/jetbrains/exposed/v1/core/DatabaseApi;)V
 }
 
-public final class org/jetbrains/exposed/v1/core/transactions/ThreadLocalTransactionsStack {
-	public static final field INSTANCE Lorg/jetbrains/exposed/v1/core/transactions/ThreadLocalTransactionsStack;
-	public final fun getTransactionIsInstance (Ljava/lang/Class;)Lorg/jetbrains/exposed/v1/core/Transaction;
-	public final fun getTransactionOrNull ()Lorg/jetbrains/exposed/v1/core/Transaction;
-	public final fun getTransactionOrNull (Lorg/jetbrains/exposed/v1/core/DatabaseApi;)Lorg/jetbrains/exposed/v1/core/Transaction;
-	public final fun isEmpty ()Z
-	public final fun popTransaction ()Lorg/jetbrains/exposed/v1/core/Transaction;
-	public final fun pushTransaction (Lorg/jetbrains/exposed/v1/core/Transaction;)V
-	public final fun threadTransactions ()Ljava/util/Stack;
-}
-
 public abstract interface class org/jetbrains/exposed/v1/core/transactions/TransactionInterface {
 	public abstract fun getDb ()Lorg/jetbrains/exposed/v1/core/DatabaseApi;
 	public abstract fun getOuterTransaction ()Lorg/jetbrains/exposed/v1/core/Transaction;
@@ -3904,6 +3893,27 @@ public final class org/jetbrains/exposed/v1/core/transactions/TransactionsKt {
 	public static final fun currentTransaction ()Lorg/jetbrains/exposed/v1/core/Transaction;
 	public static final fun currentTransactionOrNull ()Lorg/jetbrains/exposed/v1/core/Transaction;
 	public static final fun withThreadLocalTransaction (Lorg/jetbrains/exposed/v1/core/Transaction;Lkotlin/jvm/functions/Function0;)Ljava/lang/Object;
+}
+
+public abstract interface class org/jetbrains/exposed/v1/core/transactions/TransactionsStack {
+	public fun getPriority ()I
+	public abstract fun getSize ()I
+	public abstract fun getTransactionIsInstance (Ljava/lang/Class;)Lorg/jetbrains/exposed/v1/core/Transaction;
+	public abstract fun getTransactionOrNull ()Lorg/jetbrains/exposed/v1/core/Transaction;
+	public abstract fun getTransactionOrNull (Lorg/jetbrains/exposed/v1/core/DatabaseApi;)Lorg/jetbrains/exposed/v1/core/Transaction;
+	public abstract fun getTransactionsAsIds ()Ljava/util/List;
+	public abstract fun isEmpty ()Z
+	public abstract fun popTransaction ()Lorg/jetbrains/exposed/v1/core/Transaction;
+	public abstract fun pushTransaction (Lorg/jetbrains/exposed/v1/core/Transaction;)V
+}
+
+public final class org/jetbrains/exposed/v1/core/transactions/TransactionsStack$DefaultImpls {
+	public static fun getPriority (Lorg/jetbrains/exposed/v1/core/transactions/TransactionsStack;)I
+}
+
+public final class org/jetbrains/exposed/v1/core/transactions/TransactionsStackProvider {
+	public static final field INSTANCE Lorg/jetbrains/exposed/v1/core/transactions/TransactionsStackProvider;
+	public final fun getStackImpl ()Lorg/jetbrains/exposed/v1/core/transactions/TransactionsStack;
 }
 
 public final class org/jetbrains/exposed/v1/core/transactions/suspend/TransactionContextElement : kotlin/coroutines/AbstractCoroutineContextElement, kotlinx/coroutines/ThreadContextElement {

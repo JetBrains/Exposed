@@ -10,7 +10,7 @@ import org.jetbrains.exposed.v1.core.Transaction
  */
 @InternalApi
 fun currentTransactionOrNull(): Transaction? {
-    return ThreadLocalTransactionsStack.getTransactionOrNull()
+    return TransactionsStackProvider.stackImpl.getTransactionOrNull()
 }
 
 /**
@@ -26,7 +26,7 @@ fun currentTransaction(): Transaction = currentTransactionOrNull() ?: error("No 
  * The method runs code block within the context of provided transaction.
  * If transaction is null, the code block is executed without any transaction context.
  *
- * Provided transaction will be pushed into [ThreadLocalTransactionsStack] before executing code block,
+ * Provided transaction will be pushed into [TransactionsStack] before executing code block,
  * and will be popped from the stack after code block is executed.
  *
  * @param transaction The transaction to be used in the context.
@@ -41,17 +41,17 @@ fun <T> withThreadLocalTransaction(transaction: Transaction?, block: () -> T): T
     }
 
     // Check if this transaction is already on the stack to avoid duplicate push/pop
-    val currentTransaction = ThreadLocalTransactionsStack.getTransactionOrNull()
+    val currentTransaction = TransactionsStackProvider.stackImpl.getTransactionOrNull()
     if (currentTransaction?.transactionId == transaction.transactionId) {
         // Transaction is already on the stack - just execute without pushing
         return block()
     }
 
     // Transaction is not on stack, so we need to push/pop it
-    ThreadLocalTransactionsStack.pushTransaction(transaction)
+    TransactionsStackProvider.stackImpl.pushTransaction(transaction)
     return try {
         block()
     } finally {
-        ThreadLocalTransactionsStack.popTransaction()
+        TransactionsStackProvider.stackImpl.popTransaction()
     }
 }
