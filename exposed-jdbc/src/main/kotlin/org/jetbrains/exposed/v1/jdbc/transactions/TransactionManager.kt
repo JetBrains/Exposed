@@ -4,9 +4,9 @@ import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
 import org.jetbrains.exposed.v1.core.transactions.DatabasesManagerImpl
-import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagersContainerImpl
+import org.jetbrains.exposed.v1.core.transactions.TransactionsStackProvider
 import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolder
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
@@ -139,7 +139,6 @@ class TransactionManager(
         @Synchronized
         fun registerManager(database: Database, manager: JdbcTransactionManager) {
             contextKeys[manager] = object : CoroutineContext.Key<TransactionContextHolder> {}
-            @OptIn(InternalApi::class)
             transactionManagers.registerDatabaseManager(database, manager)
         }
 
@@ -149,19 +148,17 @@ class TransactionManager(
          */
         @Synchronized
         fun closeAndUnregister(database: Database) {
-            @OptIn(InternalApi::class)
             val manager = transactionManagers.getTransactionManager(database)
             if (manager != null) {
                 contextKeys.remove(manager)
             }
-            @OptIn(InternalApi::class)
             transactionManagers.closeAndUnregisterDatabase(database)
         }
 
         /** Returns the current [JdbcTransaction], or `null` if none exists. */
         fun currentOrNull(): JdbcTransaction? {
             @OptIn(InternalApi::class)
-            return ThreadLocalTransactionsStack.getTransactionIsInstance(JdbcTransaction::class.java)
+            return TransactionsStackProvider.stackImpl.getTransactionIsInstance(JdbcTransaction::class.java)
         }
 
         /**

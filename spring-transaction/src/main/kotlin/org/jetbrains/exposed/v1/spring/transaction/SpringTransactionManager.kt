@@ -4,7 +4,7 @@ import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.exposedLogger
-import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
+import org.jetbrains.exposed.v1.core.transactions.TransactionsStackProvider
 import org.jetbrains.exposed.v1.core.transactions.currentTransactionOrNull
 import org.jetbrains.exposed.v1.core.transactions.transactionScope
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -77,7 +77,7 @@ class SpringTransactionManager(
             // unbind Spring JDBC connection reference
             connectionHolder = TransactionSynchronizationManager.unbindResource(dataSource) as ConnectionHolder,
         ).apply {
-            ThreadLocalTransactionsStack.popTransaction()
+            TransactionsStackProvider.stackImpl.popTransaction()
             trxObject.connectionHolder = null
         }
     }
@@ -86,7 +86,7 @@ class SpringTransactionManager(
         val suspendedObject = suspendedResources as SuspendedObject
 
         @OptIn(InternalApi::class)
-        ThreadLocalTransactionsStack.pushTransaction(suspendedObject.transaction)
+        TransactionsStackProvider.stackImpl.pushTransaction(suspendedObject.transaction)
         TransactionSynchronizationManager.bindResource(dataSource, suspendedObject.connectionHolder)
     }
 
@@ -148,7 +148,7 @@ class SpringTransactionManager(
         }
 
         @OptIn(InternalApi::class)
-        ThreadLocalTransactionsStack.pushTransaction(newTransaction)
+        TransactionsStackProvider.stackImpl.pushTransaction(newTransaction)
     }
 
     override fun doCommit(status: DefaultTransactionStatus) {
@@ -171,7 +171,7 @@ class SpringTransactionManager(
             closeStatementsAndConnections(it)
         }
         @OptIn(InternalApi::class)
-        ThreadLocalTransactionsStack.popTransaction()
+        TransactionsStackProvider.stackImpl.popTransaction()
 
         // Clean up Spring JDBC
         if (trxObject.isNewConnectionHolder) {

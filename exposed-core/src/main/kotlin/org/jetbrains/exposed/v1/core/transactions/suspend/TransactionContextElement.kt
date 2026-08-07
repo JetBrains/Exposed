@@ -4,7 +4,7 @@ import kotlinx.coroutines.ThreadContextElement
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.exposedLogger
-import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
+import org.jetbrains.exposed.v1.core.transactions.TransactionsStackProvider
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
 
@@ -32,10 +32,10 @@ class TransactionContextElement(
      * @return The previous transaction that was on top of the stack, or null if none existed.
      */
     override fun updateThreadContext(context: CoroutineContext): Transaction? {
-        val previousTransaction = ThreadLocalTransactionsStack.getTransactionOrNull()
+        val previousTransaction = TransactionsStackProvider.stackImpl.getTransactionOrNull()
         if (previousTransaction?.transactionId == transaction.transactionId) return null
 
-        ThreadLocalTransactionsStack.pushTransaction(transaction)
+        TransactionsStackProvider.stackImpl.pushTransaction(transaction)
         return transaction
     }
 
@@ -50,7 +50,7 @@ class TransactionContextElement(
         if (oldState == null) return
 
         // Check if stack is empty - this can happen if withThreadLocalTransaction already popped it
-        val currentTransaction = ThreadLocalTransactionsStack.getTransactionOrNull()
+        val currentTransaction = TransactionsStackProvider.stackImpl.getTransactionOrNull()
         if (currentTransaction == null) {
             exposedLogger.warn(
                 "restoreThreadContext called for transaction ${transaction.transactionId} but stack is already empty. " +
@@ -69,7 +69,7 @@ class TransactionContextElement(
         }
 
         // Safe to pop
-        val poppedTransaction = ThreadLocalTransactionsStack.popTransaction()
+        val poppedTransaction = TransactionsStackProvider.stackImpl.popTransaction()
         if (poppedTransaction.transactionId != transaction.transactionId) {
             exposedLogger.warn(
                 "The current thread local stack of transactions had a transaction ${poppedTransaction.transactionId} on the top. " +
