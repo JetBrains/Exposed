@@ -26,7 +26,11 @@ fun currentTransaction(): Transaction = currentTransactionOrNull() ?: error("No 
  * The method runs code block within the context of provided transaction.
  * If transaction is null, the code block is executed without any transaction context.
  *
+<<<<<<< HEAD
  * Provided transaction will be pushed into [TransactionsHolder] before executing code block,
+=======
+ * Provided transaction will be pushed into [TransactionsStack] before executing code block,
+>>>>>>> f48ded729 (feat: Update use of new TransactionsStack interface)
  * and will be popped from the stack after code block is executed.
  *
  * @param transaction The transaction to be used in the context.
