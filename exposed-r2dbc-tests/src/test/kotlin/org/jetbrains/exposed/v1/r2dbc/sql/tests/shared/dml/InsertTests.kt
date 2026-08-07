@@ -13,7 +13,11 @@ import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.java.UUIDColumnType
 import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.core.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
+import org.jetbrains.exposed.v1.core.statements.PostgreSQLBatchInsertStatement
+import org.jetbrains.exposed.v1.core.statements.StatementContext
+import org.jetbrains.exposed.v1.core.statements.expandArgs
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.datetime.CurrentTimestamp
 import org.jetbrains.exposed.v1.datetime.XCurrentTimestamp
@@ -33,6 +37,7 @@ import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.fail
@@ -200,6 +205,29 @@ class InsertTests : R2dbcDatabaseTestsBase() {
     }
 
     @Test
+    fun testBatchInsertUsesSingleMultiRowStatementForPostgreSQL() {
+        withCitiesAndUsers(exclude = TestDB.ALL - TestDB.POSTGRESQL) { cities, _, _ ->
+            val executedSql = mutableListOf<String>()
+            val logger = object : SqlLogger {
+                override fun log(context: StatementContext, transaction: Transaction) {
+                    executedSql.add(context.expandArgs(transaction))
+                }
+            }
+            addLogger(logger)
+
+            val cityNames = listOf("Paris", "Moscow", "Helsinki")
+            val allCitiesID = cities.batchInsert(cityNames) { name ->
+                this[cities.name] = name
+            }
+
+            assertEquals(cityNames.size, allCitiesID.size)
+            val insertStatements = executedSql.filter { it.startsWith("INSERT", ignoreCase = true) }
+            assertEquals(1, insertStatements.size, "Expected a single collapsed multi-row INSERT, got: $insertStatements")
+            assertTrue(insertStatements.single().count { it == '(' } >= cityNames.size + 1)
+        }
+    }
+
+    @Test
     fun testBatchInsertWithSequence() {
         val cities = DMLTestsData.Cities
         withTables(cities) { testDb ->
@@ -236,6 +264,30 @@ class InsertTests : R2dbcDatabaseTestsBase() {
         statement.addBatch()
         assertDoesNotThrow("Removing the only batch should not restore values from empty data") {
             statement.removeLastBatch()
+        }
+    }
+
+    @Test
+    fun testPostgreSQLBatchInsertRejectsBatchExceedingParameterLimit() {
+        // DMLTestsData.Cities has 2 columns, so the 65535 PostgreSQL bind-parameter limit
+        // is exceeded once more than 32767 rows are batched.
+        // validateLastBatch() requires a transaction in context, but the statement is never executed.
+        withTables(DMLTestsData.Cities) {
+            val statement = PostgreSQLBatchInsertStatement(DMLTestsData.Cities)
+
+            repeat(32767) {
+                statement[DMLTestsData.Cities.name] = "City$it"
+                statement.addBatch()
+            }
+            assertDoesNotThrow("Batch at the parameter limit should not throw") {
+                statement[DMLTestsData.Cities.name] = "City32767"
+                statement.addBatch()
+            }
+
+            assertFailsWith<BatchDataInconsistentException>("Batch exceeding the parameter limit should throw") {
+                statement[DMLTestsData.Cities.name] = "OneRowTooMany"
+                statement.addBatch()
+            }
         }
     }
 

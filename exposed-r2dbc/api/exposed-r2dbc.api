@@ -721,6 +721,15 @@ public class org/jetbrains/exposed/v1/r2dbc/statements/MergeSuspendExecutable : 
 	public fun prepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
+public class org/jetbrains/exposed/v1/r2dbc/statements/PostgreSQLBatchInsertSuspendExecutable : org/jetbrains/exposed/v1/r2dbc/statements/BatchInsertSuspendExecutable {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/PostgreSQLBatchInsertStatement;)V
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/InsertStatement;
+	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/PostgreSQLBatchInsertStatement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
+	public fun isAlwaysBatch ()Z
+}
+
 public final class org/jetbrains/exposed/v1/r2dbc/statements/R2dbcConnectionImpl : org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposedConnection {
 	public fun <init> (Lorg/reactivestreams/Publisher;Ljava/lang/String;Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;)V
 	public fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

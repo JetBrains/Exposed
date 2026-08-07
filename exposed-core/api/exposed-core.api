@@ -3460,6 +3460,15 @@ public class org/jetbrains/exposed/v1/core/statements/MergeTableStatement : org/
 	public fun prepareSQL (Lorg/jetbrains/exposed/v1/core/Transaction;Z)Ljava/lang/String;
 }
 
+public class org/jetbrains/exposed/v1/core/statements/PostgreSQLBatchInsertStatement : org/jetbrains/exposed/v1/core/statements/BatchInsertStatement {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/Table;ZZ)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/Table;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun arguments ()Ljava/lang/Iterable;
+	public fun arguments ()Ljava/util/List;
+	public fun prepareSQL (Lorg/jetbrains/exposed/v1/core/Transaction;Z)Ljava/lang/String;
+	public fun validateLastBatch ()V
+}
+
 public class org/jetbrains/exposed/v1/core/statements/ReplaceSelectStatement : org/jetbrains/exposed/v1/core/statements/InsertSelectStatement {
 	public fun <init> (Ljava/util/List;Lorg/jetbrains/exposed/v1/core/AbstractQuery;)V
 	public fun prepareSQL (Lorg/jetbrains/exposed/v1/core/Transaction;Z)Ljava/lang/String;
