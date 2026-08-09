@@ -106,7 +106,17 @@ class R2dbcDatabase private constructor(
         }
     }
 
-    override val version: Version by lazy { connectionMetadata { getVersion() } }
+    @Volatile
+    private var cachedVersion: Version? = null
+
+    internal suspend fun cacheVersion(connection: R2dbcExposedConnection<*>) {
+        if (cachedVersion == null) {
+            cachedVersion = connection.metadata { getVersion() }
+        }
+    }
+
+    override val version: Version
+        get() = cachedVersion ?: connectionMetadata { getVersion() }.also { cachedVersion = it }
 
     override val fullVersion: String by lazy { connectionMetadata { getDatabaseProductVersion() } }
 

@@ -201,6 +201,7 @@ class TransactionManager(
                             )
                         )
                     }
+                    db.cacheVersion(this)
                 } catch (e: Exception) {
                     try {
                         close()
