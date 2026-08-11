@@ -18,6 +18,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.exposedLogger
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
 import org.jetbrains.exposed.v1.core.transactions.withThreadLocalTransaction
@@ -107,9 +108,9 @@ class R2dbcConnectionImpl(
         withConnection { rollbackTransaction().awaitFirstOrNull() }
     }
 
-    override suspend fun isClosed(): Boolean = withConnection {
+    override suspend fun isClosed(): Boolean = localConnectionLock.withLock { localConnection }?.run {
         !validate(ValidationDepth.LOCAL).awaitSingle() || !validate(ValidationDepth.REMOTE).awaitSingle()
-    }
+    } ?: true
 
     override suspend fun close() {
         localConnectionLock.withLock {
@@ -231,10 +232,11 @@ class R2dbcConnectionImpl(
     private val localConnectionLock = Mutex()
     private var localConnection: Connection? = null
 
+    @Suppress("TooGenericExceptionCaught")
     private suspend fun <T> withConnection(body: suspend Connection.() -> T): T {
         val acquiredConnection = localConnectionLock.withLock {
             localConnection ?: withContext(NonCancellable) { connection.awaitLast() }.also { cx ->
-                runCatching {
+                try {
                     // beginTransaction() starts an explicit transaction with autoCommit mode off
                     transactionDefinition
                         ?.let { originalDefinition ->
@@ -257,18 +259,23 @@ class R2dbcConnectionImpl(
 
                     localConnection = cx
                     transactionDefinition = null
+                } catch (cause: Throwable) {
+                    releaseConnection(cx)
+                    throw cause
                 }
-                    .onFailure {
-                        releaseConnection(cx)
-                    }.getOrThrow()
             }
         }
         return acquiredConnection.body()
     }
 
+    @Suppress("TooGenericExceptionCaught")
     private suspend fun releaseConnection(connection: Connection) {
         withContext(NonCancellable) {
-            runCatching { connection.close().awaitFirstOrNull() }
+            try {
+                connection.close().awaitFirstOrNull()
+            } catch (cause: Exception) {
+                exposedLogger.warn("Failed to release connection: ${cause.message}", cause)
+            }
         }
     }
 }
