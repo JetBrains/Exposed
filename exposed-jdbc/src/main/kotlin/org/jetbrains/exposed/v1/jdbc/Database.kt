@@ -111,7 +111,8 @@ class Database private constructor(
             "jdbc:mariadb" to "org.mariadb.jdbc.Driver",
             "jdbc:oracle" to "oracle.jdbc.OracleDriver",
             "jdbc:sqlite" to "org.sqlite.JDBC",
-            "jdbc:sqlserver" to "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+            "jdbc:sqlserver" to "com.microsoft.sqlserver.jdbc.SQLServerDriver",
+            "jdbc:redshift" to "com.amazon.redshift.Driver"
         )
         private val dialectMapping = mutableMapOf(
             "jdbc:h2" to H2Dialect.dialectName,
@@ -121,7 +122,8 @@ class Database private constructor(
             "jdbc:mariadb" to MariaDBDialect.dialectName,
             "jdbc:oracle" to OracleDialect.dialectName,
             "jdbc:sqlite" to SQLiteDialect.dialectName,
-            "jdbc:sqlserver" to SQLServerDialect.dialectName
+            "jdbc:sqlserver" to SQLServerDialect.dialectName,
+            "jdbc:redshift" to RedshiftDialect.dialectName
         )
 
         private val dialectsMetadata = ConcurrentHashMap<String, () -> DatabaseDialectMetadata>()
@@ -135,6 +137,7 @@ class Database private constructor(
             registerDialect(OracleDialect.dialectName) { OracleDialect() }
             registerDialect(SQLServerDialect.dialectName) { SQLServerDialect() }
             registerDialect(MariaDBDialect.dialectName) { MariaDBDialect() }
+            registerDialect(RedshiftDialect.dialectName) { RedshiftDialect() }
 
             registerDialectMetadata(H2Dialect.dialectName) { H2DialectMetadata() }
             registerDialectMetadata(MysqlDialect.dialectName) { MysqlDialectMetadata() }
@@ -144,6 +147,7 @@ class Database private constructor(
             registerDialectMetadata(OracleDialect.dialectName) { OracleDialectMetadata() }
             registerDialectMetadata(SQLServerDialect.dialectName) { SQLServerDialectMetadata() }
             registerDialectMetadata(MariaDBDialect.dialectName) { MariaDBDialectMetadata() }
+            registerDialectMetadata(RedshiftDialect.dialectName) { RedshiftDialectMetadata() }
         }
 
         /** Registers a new [DatabaseDialectMetadata] with the identifier [prefix]. */

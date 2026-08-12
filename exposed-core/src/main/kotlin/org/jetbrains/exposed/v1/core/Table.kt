@@ -1911,7 +1911,15 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
                 }
 
                 if (checkConstraints.isNotEmpty()) {
-                    checkConstraints().map { it.checkPart }.ifEmpty { null }?.joinTo(this, prefix = ", ")
+                    val effectiveCheckConstraints = checkConstraints()
+                    if (effectiveCheckConstraints.isNotEmpty() && currentDialect.supportsCheckConstraints) {
+                        effectiveCheckConstraints.joinTo(this, prefix = ", ") { it.checkPart }
+                    } else if (effectiveCheckConstraints.isNotEmpty()) {
+                        val tableName = currentTransaction().identity(this@Table)
+                        exposedLogger.warn(
+                            "CHECK constraints for table $tableName are not supported by ${currentDialect.name} and will not be created."
+                        )
+                    }
                 }
 
                 append(")")

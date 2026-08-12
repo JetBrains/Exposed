@@ -36,6 +36,7 @@ Similar to our mascot, Exposed can be used to mimic a variety of database engine
 - [![Oracle](https://img.shields.io/badge/Oracle-F80000?style=for-the-badge&logo=oracle&logoColor=white)](https://www.oracle.com/ca-en/database/technologies/appdev/jdbc-downloads.html)
 - [![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)](https://jdbc.postgresql.org/)
   (Also, PostgreSQL using the [pgjdbc-ng](https://impossibl.github.io/pgjdbc-ng/) JDBC driver)
+- [![Amazon Redshift](https://img.shields.io/badge/Amazon%20Redshift-3b46ca?style=for-the-badge&logo=amazonredshift&logoColor=white)](https://docs.aws.amazon.com/redshift/latest/mgmt/jdbc20-install.html) (JDBC only)
 - [![MicrosoftSQLServer](https://img.shields.io/badge/Microsoft%20SQL%20Server-CC2927?style=for-the-badge&logo=microsoft%20sql%20server&logoColor=white)](https://github.com/microsoft/mssql-jdbc)
 - [![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)](https://github.com/xerial/sqlite-jdbc)
 
