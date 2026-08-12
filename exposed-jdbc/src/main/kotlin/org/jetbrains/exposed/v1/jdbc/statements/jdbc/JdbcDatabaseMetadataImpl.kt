@@ -41,6 +41,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             "PostgreSQL JDBC - NG" -> PostgreSQLNGDialect.dialectName
             "PostgreSQL JDBC Driver" -> PostgreSQLDialect.dialectName
             "Oracle JDBC driver" -> OracleDialect.dialectName
+            "Redshift JDBC Driver" -> RedshiftDialect.dialectName
             else -> {
                 if (driverName.startsWith("Microsoft JDBC Driver ")) {
                     SQLServerDialect.dialectName
@@ -378,6 +379,10 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     }
 
     override fun existingCheckConstraints(vararg tables: Table): Map<Table, List<CheckConstraint>> {
+        if (!currentDialect.supportsCheckConstraints) {
+            return tables.associateWith { emptyList() }
+        }
+
         val result = mutableMapOf<Table, List<CheckConstraint>>()
         tables.forEach { table ->
             val transaction = TransactionManager.current()

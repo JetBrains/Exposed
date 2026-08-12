@@ -17,6 +17,7 @@ mysql51 = "5.1.49"
 mysql80 = "8.4.0"
 oracle = "23.26.3.0.0"
 postgre = "42.7.13"
+redshift = "2.1.0.30"
 postgreNG = "0.8.9"
 sqlite3 = "3.53.2.1"
 sqlserver = "13.2.1.jre11"
@@ -110,6 +111,7 @@ mysql51 = { group = "mysql", name = "mysql-connector-java", version.ref = "mysql
 mysql = { group = "com.mysql", name = "mysql-connector-j", version.ref = "mysql80" }
 pgjdbc-ng = { group = "com.impossibl.pgjdbc-ng", name = "pgjdbc-ng", version.ref = "postgreNG" }
 postgre = { group = "org.postgresql", name = "postgresql", version.ref = "postgre" }
+redshift = { group = "com.amazon.redshift", name = "redshift-jdbc42", version.ref = "redshift" }
 sqlite-jdbc = { group = "org.xerial", name = "sqlite-jdbc", version.ref = "sqlite3" }
 mariadb = { group = "org.mariadb.jdbc", name = "mariadb-java-client", version.ref = "mariaDB" }
 oracle = { group = "com.oracle.database.jdbc", name = "ojdbc11", version.ref = "oracle" }

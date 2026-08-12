@@ -51,6 +51,10 @@
                 <a href="https://impossibl.github.io/pgjdbc-ng/">pgjdbc-ng</a> JDBC driver)
             </li>
             <li>
+                <a href="https://docs.aws.amazon.com/redshift/latest/mgmt/jdbc20-install.html">Amazon Redshift</a>
+                (JDBC only)
+            </li>
+            <li>
                 <a href="https://github.com/microsoft/mssql-jdbc">Microsoft SQL Server</a>
             </li>
             <li>

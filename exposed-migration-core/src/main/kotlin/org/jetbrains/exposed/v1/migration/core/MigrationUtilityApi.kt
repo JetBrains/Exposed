@@ -25,6 +25,7 @@ abstract class MigrationUtilityApi : SchemaUtilityApi() {
         migrationScript.writeText("")
         // Append statements
         forEach { statement ->
+            if (statement.isBlank()) return@forEach
             // Add semicolon only if it's not already there
             val conditionalSemicolon = if (statement.last() == ';') "" else ";"
             migrationScript.appendText("$statement$conditionalSemicolon\n")

@@ -885,6 +885,12 @@ public final class org/jetbrains/exposed/v1/jdbc/vendors/PostgreSQLNGDialectMeta
 	public fun <init> ()V
 }
 
+public class org/jetbrains/exposed/v1/jdbc/vendors/RedshiftDialectMetadata : org/jetbrains/exposed/v1/jdbc/vendors/DatabaseDialectMetadata {
+	public fun <init> ()V
+	public fun existingIndices ([Lorg/jetbrains/exposed/v1/core/Table;)Ljava/util/Map;
+	public fun supportsLimitWithUpdateOrDelete ()Z
+}
+
 public class org/jetbrains/exposed/v1/jdbc/vendors/SQLServerDialectMetadata : org/jetbrains/exposed/v1/jdbc/vendors/DatabaseDialectMetadata {
 	public fun <init> ()V
 }

@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.v1.core.statements
 
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.vendors.currentDialectIfAvailable
+import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import kotlin.properties.Delegates
 
 /**
@@ -40,6 +42,13 @@ open class InsertStatement<Key : Any>(
 
     infix operator fun <T> get(column: Column<T>): T {
         val row = resultedValues?.firstOrNull() ?: error("No key generated")
+        val dialect = currentDialectIfAvailable
+        if (!row.hasValue(column) && column.columnType.isAutoInc && dialect?.supportsGeneratedKeysRetrieval == false) {
+            throw UnsupportedByDialectException(
+                "Generated value for column '${column.table.tableName}.${column.name}' cannot be retrieved",
+                dialect
+            )
+        }
         return row[column]
     }
 
