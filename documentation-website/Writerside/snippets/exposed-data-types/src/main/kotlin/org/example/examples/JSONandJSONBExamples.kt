@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package org.example.examples
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -5,27 +7,25 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.lowerCase
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
+import org.jetbrains.exposed.v1.json.castToJson
 import org.jetbrains.exposed.v1.json.contains
 import org.jetbrains.exposed.v1.json.exists
 import org.jetbrains.exposed.v1.json.extract
 import org.jetbrains.exposed.v1.json.json
-
-const val GROUP_ID_LENGTH = 32
-const val INT_ARRAY_ITEM_1 = 1
-const val INT_ARRAY_ITEM_2 = 2
-const val INT_ARRAY_ITEM_3 = 3
+import org.jetbrains.exposed.v1.json.jsonb
 
 /*
-    Important: The code in this file is referenced by line number in `JSON-and-JSONB.topic`.
-    If you add, remove, or modify any lines prior to this one, ensure you update the corresponding
-    line numbers in the `code-block` element of the referenced file.
-*/
+ * Important: The code in this file is referenced by line number in `JSON-and-JSONB.topic`.
+ * If you add, remove, or modify any lines prior to this one, ensure you update the corresponding
+ * line numbers in the `code-block` element of the referenced file.
+ */
 
 @Serializable
 data class Project(val name: String, val language: String, val active: Boolean)
@@ -33,8 +33,10 @@ data class Project(val name: String, val language: String, val active: Boolean)
 val format = Json { prettyPrint = true }
 
 object TeamsTable : Table("team") {
-    val groupId = varchar("group_id", GROUP_ID_LENGTH)
-    val project = json<Project>("project", format) // equivalent to json("project", format, Project.serializer())
+    val groupId = varchar("group_id", 32)
+
+    // Equivalent to json("project", format, Project.serializer()).
+    val project = json<Project>("project", format)
 }
 
 // using Jackson
@@ -42,14 +44,18 @@ object TeamsTable : Table("team") {
 val mapper = jacksonObjectMapper()
 
 object JacksonTeamsTable : Table("team") {
-    val groupId = varchar("group_id", GROUP_ID_LENGTH)
-    val project = json("project", { mapper.writeValueAsString(it) }, { mapper.readValue<Project>(it) })
+    val groupId = varchar("group_id", 32)
+    val project = json(
+        "project",
+        { mapper.writeValueAsString(it) },
+        { mapper.readValue<Project>(it) }
+    )
 }
 
 object TeamProjectsTable : Table("team_projects") {
     val memberIds = json<IntArray>("member_ids", Json.Default)
     val projects = json<Array<Project>>("projects", Json.Default)
-    // equivalent to:
+    // Equivalent to:
     // @OptIn(ExperimentalSerializationApi::class) json("projects", Json.Default, ArraySerializer(Project.serializer()))
 }
 
@@ -64,21 +70,28 @@ class JSONandJSONBExamples {
             it[project] = mainProject.copy(language = "Kotlin")
         }
 
-        TeamsTable.selectAll().map { "Team ${it[TeamsTable.groupId]} -> ${it[TeamsTable.project]}" }.forEach { println(it) }
+        TeamsTable
+            .selectAll()
+            .map { "Team ${it[TeamsTable.groupId]} -> ${it[TeamsTable.project]}" }
+            .forEach { println(it) }
         // Team A -> Project(name=Main, language=Kotlin, active=true)
     }
 
     /*
-        Generated SQL:
+    Generated SQL:
 
-        SELECT JSON_UNQUOTE(JSON_EXTRACT(team.project, "$.name"))
-        FROM team
-        WHERE LOWER(JSON_UNQUOTE(JSON_EXTRACT(team.project, "$.language"))) = 'kotlin'
+    SELECT JSON_UNQUOTE(JSON_EXTRACT(team.project, "$.name"))
+    FROM team
+    WHERE LOWER(JSON_UNQUOTE(JSON_EXTRACT(team.project, "$.language"))) = 'kotlin'
      */
     fun useExtract() {
         val projectName = TeamsTable.project.extract<String>(".name")
-        val languageIsKotlin = TeamsTable.project.extract<String>(".language").lowerCase() eq "kotlin"
-        TeamsTable.select(projectName).where { languageIsKotlin }.map { it[projectName] }
+        val languageIsKotlin =
+            TeamsTable.project.extract<String>(".language").lowerCase() eq "kotlin"
+        TeamsTable
+            .select(projectName)
+            .where { languageIsKotlin }
+            .map { it[projectName] }
     }
 
     fun useExists() {
@@ -91,8 +104,14 @@ class JSONandJSONBExamples {
     // PostgreSQL example
     fun useExistsWithFilterPath() {
         val mainId = "Main"
-        val hasMainProject = TeamsTable.project.exists(".name ? (@ == \$main)", optional = "{\"main\":\"$mainId\"}")
-        val mainProjects = TeamsTable.selectAll().where { hasMainProject }.map { it[TeamsTable.groupId] }
+        val hasMainProject = TeamsTable.project.exists(
+            ".name ? (@ == \\$main)",
+            optional = "{\"main\":\"$mainId\"}"
+        )
+        val mainProjects = TeamsTable
+            .selectAll()
+            .where { hasMainProject }
+            .map { it[TeamsTable.groupId] }
         println(mainProjects)
     }
 
@@ -105,20 +124,26 @@ class JSONandJSONBExamples {
     // Depending on the database, an optional path can be provided too
     // MySQL example
     fun useContainsWithPath() {
-        val usesKotlinWithPath = TeamsTable.project.contains("\"Kotlin\"", ".language")
-        val kotlinTeams = TeamsTable.selectAll().where { usesKotlinWithPath }.count()
+        val usesKotlinWithPath = TeamsTable.project.contains(
+            "\"Kotlin\"",
+            ".language"
+        )
+        val kotlinTeams = TeamsTable
+            .selectAll()
+            .where { usesKotlinWithPath }
+            .count()
         println(kotlinTeams)
     }
 
     /*
-     Generated SQL:
+    Generated SQL:
 
-     INSERT INTO team_projects (member_ids, projects)
-     VALUES ([1,2,3], [{"name":"A","language":"Kotlin","active":true},{"name":"B","language":"Java","active":true}])
+    INSERT INTO team_projects (member_ids, projects)
+    VALUES ([1,2,3], [{"name":"A","language":"Kotlin","active":true},{"name":"B","language":"Java","active":true}])
      */
     fun insertJSONArrays() {
         TeamProjectsTable.insert {
-            it[memberIds] = intArrayOf(INT_ARRAY_ITEM_1, INT_ARRAY_ITEM_2, INT_ARRAY_ITEM_3)
+            it[memberIds] = intArrayOf(1, 2, 3)
             it[projects] = arrayOf(
                 Project("A", "Kotlin", true),
                 Project("B", "Java", true)
@@ -127,10 +152,10 @@ class JSONandJSONBExamples {
     }
 
     /*
-     Generated SQL:
+    Generated SQL:
 
-     INSERT INTO tasks (project)
-     VALUES (JSONB('{"name":"Main","language":"Java","active":true}'))
+    INSERT INTO tasks (project)
+    VALUES (JSONB('{"name":"Main","language":"Java","active":true}'))
      */
     fun insertJSONBSqlite() {
         TasksTable.insert {
@@ -139,9 +164,9 @@ class JSONandJSONBExamples {
     }
 
     /*
-     Generated SQL:
+    Generated SQL:
 
-     SELECT JSON(tasks.project) ptext FROM tasks
+    SELECT JSON(tasks.project) ptext FROM tasks
      */
     fun selectJSONBSqlite() {
         val projectText = TasksTable.project.alias("ptext")
@@ -150,22 +175,23 @@ class JSONandJSONBExamples {
     }
 
     fun useJsonCast() {
-        ProjectsTable.select(
-            // assumes this column is a JSONB column of type <Project>
-            ProjectsTable.projects.castToJson(),
-            // assumes this column stores valid string input like "{"group":"A","id":"a"}"
-            ProjectsTable.groupId.castToJson<GroupId>()
+        JsonCastTable.select(
+            // Assumes this column is a JSONB column of type <Project>.
+            JsonCastTable.project.castToJson(),
+            // Assumes this column stores valid JSON string input like
+            // "{"name":"Main","language":"Java","active":true}".
+            JsonCastTable.projectText.castToJson<Project>()
         ).toList()
     }
 }
 
 /*
- Generated SQL:
+Generated SQL:
 
- CREATE TABLE IF NOT EXISTS tasks (
+CREATE TABLE IF NOT EXISTS tasks (
     complete BOOLEAN DEFAULT 0 NOT NULL,
     project BLOB DEFAULT (JSONB('{"name":"Main","language":"Kotlin","active":true}')) NOT NULL
- )
+)
  */
 object TasksTable : Table("tasks") {
     val complete = bool("complete").default(false)
@@ -175,4 +201,9 @@ object TasksTable : Table("tasks") {
 
 object TasksRawTable : Table("tasks_raw") {
     val project = jsonb<Project>("project", Json.Default, castToJsonFormat = false)
+}
+
+object JsonCastTable : Table("json_cast") {
+    val project = jsonb<Project>("project", Json.Default)
+    val projectText = varchar("project_text", 256)
 }

@@ -6,7 +6,7 @@
 <tldr>
 
 **Required dependencies**: `org.jetbrains.exposed:exposed-json`
-    
+
 <include from="lib.topic" element-id="jdbc-supported"/>
 <include from="lib.topic" element-id="r2dbc-supported"/>
 </tldr>
@@ -18,12 +18,12 @@ and
 [`jsonb()`](https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.json/jsonb.html)
 functions.
 
-As databases store JSON values either in text or binary format, Exposed provides two types to
-account for any potential differences.
+Databases store JSON values in either text or binary format, so Exposed provides a separate type for each.
 
 ## Add dependencies {id="add-dependency"}
 
 Before using JSON and JSONB column types or functions, add the `%artifact_name%` module to your build file:
+
 <include from="lib.topic" element-id="add-dependency"/>
 
 ## Basic usage {id="basic-usage"}
@@ -34,94 +34,136 @@ the specified type:
 
 ```kotlin
 ```
-{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="5-6,7,17,18-19,29-38"}
+{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="7-9,21,29-40"}
 
-You can also provide serializer and deserializer functions directly. For example, the following definition uses [Jackson](https://github.com/FasterXML/jackson)
-with the `jackson-module-kotlin` dependency and the full form of `json()`:
+You can also provide serializer and deserializer functions directly. For example, the following definition uses
+[Jackson](https://github.com/FasterXML/jackson) with the `jackson-module-kotlin` dependency and the full form of
+`json()`:
 
 ```kotlin
 ```
-{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="3-4,18-19,29,31,41-48"}
+{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="5-6,9,21,43-53"}
+
+### Insert and update JSON data {id="insert-update-json"}
+
+The following examples use the `TeamsTable` definition from the `kotlinx.serialization` example.
+
+To store a JSON value, assign an instance of the serializable class to the column. Exposed serializes it with the
+`Json` instance passed to `json()`:
+
+```kotlin
+```
+{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="64-68"}
+
+To modify a stored value, assign a new instance in an `update()` statement:
+
+```kotlin
+```
+{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="69-71"}
+
+When you read the column, Exposed deserializes the stored JSON back into an instance of the class:
+
+```kotlin
+```
+{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="73-77"}
+
+### Store arrays {id="json-arrays"}
+
+JSON columns can also store arrays. Pass the corresponding Kotlin array type to `json()`, for example `IntArray` for
+integers or `Array<Project>` for objects:
+
+```kotlin
+```
+{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-symbol="TeamProjectsTable"}
+
+To insert values into these columns, use standard Kotlin collections:
+
+<tabs>
+<tab title="Exposed">
+
+```kotlin
+```
+{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="145-151"}
+
+</tab>
+<tab title="SQL">
+
+```sql
+```
+{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="141-142"}
+
+</tab>
+</tabs>
 
 ## Supported types {id="supported-types"}
 
-The `exposed-json` extension module provides the following additional types:
+The `exposed-json` module provides the following column types:
 
 | Column type         | PostgreSQL | MySQL/MariaDB/H2 | SQLite | SQLServer       | Oracle           |
 |---------------------|------------|------------------|--------|-----------------|------------------|
 | [`json()`](#json)   | `JSON`     | `JSON`           | `TEXT` | `NVARCHAR(MAX)` | `VARCHAR2(4000)` |
 | [`jsonb()`](#jsonb) | `JSONB`    | `JSON`           | `BLOB` | `JSONB`         | Not supported    |
 
-The exact SQL type depends on the database dialect. For example, `jsonb()` maps to `JSON` in MySQL and H2 and `BLOB` in
-supported SQLite versions rather than a type named `JSONB`.
+The exact SQL type depends on the database dialect. For example, `jsonb()` maps to `JSON` in MySQL and H2 rather than to
+a type named `JSONB`.
 
 ### `json()` {id="json"}
 
 The [`json()`](https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.json/json.html) column type
-maps to the database `JSON` type. It is used for storing JSON data in text format.
+maps to the database `JSON` type. Use it to store JSON data in text format:
 
 ```kotlin
 val project = json<Project>("project", format)
 ```
 
-> The exact SQL type depends on the database dialect. For exact type mappings, see [](#supported-types).
-> 
-{style="note"}
-
 ### `jsonb()` {id="jsonb"}
 
 The [`jsonb()`](https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.json/jsonb.html) column type
-maps to the database `JSONB` type. It is used for storing JSON data in binary format.
+maps to the database `JSONB` type. Use it to store JSON data in binary format:
 
 ```kotlin
 val project = jsonb<Project>("project", Json.Default)
 ```
 
-> The exact SQL type depends on the database dialect. For exact type mappings, see [](#supported-types).
->
-{style="note"}
-
 #### JSONB support in SQLite {id="sqlite-jsonb"}
 
-SQLite supports storing JSON data in its binary `JSONB` format starting with version 3.45.0.0.
-For SQLite, Exposed maps `jsonb()` columns to `BLOB` and automatically wraps values written to these columns with SQLite's
-`JSONB()` SQL function.
+SQLite supports storing JSON data in its binary `JSONB` format starting with version 3.45.0.0. Exposed maps `jsonb()`
+columns to `BLOB` and wraps values written to them with SQLite's `JSONB()` function.
 
-This behavior also applies to values used in DDL default clauses:
+This applies to values in DDL default clauses:
 
 <tabs>
 <tab title="Exposed">
 
 ```kotlin
 ```
-{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="30-31,161,170-174"}
+{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="196-200"}
 
 </tab>
 <tab title="SQL">
 
 ```sql
 ```
-{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="165-168"}
+{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="191-194"}
 
 </tab>
 </tabs>
 
-
-Exposed also wraps values in `JSONB()` when you use them in DML operations:
+Exposed also wraps values in `JSONB()` in DML operations:
 
 <tabs>
 <tab title="Exposed">
 
 ```kotlin
 ```
-{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="136-138"}
+{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="161-163"}
 
 </tab>
 <tab title="SQL">
 
 ```sql
 ```
-{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="132-133"}
+{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="157-158"}
 
 </tab>
 </tabs>
@@ -138,27 +180,26 @@ function when it reads a `jsonb()` column from SQLite.
 
 ```kotlin
 ```
-{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="147-149"}
+{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="172-173"}
 
 </tab>
 <tab title="SQL">
 
 ```sql
 ```
-{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="144"}
+{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="169"}
 
 </tab>
 </tabs>
 
-To disable this automatic function wrapping in queries, set the `castToJsonFormat` parameter to `false` when defining
-a column:
+To disable this behavior, set the `castToJsonFormat` parameter to `false` when you define the column:
 
 ```kotlin
 ```
-{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="176-178"}
+{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="202-204"}
 
-The `castToJsonFormat` parameter applies only to SQLite and Exposed ignores it for other databases.
-To convert an individual JSONB expression to JSON instead, use the [`.castToJson()`](#cast-to-json) function.
+Exposed ignores `castToJsonFormat` for databases other than SQLite. To convert an individual JSONB expression to JSON,
+use [`.castToJson()`](#cast-to-json).
 
 ## JSON functions {id="json-functions"}
 
@@ -172,12 +213,10 @@ For example, the following query extracts the project name and selects projects 
 
 ```kotlin
 ```
-{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="79-81"}
+{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="88-94"}
 
-For databases that use `$` as the JSON path root, Exposed adds it to the generated path expression automatically. Do not
-include `$` in the path passed to `.extract()`.
-
-For example, when using MySQL, pass `.name` instead of `$.name`.
+For databases that use `$` as the JSON path root, Exposed adds it to the generated path expression automatically, so
+don't include `$` in the path you pass to `.extract()`. For example, in MySQL, pass `.name` instead of `$.name`.
 
 ### Check if data exists
 
@@ -187,73 +226,37 @@ function:
 
 ```kotlin
 ```
-{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="85-86"}
+{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="98-99"}
 
 Some databases also support filter expressions and optional variables in JSON paths:
 
 ```kotlin
 ```
-{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="93-95"}
+{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="106-114"}
 
 ### Check if JSON contains an expression
 
-To check whether an expression is contained within a JSON, use the
+To check whether a JSON expression contains a value, use the
 [`.contains()`](https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.json/contains.html)
 function:
 
 ```kotlin
 ```
-{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="100-101"}
+{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="119-120"}
 
 On supported databases, you can also limit the check to a specific JSON path:
 
 ```kotlin
 ```
-{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="108-109"}
+{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="127-134"}
 
 ### Cast data to JSON type {id="cast-to-json"}
 
-You can cast other supported data types, like text or JSONB, to the JSON data type using the
-[`.castToJson()`](https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.json/cast-to-json.html)
-function:
+Use the [`.castToJson()`](https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.json/cast-to-json.html)
+function to cast other supported types, such as text or JSONB, to JSON:
 
 ```kotlin
 ```
-{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="153-158"}
+{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="178-184"}
 
-On supported databases, you can use `.castToJson()` to cast valid JSON strings stored in a text column
-to the serializable class of your choosing.
-
-## JSON arrays {id="json-arrays"}
-
-JSON columns can also store arrays, allowing structured data to be stored and manipulated
-directly in the database.
-
-To define a JSON column that stores an array, use the
-[`json()`](https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.json/json.html)
-function with the corresponding Kotlin array type.
-
-The following example defines one column for an array of integers and another for an array of `Project` objects:
-
-```kotlin
-```
-{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-symbol="Project, TeamProjectsTable"}
-
-To insert data into the JSON array columns, use standard Kotlin collections:
-
-<tabs>
-<tab title="Exposed">
-
-```kotlin
-```
-{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="120-126"}
-
-</tab>
-<tab title="SQL">
-
-```sql
-```
-{src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="116-117"}
-
-</tab>
-</tabs>
+On supported databases, you can also cast a text column that stores valid JSON strings to a serializable class.
