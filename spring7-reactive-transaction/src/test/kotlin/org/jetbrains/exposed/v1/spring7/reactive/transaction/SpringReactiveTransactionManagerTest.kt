@@ -394,16 +394,18 @@ class SpringReactiveTransactionManagerTest {
             if (timeout != null) this.timeout = timeout
         }
         val trxOp = TransactionalOperator.create(this, trxDef)
-        trxOp.executeAndAwait {
-            TransactionManager.currentOrNull()?.db?.let { db ->
-                assertEquals(
-                    TransactionManager.managerFor(db),
-                    TransactionManager.current().transactionManager
-                )
-            }
+        withExposedReactiveTransactionContext {
+            trxOp.executeAndAwait {
+                TransactionManager.currentOrNull()?.db?.let { db ->
+                    assertEquals(
+                        TransactionManager.managerFor(db),
+                        TransactionManager.current().transactionManager
+                    )
+                }
 
-            if (initializeConnection) TransactionManager.current().connection()
-            body(it)
+                if (initializeConnection) TransactionManager.current().connection()
+                body(it)
+            }
         }
     }
 }

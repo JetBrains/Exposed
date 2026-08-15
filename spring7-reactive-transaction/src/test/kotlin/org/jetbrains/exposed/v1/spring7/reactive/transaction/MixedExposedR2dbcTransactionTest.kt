@@ -1,12 +1,20 @@
 package org.jetbrains.exposed.v1.spring7.reactive.transaction
 
 import io.r2dbc.spi.ConnectionFactory
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.yield
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -20,31 +28,46 @@ import org.springframework.transaction.annotation.Transactional
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotEquals
 
 class MixedExposedR2dbcTransactionTest : SpringReactiveTransactionTestBase() {
 
     @Autowired
     private lateinit var mixedTransactionService: MixedTransactionService
 
+    /**
+     * The database backing this test's Spring context, resolved explicitly rather than relying on the
+     * ambient primary database: other tests in this module (for example `SpringMultiContainerTransactionTest`)
+     * register additional databases in the same JVM, which would otherwise make these bare
+     * `suspendTransaction` calls resolve to whichever database happens to be primary given class order.
+     */
+    private lateinit var database: R2dbcDatabase
+
     @BeforeEach
     fun setUp() = runTest {
-        suspendTransaction {
+        lateinit var resolvedDatabase: R2dbcDatabase
+        transactionManager.execute { resolvedDatabase = TransactionManager.current().db }
+        database = resolvedDatabase
+
+        suspendTransaction(db = database) {
             SchemaUtils.create(CustomerTable)
         }
     }
 
     @AfterEach
     fun tearDown() = runTest {
-        suspendTransaction {
+        suspendTransaction(db = database) {
             SchemaUtils.drop(CustomerTable)
         }
     }
 
     @Test
     fun testSuccessfulMixedTransaction() = runTest {
-        mixedTransactionService.saveTwoThingsSpringTransactional(fail = false)
+        withExposedReactiveTransactionContext {
+            mixedTransactionService.saveTwoThingsSpringTransactional(fail = false)
+        }
 
-        val customers = suspendTransaction { CustomerTable.selectAll().toList() }
+        val customers = suspendTransaction(db = database) { CustomerTable.selectAll().toList() }
 
         assertEquals(2, customers.size)
     }
@@ -52,72 +75,170 @@ class MixedExposedR2dbcTransactionTest : SpringReactiveTransactionTestBase() {
     @Test
     fun testFailedMixedTransaction() = runTest {
         assertFailsWith<RuntimeException> {
-            mixedTransactionService.saveTwoThingsSpringTransactional(fail = true)
+            withExposedReactiveTransactionContext {
+                mixedTransactionService.saveTwoThingsSpringTransactional(fail = true)
+            }
         }
 
-        val customers = suspendTransaction { CustomerTable.selectAll().toList() }
+        val customers = suspendTransaction(db = database) { CustomerTable.selectAll().toList() }
 
         assertEquals(0, customers.size)
     }
 
     @Test
     fun testSuccessfulRequiresNewTransactions() = runTest {
-        mixedTransactionService.withNewTransaction {
-            mixedTransactionService.saveTwoThingsSpringTransactional(fail = false)
+        withExposedReactiveTransactionContext {
             mixedTransactionService.withNewTransaction {
                 mixedTransactionService.saveTwoThingsSpringTransactional(fail = false)
+                mixedTransactionService.withNewTransaction {
+                    mixedTransactionService.saveTwoThingsSpringTransactional(fail = false)
+                }
             }
         }
 
-        val customers = suspendTransaction { CustomerTable.selectAll().toList() }
+        val customers = suspendTransaction(db = database) { CustomerTable.selectAll().toList() }
 
         assertEquals(4, customers.size)
     }
 
     @Test
     fun testFailedRequiresNewTransactions() = runTest {
-        mixedTransactionService.withNewTransaction {
-            mixedTransactionService.saveTwoThingsSpringTransactional(fail = false)
-            assertFailsWith<RuntimeException> {
-                mixedTransactionService.withNewTransaction {
-                    mixedTransactionService.saveTwoThingsSpringTransactional(fail = true)
+        withExposedReactiveTransactionContext {
+            mixedTransactionService.withNewTransaction {
+                mixedTransactionService.saveTwoThingsSpringTransactional(fail = false)
+                assertFailsWith<RuntimeException> {
+                    mixedTransactionService.withNewTransaction {
+                        mixedTransactionService.saveTwoThingsSpringTransactional(fail = true)
+                    }
                 }
             }
         }
 
-        val customers = suspendTransaction { CustomerTable.selectAll().toList() }
+        val customers = suspendTransaction(db = database) { CustomerTable.selectAll().toList() }
 
         assertEquals(2, customers.size)
     }
 
     @Test
     fun testSuccessfulNestedTransactions() = runTest {
-        mixedTransactionService.withNewTransaction {
-            mixedTransactionService.saveTwoThingsSpringTransactional(fail = false)
-            mixedTransactionService.withNestedTransaction {
+        withExposedReactiveTransactionContext {
+            mixedTransactionService.withNewTransaction {
                 mixedTransactionService.saveTwoThingsSpringTransactional(fail = false)
+                mixedTransactionService.withNestedTransaction {
+                    mixedTransactionService.saveTwoThingsSpringTransactional(fail = false)
+                }
             }
         }
 
-        val customers = suspendTransaction { CustomerTable.selectAll().toList() }
+        val customers = suspendTransaction(db = database) { CustomerTable.selectAll().toList() }
 
         assertEquals(4, customers.size)
     }
 
     @Test
     fun testFailedNestedTransactions() = runTest {
-        mixedTransactionService.withNewTransaction {
-            mixedTransactionService.saveTwoThingsSpringTransactional(fail = false)
-            assertFailsWith<RuntimeException> {
-                mixedTransactionService.withNestedTransaction {
-                    mixedTransactionService.saveTwoThingsSpringTransactional(fail = true)
+        withExposedReactiveTransactionContext {
+            mixedTransactionService.withNewTransaction {
+                mixedTransactionService.saveTwoThingsSpringTransactional(fail = false)
+                assertFailsWith<RuntimeException> {
+                    mixedTransactionService.withNestedTransaction {
+                        mixedTransactionService.saveTwoThingsSpringTransactional(fail = true)
+                    }
                 }
             }
         }
 
-        val customers = suspendTransaction { CustomerTable.selectAll().toList() }
+        val customers = suspendTransaction(db = database) { CustomerTable.selectAll().toList() }
 
         assertEquals(2, customers.size)
+    }
+
+    // Barriers intentionally keep both independent @Transactional suspend invocations active
+    // simultaneously so each one must retain its own current transaction, mirroring
+    // SpringCoroutineTest.`concurrent reactive transactions retain their own current transaction`
+    // but through the annotation-driven path instead of TransactionalOperator.
+    @Test
+    fun testInterleavingTransactionalSuspendMethodsRetainOwnTransaction() = runTest {
+        val firstStarted = CompletableDeferred<String>()
+        val secondStarted = CompletableDeferred<Unit>()
+        val firstChecked = CompletableDeferred<Unit>()
+
+        coroutineScope {
+            val first = async {
+                withExposedReactiveTransactionContext {
+                    mixedTransactionService.inTransaction {
+                        val expectedTransactionId = TransactionManager.current().transactionId
+                        firstStarted.complete(expectedTransactionId)
+                        secondStarted.await()
+
+                        mixedTransactionService.saveCustomer()
+
+                        try {
+                            withContext(Dispatchers.IO) {
+                                yield()
+                                assertEquals(expectedTransactionId, TransactionManager.current().transactionId)
+                            }
+                        } finally {
+                            firstChecked.complete(Unit)
+                        }
+                    }
+                }
+            }
+
+            val second = async {
+                val firstTransactionId = firstStarted.await()
+
+                withExposedReactiveTransactionContext {
+                    mixedTransactionService.inTransaction {
+                        val expectedTransactionId = TransactionManager.current().transactionId
+                        assertNotEquals(firstTransactionId, expectedTransactionId)
+                        secondStarted.complete(Unit)
+                        firstChecked.await()
+
+                        mixedTransactionService.saveCustomer()
+
+                        withContext(Dispatchers.Default) {
+                            yield()
+                            assertEquals(expectedTransactionId, TransactionManager.current().transactionId)
+                        }
+                    }
+                }
+            }
+
+            first.await()
+            second.await()
+        }
+
+        val customers = suspendTransaction(db = database) { CustomerTable.selectAll().count() }
+
+        assertEquals(2, customers)
+    }
+
+    // A suspendTransaction started while already inside a @Transactional method must join that
+    // Spring-managed transaction as its outer, rather than opening and committing an independent
+    // transaction - otherwise rows inserted through it would survive a later Spring rollback.
+    @Test
+    fun testNestedSuspendTransactionJoinsAndRollsBackWithSpringTransaction() = runTest {
+        assertFailsWith<RuntimeException> {
+            withExposedReactiveTransactionContext {
+                mixedTransactionService.saveCustomerThenNestedSuspendTransactionCustomer(fail = true)
+            }
+        }
+
+        val customers = suspendTransaction(db = database) { CustomerTable.selectAll().count() }
+
+        assertEquals(0, customers)
+    }
+
+    @Test
+    fun testNestedSuspendTransactionJoinsAndCommitsWithSpringTransaction() = runTest {
+        withExposedReactiveTransactionContext {
+            mixedTransactionService.saveCustomerThenNestedSuspendTransactionCustomer(fail = false)
+        }
+
+        val customers = suspendTransaction(db = database) { CustomerTable.selectAll().count() }
+
+        assertEquals(2, customers)
     }
 }
 
@@ -143,6 +264,37 @@ open class MixedTransactionService {
     @Transactional(propagation = Propagation.NESTED)
     open suspend fun <T> withNestedTransaction(block: suspend () -> T): T {
         return block()
+    }
+
+    @Transactional
+    open suspend fun <T> inTransaction(block: suspend () -> T): T = block()
+
+    @Transactional
+    open suspend fun saveCustomer() {
+        CustomerTable.insert {
+            it[id] = UUID.randomUUID()
+            it[name] = "Test-${UUID.randomUUID()}"
+        }
+    }
+
+    @Transactional
+    open suspend fun saveCustomerThenNestedSuspendTransactionCustomer(fail: Boolean) {
+        CustomerTable.insert {
+            it[id] = UUID.randomUUID()
+            it[name] = "Test-${UUID.randomUUID()}"
+        }
+
+        suspendTransaction {
+            CustomerTable.insert {
+                it[id] = UUID.randomUUID()
+                it[name] = "Test-${UUID.randomUUID()}"
+            }
+        }
+
+        @Suppress("UseCheckOrError")
+        if (fail) {
+            throw IllegalStateException("Fail")
+        }
     }
 
     private suspend fun saveTwoThings(fail: Boolean) {

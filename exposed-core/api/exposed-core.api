@@ -3916,6 +3916,22 @@ public final class org/jetbrains/exposed/v1/core/transactions/TransactionsStackP
 	public final fun getStackImpl ()Lorg/jetbrains/exposed/v1/core/transactions/TransactionsStack;
 }
 
+public final class org/jetbrains/exposed/v1/core/transactions/TransactionsThreadLocalState {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lorg/jetbrains/exposed/v1/core/transactions/TransactionsThreadLocalState;
+	public static synthetic fun copy$default (Lorg/jetbrains/exposed/v1/core/transactions/TransactionsThreadLocalState;Ljava/util/List;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/transactions/TransactionsThreadLocalState;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getTransactions ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/v1/core/transactions/TransactionsThreadLocalStateKt {
+	public static final fun captureTransactionsThreadLocalState ()Lorg/jetbrains/exposed/v1/core/transactions/TransactionsThreadLocalState;
+	public static final fun restoreTransactionsThreadLocalState (Lorg/jetbrains/exposed/v1/core/transactions/TransactionsThreadLocalState;)V
+}
+
 public final class org/jetbrains/exposed/v1/core/transactions/suspend/TransactionContextElement : kotlin/coroutines/AbstractCoroutineContextElement, kotlinx/coroutines/ThreadContextElement {
 	public static final field Key Lorg/jetbrains/exposed/v1/core/transactions/suspend/TransactionContextElement$Key;
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Transaction;)V

@@ -9,7 +9,6 @@ import kotlinx.coroutines.reactor.mono
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.exposedLogger
-import org.jetbrains.exposed.v1.core.transactions.currentTransactionOrNull
 import org.jetbrains.exposed.v1.core.transactions.transactionScope
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
@@ -65,14 +64,17 @@ class SpringReactiveTransactionManager(
 
             synchronizationManager.getResourceOrNull() ?: error("No synchronized transaction to suspend")
 
+            // No thread-local stack mutation here: doSuspend runs on an arbitrary Reactor carrier thread,
+            // so pushing/popping the ambient thread-local stack would leak state onto shared dispatcher
+            // threads. Unbinding the resource is enough - SpringReactiveTransactionContextElement rebuilds
+            // the per-coroutine projection from the currently bound resources on every coroutine resume,
+            // so the suspended transaction stops being visible until doResume rebinds it.
             Mono
                 .justOrEmpty(
                     synchronizationManager.unbindResource(connectionFactory) as ExposedHolderObject
                 )
                 .doOnSuccess {
                     trxObject.connectionHolder = null
-
-                    SpringReactiveTransactionsStack.popTransaction()
                 }
         }
     }
@@ -85,9 +87,10 @@ class SpringReactiveTransactionManager(
         return Mono.defer {
             val suspendedObject = suspendedResources as ExposedHolderObject
 
+            // See doSuspend: rebinding the resource is enough for the per-coroutine projection to pick
+            // the resumed transaction back up; mutating the thread-local stack here would corrupt or leak
+            // state on whichever Reactor carrier thread happens to run this callback.
             synchronizationManager.bindResource(connectionFactory, suspendedObject)
-
-            SpringReactiveTransactionsStack.pushTransaction(suspendedObject.transaction)
 
             Mono.empty()
         }
@@ -107,13 +110,40 @@ class SpringReactiveTransactionManager(
         return Mono.defer {
             val trxObject = transaction as ExposedTransactionObject
 
-            @OptIn(InternalApi::class)
-            val currentTransaction = currentTransactionOrNull() as? R2dbcTransaction
-            val outerTransactionToUse = if (currentTransaction?.db == database) {
-                currentTransaction
-            } else {
-                null
-            }
+            // Resolve the outer transaction to nest under, in order of trustworthiness:
+            // 1. The Spring-bound holder on this transaction object (set by doGetTransaction), which is
+            //    only non-null when Spring itself is nesting inside an existing Spring-managed transaction
+            //    (for example PROPAGATION_NESTED with useNestedTransactions).
+            // 2. The call-site handoff snapshot: doBegin runs as part of createTransactionIfNecessary,
+            //    which completes before the coroutine carrying SpringReactiveTransactionContextElement is
+            //    created (that coroutine is only created once invocation.proceedWithInvocation() is later
+            //    invoked). The handoff is captured synchronously, on the same calling thread, at the actual
+            //    `@Transactional suspend` call site, so it reflects the real ambient Exposed transaction
+            //    (if any). It takes precedence over the live thread-local because this Mono.defer body may
+            //    run on a foreign Reactor carrier thread, whose thread-local can belong to an unrelated
+            //    coroutine.
+            // 3. The live thread-local, for direct programmatic use through TransactionalOperator, which
+            //    has no advisor call site setting the handoff.
+            //
+            // Both lookups are filtered by this manager's database, so a transaction of another type
+            // (for example a JdbcTransaction) or another database sitting on top of the stack never hides a
+            // matching transaction below it.
+            //
+            // PROPAGATION_REQUIRES_NEW must never adopt an ambient outer transaction: Spring has just
+            // suspended any existing Spring-managed transaction in doSuspend, and nesting under a native
+            // Exposed outer would silently turn the "new" transaction into a savepoint on the outer's
+            // connection (and make doCleanupAfterCompletion rebind that outer, colliding with doResume).
+            val outerTransactionToUse = trxObject.connectionHolder?.transaction?.takeIf { it.db == database }
+                ?: if (definition.propagationBehavior == TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
+                    null
+                } else {
+                    @OptIn(InternalApi::class)
+                    SpringReactiveTransactionHandoff.currentOrNull()
+                        ?.transactions
+                        ?.filterIsInstance<R2dbcTransaction>()
+                        ?.lastOrNull { it.db == database }
+                        ?: database.transactionManager.currentOrNull()
+                }
 
             val newTransaction = trxObject.database.transactionManager.newTransaction(
                 isolation = definition.isolationLevel.resolveIsolationLevel(),
@@ -157,8 +187,6 @@ class SpringReactiveTransactionManager(
                         synchronizationManager.unbindResourceIfPossible(connectionFactory) as? ExposedHolderObject
 
                         synchronizationManager.bindResource(connectionFactory, trxObject.connectionHolder!!)
-
-                        SpringReactiveTransactionsStack.pushTransaction(newTransaction)
                     }
                 }
                 .doOnError { ex ->
@@ -213,7 +241,6 @@ class SpringReactiveTransactionManager(
 
             if (trxObject.isNewConnectionHolder) {
                 val previous = synchronizationManager.unbindResource(connectionFactory) as ExposedHolderObject
-                SpringReactiveTransactionsStack.popUntilSynced(previous.transaction)
 
                 // otherwise a PROPAGATION_NESTED transaction would incorrectly have the context of its
                 // now closed inner transaction used when doCommit() or doRollback() is later invoked
@@ -274,8 +301,8 @@ class SpringReactiveTransactionManager(
      */
     private class ExposedHolderObject(
         connection: Connection,
-        val transaction: R2dbcTransaction,
-    ) : ConnectionHolder(connection)
+        override val transaction: R2dbcTransaction,
+    ) : ConnectionHolder(connection), ExposedTransactionResource
 
     private data class ExposedTransactionObject(
         val database: R2dbcDatabase,

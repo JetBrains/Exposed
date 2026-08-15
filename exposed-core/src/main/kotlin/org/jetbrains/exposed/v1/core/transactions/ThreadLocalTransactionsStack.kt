@@ -25,7 +25,7 @@ internal object ThreadLocalTransactionsStack : TransactionsStack {
     private val transactions = ThreadLocal<Stack<Transaction>>()
 
     override val size: Int
-        get() = transactions.get().size
+        get() = transactions.get()?.size ?: 0
 
     /**
      * Pushes the given transaction onto the current thread's stack.
@@ -105,5 +105,25 @@ internal object ThreadLocalTransactionsStack : TransactionsStack {
      */
     override fun getTransactionsAsIds(): List<String> {
         return transactions.get()?.map { it.transactionId } ?: emptyList()
+    }
+
+    /**
+     * Returns an immutable snapshot of the current thread's transaction stack, ordered from bottom to top.
+     * Does not modify the stack.
+     * @suppress
+     */
+    internal fun snapshot(): List<Transaction> = transactions.get()?.toList().orEmpty()
+
+    /**
+     * Replaces the current thread's transaction stack with the provided [snapshot], ordered from bottom to top.
+     * Passing an empty list clears the thread-local entirely.
+     * @suppress
+     */
+    internal fun restore(snapshot: List<Transaction>) {
+        if (snapshot.isEmpty()) {
+            transactions.remove()
+        } else {
+            transactions.set(Stack<Transaction>().apply { addAll(snapshot) })
+        }
     }
 }

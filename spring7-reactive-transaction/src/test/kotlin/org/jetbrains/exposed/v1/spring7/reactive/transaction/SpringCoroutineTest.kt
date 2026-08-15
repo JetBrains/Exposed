@@ -1,14 +1,18 @@
 package org.jetbrains.exposed.v1.spring7.reactive.transaction
 
 import kotlinx.coroutines.*
+import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.RepeatedTest
+import org.junit.jupiter.api.Test
 import org.springframework.test.annotation.Commit
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.time.Duration.Companion.milliseconds
 
 open class SpringCoroutineTest : SpringReactiveTransactionTestBase() {
@@ -26,12 +30,17 @@ open class SpringCoroutineTest : SpringReactiveTransactionTestBase() {
         try {
             SchemaUtils.create(Testing)
 
+            // Detached coroutines (GlobalScope) do not inherit the Spring-managed transaction context,
+            // so they must resolve the database explicitly instead of relying on the ambient default,
+            // which may point at another database registered by an unrelated Spring context in this JVM.
+            val database = TransactionManager.current().db
+
             val mainJob = GlobalScope.async {
                 // @CoroutinesTimeout is not compatible with @Transactional
                 val results = withTimeout(1000.milliseconds) {
                     (1..5).map { indx ->
                         async(Dispatchers.IO) {
-                            suspendTransaction {
+                            suspendTransaction(db = database) {
                                 Testing.insert { }
                                 indx
                             }
@@ -48,6 +57,49 @@ open class SpringCoroutineTest : SpringReactiveTransactionTestBase() {
             assertEquals(5L, Testing.selectAll().count())
         } finally {
             SchemaUtils.drop(Testing)
+        }
+    }
+
+    // Barriers intentionally keep both independent TransactionalOperator subscriptions active
+    // simultaneously so each one must retain its own current transaction.
+    @Test
+    fun `concurrent reactive transactions retain their own current transaction`() = runTest {
+        val firstTransactionStarted = CompletableDeferred<String>()
+        val secondTransactionStarted = CompletableDeferred<Unit>()
+        val firstTransactionChecked = CompletableDeferred<Unit>()
+
+        coroutineScope {
+            val firstTransaction = async {
+                transactionManager.execute {
+                    val expectedTransactionId = TransactionManager.current().transactionId
+                    firstTransactionStarted.complete(expectedTransactionId)
+                    secondTransactionStarted.await()
+                    try {
+                        withContext(Dispatchers.IO) {
+                            yield()
+                            assertEquals(expectedTransactionId, TransactionManager.current().transactionId)
+                        }
+                    } finally {
+                        firstTransactionChecked.complete(Unit)
+                    }
+                }
+            }
+
+            val secondTransaction = async {
+                val firstTransactionId = firstTransactionStarted.await()
+                transactionManager.execute {
+                    val expectedTransactionId = TransactionManager.current().transactionId
+                    assertNotEquals(firstTransactionId, expectedTransactionId)
+                    secondTransactionStarted.complete(Unit)
+                    firstTransactionChecked.await()
+                    withContext(Dispatchers.Default) {
+                        yield()
+                        assertEquals(expectedTransactionId, TransactionManager.current().transactionId)
+                    }
+                }
+            }
+
+            awaitAll(firstTransaction, secondTransaction)
         }
     }
 }
