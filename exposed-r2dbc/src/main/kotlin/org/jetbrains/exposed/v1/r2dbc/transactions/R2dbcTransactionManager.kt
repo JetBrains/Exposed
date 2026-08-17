@@ -4,7 +4,7 @@ import io.r2dbc.spi.IsolationLevel
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
-import org.jetbrains.exposed.v1.core.transactions.TransactionsStackProvider
+import org.jetbrains.exposed.v1.core.transactions.TransactionsHolderProvider
 import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextElement
 import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolder
 import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolderImpl
@@ -73,9 +73,8 @@ internal fun R2dbcTransactionManager.createTransactionContext(transaction: Trans
  * @return The current [R2dbcTransaction] from the stack, or null if no transaction exists
  * @throws [IllegalStateException] If the transaction in the stack is not an [R2dbcTransaction]
  */
-@OptIn(InternalApi::class)
-internal fun R2dbcTransactionManager.getCurrentStackTransaction(): R2dbcTransaction? {
-    val transaction = TransactionsStackProvider.stackImpl.getTransactionOrNull(db)
+internal suspend fun R2dbcTransactionManager.getCurrentContextTransaction(): R2dbcTransaction? {
+    val transaction = currentCoroutineContext()[contextKey]?.transaction
     return when (transaction) {
         null -> null
         is R2dbcTransaction -> transaction
@@ -93,5 +92,5 @@ internal fun R2dbcTransactionManager.getCurrentStackTransaction(): R2dbcTransact
  */
 fun R2dbcTransactionManager.currentOrNull(): R2dbcTransaction? {
     @OptIn(InternalApi::class)
-    return TransactionsStackProvider.stackImpl.getTransactionOrNull(db) as? R2dbcTransaction
+    return TransactionsHolderProvider.holder.getTransactionOrNull(db) as? R2dbcTransaction
 }

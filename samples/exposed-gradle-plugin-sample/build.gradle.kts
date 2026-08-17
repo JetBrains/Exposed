@@ -3,7 +3,7 @@
 
 plugins {
     kotlin("jvm") version "2.3.20"
-    id("org.jetbrains.exposed.plugin") version "1.3.2"
+    id("org.jetbrains.exposed.plugin") version "1.4.0"
 }
 
 dependencies {

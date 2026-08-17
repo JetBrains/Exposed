@@ -30,6 +30,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
+import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
 import org.junit.jupiter.api.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertNotNull
@@ -462,6 +463,49 @@ class JsonColumnTests : R2dbcDatabaseTestsBase() {
 
             assertEquals(newInfo, result[tester.info])
             assertEquals(newUser, result[infoAsJson])
+        }
+    }
+
+    @Test
+    fun testJsonStoredAsClob() {
+        val textTester = object : IntIdTable("json_large_text_tester") {
+            val payload = text("payload")
+        }
+        val jsonTester = object : IntIdTable("json_large_text_tester") {
+            val payload = json<User>("payload", Json.Default)
+        }
+
+        val newUser = User("Pro", "Alpha")
+        var writtenAsText: EntityID<Int>? = null
+        var writtenAsJson: EntityID<Int>? = null
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_ORACLE_LIKE, textTester) {
+            val columnDdl = textTester.payload.descriptionDdl()
+            kotlin.test.assertTrue(
+                columnDdl.contains("CLOB"),
+                "The column must be created as a CLOB for this test to exercise anything, but was: $columnDdl"
+            )
+
+            inTopLevelSuspendTransaction {
+                maxAttempts = 1
+                val textId = textTester.insertAndGetId { it[payload] = Json.encodeToString(newUser) }
+                val jsonId = jsonTester.insertAndGetId { it[payload] = newUser }
+                writtenAsText = textId
+                writtenAsJson = jsonId
+
+                for (id in listOf(textId, jsonId)) {
+                    val row = jsonTester.selectAll().where { jsonTester.id eq id }.single()
+                    assertEquals(newUser, row[jsonTester.payload])
+                }
+            }
+
+            inTopLevelSuspendTransaction {
+                maxAttempts = 1
+                for (id in listOf(assertNotNull(writtenAsText), assertNotNull(writtenAsJson))) {
+                    val row = jsonTester.selectAll().where { jsonTester.id eq id }.single()
+                    assertEquals(newUser, row[jsonTester.payload])
+                }
+            }
         }
     }
 }

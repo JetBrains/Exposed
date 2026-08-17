@@ -6,7 +6,7 @@ import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.statements.StatementContext
 import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
-import org.jetbrains.exposed.v1.core.transactions.TransactionsStackProvider
+import org.jetbrains.exposed.v1.core.transactions.TransactionsHolderProvider
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -45,7 +45,7 @@ class TransactionStackCorruptionTest : DatabaseTestsBase() {
 
         @OptIn(InternalApi::class)
         override fun beforeExecution(transaction: Transaction, context: StatementContext) {
-            val ts = TransactionsStackProvider.stackImpl
+            val ts = TransactionsHolderProvider.holder
             val size = ts.size
             maxStackSize.updateAndGet { current -> maxOf(current, size) }
 
@@ -220,7 +220,7 @@ class TransactionStackCorruptionTest : DatabaseTestsBase() {
             TestTable.insert { it[name] = "Test" }
         }
 
-        val ts = TransactionsStackProvider.stackImpl
+        val ts = TransactionsHolderProvider.holder
         try {
             runBlocking {
                 suspendTransaction(db = testDb) {

@@ -3889,6 +3889,27 @@ public final class org/jetbrains/exposed/v1/core/transactions/TransactionStore :
 	public fun setValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;Ljava/lang/Object;)V
 }
 
+public abstract interface class org/jetbrains/exposed/v1/core/transactions/TransactionsHolder {
+	public fun getPriority ()I
+	public abstract fun getSize ()I
+	public abstract fun getTransactionIsInstance (Ljava/lang/Class;)Lorg/jetbrains/exposed/v1/core/Transaction;
+	public abstract fun getTransactionOrNull ()Lorg/jetbrains/exposed/v1/core/Transaction;
+	public abstract fun getTransactionOrNull (Lorg/jetbrains/exposed/v1/core/DatabaseApi;)Lorg/jetbrains/exposed/v1/core/Transaction;
+	public abstract fun getTransactionsAsIds ()Ljava/util/List;
+	public abstract fun isEmpty ()Z
+	public abstract fun removeTransaction ()Lorg/jetbrains/exposed/v1/core/Transaction;
+	public abstract fun storeTransaction (Lorg/jetbrains/exposed/v1/core/Transaction;)V
+}
+
+public final class org/jetbrains/exposed/v1/core/transactions/TransactionsHolder$DefaultImpls {
+	public static fun getPriority (Lorg/jetbrains/exposed/v1/core/transactions/TransactionsHolder;)I
+}
+
+public final class org/jetbrains/exposed/v1/core/transactions/TransactionsHolderProvider {
+	public static final field INSTANCE Lorg/jetbrains/exposed/v1/core/transactions/TransactionsHolderProvider;
+	public final fun getHolder ()Lorg/jetbrains/exposed/v1/core/transactions/TransactionsHolder;
+}
+
 public final class org/jetbrains/exposed/v1/core/transactions/TransactionsKt {
 	public static final fun currentTransaction ()Lorg/jetbrains/exposed/v1/core/Transaction;
 	public static final fun currentTransactionOrNull ()Lorg/jetbrains/exposed/v1/core/Transaction;

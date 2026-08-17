@@ -12,6 +12,7 @@ import org.jetbrains.exposed.v1.core.statements.api.RowApi
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
+import java.sql.Clob
 
 /**
  * Column for storing JSON data, either in non-binary text format or the vendor's default JSON type format.
@@ -73,13 +74,17 @@ open class JsonColumnType<T : Any>(
     }
 
     override fun readObject(rs: RowApi, index: Int): Any? {
-        return if (currentDialect is PostgreSQLDialect) {
-            rs.getString(index)
-        } else {
-            super.readObject(rs, index)
+        if (currentDialect is PostgreSQLDialect) return rs.getString(index)
+
+        return when (val value = super.readObject(rs, index)) {
+            is Clob -> value.readText()
+            else -> value
         }
     }
 }
+
+/** Reads this large object completely, releasing the reader it was streamed through. */
+private fun Clob.readText(): String = characterStream.use { it.readText() }
 
 /**
  * Creates a column, with the specified [name], for storing JSON data.

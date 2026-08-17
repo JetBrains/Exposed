@@ -1,6 +1,6 @@
 # exposed-version-catalog
 
-A [Gradle version catalog](https://docs.gradle.org/current/userguide/platforms.html#sec:sharing-catalogs)
+A [Gradle version catalog](https://docs.gradle.org/current/userguide/version_catalogs.html#sec:importing-published-catalog)
 for all published Exposed modules. It lets you reference Exposed dependencies through type-safe
 accessors instead of hard-coding coordinates and versions.
 
@@ -15,7 +15,7 @@ dependencyResolutionManagement {
     }
     versionCatalogs {
         create("exposedLibs") {
-            from("org.jetbrains.exposed:exposed-version-catalog:1.3.2")
+            from("org.jetbrains.exposed:exposed-version-catalog:1.4.0")
         }
     }
 }
@@ -34,21 +34,21 @@ dependencies {
 The accessor for each module is its module name with the `exposed-` prefix removed and dashes turned
 into nested accessors, for example:
 
-| Module                    | Accessor                        |
-|---------------------------|---------------------------------|
-| `exposed-core`            | `exposedLibs.core`              |
-| `exposed-jdbc`            | `exposedLibs.jdbc`              |
-| `exposed-r2dbc`           | `exposedLibs.r2dbc`             |
-| `exposed-kotlin-datetime` | `exposedLibs.kotlin.datetime`   |
-| `spring-transaction`      | `exposedLibs.spring.transaction` |
+| Module                    | Accessor                          |
+|---------------------------|-----------------------------------|
+| `exposed-core`            | `exposedLibs.core`                |
+| `exposed-jdbc`            | `exposedLibs.jdbc`                |
+| `exposed-r2dbc`           | `exposedLibs.r2dbc`               |
+| `exposed-kotlin-datetime` | `exposedLibs.kotlin.datetime`     |
+| `spring7-transaction`     | `exposedLibs.spring7.transaction` |
 
 All libraries share the `exposed` version, so you can override the whole Exposed version in one place:
 
 ```kotlin
 versionCatalogs {
     create("exposedLibs") {
-        from("org.jetbrains.exposed:exposed-version-catalog:1.3.2")
-        version("exposed", "1.3.2")
+        from("org.jetbrains.exposed:exposed-version-catalog:1.4.0")
+        version("exposed", "1.4.0")
     }
 }
 ```
