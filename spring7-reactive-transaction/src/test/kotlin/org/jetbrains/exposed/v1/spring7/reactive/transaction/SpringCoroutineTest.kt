@@ -1,14 +1,18 @@
 package org.jetbrains.exposed.v1.spring7.reactive.transaction
 
 import kotlinx.coroutines.*
+import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.RepeatedTest
+import org.junit.jupiter.api.Test
 import org.springframework.test.annotation.Commit
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.time.Duration.Companion.milliseconds
 
 open class SpringCoroutineTest : SpringReactiveTransactionTestBase() {
@@ -50,4 +54,37 @@ open class SpringCoroutineTest : SpringReactiveTransactionTestBase() {
             SchemaUtils.drop(Testing)
         }
     }
+
+    @Test
+    fun `concurrent reactive transactions retain their own current transaction`() = runTest {
+        val firstTransactionStarted = CompletableDeferred<String>()
+        val secondTransactionStarted = CompletableDeferred<Unit>()
+        val firstTransactionChecked = CompletableDeferred<Unit>()
+
+        coroutineScope {
+            val firstTransaction = async {
+                transactionManager.execute {
+                    val expectedTransactionId = TransactionManager.current().transactionId
+                    firstTransactionStarted.complete(expectedTransactionId)
+                    secondTransactionStarted.await()
+                    assertEquals(expectedTransactionId, TransactionManager.current().transactionId)
+                    firstTransactionChecked.complete(Unit)
+                }
+            }
+
+            val secondTransaction = async {
+                val firstTransactionId = firstTransactionStarted.await()
+                transactionManager.execute {
+                    val expectedTransactionId = TransactionManager.current().transactionId
+                    assertNotEquals(firstTransactionId, expectedTransactionId)
+                    secondTransactionStarted.complete(Unit)
+                    firstTransactionChecked.await()
+                    assertEquals(expectedTransactionId, TransactionManager.current().transactionId)
+                }
+            }
+
+            awaitAll(firstTransaction, secondTransaction)
+        }
+    }
+
 }
