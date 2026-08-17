@@ -72,7 +72,7 @@ class SpringReactiveTransactionManager(
                 .doOnSuccess {
                     trxObject.connectionHolder = null
 
-                    SpringReactiveTransactionsStack.popTransaction()
+                    SpringReactiveTransactionsStack.removeTransaction()
                 }
         }
     }
@@ -87,7 +87,7 @@ class SpringReactiveTransactionManager(
 
             synchronizationManager.bindResource(connectionFactory, suspendedObject)
 
-            SpringReactiveTransactionsStack.pushTransaction(suspendedObject.transaction)
+            SpringReactiveTransactionsStack.storeTransaction(suspendedObject.transaction)
 
             Mono.empty()
         }
@@ -158,7 +158,7 @@ class SpringReactiveTransactionManager(
 
                         synchronizationManager.bindResource(connectionFactory, trxObject.connectionHolder!!)
 
-                        SpringReactiveTransactionsStack.pushTransaction(newTransaction)
+                        SpringReactiveTransactionsStack.storeTransaction(newTransaction)
                     }
                 }
                 .doOnError { ex ->
