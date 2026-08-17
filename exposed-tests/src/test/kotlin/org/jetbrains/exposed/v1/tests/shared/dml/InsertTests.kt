@@ -254,7 +254,12 @@ class InsertTests : DatabaseTestsBase() {
             val name = varchar("name", 32).uniqueIndex()
         }
 
-        withTables(excludeSettings = insertIgnoreUnsupportedDB, tester) {
+        // pgjdbc-ng takes the first generated-keys row of every batch entry unconditionally, in
+        // PGPreparedStatement.finishRequest, so an entry the database skipped has no row to take and the driver throws
+        // out of executeBatch() before any of this reaches Exposed
+        val skippedEntryBreaksGeneratedKeys = setOf(TestDB.POSTGRESQLNG)
+
+        withTables(excludeSettings = insertIgnoreUnsupportedDB + skippedEntryBreaksGeneratedKeys, tester) {
             tester.insert { it[tester.name] = "skipped" }
 
             val inserted = tester.batchInsert(listOf("skipped", "added"), ignore = true) { name ->
