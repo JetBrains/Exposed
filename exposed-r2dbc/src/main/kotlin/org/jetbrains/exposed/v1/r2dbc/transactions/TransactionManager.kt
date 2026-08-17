@@ -5,9 +5,9 @@ import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
 import org.jetbrains.exposed.v1.core.transactions.DatabasesManagerImpl
-import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagersContainerImpl
+import org.jetbrains.exposed.v1.core.transactions.TransactionsStackProvider
 import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolder
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
@@ -107,7 +107,6 @@ class TransactionManager(
         @Synchronized
         fun registerManager(database: R2dbcDatabase, manager: R2dbcTransactionManager) {
             contextKeys[manager] = object : CoroutineContext.Key<TransactionContextHolder> {}
-            @OptIn(InternalApi::class)
             transactionManagers.registerDatabaseManager(database, manager)
         }
 
@@ -117,19 +116,17 @@ class TransactionManager(
          */
         @Synchronized
         fun closeAndUnregister(database: R2dbcDatabase) {
-            @OptIn(InternalApi::class)
             val manager = transactionManagers.getTransactionManager(database)
             if (manager != null) {
                 contextKeys.remove(manager)
             }
-            @OptIn(InternalApi::class)
             transactionManagers.closeAndUnregisterDatabase(database)
         }
 
         /** Returns the current [R2dbcTransaction], or `null` if none exists. */
         fun currentOrNull(): R2dbcTransaction? {
             @OptIn(InternalApi::class)
-            return ThreadLocalTransactionsStack.getTransactionIsInstance(R2dbcTransaction::class.java)
+            return TransactionsStackProvider.stackImpl.getTransactionIsInstance(R2dbcTransaction::class.java)
         }
 
         /**

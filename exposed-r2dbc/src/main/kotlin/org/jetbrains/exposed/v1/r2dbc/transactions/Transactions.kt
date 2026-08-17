@@ -8,7 +8,6 @@ import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.SqlLogger
 import org.jetbrains.exposed.v1.core.exposedLogger
-import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.r2dbc.ExposedR2dbcException
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
@@ -78,10 +77,9 @@ private suspend inline fun <T> executeR2dbcTransactionWithErrorHandling(
  * @return The resolved database instance
  * @throws IllegalStateException If no database can be resolved
  */
-@OptIn(InternalApi::class)
 private fun resolveR2dbcDatabaseOrThrow(db: R2dbcDatabase?): R2dbcDatabase {
     return db
-        ?: ThreadLocalTransactionsStack.getTransactionIsInstance(R2dbcTransaction::class.java)?.db
+        ?: TransactionManager.currentOrNull()?.db
         ?: TransactionManager.primaryDatabase
         ?: throw IllegalStateException(
             "No R2DBC database specified and no default database found. " +
@@ -114,7 +112,7 @@ suspend fun <T> suspendTransaction(
     statement: suspend R2dbcTransaction.() -> T
 ): T {
     val databaseToUse = resolveR2dbcDatabaseOrThrow(db)
-    val outer = databaseToUse.transactionManager.getCurrentContextTransaction()
+    val outer = databaseToUse.transactionManager.getCurrentStackTransaction()
 
     return if (outer != null) {
         val transaction = outer.transactionManager.newTransaction(

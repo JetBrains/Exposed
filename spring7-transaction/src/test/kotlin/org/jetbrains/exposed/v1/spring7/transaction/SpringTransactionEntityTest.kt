@@ -6,8 +6,10 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.dao.java.UUIDEntity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.annotation.Commit
@@ -76,6 +78,7 @@ open class Service {
     }
 }
 
+@Tag(MISSING_R2DBC_TEST)
 open class SpringTransactionEntityTest : SpringTransactionTestBase() {
 
     @Autowired

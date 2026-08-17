@@ -19,17 +19,19 @@ import kotlin.concurrent.getOrSet
  * To avoid misuse and potential memory leaks, prefer using the utilities:
  * - withTransactionContext(...)
  * - withThreadLocalTransaction(...)
- * @suppress
  */
-@InternalApi
-object ThreadLocalTransactionsStack {
+@OptIn(InternalApi::class)
+internal object ThreadLocalTransactionsStack : TransactionsStack {
     private val transactions = ThreadLocal<Stack<Transaction>>()
+
+    override val size: Int
+        get() = transactions.get().size
 
     /**
      * Pushes the given transaction onto the current thread's stack.
      * If the stack does not exist yet for this thread, it is created.
      */
-    fun pushTransaction(transaction: Transaction) {
+    override fun pushTransaction(transaction: Transaction) {
         transactions.getOrSet { Stack() }.push(transaction)
     }
 
@@ -42,7 +44,7 @@ object ThreadLocalTransactionsStack {
      * Automatically clears the thread-local when the stack becomes empty,
      * helping the GC and preventing thread-local leaks.
      */
-    fun popTransaction(): Transaction {
+    override fun popTransaction(): Transaction {
         val stack = transactions.get()
         require(stack != null && stack.isNotEmpty()) { "No transaction to pop" }
         val result = stack.pop()
@@ -59,7 +61,7 @@ object ThreadLocalTransactionsStack {
      * Returns the current top transaction or null if none is present.
      * Does not modify the stack.
      */
-    fun getTransactionOrNull(): Transaction? {
+    override fun getTransactionOrNull(): Transaction? {
         val stack = transactions.get() ?: return null
         return if (stack.isEmpty()) null else stack.peek()
     }
@@ -81,11 +83,11 @@ object ThreadLocalTransactionsStack {
      */
     // TODO make search in list is not optimal, another structure should be used
     //  Related issue: https://youtrack.jetbrains.com/issue/EXPOSED-915/ThreadLocalTransactionsStack-makes-inefficient-operations
-    fun getTransactionOrNull(db: DatabaseApi): Transaction? {
+    override fun getTransactionOrNull(db: DatabaseApi): Transaction? {
         return transactions.get()?.findLast { it.db == db }
     }
 
-    fun <T : Transaction> getTransactionIsInstance(klass: Class<T>): T? {
+    override fun <T : Transaction> getTransactionIsInstance(klass: Class<T>): T? {
         return transactions.get()?.filterIsInstance(klass)?.lastOrNull()
     }
 
@@ -93,17 +95,15 @@ object ThreadLocalTransactionsStack {
      * Returns true if the current thread has no transactions,
      * or if the stack exists but is empty.
      */
-    fun isEmpty(): Boolean {
+    override fun isEmpty(): Boolean {
         val stack = transactions.get() ?: return true
         return stack.isEmpty()
     }
 
     /**
-     * Returns transactions that belong to the current thread.
-     *
-     * Made for testing purposes. It's better to avoid manipulating the stack directly.
+     * Returns transactions that belong to the current thread as a list of their String id values.
      */
-    fun threadTransactions(): Stack<Transaction>? {
-        return transactions.get()
+    override fun getTransactionsAsIds(): List<String> {
+        return transactions.get()?.map { it.transactionId } ?: emptyList()
     }
 }
