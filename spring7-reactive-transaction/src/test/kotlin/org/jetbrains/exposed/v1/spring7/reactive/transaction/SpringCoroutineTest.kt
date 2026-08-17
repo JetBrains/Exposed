@@ -86,5 +86,4 @@ open class SpringCoroutineTest : SpringReactiveTransactionTestBase() {
             awaitAll(firstTransaction, secondTransaction)
         }
     }
-
 }
