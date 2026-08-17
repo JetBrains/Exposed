@@ -6,13 +6,14 @@ import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
  * [Hasher] that uses the scrypt algorithm, salting each value individually.
  *
  * This requires BouncyCastle (`org.bouncycastle:bcprov-jdk18on`) on the runtime classpath, which `exposed-crypt`
- * does not depend on; constructing it throws an [IllegalStateException] if BouncyCastle is missing.
+ * does not depend on.
  *
  * @param cpuCost CPU cost of the algorithm, as a power of 2 greater than 1
  * @param memoryCost Memory cost of the algorithm
  * @param parallelization Parallelization of the algorithm
  * @param keyLength Length in bytes of the generated key
  * @param saltLength Length in bytes of the randomly generated salt
+ * @throws IllegalStateException If BouncyCastle is not on the runtime classpath.
  */
 class SCryptHasher(
     cpuCost: Int = DEFAULT_CPU_COST,

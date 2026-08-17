@@ -4,7 +4,11 @@ import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.crypt.BCryptHasher
+import org.jetbrains.exposed.v1.crypt.Hashed
+import org.jetbrains.exposed.v1.crypt.Hasher
+import org.jetbrains.exposed.v1.crypt.hash
 import org.jetbrains.exposed.v1.crypt.hashed
+import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
@@ -13,6 +17,7 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -22,8 +27,31 @@ class HashedColumnTests : R2dbcDatabaseTestsBase() {
 
         const val PASSWORD = "s3cret"
         const val WRONG_PASSWORD = "s3cr3t"
+        const val RECOVERY_CODE = "r3covery"
 
         const val TESTER_TABLE = "HashedTester"
+    }
+
+    @Test
+    fun testColumnDeclaredWithoutAHasherHashesWithBCrypt() {
+        val tester = object : IntIdTable(TESTER_TABLE) {
+            val password = text("password").hashed()
+            val recoveryCode = varchar("recovery_code", 60).nullable().hashed()
+        }
+
+        withTables(tester) {
+            tester.insert {
+                it[password] = tester.password.hash(PASSWORD)
+                it[recoveryCode] = tester.recoveryCode.hash(RECOVERY_CODE)
+            }
+
+            val stored = tester.selectAll().single()
+            assertTrue(stored[tester.password].matches(PASSWORD))
+            assertFalse(stored[tester.password].matches(WRONG_PASSWORD))
+            assertTrue(assertNotNull(stored[tester.recoveryCode]).matches(RECOVERY_CODE))
+
+            assertTrue(BCryptHasher().matches(PASSWORD, stored[tester.password].encodedValue))
+        }
     }
 
     @Test
@@ -58,6 +86,41 @@ class HashedColumnTests : R2dbcDatabaseTestsBase() {
     }
 
     @Test
+    fun testColumnHashesWhenTheHashingTransformIsNotTheOutermostOne() {
+        val hasher = BCryptHasher(strength = TEST_BCRYPT_STRENGTH)
+        val tester = object : IntIdTable(TESTER_TABLE) {
+            val password = text("password").hashed(hasher).transform(wrap = { it }, unwrap = { it })
+        }
+
+        withTables(tester) {
+            tester.insert { it[password] = tester.password.hash(PASSWORD) }
+
+            val stored = tester.selectAll().single()[tester.password]
+            assertTrue(stored.matches(PASSWORD))
+            assertFalse(stored.matches(WRONG_PASSWORD))
+        }
+    }
+
+    @Test
+    fun testStoredHashIsNotHashedAgainWhenWrittenBack() {
+        val hasher = BCryptHasher(strength = TEST_BCRYPT_STRENGTH)
+        val tester = object : IntIdTable(TESTER_TABLE) {
+            val password = text("password").hashed(hasher)
+        }
+
+        withTables(tester) {
+            val originalId = tester.insertAndGetId { it[password] = hasher.hash(PASSWORD) }
+            val original = tester.selectAll().where { tester.id eq originalId }.single()[tester.password]
+
+            val copyId = tester.insertAndGetId { it[password] = original }
+            val copy = tester.selectAll().where { tester.id eq copyId }.single()[tester.password]
+
+            assertEquals(original.encodedValue, copy.encodedValue)
+            assertTrue(copy.matches(PASSWORD))
+        }
+    }
+
+    @Test
     fun testUpdateReplacesStoredHash() {
         val hasher = BCryptHasher(strength = TEST_BCRYPT_STRENGTH)
         val tester = object : IntIdTable(TESTER_TABLE) {
@@ -80,6 +143,47 @@ class HashedColumnTests : R2dbcDatabaseTestsBase() {
             val rewritten = tester.selectAll().where { tester.id eq id }.single()[tester.password]
             assertEquals(stored.encodedValue, rewritten.encodedValue)
             assertTrue(rewritten.matches(newPassword))
+        }
+    }
+
+    @Test
+    fun testHashedWrapsAHashProducedElsewhereWithoutRehashingIt() {
+        val foreignHash = BCryptHasher(strength = TEST_BCRYPT_STRENGTH + 1).hash(PASSWORD).encodedValue
+
+        val hasher = BCryptHasher(strength = TEST_BCRYPT_STRENGTH)
+        val tester = object : IntIdTable(TESTER_TABLE) {
+            val password = text("password").hashed(hasher)
+        }
+
+        withTables(tester) {
+            tester.insert { it[password] = Hashed(hasher, foreignHash) }
+
+            val stored = tester.selectAll().single()[tester.password]
+            assertEquals(foreignHash, stored.encodedValue)
+            assertTrue(stored.matches(PASSWORD))
+        }
+    }
+
+    private class ReversingHasher : Hasher {
+        override fun hash(plainText: String): Hashed = Hashed(this, plainText.reversed())
+
+        override fun matches(plainText: String, encodedValue: String): Boolean = plainText.reversed() == encodedValue
+    }
+
+    @Test
+    fun testCustomHasherIsUsableAsAColumn() {
+        val hasher = ReversingHasher()
+        val tester = object : IntIdTable(TESTER_TABLE) {
+            val password = text("password").hashed(hasher)
+        }
+
+        withTables(tester) {
+            tester.insert { it[password] = hasher.hash(PASSWORD) }
+
+            val stored = tester.selectAll().single()[tester.password]
+            assertEquals(PASSWORD.reversed(), stored.encodedValue)
+            assertTrue(stored.matches(PASSWORD))
+            assertFalse(stored.matches(WRONG_PASSWORD))
         }
     }
 }

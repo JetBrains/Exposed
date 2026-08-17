@@ -7,9 +7,11 @@ import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
@@ -101,6 +103,7 @@ class HashedColumnTests : DatabaseTestsBase() {
         }
     }
 
+    @Tag(NOT_APPLICABLE_TO_R2DBC)
     @Test
     fun testEachAlgorithmVerifiesItsOwnHashesAndSaltsThem() {
         val hashers = arrayOf(
