@@ -64,7 +64,7 @@ interface TransactionsHolder {
     fun <T : Transaction> getTransactionIsInstance(klass: Class<T>): T?
 
     /**
-     * Returns whether the underlying data structure stores any [Transaction] instances.\
+     * Returns whether the underlying data structure stores any [Transaction] instances.
      * @suppress
      */
     fun isEmpty(): Boolean
