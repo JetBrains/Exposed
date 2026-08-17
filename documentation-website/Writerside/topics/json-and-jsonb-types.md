@@ -1,6 +1,6 @@
 [//]: # (title: JSON and JSONB types)
 
-<show-structure for="chapter" depth="2" />
+<show-structure for="chapter" depth="3" />
 <var name="artifact_name" value="exposed-json"/>
 
 <tldr>
@@ -48,8 +48,8 @@ You can also provide serializer and deserializer functions directly. For example
 
 The following examples use the `TeamsTable` definition from the `kotlinx.serialization` example.
 
-To store a JSON value, assign an instance of the serializable class to the column. Exposed serializes it with the
-`Json` instance passed to `json()`:
+To store a JSON value, assign an instance of the serializable class to the column. Exposed serializes the value using
+the `Json` instance passed to the `jsonConfig` parameter of [`json()`](#json):
 
 ```kotlin
 ```
@@ -99,30 +99,34 @@ To insert values into these columns, use standard Kotlin collections:
 
 The `exposed-json` module provides the following column types:
 
-| Column type         | PostgreSQL | MySQL/MariaDB/H2 | SQLite | SQLServer       | Oracle           |
-|---------------------|------------|------------------|--------|-----------------|------------------|
-| [`json()`](#json)   | `JSON`     | `JSON`           | `TEXT` | `NVARCHAR(MAX)` | `VARCHAR2(4000)` |
-| [`jsonb()`](#jsonb) | `JSONB`    | `JSON`           | `BLOB` | `JSONB`         | Not supported    |
+| Column type         | PostgreSQL | MySQL / MariaDB / H2 | SQLite | SQLServer       | Oracle           |
+|---------------------|------------|----------------------|--------|-----------------|------------------|
+| [`json()`](#json)   | `JSON`     | `JSON`               | `TEXT` | `NVARCHAR(MAX)` | `VARCHAR2(4000)` |
+| [`jsonb()`](#jsonb) | `JSONB`    | `JSON`               | `BLOB` | Not supported   | Not supported    |
 
 The exact SQL type depends on the database dialect. For example, `jsonb()` maps to `JSON` in MySQL and H2 rather than to
 a type named `JSONB`.
 
 ### `json()` {id="json"}
 
-The [`json()`](https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.json/json.html) column type
-maps to the database `JSON` type. Use it to store JSON data in text format:
+Use [`json()`](https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.json/json.html) to define
+a column that stores JSON data in a text-based representation.
+
+When using `kotlinx.serialization`, pass the `Json` instance to the `jsonConfig` parameter:
 
 ```kotlin
-val project = json<Project>("project", format)
+val project = json<Project>("project", jsonConfig = format)
 ```
 
 ### `jsonb()` {id="jsonb"}
 
-The [`jsonb()`](https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.json/jsonb.html) column type
-maps to the database `JSONB` type. Use it to store JSON data in binary format:
+Use the [`jsonb()`](https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.json/jsonb.html) to 
+define a column for JSON data that the database can store in a binary representation, where supported.
+
+When using `kotlinx.serialization`, pass the `Json` instance to the `jsonConfig` parameter:
 
 ```kotlin
-val project = jsonb<Project>("project", Json.Default)
+val project = jsonb<Project>("project", jsonConfig = Json.Default)
 ```
 
 #### JSONB support in SQLite {id="sqlite-jsonb"}
@@ -253,10 +257,11 @@ On supported databases, you can also limit the check to a specific JSON path:
 ### Cast data to JSON type {id="cast-to-json"}
 
 Use the [`.castToJson()`](https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.json/cast-to-json.html)
-function to cast other supported types, such as text or JSONB, to JSON:
+function to cast other supported types, such as JSONB, to JSON:
 
 ```kotlin
 ```
 {src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt" include-lines="178-184"}
 
-On supported databases, you can also cast a text column that stores valid JSON strings to a serializable class.
+As shown on the example above, on supported databases, you can also cast a text column that stores valid JSON strings to
+a serializable class.
