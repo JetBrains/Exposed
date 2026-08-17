@@ -28,17 +28,17 @@ import kotlin.concurrent.getOrSet
  * - withThreadLocalTransaction(...)
  */
 @OptIn(InternalApi::class)
-internal object ThreadLocalTransactionsStack : TransactionsStack {
+internal object ThreadLocalTransactionsStack : TransactionsHolder {
     private val transactions = ThreadLocal<Stack<Transaction>>()
 
     override val size: Int
-        get() = transactions.get().size
+        get() = transactions.get()?.size ?: 0
 
     /**
      * Pushes the given transaction onto the current thread's stack.
      * If the stack does not exist yet for this thread, it is created.
      */
-    override fun pushTransaction(transaction: Transaction) {
+    override fun storeTransaction(transaction: Transaction) {
         transactions.getOrSet { Stack() }.push(transaction)
     }
 
@@ -51,7 +51,7 @@ internal object ThreadLocalTransactionsStack : TransactionsStack {
      * Automatically clears the thread-local when the stack becomes empty,
      * helping the GC and preventing thread-local leaks.
      */
-    override fun popTransaction(): Transaction {
+    override fun removeTransaction(): Transaction {
         val stack = transactions.get()
         require(stack != null && stack.isNotEmpty()) { "No transaction to pop" }
         val result = stack.pop()

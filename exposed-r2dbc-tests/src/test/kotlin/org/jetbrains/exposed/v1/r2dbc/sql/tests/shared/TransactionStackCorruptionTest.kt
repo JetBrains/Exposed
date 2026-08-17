@@ -7,7 +7,7 @@ import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.statements.StatementContext
 import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
-import org.jetbrains.exposed.v1.core.transactions.TransactionsStackProvider
+import org.jetbrains.exposed.v1.core.transactions.TransactionsHolderProvider
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
@@ -35,7 +35,7 @@ class TransactionStackCorruptionTest : R2dbcDatabaseTestsBase() {
 
         @OptIn(InternalApi::class)
         override fun beforeExecution(transaction: Transaction, context: StatementContext) {
-            val ts = TransactionsStackProvider.stackImpl
+            val ts = TransactionsHolderProvider.holder
             val size = ts.size
             maxStackSize.updateAndGet { current -> maxOf(current, size) }
 
@@ -190,7 +190,7 @@ class TransactionStackCorruptionTest : R2dbcDatabaseTestsBase() {
             TestTable.insert { it[name] = "Test" }
         }
 
-        val ts = TransactionsStackProvider.stackImpl
+        val ts = TransactionsHolderProvider.holder
         try {
             suspendTransaction(db = testDb) {
                 // At this point, suspendTransaction is already on stack (pushed by TransactionContextElement)

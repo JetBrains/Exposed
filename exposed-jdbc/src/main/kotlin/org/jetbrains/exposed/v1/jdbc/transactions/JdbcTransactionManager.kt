@@ -4,7 +4,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
-import org.jetbrains.exposed.v1.core.transactions.TransactionsStackProvider
+import org.jetbrains.exposed.v1.core.transactions.TransactionsHolderProvider
 import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextElement
 import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolder
 import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolderImpl
@@ -91,5 +91,5 @@ internal suspend fun JdbcTransactionManager.getCurrentContextTransaction(): Jdbc
  */
 fun JdbcTransactionManager.currentOrNull(): JdbcTransaction? {
     @OptIn(InternalApi::class)
-    return TransactionsStackProvider.stackImpl.getTransactionOrNull(db) as? JdbcTransaction
+    return TransactionsHolderProvider.holder.getTransactionOrNull(db) as? JdbcTransaction
 }
