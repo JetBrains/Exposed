@@ -3,11 +3,11 @@ package org.jetbrains.exposed.v1.spring7.reactive.transaction
 import org.jetbrains.exposed.v1.core.DatabaseApi
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Transaction
-import org.jetbrains.exposed.v1.core.transactions.TransactionsStack
+import org.jetbrains.exposed.v1.core.transactions.TransactionsHolder
 import java.util.*
 
 @OptIn(InternalApi::class)
-internal object SpringReactiveTransactionsStack : TransactionsStack {
+internal object SpringReactiveTransactionsStack : TransactionsHolder {
     private var transactions: Stack<Transaction>? = null
 
     override val priority: Int
@@ -16,14 +16,14 @@ internal object SpringReactiveTransactionsStack : TransactionsStack {
     override val size: Int
         get() = transactions?.size ?: 0
 
-    override fun pushTransaction(transaction: Transaction) {
+    override fun storeTransaction(transaction: Transaction) {
         if (transactions == null) {
             transactions = Stack()
         }
         transactions?.push(transaction) ?: error("Error on transaction stack")
     }
 
-    override fun popTransaction(): Transaction {
+    override fun removeTransaction(): Transaction {
         val stack = transactions?.ifEmpty { null } ?: error("No transaction to pop")
         val result = stack.pop()
 
@@ -37,7 +37,7 @@ internal object SpringReactiveTransactionsStack : TransactionsStack {
 
     internal fun popUntilSynced(transaction: Transaction) {
         while (true) {
-            val popped = popTransaction()
+            val popped = removeTransaction()
             if (popped.transactionId == transaction.transactionId) break
         }
     }
@@ -66,15 +66,15 @@ internal object SpringReactiveTransactionsStack : TransactionsStack {
 }
 
 @OptIn(InternalApi::class)
-internal class SpringReactiveTransactionsStackProxy : TransactionsStack {
+internal class SpringReactiveTransactionsStackProxy : TransactionsHolder {
     override val size: Int
         get() = SpringReactiveTransactionsStack.size
 
-    override fun pushTransaction(transaction: Transaction) {
-        SpringReactiveTransactionsStack.pushTransaction(transaction)
+    override fun storeTransaction(transaction: Transaction) {
+        SpringReactiveTransactionsStack.storeTransaction(transaction)
     }
 
-    override fun popTransaction(): Transaction = SpringReactiveTransactionsStack.popTransaction()
+    override fun removeTransaction(): Transaction = SpringReactiveTransactionsStack.removeTransaction()
     override fun getTransactionOrNull(): Transaction? = SpringReactiveTransactionsStack.getTransactionOrNull()
     override fun getTransactionOrNull(db: DatabaseApi): Transaction? = SpringReactiveTransactionsStack.getTransactionOrNull(db)
     override fun <T : Transaction> getTransactionIsInstance(klass: Class<T>): T? = SpringReactiveTransactionsStack.getTransactionIsInstance(klass)

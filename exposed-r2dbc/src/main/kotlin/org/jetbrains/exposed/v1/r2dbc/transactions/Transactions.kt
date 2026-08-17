@@ -112,7 +112,7 @@ suspend fun <T> suspendTransaction(
     statement: suspend R2dbcTransaction.() -> T
 ): T {
     val databaseToUse = resolveR2dbcDatabaseOrThrow(db)
-    val outer = databaseToUse.transactionManager.getCurrentStackTransaction()
+    val outer = databaseToUse.transactionManager.getCurrentContextTransaction()
 
     return if (outer != null) {
         val transaction = outer.transactionManager.newTransaction(
