@@ -1,8 +1,32 @@
+public abstract interface annotation class org/jetbrains/exposed/v1/spring7/reactive/transaction/EnableExposedReactiveTransactionManagement : java/lang/annotation/Annotation {
+}
+
+public class org/jetbrains/exposed/v1/spring7/reactive/transaction/ExposedReactiveTransactionManagementConfiguration {
+	public fun <init> ()V
+	public fun exposedReactiveTransactionContextAdvisor ()Lorg/springframework/aop/Advisor;
+}
+
 public final class org/jetbrains/exposed/v1/spring7/reactive/transaction/ExposedSpringTransactionAttributeSource : org/springframework/transaction/interceptor/TransactionAttributeSource {
 	public fun <init> ()V
 	public fun <init> (Lorg/springframework/transaction/interceptor/TransactionAttributeSource;Ljava/util/List;)V
 	public synthetic fun <init> (Lorg/springframework/transaction/interceptor/TransactionAttributeSource;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun getTransactionAttribute (Ljava/lang/reflect/Method;Ljava/lang/Class;)Lorg/springframework/transaction/interceptor/TransactionAttribute;
+}
+
+public final class org/jetbrains/exposed/v1/spring7/reactive/transaction/SpringReactiveTransactionContextElement : kotlin/coroutines/AbstractCoroutineContextElement, kotlinx/coroutines/ThreadContextElement {
+	public static final field Key Lorg/jetbrains/exposed/v1/spring7/reactive/transaction/SpringReactiveTransactionContextElement$Key;
+	public fun <init> ()V
+	public synthetic fun restoreThreadContext (Lkotlin/coroutines/CoroutineContext;Ljava/lang/Object;)V
+	public fun restoreThreadContext (Lkotlin/coroutines/CoroutineContext;Lorg/jetbrains/exposed/v1/core/transactions/TransactionsThreadLocalState;)V
+	public synthetic fun updateThreadContext (Lkotlin/coroutines/CoroutineContext;)Ljava/lang/Object;
+	public fun updateThreadContext (Lkotlin/coroutines/CoroutineContext;)Lorg/jetbrains/exposed/v1/core/transactions/TransactionsThreadLocalState;
+}
+
+public final class org/jetbrains/exposed/v1/spring7/reactive/transaction/SpringReactiveTransactionContextElement$Key : kotlin/coroutines/CoroutineContext$Key {
+}
+
+public final class org/jetbrains/exposed/v1/spring7/reactive/transaction/SpringReactiveTransactionContextElementKt {
+	public static final fun withExposedReactiveTransactionContext (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/v1/spring7/reactive/transaction/SpringReactiveTransactionManager : org/springframework/transaction/reactive/AbstractReactiveTransactionManager {
