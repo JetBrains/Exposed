@@ -7,7 +7,7 @@ import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
 import org.jetbrains.exposed.v1.core.transactions.DatabasesManagerImpl
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagersContainerImpl
-import org.jetbrains.exposed.v1.core.transactions.TransactionsStackProvider
+import org.jetbrains.exposed.v1.core.transactions.TransactionsHolderProvider
 import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolder
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
@@ -126,7 +126,7 @@ class TransactionManager(
         /** Returns the current [R2dbcTransaction], or `null` if none exists. */
         fun currentOrNull(): R2dbcTransaction? {
             @OptIn(InternalApi::class)
-            return TransactionsStackProvider.stackImpl.getTransactionIsInstance(R2dbcTransaction::class.java)
+            return TransactionsHolderProvider.holder.getTransactionIsInstance(R2dbcTransaction::class.java)
         }
 
         /**

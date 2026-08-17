@@ -4,7 +4,7 @@ import kotlinx.coroutines.ThreadContextElement
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.exposedLogger
-import org.jetbrains.exposed.v1.core.transactions.TransactionsStackProvider
+import org.jetbrains.exposed.v1.core.transactions.TransactionsHolderProvider
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
 
@@ -26,16 +26,16 @@ class TransactionContextElement(
 
     /**
      * Updates the thread context when the coroutine is resumed on a thread.
-     * Pushes the transaction onto the thread-local stack and returns the previous transaction.
+     * Pushes the transaction onto the current transactions data holder and returns the previous transaction.
      *
      * @param context The coroutine context.
      * @return The previous transaction that was on top of the stack, or null if none existed.
      */
     override fun updateThreadContext(context: CoroutineContext): Transaction? {
-        val previousTransaction = TransactionsStackProvider.stackImpl.getTransactionOrNull()
+        val previousTransaction = TransactionsHolderProvider.holder.getTransactionOrNull()
         if (previousTransaction?.transactionId == transaction.transactionId) return null
 
-        TransactionsStackProvider.stackImpl.pushTransaction(transaction)
+        TransactionsHolderProvider.holder.storeTransaction(transaction)
         return transaction
     }
 
@@ -50,7 +50,7 @@ class TransactionContextElement(
         if (oldState == null) return
 
         // Check if stack is empty - this can happen if withThreadLocalTransaction already popped it
-        val currentTransaction = TransactionsStackProvider.stackImpl.getTransactionOrNull()
+        val currentTransaction = TransactionsHolderProvider.holder.getTransactionOrNull()
         if (currentTransaction == null) {
             exposedLogger.warn(
                 "restoreThreadContext called for transaction ${transaction.transactionId} but stack is already empty. " +
@@ -69,7 +69,7 @@ class TransactionContextElement(
         }
 
         // Safe to pop
-        val poppedTransaction = TransactionsStackProvider.stackImpl.popTransaction()
+        val poppedTransaction = TransactionsHolderProvider.holder.removeTransaction()
         if (poppedTransaction.transactionId != transaction.transactionId) {
             exposedLogger.warn(
                 "The current thread local stack of transactions had a transaction ${poppedTransaction.transactionId} on the top. " +

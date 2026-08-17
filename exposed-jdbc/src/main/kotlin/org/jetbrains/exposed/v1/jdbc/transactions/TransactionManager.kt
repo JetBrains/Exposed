@@ -6,7 +6,7 @@ import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
 import org.jetbrains.exposed.v1.core.transactions.DatabasesManagerImpl
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagersContainerImpl
-import org.jetbrains.exposed.v1.core.transactions.TransactionsStackProvider
+import org.jetbrains.exposed.v1.core.transactions.TransactionsHolderProvider
 import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolder
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
@@ -158,7 +158,7 @@ class TransactionManager(
         /** Returns the current [JdbcTransaction], or `null` if none exists. */
         fun currentOrNull(): JdbcTransaction? {
             @OptIn(InternalApi::class)
-            return TransactionsStackProvider.stackImpl.getTransactionIsInstance(JdbcTransaction::class.java)
+            return TransactionsHolderProvider.holder.getTransactionIsInstance(JdbcTransaction::class.java)
         }
 
         /**

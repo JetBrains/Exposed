@@ -3,6 +3,7 @@ package org.jetbrains.exposed.v1.core.transactions
 import org.jetbrains.exposed.v1.core.DatabaseApi
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.exposedLogger
 import java.util.*
 
 /**
@@ -10,7 +11,7 @@ import java.util.*
  * @suppress
  */
 @InternalApi
-interface TransactionsStack {
+interface TransactionsHolder {
     /**
      * When multiple implementations of this interface are detected, this value determines which one will be used,
      * with the highest value implementation being chosen.
@@ -33,13 +34,13 @@ interface TransactionsStack {
      * Stores the provided [transaction] to the underlying data structure.
      * @suppress
      */
-    fun pushTransaction(transaction: Transaction)
+    fun storeTransaction(transaction: Transaction)
 
     /**
      * Removes the currently active [Transaction] from the underlying data structure.
      * @suppress
      */
-    fun popTransaction(): Transaction
+    fun removeTransaction(): Transaction
 
     /**
      * Returns the currently active [Transaction] from the underlying data structure,
@@ -64,11 +65,13 @@ interface TransactionsStack {
 
     /**
      * Returns whether the underlying data structure stores any [Transaction] instances.
+     * @suppress
      */
     fun isEmpty(): Boolean
 
     /**
      * Returns the stored [Transaction] instances as a list of their String id values.
+     * @suppress
      */
     fun getTransactionsAsIds(): List<String>
 }
@@ -79,13 +82,18 @@ interface TransactionsStack {
  * @suppress
  */
 @InternalApi
-object TransactionsStackProvider {
+object TransactionsHolderProvider {
     /**
      * @suppress
      */
     @OptIn(InternalApi::class)
-    val stackImpl: TransactionsStack = ServiceLoader
-        .load(TransactionsStack::class.java, TransactionsStack::class.java.classLoader)
+    val holder: TransactionsHolder = ServiceLoader
+        .load(TransactionsHolder::class.java, TransactionsHolder::class.java.classLoader)
         .maxByOrNull { it.priority }
+        .also {
+            exposedLogger.debug(
+                "Loaded TransactionsHolder class ${(it ?: ThreadLocalTransactionsStack)::class.simpleName} to manage instances (priority ${it?.priority ?: 0})"
+            )
+        }
         ?: ThreadLocalTransactionsStack
 }

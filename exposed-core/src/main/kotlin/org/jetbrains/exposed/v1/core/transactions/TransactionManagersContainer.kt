@@ -71,7 +71,7 @@ abstract class TransactionManagersContainerImpl<DB : DatabaseApi>(
      * @return The current transaction manager, or null if none is available
      */
     override fun getCurrentTransactionManagerOrNull(): TransactionManagerApi? {
-        return TransactionsStackProvider.stackImpl.getTransactionIsInstance(transactionClass())?.transactionManager
+        return TransactionsHolderProvider.holder.getTransactionIsInstance(transactionClass())?.transactionManager
             ?: databases.getPrimaryDatabase()?.let { getTransactionManager(it) }
     }
 
