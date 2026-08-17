@@ -949,6 +949,11 @@ open class LargeTextColumnType(
 open class BasicBinaryColumnType : ColumnType<ByteArray>() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.binaryType()
 
+    override fun parameterMarker(value: ByteArray?): String = when (currentDialect) {
+        is H2Dialect -> "cast(? as ${sqlType()})"
+        else -> super.parameterMarker(value)
+    }
+
     override fun valueFromDB(value: Any): ByteArray = when (value) {
         is Blob -> value.binaryStream.use { it.readBytes() }
         is InputStream -> value.use { it.readBytes() }
