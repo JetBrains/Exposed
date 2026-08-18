@@ -302,6 +302,12 @@ fun <T : Table> T.insertReturning(
 /**
  * Represents the SQL statement that batch inserts new rows into a table.
  *
+ * **Note:** On most databases, a batch with [ignore] enabled that inserts only some of its rows returns only the rows
+ * that were successfully inserted. However, on H2 and MariaDB, such a batch returns a row for every value in [data]
+ * rather than only the inserted ones, and pairs the values the database generated with the wrong rows. This occurs
+ * because their drivers report no update count per statement, leaving nothing to tell the skipped rows apart by.
+ * Any batch that inserts no rows at all returns an empty list on every database.
+ *
  * @param data Collection of values to use in the batch insert.
  * @param ignore Whether to ignore errors or not.
  * **Note** [ignore] is not supported by all vendors. Please check the documentation.
@@ -319,6 +325,12 @@ suspend fun <T : Table, E> T.batchInsert(
 
 /**
  * Represents the SQL statement that batch inserts new rows into a table.
+ *
+ * **Note:** On most databases, a batch with [ignore] enabled that inserts only some of its rows returns only the rows
+ * that were successfully inserted. However, on H2 and MariaDB, such a batch returns a row for every value in [data]
+ * rather than only the inserted ones, and pairs the values the database generated with the wrong rows. This occurs
+ * because their drivers report no update count per statement, leaving nothing to tell the skipped rows apart by.
+ * Any batch that inserts no rows at all returns an empty list on every database.
  *
  * @param data Sequence of values to use in the batch insert.
  * @param ignore Whether to ignore errors or not.

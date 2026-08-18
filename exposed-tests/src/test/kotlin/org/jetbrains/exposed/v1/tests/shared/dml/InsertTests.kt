@@ -5,6 +5,7 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.java.UUIDColumnType
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
@@ -221,6 +222,53 @@ class InsertTests : DatabaseTestsBase() {
             val batchesSize = cities.selectAll().count()
 
             assertEquals(0, batchesSize)
+        }
+    }
+
+    @Test
+    fun batchInsertWithIgnoreDoesNotReturnSkippedRows() {
+        val tester = object : UUIDTable("batch_ignore_tester") {
+            val name = varchar("name", 32)
+        }
+
+        withTables(excludeSettings = insertIgnoreUnsupportedDB, tester) {
+            val existingId = JavaUUID.randomUUID()
+            tester.insert {
+                it[tester.id] = existingId
+                it[tester.name] = "original"
+            }
+
+            val inserted = tester.batchInsert(listOf(existingId), ignore = true) { conflictingId ->
+                this[tester.id] = conflictingId
+                this[tester.name] = "conflicting"
+            }
+
+            assertEqualLists(tester.selectAll().map { it[tester.name] }, listOf("original"))
+            assertEqualLists(inserted.map { it[tester.name] }, emptyList())
+        }
+    }
+
+    @Test
+    fun batchInsertWithIgnorePairsGeneratedValuesWithTheRowsTheyBelongTo() {
+        val tester = object : IntIdTable("partial_ignore_tester") {
+            val name = varchar("name", 32).uniqueIndex()
+        }
+
+        // pgjdbc-ng takes the first generated-keys row of every batch entry unconditionally, in
+        // PGPreparedStatement.finishRequest, so an entry the database skipped has no row to take and the driver throws
+        // out of executeBatch() before any of this reaches Exposed
+        val skippedEntryBreaksGeneratedKeys = setOf(TestDB.POSTGRESQLNG)
+
+        withTables(excludeSettings = insertIgnoreUnsupportedDB + skippedEntryBreaksGeneratedKeys, tester) {
+            tester.insert { it[tester.name] = "skipped" }
+
+            val inserted = tester.batchInsert(listOf("skipped", "added"), ignore = true) { name ->
+                this[tester.name] = name
+            }
+
+            val addedId = tester.selectAll().where { tester.name eq "added" }.single()[tester.id]
+            assertEqualLists(inserted.map { it[tester.name] }, listOf("added"))
+            assertEquals(addedId, inserted.single()[tester.id])
         }
     }
 
