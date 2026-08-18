@@ -93,6 +93,19 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
     }
 
     /**
+     * Whether this entity maps to a row that already exists in the database of the current transaction.
+     *
+     * The result is `false` for an entity that belongs to a different [Database], that has not been assigned an
+     * id value, that is scheduled for insert, or that is still running its initialization block and so has not
+     * been scheduled yet.
+     */
+    internal fun isPersistedInCurrentTransaction(): Boolean {
+        val transaction = TransactionManager.current()
+        if (transaction.db != db || id._value == null) return false
+        return !isNewEntity() && !transaction.entityCache.isEntityInInitializationState(this)
+    }
+
+    /**
      * Updates the fields of this [Entity] instance with values retrieved from the database.
      * Override this function to refresh some additional state, if any.
      *
@@ -310,7 +323,7 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
             }
             val valueTypeMismatch = value is EntityID<*> && value.table is CompositeIdTable && this.columnType !is EntityIDColumnType<*>
             writeValues[this as Column<Any?>] = if (valueTypeMismatch) (value as EntityID<*>)._value else value
-            if (entityCache.data[table].orEmpty().contains(o.id._value)) {
+            if (o.isPersistedInCurrentTransaction()) {
                 entityCache.scheduleUpdate(klass, o)
             }
         }
