@@ -9,17 +9,10 @@ import org.jetbrains.exposed.v1.core.Transaction
 private const val POSTGRESQL_PARAMETER_LIMIT = 65535
 
 /**
- * Represents the SQL statement that batch inserts new rows into a table, specifically for the PostgreSQL
- * database, by rewriting the batch into a single multi-row `INSERT ... VALUES (...), (...), ...` statement
- * instead of executing one bound statement per row.
+ * Represents the SQL statement that batch inserts new rows into a table by using a single multi-row
+ * `INSERT ... VALUES (...), (...), ...` statement instead of executing one bound statement per row.
  *
- * Before adding each new batch, the class validates that PostgreSQL's maximum bind-parameter count (65535)
- * is not being exceeded.
- *
- * Note: collapsing to one multi-row `INSERT ... RETURNING` relies on PostgreSQL returning the `RETURNING`
- * rows in the same order as the `VALUES` list, so that generated values can be matched back to the input
- * row they belong to. This holds for plain multi-row `VALUES` inserts (no `BEFORE INSERT` trigger reordering)
- * and is the same assumption the JDBC driver's `reWriteBatchedInserts` rewrite relies on.
+ * Before adding each new batch, the class validates that the database's maximum bind-parameter count is not being exceeded.
  */
 open class MultiRowValuesInsertStatement(
     table: Table,
@@ -32,7 +25,7 @@ open class MultiRowValuesInsertStatement(
         val parameterCount = data.size.toLong() * table.columns.size.toLong()
         if (parameterCount > POSTGRESQL_PARAMETER_LIMIT) {
             throw BatchDataInconsistentException(
-                "Too many parameters in one batch. Exceeds the PostgreSQL limit of $POSTGRESQL_PARAMETER_LIMIT bind parameters."
+                "Too many parameters in one batch. Exceeds the database's limit of $POSTGRESQL_PARAMETER_LIMIT bind parameters."
             )
         }
     }
@@ -43,14 +36,15 @@ open class MultiRowValuesInsertStatement(
             ""
         } else {
             QueryBuilder(prepared).apply {
-                values.appendTo(prefix = " VALUES") {
+                values.appendTo(prefix = "VALUES ") {
                     it.appendTo(prefix = "(", postfix = ")") { (col, value) ->
                         registerArgument(col, value)
                     }
                 }
             }.toString()
         }
-        return transaction.db.dialect.functionProvider.insert(isIgnore, table, values.firstOrNull()?.map { it.first }.orEmpty(), sql, transaction)
+        return transaction.db.dialect.functionProvider
+            .insert(isIgnore, table, values.firstOrNull()?.map { it.first }.orEmpty(), sql, transaction)
     }
 
     override fun arguments() = listOfNotNull(

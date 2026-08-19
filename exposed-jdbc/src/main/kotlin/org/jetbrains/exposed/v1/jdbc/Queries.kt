@@ -322,7 +322,15 @@ fun <T : Table, E> T.batchInsert(
     ignore: Boolean = false,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchInsertStatement.(E) -> Unit
-): List<ResultRow> = batchInsert(data.iterator(), ignoreErrors = ignore, shouldReturnGeneratedValues, body)
+): List<ResultRow> = batchInsert(data.iterator(), false, ignoreErrors = ignore, shouldReturnGeneratedValues, body)
+
+fun <T : Table, E> T.batchInsert(
+    data: Iterable<E>,
+    useMultiRowValues: Boolean,
+    ignore: Boolean = false,
+    shouldReturnGeneratedValues: Boolean = true,
+    body: BatchInsertStatement.(E) -> Unit
+): List<ResultRow> = batchInsert(data.iterator(), useMultiRowValues, ignoreErrors = ignore, shouldReturnGeneratedValues, body)
 
 /**
  * Represents the SQL statement that batch inserts new rows into a table.
@@ -340,15 +348,24 @@ fun <T : Table, E> T.batchInsert(
     ignore: Boolean = false,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchInsertStatement.(E) -> Unit
-): List<ResultRow> = batchInsert(data.iterator(), ignoreErrors = ignore, shouldReturnGeneratedValues, body)
+): List<ResultRow> = batchInsert(data.iterator(), false, ignoreErrors = ignore, shouldReturnGeneratedValues, body)
+
+fun <T : Table, E> T.batchInsert(
+    data: Sequence<E>,
+    useMultiRowValues: Boolean,
+    ignore: Boolean = false,
+    shouldReturnGeneratedValues: Boolean = true,
+    body: BatchInsertStatement.(E) -> Unit
+): List<ResultRow> = batchInsert(data.iterator(), useMultiRowValues, ignoreErrors = ignore, shouldReturnGeneratedValues, body)
 
 private fun <T : Table, E> T.batchInsert(
     data: Iterator<E>,
+    useMultiRowValues: Boolean,
     ignoreErrors: Boolean = false,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchInsertStatement.(E) -> Unit
 ): List<ResultRow> = executeBatch(data, body) {
-    val stmt = buildStatement { batchInsert(ignoreErrors, shouldReturnGeneratedValues, body) }
+    val stmt = buildStatement { batchInsert(useMultiRowValues, ignoreErrors, shouldReturnGeneratedValues, body) }
     stmt.executable()
 }
 

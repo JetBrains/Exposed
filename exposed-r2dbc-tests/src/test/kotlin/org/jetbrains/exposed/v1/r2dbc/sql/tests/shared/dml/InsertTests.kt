@@ -18,6 +18,8 @@ import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
 import org.jetbrains.exposed.v1.core.statements.MultiRowValuesInsertStatement
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.OracleDialect
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.datetime.CurrentTimestamp
 import org.jetbrains.exposed.v1.datetime.XCurrentTimestamp
@@ -27,6 +29,7 @@ import org.jetbrains.exposed.v1.r2dbc.*
 import org.jetbrains.exposed.v1.r2dbc.statements.toExecutable
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
 import org.jetbrains.exposed.v1.r2dbc.tests.currentTestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
@@ -206,13 +209,19 @@ class InsertTests : R2dbcDatabaseTestsBase() {
     }
 
     @Test
-    fun testBatchInsertUsesSingleMultiRowStatementForPostgreSQL() {
-        withCitiesAndUsers(exclude = TestDB.ALL - TestDB.POSTGRESQL) { cities, _, _ ->
+    fun testBatchInsertUsingMultiRowValue() {
+        withCitiesAndUsers { cities, _, _ ->
             val logCaptor = LogCaptor.forName(exposedLogger.name)
             logCaptor.setLogLevelToDebug()
 
             val cityNames = listOf("Paris", "Moscow", "Helsinki")
-            val allCitiesID = cities.batchInsert(cityNames, useMultiRowValues = true) { name ->
+            // Oracle driver tries to append RETURNING if keys must be generated, which is not compatible with any table value constructor syntax;
+            // MySQL does not allow RETURNING clause
+            val allCitiesID = cities.batchInsert(
+                cityNames,
+                useMultiRowValues = true,
+                shouldReturnGeneratedValues = currentDialectTest !is OracleDialect && currentDialectTest !is MysqlDialect
+            ) { name ->
                 this[cities.name] = name
             }
 

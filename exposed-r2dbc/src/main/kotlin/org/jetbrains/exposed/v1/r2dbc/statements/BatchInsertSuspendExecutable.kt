@@ -51,7 +51,7 @@ open class SQLServerBatchInsertSuspendExecutable(
 
 /**
  * Represents the execution logic for an SQL statement that batch inserts new rows into a table,
- * specifically for the PostgreSQL database, using a single multi-row INSERT statement.
+ * specifically using a single multi-row value INSERT statement.
  */
 open class MultiRowValuesInsertSuspendExecutable(
     override val statement: MultiRowValuesInsertStatement

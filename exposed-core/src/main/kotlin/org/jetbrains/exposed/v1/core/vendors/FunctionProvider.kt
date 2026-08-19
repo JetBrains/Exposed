@@ -483,13 +483,24 @@ abstract class FunctionProvider {
 
         val nextValExpression = autoIncColumn?.autoIncColumnType?.nextValExpression?.takeIf { autoIncColumn !in columns }
         val isInsertFromSelect = columns.isNotEmpty() && expr.isNotEmpty() && !expr.startsWith("VALUES")
+        val isOracle = transaction.db.dialect is OracleDialect
+        val isOracleLike = isOracle || (transaction.db.dialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
 
         val (columnsToInsert, valuesExpr) = when {
             isInsertFromSelect -> columns to expr
-            nextValExpression != null && columns.isNotEmpty() -> (columns + autoIncColumn) to expr.dropLast(1) + ", $nextValExpression)"
+            nextValExpression != null && columns.isNotEmpty() -> {
+                val multiRowValuesCount = if (!expr.startsWith("VALUES")) 0 else Regex("""\(([^)]+)\)""").findAll(expr).count()
+                val newExpr = if (multiRowValuesCount <= 1 || !isOracleLike) {
+                    expr.dropLast(1) + ", $nextValExpression)"
+                } else {
+                    val exprColumns = columns.joinToString { transaction.identity(it) }
+                    "SELECT DATA.*, $nextValExpression FROM ($expr) DATA($exprColumns)"
+                }
+                (columns + autoIncColumn) to newExpr
+            }
             nextValExpression != null -> listOf(autoIncColumn) to "VALUES ($nextValExpression)"
             columns.isNotEmpty() -> columns to expr
-            currentDialect is OracleDialect -> {
+            isOracle -> {
                 val oracleDefaults = table.columns.joinToString(prefix = "VALUES(", postfix = ")") { "DEFAULT" }
                 emptyList<Column<*>>() to oracleDefaults
             }

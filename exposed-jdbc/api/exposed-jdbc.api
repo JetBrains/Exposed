@@ -177,9 +177,13 @@ public final class org/jetbrains/exposed/v1/jdbc/MetadataQueriesKt {
 
 public final class org/jetbrains/exposed/v1/jdbc/QueriesKt {
 	public static final fun batchInsert (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Iterable;ZZLkotlin/jvm/functions/Function2;)Ljava/util/List;
+	public static final fun batchInsert (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Iterable;ZZZLkotlin/jvm/functions/Function2;)Ljava/util/List;
 	public static final fun batchInsert (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/sequences/Sequence;ZZLkotlin/jvm/functions/Function2;)Ljava/util/List;
+	public static final fun batchInsert (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/sequences/Sequence;ZZZLkotlin/jvm/functions/Function2;)Ljava/util/List;
 	public static synthetic fun batchInsert$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Iterable;ZZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Ljava/util/List;
+	public static synthetic fun batchInsert$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Iterable;ZZZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Ljava/util/List;
 	public static synthetic fun batchInsert$default (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/sequences/Sequence;ZZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Ljava/util/List;
+	public static synthetic fun batchInsert$default (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/sequences/Sequence;ZZZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Ljava/util/List;
 	public static final fun batchReplace (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Iterable;ZLkotlin/jvm/functions/Function2;)Ljava/util/List;
 	public static final fun batchReplace (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/sequences/Sequence;ZLkotlin/jvm/functions/Function2;)Ljava/util/List;
 	public static synthetic fun batchReplace$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Iterable;ZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Ljava/util/List;
@@ -515,6 +519,15 @@ public class org/jetbrains/exposed/v1/jdbc/statements/MergeBlockingExecutable : 
 	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
 	public fun isAlwaysBatch ()Z
 	public fun prepared (Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/jdbc/statements/api/JdbcPreparedStatementApi;
+}
+
+public class org/jetbrains/exposed/v1/jdbc/statements/MultiRowValuesInsertBlockingExecutable : org/jetbrains/exposed/v1/jdbc/statements/BatchInsertBlockingExecutable {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/MultiRowValuesInsertStatement;)V
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/InsertStatement;
+	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/MultiRowValuesInsertStatement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
+	public fun isAlwaysBatch ()Z
 }
 
 public class org/jetbrains/exposed/v1/jdbc/statements/ReturningBlockingExecutable : java/lang/Iterable, kotlin/jvm/internal/markers/KMappedMarker, org/jetbrains/exposed/v1/jdbc/statements/BlockingExecutable {

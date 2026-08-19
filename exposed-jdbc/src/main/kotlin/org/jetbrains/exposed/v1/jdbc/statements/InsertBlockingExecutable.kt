@@ -3,6 +3,8 @@ package org.jetbrains.exposed.v1.jdbc.statements
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
 import org.jetbrains.exposed.v1.core.statements.InsertStatement
+import org.jetbrains.exposed.v1.core.statements.MultiRowValuesInsertStatement
+import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
@@ -25,9 +27,15 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
      */
     private var affectedRowCounts: List<Int>? = null
 
+    @Suppress("MagicNumber")
+    private val mariaDBResult = -99
+
     protected open fun JdbcPreparedStatementApi.execInsertFunction(): Pair<Int, ResultSet?> {
         val inserted = if (statement.arguments().count() > 1 || isAlwaysBatch) {
             executeBatch().also { affectedRowCounts = it }.sum()
+        } else if (statement is MultiRowValuesInsertStatement && currentDialect is MariaDBDialect && autoIncColumns.isNotEmpty()) {
+            executeQuery()
+            mariaDBResult
         } else {
             executeUpdate()
         }
@@ -45,8 +53,8 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
         val (inserted, rs) = execInsertFunction()
         @OptIn(InternalApi::class)
         return inserted.apply {
-            statement.insertedCount = this
             statement.resultedValues = processResults(rs, this)
+            statement.insertedCount = if (this != mariaDBResult) this else statement.resultedValues?.size ?: 0
             rs?.close()
         }
     }
@@ -61,9 +69,18 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
             transaction.connection.prepareStatement(sql, true)
 
         autoIncColumns.isNotEmpty() -> {
-            // http://viralpatel.net/blogs/oracle-java-jdbc-get-primary-key-insert-sql/
+            // [MariaDB] jdbc returnGeneratedValues() does not support adding RETURNING clause to multi-row values insert, so it only returns key for first row
+            val needsManualReturning = (statement is MultiRowValuesInsertStatement) && currentDialect is MariaDBDialect
+
             @OptIn(InternalApi::class)
-            transaction.connection.prepareStatement(sql, autoIncColumns.map { it.name.inProperCase() }.toTypedArray())
+            val generatedColumns = autoIncColumns.map { it.name.inProperCase() }.toTypedArray()
+            if (needsManualReturning) {
+                val replaceReturning = "$sql RETURNING ${generatedColumns.joinToString()}"
+                transaction.connection.prepareStatement(replaceReturning, false)
+            } else {
+                // http://viralpatel.net/blogs/oracle-java-jdbc-get-primary-key-insert-sql/
+                transaction.connection.prepareStatement(sql, generatedColumns)
+            }
         }
 
         else -> transaction.connection.prepareStatement(sql, false)

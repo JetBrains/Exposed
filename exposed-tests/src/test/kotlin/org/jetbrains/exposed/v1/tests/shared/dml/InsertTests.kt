@@ -9,6 +9,7 @@ import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.java.UUIDColumnType
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
+import org.jetbrains.exposed.v1.core.vendors.OracleDialect
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
@@ -23,6 +24,7 @@ import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
 import org.jetbrains.exposed.v1.tests.TestDB
+import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.currentTestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
@@ -200,6 +202,37 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testBatchInsertUsingMultiRowValue() {
+        withCitiesAndUsers { cities, users, _ ->
+            val cityNames = listOf("Paris", "Moscow", "Helsinki")
+
+            // Oracle driver tries to append RETURNING if keys must be generated, which is not compatible with any table value constructor syntax
+            val allCitiesID = cities.batchInsert(cityNames, useMultiRowValues = true, shouldReturnGeneratedValues = currentDialectTest !is OracleDialect) { name ->
+                this[cities.name] = name
+            }
+            assertEquals(cityNames.size, allCitiesID.size)
+
+            if (currentDialectTest !is OracleDialect) {
+                val userNamesWithCityIds = allCitiesID.mapIndexed { index, id ->
+                    "UserFrom${cityNames[index]}" to id[cities.id] as Number
+                }
+
+                val generatedIds = users.batchInsert(userNamesWithCityIds, useMultiRowValues = true) { (userName, cityId) ->
+                    this[users.id] = java.util.Random().nextInt().toString().take(6)
+                    this[users.name] = userName
+                    this[users.cityId] = cityId.toInt()
+                }
+
+                assertEquals(userNamesWithCityIds.size, generatedIds.size)
+                assertEquals(
+                    userNamesWithCityIds.size.toLong(),
+                    users.selectAll().where { users.name inList userNamesWithCityIds.map { it.first } }.count()
+                )
+            }
+        }
+    }
+
+    @Test
     fun testBatchInsertWithSequence() {
         val cities = DMLTestsData.Cities
         withTables(cities) {
@@ -217,7 +250,7 @@ class InsertTests : DatabaseTestsBase() {
         val cities = DMLTestsData.Cities
         withTables(cities) {
             val names = emptySequence<String>()
-            cities.batchInsert(names) { name -> this[cities.name] = name }
+            cities.batchInsert(names, useMultiRowValues = true) { name -> this[cities.name] = name }
 
             val batchesSize = cities.selectAll().count()
 

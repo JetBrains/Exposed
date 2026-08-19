@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.v1.core.statements
 
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 
@@ -191,10 +190,10 @@ interface StatementBuilder {
         shouldReturnGeneratedValues: Boolean = true,
         body: BatchInsertStatement.(E) -> Unit
     ): BatchInsertStatement {
-        return if (useMultiRowValues && currentDialect is PostgreSQLDialect) {
-            MultiRowValuesInsertStatement(this, ignoreErrors, shouldReturnGeneratedValues)
-        } else {
-            batchInsert(ignoreErrors, shouldReturnGeneratedValues, body)
+        return when {
+            !useMultiRowValues -> this.batchInsert(ignoreErrors, shouldReturnGeneratedValues, body)
+            currentDialect is SQLServerDialect && autoIncColumn != null -> SQLServerBatchInsertStatement(this, ignoreErrors, shouldReturnGeneratedValues)
+            else -> MultiRowValuesInsertStatement(this, ignoreErrors, shouldReturnGeneratedValues)
         }
     }
 
