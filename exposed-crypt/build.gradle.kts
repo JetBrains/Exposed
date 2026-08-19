@@ -17,6 +17,7 @@ kotlin {
 dependencies {
     api(project(":exposed-core"))
     api(libs.spring.security.crypto)
+    runtimeOnly(libs.commons.logging)
 
     testImplementation(project(":exposed-dao"))
     testImplementation(project(":exposed-tests"))
@@ -25,6 +26,7 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(kotlin("test"))
     testImplementation(libs.logcaptor)
+    testImplementation(libs.bouncycastle)
 }
 
 tasks.withType<KotlinCompile>().configureEach {
