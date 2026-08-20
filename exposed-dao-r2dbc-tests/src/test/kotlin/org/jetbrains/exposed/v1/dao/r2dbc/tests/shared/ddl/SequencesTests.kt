@@ -39,7 +39,7 @@ class SequencesTests : R2dbcDatabaseTestsBase() {
             }
 
             val testerEntity = suspendTransaction {
-                TesterEntity.new {
+                TesterEntity.newSuspend {
                     name = "test row"
                 }
             }

@@ -14,7 +14,7 @@ class AliasesTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testWrapRowWithAliasedTable() {
         withTables(EntityTestsData.XTable, EntityTestsData.YTable) {
-            val entity1 = EntityTestsData.XEntity.new {
+            val entity1 = EntityTestsData.XEntity.newSuspend {
                 this.b1 = false
             }
 
@@ -31,7 +31,7 @@ class AliasesTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testWrapRowWithAliasedQuery() {
         withTables(EntityTestsData.XTable, EntityTestsData.YTable) {
-            val entity1 = EntityTestsData.XEntity.new {
+            val entity1 = EntityTestsData.XEntity.newSuspend {
                 this.b1 = false
             }
 

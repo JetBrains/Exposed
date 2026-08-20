@@ -60,7 +60,7 @@ class AttachEntityTests : R2dbcDatabaseTestsBase() {
         withTables(Items) {
             val item = newTransaction {
                 maxAttempts = 1
-                Item.new { name = "foo" }
+                Item.newSuspend { name = "foo" }
             }
             newTransaction {
                 maxAttempts = 1
@@ -84,7 +84,7 @@ class AttachEntityTests : R2dbcDatabaseTestsBase() {
         withTables(Items) {
             val item = newTransaction {
                 maxAttempts = 1
-                Item.new { name = "original" }
+                Item.newSuspend { name = "original" }
             }
 
             newTransaction {
@@ -106,7 +106,7 @@ class AttachEntityTests : R2dbcDatabaseTestsBase() {
         withTables(Items) {
             val item = newTransaction {
                 maxAttempts = 1
-                Item.new { name = "original" }
+                Item.newSuspend { name = "original" }
             }
 
             newTransaction {
@@ -128,7 +128,7 @@ class AttachEntityTests : R2dbcDatabaseTestsBase() {
         withTables(Items) {
             val item = newTransaction {
                 maxAttempts = 1
-                Item.new { name = "original" }
+                Item.newSuspend { name = "original" }
             }
 
             newTransaction {
@@ -151,9 +151,9 @@ class AttachEntityTests : R2dbcDatabaseTestsBase() {
         withTables(Owners, OwnedItems) {
             val (item, firstOwnerId, secondOwner) = newTransaction {
                 maxAttempts = 1
-                val first = Owner.new { name = "first" }
-                val second = Owner.new { name = "second" }
-                val owned = OwnedItem.new { owner.set(first) }
+                val first = Owner.newSuspend { name = "first" }
+                val second = Owner.newSuspend { name = "second" }
+                val owned = OwnedItem.newSuspend { owner.set(first) }
                 Triple(owned, first.id, second)
             }
 
@@ -184,9 +184,9 @@ class AttachEntityTests : R2dbcDatabaseTestsBase() {
         withTables(Owners, OwnedItems) {
             val (item, _, secondOwner) = newTransaction {
                 maxAttempts = 1
-                val first = Owner.new { name = "first" }
-                val second = Owner.new { name = "second" }
-                val owned = OwnedItem.new { owner.set(first) }
+                val first = Owner.newSuspend { name = "first" }
+                val second = Owner.newSuspend { name = "second" }
+                val owned = OwnedItem.newSuspend { owner.set(first) }
                 Triple(owned, first.id, second)
             }
 
@@ -210,7 +210,7 @@ class AttachEntityTests : R2dbcDatabaseTestsBase() {
             newTransaction {
                 maxAttempts = 1
                 expectException<EntityNotFoundException> {
-                    val item = Item.new { name = "doomed" }
+                    val item = Item.newSuspend { name = "doomed" }
                     item.delete()
                     item.name = "boom"
                 }
@@ -223,7 +223,7 @@ class AttachEntityTests : R2dbcDatabaseTestsBase() {
         withTables(Items) {
             val item = newTransaction {
                 maxAttempts = 1
-                Item.new { name = "doomed" }
+                Item.newSuspend { name = "doomed" }
             }
 
             newTransaction {
@@ -246,7 +246,7 @@ class AttachEntityTests : R2dbcDatabaseTestsBase() {
         withTables(Items) {
             val item = newTransaction {
                 maxAttempts = 1
-                Item.new { name = "original" }
+                Item.newSuspend { name = "original" }
             }
 
             newTransaction {
@@ -264,7 +264,7 @@ class AttachEntityTests : R2dbcDatabaseTestsBase() {
         withTables(Items) {
             val carriedOver = newTransaction {
                 maxAttempts = 1
-                Item.new { name = "original" }
+                Item.newSuspend { name = "original" }
             }
 
             newTransaction {
@@ -288,7 +288,7 @@ class AttachEntityTests : R2dbcDatabaseTestsBase() {
         withTables(Items) {
             val carriedOver = newTransaction {
                 maxAttempts = 1
-                Item.new { name = "original" }
+                Item.newSuspend { name = "original" }
             }
 
             newTransaction {
@@ -308,7 +308,7 @@ class AttachEntityTests : R2dbcDatabaseTestsBase() {
         withTables(Items) {
             val carriedOver = newTransaction {
                 maxAttempts = 1
-                Item.new { name = "original" }
+                Item.newSuspend { name = "original" }
             }
 
             newTransaction {
@@ -332,7 +332,7 @@ class AttachEntityTests : R2dbcDatabaseTestsBase() {
         withTables(Items) {
             val item = newTransaction {
                 maxAttempts = 1
-                Item.new { name = "original" }
+                Item.newSuspend { name = "original" }
             }
 
             newTransaction {
@@ -351,7 +351,7 @@ class AttachEntityTests : R2dbcDatabaseTestsBase() {
         withTables(Items) {
             val item = newTransaction {
                 maxAttempts = 1
-                Item.new { name = "original" }
+                Item.newSuspend { name = "original" }
             }
 
             newTransaction {
@@ -376,7 +376,7 @@ class AttachEntityTests : R2dbcDatabaseTestsBase() {
         withTables(Items) {
             val item = newTransaction {
                 maxAttempts = 1
-                Item.new { name = "original" }
+                Item.newSuspend { name = "original" }
             }
 
             newTransaction {
@@ -395,7 +395,7 @@ class AttachEntityTests : R2dbcDatabaseTestsBase() {
         withTables(Items) {
             val item = newTransaction {
                 maxAttempts = 1
-                Item.new { name = "original" }
+                Item.newSuspend { name = "original" }
             }
 
             newTransaction {
@@ -422,7 +422,7 @@ class AttachEntityTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testDetachRefusesAnEntityThisTransactionCreated() {
         withTables(Items) {
-            val item = Item.new { name = "fresh" }
+            val item = Item.newSuspend { name = "fresh" }
 
             expectException<IllegalStateException> { Item.detach(item) }
             expectException<IllegalStateException> { Item.detach(item, force = true) }

@@ -110,8 +110,8 @@ class ViaTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testConnection01() {
         withTables(*ViaTestData.allTables) {
-            val n = VNumber.new { number = 10 }
-            val s = VString.new { text = "aaa" }
+            val n = VNumber.newSuspend { number = 10 }
+            val s = VString.newSuspend { text = "aaa" }
             n.testWithBothTables(listOf(s)) { table, result ->
                 val row = result.single()
                 assertEquals(n.id, row[table.numId])
@@ -123,10 +123,10 @@ class ViaTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testConnection02() {
         withTables(*ViaTestData.allTables) {
-            val n1 = VNumber.new { number = 1 }
-            val n2 = VNumber.new { number = 2 }
-            val s1 = VString.new { text = "aaa" }
-            val s2 = VString.new { text = "bbb" }
+            val n1 = VNumber.newSuspend { number = 1 }
+            val n2 = VNumber.newSuspend { number = 2 }
+            val s1 = VString.newSuspend { text = "aaa" }
+            val s2 = VString.newSuspend { text = "bbb" }
 
             n1.testWithBothTables(listOf(s1, s2)) { table, row ->
                 assertEquals(2, row.count())
@@ -140,10 +140,10 @@ class ViaTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testConnection03() {
         withTables(*ViaTestData.allTables) {
-            val n1 = VNumber.new { number = 1 }
-            val n2 = VNumber.new { number = 2 }
-            val s1 = VString.new { text = "aaa" }
-            val s2 = VString.new { text = "bbb" }
+            val n1 = VNumber.newSuspend { number = 1 }
+            val n2 = VNumber.newSuspend { number = 2 }
+            val s1 = VString.newSuspend { text = "aaa" }
+            val s2 = VString.newSuspend { text = "bbb" }
 
             n1.testWithBothTables(listOf(s1, s2)) { _, _ -> }
             n2.testWithBothTables(listOf(s1, s2)) { _, row ->
@@ -165,10 +165,10 @@ class ViaTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testConnection04() {
         withTables(*ViaTestData.allTables) {
-            val n1 = VNumber.new { number = 1 }
-            val n2 = VNumber.new { number = 2 }
-            val s1 = VString.new { text = "aaa" }
-            val s2 = VString.new { text = "bbb" }
+            val n1 = VNumber.newSuspend { number = 1 }
+            val n2 = VNumber.newSuspend { number = 2 }
+            val s1 = VString.newSuspend { text = "aaa" }
+            val s2 = VString.newSuspend { text = "bbb" }
 
             n1.testWithBothTables(listOf(s1, s2)) { _, _ -> }
             n2.testWithBothTables(listOf(s1, s2)) { _, row ->
@@ -196,9 +196,9 @@ class ViaTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testReadBackAssignedLinksWithoutExplicitFlush() {
         withTables(*ViaTestData.allTables) {
-            val n = VNumber.new { number = 10 }
-            val s1 = VString.new { text = "aaa" }
-            val s2 = VString.new { text = "bbb" }
+            val n = VNumber.newSuspend { number = 10 }
+            val s1 = VString.newSuspend { text = "aaa" }
+            val s2 = VString.newSuspend { text = "bbb" }
 
             n.connectedStrings = SizedCollection(listOf(s1, s2))
             assertEqualCollections(listOf("aaa", "bbb"), n.connectedStrings.toList().map { it.text })
@@ -219,11 +219,11 @@ class ViaTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testReadBackAssignedLinksAfterFindByIdWithoutExplicitFlush() {
         withTables(*ViaTestData.allTables) {
-            val numberId = VNumber.new { number = 7 }.id
+            val numberId = VNumber.newSuspend { number = 7 }.id
 
             inTopLevelSuspendTransaction {
                 val n = VNumber.findById(numberId)!!
-                val targets = listOf("aaa", "bbb").map { value -> VString.new { text = value } }
+                val targets = listOf("aaa", "bbb").map { value -> VString.newSuspend { text = value } }
 
                 n.connectedStrings = SizedCollection(targets)
                 assertEqualCollections(listOf("aaa", "bbb"), n.connectedStrings.map { it.text }.toList())
@@ -242,8 +242,8 @@ class ViaTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testPendingLinkUpdatesAreDiscardedOnRollback() {
         withTables(*ViaTestData.allTables) {
-            val numberId = VNumber.new { number = 1 }.id
-            val stringId = VString.new { text = "aaa" }.id
+            val numberId = VNumber.newSuspend { number = 1 }.id
+            val stringId = VString.newSuspend { text = "aaa" }.id
             commit()
 
             inTopLevelSuspendTransaction {
@@ -284,10 +284,10 @@ class ViaTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testHierarchicalReferences() {
         withTables(NodesTable, NodeToNodes) {
-            val child1 = Node.new {
+            val child1 = Node.newSuspend {
                 name = "child1"
                 parents = SizedCollection(
-                    Node.new { name = "root" }
+                    Node.newSuspend { name = "root" }
                 )
             }
 
@@ -296,7 +296,7 @@ class ViaTest : R2dbcDatabaseTestsBase() {
             assertEquals(0L, root.parents.count())
             assertEquals(1L, root.children.count())
 
-            val child2 = Node.new { name = "child2" }
+            val child2 = Node.newSuspend { name = "child2" }
             root.children = SizedCollection(listOf(child1, child2))
 
             assertEquals(root, child1.parents.singleOrNull())
@@ -307,7 +307,7 @@ class ViaTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testRefresh() {
         withTables(*ViaTestData.allTables) {
-            val s = VString.new { text = "ccc" }.apply {
+            val s = VString.newSuspend { text = "ccc" }.apply {
                 refresh(true)
             }
             assertEquals("ccc", s.text)
@@ -317,13 +317,13 @@ class ViaTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testWarmUpOnHierarchicalEntities() {
         withTables(NodesTable, NodeToNodes) {
-            val child1 = Node.new { name = "child1" }
-            val child2 = Node.new { name = "child1" }
-            val root1 = Node.new {
+            val child1 = Node.newSuspend { name = "child1" }
+            val child2 = Node.newSuspend { name = "child1" }
+            val root1 = Node.newSuspend {
                 name = "root1"
                 children = SizedCollection(child1)
             }
-            val root2 = Node.new {
+            val root2 = Node.newSuspend {
                 name = "root2"
                 children = SizedCollection(child1, child2)
             }
@@ -369,9 +369,9 @@ class ViaTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testOrderBy() {
         withTables(NodesTable, NodeToNodes) {
-            val root = NodeOrdered.new { name = "root" }
+            val root = NodeOrdered.newSuspend { name = "root" }
             listOf("#3", "#0", "#2", "#4", "#1").forEach {
-                val n = NodeOrdered.new {
+                val n = NodeOrdered.newSuspend {
                     name = it
                     parents = SizedCollection(listOf(root))
                 }
@@ -427,25 +427,25 @@ class ViaTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testAdditionalLinkDataUsingCompositeIdInnerTable() {
         withTables(Projects, Tasks, ProjectTasks) {
-            val p1 = Project.new { name = "Project 1" }
-            val p2 = Project.new { name = "Project 2" }
-            val t1 = Task.new { title = "Task 1" }
-            val t2 = Task.new { title = "Task 2" }
-            val t3 = Task.new { title = "Task 3" }
+            val p1 = Project.newSuspend { name = "Project 1" }
+            val p2 = Project.newSuspend { name = "Project 2" }
+            val t1 = Task.newSuspend { title = "Task 1" }
+            val t2 = Task.newSuspend { title = "Task 2" }
+            val t3 = Task.newSuspend { title = "Task 3" }
 
-            ProjectTask.new(
+            ProjectTask.newSuspend(
                 CompositeID {
                     it[ProjectTasks.task] = t1.id
                     it[ProjectTasks.project] = p1.id
                 }
             ) { approved = true }
-            ProjectTask.new(
+            ProjectTask.newSuspend(
                 CompositeID {
                     it[ProjectTasks.task] = t2.id
                     it[ProjectTasks.project] = p2.id
                 }
             ) { approved = false }
-            ProjectTask.new(
+            ProjectTask.newSuspend(
                 CompositeID {
                     it[ProjectTasks.task] = t3.id
                     it[ProjectTasks.project] = p2.id

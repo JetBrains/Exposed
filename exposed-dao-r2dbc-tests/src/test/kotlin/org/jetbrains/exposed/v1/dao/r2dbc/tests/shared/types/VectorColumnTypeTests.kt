@@ -35,7 +35,7 @@ class VectorColumnTypeTests : R2dbcDatabaseTestsBase() {
                 }
                 SchemaUtils.create(VectorEntityTable)
 
-                val ve = VectorEntity.new {
+                val ve = VectorEntity.newSuspend {
                     embedding = floatArrayOf(0f, 1f, 0f, 0f, 0f)
                 }
 

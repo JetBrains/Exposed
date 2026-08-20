@@ -21,7 +21,7 @@ fun Application.clientRoutes() {
                 val result = suspendTransaction {
                     val broker = Broker.findById(dto.brokerId)
                         ?: error("Broker ${dto.brokerId} not found")
-                    val client = Client.new {
+                    val client = Client.newSuspend {
                         name = dto.name
                         email = dto.email
                         this.broker.set(broker)

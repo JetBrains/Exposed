@@ -23,6 +23,11 @@ internal class StagedValues {
         return NoStagedValue
     }
 
+    /** Drops the unissued assignments for [columns], which a nested scope has since superseded. */
+    fun discardUnissued(columns: Set<Column<Any?>>) {
+        columns.forEach { dirty.remove(it) }
+    }
+
     /** Takes every value [row] reports, leaving assignments that have not reached the database in place. */
     fun stageRow(row: ResultRow) {
         row.fieldIndex.keys.filterIsInstance<Column<*>>().forEach { column ->

@@ -1,9 +1,7 @@
 package org.jetbrains.exposed.v1.dao.r2dbc
 
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.flow.toList
@@ -52,12 +50,17 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * entity cache, and returns the fully-hydrated entity with its auto-generated id and database-generated
      * columns populated.
      *
-     * Mirrors JDBC's `EntityClass.new` semantics: after this call the entity's [Entity.id] is immediately usable.
+     * This is the counterpart of the JDBC DAO's `EntityClass.new`: after this call the entity's [Entity.id] is
+     * immediately usable. The non-suspending [new] of this class schedules the insert without flushing, and so
+     * leaves the id unresolved — JDBC code that reads the id right after creating an entity should be migrated
+     * to this function, not to [new].
+     *
+     * Because this function suspends, so does [init]: other DAO operations can be called from inside the block.
      *
      * @param init Suspending block where the entity's fields can be set.
      * @return The created and flushed entity.
      */
-    open suspend fun new(init: suspend T.() -> Unit): T = new(null, init)
+    open suspend fun newSuspend(init: suspend T.() -> Unit): T = newSuspend(null, init)
 
     /** The [IdTable] that this [EntityClass] depends on when maintaining relations with managed [Entity] instances. */
     open val dependsOnTables: ColumnSet get() = table
@@ -66,14 +69,15 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
     open val dependsOnColumns: List<Column<out Any?>> get() = dependsOnTables.columns
 
     /**
-     * Creates a new [Entity] instance with the fields set in the [init] block and with the provided [id],
-     * schedules its insert, flushes the entity cache, and returns the fully-hydrated entity.
+     * Composite/explicit-id variant of [newSuspend]: creates a new [Entity] instance with the fields set in the
+     * [init] block and with the provided [id], schedules its insert, flushes the entity cache, and returns the
+     * fully-hydrated entity.
      *
      * @param id The id of the entity. Set this to `null` if it should be automatically generated.
      * @param init Suspending block where the entity's fields can be set.
      * @return The created and flushed entity.
      */
-    open suspend fun new(id: ID?, init: suspend T.() -> Unit): T {
+    open suspend fun newSuspend(id: ID?, init: suspend T.() -> Unit): T {
         val prototype = scheduleNew(id, init)
         TransactionManager.current().entityCache.flush()
         return prototype
@@ -81,80 +85,55 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
 
     /**
      * Creates a new [Entity] instance with the fields set in the [init] block, schedules its insert into the
-     * entity cache **without** flushing, and returns a cold [Flow] that emits exactly the created entity.
+     * entity cache **without** flushing, and returns it — all without suspending.
      *
-     * **Discarding the flow does not cancel the insert.** The entity is scheduled when [newDeferred] is
-     * called, not when the flow is collected, so it is written either way. The pending insert is flushed at
-     * the first of:
-     * - collection of the returned flow;
+     * Unlike [newSuspend], which flushes before returning, this performs no database access whatsoever, which
+     * is what makes it callable from a non-suspending context: an entity initialization block, a plain factory
+     * function, or a builder that assembles a whole object graph before touching the connection. A transaction
+     * still has to be in context, since the pending insert is held by that transaction's [EntityCache].
+     *
+     * **This is not the JDBC DAO's `new`.** There, `new { }` issues the `INSERT` before it returns; here the
+     * statement is deferred, which is why the entity it returns is not yet hydrated. [newSuspend] is the
+     * function with the JDBC semantics.
+     *
+     * **The returned entity usually has no id yet** — the row does not exist, so neither does its
+     * auto-generated key. Until the insert is issued, [EntityID.value] throws for such an entity and it
+     * cannot be looked up by id through [findById] or [testCache]. An id is available immediately only when
+     * it does not come from the database: an explicit `id` argument, or an id column with a client-side
+     * default such as `uuid("id").autoGenerate()`.
+     *
+     * What does work before the flush is reading and writing the entity's own columns, which are served from
+     * the entity cache, and using the entity as a reference target: the child stores the very [EntityID]
+     * instance that the parent's insert fills in, and [EntityCache.flush] orders inserts so the parent is
+     * written first.
+     *
+     * The pending insert is issued at the first of:
+     * - an explicit [flushCache] or [EntityCache.flush];
      * - any other statement executed in the same transaction — a query flushes the entities of the tables it
      *   reads, while an insert, update, upsert, delete or DDL statement flushes everything pending;
      * - the transaction's commit.
      *
-     * Collecting therefore controls *when* the insert is issued, and is the only way to obtain the hydrated
-     * entity; it does not control *whether* the row is written.
-     *
-     * Intended for batching: scheduling several entities via [newDeferred] and then collecting them together
-     * results in a single flush covering all pending inserts.
-     *
-     * ```kotlin
-     * val users: List<User> = names
-     *     .map { name -> User.newDeferred { this.name = name } }
-     *     .asFlow()
-     *     .flattenConcat()
-     *     .toList()
-     * ```
-     *
-     * Use `flattenConcat` rather than `merge` — `merge` gives no ordering guarantee, so the
-     * collected list would not follow the order the entities were scheduled in.
-     *
-     * The flow is bound to the transaction that created it: the pending insert lives in that
-     * transaction's entity cache, so collecting the flow anywhere else cannot flush it. Rather than
-     * report a success it did not produce, such a collection throws [IllegalStateException] — by then
-     * the insert has either already happened at commit time, or, if that transaction rolled back,
-     * never happened at all.
+     * Everything still pending for one table is written by a single batch statement, so scheduling several
+     * entities and flushing once is the cheapest way to insert many rows through the DAO. Use [newSuspend]
+     * instead where a suspending context is available and the id is needed right away.
      *
      * @param init Block where the entity's fields can be set. Must be non-suspending, since scheduling is
      *   performed synchronously.
-     * @return A cold [Flow] that emits the created entity on first collection.
-     * @throws IllegalStateException on collection, if the current transaction is not the one that
-     *   created the flow, or if there is no transaction in context.
+     * @return The created entity, scheduled for insert but not yet written to the database.
+     * @throws IllegalStateException if there is no transaction in context.
      */
-    open fun newDeferred(init: T.() -> Unit): Flow<T> = newDeferred(null, init)
+    open fun new(init: T.() -> Unit): T = new(null, init)
 
     /**
-     * Composite/explicit-id variant of [newDeferred].
+     * Composite/explicit-id variant of [new]. Passing a non-null [id] is also the way to obtain an
+     * entity whose id is usable before the insert is issued.
      *
      * @param id The id of the entity. Set this to `null` if it should be automatically generated.
      * @param init Block where the entity's fields can be set. Must be non-suspending.
-     * @return A cold [Flow] that emits the created entity on first collection.
-     * @throws IllegalStateException on collection, if the current transaction is not the one that
-     *   created the flow, or if there is no transaction in context.
+     * @return The created entity, scheduled for insert but not yet written to the database.
+     * @throws IllegalStateException if there is no transaction in context.
      */
-    open fun newDeferred(id: ID?, init: T.() -> Unit): Flow<T> {
-        val prototype = scheduleNewSync(id, init)
-        // Only the id is captured, never the transaction itself: the flow may outlive the transaction,
-        // and holding it would keep its connection and entity cache reachable.
-        val schedulingTransactionId = TransactionManager.current().transactionId
-        return flow {
-            val transaction = TransactionManager.currentOrNull()
-                ?: error(
-                    "The flow returned by newDeferred() must be collected inside the transaction that created " +
-                        "the entity, but no transaction is in context. The insert was scheduled in the entity " +
-                        "cache of transaction $schedulingTransactionId and is unreachable from here."
-                )
-            check(transaction.transactionId == schedulingTransactionId) {
-                "The flow returned by newDeferred() must be collected inside the transaction that created the " +
-                    "entity. The insert was scheduled in transaction $schedulingTransactionId but collection " +
-                    "happened in transaction ${transaction.transactionId}, whose entity cache knows nothing " +
-                    "about it."
-            }
-            transaction.entityCache.flush()
-            emit(prototype)
-        }
-    }
-
-    private suspend fun scheduleNew(id: ID?, init: suspend T.() -> Unit): T {
+    open fun new(id: ID?, init: T.() -> Unit): T {
         val prototype = createPrototype(id)
         val entityCache = warmCache()
         try {
@@ -169,7 +148,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
         return prototype
     }
 
-    private fun scheduleNewSync(id: ID?, init: T.() -> Unit): T {
+    private suspend fun scheduleNew(id: ID?, init: suspend T.() -> Unit): T {
         val prototype = createPrototype(id)
         val entityCache = warmCache()
         try {
@@ -341,7 +320,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * **Typical usage:**
      * ```kotlin
-     * val entity = suspendTransaction { MyEntity.new { name = "foo" }.flush() }
+     * val entity = suspendTransaction { MyEntity.newSuspend { name = "foo" } }
      * suspendTransaction {
      *     MyEntity.attach(entity)   // register in new transaction's cache
      *     entity.name = "bar"       // now safe to modify

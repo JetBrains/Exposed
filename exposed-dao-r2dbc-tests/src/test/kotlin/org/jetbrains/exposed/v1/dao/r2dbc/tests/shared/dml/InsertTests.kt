@@ -36,11 +36,11 @@ class InsertTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testInsertWithColumnNamedWithKeyword() {
         withTables(OrderedDataTable) {
-            val foo = OrderedData.new {
+            val foo = OrderedData.newSuspend {
                 name = "foo"
                 order = 20
             }
-            val bar = OrderedData.new {
+            val bar = OrderedData.newSuspend {
                 name = "bar"
                 order = 10
             }

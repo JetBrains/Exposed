@@ -82,8 +82,8 @@ class JavatimeDefaultsTest : R2dbcDatabaseTestsBase() {
     fun testDefaultsWithExplicit01() {
         withTables(TableWithDBDefault) {
             val created = listOf(
-                DBDefault.new { field = "1" },
-                DBDefault.new {
+                DBDefault.newSuspend { field = "1" },
+                DBDefault.newSuspend {
                     field = "2"
                     t1 = LocalDateTime.now().minusDays(5)
                 }
@@ -102,11 +102,11 @@ class JavatimeDefaultsTest : R2dbcDatabaseTestsBase() {
     fun testDefaultsWithExplicit02() {
         withTables(TableWithDBDefault) {
             val created = listOf(
-                DBDefault.new {
+                DBDefault.newSuspend {
                     field = "2"
                     t1 = LocalDateTime.now().minusDays(5)
                 },
-                DBDefault.new { field = "1" }
+                DBDefault.newSuspend { field = "1" }
             )
             // R2DBC: INSERT/RETURNING doesn't bring back `defaultExpression` columns (`t1`), and
             // `Column.getValue` is non-suspend so it can't lazy-load like JDBC does. Refresh
@@ -122,8 +122,8 @@ class JavatimeDefaultsTest : R2dbcDatabaseTestsBase() {
     fun testDefaultsInvokedOnlyOncePerEntity() {
         withTables(TableWithDBDefault) {
             TableWithDBDefault.cIndex = 0
-            val db1 = DBDefault.new { field = "1" }
-            val db2 = DBDefault.new { field = "2" }
+            val db1 = DBDefault.newSuspend { field = "1" }
+            val db2 = DBDefault.newSuspend { field = "2" }
             assertEquals(0, db1.clientDefault)
             assertEquals(1, db2.clientDefault)
             assertEquals(2, TableWithDBDefault.cIndex)
@@ -134,8 +134,8 @@ class JavatimeDefaultsTest : R2dbcDatabaseTestsBase() {
     fun testDefaultsCanBeOverridden() {
         withTables(TableWithDBDefault) {
             TableWithDBDefault.cIndex = 0
-            val db1 = DBDefault.new { field = "1" }
-            val db2 = DBDefault.new { field = "2" }
+            val db1 = DBDefault.newSuspend { field = "1" }
+            val db2 = DBDefault.newSuspend { field = "2" }
             db1.clientDefault = 12345
             flushCache()
             assertEquals(12345, db1.clientDefault)
@@ -150,7 +150,7 @@ class JavatimeDefaultsTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testCustomDefaultTimestampFunctionWithEntity() {
         withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES - TestDB.MYSQL_V8 - TestDB.ALL_H2_V2, DefaultTimestampTable) {
-            val entity = DefaultTimestampEntity.new {}
+            val entity = DefaultTimestampEntity.newSuspend {}
             // R2DBC: `defaultExpression(dbTimestampNow)` is evaluated by the DB and isn't part of
             // the INSERT's resultedValues, so `entity.timestamp` has no cached value yet. Flush and
             // refresh so the row is loaded back from the DB (JDBC does this implicitly on read).
@@ -181,7 +181,7 @@ class JavatimeDefaultsTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testExplicitInsertionOfDefaultValuesWithIdTable() {
         withTables(TableWithDefaultValue) {
-            val entity = TableWithDefaultValueEntity.new(5) {
+            val entity = TableWithDefaultValueEntity.newSuspend(5) {
                 value = 94
                 valueWithDefault = TableWithDefaultValue.DEFAULT_VALUE
             }

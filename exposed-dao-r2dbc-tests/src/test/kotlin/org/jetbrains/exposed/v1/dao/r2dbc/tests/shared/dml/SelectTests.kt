@@ -14,16 +14,16 @@ class SelectTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testInListWithEntityIDColumns() {
         withTables(EntityTests.Posts, EntityTests.Boards, EntityTests.Categories) {
-            val board1 = EntityTests.Board.new {
+            val board1 = EntityTests.Board.newSuspend {
                 this.name = "Board1"
             }
 
-            val post1 = EntityTests.Post.new {
+            val post1 = EntityTests.Post.newSuspend {
                 this.board.set(board1)
             }
 
-            EntityTests.Post.new {
-                category.set(EntityTests.Category.new { title = "Category1" })
+            EntityTests.Post.newSuspend {
+                category.set(EntityTests.Category.newSuspend { title = "Category1" })
             }
 
             val result1 = EntityTests.Posts.selectAll().where {

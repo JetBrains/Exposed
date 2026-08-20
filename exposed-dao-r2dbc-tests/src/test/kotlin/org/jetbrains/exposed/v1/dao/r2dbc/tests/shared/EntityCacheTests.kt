@@ -54,7 +54,7 @@ class EntityCacheTests : R2dbcDatabaseTestsBase() {
                 SchemaUtils.create(TestTable)
 
                 repeat(entitiesCount) {
-                    TestEntity.new {
+                    TestEntity.newSuspend {
                         value = Random.nextInt()
                     }
                 }
@@ -84,7 +84,7 @@ class EntityCacheTests : R2dbcDatabaseTestsBase() {
     @Test
     fun `EntityCache should not be cleaned on explicit commit`() {
         withTables(TestTable) {
-            val entity = TestEntity.new {
+            val entity = TestEntity.newSuspend {
                 value = Random.nextInt()
             }
             assertEquals(entity, TestEntity.testCache(entity.id))
@@ -116,10 +116,10 @@ class EntityCacheTests : R2dbcDatabaseTestsBase() {
     @Test
     fun entitiesWithDifferentAmountOfFieldsCouldBeCreated() {
         withTables(TableWithDefaultValue) {
-            TableWithDefaultValueEntity.new {
+            TableWithDefaultValueEntity.newSuspend {
                 value = 1
             }
-            TableWithDefaultValueEntity.new {
+            TableWithDefaultValueEntity.newSuspend {
                 value = 2
                 valueWithDefault = 1
             }
@@ -215,7 +215,7 @@ class EntityCacheTests : R2dbcDatabaseTestsBase() {
                 val entity = suspendTransaction {
                     SchemaUtils.create(TestTable)
 
-                    TestEntity.new { value = 1 }
+                    TestEntity.newSuspend { value = 1 }
                 }
 
                 suspendTransaction {

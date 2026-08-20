@@ -81,17 +81,17 @@ class JavaUUIDTableEntityTest : R2dbcDatabaseTestsBase() {
     @Test
     fun `create records`() {
         withTables(JavaUUIDTables.Cities, JavaUUIDTables.People) {
-            val mumbai = JavaUUIDTables.City.new { name = "Mumbai" }
-            val pune = JavaUUIDTables.City.new { name = "Pune" }
-            JavaUUIDTables.Person.new(JavaUUID.randomUUID()) {
+            val mumbai = JavaUUIDTables.City.newSuspend { name = "Mumbai" }
+            val pune = JavaUUIDTables.City.newSuspend { name = "Pune" }
+            JavaUUIDTables.Person.newSuspend(JavaUUID.randomUUID()) {
                 name = "David D'souza"
                 city.set(mumbai)
             }
-            JavaUUIDTables.Person.new(JavaUUID.randomUUID()) {
+            JavaUUIDTables.Person.newSuspend(JavaUUID.randomUUID()) {
                 name = "Tushar Mumbaikar"
                 city.set(mumbai)
             }
-            JavaUUIDTables.Person.new(JavaUUID.randomUUID()) {
+            JavaUUIDTables.Person.newSuspend(JavaUUID.randomUUID()) {
                 name = "Tanu Arora"
                 city.set(pune)
             }
@@ -110,17 +110,17 @@ class JavaUUIDTableEntityTest : R2dbcDatabaseTestsBase() {
     @Test
     fun `update and delete records`() {
         withTables(JavaUUIDTables.Cities, JavaUUIDTables.People) {
-            val mumbai = JavaUUIDTables.City.new(JavaUUID.randomUUID()) { name = "Mumbai" }
-            val pune = JavaUUIDTables.City.new(JavaUUID.randomUUID()) { name = "Pune" }
-            JavaUUIDTables.Person.new(JavaUUID.randomUUID()) {
+            val mumbai = JavaUUIDTables.City.newSuspend(JavaUUID.randomUUID()) { name = "Mumbai" }
+            val pune = JavaUUIDTables.City.newSuspend(JavaUUID.randomUUID()) { name = "Pune" }
+            JavaUUIDTables.Person.newSuspend(JavaUUID.randomUUID()) {
                 name = "David D'souza"
                 city.set(mumbai)
             }
-            JavaUUIDTables.Person.new(JavaUUID.randomUUID()) {
+            JavaUUIDTables.Person.newSuspend(JavaUUID.randomUUID()) {
                 name = "Tushar Mumbaikar"
                 city.set(mumbai)
             }
-            val tanu = JavaUUIDTables.Person.new(JavaUUID.randomUUID()) {
+            val tanu = JavaUUIDTables.Person.newSuspend(JavaUUID.randomUUID()) {
                 name = "Tanu Arora"
                 city.set(pune)
             }
@@ -141,21 +141,21 @@ class JavaUUIDTableEntityTest : R2dbcDatabaseTestsBase() {
     @Test
     fun `insert with inner table`() {
         withTables(JavaUUIDTables.Addresses, JavaUUIDTables.Cities, JavaUUIDTables.People) {
-            val city1 = JavaUUIDTables.City.new {
+            val city1 = JavaUUIDTables.City.newSuspend {
                 name = "city1"
             }
-            val person1 = JavaUUIDTables.Person.new {
+            val person1 = JavaUUIDTables.Person.newSuspend {
                 name = "person1"
                 city.set(city1)
             }
 
-            val address1 = JavaUUIDTables.Address.new {
+            val address1 = JavaUUIDTables.Address.newSuspend {
                 person.set(person1)
                 city.set(city1)
                 address = "address1"
             }
 
-            val address2 = JavaUUIDTables.Address.new {
+            val address2 = JavaUUIDTables.Address.newSuspend {
                 person.set(person1)
                 city.set(city1)
                 address = "address2"

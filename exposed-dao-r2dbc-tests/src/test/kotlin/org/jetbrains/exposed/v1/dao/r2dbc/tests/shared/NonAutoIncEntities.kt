@@ -30,10 +30,10 @@ class NonAutoIncEntities : R2dbcDatabaseTestsBase() {
         companion object : EntityClass<Int, NotAutoEntity>(NotAutoIntIdTable) {
             val lastId = AtomicInteger(0)
             internal const val defaultInt = 42
-            suspend fun new(b: Boolean) = new(lastId.incrementAndGet()) { b1 = b }
+            suspend fun new(b: Boolean) = newSuspend(lastId.incrementAndGet()) { b1 = b }
 
-            override suspend fun new(id: Int?, init: suspend NotAutoEntity.() -> Unit): NotAutoEntity {
-                return super.new(id ?: lastId.incrementAndGet()) {
+            override suspend fun newSuspend(id: Int?, init: suspend NotAutoEntity.() -> Unit): NotAutoEntity {
+                return super.newSuspend(id ?: lastId.incrementAndGet()) {
                     defaultedInNew = defaultInt
                     init()
                 }
@@ -48,7 +48,7 @@ class NonAutoIncEntities : R2dbcDatabaseTestsBase() {
             assertEquals(true, entity1.b1)
             assertEquals(NotAutoEntity.defaultInt, entity1.defaultedInNew)
 
-            val entity2 = NotAutoEntity.new {
+            val entity2 = NotAutoEntity.newSuspend {
                 b1 = false
                 defaultedInNew = 1
             }
@@ -84,7 +84,7 @@ class NonAutoIncEntities : R2dbcDatabaseTestsBase() {
     @Test
     fun testIdValueIsTheSameAsCustomPrimaryKeyColumn() {
         withTables(CustomPrimaryKeyColumnTable) {
-            val request = CustomPrimaryKeyColumnEntity.new {
+            val request = CustomPrimaryKeyColumnEntity.newSuspend {
                 customId = "customIdValue"
             }
 
@@ -115,7 +115,7 @@ class NonAutoIncEntities : R2dbcDatabaseTestsBase() {
     @Test
     fun testAccessEntityIdFromOverrideEntityMethod() {
         withTables(RequestsTable) {
-            val request = Request.new {
+            val request = Request.newSuspend {
                 requestId = "test1"
                 deleted = false
             }

@@ -29,7 +29,7 @@ class R2bdcJsonBColumnTests : R2dbcDatabaseTestsBase() {
 
         withTables(excludeSettings = binaryJsonNotSupportedDB, dataTable) { testDb ->
             val dataA = DataHolder(User("Admin", "Alpha"), 10, true, null)
-            val newUser = dataEntity.new {
+            val newUser = dataEntity.newSuspend {
                 jsonBColumn = dataA
             }
 
@@ -43,7 +43,7 @@ class R2bdcJsonBColumnTests : R2dbcDatabaseTestsBase() {
             assertEquals(updatedUser, dataEntity.all().single().jsonBColumn)
 
             if (testDb !in TestDB.ALL_H2_V2) {
-                dataEntity.new { jsonBColumn = dataA }
+                dataEntity.newSuspend { jsonBColumn = dataA }
                 val loginCount = if (currentDialectTest is PostgreSQLDialect) {
                     JsonTestsData.JsonBTable.jsonBColumn.extract<Int>("logins").castTo(IntegerColumnType())
                 } else {
@@ -71,7 +71,7 @@ class R2bdcJsonBColumnTests : R2dbcDatabaseTestsBase() {
     fun testFieldsOutsideTransaction() {
         lateinit var entity: MyEntity
         withTables(excludeSettings = binaryJsonNotSupportedDB, MyTable) {
-            entity = MyEntity.new {
+            entity = MyEntity.newSuspend {
                 name = "Test"
                 user = User("Pro", "Alpha")
             }

@@ -38,13 +38,13 @@ class WarmUpLinkedReferencesTests : R2dbcDatabaseTestsBase() {
     fun warmUpLinkedReferencesShouldNotReturnAllTheValueFromCache() {
         withTables(Box, BoxItem) {
             val boxEntities = (0..4).map {
-                EBox.new {
+                EBox.newSuspend {
                     value = it
                 }
             }
 
             boxEntities.forEach { boxEntity ->
-                EBoxItem.new {
+                EBoxItem.newSuspend {
                     value = boxEntity.id.value
                     box.set(boxEntity)
                 }
