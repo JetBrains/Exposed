@@ -37,7 +37,7 @@ springBoot4 = "4.1.0"
 
 spring-security-crypto = "7.0.0"
 commons-logging = "1.4.0"
-bouncycastle = "1.85"
+bouncycastle = "1.85.2"
 joda-time = "2.14.3"
 junit5 = "5.14.1"
 junit6 = "6.0.1"
