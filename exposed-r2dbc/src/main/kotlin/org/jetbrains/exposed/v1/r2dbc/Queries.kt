@@ -6,6 +6,8 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.statements.*
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.r2dbc.statements.*
@@ -314,6 +316,10 @@ fun <T : Table> T.insertReturning(
  * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs)
  * should be returned. See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
  * @return A list of [ResultRow] representing data from each newly inserted row.
+ *
+ * **Note** Against PostgreSQL, the batch is sent as a single multi-row `INSERT ... VALUES (...), (...), ...`
+ * statement instead of one bound statement per row, avoiding the per-row round trip that r2dbc-postgresql
+ * otherwise performs for statement-level batches.
  * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.InsertTests.testBatchInsert01
  */
 suspend fun <T : Table, E> T.batchInsert(
@@ -338,6 +344,11 @@ suspend fun <T : Table, E> T.batchInsert(
  * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs)
  * should be returned. See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
  * @return A list of [ResultRow] representing data from each newly inserted row.
+ *
+ * **Note** Against PostgreSQL, the batch is sent as a single multi-row `INSERT ... VALUES (...), (...), ...`
+ * statement instead of one bound statement per row, avoiding the per-row round trip that r2dbc-postgresql
+ * otherwise performs for statement-level batches (see
+ * [pgjdbc/r2dbc-postgresql#527](https://github.com/pgjdbc/r2dbc-postgresql/issues/527)).
  * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.InsertTests.testBatchInsertWithSequence
  */
 suspend fun <T : Table, E> T.batchInsert(
@@ -353,7 +364,14 @@ private suspend fun <T : Table, E> T.batchInsert(
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchInsertStatement.(E) -> Unit
 ): List<ResultRow> = executeBatch(data, body) {
-    val stmt = buildStatement { batchInsert(ignoreErrors, shouldReturnGeneratedValues, body) }
+    val stmt = buildStatement {
+        when (currentDialect) {
+            is SQLServerDialect if autoIncColumn != null ->
+                SQLServerBatchInsertStatement(this@batchInsert, ignoreErrors, shouldReturnGeneratedValues)
+            is PostgreSQLDialect -> PostgreSQLBatchInsertStatement(this@batchInsert, ignoreErrors, shouldReturnGeneratedValues)
+            else -> BatchInsertStatement(this@batchInsert, ignoreErrors, shouldReturnGeneratedValues)
+        }
+    }
     stmt.executable()
 }
 

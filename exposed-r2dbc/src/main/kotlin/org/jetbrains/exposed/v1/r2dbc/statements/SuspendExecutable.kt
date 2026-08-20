@@ -103,6 +103,7 @@ fun <T : Any, S : Statement<T>> S.toExecutable(): SuspendExecutable<T, S> {
         is BatchUpsertStatement -> BatchUpsertSuspendExecutable(this)
         is UpsertStatement<*> -> UpsertSuspendExecutable(this as UpsertStatement<T>)
         is SQLServerBatchInsertStatement -> SQLServerBatchInsertSuspendExecutable(this)
+        is PostgreSQLBatchInsertStatement -> PostgreSQLBatchInsertSuspendExecutable(this)
         is BatchInsertStatement -> BatchInsertSuspendExecutable(this)
         is InsertStatement<*> -> InsertSuspendExecutable(this as InsertStatement<T>)
         is BatchUpdateStatement -> BatchUpdateSuspendExecutable(this)
