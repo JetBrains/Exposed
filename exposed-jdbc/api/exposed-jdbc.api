@@ -175,6 +175,19 @@ public final class org/jetbrains/exposed/v1/jdbc/MetadataQueriesKt {
 	public static final fun exists (Lorg/jetbrains/exposed/v1/core/Table;)Z
 }
 
+public abstract interface class org/jetbrains/exposed/v1/jdbc/MutableSizedIterable : org/jetbrains/exposed/v1/jdbc/SizedIterable {
+	public abstract fun add (Ljava/lang/Object;)Z
+	public abstract fun addAll (Ljava/util/Collection;)Z
+	public abstract fun clear ()V
+	public abstract fun remove (Ljava/lang/Object;)Z
+	public abstract fun removeAll (Ljava/util/Collection;)Z
+}
+
+public final class org/jetbrains/exposed/v1/jdbc/MutableSizedIterable$DefaultImpls {
+	public static fun forUpdate (Lorg/jetbrains/exposed/v1/jdbc/MutableSizedIterable;Lorg/jetbrains/exposed/v1/core/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
+	public static fun notForUpdate (Lorg/jetbrains/exposed/v1/jdbc/MutableSizedIterable;)Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
+}
+
 public final class org/jetbrains/exposed/v1/jdbc/QueriesKt {
 	public static final fun batchInsert (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Iterable;ZZLkotlin/jvm/functions/Function2;)Ljava/util/List;
 	public static final fun batchInsert (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/sequences/Sequence;ZZLkotlin/jvm/functions/Function2;)Ljava/util/List;

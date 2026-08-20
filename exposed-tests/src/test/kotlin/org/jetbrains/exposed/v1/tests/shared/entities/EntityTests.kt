@@ -820,7 +820,7 @@ class EntityTests : DatabaseTestsBase() {
         var region by Region referencedOn Schools.region
         var secondaryRegion by Region optionalReferencedOn Schools.secondaryRegion
         val students by Student.referrersOn(Students.school, true)
-        var holidays by Holiday via SchoolHolidays
+        var holidays: SizedIterable<Holiday> by Holiday via SchoolHolidays
     }
 
     @Test
