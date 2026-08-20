@@ -26,7 +26,7 @@ fun Application.tradeRoutes() {
                         Portfolio.findById(it) ?: error("Portfolio $it not found")
                     }
 
-                    val trade = Trade.new {
+                    val trade = Trade.newSuspend {
                         this.client.set(client)
                         this.instrument.set(instrument)
                         this.portfolio.set(portfolio)

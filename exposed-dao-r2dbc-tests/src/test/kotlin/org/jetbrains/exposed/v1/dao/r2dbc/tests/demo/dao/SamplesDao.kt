@@ -49,27 +49,27 @@ fun main() = runBlocking {
 
         SchemaUtils.create(Cities, Users)
 
-        val stPete = City.new {
+        val stPete = City.newSuspend {
             name = "St. Petersburg"
         }
 
-        val munich = City.new {
+        val munich = City.newSuspend {
             name = "Munich"
         }
 
-        User.new {
+        User.newSuspend {
             name = "a"
             city.set(stPete)
             age = 5
         }
 
-        User.new {
+        User.newSuspend {
             name = "b"
             city.set(stPete)
             age = 27
         }
 
-        User.new {
+        User.newSuspend {
             name = "c"
             city.set(munich)
             age = 42

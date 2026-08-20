@@ -34,7 +34,7 @@ class EntityWithBlobTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testBlobField() {
         withTables(BlobTable) {
-            val y1 = BlobEntity.new {
+            val y1 = BlobEntity.newSuspend {
                 content = ExposedBlob("foo".toByteArray())
             }
 

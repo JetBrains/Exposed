@@ -46,7 +46,7 @@ class RollbackEntityStateTests : R2dbcDatabaseTestsBase() {
 
     private suspend fun newItem(name: String = "original", note: String = "note0") = newTransaction {
         maxAttempts = 1
-        Item.new {
+        Item.newSuspend {
             this.name = name
             this.note = note
         }
@@ -177,7 +177,7 @@ class RollbackEntityStateTests : R2dbcDatabaseTestsBase() {
             runCatching {
                 newTransaction {
                     maxAttempts = 1
-                    created = Item.new {
+                    created = Item.newSuspend {
                         name = "ghost"
                         note = "note0"
                     }
@@ -199,7 +199,7 @@ class RollbackEntityStateTests : R2dbcDatabaseTestsBase() {
             val item = newTransaction {
                 maxAttempts = 1
                 Codes.insert { it[code] = "taken" }
-                Item.new {
+                Item.newSuspend {
                     name = "original"
                     note = "note0"
                 }
@@ -224,7 +224,7 @@ class RollbackEntityStateTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testNestedRollbackKeepsOuterPendingWrite() {
         withTables(Items, configure = { useNestedTransactions = true }) {
-            val item = Item.new {
+            val item = Item.newSuspend {
                 name = "name0"
                 note = "note0"
             }
@@ -252,7 +252,7 @@ class RollbackEntityStateTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testNestedRollbackAfterFlushKeepsOuterFlushedWrite() {
         withTables(Items, configure = { useNestedTransactions = true }) {
-            val item = Item.new {
+            val item = Item.newSuspend {
                 name = "name0"
                 note = "note0"
             }
@@ -282,7 +282,7 @@ class RollbackEntityStateTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testNestedCommitHandsWritesToOuterTransaction() {
         withTables(Items, configure = { useNestedTransactions = true }) {
-            val item = Item.new {
+            val item = Item.newSuspend {
                 name = "name0"
                 note = "note0"
             }
@@ -301,7 +301,7 @@ class RollbackEntityStateTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testNestedTransactionSeesOuterPendingWrite() {
         withTables(Items, configure = { useNestedTransactions = true }) {
-            val item = Item.new {
+            val item = Item.newSuspend {
                 name = "name0"
                 note = "note0"
             }

@@ -76,17 +76,17 @@ class MultiDatabaseEntityTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testSimpleCreateEntitiesInDifferentDatabase() = runTest {
         suspendTransaction(db1) {
-            EntityTestsData.XEntity.new {
+            EntityTestsData.XEntity.newSuspend {
                 this.b1 = true
             }
         }
 
         suspendTransaction(db2) {
-            EntityTestsData.XEntity.new {
+            EntityTestsData.XEntity.newSuspend {
                 this.b1 = false
             }
 
-            EntityTestsData.XEntity.new {
+            EntityTestsData.XEntity.newSuspend {
                 this.b1 = false
             }
         }
@@ -105,7 +105,7 @@ class MultiDatabaseEntityTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testEmbeddedInsertsInDifferentDatabase() = runTest {
         suspendTransaction(db1) {
-            EntityTestsData.XEntity.new {
+            EntityTestsData.XEntity.newSuspend {
                 this.b1 = true
             }
 
@@ -114,11 +114,11 @@ class MultiDatabaseEntityTest : R2dbcDatabaseTestsBase() {
 
             suspendTransaction(db2) {
                 assertEquals(0L, EntityTestsData.XEntity.all().count())
-                EntityTestsData.XEntity.new {
+                EntityTestsData.XEntity.newSuspend {
                     this.b1 = false
                 }
 
-                EntityTestsData.XEntity.new {
+                EntityTestsData.XEntity.newSuspend {
                     this.b1 = false
                 }
                 assertEquals(2L, EntityTestsData.XEntity.all().count())
@@ -133,7 +133,7 @@ class MultiDatabaseEntityTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testEmbeddedInsertsInDifferentDatabaseDepth2() = runTest {
         suspendTransaction(db1) {
-            EntityTestsData.XEntity.new {
+            EntityTestsData.XEntity.newSuspend {
                 this.b1 = true
             }
 
@@ -142,22 +142,22 @@ class MultiDatabaseEntityTest : R2dbcDatabaseTestsBase() {
 
             suspendTransaction(db2) {
                 assertEquals(0L, EntityTestsData.XEntity.all().count())
-                EntityTestsData.XEntity.new {
+                EntityTestsData.XEntity.newSuspend {
                     this.b1 = false
                 }
 
-                EntityTestsData.XEntity.new {
+                EntityTestsData.XEntity.newSuspend {
                     this.b1 = false
                 }
                 assertEquals(2L, EntityTestsData.XEntity.all().count())
                 assertEquals(true, EntityTestsData.XEntity.all().all { !it.b1 })
 
                 suspendTransaction(db1) {
-                    EntityTestsData.XEntity.new {
+                    EntityTestsData.XEntity.newSuspend {
                         this.b1 = true
                     }
 
-                    EntityTestsData.XEntity.new {
+                    EntityTestsData.XEntity.newSuspend {
                         this.b1 = false
                     }
                     assertEquals(3L, EntityTestsData.XEntity.all().count())
@@ -177,18 +177,18 @@ class MultiDatabaseEntityTest : R2dbcDatabaseTestsBase() {
         var db1y1 by Delegates.notNull<EntityTestsData.YEntity>()
         var db2y1 by Delegates.notNull<EntityTestsData.YEntity>()
         suspendTransaction(db1) {
-            db1b1 = EntityTestsData.BEntity.new(1) { }
+            db1b1 = EntityTestsData.BEntity.newSuspend(1) { }
 
             suspendTransaction(db2) {
                 assertEquals(0L, EntityTestsData.BEntity.count())
-                db2b1 = EntityTestsData.BEntity.new(2) { }
-                db2y1 = EntityTestsData.YEntity.new("2") { }
+                db2b1 = EntityTestsData.BEntity.newSuspend(2) { }
+                db2y1 = EntityTestsData.YEntity.newSuspend("2") { }
                 db2b1.y.set(db2y1)
             }
             assertEquals(1L, EntityTestsData.BEntity.count())
             assertNotNull(EntityTestsData.BEntity[1])
 
-            db1y1 = EntityTestsData.YEntity.new("1") { }
+            db1y1 = EntityTestsData.YEntity.newSuspend("1") { }
             db1b1.y.set(db1y1)
 
             commit()
@@ -216,11 +216,11 @@ class MultiDatabaseEntityTest : R2dbcDatabaseTestsBase() {
         Assertions.assertThrows(IllegalStateException::class.java) {
             runBlocking {
                 suspendTransaction(db1) {
-                    val db1b1 = EntityTestsData.BEntity.new(1) { }
+                    val db1b1 = EntityTestsData.BEntity.newSuspend(1) { }
 
                     suspendTransaction(db2) {
                         assertEquals(0L, EntityTestsData.BEntity.count())
-                        db1b1.y.set(EntityTestsData.YEntity.new("2") { })
+                        db1b1.y.set(EntityTestsData.YEntity.newSuspend("2") { })
                     }
                 }
             }

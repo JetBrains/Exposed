@@ -24,7 +24,7 @@ fun Application.instrumentRoutes() {
             post {
                 val dto = call.receive<InstrumentDTO>()
                 val result = suspendTransaction {
-                    val instrument = Instrument.new {
+                    val instrument = Instrument.newSuspend {
                         ticker = dto.ticker
                         name = dto.name
                         type = dto.type
@@ -79,7 +79,7 @@ fun Application.instrumentRoutes() {
                         ?: return@suspendTransaction null
                     val tags = dto.tags.map { tagName ->
                         Tag.find { Tags.name eq tagName }.firstOrNull()
-                            ?: Tag.new { name = tagName }
+                            ?: Tag.newSuspend { name = tagName }
                     }
                     instrument.tags = SizedCollection(tags)
                     InstrumentDetailDTO(

@@ -29,17 +29,17 @@ class UIntIdTableEntityTest : R2dbcDatabaseTestsBase() {
     @Test
     fun `create records`() {
         withTables(UIntIdTables.Cities, UIntIdTables.People) {
-            val mumbai = UIntIdTables.City.new { name = "Mumbai" }
-            val pune = UIntIdTables.City.new { name = "Pune" }
-            UIntIdTables.Person.new {
+            val mumbai = UIntIdTables.City.newSuspend { name = "Mumbai" }
+            val pune = UIntIdTables.City.newSuspend { name = "Pune" }
+            UIntIdTables.Person.newSuspend {
                 name = "David D'souza"
                 city.set(mumbai)
             }
-            UIntIdTables.Person.new {
+            UIntIdTables.Person.newSuspend {
                 name = "Tushar Mumbaikar"
                 city.set(mumbai)
             }
-            UIntIdTables.Person.new {
+            UIntIdTables.Person.newSuspend {
                 name = "Tanu Arora"
                 city.set(pune)
             }
@@ -58,17 +58,17 @@ class UIntIdTableEntityTest : R2dbcDatabaseTestsBase() {
     @Test
     fun `update and delete records`() {
         withTables(UIntIdTables.Cities, UIntIdTables.People) {
-            val mumbai = UIntIdTables.City.new { name = "Mumbai" }
-            val pune = UIntIdTables.City.new { name = "Pune" }
-            UIntIdTables.Person.new {
+            val mumbai = UIntIdTables.City.newSuspend { name = "Mumbai" }
+            val pune = UIntIdTables.City.newSuspend { name = "Pune" }
+            UIntIdTables.Person.newSuspend {
                 name = "David D'souza"
                 city.set(mumbai)
             }
-            UIntIdTables.Person.new {
+            UIntIdTables.Person.newSuspend {
                 name = "Tushar Mumbaikar"
                 city.set(mumbai)
             }
-            val tanu = UIntIdTables.Person.new {
+            val tanu = UIntIdTables.Person.newSuspend {
                 name = "Tanu Arora"
                 city.set(pune)
             }
