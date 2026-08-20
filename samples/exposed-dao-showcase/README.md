@@ -51,8 +51,9 @@ shared by both drivers. The differences are concentrated in:
 - **`model/entities/`** — reference properties are `var` under JDBC and `val` under R2DBC.
 - **`routes/`** — `transaction { }` becomes `suspendTransaction { }`, reference reads become `x()`,
   writes become `x.set(...)`, and collections need `.toList()`.
-- **`routes/SeedRoutes.kt`** — the R2DBC version additionally demonstrates `newDeferred { }`, which
-  batches several inserts into one statement and has no JDBC counterpart.
+- **`routes/SeedRoutes.kt`** — the R2DBC version uses the non-suspending `new { }`, which schedules an
+  insert instead of issuing it, so several rows are written by one batched statement. Where a
+  ready-to-use entity with a generated id is needed, it uses `newSuspend { }` instead.
 
 For a step-by-step account of every difference, see the
 [JDBC DAO to R2DBC DAO migration guide](https://www.jetbrains.com/help/exposed/migration-guide-dao-jdbc-to-r2dbc.html).

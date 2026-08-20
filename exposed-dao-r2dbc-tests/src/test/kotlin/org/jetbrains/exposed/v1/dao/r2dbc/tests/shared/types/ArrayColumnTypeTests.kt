@@ -37,7 +37,7 @@ class ArrayColumnTypeTests : R2dbcDatabaseTestsBase() {
     fun testArrayColumnWithDAOFunctions() {
         withTestTableAndExcludeSettings {
             val numInput = listOf(1, 2, 3)
-            val entity1 = ArrayTestDao.new {
+            val entity1 = ArrayTestDao.newSuspend {
                 numbers = numInput
                 doubles = null
             }

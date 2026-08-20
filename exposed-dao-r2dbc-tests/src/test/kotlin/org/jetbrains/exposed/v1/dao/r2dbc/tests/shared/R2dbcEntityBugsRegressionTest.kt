@@ -53,12 +53,12 @@ class `Table id not in Record Test issue 1341` : R2dbcDatabaseTestsBase() {
         companion object : EntityClass<Int, Accounts>(AccountsTable) {
 
             suspend fun new(accountName: Pair<String, String>): Accounts {
-                val newName = Names.new {
+                val newName = Names.newSuspend {
                     first = accountName.first
                     second = accountName.second
                 }
 
-                return new {
+                return newSuspend {
                     this.name.set(newName)
                 }
             }
@@ -111,11 +111,11 @@ class `Text id loosed on insert issue 1379` : R2dbcDatabaseTestsBase() {
     fun testRegression() {
         val runTests = TestDB.entries - TestDB.POSTGRESQL
         withTables(runTests, Table1, Table2) {
-            val obj1 = Obj1.new {
+            val obj1 = Obj1.newSuspend {
                 a = "hello world!"
             }
 
-            Obj2.new("test") {
+            Obj2.newSuspend("test") {
                 a = "bye world!"
                 ref.set(obj1)
             }
@@ -136,7 +136,7 @@ class EntityCacheNotUpdatedOnCommitIssue1380 : R2dbcDatabaseTestsBase() {
 
     @Test fun testRegression() {
         withTables(TestTable) {
-            val entity1 = TestEntity.new { value = 1 }
+            val entity1 = TestEntity.newSuspend { value = 1 }
 
             assertNotNull(TestEntity.findById(entity1.id))
             TestEntity.findById(entity1.id)?.delete()

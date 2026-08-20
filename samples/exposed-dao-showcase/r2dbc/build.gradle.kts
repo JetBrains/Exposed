@@ -32,7 +32,5 @@ kotlin {
     compilerOptions {
         optIn.add("kotlin.time.ExperimentalTime")
         optIn.add("org.jetbrains.exposed.v1.dao.r2dbc.ExperimentalR2dbcDaoApi")
-        // Required by Flow.flattenConcat(), used in SeedRoutes to collect newDeferred { } flows.
-        optIn.add("kotlinx.coroutines.ExperimentalCoroutinesApi")
     }
 }

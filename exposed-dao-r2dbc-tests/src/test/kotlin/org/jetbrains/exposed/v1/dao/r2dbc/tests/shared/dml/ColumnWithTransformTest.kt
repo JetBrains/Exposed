@@ -43,7 +43,7 @@ class ColumnWithTransformTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testTransformedValuesWithDAO() {
         withTables(TransformTable) {
-            val entity = TransformEntity.new {
+            val entity = TransformEntity.newSuspend {
                 this.simple = TransformDataHolder(120)
                 this.chained = TransformDataHolder(240)
             }
@@ -62,7 +62,7 @@ class ColumnWithTransformTest : R2dbcDatabaseTestsBase() {
         withTables(TransformTable) {
             val entity = inTopLevelSuspendTransaction(null) {
                 maxAttempts = 1
-                TransformEntity.new {
+                TransformEntity.newSuspend {
                     simple = TransformDataHolder(120)
                     chained = TransformDataHolder(240)
                 }
@@ -83,7 +83,7 @@ class ColumnWithTransformTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testEntityWithDefaultValue() {
         withTables(TransformTable) {
-            val entity = TransformEntity.new {}
+            val entity = TransformEntity.newSuspend {}
 
             assertEquals(TransformDataHolder(1), entity.simple)
             assertEquals(TransformDataHolder(2), entity.chained)
@@ -98,7 +98,7 @@ class ColumnWithTransformTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testWrapRowWithAliases() {
         withTables(TransformTable) {
-            TransformEntity.new {
+            TransformEntity.newSuspend {
                 simple = TransformDataHolder(10)
             }
             entityCache.clear()

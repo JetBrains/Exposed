@@ -87,10 +87,10 @@ class EntityHookTest : R2dbcDatabaseTestsBase() {
     fun testCreated01() {
         withTables(*EntityHookTestData.allTables) {
             val (_, events, txId) = trackChanges {
-                val ru = EntityHookTestData.Country.new {
+                val ru = EntityHookTestData.Country.newSuspend {
                     name = "RU"
                 }
-                val x = EntityHookTestData.City.new {
+                val x = EntityHookTestData.City.newSuspend {
                     name = "St. Petersburg"
                     country.set(ru)
                 }
@@ -109,10 +109,10 @@ class EntityHookTest : R2dbcDatabaseTestsBase() {
     fun testDeleted01() {
         withTables(*EntityHookTestData.allTables) {
             val spbId = suspendTransaction {
-                val ru = EntityHookTestData.Country.new {
+                val ru = EntityHookTestData.Country.newSuspend {
                     name = "RU"
                 }
-                val x = EntityHookTestData.City.new {
+                val x = EntityHookTestData.City.newSuspend {
                     name = "St. Petersburg"
                     country.set(ru)
                 }
@@ -136,10 +136,10 @@ class EntityHookTest : R2dbcDatabaseTestsBase() {
     fun testModifiedSimple01() {
         withTables(*EntityHookTestData.allTables) {
             val (_, events1, _) = trackChanges {
-                val ru = EntityHookTestData.Country.new {
+                val ru = EntityHookTestData.Country.newSuspend {
                     name = "RU"
                 }
-                EntityHookTestData.City.new {
+                EntityHookTestData.City.newSuspend {
                     name = "St. Petersburg"
                     country.set(ru)
                 }
@@ -148,7 +148,7 @@ class EntityHookTest : R2dbcDatabaseTestsBase() {
             assertEquals(2, events1.count())
 
             val (_, events2, txId) = trackChanges {
-                val de = EntityHookTestData.Country.new {
+                val de = EntityHookTestData.Country.newSuspend {
                     name = "DE"
                 }
                 val x = EntityHookTestData.City.all().single()
@@ -169,21 +169,21 @@ class EntityHookTest : R2dbcDatabaseTestsBase() {
     fun testModifiedInnerTable01() {
         withTables(*EntityHookTestData.allTables) {
             suspendTransaction {
-                val ru = EntityHookTestData.Country.new {
+                val ru = EntityHookTestData.Country.newSuspend {
                     name = "RU"
                 }
-                val de = EntityHookTestData.Country.new {
+                val de = EntityHookTestData.Country.newSuspend {
                     name = "DE"
                 }
-                EntityHookTestData.City.new {
+                EntityHookTestData.City.newSuspend {
                     name = "St. Petersburg"
                     country.set(ru)
                 }
-                EntityHookTestData.City.new {
+                EntityHookTestData.City.newSuspend {
                     name = "Munich"
                     country.set(de)
                 }
-                EntityHookTestData.User.new {
+                EntityHookTestData.User.newSuspend {
                     name = "John"
                     age = 30
                 }
@@ -208,21 +208,21 @@ class EntityHookTest : R2dbcDatabaseTestsBase() {
     fun testModifiedInnerTable02() {
         withTables(*EntityHookTestData.allTables) {
             suspendTransaction {
-                val ru = EntityHookTestData.Country.new {
+                val ru = EntityHookTestData.Country.newSuspend {
                     name = "RU"
                 }
-                val de = EntityHookTestData.Country.new {
+                val de = EntityHookTestData.Country.newSuspend {
                     name = "DE"
                 }
-                val spb = EntityHookTestData.City.new {
+                val spb = EntityHookTestData.City.newSuspend {
                     name = "St. Petersburg"
                     country.set(ru)
                 }
-                val muc = EntityHookTestData.City.new {
+                val muc = EntityHookTestData.City.newSuspend {
                     name = "Munich"
                     country.set(de)
                 }
-                val john = EntityHookTestData.User.new {
+                val john = EntityHookTestData.User.newSuspend {
                     name = "John"
                     age = 30
                 }
@@ -250,21 +250,21 @@ class EntityHookTest : R2dbcDatabaseTestsBase() {
     fun testModifiedInnerTable03() {
         withTables(*EntityHookTestData.allTables) {
             suspendTransaction {
-                val ru = EntityHookTestData.Country.new {
+                val ru = EntityHookTestData.Country.newSuspend {
                     name = "RU"
                 }
-                val de = EntityHookTestData.Country.new {
+                val de = EntityHookTestData.Country.newSuspend {
                     name = "DE"
                 }
-                val spb = EntityHookTestData.City.new {
+                val spb = EntityHookTestData.City.newSuspend {
                     name = "St. Petersburg"
                     country.set(ru)
                 }
-                val muc = EntityHookTestData.City.new {
+                val muc = EntityHookTestData.City.newSuspend {
                     name = "Munich"
                     country.set(de)
                 }
-                val john = EntityHookTestData.User.new {
+                val john = EntityHookTestData.User.newSuspend {
                     name = "John"
                     age = 30
                 }
@@ -291,7 +291,7 @@ class EntityHookTest : R2dbcDatabaseTestsBase() {
     fun `single entity flush should trigger events`() {
         withTables(EntityHookTestData.User.table) {
             val (user, events, _) = trackChanges {
-                EntityHookTestData.User.new {
+                EntityHookTestData.User.newSuspend {
                     name = "John"
                     age = 30
                 }
@@ -319,7 +319,7 @@ class EntityHookTest : R2dbcDatabaseTestsBase() {
     fun testCallingFlushNotifiesEntityHookSubscribers() {
         withTables(EntityHookTestData.User.table) {
             var hookCalls = 0
-            val user = EntityHookTestData.User.new {
+            val user = EntityHookTestData.User.newSuspend {
                 name = "1@test.local"
                 age = 30
             }
@@ -349,7 +349,7 @@ class EntityHookTest : R2dbcDatabaseTestsBase() {
             var hookCalls = 0
 
             withHook({ hookCalls++ }) {
-                val user = EntityHookTestData.User.new {
+                val user = EntityHookTestData.User.newSuspend {
                     name = "name 1"
                     age = 25
                 }

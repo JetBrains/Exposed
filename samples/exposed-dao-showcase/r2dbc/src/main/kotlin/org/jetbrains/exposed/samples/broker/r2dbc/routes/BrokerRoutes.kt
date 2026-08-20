@@ -18,7 +18,7 @@ fun Application.brokerRoutes() {
             post {
                 val dto = call.receive<BrokerDTO>()
                 val result = suspendTransaction {
-                    val broker = Broker.new {
+                    val broker = Broker.newSuspend {
                         name = dto.name
                         licenseNumber = dto.licenseNumber
                     }

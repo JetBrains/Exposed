@@ -65,7 +65,7 @@ class NestedTransactionEntityCacheTests : R2dbcDatabaseTestsBase() {
 
     private suspend fun newItem(name: String = "name0", note: String = "note0") = newTransaction {
         maxAttempts = 1
-        Item.new {
+        Item.newSuspend {
             this.name = name
             this.note = note
         }
@@ -74,7 +74,7 @@ class NestedTransactionEntityCacheTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testNestedTransactionSharesParentEntityInstance() {
         withTables(Items, configure = { useNestedTransactions = true }) {
-            val outer = Item.new {
+            val outer = Item.newSuspend {
                 name = "name0"
                 note = "note0"
             }
@@ -89,7 +89,7 @@ class NestedTransactionEntityCacheTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testWriteThroughNestedLookupReachesParentInstance() {
         withTables(Items, configure = { useNestedTransactions = true }) {
-            val outer = Item.new {
+            val outer = Item.newSuspend {
                 name = "name0"
                 note = "note0"
             }
@@ -108,7 +108,7 @@ class NestedTransactionEntityCacheTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testNestedDslQuerySeesOuterPendingWrite() {
         withTables(Items, configure = { useNestedTransactions = true }) {
-            val item = Item.new {
+            val item = Item.newSuspend {
                 name = "name0"
                 note = "note0"
             }
@@ -125,7 +125,7 @@ class NestedTransactionEntityCacheTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testNestedQuerySeesOuterPendingInsert() {
         withTables(Items, configure = { useNestedTransactions = true }) {
-            Item.new {
+            Item.newSuspend {
                 name = "name0"
                 note = "note0"
             }
@@ -140,7 +140,7 @@ class NestedTransactionEntityCacheTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testNestedRollbackKeepsOuterWriteItForcedOut() {
         withTables(Items, configure = { useNestedTransactions = true }) {
-            val item = Item.new {
+            val item = Item.newSuspend {
                 name = "name0"
                 note = "note0"
             }
@@ -163,8 +163,8 @@ class NestedTransactionEntityCacheTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testNestedInsertInvalidatesOuterReferrers() {
         withTables(Owners, Pets, configure = { useNestedTransactions = true }) {
-            val theOwner = Owner.new { name = "owner" }
-            Pet.new {
+            val theOwner = Owner.newSuspend { name = "owner" }
+            Pet.newSuspend {
                 owner.set(theOwner)
                 name = "pet1"
             }
@@ -174,7 +174,7 @@ class NestedTransactionEntityCacheTests : R2dbcDatabaseTestsBase() {
             assertEquals(listOf("pet1"), theOwner.pets.map { it.name }.toList())
 
             suspendTransaction {
-                Pet.new {
+                Pet.newSuspend {
                     owner.set(theOwner)
                     name = "pet2"
                 }
@@ -204,6 +204,55 @@ class NestedTransactionEntityCacheTests : R2dbcDatabaseTestsBase() {
                     assertEquals("name1", item.name)
                 }
             }
+        }
+    }
+
+    @Test
+    fun testNestedCommitSupersedesOuterPendingWrite() {
+        withTables(Items, configure = { useNestedTransactions = true }) {
+            val item = Item.newSuspend {
+                name = "name0"
+                note = "note0"
+            }
+            flushCache()
+
+            item.name = "name1"
+
+            suspendTransaction {
+                item.name = "name2"
+            }
+
+            assertEquals("name2", item.name)
+
+            flushCache()
+            assertEquals("name2", Items.selectAll().single()[Items.name])
+        }
+    }
+
+    @Test
+    fun testNestedCommitSupersedesPendingWriteInEveryOuterScope() {
+        withTables(Items, configure = { useNestedTransactions = true }) {
+            val item = Item.newSuspend {
+                name = "name0"
+                note = "note0"
+            }
+            flushCache()
+
+            item.name = "name1"
+
+            suspendTransaction {
+                suspendTransaction {
+                    item.name = "name2"
+                    flushCache()
+                }
+
+                assertEquals("name2", Items.selectAll().single()[Items.name])
+            }
+
+            assertEquals("name2", item.name)
+
+            flushCache()
+            assertEquals("name2", Items.selectAll().single()[Items.name])
         }
     }
 }

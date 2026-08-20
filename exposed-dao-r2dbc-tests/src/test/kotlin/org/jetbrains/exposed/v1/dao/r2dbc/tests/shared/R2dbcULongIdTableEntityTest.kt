@@ -29,17 +29,17 @@ class ULongIdTableEntityTest : R2dbcDatabaseTestsBase() {
     @Test
     fun `create records`() {
         withTables(ULongIdTables.People) {
-            val mumbai = ULongIdTables.City.new { name = "Mumbai" }
-            val pune = ULongIdTables.City.new { name = "Pune" }
-            ULongIdTables.Person.new {
+            val mumbai = ULongIdTables.City.newSuspend { name = "Mumbai" }
+            val pune = ULongIdTables.City.newSuspend { name = "Pune" }
+            ULongIdTables.Person.newSuspend {
                 name = "David D'souza"
                 city.set(mumbai)
             }
-            ULongIdTables.Person.new {
+            ULongIdTables.Person.newSuspend {
                 name = "Tushar Mumbaikar"
                 city.set(mumbai)
             }
-            ULongIdTables.Person.new {
+            ULongIdTables.Person.newSuspend {
                 name = "Tanu Arora"
                 city.set(pune)
             }
@@ -58,17 +58,17 @@ class ULongIdTableEntityTest : R2dbcDatabaseTestsBase() {
     @Test
     fun `update and delete records`() {
         withTables(ULongIdTables.People) {
-            val mumbai = ULongIdTables.City.new { name = "Mumbai" }
-            val pune = ULongIdTables.City.new { name = "Pune" }
-            ULongIdTables.Person.new {
+            val mumbai = ULongIdTables.City.newSuspend { name = "Mumbai" }
+            val pune = ULongIdTables.City.newSuspend { name = "Pune" }
+            ULongIdTables.Person.newSuspend {
                 name = "David D'souza"
                 city.set(mumbai)
             }
-            ULongIdTables.Person.new {
+            ULongIdTables.Person.newSuspend {
                 name = "Tushar Mumbaikar"
                 city.set(mumbai)
             }
-            val tanu = ULongIdTables.Person.new {
+            val tanu = ULongIdTables.Person.newSuspend {
                 name = "Tanu Arora"
                 city.set(pune)
             }

@@ -75,10 +75,10 @@ class EntityReferenceCacheTest : R2dbcDatabaseTestsBase() {
         var b1: EntityTestsData.BEntity by Delegates.notNull()
         executeOnH2(EntityTestsData.XTable, EntityTestsData.YTable) {
             suspendTransaction(db) {
-                y1 = EntityTestsData.YEntity.new {
+                y1 = EntityTestsData.YEntity.newSuspend {
                     this.x = true
                 }
-                b1 = EntityTestsData.BEntity.new {
+                b1 = EntityTestsData.BEntity.newSuspend {
                     this.b1 = true
                     this.y.set(y1)
                 }
@@ -104,8 +104,8 @@ class EntityReferenceCacheTest : R2dbcDatabaseTestsBase() {
         var b1: EntityTestsData.BEntity by Delegates.notNull()
         executeOnH2(EntityTestsData.XTable, EntityTestsData.YTable) {
             suspendTransaction(db) {
-                y1 = EntityTestsData.YEntity.new {}
-                b1 = EntityTestsData.BEntity.new {
+                y1 = EntityTestsData.YEntity.newSuspend {}
+                b1 = EntityTestsData.BEntity.newSuspend {
                     this.y.set(y1)
                 }
             }
@@ -131,8 +131,8 @@ class EntityReferenceCacheTest : R2dbcDatabaseTestsBase() {
         var b1: EntityTestsData.BEntity by Delegates.notNull()
         executeOnH2(EntityTestsData.XTable, EntityTestsData.YTable) {
             suspendTransaction(db) {
-                y1 = EntityTestsData.YEntity.new {}
-                b1 = EntityTestsData.BEntity.new {}
+                y1 = EntityTestsData.YEntity.newSuspend {}
+                b1 = EntityTestsData.BEntity.newSuspend {}
             }
 
             suspendTransaction(dbWithCache) {
@@ -156,13 +156,13 @@ class EntityReferenceCacheTest : R2dbcDatabaseTestsBase() {
         var p2: EntityTests.Post by Delegates.notNull()
         executeOnH2(EntityTests.Boards, EntityTests.Posts, EntityTests.Categories) {
             suspendTransaction(db) {
-                b1 = EntityTests.Board.new {
+                b1 = EntityTests.Board.newSuspend {
                     name = "test-board"
                 }
-                p1 = EntityTests.Post.new {
+                p1 = EntityTests.Post.newSuspend {
                     board.set(b1)
                 }
-                p2 = EntityTests.Post.new {
+                p2 = EntityTests.Post.newSuspend {
                     board.set(b1)
                 }
             }
@@ -189,13 +189,13 @@ class EntityReferenceCacheTest : R2dbcDatabaseTestsBase() {
         var p2: EntityTests.Post by Delegates.notNull()
         executeOnH2(EntityTests.Boards, EntityTests.Posts, EntityTests.Categories) {
             suspendTransaction(db) {
-                b1 = EntityTests.Board.new {
+                b1 = EntityTests.Board.newSuspend {
                     name = "test-board"
                 }
-                p1 = EntityTests.Post.new {
+                p1 = EntityTests.Post.newSuspend {
                     board.set(b1)
                 }
-                p2 = EntityTests.Post.new {
+                p2 = EntityTests.Post.newSuspend {
                     board.set(b1)
                 }
             }
@@ -226,13 +226,13 @@ class EntityReferenceCacheTest : R2dbcDatabaseTestsBase() {
         var p2: EntityTests.Post by Delegates.notNull()
         executeOnH2(EntityTests.Boards, EntityTests.Posts, EntityTests.Categories) {
             suspendTransaction(db) {
-                b1 = EntityTests.Board.new {
+                b1 = EntityTests.Board.newSuspend {
                     name = "test-board"
                 }
-                p1 = EntityTests.Post.new {
+                p1 = EntityTests.Post.newSuspend {
                     board.set(b1)
                 }
-                p2 = EntityTests.Post.new {
+                p2 = EntityTests.Post.newSuspend {
                     board.set(b1)
                 }
             }
@@ -259,15 +259,15 @@ class EntityReferenceCacheTest : R2dbcDatabaseTestsBase() {
         var u2: User by Delegates.notNull()
         executeOnH2(Cities, Users) {
             suspendTransaction(dbWithCache) {
-                c1 = City.new {
+                c1 = City.newSuspend {
                     name = "Seoul"
                 }
-                u1 = User.new {
+                u1 = User.newSuspend {
                     name = "a"
                     city.set(c1)
                     age = 5
                 }
-                u2 = User.new {
+                u2 = User.newSuspend {
                     name = "b"
                     city.set(c1)
                     age = 27
@@ -285,9 +285,9 @@ class EntityReferenceCacheTest : R2dbcDatabaseTestsBase() {
         var s2: VString by Delegates.notNull()
         executeOnH2(*ViaTestData.allTables) {
             suspendTransaction(db) {
-                n = VNumber.new { number = 10 }
-                s1 = VString.new { text = "aaa" }
-                s2 = VString.new { text = "bbb" }
+                n = VNumber.newSuspend { number = 10 }
+                s1 = VString.newSuspend { text = "aaa" }
+                s2 = VString.newSuspend { text = "bbb" }
                 n.connectedStrings = SizedCollection(listOf(s1, s2))
             }
 
@@ -309,9 +309,9 @@ class EntityReferenceCacheTest : R2dbcDatabaseTestsBase() {
         var s2: VString by Delegates.notNull()
         executeOnH2(*ViaTestData.allTables) {
             suspendTransaction(db) {
-                n = VNumber.new { number = 10 }
-                s1 = VString.new { text = "aaa" }
-                s2 = VString.new { text = "bbb" }
+                n = VNumber.newSuspend { number = 10 }
+                s1 = VString.newSuspend { text = "aaa" }
+                s2 = VString.newSuspend { text = "bbb" }
                 n.connectedStrings = SizedCollection(listOf(s1, s2))
             }
 
@@ -344,8 +344,8 @@ class EntityReferenceCacheTest : R2dbcDatabaseTestsBase() {
         var n: VNumber by Delegates.notNull()
         executeOnH2(*ViaTestData.allTables) {
             suspendTransaction(db) {
-                n = VNumber.new { number = 10 }
-                val s1 = VString.new { text = "aaa" }
+                n = VNumber.newSuspend { number = 10 }
+                val s1 = VString.newSuspend { text = "aaa" }
                 n.connectedStrings = SizedCollection(listOf(s1))
             }
 
@@ -436,13 +436,13 @@ class EntityReferenceCacheTest : R2dbcDatabaseTestsBase() {
     @Test
     fun `dont flush indirectly related entities on insert`() {
         withTables(Customers, Orders, OrderItems, Addresses) {
-            val customer1 = Customer.new { name = "Test" }
-            val order1 = Order.new {
+            val customer1 = Customer.newSuspend { name = "Test" }
+            val order1 = Order.newSuspend {
                 customer.set(customer1)
                 ref = "Test"
             }
 
-            val orderItem1 = OrderItem.new {
+            val orderItem1 = OrderItem.newSuspend {
                 order.set(order1)
                 sku = "Test"
             }
@@ -456,7 +456,7 @@ class EntityReferenceCacheTest : R2dbcDatabaseTestsBase() {
             assertEquals(orderItem1, order1.items.single())
             assertNotNull(entityCache.getReferrers<OrderItem>(order1.id, OrderItems.order))
 
-            Address.new {
+            Address.newSuspend {
                 customer.set(customer1)
                 street = "Test"
             }
@@ -467,7 +467,7 @@ class EntityReferenceCacheTest : R2dbcDatabaseTestsBase() {
             assertNotNull(entityCache.getReferrers<Order>(customer1.id, Orders.customer))
             assertNotNull(entityCache.getReferrers<OrderItem>(order1.id, OrderItems.order))
 
-            val customer2 = Customer.new { name = "Test2" }
+            val customer2 = Customer.newSuspend { name = "Test2" }
 
             flushCache()
 
@@ -483,28 +483,28 @@ class EntityReferenceCacheTest : R2dbcDatabaseTestsBase() {
     @Test
     fun `dont flush indirectly related entities on delete`() {
         withTables(Customers, Orders, OrderItems, Addresses) {
-            val customer1 = Customer.new { name = "Test" }
-            val order1 = Order.new {
+            val customer1 = Customer.newSuspend { name = "Test" }
+            val order1 = Order.newSuspend {
                 customer.set(customer1)
                 ref = "Test"
             }
 
-            val order2 = Order.new {
+            val order2 = Order.newSuspend {
                 customer.set(customer1)
                 ref = "Test2"
             }
 
-            OrderItem.new {
+            OrderItem.newSuspend {
                 order.set(order1)
                 sku = "Test"
             }
 
-            val orderItem2 = OrderItem.new {
+            val orderItem2 = OrderItem.newSuspend {
                 order.set(order2)
                 sku = "Test2"
             }
 
-            Address.new {
+            Address.newSuspend {
                 customer.set(customer1)
                 street = "Test"
             }
@@ -546,21 +546,21 @@ class EntityReferenceCacheTest : R2dbcDatabaseTestsBase() {
     @Test
     fun `dont flush indirectly related entities with inner table`() {
         withTables(Customers, Roles, CustomerRoles) {
-            val customer1 = Customer.new { name = "Test" }
-            val role1 = Role.new { name = "Test" }
-            val customerRole1 = CustomerRole.new {
+            val customer1 = Customer.newSuspend { name = "Test" }
+            val role1 = Role.newSuspend { name = "Test" }
+            val customerRole1 = CustomerRole.newSuspend {
                 customer.set(customer1)
                 role.set(role1)
             }
 
             flushCache()
             assertEqualCollections(listOf(customerRole1), customer1.customerRoles.toList())
-            val role2 = Role.new { name = "Test2" }
+            val role2 = Role.newSuspend { name = "Test2" }
 
             flushCache()
             assertNotNull(entityCache.getReferrers<CustomerRole>(customer1.id, CustomerRoles.customer))
 
-            val customerRole2 = CustomerRole.new {
+            val customerRole2 = CustomerRole.newSuspend {
                 customer.set(customer1)
                 role.set(role2)
             }

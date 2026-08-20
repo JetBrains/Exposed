@@ -43,7 +43,7 @@ class EncryptedColumnDaoTests : R2dbcDatabaseTestsBase() {
         }
 
         withTables(TestTable) {
-            val entity = ETest.new {
+            val entity = ETest.newSuspend {
                 varchar = varcharValue
                 binary = binaryValue
             }
@@ -73,7 +73,7 @@ class EncryptedColumnDaoTests : R2dbcDatabaseTestsBase() {
             val varcharValue = "varchar"
             val binaryValue = "binary".toByteArray()
 
-            val entity = ETest.new {
+            val entity = ETest.newSuspend {
                 varchar = varcharValue
                 binary = binaryValue
             }

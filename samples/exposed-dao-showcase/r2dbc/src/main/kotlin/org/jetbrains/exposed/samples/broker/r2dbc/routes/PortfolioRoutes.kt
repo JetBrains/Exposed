@@ -21,7 +21,7 @@ fun Application.portfolioRoutes() {
                 val result = suspendTransaction {
                     val client = Client.findById(dto.clientId)
                         ?: error("Client ${dto.clientId} not found")
-                    val portfolio = Portfolio.new {
+                    val portfolio = Portfolio.newSuspend {
                         name = dto.name
                         this.client.set(client)
                         createdAt = Clock.System.now()

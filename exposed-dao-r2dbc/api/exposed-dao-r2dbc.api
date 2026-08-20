@@ -121,10 +121,10 @@ public abstract class org/jetbrains/exposed/v1/dao/r2dbc/EntityClass {
 	public final fun memoizedTransform (Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/dao/r2dbc/EntityFieldWithTransform;
 	public final fun memoizedTransform (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnTransformer;)Lorg/jetbrains/exposed/v1/dao/r2dbc/EntityFieldWithTransform;
 	public final fun memoizedTransform (Lorg/jetbrains/exposed/v1/dao/r2dbc/EntityFieldWithTransform;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/dao/r2dbc/EntityFieldWithTransform;
-	public fun new (Ljava/lang/Object;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun new (Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun newDeferred (Ljava/lang/Object;Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
-	public fun newDeferred (Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
+	public fun new (Ljava/lang/Object;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/dao/r2dbc/Entity;
+	public fun new (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/dao/r2dbc/Entity;
+	public fun newSuspend (Ljava/lang/Object;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun newSuspend (Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun optionalBackReferencedOn (Lorg/jetbrains/exposed/v1/dao/r2dbc/EntityClass;Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/dao/r2dbc/relationships/OptionalBackReference;
 	public final fun optionalBackReferencedOn (Lorg/jetbrains/exposed/v1/dao/r2dbc/EntityClass;Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;)Lorg/jetbrains/exposed/v1/dao/r2dbc/relationships/OptionalBackReference;
 	public final fun optionalBackReferencedOnNonNullable (Lorg/jetbrains/exposed/v1/dao/r2dbc/EntityClass;Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/dao/r2dbc/relationships/OptionalBackReference;

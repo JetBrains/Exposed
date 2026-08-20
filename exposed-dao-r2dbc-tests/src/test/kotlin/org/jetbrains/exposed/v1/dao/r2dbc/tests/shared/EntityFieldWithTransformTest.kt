@@ -44,7 +44,7 @@ class EntityFieldWithTransformTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testSetAndGetValue() {
         withTables(TransformationsTable) {
-            val entity = TransformationEntity.new {
+            val entity = TransformationEntity.newSuspend {
                 value = "stuff"
             }
 
@@ -61,7 +61,7 @@ class EntityFieldWithTransformTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testSetAndGetNullableValueWhilePresent() {
         withTables(NullableTransformationsTable) {
-            val entity = NullableTransformationEntity.new {
+            val entity = NullableTransformationEntity.newSuspend {
                 value = "stuff"
             }
 
@@ -78,7 +78,7 @@ class EntityFieldWithTransformTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testSetAndGetNullableValueWhileAbsent() {
         withTables(NullableTransformationsTable) {
-            val entity = NullableTransformationEntity.new {}
+            val entity = NullableTransformationEntity.newSuspend {}
 
             assertEquals(null, entity.value)
 
@@ -104,7 +104,7 @@ class EntityFieldWithTransformTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testDaoTransformWithDslTransform() {
         withTables(TableWithTransforms) {
-            TableWithTransform.new {
+            TableWithTransform.newSuspend {
                 value = 10
             }
 
@@ -133,7 +133,7 @@ class EntityFieldWithTransformTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testChainedTransformation() {
         withTables(TransformationsTable) {
-            ChainedTransformationEntity.new {
+            ChainedTransformationEntity.newSuspend {
                 value = "qwertyuiop"
             }
 
@@ -158,7 +158,7 @@ class EntityFieldWithTransformTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testMemoizedChainedTransformation() {
         withTables(TransformationsTable) {
-            MemoizedChainedTransformationEntity.new {
+            MemoizedChainedTransformationEntity.newSuspend {
                 value = "value#"
             }
 
