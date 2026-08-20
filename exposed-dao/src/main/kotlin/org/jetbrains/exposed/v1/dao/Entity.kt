@@ -87,22 +87,20 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
 
     private val referenceCache by lazy { HashMap<Column<*>, Any?>() }
 
-    internal fun isNewEntity(): Boolean {
-        val cache = TransactionManager.current().entityCache
+    internal fun isNewEntity(cache: EntityCache = TransactionManager.current().entityCache): Boolean {
         return cache.inserts[klass.table]?.contains(this) ?: false
     }
 
     /**
-     * Whether this entity maps to a row that already exists in the database of the current transaction.
+     * Whether this entity maps to a row that already exists in the database of the provided [transaction].
      *
      * The result is `false` for an entity that belongs to a different [Database], that has not been assigned an
      * id value, that is scheduled for insert, or that is still running its initialization block and so has not
      * been scheduled yet.
      */
-    internal fun isPersistedInCurrentTransaction(): Boolean {
-        val transaction = TransactionManager.current()
+    internal fun isPersistedIn(transaction: Transaction, cache: EntityCache): Boolean {
         if (transaction.db != db || id._value == null) return false
-        return !isNewEntity() && !transaction.entityCache.isEntityInInitializationState(this)
+        return !isNewEntity(cache) && !cache.isEntityInInitializationState(this)
     }
 
     /**
@@ -313,7 +311,8 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
         klass.invalidateEntityInCache(o)
         val currentValue = _readValues?.getOrNull(this)
         if (writeValues.containsKey(this as Column<out Any?>) || currentValue != value) {
-            val entityCache = TransactionManager.current().entityCache
+            val transaction = TransactionManager.current()
+            val entityCache = transaction.entityCache
             if (referee != null) {
                 if (value is EntityID<*> && value.table == referee!!.table) value.value // flush
 
@@ -323,7 +322,7 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
             }
             val valueTypeMismatch = value is EntityID<*> && value.table is CompositeIdTable && this.columnType !is EntityIDColumnType<*>
             writeValues[this as Column<Any?>] = if (valueTypeMismatch) (value as EntityID<*>)._value else value
-            if (o.isPersistedInCurrentTransaction()) {
+            if (o.isPersistedIn(transaction, entityCache)) {
                 entityCache.scheduleUpdate(klass, o)
             }
         }
