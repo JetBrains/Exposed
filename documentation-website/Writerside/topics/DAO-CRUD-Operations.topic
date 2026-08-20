@@ -345,7 +345,7 @@
     </chapter>
     <chapter title="R2DBC differences" id="r2dbc-differences">
         <include from="lib.topic" element-id="r2dbc-dao-experimental"/>
-        <chapter title="Every operation suspends" id="r2dbc-suspending">
+        <chapter title="Operations suspend" id="r2dbc-suspending">
             <p>
                 Run all DAO calls inside <code>suspendTransaction</code>, and make the enclosing functions
                 <code>suspend</code>:
@@ -372,7 +372,7 @@
                         import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 
                         suspendTransaction {
-                            val movie = StarWarsFilmEntity.new {
+                            val movie = StarWarsFilmEntity.newSuspend {
                                 name = "The Last Jedi"
                                 director = "Rian Johnson"
                             }
@@ -385,23 +385,65 @@
                 </tab>
             </tabs>
             <p>
-                <code>new()</code>, <code>findById()</code>, <code>get()</code>, <code>findByIdAndUpdate()</code>,
-                <code>findSingleByAndUpdate()</code>, <code>count()</code>, <code>reload()</code>,
-                <code>Entity.delete()</code>, <code>Entity.flush()</code>, and <code>Entity.refresh()</code> are all
-                suspending. <code>all()</code> and <code>find { }</code> are not, because they only build a query.
+                <code>newSuspend()</code>, <code>findById()</code>, <code>get()</code>,
+                <code>findByIdAndUpdate()</code>, <code>findSingleByAndUpdate()</code>, <code>count()</code>,
+                <code>reload()</code>, <code>Entity.delete()</code>, <code>Entity.flush()</code>, and
+                <code>Entity.refresh()</code> are all suspending. <code>all()</code> and <code>find { }</code> are
+                not, because they only build a query, and neither is <code>new { }</code>, because it only
+                schedules an insert.
             </p>
             <p>
-                Because <code>new { }</code> suspends, its initializer block does too, so you can call other DAO
-                operations inside it:
+                Because <code>newSuspend { }</code> suspends, its initializer block does too, so you can call other
+                DAO operations inside it:
             </p>
             <code-block lang="kotlin"><![CDATA[
-                val movie = StarWarsFilmEntity.new {
+                val movie = StarWarsFilmEntity.newSuspend {
                     name = "The Last Jedi"
                     // findById() suspends, which the initializer block allows
                     sequelId = (StarWarsFilmEntity.findById(previousFilmId)?.sequelId ?: 0) + 1
                 }
             ]]>
             </code-block>
+        </chapter>
+        <chapter title="Two ways to create an entity" id="r2dbc-new">
+            <p>
+                The JDBC DAO has a single factory, <code>new { }</code>, which issues the <code>INSERT</code> before
+                it returns. In the R2DBC DAO, issuing that statement is exactly the part that has to suspend, so the
+                factory is split in two:
+            </p>
+            <deflist type="medium">
+                <def id="r2dbc-new-nonsuspending">
+                    <title>
+                        <code>new { }</code>
+                    </title>
+                    <p>
+                        Non-suspending. Schedules the insert in the entity cache and returns without touching the
+                        database, so it can be called from anywhere — a plain factory function, a builder, an entity
+                        initializer. The entity it returns has readable and writable columns and can be used as the
+                        target of a reference, but it usually has no id yet: <code>id.value</code> throws, and
+                        <code>findById()</code> cannot find it, until the insert is issued. That happens at the
+                        first flush — an explicit <code>flushCache()</code>, any other statement in the same
+                        transaction, or the commit. Everything pending for one table then goes out as a single
+                        batch, which is what makes this the cheapest way to insert many rows; see
+                        <a anchor="r2dbc-batching">Batching inserts</a>.
+                    </p>
+                </def>
+                <def id="r2dbc-new-suspend">
+                    <title>
+                        <code>newSuspend { }</code>
+                    </title>
+                    <p>
+                        The counterpart of the JDBC DAO's <code>new { }</code>: schedules the insert, flushes, and
+                        returns the hydrated entity with its id and database-generated columns populated. JDBC code
+                        that reads the id right after creating an entity migrates to this one.
+                    </p>
+                </def>
+            </deflist>
+            <warning>
+                <code>new { }</code> is not a drop-in replacement for the JDBC <code>new { }</code>: when it
+                returns, neither the row nor the id exists yet. Anything that reads
+                <code>entity.id.value</code> straight away needs <code>newSuspend { }</code>.
+            </warning>
         </chapter>
         <chapter title="Query results are flows" id="r2dbc-flows">
             <p>
@@ -452,7 +494,7 @@
                 </tab>
                 <tab id="r2dbc-crud-attach" title="R2DBC" group-key="r2dbc">
                     <code-block lang="kotlin"><![CDATA[
-                        val movie = suspendTransaction { StarWarsFilmEntity.new { name = "The Last Jedi" } }
+                        val movie = suspendTransaction { StarWarsFilmEntity.newSuspend { name = "The Last Jedi" } }
 
                         suspendTransaction {
                             StarWarsFilmEntity.attach(movie)
@@ -463,33 +505,40 @@
                 </tab>
             </tabs>
             <p>
-                <code>attach()</code> throws <code>EntityNotFoundException</code> if the row no longer exists.
+                <code>attach()</code> throws <code>EntityNotFoundException</code> if the row no longer exists. It
+                also refuses to replace a <i>different</i> instance of the same row that the transaction already
+                tracks with unflushed changes, since that would drop those changes silently; pass
+                <code>attach(movie, force = true)</code> to discard them deliberately.
             </p>
         </chapter>
-        <chapter title="Batching inserts" id="r2dbc-new-deferred">
+        <chapter title="Batching inserts" id="r2dbc-batching">
             <p>
-                <code>new { }</code> flushes immediately, costing one <code>INSERT</code> per entity.
-                <code>newDeferred { }</code> has no JDBC counterpart: it schedules the insert without flushing and
-                returns a cold <code>Flow</code>, so collecting several together produces a single batched
-                <code>INSERT</code>:
+                <code>newSuspend { }</code> flushes immediately, costing one <code>INSERT</code> per entity.
+                <code>new { }</code> only schedules, so creating several entities and flushing once persists them
+                all with a single batched <code>INSERT</code> per table:
             </p>
             <code-block lang="kotlin"><![CDATA[
-                val films: List<StarWarsFilmEntity> = listOf("A New Hope", "The Empire Strikes Back")
-                    .map { title -> StarWarsFilmEntity.newDeferred { name = title } }
-                    .asFlow()
-                    .flattenConcat()
-                    .toList()
+                suspendTransaction {
+                    val films = listOf("A New Hope", "The Empire Strikes Back")
+                        .map { title -> StarWarsFilmEntity.new { name = title } }
+
+                    flushCache()
+
+                    // one INSERT was issued, and every entity now has its id
+                    val ids = films.map { it.id.value }
+                }
             ]]>
             </code-block>
             <p>
-                Use <code>flattenConcat</code> rather than <code>merge</code>: <code>merge</code> does not preserve
-                the order in which the entities were scheduled.
+                The explicit <code>flushCache()</code> is only there to say where the statement goes out. Any other
+                statement in the transaction, or its commit, flushes the pending inserts just as well — which is
+                also why batching only holds as long as nothing else touches the database in between. An
+                intervening <code>newSuspend { }</code> splits the batch; another <code>new { }</code> joins it.
             </p>
             <warning>
-                Discarding the flow does not cancel the insert. It is flushed at the first of collection, any other
-                statement in the same transaction, or commit. Batching therefore only holds if nothing else touches
-                the database in between — an intervening <code>new { }</code> splits the batch. Collecting the flow
-                outside the transaction that created it throws.
+                Discarding the entity does not cancel its insert: it is scheduled by the call, not by the flush.
+                Use <code>Entity.delete()</code> before the flush to drop a scheduled entity again, which issues
+                no statement at all.
             </warning>
         </chapter>
         <chapter title="Not available" id="r2dbc-crud-unavailable">

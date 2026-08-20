@@ -217,6 +217,11 @@ class EntityCache(private val transaction: R2dbcTransaction) {
         if (outer != null) {
             staged.forEach { (entity, values) ->
                 val target = outer.staged.acquire(entity, outer.transaction)
+
+                // Staged value from inner transaction should overwrite dirty values from outer transactions
+                val superseded = values.flushed.keys + values.dirty.keys
+                outer.scopeChain.forEach { it.staged[entity]?.discardUnissued(superseded) }
+
                 target.flushed.putAll(values.flushed)
                 target.dirty.putAll(values.dirty)
             }

@@ -22,7 +22,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         val keywordEntityClass = object : IntEntityClass<Keyword>(KeyWordTable, Keyword::class.java) {}
 
         withTables(KeyWordTable) {
-            keywordEntityClass.new { bool = true }
+            keywordEntityClass.newSuspend { bool = true }
         }
     }
 }

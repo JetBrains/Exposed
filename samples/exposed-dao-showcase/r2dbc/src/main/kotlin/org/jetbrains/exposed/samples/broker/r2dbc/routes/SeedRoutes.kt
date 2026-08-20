@@ -6,9 +6,6 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.flattenConcat
-import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.samples.broker.r2dbc.model.InstrumentType
 import org.jetbrains.exposed.samples.broker.r2dbc.model.TradeType
 import org.jetbrains.exposed.samples.broker.r2dbc.model.entities.*
@@ -21,52 +18,47 @@ fun Application.seedRoutes() {
     routing {
         post("/seed") {
             suspendTransaction {
-                // `new { }` suspends and flushes immediately, so it costs one INSERT per entity —
-                // that is the right default, and every other creation below uses it.
+                // `newSuspend { }` flushes immediately, so it costs one INSERT per entity — that is the
+                // right default, and every other creation below uses it.
                 //
                 // These four tags are independent rows with no references, so they are a good fit for
-                // `newDeferred { }`: it schedules the insert without flushing and returns a cold Flow,
-                // and collecting the four flows together persists them in a single batched INSERT.
-                //
-                // Collect before creating anything else: `new { }` flushes the whole entity cache, so
-                // an eager creation in between would flush these tags early and split the batch.
+                // the non-suspending `new { }`: it only schedules the insert, and the four pending rows
+                // then go out as a single batched INSERT. The next `newSuspend { }` below flushes them,
+                // which is also where the tags get their ids — nothing reads those before that point.
                 val (tagTech, tagFinance, tagEnergy, tagIndex) =
                     listOf("tech", "finance", "energy", "index")
                         .map { tagName ->
-                            Tag.newDeferred {
+                            Tag.new {
                                 name = tagName
                             }
                         }
-                        .asFlow()
-                        .flattenConcat()
-                        .toList()
 
-                val aapl = Instrument.new {
+                val aapl = Instrument.newSuspend {
                     ticker = "AAPL"
                     name = "Apple Inc."
                     type = InstrumentType.STOCK
                 }
-                val googl = Instrument.new {
+                val googl = Instrument.newSuspend {
                     ticker = "GOOGL"
                     name = "Alphabet Inc."
                     type = InstrumentType.STOCK
                 }
-                val tsla = Instrument.new {
+                val tsla = Instrument.newSuspend {
                     ticker = "TSLA"
                     name = "Tesla Inc."
                     type = InstrumentType.STOCK
                 }
-                val spy = Instrument.new {
+                val spy = Instrument.newSuspend {
                     ticker = "SPY"
                     name = "S&P 500 ETF"
                     type = InstrumentType.ETF
                 }
-                val bnd = Instrument.new {
+                val bnd = Instrument.newSuspend {
                     ticker = "BND"
                     name = "Total Bond Market ETF"
                     type = InstrumentType.BOND
                 }
-                val xom = Instrument.new {
+                val xom = Instrument.newSuspend {
                     ticker = "XOM"
                     name = "Exxon Mobil"
                     type = InstrumentType.STOCK
@@ -79,59 +71,59 @@ fun Application.seedRoutes() {
                 bnd.tags = SizedCollection(listOf(tagFinance))
                 xom.tags = SizedCollection(listOf(tagEnergy))
 
-                val brokerA = Broker.new {
+                val brokerA = Broker.newSuspend {
                     name = "Alpha Securities"
                     licenseNumber = "SEC-001"
                 }
-                val brokerB = Broker.new {
+                val brokerB = Broker.newSuspend {
                     name = "Beta Trading"
                     licenseNumber = "SEC-002"
                 }
 
-                val alice = Client.new {
+                val alice = Client.newSuspend {
                     name = "Alice Johnson"
                     email = "alice@example.com"
                     broker.set(brokerA)
                 }
-                val bob = Client.new {
+                val bob = Client.newSuspend {
                     name = "Bob Smith"
                     email = "bob@example.com"
                     broker.set(brokerA)
                 }
-                val carol = Client.new {
+                val carol = Client.newSuspend {
                     name = "Carol White"
                     email = "carol@example.com"
                     broker.set(brokerB)
                 }
-                val dave = Client.new {
+                val dave = Client.newSuspend {
                     name = "Dave Brown"
                     email = "dave@example.com"
                     broker.set(brokerB)
                 }
 
-                val aliceGrowth = Portfolio.new {
+                val aliceGrowth = Portfolio.newSuspend {
                     name = "Growth Portfolio"
                     client.set(alice)
                     createdAt = Clock.System.now()
                 }
-                val aliceSafe = Portfolio.new {
+                val aliceSafe = Portfolio.newSuspend {
                     name = "Conservative Portfolio"
                     client.set(alice)
                     createdAt = Clock.System.now()
                 }
-                val bobMain = Portfolio.new {
+                val bobMain = Portfolio.newSuspend {
                     name = "Main Portfolio"
                     client.set(bob)
                     createdAt = Clock.System.now()
                 }
-                val carolTech = Portfolio.new {
+                val carolTech = Portfolio.newSuspend {
                     name = "Tech Portfolio"
                     client.set(carol)
                     createdAt = Clock.System.now()
                 }
 
                 val now = Clock.System.now()
-                Trade.new {
+                Trade.newSuspend {
                     client.set(alice)
                     instrument.set(aapl)
                     portfolio.set(aliceGrowth)
@@ -140,7 +132,7 @@ fun Application.seedRoutes() {
                     price = "178.50".toBigDecimal()
                     executedAt = now
                 }
-                Trade.new {
+                Trade.newSuspend {
                     client.set(alice)
                     instrument.set(tsla)
                     portfolio.set(aliceGrowth)
@@ -149,7 +141,7 @@ fun Application.seedRoutes() {
                     price = "242.00".toBigDecimal()
                     executedAt = now
                 }
-                Trade.new {
+                Trade.newSuspend {
                     client.set(alice)
                     instrument.set(bnd)
                     portfolio.set(aliceSafe)
@@ -158,7 +150,7 @@ fun Application.seedRoutes() {
                     price = "72.30".toBigDecimal()
                     executedAt = now
                 }
-                Trade.new {
+                Trade.newSuspend {
                     client.set(bob)
                     instrument.set(spy)
                     portfolio.set(bobMain)
@@ -167,7 +159,7 @@ fun Application.seedRoutes() {
                     price = "450.00".toBigDecimal()
                     executedAt = now
                 }
-                Trade.new {
+                Trade.newSuspend {
                     client.set(carol)
                     instrument.set(googl)
                     portfolio.set(carolTech)
@@ -176,7 +168,7 @@ fun Application.seedRoutes() {
                     price = "141.80".toBigDecimal()
                     executedAt = now
                 }
-                Trade.new {
+                Trade.newSuspend {
                     client.set(dave)
                     instrument.set(xom)
                     portfolio.set(null)
