@@ -165,6 +165,8 @@ public class org/jetbrains/exposed/v1/core/BasicBinaryColumnType : org/jetbrains
 	public fun <init> ()V
 	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun nonNullValueToString ([B)Ljava/lang/String;
+	public synthetic fun parameterMarker (Ljava/lang/Object;)Ljava/lang/String;
+	public fun parameterMarker ([B)Ljava/lang/String;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB (Ljava/lang/Object;)[B
