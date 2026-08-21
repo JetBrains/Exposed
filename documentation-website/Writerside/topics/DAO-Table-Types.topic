@@ -5,6 +5,12 @@
        xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
        title="Table types" id="DAO-Table-Types" help-id="DAO-Table-types">
     <include from="DSL-Table-Types.topic" element-id="dsl-core-table-class"/>
+    <note>
+        Everything on this page applies to both the JDBC and the R2DBC DAO. Table types come from
+        <code>exposed-core</code> and are shared by both drivers, so table definitions need no changes when moving
+        between them. For the parts of the DAO that do differ, see
+        <a href="Migration-Guide-DAO-JDBC-to-R2DBC.md"/>.
+    </note>
     <chapter title="Auto-incrementing ID column tables" id="defining-tables">
         <snippet id="dao-table-types">
             <p>

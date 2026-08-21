@@ -26,6 +26,8 @@ include("exposed-plugin-core")
 include("exposed-gradle-plugin")
 include("exposed-maven-plugin")
 include("exposed-version-catalog")
+include("exposed-dao-r2dbc")
+include("exposed-dao-r2dbc-tests")
 
 pluginManagement {
     repositories {

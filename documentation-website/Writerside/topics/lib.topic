@@ -69,6 +69,26 @@
         </p>
     </snippet>
 
+    <snippet id="r2dbc-dao-experimental">
+        <warning>
+            <p>
+                The R2DBC DAO (<code>exposed-dao-r2dbc</code>) is an experimental preview: its API may change in
+                incompatible ways between releases. Every declaration requires opting in to
+                <code>@ExperimentalR2dbcDaoApi</code>, most easily module-wide:
+            </p>
+            <code-block lang="kotlin">
+                kotlin {
+                    compilerOptions {
+                        optIn.add(&quot;org.jetbrains.exposed.v1.dao.r2dbc.ExperimentalR2dbcDaoApi&quot;)
+                    }
+                }
+            </code-block>
+            <p>
+                For the complete list of differences, see <a href="Migration-Guide-DAO-JDBC-to-R2DBC.md"/>.
+            </p>
+        </warning>
+    </snippet>
+
     <snippet id="add-dependency">
         <tabs>
             <tab title="Kotlin Gradle">

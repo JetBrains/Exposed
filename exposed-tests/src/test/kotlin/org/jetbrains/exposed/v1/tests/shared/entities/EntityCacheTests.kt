@@ -32,7 +32,6 @@ import java.sql.SQLException
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
 
-@Tag(MISSING_R2DBC_TEST)
 class EntityCacheTests : DatabaseTestsBase() {
 
     object TestTable : IntIdTable("TestCache") {
