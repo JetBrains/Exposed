@@ -23,7 +23,23 @@ import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
 
 /**
- * Class representing a mapping to values stored in a table record in a database.
+ * A row of [EntityClass.table], with the columns it should expose declared as delegated properties.
+ *
+ * Subclass one of the typed variants — [IntEntity], [LongEntity], [UuidEntity], [CompositeEntity] — and
+ * give the class a companion object of the matching [EntityClass]:
+ *
+ * ```kotlin
+ * class Film(id: EntityID<Int>) : IntEntity(id) {
+ *     var title by Films.title
+ *     val director by Director referencedOn Films.director
+ *
+ *     companion object : IntEntityClass<Film>(Films)
+ * }
+ * ```
+ *
+ * Reading and writing a column property does not suspend and issues no statement: a write is staged in the
+ * current transaction's [EntityCache] and reaches the database on the next flush. The operations that do use
+ * the connection — [flush], [refresh], [delete], and the relationship accessors — are suspending.
  *
  * @param id The unique stored identity value for the mapped record.
  */
@@ -53,7 +69,7 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
         )
 
     private val cache: EntityCache
-        get() = (currentR2dbcTransactionOrNull() ?: TransactionManager.current()).entityCache
+        get() = TransactionManager.current().entityCache
 
     /** Records [value] as this entity's value for [column] in the current transaction's [EntityCache]. */
     internal fun stageWrite(column: Column<Any?>, value: Any?) {
@@ -95,7 +111,7 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
         val stagingScopes = stagedScopeCount.get()
         if (stagingScopes == 0) return NoStagedValue
 
-        val current = currentR2dbcTransactionOrNull() ?: return NoStagedValue
+        val current = TransactionManager.currentOrNull() ?: return NoStagedValue
 
         val memo = stagedMemo
         if (stagingScopes == 1 && memo != null && memo.owner === current) {
@@ -133,7 +149,7 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
     @Suppress("UNCHECKED_CAST")
     operator fun <T> Column<T>.setValue(entity: Entity<ID>, desc: KProperty<*>, value: T) {
         klass.invalidateEntityInCache(entity)
-        val entityCache = (currentR2dbcTransactionOrNull() ?: TransactionManager.current()).entityCache
+        val entityCache = TransactionManager.current().entityCache
         val column = this as Column<Any?>
 
         val alreadyDirty = entityCache.isDirty(entity, column)
@@ -158,19 +174,26 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
     }
 
     /**
-     * Property delegate for [CompositeColumn] — reads each underlying column's value via [Column.lookup]
-     * and reassembles them via [CompositeColumn.restoreValueFromParts]. Mirrors JDBC's `Entity` operator.
+     * Reads a property delegated to a [CompositeColumn], which stores a single value across several columns:
+     *
+     * ```kotlin
+     * object Accounts : IntIdTable() {
+     *     val balance = compositeMoney(8, 2, "balance")
+     * }
+     *
+     * class Account(id: EntityID<Int>) : IntEntity(id) {
+     *     var balance by Accounts.balance // read and written as one MonetaryAmount
+     *
+     *     companion object : IntEntityClass<Account>(Accounts)
+     * }
+     * ```
      */
     operator fun <T> CompositeColumn<T>.getValue(o: Entity<ID>, desc: KProperty<*>): T {
         val values = this.getRealColumns().associateWith { it.lookup() }
         return this.restoreValueFromParts(values)
     }
 
-    /**
-     * Property delegate for [CompositeColumn] — splits [value] into its real-column parts via
-     * [CompositeColumn.getRealColumnsWithValues] and writes each part through [Column.setValue].
-     * Mirrors JDBC's `Entity` operator.
-     */
+    /** Writes a property delegated to a [CompositeColumn], staging one value per underlying column. */
     operator fun <T> CompositeColumn<T>.setValue(o: Entity<ID>, desc: KProperty<*>, value: T) {
         with(o) {
             this@setValue.getRealColumnsWithValues(value).forEach { (column, partValue) ->
@@ -181,16 +204,20 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
     }
 
     /**
-     * Property delegate for [EntityFieldWithTransform] — reads the raw column value via [Column.getValue]
-     * and runs it through the transformer's `wrap` function (with optional memoization).
+     * Reads a property delegated to a transformed column, converting the stored value on the way out:
+     *
+     * ```kotlin
+     * class Film(id: EntityID<Int>) : IntEntity(id) {
+     *     var tags by Films.tags.transform(wrap = { it.split(",") }, unwrap = { it.joinToString(",") })
+     *
+     *     companion object : IntEntityClass<Film>(Films)
+     * }
+     * ```
      */
     operator fun <Unwrapped, Wrapped> EntityFieldWithTransform<Unwrapped, Wrapped>.getValue(o: Entity<ID>, desc: KProperty<*>): Wrapped =
         wrap(column.getValue(o, desc))
 
-    /**
-     * Property delegate for [EntityFieldWithTransform] — runs the supplied value through the transformer's
-     * `unwrap` function and writes it back to the original column via [Column.setValue].
-     */
+    /** Writes a property delegated to a transformed column, converting the value back to what the column stores. */
     operator fun <Unwrapped, Wrapped> EntityFieldWithTransform<Unwrapped, Wrapped>.setValue(o: Entity<ID>, desc: KProperty<*>, value: Wrapped) {
         column.setValue(o, desc, unwrap(value))
     }
@@ -351,11 +378,19 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
     }
 
     /**
-     * Registers an intermediate [table] as a many-to-many link between this entity's table and
-     * the target [EntityClass]. The source and target columns are inferred from the
-     * intermediate table's foreign keys.
+     * Declares a many-to-many relationship held by the intermediate [table], whose references to this
+     * entity's table and to the target's table are inferred from its foreign keys:
      *
-     * Counterpart of JDBC's `via`.
+     * ```kotlin
+     * class Film(id: EntityID<Int>) : IntEntity(id) {
+     *     var actors by Actor via FilmActors
+     *
+     *     companion object : IntEntityClass<Film>(Films)
+     * }
+     *
+     * film.actors = SizedCollection(actor1, actor2) // replaces the links
+     * val cast = film.actors.toList()               // the property is a Flow, so collect it
+     * ```
      */
     infix fun <TID : Any, Target : Entity<TID>> EntityClass<TID, Target>.via(
         table: Table
@@ -367,9 +402,18 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
         )
 
     /**
-     * Registers an intermediate table as a many-to-many link with explicitly specified
-     * [sourceColumn] and [targetColumn] — use this when the intermediate table has multiple
-     * references into the same entity's table and the defaults cannot be inferred.
+     * Declares a many-to-many relationship, naming [sourceColumn] and [targetColumn] explicitly. Use this
+     * overload when the intermediate table holds more than one reference to either side, which leaves
+     * nothing to infer:
+     *
+     * ```kotlin
+     * class Node(id: EntityID<Int>) : IntEntity(id) {
+     *     var parents by Node.via(NodeToNodes.child, NodeToNodes.parent)
+     *     var children by Node.via(NodeToNodes.parent, NodeToNodes.child)
+     *
+     *     companion object : IntEntityClass<Node>(Nodes)
+     * }
+     * ```
      */
     fun <TID : Any, Target : Entity<TID>> EntityClass<TID, Target>.via(
         sourceColumn: Column<EntityID<ID>>,
