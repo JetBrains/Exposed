@@ -26,6 +26,7 @@ import org.springframework.transaction.support.DefaultTransactionDefinition
 
 @Configuration
 @EnableTransactionManagement
+@EnableExposedReactiveTransactionManagement
 /*(mode = AdviceMode.ASPECTJ, proxyTargetClass = true)*/
 open class TestConfig : TransactionManagementConfigurer {
 
@@ -79,9 +80,11 @@ abstract class SpringReactiveTransactionTestBase {
 
         runTest {
             val trxOp = TransactionalOperator.create(transactionManager, trxDef)
-            trxOp.executeAndAwait {
-                testBody(it)
-                it.setRollbackOnly()
+            withExposedReactiveContext {
+                trxOp.executeAndAwait {
+                    testBody(it)
+                    it.setRollbackOnly()
+                }
             }
         }
     }
@@ -101,7 +104,9 @@ suspend fun ReactiveTransactionManager.execute(
         if (timeout != null) this.timeout = timeout
     }
     val trxOp = TransactionalOperator.create(this, trxDef)
-    trxOp.executeAndAwait {
-        block(it)
+    withExposedReactiveContext {
+        trxOp.executeAndAwait {
+            block(it)
+        }
     }
 }

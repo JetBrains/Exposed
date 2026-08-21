@@ -16,8 +16,8 @@ interface TransactionsHolder {
      * When multiple implementations of this interface are detected, this value determines which one will be used,
      * with the highest value implementation being chosen.
      *
-     * Exposed built-in implementations will have a default priority of either 0 or 1
-     * (for specific cases like Spring's transaction management). Custom implementations with a higher priority value
+     * Exposed built-in core (JDBC + R2DBC) implementations will have a default priority of 0,
+     * while Exposed built-in Spring implementations will have a priority of 5. Custom implementations with a higher priority value
      * will override these defaults when the registry first searches for an implementation.
      * @suppress
      */
@@ -50,18 +50,25 @@ interface TransactionsHolder {
     fun getTransactionOrNull(): Transaction?
 
     /**
-     * Returns the most recently active [Transaction] for the provided [db] from the underlying data structure,
+     * Returns the currently active [Transaction] for the provided [db] from the underlying data structure,
      * without modification of the collection, or `null` if none is found.
      * @suppress
      */
     fun getTransactionOrNull(db: DatabaseApi): Transaction?
 
     /**
-     * Returns the most recently active [Transaction] of the provided type [klass] from the underlying data structure,
+     * Returns the currently active [Transaction] of the provided type [klass] from the underlying data structure,
      * without modification of the collection, or `null` if none is found.
      * @suppress
      */
     fun <T : Transaction> getTransactionIsInstance(klass: Class<T>): T?
+
+    /**
+     * Returns the currently active [Transaction] from the coroutine context, or `null` if none is found.
+     * The provided [manager] enables access to potentially useful properties, like the active database and context keys.
+     * @suppress
+     */
+    suspend fun getTransactionFromContextOrNull(manager: TransactionManagerApi): Transaction?
 
     /**
      * Returns whether the underlying data structure stores any [Transaction] instances.
@@ -70,10 +77,20 @@ interface TransactionsHolder {
     fun isEmpty(): Boolean
 
     /**
-     * Returns the stored [Transaction] instances as a list of their String id values.
+     * Returns an immutable snapshot of the entire data originating from the underlying data structure,
+     * assumed in order from oldest to most recently active transaction. Retrieving this does not modify
+     * the underlying data structure.
      * @suppress
      */
-    fun getTransactionsAsIds(): List<String>
+    fun snapshot(): List<Transaction>
+
+    /**
+     * Replaces the contents of the underlying data structure with the provided [snapshot],
+     * assumed in order from oldest to most recently active transaction. If the [snapshot] is empty,
+     * the underlying data structure will be cleared entirely.
+     * @suppress
+     */
+    fun restore(snapshot: List<Transaction>)
 }
 
 /**
