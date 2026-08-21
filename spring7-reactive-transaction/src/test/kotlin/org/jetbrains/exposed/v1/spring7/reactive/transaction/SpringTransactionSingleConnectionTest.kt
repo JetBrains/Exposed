@@ -85,6 +85,7 @@ class SpringTransactionSingleConnectionTest {
 
 @Configuration
 @EnableTransactionManagement(proxyTargetClass = true)
+@EnableExposedReactiveTransactionManagement
 open class SingleConnectionH2TestConfig {
 
     @Bean

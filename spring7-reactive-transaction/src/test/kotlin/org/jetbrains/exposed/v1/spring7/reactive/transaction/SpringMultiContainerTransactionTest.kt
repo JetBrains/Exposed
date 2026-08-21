@@ -145,6 +145,7 @@ open class SpringMultiContainerTransactionTest {
 
 @Configuration
 @EnableTransactionManagement(proxyTargetClass = true)
+@EnableExposedReactiveTransactionManagement
 open class OrderConfig {
 
     @Bean
@@ -191,6 +192,7 @@ object Order : LongIdTable("orders") {
 
 @Configuration
 @EnableTransactionManagement(proxyTargetClass = true)
+@EnableExposedReactiveTransactionManagement
 open class PaymentConfig {
 
     @Bean
