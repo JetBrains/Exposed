@@ -1,8 +1,10 @@
 package org.jetbrains.exposed.v1.r2dbc.transactions
 
 import io.r2dbc.spi.IsolationLevel
+import kotlinx.coroutines.currentCoroutineContext
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.transactions.TransactionsHolderProvider
 import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextElement
@@ -75,9 +77,10 @@ internal fun R2dbcTransactionManager.createTransactionContext(transaction: Trans
  */
 @OptIn(InternalApi::class)
 internal suspend fun R2dbcTransactionManager.getCurrentContextTransaction(): R2dbcTransaction? {
-    // TODO should be possible to retain this
-//    val transaction = currentCoroutineContext()[contextKey]?.transaction
-    val transaction = TransactionsHolderProvider.holder.getTransactionOrNull()
+    val transaction = when (val holder = TransactionsHolderProvider.holder) {
+        is ThreadLocalTransactionsStack -> currentCoroutineContext()[contextKey]?.transaction
+        else -> holder.getTransactionFromContextOrNull(this)
+    }
     return when (transaction) {
         null -> null
         is R2dbcTransaction -> transaction

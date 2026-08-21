@@ -30,12 +30,17 @@ open class SpringCoroutineTest : SpringReactiveTransactionTestBase() {
         try {
             SchemaUtils.create(Testing)
 
+            // Detached coroutines (GlobalScope) do not inherit the Spring-managed transaction context,
+            // so they must resolve the database explicitly instead of relying on the ambient default,
+            // which may point at another database registered by an unrelated Spring context in this JVM.
+            val database = TransactionManager.current().db
+
             val mainJob = GlobalScope.async {
                 // @CoroutinesTimeout is not compatible with @Transactional
                 val results = withTimeout(1000.milliseconds) {
                     (1..5).map { indx ->
                         async(Dispatchers.IO) {
-                            suspendTransaction {
+                            suspendTransaction(db = database) {
                                 Testing.insert { }
                                 indx
                             }

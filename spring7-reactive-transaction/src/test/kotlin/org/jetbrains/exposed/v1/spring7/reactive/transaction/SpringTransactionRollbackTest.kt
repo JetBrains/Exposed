@@ -283,6 +283,7 @@ class SpringTransactionRollbackTest {
 
 @Configuration
 @EnableTransactionManagement(proxyTargetClass = true)
+@EnableExposedReactiveTransactionManagement
 open class TransactionManagerAttributeSourceTestConfig {
 
     @Bean

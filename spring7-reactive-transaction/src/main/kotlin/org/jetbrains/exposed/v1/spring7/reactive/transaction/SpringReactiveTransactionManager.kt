@@ -6,10 +6,8 @@ import io.r2dbc.spi.IsolationLevel
 import io.r2dbc.spi.R2dbcException
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.mono
-import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.exposedLogger
-import org.jetbrains.exposed.v1.core.transactions.currentTransactionOrNull
 import org.jetbrains.exposed.v1.core.transactions.transactionScope
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
@@ -71,8 +69,6 @@ class SpringReactiveTransactionManager(
                 )
                 .doOnSuccess {
                     trxObject.connectionHolder = null
-
-                    SpringReactiveTransactionsStack.removeTransaction()
                 }
         }
     }
@@ -86,8 +82,6 @@ class SpringReactiveTransactionManager(
             val suspendedObject = suspendedResources as ExposedHolderObject
 
             synchronizationManager.bindResource(connectionFactory, suspendedObject)
-
-            SpringReactiveTransactionsStack.storeTransaction(suspendedObject.transaction)
 
             Mono.empty()
         }
@@ -107,13 +101,23 @@ class SpringReactiveTransactionManager(
         return Mono.defer {
             val trxObject = transaction as ExposedTransactionObject
 
-            @OptIn(InternalApi::class)
-            val currentTransaction = currentTransactionOrNull() as? R2dbcTransaction
-            val outerTransactionToUse = if (currentTransaction?.db == database) {
-                currentTransaction
-            } else {
-                null
-            }
+            // Resolve the outer transaction to nest under, in order of trustworthiness:
+            // 1. The Spring-bound holder on this transaction object (set by doGetTransaction), which is
+            // only non-null when Spring itself is nesting inside an existing Spring-managed transaction
+            // (for example PROPAGATION_NESTED with useNestedTransactions).
+            // 2. The call-site handoff snapshot captured synchronously, on the same calling thread, at the actual
+            // suspend `@Transactional` call site, so it reflects real existing Exposed transaction(s).
+            // 3. The live stack object
+            val outerTransactionToUse = trxObject.connectionHolder?.transaction?.takeIf { it.db == database }
+                ?: if (definition.propagationBehavior == TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
+                    // PROPAGATION_REQUIRES_NEW must never adopt an existing outer transaction
+                    null
+                } else {
+                    SpringReactiveTransactionHandoff.currentOrNull()?.transactions
+                        ?.filterIsInstance<R2dbcTransaction>()
+                        ?.lastOrNull { it.db == database }
+                        ?: database.transactionManager.currentOrNull()
+                }
 
             val newTransaction = trxObject.database.transactionManager.newTransaction(
                 isolation = definition.isolationLevel.resolveIsolationLevel(),
@@ -157,8 +161,6 @@ class SpringReactiveTransactionManager(
                         synchronizationManager.unbindResourceIfPossible(connectionFactory) as? ExposedHolderObject
 
                         synchronizationManager.bindResource(connectionFactory, trxObject.connectionHolder!!)
-
-                        SpringReactiveTransactionsStack.storeTransaction(newTransaction)
                     }
                 }
                 .doOnError { ex ->
@@ -213,7 +215,6 @@ class SpringReactiveTransactionManager(
 
             if (trxObject.isNewConnectionHolder) {
                 val previous = synchronizationManager.unbindResource(connectionFactory) as ExposedHolderObject
-                SpringReactiveTransactionsStack.popUntilSynced(previous.transaction)
 
                 // otherwise a PROPAGATION_NESTED transaction would incorrectly have the context of its
                 // now closed inner transaction used when doCommit() or doRollback() is later invoked
@@ -274,8 +275,8 @@ class SpringReactiveTransactionManager(
      */
     private class ExposedHolderObject(
         connection: Connection,
-        val transaction: R2dbcTransaction,
-    ) : ConnectionHolder(connection)
+        override val transaction: R2dbcTransaction,
+    ) : ConnectionHolder(connection), ExposedTransactionResource
 
     private data class ExposedTransactionObject(
         val database: R2dbcDatabase,

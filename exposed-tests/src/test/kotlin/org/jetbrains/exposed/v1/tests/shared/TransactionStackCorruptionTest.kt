@@ -54,7 +54,7 @@ class TransactionStackCorruptionTest : DatabaseTestsBase() {
             maxStackSize.updateAndGet { current -> maxOf(current, size) }
 
             // Check for duplicates: if the same transaction appears multiple times
-            val transactionIds = ts.getTransactionsAsIds()
+            val transactionIds = ts.snapshot().map { it.transactionId }
             if (transactionIds.size != transactionIds.distinct().size) {
                 hasDuplicates.incrementAndGet()
             }
