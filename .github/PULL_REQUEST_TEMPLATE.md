@@ -26,6 +26,7 @@ Affected databases:
 - [ ] Mysql8
 - [ ] Oracle
 - [ ] Postgres
+- [ ] Redshift
 - [ ] SqlServer
 - [ ] H2
 - [ ] SQLite

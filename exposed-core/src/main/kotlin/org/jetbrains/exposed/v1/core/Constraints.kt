@@ -3,6 +3,7 @@ package org.jetbrains.exposed.v1.core
 import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.RedshiftDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialectIfAvailable
@@ -130,14 +131,20 @@ data class ForeignKeyConstraint(
             append("FOREIGN KEY ($fromColumns) REFERENCES $targetTableName($targetColumns)")
 
             if (deleteRule != ReferenceOption.NO_ACTION) {
-                when (deleteRule) {
-                    ReferenceOption.RESTRICT if !currentDialect.supportsRestrictReferenceOption -> {
+                when {
+                    !currentDialect.supportsOnDelete -> {
+                        exposedLogger.warn(
+                            "${currentDialect.name} doesn't support FOREIGN KEY with ON DELETE clause. " +
+                                "Please check your $fromTableName table."
+                        )
+                    }
+                    deleteRule == ReferenceOption.RESTRICT && !currentDialect.supportsRestrictReferenceOption -> {
                         exposedLogger.warn(
                             "${currentDialect.name} doesn't support FOREIGN KEY with RESTRICT reference option with ON DELETE clause. " +
                                 "Please check your $fromTableName table."
                         )
                     }
-                    ReferenceOption.SET_DEFAULT if !currentDialect.supportsSetDefaultReferenceOption -> {
+                    deleteRule == ReferenceOption.SET_DEFAULT && !currentDialect.supportsSetDefaultReferenceOption -> {
                         exposedLogger.warn(
                             "${currentDialect.name} doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
                                 "Please check your $fromTableName table."
@@ -305,11 +312,13 @@ data class Index(
         this.table = columnsTable ?: functionsTable!!
     }
 
-    override fun createStatement(): List<String> = listOf(currentDialect.createIndex(this))
+    override fun createStatement(): List<String> = currentDialect.createIndex(this).asIndexStatement()
+
     override fun modifyStatement(): List<String> = dropStatement() + createStatement()
-    override fun dropStatement(): List<String> = listOf(
+
+    override fun dropStatement(): List<String> =
         currentDialect.dropIndex(table.nameInDatabaseCase(), indexName, unique, filterCondition != null || functions != null)
-    )
+            .asIndexStatement()
 
     /** Returns `true` if the [other] index has the same columns and uniqueness as this index, but a different name, `false` otherwise */
     fun onlyNameDiffer(other: Index): Boolean = indexName != other.indexName && columns == other.columns && unique == other.unique
@@ -334,4 +343,7 @@ data class Index(
 
     override fun toString(): String =
         "${if (unique) "Unique " else ""}Index '$indexName' for '${table.nameInDatabaseCase()}' on columns ${columns.joinToString()}"
+
+    private fun String.asIndexStatement(): List<String> =
+        if (isBlank() && currentDialect is RedshiftDialect) emptyList() else listOf(this)
 }

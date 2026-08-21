@@ -276,6 +276,41 @@ Connect to a database:
 ```
 {src="exposed-databases-jdbc/src/main/kotlin/org/example/Databases.kt" include-symbol="postgresqldbNG"}
 
+### Amazon Redshift
+
+Amazon Redshift support is available through JDBC only. Add the
+[Amazon Redshift JDBC driver](https://docs.aws.amazon.com/redshift/latest/mgmt/jdbc20-install.html):
+
+```kotlin
+implementation("com.amazon.redshift:redshift-jdbc42:%redshift%")
+```
+
+Then connect using a Redshift JDBC URL:
+
+```kotlin
+Database.connect(
+    url = "jdbc:redshift://example-cluster.region.redshift.amazonaws.com:5439/database",
+    driver = "com.amazon.redshift.Driver",
+    user = "username",
+    password = "password"
+)
+```
+
+Keep these Exposed integration limitations in mind:
+
+- Exposed cannot retrieve generated identity values after insertion. Use explicit or client-generated IDs when the
+  application needs the inserted ID.
+- Exposed does not create `ON DELETE`, `ON UPDATE`, or `CHECK` constraints. As a result, `byte`, `ubyte`, and `ushort`
+  columns do not have range-enforcing constraints.
+- Exposed skips non-unique, partial, functional, and typed indexes. Define Redshift sort and distribution keys outside
+  the Exposed index API.
+- Text columns map to `VARCHAR(MAX)`, which stores at most 65,535 bytes. Binary and blob columns map to
+  `VARBYTE(16777216)`.
+- UUID columns use `VARCHAR(36)`. Exposed writes the standard dashed representation and reads either dashed or undashed
+  hexadecimal text.
+- Exposed does not generate Redshift column-modification SQL. Requests to build a column-modification statement fail
+  before any SQL is sent to the database.
+
 ### SQL Server
 
 Add the required dependency:

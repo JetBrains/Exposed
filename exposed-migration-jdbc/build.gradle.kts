@@ -27,6 +27,7 @@ dependencies {
     testImplementation(project(":exposed-java-time"))
     testImplementation(project(":exposed-money"))
     testCompileOnly(libs.postgre)
+    testRuntimeOnly(libs.redshift)
 
     testImplementation(libs.logcaptor)
     testImplementation(libs.junit5)

@@ -9,6 +9,7 @@ import org.jetbrains.exposed.v1.core.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.v1.core.statements.api.RowApi
 import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.core.vendors.*
+import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import java.io.InputStream
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -1053,7 +1054,7 @@ abstract class BasicUuidColumnType<T> : ColumnType<T>() {
     protected val originalDataTypeProvider: DataTypeProvider
         get() = (currentDialect as? H2Dialect)?.originalDataTypeProvider ?: currentDialect.dataTypeProvider
 
-    /** Returns whether this string follows the standard 36-hexadecimal character UUID format. */
+    /** Returns whether this string follows the standard 36-character UUID format. */
     protected fun String.isHexAndDashFormat(): Boolean = matches(uuidRegexp)
 
     override fun sqlType(): String = currentDialect.dataTypeProvider.uuidType()
@@ -1076,6 +1077,13 @@ abstract class BasicUuidColumnType<T> : ColumnType<T>() {
     }
 }
 
+private const val UUID_HEX_LENGTH = 32
+
+internal fun String.parseUuidHexOrNull(): Uuid? {
+    val isHex = length == UUID_HEX_LENGTH && all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }
+    return if (isHex) Uuid.parseHex(this) else null
+}
+
 /**
  * Binary column for storing [kotlin.uuid.Uuid].
  */
@@ -1085,6 +1093,9 @@ class UuidColumnType : BasicUuidColumnType<Uuid>() {
         is JavaUUID -> value.toKotlinUuid()
         is ByteArray -> Uuid.fromByteArray(value)
         is String if value.isHexAndDashFormat() -> Uuid.parseHexDash(value)
+        is String if currentDialectIfAvailable is RedshiftDialect ->
+            value.parseUuidHexOrNull()
+                ?: error("Amazon Redshift UUID columns require dashed or undashed hexadecimal text: $value")
         is String -> valueFromDB(value.toByteArray())
         is ByteBuffer -> value.getUuid()
         else -> error("Unexpected value of type Uuid: $value of ${value::class.qualifiedName}")
@@ -1298,24 +1309,32 @@ class ArrayColumnType<T, R : List<Any?>>(
     val delegateType: String
         get() = delegate.sqlType().substringBefore('(')
 
-    override fun sqlType(): String = buildString {
-        if (maximumCardinality != null) {
-            require(maximumCardinality.size == dimensions) {
-                "The size of cardinality list must be equal to the amount of array dimensions. " +
-                    "Dimensions: $dimensions, cardinality size: ${maximumCardinality.size}"
-            }
+    override fun sqlType(): String {
+        if (currentDialect is RedshiftDialect) {
+            throw UnsupportedByDialectException("Amazon Redshift does not support array columns", currentDialect)
         }
-        append(delegate.sqlType())
-        when {
-            currentDialect is H2Dialect -> {
-                require(dimensions == 1) {
-                    "H2 does not support multidimensional arrays. " +
-                        "`dimensions` parameter for H2 database must be 1"
+        return buildString {
+            if (maximumCardinality != null) {
+                require(maximumCardinality.size == dimensions) {
+                    "The size of cardinality list must be equal to the amount of array dimensions. " +
+                        "Dimensions: $dimensions, cardinality size: ${maximumCardinality.size}"
                 }
-                append(" ARRAY", maximumCardinality?.let { "[${it.first()}]" } ?: "")
             }
+            append(delegate.sqlType())
+            when {
+                currentDialect is H2Dialect -> {
+                    require(dimensions == 1) {
+                        "H2 does not support multidimensional arrays. " +
+                            "`dimensions` parameter for H2 database must be 1"
+                    }
+                    append(" ARRAY", maximumCardinality?.let { "[${it.first()}]" } ?: "")
+                }
 
-            else -> append(maximumCardinality?.let { cardinality -> cardinality.joinToString("") { "[$it]" } } ?: "[]".repeat(dimensions))
+                else -> append(
+                    maximumCardinality?.let { cardinality -> cardinality.joinToString("") { "[$it]" } }
+                        ?: "[]".repeat(dimensions)
+                )
+            }
         }
     }
 

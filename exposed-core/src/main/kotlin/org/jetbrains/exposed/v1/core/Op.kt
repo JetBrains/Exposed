@@ -398,8 +398,9 @@ class OrBitOp<T, S : T>(
 ) : ExpressionWithColumnType<T>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         when (currentDialectIfAvailable) {
-            // Oracle doesn't natively support bitwise OR, thus emulate it with 'and'
-            is OracleDialect -> append("(", expr1, "+", expr2, "-", AndBitOp(expr1, expr2, columnType), ")")
+            // Oracle and Redshift don't natively support bitwise OR, thus emulate it with 'and'
+            is OracleDialect, is RedshiftDialect ->
+                append("(", expr1, "+", expr2, "-", AndBitOp(expr1, expr2, columnType), ")")
             is H2Dialect -> {
                 +"BITOR("
                 castToExpressionTypeForH2BitWiseIps(expr1, this)
@@ -425,8 +426,8 @@ class XorBitOp<T, S : T>(
 ) : ExpressionWithColumnType<T>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         when (currentDialectIfAvailable) {
-            // Oracle and SQLite don't natively support bitwise XOR, thus emulate it with 'or' and 'and'
-            is OracleDialect, is SQLiteDialect -> append(
+            // These dialects don't natively support bitwise XOR, thus emulate it with 'or' and 'and'
+            is OracleDialect, is RedshiftDialect, is SQLiteDialect -> append(
                 "(", OrBitOp(expr1, expr2, columnType), "-", AndBitOp(expr1, expr2, columnType), ")"
             )
             is PostgreSQLDialect -> append('(', expr1, " # ", expr2, ')')
