@@ -20,12 +20,21 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import kotlin.reflect.KProperty
 
 /**
- * Class responsible for implementing property delegates of the read-write properties involved in a many-to-many
- * relation, which uses an intermediate (join) table.
+ * What a many-to-many relationship declared with `via` gives back: the entities linked to this one through
+ * an intermediate table.
  *
- * R2DBC counterpart of JDBC's `InnerTableLink`. Because R2DBC's [SizedIterable] is a coroutine `Flow` (not a
- * blocking `Iterable`), the property delegate produces an [InnerTableLinkAccessor] that itself acts as the
- * `SizedIterable` returned to user code — see [provideDelegate].
+ * ```kotlin
+ * class Film(id: EntityID<Int>) : IntEntity(id) {
+ *     var actors by Actor via FilmActors
+ *
+ *     companion object : IntEntityClass<Film>(Films)
+ * }
+ *
+ * film.actors = SizedCollection(actor1, actor2) // replaces the rows in FilmActors
+ * val cast = film.actors.toList()
+ * ```
+ *
+ * Unlike the other relationships, this property is a `var`: assigning a collection rewrites the links.
  *
  * @param table The intermediate table containing reference columns to both child and parent entities.
  * @param sourceTable The [IdTable] associated with the source child entity.

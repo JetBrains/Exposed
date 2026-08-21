@@ -13,7 +13,7 @@ import org.jetbrains.exposed.v1.r2dbc.update
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.Test
 
-class NonAutoIncEntities : R2dbcDatabaseTestsBase() {
+class NonAutoIncEntitiesTest : R2dbcDatabaseTestsBase() {
     abstract class BaseNonAutoIncTable(name: String) : IdTable<Int>(name) {
         override val id = integer("id").entityId()
         val b1 = bool("b1")

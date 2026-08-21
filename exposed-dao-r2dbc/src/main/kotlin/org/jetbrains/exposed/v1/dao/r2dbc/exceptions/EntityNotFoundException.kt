@@ -4,10 +4,7 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.r2dbc.EntityClass
 import org.jetbrains.exposed.v1.dao.r2dbc.ExperimentalR2dbcDaoApi
 
-/**
- * An exception that provides information about an [entity] that could not be accessed
- * either within the scope of the current entity cache or as a result of a database search error.
- */
+/** Thrown when no row with [id] exists in the table that [entity] maps to. */
 @ExperimentalR2dbcDaoApi
 class EntityNotFoundException(val id: EntityID<*>, val entity: EntityClass<*, *>) :
     Exception("Entity ${entity.klass.simpleName}, id=${id._value} not found in the database")
