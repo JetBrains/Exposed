@@ -4,13 +4,6 @@ import org.jetbrains.exposed.v1.core.DatabaseApi
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Transaction
 import java.util.Stack
-import kotlin.collections.List
-import kotlin.collections.emptyList
-import kotlin.collections.filterIsInstance
-import kotlin.collections.findLast
-import kotlin.collections.isNotEmpty
-import kotlin.collections.lastOrNull
-import kotlin.collections.map
 import kotlin.concurrent.getOrSet
 
 /**
