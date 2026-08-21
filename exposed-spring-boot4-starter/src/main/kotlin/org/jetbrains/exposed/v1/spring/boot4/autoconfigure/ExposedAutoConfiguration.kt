@@ -65,10 +65,15 @@ open class ExposedAutoConfiguration(private val applicationContext: ApplicationC
      *
      * The property `spring.exposed.excluded-packages` can be used to ensure that tables in specified packages are
      * not auto-created.
+     *
+     * DDL runs during the bean initialization phase via `InitializingBean.afterPropertiesSet`, before downstream
+     * beans annotated with `@DependsOnDatabaseInitialization` are initialized (ordering is enforced automatically
+     * via [ExposedDatabaseInitializerDetector]).
      */
     @Bean
     @ConditionalOnProperty("spring.exposed.generate-ddl", havingValue = "true", matchIfMissing = false)
-    open fun databaseInitializer() = DatabaseInitializer(applicationContext, excludedPackages)
+    open fun databaseInitializer(springTransactionManager: SpringTransactionManager) =
+        DatabaseInitializer(applicationContext, excludedPackages, springTransactionManager)
 
     /**
      * Returns an [ExposedSpringTransactionAttributeSource] instance.
