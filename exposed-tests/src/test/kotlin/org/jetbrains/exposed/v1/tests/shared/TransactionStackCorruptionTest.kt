@@ -44,11 +44,7 @@ class TransactionStackCorruptionTest : DatabaseTestsBase() {
         var hasDuplicates = AtomicInteger(0)
 
         @OptIn(InternalApi::class)
-<<<<<<< HEAD
-        override fun beforeExecution(transaction: Transaction, context: org.jetbrains.exposed.v1.core.statements.StatementContext) {
-=======
         override fun beforeExecution(transaction: Transaction, context: StatementContext) {
->>>>>>> a3947e227 (feat: Update transactions holder api)
             val ts = TransactionsHolderProvider.holder
             val size = ts.size
             maxStackSize.updateAndGet { current -> maxOf(current, size) }
