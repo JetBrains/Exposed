@@ -7,7 +7,7 @@ import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.statements.StatementContext
 import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
-import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
+import org.jetbrains.exposed.v1.core.transactions.TransactionsHolderProvider
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
@@ -33,14 +33,14 @@ class TransactionStackCorruptionTest : R2dbcDatabaseTestsBase() {
         var maxStackSize = AtomicInteger(0)
         var hasDuplicates = AtomicInteger(0)
 
+        @OptIn(InternalApi::class)
         override fun beforeExecution(transaction: Transaction, context: StatementContext) {
-            @OptIn(InternalApi::class)
-            val size = ThreadLocalTransactionsStack.threadTransactions()!!.size
+            val ts = TransactionsHolderProvider.holder
+            val size = ts.size
             maxStackSize.updateAndGet { current -> maxOf(current, size) }
 
             // Check for duplicates: if the same suspendTransaction appears multiple times
-            @OptIn(InternalApi::class)
-            val suspendTransactionIds = ThreadLocalTransactionsStack.threadTransactions()!!.map { it.transactionId }
+            val suspendTransactionIds = ts.getTransactionsAsIds()
             if (suspendTransactionIds.size != suspendTransactionIds.distinct().size) {
                 hasDuplicates.incrementAndGet()
             }
@@ -180,6 +180,7 @@ class TransactionStackCorruptionTest : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testWithThreadLocalTransactionNotCalledWithExistingTransaction() = runTest {
         val testDb = TestDB.H2_V2.connect()
@@ -189,19 +190,18 @@ class TransactionStackCorruptionTest : R2dbcDatabaseTestsBase() {
             TestTable.insert { it[name] = "Test" }
         }
 
+        val ts = TransactionsHolderProvider.holder
         try {
             suspendTransaction(db = testDb) {
                 // At this point, suspendTransaction is already on stack (pushed by TransactionContextElement)
-                @OptIn(InternalApi::class)
-                val currentTxOnStack = ThreadLocalTransactionsStack.getTransactionOrNull()
+                val currentTxOnStack = ts.getTransactionOrNull()
 
                 // When we execute a query, it will call withThreadLocalTransaction(this)
                 // which should check if 'this' is already on the stack
                 val count = TestTable.selectAll().count()
 
                 // After query, verify we still have the same suspendTransaction on top
-                @OptIn(InternalApi::class)
-                val txAfter = ThreadLocalTransactionsStack.getTransactionOrNull()
+                val txAfter = ts.getTransactionOrNull()
 
                 assertEquals(
                     currentTxOnStack?.transactionId, txAfter?.transactionId,
@@ -211,8 +211,7 @@ class TransactionStackCorruptionTest : R2dbcDatabaseTestsBase() {
             }
 
             // Verify stack is clean
-            @OptIn(InternalApi::class)
-            val isEmpty = ThreadLocalTransactionsStack.isEmpty()
+            val isEmpty = ts.isEmpty()
             assertEquals(true, isEmpty, "Stack should be empty after suspendTransaction")
         } finally {
             suspendTransaction(testDb) {

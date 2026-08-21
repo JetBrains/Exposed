@@ -3,8 +3,8 @@ package org.jetbrains.exposed.v1.jdbc.transactions
 import kotlinx.coroutines.currentCoroutineContext
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Transaction
-import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
+import org.jetbrains.exposed.v1.core.transactions.TransactionsHolderProvider
 import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextElement
 import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolder
 import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolderImpl
@@ -73,7 +73,6 @@ internal fun JdbcTransactionManager.createTransactionContext(transaction: Transa
  * @throws [IllegalStateException] If the transaction in the context is not a [JdbcTransaction]
  */
 internal suspend fun JdbcTransactionManager.getCurrentContextTransaction(): JdbcTransaction? {
-    @OptIn(InternalApi::class)
     val transaction = currentCoroutineContext()[contextKey]?.transaction
     return when (transaction) {
         null -> null
@@ -92,5 +91,5 @@ internal suspend fun JdbcTransactionManager.getCurrentContextTransaction(): Jdbc
  */
 fun JdbcTransactionManager.currentOrNull(): JdbcTransaction? {
     @OptIn(InternalApi::class)
-    return ThreadLocalTransactionsStack.getTransactionOrNull(db) as? JdbcTransaction
+    return TransactionsHolderProvider.holder.getTransactionOrNull(db) as? JdbcTransaction
 }
