@@ -265,5 +265,5 @@ transaction, or its commit, flushes the pending inserts just as well.
 
 The same application written against each DAO, which is the quickest way to compare:
 
-* [`samples/exposed-dao-showcase/jdbc`](https://github.com/JetBrains/Exposed/tree/main/samples/exposed-dao-showcase/jdbc)
-* [`samples/exposed-dao-showcase/r2dbc`](https://github.com/JetBrains/Exposed/tree/main/samples/exposed-dao-showcase/r2dbc)
+* [`samples/exposed-jdbc-dao-sample`](https://github.com/JetBrains/Exposed/tree/main/samples/exposed-jdbc-dao-sample)
+* [`samples/exposed-r2dbc-dao-sample`](https://github.com/JetBrains/Exposed/tree/main/samples/exposed-r2dbc-dao-sample)
