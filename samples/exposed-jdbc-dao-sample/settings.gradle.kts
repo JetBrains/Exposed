@@ -1,10 +1,7 @@
-rootProject.name = "exposed-dao-showcase"
+rootProject.name = "exposed-jdbc-dao-sample"
 
 dependencyResolutionManagement {
     repositories {
         mavenCentral()
     }
 }
-
-include("jdbc")
-include("r2dbc")
