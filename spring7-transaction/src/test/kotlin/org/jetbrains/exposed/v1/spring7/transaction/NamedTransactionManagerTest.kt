@@ -32,7 +32,7 @@ import javax.sql.DataSource
         SecondaryTransactionConfig::class,
     ]
 )
-open class Exposed1059Test {
+open class NamedTransactionManagerTest {
     @Autowired
     lateinit var playerService: PlayerService
 
