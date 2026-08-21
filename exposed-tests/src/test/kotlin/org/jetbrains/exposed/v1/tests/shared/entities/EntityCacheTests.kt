@@ -337,4 +337,47 @@ class EntityCacheTests : DatabaseTestsBase() {
             }
         }
     }
+
+    /* EXPOSED-169 a disabled entity cache silently dropped every DAO update */
+    @Test
+    @Tag(MISSING_R2DBC_TEST)
+    fun updatesArePersistedWhenTheCacheIsDisabledByConfig() {
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        val db = TestDB.H2_V2.connect {
+            maxEntitiesToStoreInCachePerEntity = 0
+        }
+
+        try {
+            val id = transaction(db) {
+                SchemaUtils.create(TestTable)
+                TestEntity.new { value = 1 }.id
+            }
+
+            transaction(db) {
+                TestEntity.findById(id)!!.value = 2
+            }
+
+            transaction(db) {
+                assertEquals(2, TestEntity.findById(id)!!.value)
+            }
+        } finally {
+            transaction(db) { SchemaUtils.drop(TestTable) }
+        }
+    }
+
+    /* EXPOSED-169 a disabled entity cache silently dropped every DAO update */
+    @Test
+    @Tag(MISSING_R2DBC_TEST)
+    fun updatesArePersistedWhenTheCacheIsDisabledMidTransaction() {
+        withTables(TestTable) {
+            val entity = TestEntity.new { value = 1 }
+            entityCache.flush()
+
+            entityCache.maxEntitiesToStore = 0
+            entity.value = 2
+            entityCache.flush()
+
+            assertEquals(2, TestTable.selectAll().single()[TestTable.value])
+        }
+    }
 }
