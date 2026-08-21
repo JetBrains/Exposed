@@ -15,18 +15,22 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import kotlin.reflect.KProperty
 
 /**
- * R2DBC accessor returned for non-nullable many-to-one references created via `referencedOn`.
+ * What a non-nullable many-to-one reference declared with `referencedOn` gives back. Declare the property
+ * as a `val`, read the referenced entity by invoking it, and write it with [set]:
  *
- * This is an R2DBC-specific shape that has no exact JDBC counterpart: in JDBC, the property delegate's
- * `getValue` directly returns the parent entity, whereas R2DBC needs a suspending lookup. The accessor
- * is exposed as a `val` and supports two usage patterns:
+ * ```kotlin
+ * class Film(id: EntityID<Int>) : IntEntity(id) {
+ *     val director by Director referencedOn Films.director
  *
- * - `entity.ref()` — suspending read via [invoke].
- * - `entity.ref.set(parent)` — write.
+ *     companion object : IntEntityClass<Film>(Films)
+ * }
  *
- * This sidesteps Kotlin's delegation protocol constraint that `getValue` and `setValue` must agree on
- * the property type — which would require `setValue` to itself be a `suspend operator`, which Kotlin
- * does not support.
+ * val name = film.director().name   // suspends, and queries unless the entity is already cached
+ * film.director.set(otherDirector)  // does not suspend: staged like any other column write
+ * ```
+ *
+ * The property hands back this accessor rather than the entity itself because reading it has to suspend
+ * and a property getter cannot — the JDBC DAO, where the read blocks, returns the entity directly.
  */
 @ExperimentalR2dbcDaoApi
 class Accessor<ID : Any, Parent : Entity<ID>, REF : Any>(
@@ -118,10 +122,19 @@ class Accessor<ID : Any, Parent : Entity<ID>, REF : Any>(
 }
 
 /**
- * R2DBC accessor returned for nullable many-to-one references created via `optionalReferencedOn`.
+ * What a nullable many-to-one reference declared with `optionalReferencedOn` gives back. Same
+ * `val` + `invoke()`/[set] shape as [Accessor], except that both ends accept `null`:
  *
- * Mirrors [Accessor] but allows `null` reads and writes. Uses the same val + invoke()/set() pattern
- * because `setValue` cannot be made `suspend` (Kotlin does not allow suspend property delegates).
+ * ```kotlin
+ * class Film(id: EntityID<Int>) : IntEntity(id) {
+ *     val producer by Producer optionalReferencedOn Films.producer
+ *
+ *     companion object : IntEntityClass<Film>(Films)
+ * }
+ *
+ * val name = film.producer()?.name
+ * film.producer.set(null)   // clears the reference
+ * ```
  */
 @ExperimentalR2dbcDaoApi
 class OptionalAccessor<ID : Any, Parent : Entity<ID>, REF : Any>(

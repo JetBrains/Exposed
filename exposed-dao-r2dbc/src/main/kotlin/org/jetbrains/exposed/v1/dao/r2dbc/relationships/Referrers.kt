@@ -18,12 +18,22 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import kotlin.reflect.KProperty
 
 /**
- * Class responsible for implementing property delegates of the read-only properties involved in a one-to-many
- * relation, which retrieves all child entities that reference the parent entity.
+ * What a one-to-many relationship declared with `referrersOn` gives back: every child entity whose
+ * reference column points at this one.
  *
- * R2DBC counterpart of JDBC's `Referrers` from `References.kt`. The property delegate returns a
- * [SizedIterable] backed by a [DeferredQuery] — iteration is suspended until terminal operations
- * (`collect`, `count`, etc.) are invoked.
+ * ```kotlin
+ * class Director(id: EntityID<Int>) : IntEntity(id) {
+ *     val films by Film referrersOn Films.director
+ *
+ *     companion object : IntEntityClass<Director>(Directors)
+ * }
+ *
+ * val titles = director.films.toList().map { it.title }
+ * val count = director.films.count()
+ * ```
+ *
+ * The property is read-only — a child joins the relation by having its own reference set. Nothing is
+ * queried until the returned [SizedIterable], which is a `Flow`, is collected or counted.
  *
  * @param reference The reference column defined on the child entity's associated table.
  * @param factory The [EntityClass] associated with the child entity that references the parent entity.

@@ -2,34 +2,23 @@ package org.jetbrains.exposed.v1.dao.r2dbc
 
 import kotlinx.coroutines.flow.firstOrNull
 import org.jetbrains.exposed.v1.core.Column
-import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Key
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.r2dbc.LazySizedCollection
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.SizedIterable
 import org.jetbrains.exposed.v1.r2dbc.batchInsert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
-import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import java.util.IdentityHashMap
 import java.util.LinkedHashMap
 import java.util.concurrent.ConcurrentHashMap
 
 private val entityCacheKey = Key<EntityCache>()
-
-@OptIn(InternalApi::class)
-internal fun currentR2dbcTransactionOrNull(): R2dbcTransaction? {
-    // It's small optimization to avoid searching in the list.
-    // Probably could be deleted, performance should be rechecked.
-    return ThreadLocalTransactionsStack.getTransactionOrNull() as? R2dbcTransaction
-        ?: TransactionManager.currentOrNull()
-}
 
 /**
  * The [EntityCache] belonging to the transaction, created on first access.

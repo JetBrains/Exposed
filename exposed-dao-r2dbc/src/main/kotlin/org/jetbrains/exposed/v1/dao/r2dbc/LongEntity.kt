@@ -3,23 +3,27 @@ package org.jetbrains.exposed.v1.dao.r2dbc
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 
-/** Base class for an [Entity] instance identified by an [id] comprised of a wrapped `Long` value. */
+/**
+ * Base class for an [Entity] with a `Long` id, mapping a table declared as a `LongIdTable`.
+ * See [Entity] for how the entity and its properties are declared.
+ */
 @ExperimentalR2dbcDaoApi
 abstract class LongEntity(id: EntityID<Long>) : Entity<Long>(id)
 
 /**
- * Base class representing the [EntityClass] that manages [LongEntity] instances and
- * maintains their relation to the provided [table].
+ * Base class for the companion object of a [LongEntity]: the entry point for creating, finding, and
+ * deleting the rows of [table].
  *
- * @param [table] The [IdTable] object that stores rows mapped to entities of this class.
- * @param [entityType] The expected [LongEntity] type. This can be left `null` if it is the class of type
- * argument [E] provided to this [LongEntityClass] instance. If this `LongEntityClass` is defined as a companion
- * object of a custom `LongEntity` class, the parameter will be set to this immediately enclosing class by default.
- * @param [entityCtor] The function invoked to instantiate a [LongEntity] using a provided [EntityID] value.
- * If a reference to a specific constructor or a custom function is not passed as an argument, reflection will
- * be used to determine the primary constructor of the associated entity class on first access. If this `LongEntityClass`
- * is defined as a companion object of a custom `LongEntity` class, the constructor will be set to that of the
- * immediately enclosing class by default.
+ * ```kotlin
+ * class Film(id: EntityID<Long>) : LongEntity(id) {
+ *     companion object : LongEntityClass<Film>(Films)
+ * }
+ * ```
+ *
+ * @param [table] The table whose rows are mapped to entities of this class.
+ * @param [entityType] The [LongEntity] class to map. Defaults to the class that encloses this companion object.
+ * @param [entityCtor] Called to instantiate an entity for a row. Defaults to the entity's primary constructor,
+ * looked up by reflection on first access; pass a reference such as `::Film` to skip that lookup.
  */
 @ExperimentalR2dbcDaoApi
 abstract class LongEntityClass<out E : LongEntity>(

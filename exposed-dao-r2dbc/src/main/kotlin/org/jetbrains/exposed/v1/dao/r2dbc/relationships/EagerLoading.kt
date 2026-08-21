@@ -23,15 +23,19 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 
 /**
- * Eager-loads the specified [relations] for all entities in this [SizedIterable]. Mirrors JDBC's
- * `SizedIterable.with` — each direct relation is bulk-loaded via a single query instead of being
- * fetched lazily one entity at a time.
+ * Loads the given [relations] for every entity of this [SizedIterable] up front, one query per relation,
+ * instead of one query per entity as it is traversed:
  *
- * Returns this [SizedIterable] to allow chaining; the loaded list is also pinned onto any
- * [LazySizedIterable] so subsequent iterations do not re-query the database.
+ * ```kotlin
+ * val films = Film.all().with(Film::director).toList()
  *
- * Note: R2DBC's [SizedIterable] extends `Flow<T>` (not `Iterable<T>` as in JDBC), so we provide
- * a separate [Iterable.with] overload below — they cannot share one generic receiver.
+ * films.forEach { println(it.director().name) } // no further queries
+ * ```
+ *
+ * Returns the same [SizedIterable], so it can be used inline in a chain; the entities it loaded are
+ * pinned onto it, so collecting it again does not re-query the database.
+ *
+ * Use the [Iterable] overload for entities that are already in memory as a `List`.
  */
 @ExperimentalR2dbcDaoApi
 suspend fun <SRCID : Any, SRC : Entity<SRCID>, REF : Entity<*>, L : SizedIterable<SRC>> L.with(
@@ -49,9 +53,16 @@ suspend fun <SRCID : Any, SRC : Entity<SRCID>, REF : Entity<*>, L : SizedIterabl
 }
 
 /**
- * Eager-loads the specified [relations] for all entities in this in-memory [Iterable] (e.g. a
- * plain `List<Entity>`). Mirrors JDBC's `Iterable.with`. This overload exists because R2DBC's
- * [SizedIterable] is a `Flow`, not an `Iterable`, so the two receivers cannot be unified.
+ * Loads the given [relations] for entities that are already in memory, one query per relation:
+ *
+ * ```kotlin
+ * val films = Film.all().toList()
+ *
+ * films.with(Film::director)
+ * ```
+ *
+ * A separate overload from the [SizedIterable] one because R2DBC's `SizedIterable` is a `Flow`, not an
+ * `Iterable`, so a single receiver cannot cover both.
  */
 @ExperimentalR2dbcDaoApi
 suspend fun <SRCID : Any, SRC : Entity<SRCID>, REF : Entity<*>, L : Iterable<SRC>> L.with(
@@ -66,7 +77,13 @@ suspend fun <SRCID : Any, SRC : Entity<SRCID>, REF : Entity<*>, L : Iterable<SRC
 }
 
 /**
- * Eager-loads the specified [relations] for this entity. Mirrors JDBC's `Entity.load`.
+ * Loads the given [relations] for this single entity up front:
+ *
+ * ```kotlin
+ * val film = Film.findById(id)?.load(Film::actors)
+ *
+ * val cast = film.actors.toList() // already loaded
+ * ```
  */
 @ExperimentalR2dbcDaoApi
 suspend fun <SRCID : Any, SRC : Entity<SRCID>> SRC.load(

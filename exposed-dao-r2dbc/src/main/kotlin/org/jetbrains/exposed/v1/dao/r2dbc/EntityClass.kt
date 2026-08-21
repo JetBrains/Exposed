@@ -22,15 +22,29 @@ import kotlin.reflect.KFunction
 import kotlin.reflect.full.primaryConstructor
 
 /**
- * Base class responsible for the management of [Entity] instances and the maintenance of their relation
- * to the provided [table].
+ * The entry point for the entities of one [table]: creating, finding, and deleting them.
  *
- * @param [table] The [IdTable] object that stores rows mapped to entities managed by this class.
- * @param [entityType] The expected [Entity] class type. This can be left `null` if it is the class of type
- * argument [T] provided to this [EntityClass] instance.
- * @param [entityCtor] The function invoked to instantiate an [Entity] using a provided [EntityID] value. If a
- * reference to a specific entity constructor or a custom function is not passed as an argument, reflection will
- * be used to determine the primary constructor of the associated entity class on first access (which can be slower).
+ * Declare it as the companion object of the entity, normally through the variant matching the id type
+ * ([IntEntityClass], [LongEntityClass], [UuidEntityClass], [CompositeEntityClass], ...):
+ *
+ * ```kotlin
+ * class Film(id: EntityID<Int>) : IntEntity(id) {
+ *     var title by Films.title
+ *
+ *     companion object : IntEntityClass<Film>(Films)
+ * }
+ *
+ * suspendTransaction {
+ *     val film = Film.newSuspend { title = "A New Hope" }
+ *     val titles = Film.all().toList().map { it.title }
+ *     Film.findById(film.id.value)?.delete()
+ * }
+ * ```
+ *
+ * @param [table] The table whose rows are mapped to entities managed by this class.
+ * @param [entityType] The [Entity] class to map. Defaults to the class that encloses this companion object.
+ * @param [entityCtor] Called to instantiate an entity for a row. Defaults to the entity's primary constructor,
+ * looked up by reflection on first access; pass a reference such as `::Film` to skip that lookup.
  */
 @Suppress("TooManyFunctions")
 @ExperimentalR2dbcDaoApi
@@ -202,9 +216,9 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
     protected open fun createInstance(entityId: EntityID<ID>, row: ResultRow?): T = entityCtor(entityId)
 
     /**
-     * Gets an [Entity] by its raw [id] value. Mirrors JDBC's `EntityClass.findById(ID)` —
-     * wraps the value in an [EntityID] (or [CompositeID]-backed [DaoEntityID]) before
-     * delegating to the [EntityID][findById] overload below.
+     * Gets an [Entity] by its raw [id] value.
+     *
+     * @return The entity that has this id value, or `null` if no entity was found.
      */
     suspend fun findById(id: ID): T? = findById(DaoEntityID(id, table))
 
@@ -315,8 +329,8 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * **Flush behavior:**
      * After attaching and modifying an entity, there is no need to call `flush()` explicitly —
-     * pending `writeValues` are auto-flushed by `EntityLifecycleInterceptor.beforeCommit`
-     * as part of the transaction's commit. This is consistent with JDBC behavior.
+     * pending changes are flushed by `EntityLifecycleInterceptor.beforeCommit` as part of the
+     * transaction's commit. This is consistent with JDBC behavior.
      *
      * **Typical usage:**
      * ```kotlin
@@ -417,10 +431,6 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * When an entity is already cached, the method performs a **selective merge**: values for
      * columns present in [row] are used to refresh the entity, while columns absent from [row]
      * (e.g. a partial SELECT) retain their previously cached values.
-     *
-     * Mirrors JDBC's fix for GitHub issue #1527 — without the merge, a cached entity returned by
-     * `SELECT FOR UPDATE` would silently keep its stale `_readValues`, causing lost updates in
-     * concurrent increment patterns.
      */
     @Suppress("MemberVisibilityCanBePrivate")
     fun wrapRow(row: ResultRow): T {
@@ -1118,7 +1128,6 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
 
     /**
      * Returns whether the [entityClass] type is equivalent to or a superclass of this [EntityClass] instance's [klass].
-     * Mirrors JDBC's `EntityClass.isAssignableTo`.
      */
     fun <ID2 : Any, T2 : Entity<ID2>> isAssignableTo(entityClass: EntityClass<ID2, T2>) =
         entityClass.klass.isAssignableFrom(klass)
@@ -1138,7 +1147,7 @@ internal fun getCompositeID(entries: () -> List<Pair<Column<*>, *>>): CompositeI
 /**
  * Unwraps any [ColumnWithTransform] values down to the underlying column type. Used by
  * [EntityClass.wrapRow]'s selective-merge path so transformed columns aren't re-wrapped
- * when their values are re-stored into [Entity._readValues]. Mirrors JDBC's helper.
+ * when their values are re-stored into [Entity._readValues].
  */
 internal fun <T : Expression<*>> unwrapColumnValues(values: Map<T, Any?>): Map<T, Any?> = values.mapValues { (col, value) ->
     if (col !is ExpressionWithColumnType<*>) return@mapValues value

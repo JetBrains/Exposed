@@ -3,23 +3,27 @@ package org.jetbrains.exposed.v1.dao.r2dbc
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 
-/** Base class for an [Entity] instance identified by an [id] comprised of a wrapped `ULong` value. */
+/**
+ * Base class for an [Entity] with a `ULong` id, mapping a table declared as a `ULongIdTable`.
+ * See [Entity] for how the entity and its properties are declared.
+ */
 @ExperimentalR2dbcDaoApi
 abstract class ULongEntity(id: EntityID<ULong>) : Entity<ULong>(id)
 
 /**
- * Base class representing the [EntityClass] that manages [ULongEntity] instances and
- * maintains their relation to the provided [table].
+ * Base class for the companion object of a [ULongEntity]: the entry point for creating, finding, and
+ * deleting the rows of [table].
  *
- * @param [table] The [IdTable] object that stores rows mapped to entities of this class.
- * @param [entityType] The expected [ULongEntity] type. This can be left `null` if it is the class of type
- * argument [E] provided to this [ULongEntityClass] instance. If this `ULongEntityClass` is defined as a companion
- * object of a custom `ULongEntity` class, the parameter will be set to this immediately enclosing class by default.
- * @param [entityCtor] The function invoked to instantiate a [ULongEntity] using a provided [EntityID] value.
- * If a reference to a specific constructor or a custom function is not passed as an argument, reflection will
- * be used to determine the primary constructor of the associated entity class on first access. If this `ULongEntityClass`
- * is defined as a companion object of a custom `ULongEntity` class, the constructor will be set to that of the
- * immediately enclosing class by default.
+ * ```kotlin
+ * class Film(id: EntityID<ULong>) : ULongEntity(id) {
+ *     companion object : ULongEntityClass<Film>(Films)
+ * }
+ * ```
+ *
+ * @param [table] The table whose rows are mapped to entities of this class.
+ * @param [entityType] The [ULongEntity] class to map. Defaults to the class that encloses this companion object.
+ * @param [entityCtor] Called to instantiate an entity for a row. Defaults to the entity's primary constructor,
+ * looked up by reflection on first access; pass a reference such as `::Film` to skip that lookup.
  */
 @ExperimentalR2dbcDaoApi
 abstract class ULongEntityClass<out E : ULongEntity>(

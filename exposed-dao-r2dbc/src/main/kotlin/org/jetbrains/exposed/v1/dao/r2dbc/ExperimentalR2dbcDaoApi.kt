@@ -2,7 +2,7 @@ package org.jetbrains.exposed.v1.dao.r2dbc
 
 /**
  * API marked with this annotation is experimental.
- * The shape of the R2DBC DAO API may change in incompatible ways while it stabilizes.
+ * The shape of the R2DBC DAO API may change in incompatible ways while it stabilizes even in patch releases.
  *
  * Opt in either by annotating the call site with
  * `@OptIn(org.jetbrains.exposed.v1.dao.r2dbc.ExperimentalR2dbcDaoApi::class)` /
@@ -11,7 +11,8 @@ package org.jetbrains.exposed.v1.dao.r2dbc
  * compiler options.
  */
 @RequiresOptIn(
-    message = "This is an experimental Exposed R2DBC DAO API. Its shape may change in incompatible ways. " +
+    message = "This is an experimental Exposed R2DBC DAO API. Its shape may change in incompatible ways, " +
+        "even in patch releases. " +
         "Opt in with '@OptIn(org.jetbrains.exposed.v1.dao.r2dbc.ExperimentalR2dbcDaoApi::class)' " +
         "or '@org.jetbrains.exposed.v1.dao.r2dbc.ExperimentalR2dbcDaoApi'."
 )

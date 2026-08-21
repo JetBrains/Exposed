@@ -11,11 +11,11 @@ internal class LinkedIdentityHashSet<T> : MutableSet<T> {
     }
 
     override fun addAll(elements: Collection<T>): Boolean {
-        val toAdd = elements.filter { it !in set }
-        if (toAdd.isEmpty()) return false
-        set.addAll(toAdd)
-        list.addAll(toAdd)
-        return true
+        var changed = false
+        for (element in elements) {
+            if (add(element)) changed = true
+        }
+        return changed
     }
 
     override fun clear() {

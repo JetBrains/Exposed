@@ -22,11 +22,20 @@ private suspend fun Entity<*>.ensureIdFlushed() {
 }
 
 /**
- * Class responsible for implementing property delegates of the read-only properties involved in a table
- * relation between two [Entity] classes, which retrieves the child entity that references the parent entity.
+ * What a one-to-one relationship declared with `backReferencedOn` gives back: the single child entity
+ * that references this one, read by invoking the property.
  *
- * R2DBC counterpart of JDBC's `BackReference` from `References.kt`. The delegate exposes the parent as a
- * `suspend () -> Parent` factory because the underlying lookup is suspending.
+ * ```kotlin
+ * class Film(id: EntityID<Int>) : IntEntity(id) {
+ *     val review by Review backReferencedOn Reviews.film
+ *
+ *     companion object : IntEntityClass<Film>(Films)
+ * }
+ *
+ * val stars = film.review().stars
+ * ```
+ *
+ * The property is invoked rather than read directly because the lookup suspends.
  *
  * @param reference The reference column defined on the child entity's associated table.
  * @param factory The [EntityClass] associated with the child entity that references the parent entity.
@@ -55,11 +64,20 @@ class BackReference<ParentID : Any, out Parent : Entity<ParentID>, ChildID : Any
 }
 
 /**
- * Class responsible for implementing property delegates of the read-only properties involved in an optional table
- * relation between two [Entity] classes, which retrieves the child entity that optionally references the parent entity.
+ * What a one-to-one relationship declared with `optionalBackReferencedOn` gives back: the single child entity
+ * that references this one, or `null` if there is none.
  *
- * R2DBC counterpart of JDBC's `OptionalBackReference` from `References.kt`. The delegate exposes the parent as a
- * `suspend () -> Parent?` factory because the underlying lookup is suspending.
+ * ```kotlin
+ * class Film(id: EntityID<Int>) : IntEntity(id) {
+ *     val review by Review optionalBackReferencedOn Reviews.film
+ *
+ *     companion object : IntEntityClass<Film>(Films)
+ * }
+ *
+ * val stars = film.review()?.stars
+ * ```
+ *
+ * The property is invoked rather than read directly because the lookup suspends.
  *
  * @param reference The nullable reference column defined on the child entity's associated table.
  * @param factory The [EntityClass] associated with the child entity that optionally references the parent entity.

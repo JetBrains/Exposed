@@ -61,8 +61,18 @@ class OptionalReference<REF : Any, ID : Any, out Target : Entity<ID>>(
 }
 
 /**
- * Class responsible for implementing property delegates of the read-only properties involved in a table
- * relation between two [Entity] classes, which retrieves the child entity that references the parent entity.
+ * What a one-to-one relationship declared with `backReferencedOn` gives back: the single child entity that
+ * references this one.
+ *
+ * ```kotlin
+ * class Film(id: EntityID<Int>) : IntEntity(id) {
+ *     val review by Review backReferencedOn Reviews.film
+ *
+ *     companion object : IntEntityClass<Film>(Films)
+ * }
+ *
+ * val stars = film.review.stars
+ * ```
  *
  * @param reference The reference column defined on the child entity's associated table.
  * @param factory The [EntityClass] associated with the child entity that references the parent entity.
@@ -79,8 +89,18 @@ internal class BackReference<ParentID : Any, out Parent : Entity<ParentID>, Chil
 }
 
 /**
- * Class responsible for implementing property delegates of the read-only properties involved in an optional table
- * relation between two [Entity] classes, which retrieves the child entity that optionally references the parent entity.
+ * What a one-to-one relationship declared with `optionalBackReferencedOn` gives back: the single child entity
+ * that references this one, or `null` if there is none.
+ *
+ * ```kotlin
+ * class Film(id: EntityID<Int>) : IntEntity(id) {
+ *     val review by Review optionalBackReferencedOn Reviews.film
+ *
+ *     companion object : IntEntityClass<Film>(Films)
+ * }
+ *
+ * val stars = film.review?.stars
+ * ```
  *
  * @param reference The nullable reference column defined on the child entity's associated table.
  * @param factory The [EntityClass] associated with the child entity that optionally references the parent entity.
@@ -97,8 +117,20 @@ class OptionalBackReference<ParentID : Any, out Parent : Entity<ParentID>, Child
 }
 
 /**
- * Class responsible for implementing property delegates of the read-only properties involved in a one-to-many
- * relation, which retrieves all child entities that reference the parent entity.
+ * What a one-to-many relationship declared with `referrersOn` gives back: every child entity whose reference
+ * column points at this one.
+ *
+ * ```kotlin
+ * class Director(id: EntityID<Int>) : IntEntity(id) {
+ *     val films by Film referrersOn Films.director
+ *
+ *     companion object : IntEntityClass<Director>(Directors)
+ * }
+ *
+ * val titles = director.films.map { it.title }
+ * ```
+ *
+ * The property is read-only — a child joins the relation by having its own reference set.
  *
  * @param reference The reference column defined on the child entity's associated table.
  * @param factory The [EntityClass] associated with the child entity that references the parent entity.

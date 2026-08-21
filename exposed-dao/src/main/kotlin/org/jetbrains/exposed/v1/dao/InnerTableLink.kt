@@ -9,8 +9,21 @@ import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
 /**
- * Class responsible for implementing property delegates of the read-write properties involved in a many-to-many
- * relation, which uses an intermediate (join) table.
+ * What a many-to-many relationship declared with `via` gives back: the entities linked to this one through an
+ * intermediate table.
+ *
+ * ```kotlin
+ * class Film(id: EntityID<Int>) : IntEntity(id) {
+ *     var actors by Actor via FilmActors
+ *
+ *     companion object : IntEntityClass<Film>(Films)
+ * }
+ *
+ * film.actors = SizedCollection(actor1, actor2) // replaces the rows in FilmActors
+ * val cast = film.actors.toList()
+ * ```
+ *
+ * Unlike the other relationships, this property is a `var`: assigning a collection rewrites the links.
  *
  * @param table The intermediate table containing reference columns to both child and parent entities.
  * @param sourceTable The [IdTable] associated with the source child entity.

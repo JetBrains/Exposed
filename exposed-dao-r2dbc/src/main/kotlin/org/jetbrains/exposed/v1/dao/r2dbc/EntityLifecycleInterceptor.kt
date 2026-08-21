@@ -107,7 +107,7 @@ class EntityLifecycleInterceptor : GlobalSuspendStatementInterceptor {
         transaction.alertSubscribers()
         transaction.flushCache()
 
-        // TODO ALIGN_WITH_JDBC: call `EntityCache.invalidateGlobalCaches(created + createdByHooks)`
+        // EXPOSED-1067: call `EntityCache.invalidateGlobalCaches(created + createdByHooks)`
         //  once `ImmutableCachedEntityClass` exists in R2DBC.
     }
 
@@ -119,7 +119,7 @@ class EntityLifecycleInterceptor : GlobalSuspendStatementInterceptor {
         val entityCache = transaction.entityCache
         entityCache.clearReferrersCache()
 
-        // TODO ALIGN_WITH_JDBC: when ImmutableCachedEntityClass is ported, preserve its _readValues here.
+        // EXPOSED-1067: when ImmutableCachedEntityClass is ported, preserve its _readValues here.
         entityCache.discardUncommittedState()
 
         entityCache.inserts.clear()
