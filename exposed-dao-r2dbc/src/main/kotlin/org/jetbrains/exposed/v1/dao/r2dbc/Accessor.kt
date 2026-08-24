@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.v1.dao.r2dbc.relationships
+package org.jetbrains.exposed.v1.dao.r2dbc
 
 import kotlinx.coroutines.flow.singleOrNull
 import org.jetbrains.exposed.v1.core.Column
@@ -7,10 +7,6 @@ import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.dao.r2dbc.Entity
-import org.jetbrains.exposed.v1.dao.r2dbc.EntityClass
-import org.jetbrains.exposed.v1.dao.r2dbc.ExperimentalR2dbcDaoApi
-import org.jetbrains.exposed.v1.dao.r2dbc.entityCache
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import kotlin.reflect.KProperty
 
@@ -242,7 +238,7 @@ class OptionalAccessor<ID : Any, Parent : Entity<ID>, REF : Any>(
  * Rejects a write to an entity that the current transaction does not track.
  *
  * Plain column writes get this check from `Entity.setValue`, but reference writes assign
- * [Entity.stageWrite] directly and would otherwise discard the assignment silently: the
+ * [stageWrite] directly and would otherwise discard the assignment silently: the
  * `scheduleUpdate` that follows only fires for entities already stored in the cache, so an
  * unattached entity would report success while nothing reaches the database.
  */

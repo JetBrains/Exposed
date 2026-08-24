@@ -10,7 +10,7 @@ import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.dao.r2dbc.java.UUIDEntity
 import org.jetbrains.exposed.v1.dao.r2dbc.java.UUIDEntityClass
-import org.jetbrains.exposed.v1.dao.r2dbc.relationships.with
+import org.jetbrains.exposed.v1.dao.r2dbc.with
 import org.jetbrains.exposed.v1.r2dbc.exists
 import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase

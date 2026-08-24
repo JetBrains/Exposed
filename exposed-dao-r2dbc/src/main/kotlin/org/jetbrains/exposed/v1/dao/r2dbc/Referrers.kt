@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.v1.dao.r2dbc.relationships
+package org.jetbrains.exposed.v1.dao.r2dbc
 
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.EntityIDColumnType
@@ -8,10 +8,6 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.dao.r2dbc.Entity
-import org.jetbrains.exposed.v1.dao.r2dbc.EntityClass
-import org.jetbrains.exposed.v1.dao.r2dbc.ExperimentalR2dbcDaoApi
-import org.jetbrains.exposed.v1.dao.r2dbc.entityCache
 import org.jetbrains.exposed.v1.r2dbc.SizedIterable
 import org.jetbrains.exposed.v1.r2dbc.emptySized
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
@@ -37,7 +33,7 @@ import kotlin.reflect.KProperty
  *
  * @param reference The reference column defined on the child entity's associated table.
  * @param factory The [EntityClass] associated with the child entity that references the parent entity.
- * @param cache Whether loaded reference entities should be stored in the [org.jetbrains.exposed.v1.dao.r2dbc.EntityCache].
+ * @param cache Whether loaded reference entities should be stored in the [EntityCache].
  */
 @ExperimentalR2dbcDaoApi
 class Referrers<ParentID : Any, in Parent : Entity<ParentID>, ChildID : Any, out Child : Entity<ChildID>, REF>(

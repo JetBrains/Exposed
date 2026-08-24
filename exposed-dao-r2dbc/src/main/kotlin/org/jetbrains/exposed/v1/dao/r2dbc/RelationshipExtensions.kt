@@ -1,9 +1,6 @@
-package org.jetbrains.exposed.v1.dao.r2dbc.relationships
+package org.jetbrains.exposed.v1.dao.r2dbc
 
 import org.jetbrains.exposed.v1.core.Column
-import org.jetbrains.exposed.v1.dao.r2dbc.Entity
-import org.jetbrains.exposed.v1.dao.r2dbc.EntityClass
-import org.jetbrains.exposed.v1.dao.r2dbc.ExperimentalR2dbcDaoApi
 import kotlin.reflect.KProperty
 
 /**

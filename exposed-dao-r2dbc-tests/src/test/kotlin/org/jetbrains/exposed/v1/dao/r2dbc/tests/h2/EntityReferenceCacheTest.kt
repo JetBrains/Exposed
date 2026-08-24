@@ -12,8 +12,7 @@ import org.jetbrains.exposed.v1.dao.r2dbc.IntEntity
 import org.jetbrains.exposed.v1.dao.r2dbc.IntEntityClass
 import org.jetbrains.exposed.v1.dao.r2dbc.entityCache
 import org.jetbrains.exposed.v1.dao.r2dbc.flushCache
-import org.jetbrains.exposed.v1.dao.r2dbc.relationships.load
-import org.jetbrains.exposed.v1.dao.r2dbc.relationships.with
+import org.jetbrains.exposed.v1.dao.r2dbc.load
 import org.jetbrains.exposed.v1.dao.r2dbc.tests.demo.dao.Cities
 import org.jetbrains.exposed.v1.dao.r2dbc.tests.demo.dao.City
 import org.jetbrains.exposed.v1.dao.r2dbc.tests.demo.dao.User
@@ -23,6 +22,7 @@ import org.jetbrains.exposed.v1.dao.r2dbc.tests.shared.EntityTestsData
 import org.jetbrains.exposed.v1.dao.r2dbc.tests.shared.VNumber
 import org.jetbrains.exposed.v1.dao.r2dbc.tests.shared.VString
 import org.jetbrains.exposed.v1.dao.r2dbc.tests.shared.ViaTestData
+import org.jetbrains.exposed.v1.dao.r2dbc.with
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.SizedCollection
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase

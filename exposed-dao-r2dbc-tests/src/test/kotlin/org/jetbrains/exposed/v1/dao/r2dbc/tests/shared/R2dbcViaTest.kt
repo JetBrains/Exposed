@@ -26,7 +26,7 @@ import org.jetbrains.exposed.v1.dao.r2dbc.UuidEntity
 import org.jetbrains.exposed.v1.dao.r2dbc.UuidEntityClass
 import org.jetbrains.exposed.v1.dao.r2dbc.entityCache
 import org.jetbrains.exposed.v1.dao.r2dbc.flushCache
-import org.jetbrains.exposed.v1.dao.r2dbc.relationships.with
+import org.jetbrains.exposed.v1.dao.r2dbc.with
 import org.jetbrains.exposed.v1.r2dbc.SizedCollection
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase

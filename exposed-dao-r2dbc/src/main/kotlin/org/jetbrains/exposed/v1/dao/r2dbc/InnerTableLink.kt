@@ -1,16 +1,9 @@
-package org.jetbrains.exposed.v1.dao.r2dbc.relationships
+package org.jetbrains.exposed.v1.dao.r2dbc
 
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
-import org.jetbrains.exposed.v1.dao.r2dbc.Entity
-import org.jetbrains.exposed.v1.dao.r2dbc.EntityChangeType
-import org.jetbrains.exposed.v1.dao.r2dbc.EntityClass
-import org.jetbrains.exposed.v1.dao.r2dbc.ExperimentalR2dbcDaoApi
-import org.jetbrains.exposed.v1.dao.r2dbc.entityCache
-import org.jetbrains.exposed.v1.dao.r2dbc.executeAsPartOfEntityLifecycle
-import org.jetbrains.exposed.v1.dao.r2dbc.registerChange
 import org.jetbrains.exposed.v1.r2dbc.SizedIterable
 import org.jetbrains.exposed.v1.r2dbc.batchInsert
 import org.jetbrains.exposed.v1.r2dbc.deleteWhere
