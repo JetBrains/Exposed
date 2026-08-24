@@ -489,10 +489,16 @@ abstract class FunctionProvider {
         val (columnsToInsert, valuesExpr) = when {
             isInsertFromSelect -> columns to expr
             nextValExpression != null && columns.isNotEmpty() -> {
-                val multiRowValuesCount = if (!expr.startsWith("VALUES")) 0 else Regex("""\(([^)]+)\)""").findAll(expr).count()
-                val newExpr = if (multiRowValuesCount <= 1 || !isOracleLike) {
+                val multiRowValuesCount = if (!isOracleLike || !expr.startsWith("VALUES")) {
+                    0
+                } else {
+                    Regex("""\(([^)]+)\)""").findAll(expr).count()
+                }
+                val newExpr = if (multiRowValuesCount <= 1) {
                     expr.dropLast(1) + ", $nextValExpression)"
                 } else {
+                    // Oracle requires special handling of sequence.NEXTVAL since Exposed does not map these to IDENTITY columns;
+                    // otherwise Oracle 12c+ could use INSERT ALL INTO ... INTO ... INTO ...
                     val exprColumns = columns.joinToString { transaction.identity(it) }
                     "SELECT DATA.*, $nextValExpression FROM ($expr) DATA($exprColumns)"
                 }

@@ -69,18 +69,9 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
             transaction.connection.prepareStatement(sql, true)
 
         autoIncColumns.isNotEmpty() -> {
-            // [MariaDB] jdbc returnGeneratedValues() does not support adding RETURNING clause to multi-row values insert, so it only returns key for first row
-            val needsManualReturning = (statement is MultiRowValuesInsertStatement) && currentDialect is MariaDBDialect
-
+            // http://viralpatel.net/blogs/oracle-java-jdbc-get-primary-key-insert-sql/
             @OptIn(InternalApi::class)
-            val generatedColumns = autoIncColumns.map { it.name.inProperCase() }.toTypedArray()
-            if (needsManualReturning) {
-                val replaceReturning = "$sql RETURNING ${generatedColumns.joinToString()}"
-                transaction.connection.prepareStatement(replaceReturning, false)
-            } else {
-                // http://viralpatel.net/blogs/oracle-java-jdbc-get-primary-key-insert-sql/
-                transaction.connection.prepareStatement(sql, generatedColumns)
-            }
+            transaction.connection.prepareStatement(sql, autoIncColumns.map { it.name.inProperCase() }.toTypedArray())
         }
 
         else -> transaction.connection.prepareStatement(sql, false)

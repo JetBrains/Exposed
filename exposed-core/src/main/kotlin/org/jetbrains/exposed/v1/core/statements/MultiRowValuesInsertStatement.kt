@@ -4,9 +4,14 @@ import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.QueryBuilder
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 
-/** PostgreSQL's hard limit on bind parameters per statement (protocol int16 count field). */
-private const val POSTGRESQL_PARAMETER_LIMIT = 65535
+/** The documented hard limit on bind parameters per statement (protocol int16 count field) for most supported databases. */
+private const val DEFAULT_PARAMETER_LIMIT = 65535
+
+/** The documented hard limit on bind parameters per statement for SQLite. */
+private const val SQLITE_PARAMETER_LIMIT = 32766
 
 /**
  * Represents the SQL statement that batch inserts new rows into a table by using a single multi-row
@@ -23,9 +28,10 @@ open class MultiRowValuesInsertStatement(
     override fun validateLastBatch() {
         super.validateLastBatch()
         val parameterCount = data.size.toLong() * table.columns.size.toLong()
-        if (parameterCount > POSTGRESQL_PARAMETER_LIMIT) {
+        val limit = if (currentDialect is SQLiteDialect) SQLITE_PARAMETER_LIMIT else DEFAULT_PARAMETER_LIMIT
+        if (parameterCount > limit) {
             throw BatchDataInconsistentException(
-                "Too many parameters in one batch. Exceeds the database's limit of $POSTGRESQL_PARAMETER_LIMIT bind parameters."
+                "Too many parameters in one batch. Exceeds the database's limit of $limit bind parameters."
             )
         }
     }

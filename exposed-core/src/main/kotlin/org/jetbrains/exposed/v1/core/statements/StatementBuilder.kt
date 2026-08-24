@@ -164,7 +164,8 @@ interface StatementBuilder {
     }
 
     /**
-     * Represents the SQL statement that batch inserts new rows into a table.
+     * Represents the SQL statement that batch inserts new rows into a table, relying entirely on the underlying driver
+     * mechanisms to perform the batching operation.
      *
      * @param ignoreErrors Whether to ignore errors or not.
      * **Note** [ignoreErrors] is not supported by all vendors. Please check the documentation.
@@ -184,6 +185,17 @@ interface StatementBuilder {
         }
     }
 
+    /**
+     * Represents the SQL statement that batch inserts new rows into a table.
+     *
+     * @param useMultiRowValues Whether to return a single INSERT statement that uses multi-row values constructor,
+     * like `INSERT ... VALUES (...), (...), ...`; if `false`, a regular statement will be prepared for driver batching.
+     * @param ignoreErrors Whether to ignore errors or not.
+     * **Note** [ignoreErrors] is not supported by all vendors. Please check the documentation.
+     * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs)
+     * should be returned.
+     * @return A [BatchInsertStatement] that can be executed.
+     */
     fun <T : Table, E> T.batchInsert(
         useMultiRowValues: Boolean,
         ignoreErrors: Boolean = false,
@@ -191,7 +203,7 @@ interface StatementBuilder {
         body: BatchInsertStatement.(E) -> Unit
     ): BatchInsertStatement {
         return when {
-            !useMultiRowValues -> this.batchInsert(ignoreErrors, shouldReturnGeneratedValues, body)
+            !useMultiRowValues -> batchInsert(ignoreErrors, shouldReturnGeneratedValues, body)
             currentDialect is SQLServerDialect && autoIncColumn != null -> SQLServerBatchInsertStatement(this, ignoreErrors, shouldReturnGeneratedValues)
             else -> MultiRowValuesInsertStatement(this, ignoreErrors, shouldReturnGeneratedValues)
         }

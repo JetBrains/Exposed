@@ -732,6 +732,7 @@ public class org/jetbrains/exposed/v1/r2dbc/statements/MultiRowValuesInsertSuspe
 	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/MultiRowValuesInsertStatement;
 	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
 	public fun isAlwaysBatch ()Z
+	public fun prepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/v1/r2dbc/statements/R2dbcConnectionImpl : org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposedConnection {

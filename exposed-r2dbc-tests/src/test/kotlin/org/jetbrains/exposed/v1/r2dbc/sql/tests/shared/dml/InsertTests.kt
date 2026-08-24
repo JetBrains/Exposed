@@ -15,9 +15,8 @@ import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.java.UUIDColumnType
 import org.jetbrains.exposed.v1.core.java.javaUUID
-import org.jetbrains.exposed.v1.core.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
-import org.jetbrains.exposed.v1.core.statements.MultiRowValuesInsertStatement
+import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.OracleDialect
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
@@ -41,7 +40,6 @@ import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.fail
@@ -209,18 +207,21 @@ class InsertTests : R2dbcDatabaseTestsBase() {
     }
 
     @Test
-    fun testBatchInsertUsingMultiRowValue() {
-        withCitiesAndUsers { cities, _, _ ->
+    fun testBatchInsertUsingMultiRowValues() {
+        withCitiesAndUsers { cities, users, _ ->
             val logCaptor = LogCaptor.forName(exposedLogger.name)
             logCaptor.setLogLevelToDebug()
 
-            val cityNames = listOf("Paris", "Moscow", "Helsinki")
             // Oracle driver tries to append RETURNING if keys must be generated, which is not compatible with any table value constructor syntax;
-            // MySQL does not allow RETURNING clause
+            // MySQL does not allow RETURNING clause & only ever retrieves first generated key
+            val dialect = currentDialectTest
+            val canReturnKeys = dialect !is OracleDialect && (dialect !is MysqlDialect || dialect is MariaDBDialect)
+
+            val cityNames = listOf("Paris", "Moscow", "Helsinki")
             val allCitiesID = cities.batchInsert(
                 cityNames,
                 useMultiRowValues = true,
-                shouldReturnGeneratedValues = currentDialectTest !is OracleDialect && currentDialectTest !is MysqlDialect
+                shouldReturnGeneratedValues = canReturnKeys,
             ) { name ->
                 this[cities.name] = name
             }
@@ -233,6 +234,28 @@ class InsertTests : R2dbcDatabaseTestsBase() {
             logCaptor.clearLogs()
             logCaptor.resetLogLevel()
             logCaptor.close()
+
+            // now make sure the generated keys were returned properly even with the new syntax
+            if (canReturnKeys) {
+                val userNamesWithCityIds = allCitiesID.mapIndexed { index, id ->
+                    "UserFrom${cityNames[index]}" to id[cities.id] as Number
+                }
+
+                val generatedIds = users.batchInsert(
+                    userNamesWithCityIds,
+                    useMultiRowValues = true,
+                ) { (userName, cityId) ->
+                    this[users.id] = java.util.Random().nextInt().toString().take(6)
+                    this[users.name] = userName
+                    this[users.cityId] = cityId.toInt()
+                }
+
+                assertEquals(userNamesWithCityIds.size, generatedIds.size)
+                assertEquals(
+                    userNamesWithCityIds.size.toLong(),
+                    users.selectAll().where { users.name inList userNamesWithCityIds.map { it.first } }.count()
+                )
+            }
         }
     }
 
@@ -319,30 +342,6 @@ class InsertTests : R2dbcDatabaseTestsBase() {
         statement.addBatch()
         assertDoesNotThrow("Removing the only batch should not restore values from empty data") {
             statement.removeLastBatch()
-        }
-    }
-
-    @Test
-    fun testPostgreSQLBatchInsertRejectsBatchExceedingParameterLimit() {
-        // DMLTestsData.Cities has 2 columns, so the 65535 PostgreSQL bind-parameter limit
-        // is exceeded once more than 32767 rows are batched.
-        // validateLastBatch() requires a transaction in context, but the statement is never executed.
-        withTables(DMLTestsData.Cities) {
-            val statement = MultiRowValuesInsertStatement(DMLTestsData.Cities)
-
-            repeat(32767) {
-                statement[DMLTestsData.Cities.name] = "City$it"
-                statement.addBatch()
-            }
-            assertDoesNotThrow("Batch at the parameter limit should not throw") {
-                statement[DMLTestsData.Cities.name] = "City32767"
-                statement.addBatch()
-            }
-
-            assertFailsWith<BatchDataInconsistentException>("Batch exceeding the parameter limit should throw") {
-                statement[DMLTestsData.Cities.name] = "OneRowTooMany"
-                statement.addBatch()
-            }
         }
     }
 
