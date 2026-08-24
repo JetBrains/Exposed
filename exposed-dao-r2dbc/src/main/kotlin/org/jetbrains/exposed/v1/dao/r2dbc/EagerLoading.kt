@@ -1,18 +1,12 @@
-package org.jetbrains.exposed.v1.dao.r2dbc.relationships
+package org.jetbrains.exposed.v1.dao.r2dbc
 
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.EntityIDColumnType
+import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.inList
-import org.jetbrains.exposed.v1.dao.r2dbc.Entity
-import org.jetbrains.exposed.v1.dao.r2dbc.EntityClass
-import org.jetbrains.exposed.v1.dao.r2dbc.ExperimentalR2dbcDaoApi
-import org.jetbrains.exposed.v1.dao.r2dbc.entityCache
-import org.jetbrains.exposed.v1.dao.r2dbc.flushCache
-import org.jetbrains.exposed.v1.dao.r2dbc.getCompositeID
-import org.jetbrains.exposed.v1.dao.r2dbc.hasSingleReferenceWithReferee
 import org.jetbrains.exposed.v1.r2dbc.LazySizedIterable
 import org.jetbrains.exposed.v1.r2dbc.SizedCollection
 import org.jetbrains.exposed.v1.r2dbc.SizedIterable
@@ -298,7 +292,7 @@ private fun List<Entity<*>>.indexedByRefereeValue(referee: Column<*>): Map<Any, 
 }
 
 @Suppress("UNCHECKED_CAST")
-private fun buildInListCondition(referee: Column<*>, refIds: List<Any>): org.jetbrains.exposed.v1.core.Op<Boolean> {
+private fun buildInListCondition(referee: Column<*>, refIds: List<Any>): Op<Boolean> {
     val baseColumn = referee.takeUnless {
         it.columnType is EntityIDColumnType<*> && refIds.first() !is EntityID<*>
     } ?: (referee.columnType as EntityIDColumnType<Any>).idColumn

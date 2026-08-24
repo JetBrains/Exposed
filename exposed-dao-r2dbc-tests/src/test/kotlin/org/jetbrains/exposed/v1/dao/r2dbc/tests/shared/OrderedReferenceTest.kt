@@ -12,7 +12,7 @@ import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
 import org.jetbrains.exposed.v1.dao.r2dbc.IntEntity
 import org.jetbrains.exposed.v1.dao.r2dbc.IntEntityClass
 import org.jetbrains.exposed.v1.dao.r2dbc.entityCache
-import org.jetbrains.exposed.v1.dao.r2dbc.relationships.load
+import org.jetbrains.exposed.v1.dao.r2dbc.load
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.insertAndGetId

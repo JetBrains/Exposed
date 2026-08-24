@@ -11,11 +11,6 @@ import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.dao.r2dbc.exceptions.EntityNotFoundException
-import org.jetbrains.exposed.v1.dao.r2dbc.relationships.BackReference
-import org.jetbrains.exposed.v1.dao.r2dbc.relationships.OptionalBackReference
-import org.jetbrains.exposed.v1.dao.r2dbc.relationships.OptionalReference
-import org.jetbrains.exposed.v1.dao.r2dbc.relationships.Reference
-import org.jetbrains.exposed.v1.dao.r2dbc.relationships.Referrers
 import org.jetbrains.exposed.v1.r2dbc.*
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import kotlin.reflect.KFunction
@@ -555,7 +550,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * The reference should have been defined by the creation of a [column] using `reference()` on the child table.
      *
      * R2DBC counterpart of JDBC's `referencedOn`. Returns a [Reference] that delegates to a suspending
-     * [org.jetbrains.exposed.v1.dao.r2dbc.relationships.Accessor] — JDBC's version returns the entity directly via a synchronous lookup.
+     * [Accessor] — JDBC's version returns the entity directly via a synchronous lookup.
      */
     infix fun <REF : Any> referencedOn(column: Column<REF>): Reference<ID, @UnsafeVariance T, REF> =
         Reference(column, this)

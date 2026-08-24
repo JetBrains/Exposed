@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.v1.dao.r2dbc.relationships
+package org.jetbrains.exposed.v1.dao.r2dbc
 
 import kotlinx.coroutines.flow.FlowCollector
 import org.jetbrains.exposed.v1.core.Expression

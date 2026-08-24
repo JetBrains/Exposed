@@ -13,7 +13,6 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.dao.r2dbc.exceptions.EntityNotFoundException
-import org.jetbrains.exposed.v1.dao.r2dbc.relationships.InnerTableLink
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.deleteWhere
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
