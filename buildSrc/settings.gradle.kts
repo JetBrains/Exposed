@@ -12,7 +12,18 @@ dependencyResolutionManagement {
     repositories {
         //KUP: override kotlin repo url
         val kotlinRepoUrl = providers.gradleProperty("kotlin_repo_url").orNull
-        if (kotlinRepoUrl != null) maven(kotlinRepoUrl)
+        val kotlin_version: String? by settings
+        val repoUrl = kotlinRepoUrl
+        if (!repoUrl.isNullOrEmpty() && !kotlin_version.isNullOrEmpty()) {
+            exclusiveContent {
+                forRepository {
+                    maven(repoUrl)
+                }
+                filter {
+                    includeVersionByRegex("org\\.jetbrains\\.kotlin.*", ".*", kotlin_version)
+                }
+            }
+        }
     }
 }
 

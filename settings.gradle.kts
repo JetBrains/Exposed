@@ -50,13 +50,22 @@ pluginManagement.resolutionStrategy.eachPlugin {
 
 pluginManagement {
     repositories {
-        val kotlinRepoUrl: String? = providers.gradleProperty("kotlin_repo_url").orNull
-        if (kotlinRepoUrl?.isNotEmpty() == true) {
-            maven(kotlinRepoUrl)
+        val kotlinRepoUrl = providers.gradleProperty("kotlin_repo_url").orNull
+        val kotlin_version: String? by settings
+        val repoUrl = kotlinRepoUrl
+        val kotlinVersion = kotlin_version
+        if (!repoUrl.isNullOrEmpty() && !kotlinVersion.isNullOrEmpty()) {
+            exclusiveContent {
+                forRepository {
+                    maven(repoUrl)
+                }
+                filter {
+                    includeVersionByRegex("org\\.jetbrains\\.kotlin.*", ".*", kotlinVersion)
+                }
+            }
         }
         google()
         maven("https://maven-central-eu.storage-download.googleapis.com/maven2/")
-        maven("https://cache-redirector.jetbrains.com/maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
         maven("https://packages.jetbrains.team/maven/p/kt/dev")
         mavenCentral()
         gradlePluginPortal()
@@ -65,11 +74,20 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositories {
-        val kotlinRepoUrl: String? = providers.gradleProperty("kotlin_repo_url").orNull
-        if (kotlinRepoUrl?.isNotEmpty() == true) {
-            maven(kotlinRepoUrl)
+        val kotlinRepoUrl = providers.gradleProperty("kotlin_repo_url").orNull
+        val kotlin_version: String? by settings
+        val repoUrl = kotlinRepoUrl
+        val kotlinVersion = kotlin_version
+        if (!repoUrl.isNullOrEmpty() && !kotlinVersion.isNullOrEmpty()) {
+            exclusiveContent {
+                forRepository {
+                    maven(repoUrl)
+                }
+                filter {
+                    includeVersionByRegex("org\\.jetbrains\\.kotlin.*", ".*", kotlinVersion)
+                }
+            }
         }
-        maven("https://cache-redirector.jetbrains.com/maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
         maven("https://packages.jetbrains.team/maven/p/kt/dev")
         google()
         maven("https://maven-central-eu.storage-download.googleapis.com/maven2/")
