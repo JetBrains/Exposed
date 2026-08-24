@@ -3462,6 +3462,15 @@ public class org/jetbrains/exposed/v1/core/statements/MergeTableStatement : org/
 	public fun prepareSQL (Lorg/jetbrains/exposed/v1/core/Transaction;Z)Ljava/lang/String;
 }
 
+public class org/jetbrains/exposed/v1/core/statements/MultiRowValuesInsertStatement : org/jetbrains/exposed/v1/core/statements/BatchInsertStatement {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/Table;ZZ)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/Table;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun arguments ()Ljava/lang/Iterable;
+	public fun arguments ()Ljava/util/List;
+	public fun prepareSQL (Lorg/jetbrains/exposed/v1/core/Transaction;Z)Ljava/lang/String;
+	public fun validateLastBatch ()V
+}
+
 public class org/jetbrains/exposed/v1/core/statements/ReplaceSelectStatement : org/jetbrains/exposed/v1/core/statements/InsertSelectStatement {
 	public fun <init> (Ljava/util/List;Lorg/jetbrains/exposed/v1/core/AbstractQuery;)V
 	public fun prepareSQL (Lorg/jetbrains/exposed/v1/core/Transaction;Z)Ljava/lang/String;
@@ -3502,7 +3511,9 @@ public abstract class org/jetbrains/exposed/v1/core/statements/Statement {
 
 public abstract interface class org/jetbrains/exposed/v1/core/statements/StatementBuilder {
 	public fun batchInsert (Lorg/jetbrains/exposed/v1/core/Table;ZZLkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
+	public fun batchInsert (Lorg/jetbrains/exposed/v1/core/Table;ZZZLkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
 	public static synthetic fun batchInsert$default (Lorg/jetbrains/exposed/v1/core/statements/StatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;ZZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
+	public static synthetic fun batchInsert$default (Lorg/jetbrains/exposed/v1/core/statements/StatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;ZZZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
 	public fun batchReplace (Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/BatchReplaceStatement;
 	public static synthetic fun batchReplace$default (Lorg/jetbrains/exposed/v1/core/statements/StatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/BatchReplaceStatement;
 	public fun batchUpsert (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function0;Z[Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/BatchUpsertStatement;
@@ -3544,7 +3555,9 @@ public abstract interface class org/jetbrains/exposed/v1/core/statements/Stateme
 
 public final class org/jetbrains/exposed/v1/core/statements/StatementBuilder$DefaultImpls {
 	public static fun batchInsert (Lorg/jetbrains/exposed/v1/core/statements/StatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;ZZLkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
+	public static fun batchInsert (Lorg/jetbrains/exposed/v1/core/statements/StatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;ZZZLkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
 	public static synthetic fun batchInsert$default (Lorg/jetbrains/exposed/v1/core/statements/StatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;ZZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
+	public static synthetic fun batchInsert$default (Lorg/jetbrains/exposed/v1/core/statements/StatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;ZZZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
 	public static fun batchReplace (Lorg/jetbrains/exposed/v1/core/statements/StatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/BatchReplaceStatement;
 	public static synthetic fun batchReplace$default (Lorg/jetbrains/exposed/v1/core/statements/StatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/BatchReplaceStatement;
 	public static fun batchUpsert (Lorg/jetbrains/exposed/v1/core/statements/StatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function0;Z[Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/BatchUpsertStatement;

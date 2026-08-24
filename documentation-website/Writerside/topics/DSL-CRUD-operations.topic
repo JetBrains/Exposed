@@ -141,8 +141,8 @@
                         src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
                         include-lines="83-95"/>
             <note>
-                The <code>.batchInsert()</code> function will still create multiple <code>INSERT</code> statements when
-                interacting with your database.
+                When using the JDBC driver, the <code>.batchInsert()</code> function will still create multiple
+                <code>INSERT</code> statements when interacting with your database.
                 <p>To convert the <code>INSERT</code> statements into a <code>BULK INSERT</code>, use the
                     <code>rewriteBatchedInserts=true</code>
                     (or <code>rewriteBatchedStatements=true</code>)
@@ -151,6 +151,11 @@
                     href="https://dev.mysql.com/doc/connector-j/en/connector-j-connp-props-performance-extensions.html#cj-conn-prop_rewriteBatchedStatements">MySQL</a>
                     and
                     <a href="https://jdbc.postgresql.org/documentation/use/">PostgresSQL</a>.</p>
+                <p>When using the R2DBC driver against PostgreSQL, no such option is needed: <code>.batchInsert()</code>
+                    automatically collapses the batch into a single multi-row <code>INSERT ... VALUES (...), (...), ...</code>
+                    statement, avoiding the per-row round trip that the r2dbc-postgresql driver otherwise performs for
+                    bound statement batches (see
+                    <a href="https://github.com/pgjdbc/r2dbc-postgresql/issues/527">pgjdbc/r2dbc-postgresql#527</a>).</p>
             </note>
 
             <p>
@@ -161,12 +166,14 @@
             </p>
             <p>
                 If you want to check if <code>rewriteBatchedInserts</code> and <code>batchInsert</code> are working
-                correctly, you need to enable JDBC logging for your driver. This is necessary, as Exposed will always
-                show the non-rewritten multiple inserts. For more information, see
+                correctly on JDBC, you need to enable JDBC logging for your driver. This is necessary, as Exposed will
+                always show the non-rewritten multiple inserts. For more information, see
                 <a href="https://jdbc.postgresql.org/documentation/logging/">
                     how to enable logging in PostgresSQL
                 </a>
-                .
+                . On R2DBC with PostgreSQL, the collapsed multi-row statement is visible directly through Exposed's own
+                <code>SqlLogger</code> (for example <code>StdOutSqlLogger</code>), since the rewrite happens in Exposed
+                itself rather than inside the driver.
             </p>
         </chapter>
     </chapter>

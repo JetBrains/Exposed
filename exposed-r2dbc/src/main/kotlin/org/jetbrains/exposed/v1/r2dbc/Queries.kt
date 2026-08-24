@@ -314,6 +314,10 @@ fun <T : Table> T.insertReturning(
  * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs)
  * should be returned. See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
  * @return A list of [ResultRow] representing data from each newly inserted row.
+ *
+ * **Note** Against PostgreSQL, the batch is sent as a single multi-row `INSERT ... VALUES (...), (...), ...`
+ * statement instead of one bound statement per row, avoiding the per-row round trip that r2dbc-postgresql
+ * otherwise performs for statement-level batches.
  * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.InsertTests.testBatchInsert01
  */
 suspend fun <T : Table, E> T.batchInsert(
@@ -321,7 +325,15 @@ suspend fun <T : Table, E> T.batchInsert(
     ignore: Boolean = false,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchInsertStatement.(E) -> Unit
-): List<ResultRow> = batchInsert(data.iterator(), ignoreErrors = ignore, shouldReturnGeneratedValues, body)
+): List<ResultRow> = batchInsert(data.iterator(), false, ignoreErrors = ignore, shouldReturnGeneratedValues, body)
+
+suspend fun <T : Table, E> T.batchInsert(
+    data: Iterable<E>,
+    useMultiRowValues: Boolean,
+    ignore: Boolean = false,
+    shouldReturnGeneratedValues: Boolean = true,
+    body: BatchInsertStatement.(E) -> Unit
+): List<ResultRow> = batchInsert(data.iterator(), useMultiRowValues, ignoreErrors = ignore, shouldReturnGeneratedValues, body)
 
 /**
  * Represents the SQL statement that batch inserts new rows into a table.
@@ -338,6 +350,11 @@ suspend fun <T : Table, E> T.batchInsert(
  * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs)
  * should be returned. See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
  * @return A list of [ResultRow] representing data from each newly inserted row.
+ *
+ * **Note** Against PostgreSQL, the batch is sent as a single multi-row `INSERT ... VALUES (...), (...), ...`
+ * statement instead of one bound statement per row, avoiding the per-row round trip that r2dbc-postgresql
+ * otherwise performs for statement-level batches (see
+ * [pgjdbc/r2dbc-postgresql#527](https://github.com/pgjdbc/r2dbc-postgresql/issues/527)).
  * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.InsertTests.testBatchInsertWithSequence
  */
 suspend fun <T : Table, E> T.batchInsert(
@@ -345,15 +362,24 @@ suspend fun <T : Table, E> T.batchInsert(
     ignore: Boolean = false,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchInsertStatement.(E) -> Unit
-): List<ResultRow> = batchInsert(data.iterator(), ignoreErrors = ignore, shouldReturnGeneratedValues, body)
+): List<ResultRow> = batchInsert(data.iterator(), false, ignoreErrors = ignore, shouldReturnGeneratedValues, body)
+
+suspend fun <T : Table, E> T.batchInsert(
+    data: Sequence<E>,
+    useMultiRowValues: Boolean,
+    ignore: Boolean = false,
+    shouldReturnGeneratedValues: Boolean = true,
+    body: BatchInsertStatement.(E) -> Unit
+): List<ResultRow> = batchInsert(data.iterator(), useMultiRowValues, ignoreErrors = ignore, shouldReturnGeneratedValues, body)
 
 private suspend fun <T : Table, E> T.batchInsert(
     data: Iterator<E>,
+    useMultiRowValues: Boolean,
     ignoreErrors: Boolean = false,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchInsertStatement.(E) -> Unit
 ): List<ResultRow> = executeBatch(data, body) {
-    val stmt = buildStatement { batchInsert(ignoreErrors, shouldReturnGeneratedValues, body) }
+    val stmt = buildStatement { batchInsert(useMultiRowValues, ignoreErrors, shouldReturnGeneratedValues, body) }
     stmt.executable()
 }
 
