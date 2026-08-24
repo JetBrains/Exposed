@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
+import nl.altindag.log.LogCaptor
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
@@ -15,9 +16,7 @@ import org.jetbrains.exposed.v1.core.java.UUIDColumnType
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
-import org.jetbrains.exposed.v1.core.statements.PostgreSQLBatchInsertStatement
-import org.jetbrains.exposed.v1.core.statements.StatementContext
-import org.jetbrains.exposed.v1.core.statements.expandArgs
+import org.jetbrains.exposed.v1.core.statements.MultiRowValuesInsertStatement
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.datetime.CurrentTimestamp
 import org.jetbrains.exposed.v1.datetime.XCurrentTimestamp
@@ -207,23 +206,22 @@ class InsertTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testBatchInsertUsesSingleMultiRowStatementForPostgreSQL() {
         withCitiesAndUsers(exclude = TestDB.ALL - TestDB.POSTGRESQL) { cities, _, _ ->
-            val executedSql = mutableListOf<String>()
-            val logger = object : SqlLogger {
-                override fun log(context: StatementContext, transaction: Transaction) {
-                    executedSql.add(context.expandArgs(transaction))
-                }
-            }
-            addLogger(logger)
+            val logCaptor = LogCaptor.forName(exposedLogger.name)
+            logCaptor.setLogLevelToDebug()
 
             val cityNames = listOf("Paris", "Moscow", "Helsinki")
-            val allCitiesID = cities.batchInsert(cityNames) { name ->
+            val allCitiesID = cities.batchInsert(cityNames, useMultiRowValues = true) { name ->
                 this[cities.name] = name
             }
 
             assertEquals(cityNames.size, allCitiesID.size)
-            val insertStatements = executedSql.filter { it.startsWith("INSERT", ignoreCase = true) }
-            assertEquals(1, insertStatements.size, "Expected a single collapsed multi-row INSERT, got: $insertStatements")
-            assertTrue(insertStatements.single().count { it == '(' } >= cityNames.size + 1)
+            val insertLogs = logCaptor.debugLogs.filter { it.startsWith("INSERT ", ignoreCase = true) }
+            assertEquals(1, insertLogs.size, "Expected a single collapsed multi-row INSERT, got: $insertLogs")
+            assertTrue(insertLogs.single().count { it == '(' } >= cityNames.size + 1)
+
+            logCaptor.clearLogs()
+            logCaptor.resetLogLevel()
+            logCaptor.close()
         }
     }
 
@@ -273,7 +271,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
         // is exceeded once more than 32767 rows are batched.
         // validateLastBatch() requires a transaction in context, but the statement is never executed.
         withTables(DMLTestsData.Cities) {
-            val statement = PostgreSQLBatchInsertStatement(DMLTestsData.Cities)
+            val statement = MultiRowValuesInsertStatement(DMLTestsData.Cities)
 
             repeat(32767) {
                 statement[DMLTestsData.Cities.name] = "City$it"

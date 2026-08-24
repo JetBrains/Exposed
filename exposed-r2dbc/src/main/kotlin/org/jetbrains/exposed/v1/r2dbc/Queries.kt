@@ -6,8 +6,6 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.statements.*
-import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.r2dbc.statements.*
@@ -321,7 +319,15 @@ suspend fun <T : Table, E> T.batchInsert(
     ignore: Boolean = false,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchInsertStatement.(E) -> Unit
-): List<ResultRow> = batchInsert(data.iterator(), ignoreErrors = ignore, shouldReturnGeneratedValues, body)
+): List<ResultRow> = batchInsert(data.iterator(), false, ignoreErrors = ignore, shouldReturnGeneratedValues, body)
+
+suspend fun <T : Table, E> T.batchInsert(
+    data: Iterable<E>,
+    useMultiRowValues: Boolean,
+    ignore: Boolean = false,
+    shouldReturnGeneratedValues: Boolean = true,
+    body: BatchInsertStatement.(E) -> Unit
+): List<ResultRow> = batchInsert(data.iterator(), useMultiRowValues, ignoreErrors = ignore, shouldReturnGeneratedValues, body)
 
 /**
  * Represents the SQL statement that batch inserts new rows into a table.
@@ -344,22 +350,24 @@ suspend fun <T : Table, E> T.batchInsert(
     ignore: Boolean = false,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchInsertStatement.(E) -> Unit
-): List<ResultRow> = batchInsert(data.iterator(), ignoreErrors = ignore, shouldReturnGeneratedValues, body)
+): List<ResultRow> = batchInsert(data.iterator(), false, ignoreErrors = ignore, shouldReturnGeneratedValues, body)
+
+suspend fun <T : Table, E> T.batchInsert(
+    data: Sequence<E>,
+    useMultiRowValues: Boolean,
+    ignore: Boolean = false,
+    shouldReturnGeneratedValues: Boolean = true,
+    body: BatchInsertStatement.(E) -> Unit
+): List<ResultRow> = batchInsert(data.iterator(), useMultiRowValues, ignoreErrors = ignore, shouldReturnGeneratedValues, body)
 
 private suspend fun <T : Table, E> T.batchInsert(
     data: Iterator<E>,
+    useMultiRowValues: Boolean,
     ignoreErrors: Boolean = false,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchInsertStatement.(E) -> Unit
 ): List<ResultRow> = executeBatch(data, body) {
-    val stmt = buildStatement {
-        when (currentDialect) {
-            is SQLServerDialect if autoIncColumn != null ->
-                SQLServerBatchInsertStatement(this@batchInsert, ignoreErrors, shouldReturnGeneratedValues)
-            is PostgreSQLDialect -> PostgreSQLBatchInsertStatement(this@batchInsert, ignoreErrors, shouldReturnGeneratedValues)
-            else -> BatchInsertStatement(this@batchInsert, ignoreErrors, shouldReturnGeneratedValues)
-        }
-    }
+    val stmt = buildStatement { batchInsert(useMultiRowValues, ignoreErrors, shouldReturnGeneratedValues, body) }
     stmt.executable()
 }
 

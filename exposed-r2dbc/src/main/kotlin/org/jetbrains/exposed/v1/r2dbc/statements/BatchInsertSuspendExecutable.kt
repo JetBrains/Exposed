@@ -3,7 +3,7 @@ package org.jetbrains.exposed.v1.r2dbc.statements
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
-import org.jetbrains.exposed.v1.core.statements.PostgreSQLBatchInsertStatement
+import org.jetbrains.exposed.v1.core.statements.MultiRowValuesInsertStatement
 import org.jetbrains.exposed.v1.core.statements.SQLServerBatchInsertStatement
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcPreparedStatementApi
@@ -53,9 +53,9 @@ open class SQLServerBatchInsertSuspendExecutable(
  * Represents the execution logic for an SQL statement that batch inserts new rows into a table,
  * specifically for the PostgreSQL database, using a single multi-row INSERT statement.
  */
-open class PostgreSQLBatchInsertSuspendExecutable(
-    override val statement: PostgreSQLBatchInsertStatement
-) : BatchInsertSuspendExecutable<PostgreSQLBatchInsertStatement>(statement) {
+open class MultiRowValuesInsertSuspendExecutable(
+    override val statement: MultiRowValuesInsertStatement
+) : BatchInsertSuspendExecutable<MultiRowValuesInsertStatement>(statement) {
     override val isAlwaysBatch: Boolean = false
 }
 
@@ -63,7 +63,7 @@ open class PostgreSQLBatchInsertSuspendExecutable(
 internal fun <S : BatchInsertStatement> S.executable(): BatchInsertSuspendExecutable<S> {
     return when (this) {
         is SQLServerBatchInsertStatement -> SQLServerBatchInsertSuspendExecutable(this)
-        is PostgreSQLBatchInsertStatement -> PostgreSQLBatchInsertSuspendExecutable(this)
+        is MultiRowValuesInsertStatement -> MultiRowValuesInsertSuspendExecutable(this)
         else -> BatchInsertSuspendExecutable(this)
     } as BatchInsertSuspendExecutable<S>
 }

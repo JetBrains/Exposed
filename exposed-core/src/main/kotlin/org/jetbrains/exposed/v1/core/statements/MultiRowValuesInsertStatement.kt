@@ -21,7 +21,7 @@ private const val POSTGRESQL_PARAMETER_LIMIT = 65535
  * row they belong to. This holds for plain multi-row `VALUES` inserts (no `BEFORE INSERT` trigger reordering)
  * and is the same assumption the JDBC driver's `reWriteBatchedInserts` rewrite relies on.
  */
-open class PostgreSQLBatchInsertStatement(
+open class MultiRowValuesInsertStatement(
     table: Table,
     ignore: Boolean = false,
     shouldReturnGeneratedValues: Boolean = true
