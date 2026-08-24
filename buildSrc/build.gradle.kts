@@ -1,7 +1,18 @@
 repositories {
-    maven("https://cache-redirector.jetbrains.com/maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
     val kotlinRepoUrl = providers.gradleProperty("kotlin_repo_url").orNull
-    if (kotlinRepoUrl != null) maven(kotlinRepoUrl)
+    val kotlin_version = providers.gradleProperty("kotlin_version").orNull
+    val repoUrl = kotlinRepoUrl
+    val kotlinVersion = kotlin_version
+    if (!repoUrl.isNullOrEmpty() && !kotlinVersion.isNullOrEmpty()) {
+        exclusiveContent {
+            forRepository {
+                maven(repoUrl)
+            }
+            filter {
+                includeVersionByRegex("org\\.jetbrains\\.kotlin.*", ".*", kotlinVersion)
+            }
+        }
+    }
     mavenCentral()
     mavenLocal()
     gradlePluginPortal()
