@@ -5,7 +5,7 @@ import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
-import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
+import org.jetbrains.exposed.v1.core.transactions.TransactionsHolderProvider
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -42,14 +42,14 @@ class TransactionStackCorruptionTest : DatabaseTestsBase() {
         var maxStackSize = AtomicInteger(0)
         var hasDuplicates = AtomicInteger(0)
 
+        @OptIn(InternalApi::class)
         override fun beforeExecution(transaction: Transaction, context: org.jetbrains.exposed.v1.core.statements.StatementContext) {
-            @OptIn(InternalApi::class)
-            val size = ThreadLocalTransactionsStack.threadTransactions()!!.size
+            val ts = TransactionsHolderProvider.holder
+            val size = ts.size
             maxStackSize.updateAndGet { current -> maxOf(current, size) }
 
             // Check for duplicates: if the same transaction appears multiple times
-            @OptIn(InternalApi::class)
-            val transactionIds = ThreadLocalTransactionsStack.threadTransactions()!!.map { it.transactionId }
+            val transactionIds = ts.getTransactionsAsIds()
             if (transactionIds.size != transactionIds.distinct().size) {
                 hasDuplicates.incrementAndGet()
             }
@@ -209,6 +209,7 @@ class TransactionStackCorruptionTest : DatabaseTestsBase() {
      * Alternative test: Manually instrument withThreadLocalTransaction to detect
      * if it's being called with a transaction that's already on the stack.
      */
+    @OptIn(InternalApi::class)
     @Test
     fun testWithThreadLocalTransactionNotCalledWithExistingTransaction() {
         val testDb = TestDB.H2_V2.connect()
@@ -218,20 +219,19 @@ class TransactionStackCorruptionTest : DatabaseTestsBase() {
             TestTable.insert { it[name] = "Test" }
         }
 
+        val ts = TransactionsHolderProvider.holder
         try {
             runBlocking {
                 suspendTransaction(db = testDb) {
                     // At this point, transaction is already on stack (pushed by TransactionContextElement)
-                    @OptIn(InternalApi::class)
-                    val currentTxOnStack = ThreadLocalTransactionsStack.getTransactionOrNull()
+                    val currentTxOnStack = ts.getTransactionOrNull()
 
                     // When we execute a query, it will call withThreadLocalTransaction(this)
                     // which should check if 'this' is already on the stack
                     val count = TestTable.selectAll().count()
 
                     // After query, verify we still have the same transaction on top
-                    @OptIn(InternalApi::class)
-                    val txAfter = ThreadLocalTransactionsStack.getTransactionOrNull()
+                    val txAfter = ts.getTransactionOrNull()
 
                     assertEquals(
                         currentTxOnStack?.transactionId, txAfter?.transactionId,
@@ -242,8 +242,7 @@ class TransactionStackCorruptionTest : DatabaseTestsBase() {
             }
 
             // Verify stack is clean
-            @OptIn(InternalApi::class)
-            val isEmpty = ThreadLocalTransactionsStack.isEmpty()
+            val isEmpty = ts.isEmpty()
             assertEquals(true, isEmpty, "Stack should be empty after transaction")
         } finally {
             transaction(testDb) {

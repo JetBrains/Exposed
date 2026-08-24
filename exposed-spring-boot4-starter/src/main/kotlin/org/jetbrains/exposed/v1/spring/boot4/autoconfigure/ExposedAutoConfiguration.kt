@@ -5,6 +5,7 @@ import org.jetbrains.exposed.v1.spring.boot4.DatabaseInitializer
 import org.jetbrains.exposed.v1.spring7.transaction.ExposedSpringTransactionAttributeSource
 import org.jetbrains.exposed.v1.spring7.transaction.SpringTransactionManager
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.beans.factory.config.BeanDefinition
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -12,6 +13,7 @@ import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Primary
+import org.springframework.context.annotation.Role
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import javax.sql.DataSource
 
@@ -30,6 +32,7 @@ import javax.sql.DataSource
  * @property applicationContext The Spring ApplicationContext container responsible for managing beans.
  */
 @AutoConfiguration(after = [DataSourceAutoConfiguration::class])
+@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 @EnableTransactionManagement
 open class ExposedAutoConfiguration(private val applicationContext: ApplicationContext) {
 
@@ -79,6 +82,7 @@ open class ExposedAutoConfiguration(private val applicationContext: ApplicationC
      * than enable when use '@EnableTransactionManagement'
      */
     @Bean
+    @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
     @Primary
     open fun exposedSpringTransactionAttributeSource(): ExposedSpringTransactionAttributeSource {
         return ExposedSpringTransactionAttributeSource()

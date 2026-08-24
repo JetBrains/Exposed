@@ -5,6 +5,7 @@ import io.r2dbc.spi.RowMetadata
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.reduce
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
 import org.jetbrains.exposed.v1.core.statements.BatchReplaceStatement
 import org.jetbrains.exposed.v1.core.statements.InsertStatement
 import org.jetbrains.exposed.v1.core.statements.ReplaceStatement
@@ -50,10 +51,10 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
     override suspend fun R2dbcPreparedStatementApi.executeInternal(transaction: R2dbcTransaction): Int {
         val (inserted, rs) = execInsertFunction()
 
-        val (processedCount, processedResults) = processResults(rs)
+        val returned = rs?.returnedValues()
+        val affectedRowCount = inserted ?: returned?.inserted ?: 0
         @OptIn(InternalApi::class)
-        statement.resultedValues = processedResults
-        val affectedRowCount = inserted ?: processedCount
+        statement.resultedValues = processResults(returned, affectedRowCount)
         statement.insertedCount = affectedRowCount
         return affectedRowCount
     }
@@ -98,11 +99,11 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             }
         }
 
-    private suspend fun processResults(rs: R2dbcResult?): Pair<Int, List<ResultRow>> {
-        val (count, allResultSetsValues) = rs?.returnedValues() ?: (0 to null)
+    private fun processResults(returned: ReturnedValues?, affectedRowCount: Int): List<ResultRow> {
+        val allResultSetsValues = returned?.values
 
         @Suppress("UNCHECKED_CAST")
-        val results = statement.arguments!!
+        return statement.arguments!!.insertedOnly(affectedRowCount, returned?.perArgumentSet)
             .mapIndexed { index, columnValues ->
                 val resultSetValues = allResultSetsValues?.getOrNull(index) ?: hashMapOf()
                 val argumentValues = columnValues.toMap()
@@ -113,8 +114,36 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             }
             .map { unwrapColumnValues(defaultAndNullableValues(exceptColumns = it.keys)) + it }
             .map { ResultRow.createAndFillValues(it as Map<Expression<*>, Any?>) }
+    }
 
-        return count to results
+    private class ReturnedValues(
+        val inserted: Int,
+        val perArgumentSet: List<Int>,
+        val values: ArrayList<MutableMap<Column<*>, Any?>>
+    )
+
+    /**
+     * Drops the argument sets that the database skipped instead of inserting.
+     *
+     * Only an `INSERT IGNORE` style batch can skip a row while still succeeding, so anything else keeps all of its
+     * arguments. A single insert keeps them too: its caller is handed the statement itself rather than these rows,
+     * and reads [InsertStatement.insertedCount] to find out whether the row was inserted.
+     *
+     * Dropping the skipped sets also realigns the remaining ones with the returned values, which the database only
+     * sends for the rows it did insert.
+     *
+     * A batch that inserted nothing is recognisable from [inserted] alone. Telling apart which rows of a partly
+     * inserted batch were skipped needs [perArgumentSet], and not every driver reports it: H2 and MariaDB send no
+     * update counts at all, so such a batch keeps all of its arguments.
+     */
+    private fun List<List<Pair<Column<*>, Any?>>>.insertedOnly(
+        inserted: Int,
+        perArgumentSet: List<Int>?
+    ): List<List<Pair<Column<*>, Any?>>> {
+        if (statement !is BatchInsertStatement || !statement.isIgnore) return this
+        if (inserted == 0) return emptyList()
+        val counts = perArgumentSet?.takeIf { it.size == size } ?: return this
+        return filterIndexed { index, _ -> counts[index] != 0 }
     }
 
     private fun defaultAndNullableValues(exceptColumns: Collection<Column<*>>): Map<Column<*>, Any?> {
@@ -132,7 +161,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
     }
 
     @Suppress("NestedBlockDepth", "TooGenericExceptionCaught", "CyclomaticComplexMethod")
-    private suspend fun R2dbcResult.returnedValues(): Pair<Int, ArrayList<MutableMap<Column<*>, Any?>>> {
+    private suspend fun R2dbcResult.returnedValues(): ReturnedValues {
         val resultSetsValues = arrayListOf<MutableMap<Column<*>, Any?>>()
         val resultSetsCounts = mutableListOf<Int>()
         var columnIndexesInResultSet: List<Pair<Column<*>, Int>>? = null
@@ -246,7 +275,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             }
         }
 
-        return inserted to resultSetsValues
+        return ReturnedValues(inserted, resultSetsCounts, resultSetsValues)
     }
 
     private fun RowMetadata?.returnedColumns(): List<Pair<Column<*>, Int>> {

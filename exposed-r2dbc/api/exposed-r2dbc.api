@@ -98,9 +98,13 @@ public final class org/jetbrains/exposed/v1/r2dbc/MetadataQueriesKt {
 
 public final class org/jetbrains/exposed/v1/r2dbc/QueriesKt {
 	public static final fun batchInsert (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Iterable;ZZLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun batchInsert (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Iterable;ZZZLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun batchInsert (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/sequences/Sequence;ZZLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun batchInsert (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/sequences/Sequence;ZZZLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun batchInsert$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Iterable;ZZLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun batchInsert$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Iterable;ZZZLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun batchInsert$default (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/sequences/Sequence;ZZLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun batchInsert$default (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/sequences/Sequence;ZZZLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun batchReplace (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Iterable;ZLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun batchReplace (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/sequences/Sequence;ZLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun batchReplace$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Iterable;ZLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
@@ -719,6 +723,15 @@ public class org/jetbrains/exposed/v1/r2dbc/statements/MergeSuspendExecutable : 
 	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
 	public fun isAlwaysBatch ()Z
 	public fun prepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public class org/jetbrains/exposed/v1/r2dbc/statements/MultiRowValuesInsertSuspendExecutable : org/jetbrains/exposed/v1/r2dbc/statements/BatchInsertSuspendExecutable {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/MultiRowValuesInsertStatement;)V
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/InsertStatement;
+	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/MultiRowValuesInsertStatement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
+	public fun isAlwaysBatch ()Z
 }
 
 public final class org/jetbrains/exposed/v1/r2dbc/statements/R2dbcConnectionImpl : org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposedConnection {

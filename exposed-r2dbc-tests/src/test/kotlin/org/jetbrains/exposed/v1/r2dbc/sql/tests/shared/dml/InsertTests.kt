@@ -7,13 +7,17 @@ import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
+import nl.altindag.log.LogCaptor
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.java.UUIDColumnType
 import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.core.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
+import org.jetbrains.exposed.v1.core.statements.MultiRowValuesInsertStatement
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.datetime.CurrentTimestamp
 import org.jetbrains.exposed.v1.datetime.XCurrentTimestamp
@@ -24,6 +28,7 @@ import org.jetbrains.exposed.v1.r2dbc.statements.toExecutable
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.currentTestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
@@ -33,6 +38,7 @@ import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.fail
@@ -200,6 +206,28 @@ class InsertTests : R2dbcDatabaseTestsBase() {
     }
 
     @Test
+    fun testBatchInsertUsesSingleMultiRowStatementForPostgreSQL() {
+        withCitiesAndUsers(exclude = TestDB.ALL - TestDB.POSTGRESQL) { cities, _, _ ->
+            val logCaptor = LogCaptor.forName(exposedLogger.name)
+            logCaptor.setLogLevelToDebug()
+
+            val cityNames = listOf("Paris", "Moscow", "Helsinki")
+            val allCitiesID = cities.batchInsert(cityNames, useMultiRowValues = true) { name ->
+                this[cities.name] = name
+            }
+
+            assertEquals(cityNames.size, allCitiesID.size)
+            val insertLogs = logCaptor.debugLogs.filter { it.startsWith("INSERT ", ignoreCase = true) }
+            assertEquals(1, insertLogs.size, "Expected a single collapsed multi-row INSERT, got: $insertLogs")
+            assertTrue(insertLogs.single().count { it == '(' } >= cityNames.size + 1)
+
+            logCaptor.clearLogs()
+            logCaptor.resetLogLevel()
+            logCaptor.close()
+        }
+    }
+
+    @Test
     fun testBatchInsertWithSequence() {
         val cities = DMLTestsData.Cities
         withTables(cities) { testDb ->
@@ -229,6 +257,52 @@ class InsertTests : R2dbcDatabaseTestsBase() {
     }
 
     @Test
+    fun batchInsertWithIgnoreDoesNotReturnSkippedRows() {
+        val tester = object : UUIDTable("batch_ignore_tester") {
+            val name = varchar("name", 32)
+        }
+
+        withTables(excludeSettings = insertIgnoreUnsupportedDB, tester) {
+            val existingId = JavaUUID.randomUUID()
+            tester.insert {
+                it[tester.id] = existingId
+                it[tester.name] = "original"
+            }
+
+            val inserted = tester.batchInsert(listOf(existingId), ignore = true) { conflictingId ->
+                this[tester.id] = conflictingId
+                this[tester.name] = "conflicting"
+            }
+
+            assertEqualLists(tester.selectAll().map { it[tester.name] }.toList(), listOf("original"))
+            assertEqualLists(inserted.map { it[tester.name] }, emptyList())
+        }
+    }
+
+    @Test
+    fun batchInsertWithIgnorePairsGeneratedValuesWithTheRowsTheyBelongTo() {
+        val tester = object : IntIdTable("partial_ignore_tester") {
+            val name = varchar("name", 32).uniqueIndex()
+        }
+
+        // telling apart which entries of a partly inserted batch were skipped needs the update count of each one,
+        // and the H2 and MariaDB drivers send none
+        val noUpdateCountsPerEntry = TestDB.ALL_H2_V2 + TestDB.MARIADB
+
+        withTables(excludeSettings = insertIgnoreUnsupportedDB + noUpdateCountsPerEntry, tester) {
+            tester.insert { it[tester.name] = "skipped" }
+
+            val inserted = tester.batchInsert(listOf("skipped", "added"), ignore = true) { name ->
+                this[tester.name] = name
+            }
+
+            val addedId = tester.selectAll().where { tester.name eq "added" }.single()[tester.id]
+            assertEqualLists(inserted.map { it[tester.name] }, listOf("added"))
+            assertEquals(addedId, inserted.single()[tester.id])
+        }
+    }
+
+    @Test
     fun testRemoveOnlyBatch() {
         val statement = BatchInsertStatement(DMLTestsData.Cities)
 
@@ -236,6 +310,30 @@ class InsertTests : R2dbcDatabaseTestsBase() {
         statement.addBatch()
         assertDoesNotThrow("Removing the only batch should not restore values from empty data") {
             statement.removeLastBatch()
+        }
+    }
+
+    @Test
+    fun testPostgreSQLBatchInsertRejectsBatchExceedingParameterLimit() {
+        // DMLTestsData.Cities has 2 columns, so the 65535 PostgreSQL bind-parameter limit
+        // is exceeded once more than 32767 rows are batched.
+        // validateLastBatch() requires a transaction in context, but the statement is never executed.
+        withTables(DMLTestsData.Cities) {
+            val statement = MultiRowValuesInsertStatement(DMLTestsData.Cities)
+
+            repeat(32767) {
+                statement[DMLTestsData.Cities.name] = "City$it"
+                statement.addBatch()
+            }
+            assertDoesNotThrow("Batch at the parameter limit should not throw") {
+                statement[DMLTestsData.Cities.name] = "City32767"
+                statement.addBatch()
+            }
+
+            assertFailsWith<BatchDataInconsistentException>("Batch exceeding the parameter limit should throw") {
+                statement[DMLTestsData.Cities.name] = "OneRowTooMany"
+                statement.addBatch()
+            }
         }
     }
 

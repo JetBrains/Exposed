@@ -61,7 +61,7 @@ As well as the following extension modules:
 
 | Module                         | Function                                                                                                                                                                        |
 |--------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `exposed-crypt`                | Provides additional column types to store encrypted data in the database and encode/decode it on the client-side                                                                |
+| `exposed-crypt`                | Provides additional column types to store encrypted data in the database and encode/decode it on the client-side, as well as one-way hashed data such as passwords              |
 | `exposed-java-time`            | Date-time extensions based on the [Java 8 Time API](https://docs.oracle.com/javase/8/docs/api/java/time/package-summary.html)                                                   |
 | `exposed-jodatime`             | Date-time extensions based on the [Joda-Time](https://www.joda.org/joda-time/) library                                                                                          |
 | `exposed-json`                 | JSON and JSONB data type extensions                                                                                                                                             |

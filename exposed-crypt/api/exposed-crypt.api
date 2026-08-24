@@ -6,6 +6,18 @@ public final class org/jetbrains/exposed/v1/crypt/Algorithms {
 	public final fun TRIPLE_DES (Ljava/lang/CharSequence;)Lorg/jetbrains/exposed/v1/crypt/Encryptor;
 }
 
+public final class org/jetbrains/exposed/v1/crypt/Argon2Hasher : org/jetbrains/exposed/v1/crypt/PasswordEncoderHasher {
+	public fun <init> ()V
+	public fun <init> (IIIII)V
+	public synthetic fun <init> (IIIIIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class org/jetbrains/exposed/v1/crypt/BCryptHasher : org/jetbrains/exposed/v1/crypt/PasswordEncoderHasher {
+	public fun <init> ()V
+	public fun <init> (I)V
+	public synthetic fun <init> (IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
 public final class org/jetbrains/exposed/v1/crypt/ByteArrayEncryptionTransformer : org/jetbrains/exposed/v1/core/ColumnTransformer {
 	public fun <init> (Lorg/jetbrains/exposed/v1/crypt/Encryptor;)V
 	public synthetic fun unwrap (Ljava/lang/Object;)Ljava/lang/Object;
@@ -32,6 +44,57 @@ public final class org/jetbrains/exposed/v1/crypt/Encryptor {
 	public final fun maxColLength (I)I
 }
 
+public final class org/jetbrains/exposed/v1/crypt/Hashed {
+	public fun <init> (Lorg/jetbrains/exposed/v1/crypt/Hasher;Ljava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEncodedValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun matches (Ljava/lang/String;)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/jetbrains/exposed/v1/crypt/Hasher {
+	public abstract fun hash (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/crypt/Hashed;
+	public abstract fun matches (Ljava/lang/String;Ljava/lang/String;)Z
+}
+
+public final class org/jetbrains/exposed/v1/crypt/HashingTransformer : org/jetbrains/exposed/v1/core/ColumnTransformer {
+	public fun <init> (Lorg/jetbrains/exposed/v1/crypt/Hasher;)V
+	public final fun getHasher ()Lorg/jetbrains/exposed/v1/crypt/Hasher;
+	public synthetic fun unwrap (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun unwrap (Lorg/jetbrains/exposed/v1/crypt/Hashed;)Ljava/lang/String;
+	public synthetic fun wrap (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun wrap (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/crypt/Hashed;
+}
+
+public final class org/jetbrains/exposed/v1/crypt/NullableHashingTransformer : org/jetbrains/exposed/v1/core/ColumnTransformer {
+	public fun <init> (Lorg/jetbrains/exposed/v1/crypt/Hasher;)V
+	public final fun getHasher ()Lorg/jetbrains/exposed/v1/crypt/Hasher;
+	public synthetic fun unwrap (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun unwrap (Lorg/jetbrains/exposed/v1/crypt/Hashed;)Ljava/lang/String;
+	public synthetic fun wrap (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun wrap (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/crypt/Hashed;
+}
+
+public class org/jetbrains/exposed/v1/crypt/PasswordEncoderHasher : org/jetbrains/exposed/v1/crypt/Hasher {
+	public fun <init> (Lorg/springframework/security/crypto/password/PasswordEncoder;)V
+	protected final fun getPasswordEncoder ()Lorg/springframework/security/crypto/password/PasswordEncoder;
+	public fun hash (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/crypt/Hashed;
+	public fun matches (Ljava/lang/String;Ljava/lang/String;)Z
+}
+
+public final class org/jetbrains/exposed/v1/crypt/Pbkdf2Hasher : org/jetbrains/exposed/v1/crypt/PasswordEncoderHasher {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/CharSequence;IILorg/springframework/security/crypto/password/Pbkdf2PasswordEncoder$SecretKeyFactoryAlgorithm;)V
+	public synthetic fun <init> (Ljava/lang/CharSequence;IILorg/springframework/security/crypto/password/Pbkdf2PasswordEncoder$SecretKeyFactoryAlgorithm;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class org/jetbrains/exposed/v1/crypt/SCryptHasher : org/jetbrains/exposed/v1/crypt/PasswordEncoderHasher {
+	public fun <init> ()V
+	public fun <init> (IIIII)V
+	public synthetic fun <init> (IIIIIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
 public final class org/jetbrains/exposed/v1/crypt/StringEncryptionTransformer : org/jetbrains/exposed/v1/core/ColumnTransformer {
 	public fun <init> (Lorg/jetbrains/exposed/v1/crypt/Encryptor;)V
 	public synthetic fun unwrap (Ljava/lang/Object;)Ljava/lang/Object;
@@ -43,5 +106,11 @@ public final class org/jetbrains/exposed/v1/crypt/StringEncryptionTransformer : 
 public final class org/jetbrains/exposed/v1/crypt/TablesKt {
 	public static final fun encryptedBinary (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;ILorg/jetbrains/exposed/v1/crypt/Encryptor;)Lorg/jetbrains/exposed/v1/core/Column;
 	public static final fun encryptedVarchar (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;ILorg/jetbrains/exposed/v1/crypt/Encryptor;)Lorg/jetbrains/exposed/v1/core/Column;
+	public static final fun hash (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/crypt/Hashed;
+	public static final fun hashNullable (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/crypt/Hashed;
+	public static final fun hashed (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/crypt/Hasher;)Lorg/jetbrains/exposed/v1/core/Column;
+	public static synthetic fun hashed$default (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/crypt/Hasher;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Column;
+	public static final fun hashedNullable (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/crypt/Hasher;)Lorg/jetbrains/exposed/v1/core/Column;
+	public static synthetic fun hashedNullable$default (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/crypt/Hasher;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Column;
 }
 

@@ -16,7 +16,7 @@ For more details and examples, see [](Transactions.md#working-with-multiple-data
 
 Exposed supports a variety of data types, including [basic data types](Numeric-Boolean-String-Types.topic),
 [date and time](date-and-time-types.md), [arrays](Array-types.topic), [binary data](Binary-types.topic),
-[enumeration](Enumeration-types.topic), and [](JSON-And-JSONB-types.topic). You can also extend and create new
+[enumeration](Enumeration-types.topic), and [](json-and-jsonb-types.md). You can also extend and create new
 [custom data types](Custom-data-types.topic) to fit your specific needs.
 
 ### How can I create a custom column type?

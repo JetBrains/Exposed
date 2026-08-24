@@ -165,6 +165,8 @@ public class org/jetbrains/exposed/v1/core/BasicBinaryColumnType : org/jetbrains
 	public fun <init> ()V
 	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun nonNullValueToString ([B)Ljava/lang/String;
+	public synthetic fun parameterMarker (Ljava/lang/Object;)Ljava/lang/String;
+	public fun parameterMarker ([B)Ljava/lang/String;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB (Ljava/lang/Object;)[B
@@ -3460,6 +3462,15 @@ public class org/jetbrains/exposed/v1/core/statements/MergeTableStatement : org/
 	public fun prepareSQL (Lorg/jetbrains/exposed/v1/core/Transaction;Z)Ljava/lang/String;
 }
 
+public class org/jetbrains/exposed/v1/core/statements/MultiRowValuesInsertStatement : org/jetbrains/exposed/v1/core/statements/BatchInsertStatement {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/Table;ZZ)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/Table;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun arguments ()Ljava/lang/Iterable;
+	public fun arguments ()Ljava/util/List;
+	public fun prepareSQL (Lorg/jetbrains/exposed/v1/core/Transaction;Z)Ljava/lang/String;
+	public fun validateLastBatch ()V
+}
+
 public class org/jetbrains/exposed/v1/core/statements/ReplaceSelectStatement : org/jetbrains/exposed/v1/core/statements/InsertSelectStatement {
 	public fun <init> (Ljava/util/List;Lorg/jetbrains/exposed/v1/core/AbstractQuery;)V
 	public fun prepareSQL (Lorg/jetbrains/exposed/v1/core/Transaction;Z)Ljava/lang/String;
@@ -3500,7 +3511,9 @@ public abstract class org/jetbrains/exposed/v1/core/statements/Statement {
 
 public abstract interface class org/jetbrains/exposed/v1/core/statements/StatementBuilder {
 	public fun batchInsert (Lorg/jetbrains/exposed/v1/core/Table;ZZLkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
+	public fun batchInsert (Lorg/jetbrains/exposed/v1/core/Table;ZZZLkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
 	public static synthetic fun batchInsert$default (Lorg/jetbrains/exposed/v1/core/statements/StatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;ZZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
+	public static synthetic fun batchInsert$default (Lorg/jetbrains/exposed/v1/core/statements/StatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;ZZZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
 	public fun batchReplace (Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/BatchReplaceStatement;
 	public static synthetic fun batchReplace$default (Lorg/jetbrains/exposed/v1/core/statements/StatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/BatchReplaceStatement;
 	public fun batchUpsert (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function0;Z[Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/BatchUpsertStatement;
@@ -3542,7 +3555,9 @@ public abstract interface class org/jetbrains/exposed/v1/core/statements/Stateme
 
 public final class org/jetbrains/exposed/v1/core/statements/StatementBuilder$DefaultImpls {
 	public static fun batchInsert (Lorg/jetbrains/exposed/v1/core/statements/StatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;ZZLkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
+	public static fun batchInsert (Lorg/jetbrains/exposed/v1/core/statements/StatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;ZZZLkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
 	public static synthetic fun batchInsert$default (Lorg/jetbrains/exposed/v1/core/statements/StatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;ZZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
+	public static synthetic fun batchInsert$default (Lorg/jetbrains/exposed/v1/core/statements/StatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;ZZZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
 	public static fun batchReplace (Lorg/jetbrains/exposed/v1/core/statements/StatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/BatchReplaceStatement;
 	public static synthetic fun batchReplace$default (Lorg/jetbrains/exposed/v1/core/statements/StatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/statements/BatchReplaceStatement;
 	public static fun batchUpsert (Lorg/jetbrains/exposed/v1/core/statements/StatementBuilder;Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function0;Z[Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/core/statements/BatchUpsertStatement;
@@ -3846,17 +3861,6 @@ public abstract class org/jetbrains/exposed/v1/core/transactions/DatabasesManage
 	public fun setDefaultDatabase (Lorg/jetbrains/exposed/v1/core/DatabaseApi;)V
 }
 
-public final class org/jetbrains/exposed/v1/core/transactions/ThreadLocalTransactionsStack {
-	public static final field INSTANCE Lorg/jetbrains/exposed/v1/core/transactions/ThreadLocalTransactionsStack;
-	public final fun getTransactionIsInstance (Ljava/lang/Class;)Lorg/jetbrains/exposed/v1/core/Transaction;
-	public final fun getTransactionOrNull ()Lorg/jetbrains/exposed/v1/core/Transaction;
-	public final fun getTransactionOrNull (Lorg/jetbrains/exposed/v1/core/DatabaseApi;)Lorg/jetbrains/exposed/v1/core/Transaction;
-	public final fun isEmpty ()Z
-	public final fun popTransaction ()Lorg/jetbrains/exposed/v1/core/Transaction;
-	public final fun pushTransaction (Lorg/jetbrains/exposed/v1/core/Transaction;)V
-	public final fun threadTransactions ()Ljava/util/Stack;
-}
-
 public abstract interface class org/jetbrains/exposed/v1/core/transactions/TransactionInterface {
 	public abstract fun getDb ()Lorg/jetbrains/exposed/v1/core/DatabaseApi;
 	public abstract fun getOuterTransaction ()Lorg/jetbrains/exposed/v1/core/Transaction;
@@ -3898,6 +3902,27 @@ public final class org/jetbrains/exposed/v1/core/transactions/TransactionStore :
 	public final fun getInit ()Lkotlin/jvm/functions/Function1;
 	public fun getValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;)Ljava/lang/Object;
 	public fun setValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;Ljava/lang/Object;)V
+}
+
+public abstract interface class org/jetbrains/exposed/v1/core/transactions/TransactionsHolder {
+	public fun getPriority ()I
+	public abstract fun getSize ()I
+	public abstract fun getTransactionIsInstance (Ljava/lang/Class;)Lorg/jetbrains/exposed/v1/core/Transaction;
+	public abstract fun getTransactionOrNull ()Lorg/jetbrains/exposed/v1/core/Transaction;
+	public abstract fun getTransactionOrNull (Lorg/jetbrains/exposed/v1/core/DatabaseApi;)Lorg/jetbrains/exposed/v1/core/Transaction;
+	public abstract fun getTransactionsAsIds ()Ljava/util/List;
+	public abstract fun isEmpty ()Z
+	public abstract fun removeTransaction ()Lorg/jetbrains/exposed/v1/core/Transaction;
+	public abstract fun storeTransaction (Lorg/jetbrains/exposed/v1/core/Transaction;)V
+}
+
+public final class org/jetbrains/exposed/v1/core/transactions/TransactionsHolder$DefaultImpls {
+	public static fun getPriority (Lorg/jetbrains/exposed/v1/core/transactions/TransactionsHolder;)I
+}
+
+public final class org/jetbrains/exposed/v1/core/transactions/TransactionsHolderProvider {
+	public static final field INSTANCE Lorg/jetbrains/exposed/v1/core/transactions/TransactionsHolderProvider;
+	public final fun getHolder ()Lorg/jetbrains/exposed/v1/core/transactions/TransactionsHolder;
 }
 
 public final class org/jetbrains/exposed/v1/core/transactions/TransactionsKt {

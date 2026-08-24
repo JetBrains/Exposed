@@ -4,8 +4,8 @@ import io.r2dbc.spi.IsolationLevel
 import kotlinx.coroutines.currentCoroutineContext
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Transaction
-import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
+import org.jetbrains.exposed.v1.core.transactions.TransactionsHolderProvider
 import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextElement
 import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolder
 import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHolderImpl
@@ -75,7 +75,6 @@ internal fun R2dbcTransactionManager.createTransactionContext(transaction: Trans
  * @throws [IllegalStateException] If the transaction in the context is not an [R2dbcTransaction]
  */
 internal suspend fun R2dbcTransactionManager.getCurrentContextTransaction(): R2dbcTransaction? {
-    @OptIn(InternalApi::class)
     val transaction = currentCoroutineContext()[contextKey]?.transaction
     return when (transaction) {
         null -> null
@@ -94,5 +93,5 @@ internal suspend fun R2dbcTransactionManager.getCurrentContextTransaction(): R2d
  */
 fun R2dbcTransactionManager.currentOrNull(): R2dbcTransaction? {
     @OptIn(InternalApi::class)
-    return ThreadLocalTransactionsStack.getTransactionOrNull(db) as? R2dbcTransaction
+    return TransactionsHolderProvider.holder.getTransactionOrNull(db) as? R2dbcTransaction
 }

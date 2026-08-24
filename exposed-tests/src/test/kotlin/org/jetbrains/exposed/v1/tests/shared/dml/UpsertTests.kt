@@ -38,6 +38,7 @@ import org.jetbrains.exposed.v1.tests.shared.expectException
 import org.junit.jupiter.api.Test
 import java.lang.Integer.parseInt
 import kotlin.properties.Delegates
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
@@ -956,6 +957,54 @@ class UpsertTests : DatabaseTestsBase() {
 
             assertTesterName(1, "tester1")
             assertTesterName(2, "tester2-modified")
+        }
+    }
+
+    @Test
+    fun testUpsertBinaryValuePreservesHighBytes() {
+        val tester = object : Table("binary_upsert") {
+            val id = integer("id")
+            val data = binary("data", 32).nullable()
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        val highBytes = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47)
+
+        withTables(tester) {
+            tester.upsert {
+                it[id] = 1
+                it[data] = highBytes
+            }
+
+            assertContentEquals(highBytes, tester.selectAll().single()[tester.data])
+        }
+    }
+
+    @Test
+    fun testBatchUpsertBinaryValuePreservesHighBytes() {
+        val tester = object : Table("binary_batch_upsert") {
+            val id = integer("id")
+            val data = binary("data", 32).nullable()
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        val rows = listOf(
+            1 to byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47),
+            2 to byteArrayOf(0xFF.toByte(), 0x00, 0xC3.toByte(), 0x28)
+        )
+
+        withTables(tester) {
+            tester.batchUpsert(rows) { (rowId, bytes) ->
+                this[tester.id] = rowId
+                this[tester.data] = bytes
+            }
+
+            rows.forEach { (rowId, bytes) ->
+                val stored = tester.selectAll().where { tester.id eq rowId }.single()[tester.data]
+                assertContentEquals(bytes, stored)
+            }
         }
     }
 }

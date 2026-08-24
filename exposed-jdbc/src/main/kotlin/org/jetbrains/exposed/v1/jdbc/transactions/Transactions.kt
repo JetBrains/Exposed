@@ -6,7 +6,6 @@ import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.SqlLogger
 import org.jetbrains.exposed.v1.core.exposedLogger
-import org.jetbrains.exposed.v1.core.transactions.ThreadLocalTransactionsStack
 import org.jetbrains.exposed.v1.core.transactions.withThreadLocalTransaction
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -100,10 +99,9 @@ private suspend inline fun <T> executeSuspendTransactionWithErrorHandling(
  * @return The resolved database instance
  * @throws IllegalStateException If no database can be resolved
  */
-@OptIn(InternalApi::class)
 private fun resolveDatabaseOrThrow(db: Database?): Database {
     return db
-        ?: ThreadLocalTransactionsStack.getTransactionIsInstance(JdbcTransaction::class.java)?.db
+        ?: TransactionManager.currentOrNull()?.db
         ?: TransactionManager.primaryDatabase
         ?: throw IllegalStateException(
             "No database specified and no default database found. " +

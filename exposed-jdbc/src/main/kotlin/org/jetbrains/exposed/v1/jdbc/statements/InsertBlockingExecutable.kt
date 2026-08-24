@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.jdbc.statements
 
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
 import org.jetbrains.exposed.v1.core.statements.InsertStatement
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
@@ -18,8 +19,18 @@ import java.sql.SQLException
 open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
     override val statement: S
 ) : BlockingExecutable<Int, S> {
+    /**
+     * Number of rows each argument set affected, in the order the sets were submitted, or `null` if the statement
+     * was not executed as a batch and the counts are therefore only known in total.
+     */
+    private var affectedRowCounts: List<Int>? = null
+
     protected open fun JdbcPreparedStatementApi.execInsertFunction(): Pair<Int, ResultSet?> {
-        val inserted = if (statement.arguments().count() > 1 || isAlwaysBatch) executeBatch().sum() else executeUpdate()
+        val inserted = if (statement.arguments().count() > 1 || isAlwaysBatch) {
+            executeBatch().also { affectedRowCounts = it }.sum()
+        } else {
+            executeUpdate()
+        }
         // According to the `processResults()` method when supportsOnlyIdentifiersInGeneratedKeys is false
         // all the columns could be taken from result set
         val rs = if (columnsGeneratedOnDB().isNotEmpty() || !currentDialect.supportsOnlyIdentifiersInGeneratedKeys) {
@@ -76,7 +87,7 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
         val allResultSetsValues = rs?.returnedValues(inserted)
 
         @Suppress("UNCHECKED_CAST")
-        return statement.arguments!!
+        return statement.arguments!!.insertedOnly(inserted, affectedRowCounts)
             // Join the values from ResultSet with arguments
             .mapIndexed { index, columnValues ->
                 val resultSetValues = allResultSetsValues?.getOrNull(index) ?: hashMapOf()
@@ -88,6 +99,30 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
             }
             .map { unwrapColumnValues(defaultAndNullableValues(exceptColumns = it.keys)) + it }
             .map { ResultRow.createAndFillValues(it as Map<Expression<*>, Any?>) }
+    }
+
+    /**
+     * Drops the argument sets that the database skipped instead of inserting.
+     *
+     * Only an `INSERT IGNORE` style batch can skip a row while still succeeding, so anything else keeps all of its
+     * arguments. A single insert keeps them too: its caller is handed the statement itself rather than these rows,
+     * and reads [InsertStatement.insertedCount] to find out whether the row was inserted.
+     *
+     * Dropping the skipped sets also realigns the remaining ones with the returned values, which the database only
+     * sends for the rows it did insert.
+     *
+     * A batch that inserted nothing is recognisable from [inserted] alone. Telling apart which rows of a partly
+     * inserted batch were skipped needs [perArgumentSet], and a batch that was not executed as one reports no such
+     * counts, so it keeps all of its arguments.
+     */
+    private fun List<List<Pair<Column<*>, Any?>>>.insertedOnly(
+        inserted: Int,
+        perArgumentSet: List<Int>?
+    ): List<List<Pair<Column<*>, Any?>>> {
+        if (statement !is BatchInsertStatement || !statement.isIgnore) return this
+        if (inserted == 0) return emptyList()
+        val counts = perArgumentSet?.takeIf { it.size == size } ?: return this
+        return filterIndexed { index, _ -> counts[index] != 0 }
     }
 
     private fun defaultAndNullableValues(exceptColumns: Collection<Column<*>>): Map<Column<*>, Any?> {
