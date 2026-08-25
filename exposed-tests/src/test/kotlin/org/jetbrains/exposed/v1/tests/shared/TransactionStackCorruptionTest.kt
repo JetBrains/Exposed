@@ -4,6 +4,7 @@ import kotlinx.coroutines.*
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.core.statements.StatementContext
 import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
 import org.jetbrains.exposed.v1.core.transactions.TransactionsHolderProvider
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -43,13 +44,13 @@ class TransactionStackCorruptionTest : DatabaseTestsBase() {
         var hasDuplicates = AtomicInteger(0)
 
         @OptIn(InternalApi::class)
-        override fun beforeExecution(transaction: Transaction, context: org.jetbrains.exposed.v1.core.statements.StatementContext) {
+        override fun beforeExecution(transaction: Transaction, context: StatementContext) {
             val ts = TransactionsHolderProvider.holder
             val size = ts.size
             maxStackSize.updateAndGet { current -> maxOf(current, size) }
 
             // Check for duplicates: if the same transaction appears multiple times
-            val transactionIds = ts.getTransactionsAsIds()
+            val transactionIds = ts.snapshot().map { it.transactionId }
             if (transactionIds.size != transactionIds.distinct().size) {
                 hasDuplicates.incrementAndGet()
             }

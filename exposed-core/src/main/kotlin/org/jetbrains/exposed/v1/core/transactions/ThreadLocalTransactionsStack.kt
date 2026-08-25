@@ -4,13 +4,6 @@ import org.jetbrains.exposed.v1.core.DatabaseApi
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Transaction
 import java.util.Stack
-import kotlin.collections.List
-import kotlin.collections.emptyList
-import kotlin.collections.filterIsInstance
-import kotlin.collections.findLast
-import kotlin.collections.isNotEmpty
-import kotlin.collections.lastOrNull
-import kotlin.collections.map
 import kotlin.concurrent.getOrSet
 
 /**
@@ -27,8 +20,8 @@ import kotlin.concurrent.getOrSet
  * - withTransactionContext(...)
  * - withThreadLocalTransaction(...)
  */
-@OptIn(InternalApi::class)
-internal object ThreadLocalTransactionsStack : TransactionsHolder {
+@InternalApi
+object ThreadLocalTransactionsStack : TransactionsHolder {
     private val transactions = ThreadLocal<Stack<Transaction>>()
 
     override val size: Int
@@ -98,6 +91,9 @@ internal object ThreadLocalTransactionsStack : TransactionsHolder {
         return transactions.get()?.filterIsInstance(klass)?.lastOrNull()
     }
 
+    /** Always returns `null` as JDBC/R2DBC implementations are restricted outside the core module. */
+    override suspend fun getTransactionFromContextOrNull(manager: TransactionManagerApi): Transaction? = null
+
     /**
      * Returns true if the current thread has no transactions,
      * or if the stack exists but is empty.
@@ -107,10 +103,15 @@ internal object ThreadLocalTransactionsStack : TransactionsHolder {
         return stack.isEmpty()
     }
 
-    /**
-     * Returns transactions that belong to the current thread as a list of their String id values.
-     */
-    override fun getTransactionsAsIds(): List<String> {
-        return transactions.get()?.map { it.transactionId } ?: emptyList()
+    override fun snapshot(): List<Transaction> = transactions.get()?.toList().orEmpty()
+
+    override fun restore(snapshot: List<Transaction>) {
+        if (snapshot.isEmpty()) {
+            // Remove the ThreadLocal entirely when stack is empty.
+            transactions.remove()
+        } else {
+            // otherwise replace entirely
+            transactions.set(Stack<Transaction>().apply { addAll(snapshot) })
+        }
     }
 }

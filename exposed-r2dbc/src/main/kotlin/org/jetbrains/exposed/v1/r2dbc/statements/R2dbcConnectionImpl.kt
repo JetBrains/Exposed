@@ -1,14 +1,10 @@
 package org.jetbrains.exposed.v1.r2dbc.statements
 
-import io.r2dbc.spi.Connection
-import io.r2dbc.spi.IsolationLevel
-import io.r2dbc.spi.Row
-import io.r2dbc.spi.RowMetadata
-import io.r2dbc.spi.Statement
-import io.r2dbc.spi.TransactionDefinition
-import io.r2dbc.spi.ValidationDepth
+import io.r2dbc.spi.*
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.reactive.asPublisher
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitLast
 import kotlinx.coroutines.reactive.awaitSingle
@@ -43,11 +39,29 @@ import java.util.*
  */
 @Suppress("UnusedPrivateMember", "SpreadOperator")
 class R2dbcConnectionImpl(
+    /** The publisher of underlying database [Connection] instances contained by this wrapper. */
     override val connection: Publisher<out Connection>,
     private val vendorDialect: String,
     private val typeMapping: R2dbcTypeMapping
 ) : R2dbcExposedConnection<Publisher<out Connection>> {
     private val metadataProvider: MetadataProvider = MetadataProvider.getProvider(vendorDialect)
+
+    /**
+     * Retrieves a publisher that provides only the single current underlying database [Connection] instance in use.
+     *
+     * If none is active, it awaits a value from the [connection] publisher and internally stores the result. Retrieval
+     * of a new value will invoke `Connection.beginTransaction()`, so this method should preferably be called when an active
+     * transaction is underway, in order to retrieve the accurate connection object instance.
+     *
+     * If this method is invoked intentionally to trigger the start of a transaction, then [setTransactionDefinition]
+     * should ideally be manually called first with the appropriate [TransactionDefinition], as well as any other
+     * [Connection] configuration methods.
+     */
+    override suspend fun activeConnection(): Publisher<out Connection> {
+        // retrieves localConnection if not null, otherwise awaits value from connection publisher
+        val acquiredConnection: Connection = withConnection { this }
+        return flowOf(acquiredConnection).asPublisher()
+    }
 
     override suspend fun getCatalog(): String = withConnection {
         getCurrentCatalog(metadataProvider)
@@ -270,10 +284,6 @@ internal val isolationLevelMapping: Map<IsolationLevel, Int> by lazy {
 internal fun IsolationLevel.asInt(): Int = isolationLevelMapping.getOrElse(this) {
     error("Unsupported IsolationLevel as Int: ${this.asSql()}")
 }
-
-internal fun Int.asIsolationLevel(): IsolationLevel = isolationLevelMapping.entries
-    .firstOrNull { it.value == this }?.key
-    ?: error("Unsupported Int as IsolationLevel: $this")
 
 internal suspend fun Connection.executeSQL(sqlQuery: String) {
     if (sqlQuery.isEmpty()) return

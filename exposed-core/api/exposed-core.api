@@ -3861,6 +3861,21 @@ public abstract class org/jetbrains/exposed/v1/core/transactions/DatabasesManage
 	public fun setDefaultDatabase (Lorg/jetbrains/exposed/v1/core/DatabaseApi;)V
 }
 
+public final class org/jetbrains/exposed/v1/core/transactions/ThreadLocalTransactionsStack : org/jetbrains/exposed/v1/core/transactions/TransactionsHolder {
+	public static final field INSTANCE Lorg/jetbrains/exposed/v1/core/transactions/ThreadLocalTransactionsStack;
+	public fun getPriority ()I
+	public fun getSize ()I
+	public fun getTransactionFromContextOrNull (Lorg/jetbrains/exposed/v1/core/transactions/TransactionManagerApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getTransactionIsInstance (Ljava/lang/Class;)Lorg/jetbrains/exposed/v1/core/Transaction;
+	public fun getTransactionOrNull ()Lorg/jetbrains/exposed/v1/core/Transaction;
+	public fun getTransactionOrNull (Lorg/jetbrains/exposed/v1/core/DatabaseApi;)Lorg/jetbrains/exposed/v1/core/Transaction;
+	public fun isEmpty ()Z
+	public fun removeTransaction ()Lorg/jetbrains/exposed/v1/core/Transaction;
+	public fun restore (Ljava/util/List;)V
+	public fun snapshot ()Ljava/util/List;
+	public fun storeTransaction (Lorg/jetbrains/exposed/v1/core/Transaction;)V
+}
+
 public abstract interface class org/jetbrains/exposed/v1/core/transactions/TransactionInterface {
 	public abstract fun getDb ()Lorg/jetbrains/exposed/v1/core/DatabaseApi;
 	public abstract fun getOuterTransaction ()Lorg/jetbrains/exposed/v1/core/Transaction;
@@ -3907,12 +3922,14 @@ public final class org/jetbrains/exposed/v1/core/transactions/TransactionStore :
 public abstract interface class org/jetbrains/exposed/v1/core/transactions/TransactionsHolder {
 	public fun getPriority ()I
 	public abstract fun getSize ()I
+	public abstract fun getTransactionFromContextOrNull (Lorg/jetbrains/exposed/v1/core/transactions/TransactionManagerApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getTransactionIsInstance (Ljava/lang/Class;)Lorg/jetbrains/exposed/v1/core/Transaction;
 	public abstract fun getTransactionOrNull ()Lorg/jetbrains/exposed/v1/core/Transaction;
 	public abstract fun getTransactionOrNull (Lorg/jetbrains/exposed/v1/core/DatabaseApi;)Lorg/jetbrains/exposed/v1/core/Transaction;
-	public abstract fun getTransactionsAsIds ()Ljava/util/List;
 	public abstract fun isEmpty ()Z
 	public abstract fun removeTransaction ()Lorg/jetbrains/exposed/v1/core/Transaction;
+	public abstract fun restore (Ljava/util/List;)V
+	public abstract fun snapshot ()Ljava/util/List;
 	public abstract fun storeTransaction (Lorg/jetbrains/exposed/v1/core/Transaction;)V
 }
 
