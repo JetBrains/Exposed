@@ -20,6 +20,7 @@ import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNull
 import org.postgresql.util.PGobject
 
 class EnumerationTests : DatabaseTestsBase() {
@@ -216,6 +217,25 @@ class EnumerationTests : DatabaseTestsBase() {
 
             assertEquals(fooBaz, tester.selectAll().single()[tester.enumNameColumn])
             assertEquals(fooBaz, referenceTable.selectAll().single()[referenceTable.referenceNameColumn])
+        }
+    }
+
+    @Test
+    fun testNullableEnumerationColumns() {
+        val tester = object : Table("nullable_tester") {
+            val enumColumn = enumeration<Foo>("enum_column").nullable()
+            val enumNameColumn = enumerationByName<Foo>("enum_name_column", 32).nullable()
+        }
+
+        withTables(tester, tester) {
+            tester.insert {
+                it[enumColumn] = null
+                it[enumNameColumn] = null
+            }
+
+            val result = tester.selectAll().single()
+            assertNull(result[tester.enumColumn])
+            assertNull(result[tester.enumNameColumn])
         }
     }
 }

@@ -23,6 +23,8 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.update
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNull
+import kotlin.collections.single
 
 class EnumerationTests : R2dbcDatabaseTestsBase() {
     // NOTE: UNSUPPORTED r2dbc-h2
@@ -268,6 +270,25 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
 
             assertEquals(fooBaz, tester.selectAll().single()[tester.enumNameColumn])
             assertEquals(fooBaz, referenceTable.selectAll().single()[referenceTable.referenceNameColumn])
+        }
+    }
+
+    @Test
+    fun testNullableEnumerationColumns() {
+        val tester = object : Table("nullable_tester") {
+            val enumColumn = enumeration<Foo>("enum_column").nullable()
+            val enumNameColumn = enumerationByName<Foo>("enum_name_column", 32).nullable()
+        }
+
+        withTables(tester, tester) {
+            tester.insert {
+                it[enumColumn] = null
+                it[enumNameColumn] = null
+            }
+
+            val result = tester.selectAll().single()
+            assertNull(result[tester.enumColumn])
+            assertNull(result[tester.enumNameColumn])
         }
     }
 }

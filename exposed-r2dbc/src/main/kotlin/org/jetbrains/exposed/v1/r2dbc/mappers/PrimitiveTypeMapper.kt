@@ -5,7 +5,6 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.java.UUIDColumnType
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import kotlin.reflect.KClass
-import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Mapper for primitive types (Int, Long, Float, Double, etc.).
@@ -30,6 +29,8 @@ class PrimitiveTypeMapper : TypeMapper {
         CharacterColumnType::class,
         BasicUuidColumnType::class,
         StringColumnType::class,
+        EnumerationColumnType::class,
+        EnumerationNameColumnType::class,
     )
 
     override fun setValue(
@@ -45,7 +46,6 @@ class PrimitiveTypeMapper : TypeMapper {
             return true
         }
 
-        @OptIn(ExperimentalUuidApi::class)
         val columnValueType = when (columnType) {
             is ByteColumnType -> java.lang.Byte::class.java
             is UByteColumnType -> java.lang.Short::class.java
@@ -63,6 +63,8 @@ class PrimitiveTypeMapper : TypeMapper {
             is CharacterColumnType -> java.lang.String::class.java
             is BooleanColumnType -> java.lang.Boolean::class.java
             is StringColumnType -> java.lang.String::class.java
+            is EnumerationColumnType -> java.lang.Integer::class.java
+            is EnumerationNameColumnType -> java.lang.String::class.java
             else -> return false
         }
         statement.bindNull(index - 1, columnValueType)
