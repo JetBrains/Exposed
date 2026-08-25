@@ -52,6 +52,9 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
     }
 
     override fun prepared(transaction: JdbcTransaction, sql: String): JdbcPreparedStatementApi = when {
+        !currentDialect.supportsGeneratedKeysRetrieval ->
+            transaction.connection.prepareStatement(sql, false)
+
         // https://github.com/pgjdbc/pgjdbc/issues/1168
         // Column names always escaped/quoted in RETURNING clause
         columnsGeneratedOnDB().isNotEmpty() && currentDialect is PostgreSQLDialect ->

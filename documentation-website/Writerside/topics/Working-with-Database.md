@@ -276,6 +276,43 @@ Connect to a database:
 ```
 {src="exposed-databases-jdbc/src/main/kotlin/org/example/Databases.kt" include-symbol="postgresqldbNG"}
 
+### Amazon Redshift
+
+Amazon Redshift support is available through JDBC only. Add the
+[Amazon Redshift JDBC driver](https://docs.aws.amazon.com/redshift/latest/mgmt/jdbc20-install.html):
+
+```kotlin
+implementation("com.amazon.redshift:redshift-jdbc42:%redshift%")
+```
+
+Then connect using a Redshift JDBC URL:
+
+```kotlin
+Database.connect(
+    url = "jdbc:redshift://example-cluster.region.redshift.amazonaws.com:5439/database",
+    driver = "com.amazon.redshift.Driver",
+    user = "username",
+    password = "password"
+)
+```
+
+Keep the following limitations in mind when connecting to Amazon Redshift using Exposed:
+
+- Amazon Redshift does not natively support returning generated identity keys as part of an insert operation. Following
+  an Exposed `insert {}`, attempting to access the statement's generated identity value will fail. Use explicit or
+  client-generated IDs when the application needs the inserted ID.
+- Amazon Redshift treats foreign key constraints as informational only and does not recognize `CHECK` constraint syntax.
+  Exposed therefore does not create `ON DELETE`, `ON UPDATE`, or `CHECK` constraints. As a result, `byte`, `ubyte`, and
+  `ushort` columns do not have range-enforcing constraints.
+- Amazon Redshift does not enforce traditional secondary indexes. Exposed therefore skips non-unique, partial,
+  functional, and typed indexes. Define Redshift sort and distribution keys outside the Exposed index API.
+- Amazon Redshift limits `VARCHAR(MAX)` values to 65,535 bytes and `VARBYTE` values to 16,777,216 bytes. Text columns
+  map to `VARCHAR(MAX)`, while binary and blob columns map to `VARBYTE(16777216)`.
+- Amazon Redshift has no native UUID data type, so UUID columns use `VARCHAR(36)`. Exposed writes the standard dashed
+  representation and reads either dashed or undashed hexadecimal text.
+- Amazon Redshift supports a limited set of column modifications that do not map to Exposed's general
+  column-modification API. Requests to build a column-modification statement fail before any SQL is sent to the database.
+
 ### SQL Server
 
 Add the required dependency:

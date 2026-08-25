@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Class responsible for retrieving and storing information about the JDBC driver and underlying DBMS, using [metadata].
  */
+@Suppress("LargeClass")
 class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData) : JdbcExposedDatabaseMetadata(database) {
     override val url: String by lazyMetadata { url }
 
@@ -41,6 +42,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             "PostgreSQL JDBC - NG" -> PostgreSQLNGDialect.dialectName
             "PostgreSQL JDBC Driver" -> PostgreSQLDialect.dialectName
             "Oracle JDBC driver" -> OracleDialect.dialectName
+            "Redshift JDBC Driver" -> RedshiftDialect.dialectName
             else -> {
                 if (driverName.startsWith("Microsoft JDBC Driver ")) {
                     SQLServerDialect.dialectName
@@ -313,10 +315,14 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     @Suppress("CyclomaticComplexMethod")
     override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> {
         for (table in tables) {
-            val transaction = TransactionManager.current()
             val (catalog, tableSchema) = tableCatalogAndSchema(table)
 
             existingIndicesCache.getOrPut(table) {
+                if (currentDialect is RedshiftDialect) {
+                    return@getOrPut redshiftExistingIndices(table, tableSchema)
+                }
+
+                val transaction = TransactionManager.current()
                 val pkNames = metadata.getPrimaryKeys(
                     catalog,
                     tableSchema,
@@ -377,7 +383,47 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return HashMap(existingIndicesCache)
     }
 
+    private fun redshiftExistingIndices(table: Table, tableSchema: String): List<Index> {
+        val schemaName = tableSchema.ifEmpty {
+            metadata.connection.executeSQL("SELECT current_schema()") { result ->
+                check(result.next())
+                result.getString(1)
+            }.orEmpty()
+        }
+        val constraints = linkedMapOf<String, MutableList<String>>()
+        metadata.connection.executeSQL(
+            """
+            SELECT tc.constraint_name, kcu.column_name
+            FROM information_schema.table_constraints tc
+            JOIN information_schema.key_column_usage kcu
+              ON tc.constraint_catalog = kcu.constraint_catalog
+             AND tc.constraint_schema = kcu.constraint_schema
+             AND tc.constraint_name = kcu.constraint_name
+            WHERE tc.table_schema = ?
+              AND tc.table_name = ?
+              AND tc.constraint_type = 'UNIQUE'
+            ORDER BY tc.constraint_name, kcu.ordinal_position
+            """.trimIndent(),
+            listOf(schemaName, table.nameInDatabaseCaseUnquoted())
+        ) { result ->
+            while (result.next()) {
+                constraints.getOrPut(result.getString(1)) { arrayListOf() }.add(result.getString(2))
+            }
+        }
+
+        val columnsByName = table.columns.associateBy { it.name.lowercase() }
+        return constraints.mapNotNull { (constraintName, columnNames) ->
+            columnNames.mapNotNull { columnsByName[it.lowercase()] }
+                .takeIf { it.size == columnNames.size }
+                ?.let { Index(it, unique = true, customName = constraintName) }
+        }
+    }
+
     override fun existingCheckConstraints(vararg tables: Table): Map<Table, List<CheckConstraint>> {
+        if (!currentDialect.supportsCheckConstraints) {
+            return tables.associateWith { emptyList() }
+        }
+
         val result = mutableMapOf<Table, List<CheckConstraint>>()
         tables.forEach { table ->
             val transaction = TransactionManager.current()

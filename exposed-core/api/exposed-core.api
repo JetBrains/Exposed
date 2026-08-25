@@ -4082,12 +4082,15 @@ public abstract interface class org/jetbrains/exposed/v1/core/vendors/DatabaseDi
 	public fun getRequiresAutoCommitOnCreateDrop ()Z
 	public fun getSequenceMaxValue ()J
 	public fun getSupportsAlterCheckConstraint ()Z
+	public fun getSupportsCheckConstraints ()Z
 	public fun getSupportsColumnTypeChange ()Z
 	public fun getSupportsCreateSchema ()Z
 	public fun getSupportsCreateSequence ()Z
 	public fun getSupportsDualTableConcept ()Z
+	public fun getSupportsGeneratedKeysRetrieval ()Z
 	public fun getSupportsIfNotExists ()Z
 	public abstract fun getSupportsMultipleGeneratedKeys ()Z
+	public fun getSupportsOnDelete ()Z
 	public fun getSupportsOnUpdate ()Z
 	public fun getSupportsOnlyIdentifiersInGeneratedKeys ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z
@@ -4122,11 +4125,14 @@ public final class org/jetbrains/exposed/v1/core/vendors/DatabaseDialect$Default
 	public static fun getRequiresAutoCommitOnCreateDrop (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getSequenceMaxValue (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)J
 	public static fun getSupportsAlterCheckConstraint (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
+	public static fun getSupportsCheckConstraints (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getSupportsColumnTypeChange (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getSupportsCreateSchema (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getSupportsCreateSequence (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getSupportsDualTableConcept (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
+	public static fun getSupportsGeneratedKeysRetrieval (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getSupportsIfNotExists (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
+	public static fun getSupportsOnDelete (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getSupportsOnUpdate (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getSupportsOnlyIdentifiersInGeneratedKeys (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getSupportsOrderByNullsFirstLast (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
@@ -4539,6 +4545,36 @@ public final class org/jetbrains/exposed/v1/core/vendors/PrimaryKeyMetadata {
 	public fun toString ()Ljava/lang/String;
 }
 
+public class org/jetbrains/exposed/v1/core/vendors/RedshiftDialect : org/jetbrains/exposed/v1/core/vendors/VendorDialect {
+	public static final field Companion Lorg/jetbrains/exposed/v1/core/vendors/RedshiftDialect$Companion;
+	public fun <init> ()V
+	public fun createDatabase (Ljava/lang/String;)Ljava/lang/String;
+	public fun createIndex (Lorg/jetbrains/exposed/v1/core/Index;)Ljava/lang/String;
+	public fun dropDatabase (Ljava/lang/String;)Ljava/lang/String;
+	public fun dropIndex (Ljava/lang/String;Ljava/lang/String;ZZ)Ljava/lang/String;
+	public fun getDefaultReferenceOption ()Lorg/jetbrains/exposed/v1/core/ReferenceOption;
+	public fun getRequiresAutoCommitOnCreateDrop ()Z
+	public fun getSupportsAlterCheckConstraint ()Z
+	public fun getSupportsCheckConstraints ()Z
+	public fun getSupportsCreateSequence ()Z
+	public fun getSupportsGeneratedKeysRetrieval ()Z
+	public fun getSupportsMultipleGeneratedKeys ()Z
+	public fun getSupportsOnDelete ()Z
+	public fun getSupportsOnUpdate ()Z
+	public fun getSupportsOnlyIdentifiersInGeneratedKeys ()Z
+	public fun getSupportsOrderByNullsFirstLast ()Z
+	public fun getSupportsRestrictReferenceOption ()Z
+	public fun getSupportsSetDefaultReferenceOption ()Z
+	public fun getSupportsSubqueryUnions ()Z
+	public fun listDatabases ()Ljava/lang/String;
+	public fun modifyColumn (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnDiff;)Ljava/util/List;
+	public fun setColumnComment (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/String;)Ljava/util/List;
+	public fun setSchema (Lorg/jetbrains/exposed/v1/core/Schema;)Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/v1/core/vendors/RedshiftDialect$Companion : org/jetbrains/exposed/v1/core/vendors/VendorDialect$DialectNameProvider {
+}
+
 public class org/jetbrains/exposed/v1/core/vendors/SQLServerDialect : org/jetbrains/exposed/v1/core/vendors/VendorDialect {
 	public static final field Companion Lorg/jetbrains/exposed/v1/core/vendors/SQLServerDialect$Companion;
 	public fun <init> ()V
@@ -4623,12 +4659,15 @@ public abstract class org/jetbrains/exposed/v1/core/vendors/VendorDialect : org/
 	public fun getRequiresAutoCommitOnCreateDrop ()Z
 	public fun getSequenceMaxValue ()J
 	public fun getSupportsAlterCheckConstraint ()Z
+	public fun getSupportsCheckConstraints ()Z
 	public fun getSupportsColumnTypeChange ()Z
 	public fun getSupportsCreateSchema ()Z
 	public fun getSupportsCreateSequence ()Z
 	public fun getSupportsDualTableConcept ()Z
+	public fun getSupportsGeneratedKeysRetrieval ()Z
 	public fun getSupportsIfNotExists ()Z
 	public fun getSupportsMultipleGeneratedKeys ()Z
+	public fun getSupportsOnDelete ()Z
 	public fun getSupportsOnUpdate ()Z
 	public fun getSupportsOnlyIdentifiersInGeneratedKeys ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z

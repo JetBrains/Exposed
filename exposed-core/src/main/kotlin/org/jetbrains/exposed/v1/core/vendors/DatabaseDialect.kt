@@ -36,6 +36,9 @@ interface DatabaseDialect {
     /** Returns `true` if the dialect supports returning multiple generated keys as a result of an insert operation, `false` otherwise. */
     val supportsMultipleGeneratedKeys: Boolean
 
+    /** Returns `true` if the dialect supports returning any generated keys as a result of an insert operation, `false` otherwise. */
+    val supportsGeneratedKeysRetrieval: Boolean get() = true
+
     /** Returns `true` if the dialect supports returning generated keys obtained from a sequence. */
     val supportsSequenceAsGeneratedKeys: Boolean get() = supportsCreateSequence
 
@@ -63,6 +66,9 @@ interface DatabaseDialect {
     /** Returns `true` if the dialect supports using the ON UPDATE clause with a foreign key constraint. */
     val supportsOnUpdate: Boolean get() = true
 
+    /** Returns `true` if the dialect supports using the ON DELETE clause with a foreign key constraint. */
+    val supportsOnDelete: Boolean get() = true
+
     /** Returns `true` if the dialect supports the SET DEFAULT action as part of a foreign key constraint clause. */
     val supportsSetDefaultReferenceOption: Boolean get() = true
 
@@ -83,6 +89,9 @@ interface DatabaseDialect {
 
     /** Returns `true` if the dialect supports ALTER TABLE with either an add or drop check constraint clause. */
     val supportsAlterCheckConstraint: Boolean get() = true
+
+    /** Returns `true` if the dialect supports check constraints, `false` otherwise. */
+    val supportsCheckConstraints: Boolean get() = true
 
     /** Returns `true` if the dialect supports `SELECT FOR UPDATE` statements, `false` otherwise. */
     @Deprecated(
