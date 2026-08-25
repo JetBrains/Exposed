@@ -7,10 +7,11 @@
     <show-structure for="chapter,procedure" depth="2"/>
     <tldr>
         <p>
-            <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-dao</code>
+            <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-dao</code> (JDBC),
+            <code>org.jetbrains.exposed:exposed-dao-r2dbc</code> (R2DBC)
         </p>
         <include from="lib.topic" element-id="jdbc-supported"/>
-        <include from="lib.topic" element-id="r2dbc-not-supported"/>
+        <include from="lib.topic" element-id="r2dbc-limited-support"/>
     </tldr>
     <p>
         CRUD (Create, Read, Update, Delete) are the four basic operations supported by any database. This section
@@ -341,6 +342,212 @@
             For more details about using statement interceptors, see
             <a href="Statement-Interceptors.md">DSL Statement Interceptors</a>.
         </tip>
+    </chapter>
+    <chapter title="R2DBC differences" id="r2dbc-differences">
+        <include from="lib.topic" element-id="r2dbc-dao-experimental"/>
+        <chapter title="Operations suspend" id="r2dbc-suspending">
+            <p>
+                Run all DAO calls inside <code>suspendTransaction</code>, and make the enclosing functions
+                <code>suspend</code>:
+            </p>
+            <tabs group="connectivity">
+                <tab id="jdbc-crud-tx" title="JDBC" group-key="jdbc">
+                    <code-block lang="kotlin"><![CDATA[
+                        import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+
+                        transaction {
+                            val movie = StarWarsFilmEntity.new {
+                                name = "The Last Jedi"
+                                director = "Rian Johnson"
+                            }
+                            val found = StarWarsFilmEntity.findById(movie.id)
+                            found?.director = "R. Johnson"
+                            found?.delete()
+                        }
+                    ]]>
+                    </code-block>
+                </tab>
+                <tab id="r2dbc-crud-tx" title="R2DBC" group-key="r2dbc">
+                    <code-block lang="kotlin"><![CDATA[
+                        import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
+
+                        suspendTransaction {
+                            val movie = StarWarsFilmEntity.newSuspend {
+                                name = "The Last Jedi"
+                                director = "Rian Johnson"
+                            }
+                            val found = StarWarsFilmEntity.findById(movie.id)
+                            found?.director = "R. Johnson"
+                            found?.delete()
+                        }
+                    ]]>
+                    </code-block>
+                </tab>
+            </tabs>
+            <p>
+                <code>newSuspend()</code>, <code>findById()</code>, <code>get()</code>,
+                <code>findByIdAndUpdate()</code>, <code>findSingleByAndUpdate()</code>, <code>count()</code>,
+                <code>reload()</code>, <code>Entity.delete()</code>, <code>Entity.flush()</code>, and
+                <code>Entity.refresh()</code> are all suspending. <code>all()</code> and <code>find { }</code> are
+                not, because they only build a query, and neither is <code>new { }</code>, because it only
+                schedules an insert.
+            </p>
+            <p>
+                Because <code>newSuspend { }</code> suspends, its initializer block does too, so you can call other
+                DAO operations inside it:
+            </p>
+            <code-block lang="kotlin"><![CDATA[
+                val movie = StarWarsFilmEntity.newSuspend {
+                    name = "The Last Jedi"
+                    // findById() suspends, which the initializer block allows
+                    sequelId = (StarWarsFilmEntity.findById(previousFilmId)?.sequelId ?: 0) + 1
+                }
+            ]]>
+            </code-block>
+        </chapter>
+        <chapter title="Two ways to create an entity" id="r2dbc-new">
+            <p>
+                The JDBC DAO has a single factory, <code>new { }</code>, which issues the <code>INSERT</code> before
+                it returns. In the R2DBC DAO, issuing that statement is exactly the part that has to suspend, so the
+                factory is split in two:
+            </p>
+            <deflist type="medium">
+                <def id="r2dbc-new-nonsuspending">
+                    <title>
+                        <code>new { }</code>
+                    </title>
+                    <p>
+                        Non-suspending. Schedules the insert in the entity cache and returns without touching the
+                        database, so it can be called from anywhere — a plain factory function, a builder, an entity
+                        initializer. The entity it returns has readable and writable columns and can be used as the
+                        target of a reference, but it usually has no id yet: <code>id.value</code> throws, and
+                        <code>findById()</code> cannot find it, until the insert is issued. That happens at the
+                        first flush — an explicit <code>flushCache()</code>, any other statement in the same
+                        transaction, or the commit. Everything pending for one table then goes out as a single
+                        batch, which is what makes this the cheapest way to insert many rows; see
+                        <a anchor="r2dbc-batching">Batching inserts</a>.
+                    </p>
+                </def>
+                <def id="r2dbc-new-suspend">
+                    <title>
+                        <code>newSuspend { }</code>
+                    </title>
+                    <p>
+                        The counterpart of the JDBC DAO's <code>new { }</code>: schedules the insert, flushes, and
+                        returns the hydrated entity with its id and database-generated columns populated. JDBC code
+                        that reads the id right after creating an entity migrates to this one.
+                    </p>
+                </def>
+            </deflist>
+            <warning>
+                <code>new { }</code> is not a drop-in replacement for the JDBC <code>new { }</code>: when it
+                returns, neither the row nor the id exists yet. Anything that reads
+                <code>entity.id.value</code> straight away needs <code>newSuspend { }</code>.
+            </warning>
+        </chapter>
+        <chapter title="Query results are flows" id="r2dbc-flows">
+            <p>
+                In <code>exposed-r2dbc</code>, <code>SizedIterable</code> extends
+                <code>kotlinx.coroutines.flow.Flow</code>. Collect the result before using operators that produce a
+                collection:
+            </p>
+            <tabs group="connectivity">
+                <tab id="jdbc-crud-read" title="JDBC" group-key="jdbc">
+                    <code-block lang="kotlin"><![CDATA[
+                        val all = StarWarsFilmEntity.all().toList()
+                        val names = StarWarsFilmEntity.all().map { it.name }
+                        val count = StarWarsFilmEntity.all().count()
+                    ]]>
+                    </code-block>
+                </tab>
+                <tab id="r2dbc-crud-read" title="R2DBC" group-key="r2dbc">
+                    <code-block lang="kotlin"><![CDATA[
+                        val all = StarWarsFilmEntity.all().toList()
+                        val names = StarWarsFilmEntity.all().toList().map { it.name }
+                        val count = StarWarsFilmEntity.all().count()
+                    ]]>
+                    </code-block>
+                </tab>
+            </tabs>
+            <warning>
+                If <code>kotlinx.coroutines.flow.map</code> is in scope, the <code>map</code> call still compiles but
+                returns a <code>Flow</code> instead of a <code>List</code>. Add <code>.toList()</code> before any
+                operator that should produce a collection.
+            </warning>
+        </chapter>
+        <chapter title="Updating an entity in a later transaction" id="r2dbc-attach">
+            <p>
+                The JDBC DAO silently re-registers an entity on its first write in a new transaction. The R2DBC DAO
+                cannot, because that check is a database round trip and a property setter cannot suspend. Call
+                <code>attach()</code> first, or the write throws:
+            </p>
+            <tabs group="connectivity">
+                <tab id="jdbc-crud-attach" title="JDBC" group-key="jdbc">
+                    <code-block lang="kotlin"><![CDATA[
+                        val movie = transaction { StarWarsFilmEntity.new { name = "The Last Jedi" } }
+
+                        transaction {
+                            movie.director = "Rian Johnson"
+                        }
+                    ]]>
+                    </code-block>
+                </tab>
+                <tab id="r2dbc-crud-attach" title="R2DBC" group-key="r2dbc">
+                    <code-block lang="kotlin"><![CDATA[
+                        val movie = suspendTransaction { StarWarsFilmEntity.newSuspend { name = "The Last Jedi" } }
+
+                        suspendTransaction {
+                            StarWarsFilmEntity.attach(movie)
+                            movie.director = "Rian Johnson"
+                        }
+                    ]]>
+                    </code-block>
+                </tab>
+            </tabs>
+            <p>
+                <code>attach()</code> throws <code>EntityNotFoundException</code> if the row no longer exists. It
+                also refuses to replace a <i>different</i> instance of the same row that the transaction already
+                tracks with unflushed changes, since that would drop those changes silently; pass
+                <code>attach(movie, force = true)</code> to discard them deliberately.
+            </p>
+        </chapter>
+        <chapter title="Batching inserts" id="r2dbc-batching">
+            <p>
+                <code>newSuspend { }</code> flushes immediately, costing one <code>INSERT</code> per entity.
+                <code>new { }</code> only schedules, so creating several entities and flushing once persists them
+                all with a single batched <code>INSERT</code> per table:
+            </p>
+            <code-block lang="kotlin"><![CDATA[
+                suspendTransaction {
+                    val films = listOf("A New Hope", "The Empire Strikes Back")
+                        .map { title -> StarWarsFilmEntity.new { name = title } }
+
+                    flushCache()
+
+                    // one INSERT was issued, and every entity now has its id
+                    val ids = films.map { it.id.value }
+                }
+            ]]>
+            </code-block>
+            <p>
+                The explicit <code>flushCache()</code> is only there to say where the statement goes out. Any other
+                statement in the transaction, or its commit, flushes the pending inserts just as well — which is
+                also why batching only holds as long as nothing else touches the database in between. An
+                intervening <code>newSuspend { }</code> splits the batch; another <code>new { }</code> joins it.
+            </p>
+            <warning>
+                Discarding the entity does not cancel its insert: it is scheduled by the call, not by the flush.
+                Use <code>Entity.delete()</code> before the flush to drop a scheduled entity again, which issues
+                no statement at all.
+            </warning>
+        </chapter>
+        <chapter title="Not available" id="r2dbc-crud-unavailable">
+            <p>
+                <code>EntityClass.view { }</code>, <code>findWithCacheCondition()</code>,
+                <code>testCache(predicate)</code>, and the <code>Alias</code> overloads of <code>wrapRows()</code>
+                have no R2DBC equivalent yet.
+            </p>
+        </chapter>
     </chapter>
 
 </topic>
