@@ -21,6 +21,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
+import org.jetbrains.exposed.v1.tests.NO_R2DBC_SUPPORT
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Tag
@@ -328,6 +329,7 @@ class CoroutineTests : DatabaseTestsBase() {
 
     // Skipped for r2dbc dao because it tests deprecated method that has no r2bdc alternative.
     //  If it's wrong, we could add it later
+    @Tag(NO_R2DBC_SUPPORT)
     @Test
     @CoroutinesTimeout(60000)
     fun testCoroutinesWithExceptionWithin() {
