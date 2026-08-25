@@ -170,7 +170,7 @@ Exposed consists of multiple modules, grouped into the following categories:
 
 - [Core module](#core-module)
 - [Transport modules](#transport-modules)
-- [Database access modules](#database-access-modules)
+- [Database access module](#database-access-module)
 - [Extension modules](#extension-modules)
 
 ### Core module
@@ -193,19 +193,14 @@ Transport modules define how Exposed communicates with the database and are mutu
 > You only need one transport module – either `exposed-jdbc` or `exposed-r2dbc`, not both.
 > {style="note"}
 
-### Database access modules
+### Database access module
 
-Exposed offers optional database access modules that build on top of `exposed-core` and provide higher-level
-abstractions for working with database data. Pick the one matching your transport module:
+Exposed offers an optional database access module that builds on top of `exposed-core` and provides higher-level
+abstractions for working with database data:
 
-| Module              | Function                                                                                                                                    |
-|---------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| `exposed-dao`       | Provides the Data Access Object (DAO) API.<br/> Requires `exposed-jdbc` and is not compatible with `exposed-r2dbc`.                          |
-| `exposed-dao-r2dbc` | Provides the DAO API for R2DBC.<br/> Requires `exposed-r2dbc`, and is an experimental preview whose API may still change between releases.   |
-
-> Do not put both DAO modules in one source set: they declare `Entity`, `EntityClass`, and `EntityCache` under the
-> same simple names. For the differences between them, see [](Migration-Guide-DAO-JDBC-to-R2DBC.md).
-> {style="note"}
+| Module        | Function                                                                                                            |
+|---------------|---------------------------------------------------------------------------------------------------------------------|
+| `exposed-dao` | Provides the Data Access Object (DAO) API.<br/> Requires `exposed-jdbc` and is not compatible with `exposed-r2dbc`. |
 
 ### Extension modules
 
