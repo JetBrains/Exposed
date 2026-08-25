@@ -11,7 +11,6 @@ import org.jetbrains.exposed.v1.jdbc.statements.StatementIterator
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
 import org.jetbrains.exposed.v1.jdbc.statements.jdbc.JdbcResult
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
-import java.sql.ResultSet
 
 /**
  * Represents the execution logic for an SQL statement that obtains information about a statement execution plan.
@@ -27,7 +26,7 @@ open class ExplainBlockingExecutable(
         return Iterable { resultIterator }.iterator()
     }
 
-    private class ResultIterator(rs: ResultSet) : StatementIterator<String, ExplainResultRow>(rs) {
+    private class ResultIterator(rs: JdbcResult) : StatementIterator<String, ExplainResultRow>(rs) {
         override val fieldIndex: Map<String, Int> = List(result.metaData.columnCount) { i ->
             result.metaData.getColumnName(i + 1) to i
         }.toMap()
@@ -36,7 +35,7 @@ open class ExplainBlockingExecutable(
             hasNext = result.next()
         }
 
-        override fun createResultRow(): ExplainResultRow = ExplainResultRow.create(JdbcResult(result), fieldIndex)
+        override fun createResultRow(): ExplainResultRow = ExplainResultRow.create(jdbcResult, fieldIndex)
     }
 }
 

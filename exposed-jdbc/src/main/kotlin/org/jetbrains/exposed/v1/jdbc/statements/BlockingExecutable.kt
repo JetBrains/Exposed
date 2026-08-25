@@ -1,10 +1,13 @@
 package org.jetbrains.exposed.v1.jdbc.statements
 
 import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.exposedLogger
 import org.jetbrains.exposed.v1.core.statements.*
+import org.jetbrains.exposed.v1.core.statements.api.ResultApi
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
+import org.jetbrains.exposed.v1.jdbc.statements.jdbc.JdbcResult
 import java.sql.SQLException
 
 internal object DefaultValueMarker {
@@ -152,15 +155,37 @@ internal fun <T, S : Statement<T>> BlockingExecutable<T, S>.executeIn(
 
     transaction.currentStatement = statement
     transaction.interceptors.forEach { it.afterStatementPrepared(transaction, statement) }
+    var executed = false
     val result = try {
-        statement.executeInternal(transaction)
+        statement.executeInternal(transaction).also { executed = true }
     } catch (cause: SQLException) {
         throw ExposedSQLException(cause, contexts, transaction)
+    } finally {
+        // A failed statement is never handed to anyone, so nothing else would close it.
+        if (!executed) statement.closeQuietly()
     }
     transaction.currentStatement = null
-    transaction.executedStatements.add(statement)
 
-    JdbcTransaction.globalInterceptors.forEach { it.afterExecution(transaction, contexts, statement) }
-    transaction.interceptors.forEach { it.afterExecution(transaction, contexts, statement) }
+    // Only a statement that hands out a result set must outlive its execution: it stays registered with the
+    // transaction until that result is released. Every other statement is closed once the interceptors have seen it.
+    val retainsResultSet = result is ResultApi
+    if (retainsResultSet) {
+        (result as? JdbcResult)?.owner = statement
+        transaction.registerStatement(statement)
+    }
+    try {
+        JdbcTransaction.globalInterceptors.forEach { it.afterExecution(transaction, contexts, statement) }
+        transaction.interceptors.forEach { it.afterExecution(transaction, contexts, statement) }
+    } finally {
+        if (!retainsResultSet) statement.closeIfPossible()
+    }
     return result to contexts
+}
+
+private fun JdbcPreparedStatementApi.closeQuietly() {
+    try {
+        closeIfPossible()
+    } catch (cause: SQLException) {
+        exposedLogger.debug("Failed to close a statement after a failed execution", cause)
+    }
 }
