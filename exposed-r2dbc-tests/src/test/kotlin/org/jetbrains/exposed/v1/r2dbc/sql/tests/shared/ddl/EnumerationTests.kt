@@ -3,13 +3,20 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.ddl
 import io.r2dbc.postgresql.PostgresqlConnectionConfiguration
 import io.r2dbc.postgresql.PostgresqlConnectionFactory
 import io.r2dbc.postgresql.codec.EnumCodec
+import io.r2dbc.postgresql.codec.PostgresqlObjectId
+import io.r2dbc.spi.Parameters
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.dao.r2dbc.ExperimentalR2dbcDaoApi
+import org.jetbrains.exposed.v1.dao.r2dbc.IntEntity
+import org.jetbrains.exposed.v1.dao.r2dbc.IntEntityClass
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
@@ -25,6 +32,7 @@ import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNull
 import kotlin.collections.single
+import kotlin.test.assertNotNull
 
 class EnumerationTests : R2dbcDatabaseTestsBase() {
     // NOTE: UNSUPPORTED r2dbc-h2
@@ -32,7 +40,9 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
     private val supportsCustomEnumerationDB = TestDB.ALL_MYSQL_MARIADB + TestDB.ALL_POSTGRES
 
     internal enum class Foo {
-        Bar, Baz
+        Bar, Baz;
+
+        override fun toString(): String = "Foo Enum ToString: $name"
     }
 
     private fun connectWithEnumCodec(enum: String): R2dbcDatabase {
@@ -59,84 +69,78 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
     object EnumTable : IntIdTable("EnumTable") {
         internal var enumColumn: Column<Foo> = enumeration("enumColumn")
 
-        internal fun initEnumColumn(sql: String) {
+        /**
+         * @param bindUntyped Sends the value as an untyped parameter on PostgreSQL, which the server then coerces
+         * to the enum type. Use it to bind an enum over a connection with no [EnumCodec] registered; the resulting
+         * value is not usable as a DDL default, so it is opt-in.
+         */
+        internal fun initEnumColumn(sql: String, bindUntyped: Boolean = false) {
             (columns as MutableList<Column<*>>).remove(enumColumn)
             enumColumn = customEnumeration(
                 "enumColumn", sql,
                 { value -> Foo.valueOf(value as String) },
                 { value ->
-                    when (currentDialectTest) {
-                        is PostgreSQLDialect -> value
-                        else -> value.name
+                    when {
+                        currentDialectTest !is PostgreSQLDialect -> value.name
+                        bindUntyped -> Parameters.`in`(PostgresqlObjectId.UNSPECIFIED, value.name)
+                        else -> value
                     }
                 }
             )
         }
     }
 
+    @OptIn(ExperimentalR2dbcDaoApi::class)
     @Test
-    fun testCustomEnumeration01() = runTest {
-        Assumptions.assumeTrue(supportsCustomEnumerationDB.containsAll(TestDB.enabledDialects()))
-        var sqlType = ""
+    fun testCustomEnumeration01() {
+        withDb(supportsCustomEnumerationDB) {
+            val sqlType = when (currentDialectTest) {
+                is H2Dialect, is MysqlDialect -> "ENUM('Bar', 'Baz')"
+                is PostgreSQLDialect -> "FooEnum"
+                else -> error("Unsupported case")
+            }
 
-//          class EnumEntity(id: EntityID<Int>) : IntEntity(id) {
-//            var enum by EnumTable.enumColumn
-//          }
+            class EnumEntity(id: EntityID<Int>) : IntEntity(id) {
+                var enum by EnumTable.enumColumn
+            }
 
-//          val enumClass = object : IntEntityClass<EnumEntity>(EnumTable, EnumEntity::class.java) {}
+            val enumClass = object : IntEntityClass<EnumEntity>(EnumTable, EnumEntity::class.java) {}
 
-        TestDB.enabledDialects().forEach { db ->
-            val initialDb = db.connect()
             try {
-                suspendTransaction(initialDb) {
-                    sqlType = when (currentDialectTest) {
-                        is MysqlDialect -> "ENUM('Bar', 'Baz')"
-                        is PostgreSQLDialect -> "FooEnum"
-                        else -> error("Unsupported case")
-                    }
-                    // PG enum codec can only be registered on connection if enum type already exists in database
-                    if (currentDialectTest is PostgreSQLDialect) {
-                        exec("DROP TYPE IF EXISTS FooEnum;")
-                        exec("CREATE TYPE FooEnum AS ENUM ('Bar', 'Baz');")
-                    }
-                    EnumTable.initEnumColumn(sqlType)
-                    SchemaUtils.create(EnumTable)
-                    // drop shared table object's unique index if created in other test
-                    if (EnumTable.indices.isNotEmpty()) {
-                        exec(EnumTable.indices.first().dropStatement().single())
-                    }
+                if (currentDialectTest is PostgreSQLDialect) {
+                    exec("DROP TYPE IF EXISTS FooEnum;")
+                    exec("CREATE TYPE FooEnum AS ENUM ('Bar', 'Baz');")
+                }
+                // no EnumCodec is registered on this connection, so the enum has to go out untyped
+                EnumTable.initEnumColumn(sqlType, bindUntyped = true)
+                SchemaUtils.create(EnumTable)
+                // drop shared table object's unique index if created in other test
+                if (EnumTable.indices.isNotEmpty()) {
+                    exec(EnumTable.indices.first().dropStatement().single())
+                }
+                EnumTable.insert {
+                    it[enumColumn] = Foo.Bar
+                }
+                assertEquals(Foo.Bar, EnumTable.selectAll().single()[EnumTable.enumColumn])
+
+                EnumTable.update {
+                    it[enumColumn] = Foo.Baz
                 }
 
-                // PG needs 1 db connection to simulate an existing enum type, then another to actually test the codec
-                suspendTransaction(
-                    db = if (db in TestDB.ALL_POSTGRES) connectWithEnumCodec(sqlType) else initialDb
-                ) {
-                    EnumTable.insert {
-                        it[EnumTable.enumColumn] = Foo.Bar
-                    }
-                    assertEquals(Foo.Bar, EnumTable.selectAll().single()[EnumTable.enumColumn])
-
-                    EnumTable.update {
-                        it[enumColumn] = Foo.Baz
-                    }
-                    assertEquals(Foo.Baz, EnumTable.selectAll().single()[EnumTable.enumColumn])
-
-//                val entity = enumClass.new {
-//                    enum = Foo.Baz
-//                }
-//                assertEquals(Foo.Baz, entity.enum)
-//                entity.id.value // flush entity
-//                assertEquals(Foo.Baz, entity.enum)
-//                assertEquals(Foo.Baz, enumClass.reload(entity)!!.enum)
-//                entity.enum = Foo.Bar
-//                assertEquals(Foo.Bar, enumClass.reload(entity, true)!!.enum)
+                val entity = enumClass.newSuspend {
+                    enum = Foo.Baz
                 }
+                assertEquals(Foo.Baz, entity.enum)
+
+                val reloaded = assertNotNull(enumClass.reload(entity))
+                assertEquals(Foo.Baz, reloaded.enum)
+                reloaded.enum = Foo.Bar
+                assertEquals(Foo.Bar, assertNotNull(enumClass.reload(reloaded, true)).enum)
             } finally {
                 try {
-                    suspendTransaction(initialDb) {
-                        SchemaUtils.drop(EnumTable)
-                    }
-                } catch (ignore: Exception) {}
+                    SchemaUtils.drop(EnumTable)
+                } catch (ignore: Exception) {
+                }
             }
         }
     }
@@ -171,7 +175,8 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
             } finally {
                 try {
                     SchemaUtils.drop(EnumTable)
-                } catch (ignore: Exception) {}
+                } catch (ignore: Exception) {
+                }
             }
         }
     }
