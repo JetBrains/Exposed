@@ -13,15 +13,17 @@ import kotlin.time.Clock
 enum class VersionFormat {
     /**
      * Uses the format `<prefix>YYYYMMDDHHMMSS<separator><description><extension>`
+     * and appends `.<index>` to subsequent migrations generated in the same run.
      *
-     * For example, V20260417195521__create_table_users.sql
+     * For example, V20260417195521__create_table_users.sql or V20260417195521.1__create_table_cities.sql
      */
     TIMESTAMP_ONLY,
 
     /**
      * Uses the format `<prefix>YYYYMMDDHHMM<separator><description><extension>`
+     * and appends `.<index>` to subsequent migrations generated in the same run.
      *
-     * For example, V202604171955__create_table_users.sql
+     * For example, V202604171955__create_table_users.sql or V202604171955.1__create_table_cities.sql
      */
     TIMESTAMP_WITHOUT_SECONDS,
 
@@ -71,11 +73,13 @@ internal fun VersionFormat.nextVersion(
     separator: String,
 ): (Int) -> String {
     return when (this) {
-        VersionFormat.TIMESTAMP_ONLY -> { _: Int ->
-            "$prefix${getCurrentTimestamp(clock, withSeconds = true)}$separator"
+        VersionFormat.TIMESTAMP_ONLY -> { index: Int ->
+            val indexSuffix = if (index > 0) ".$index" else ""
+            "$prefix${getCurrentTimestamp(clock, withSeconds = true)}$indexSuffix$separator"
         }
-        VersionFormat.TIMESTAMP_WITHOUT_SECONDS -> { _: Int ->
-            "$prefix${getCurrentTimestamp(clock, withSeconds = false)}$separator"
+        VersionFormat.TIMESTAMP_WITHOUT_SECONDS -> { index: Int ->
+            val indexSuffix = if (index > 0) ".$index" else ""
+            "$prefix${getCurrentTimestamp(clock, withSeconds = false)}$indexSuffix$separator"
         }
         VersionFormat.MAJOR_TIMESTAMP -> { _: Int ->
             val majorPadded = findNextMajor(migrationsDirectory, prefix, separator)

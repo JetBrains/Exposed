@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.v1.plugin.core.migration.migrations
 
+import org.flywaydb.core.api.MigrationVersion
 import org.jetbrains.exposed.v1.plugin.core.migration.VersionFormat
 import org.jetbrains.exposed.v1.plugin.core.migration.nextVersion
 import org.junit.jupiter.api.BeforeEach
@@ -41,16 +42,66 @@ class FileVersionGeneratorTest {
     }
 
     @Test
-    fun testTimestampOnlyFormatsIgnoreExistingFilesAndArgs() {
-        val version1 = VersionFormat.TIMESTAMP_ONLY.nextVersion(testFilePath, testClock, filePrefix, fileSeparator).invoke(1)
+    fun testTimestampOnlyFormatsIgnoreExistingFilesForFirstMigration() {
+        val version1 = VersionFormat.TIMESTAMP_ONLY.nextVersion(testFilePath, testClock, filePrefix, fileSeparator).invoke(0)
         val match1 = versionTsPattern.matchEntire(version1)
         assertNotNull(match1)
         assertTrue { match1.groupValues[1].length == 14 }
 
-        val version2 = VersionFormat.TIMESTAMP_WITHOUT_SECONDS.nextVersion(testFilePath, testClock, filePrefix, fileSeparator).invoke(1)
+        val version2 = VersionFormat.TIMESTAMP_WITHOUT_SECONDS.nextVersion(testFilePath, testClock, filePrefix, fileSeparator).invoke(0)
         val match2 = versionTsPattern.matchEntire(version2)
         assertNotNull(match2)
         assertTrue { match2.groupValues[1].length == 12 }
+    }
+
+    @Test
+    fun testTimestampOnlyFormatGeneratesUniqueVersionsForEachIndex() {
+        val nextVersion = VersionFormat.TIMESTAMP_ONLY.nextVersion(testFilePath, testClock, filePrefix, fileSeparator)
+        val versions = (0..2).map(nextVersion)
+
+        assertEquals(listOf("V20260417221043__", "V20260417221043.1__", "V20260417221043.2__"), versions)
+        assertFlywayVersionsAreUniqueAndOrdered(versions, fileSeparator)
+    }
+
+    @Test
+    fun testTimestampWithoutSecondsFormatGeneratesUniqueVersionsForEachIndex() {
+        val nextVersion = VersionFormat.TIMESTAMP_WITHOUT_SECONDS.nextVersion(
+            testFilePath,
+            testClock,
+            filePrefix,
+            fileSeparator
+        )
+        val versions = (0..2).map(nextVersion)
+
+        assertEquals(listOf("V202604172210__", "V202604172210.1__", "V202604172210.2__"), versions)
+        assertFlywayVersionsAreUniqueAndOrdered(versions, fileSeparator)
+    }
+
+    @Test
+    fun testTimestampOnlyFormatGeneratesUniqueVersionsWithSingleUnderscoreSeparator() {
+        val separator = "_"
+        val nextVersion = VersionFormat.TIMESTAMP_ONLY.nextVersion(testFilePath, testClock, filePrefix, separator)
+        val versions = (0..2).map(nextVersion)
+
+        assertEquals("V20260417221043_", versions.first())
+        assertFlywayVersionsAreUniqueAndOrdered(versions, separator)
+        assertEquals(listOf("V20260417221043_", "V20260417221043.1_", "V20260417221043.2_"), versions)
+    }
+
+    @Test
+    fun testTimestampWithoutSecondsFormatGeneratesUniqueVersionsWithSingleUnderscoreSeparator() {
+        val separator = "_"
+        val nextVersion = VersionFormat.TIMESTAMP_WITHOUT_SECONDS.nextVersion(
+            testFilePath,
+            testClock,
+            filePrefix,
+            separator
+        )
+        val versions = (0..2).map(nextVersion)
+
+        assertEquals("V202604172210_", versions.first())
+        assertFlywayVersionsAreUniqueAndOrdered(versions, separator)
+        assertEquals(listOf("V202604172210_", "V202604172210.1_", "V202604172210.2_"), versions)
     }
 
     @Test
@@ -134,5 +185,14 @@ class FileVersionGeneratorTest {
         val (major, minor) = version.substringAfter(filePrefix).substringBefore(fileSeparator).split('_')
         assertEquals(currentMajor + 1, major.toInt())
         assertEquals(1, minor.toInt())
+    }
+
+    private fun assertFlywayVersionsAreUniqueAndOrdered(versions: List<String>, separator: String) {
+        assertEquals(versions.size, versions.distinct().size, "Migration versions must be unique: $versions")
+        val flywayVersions = versions.map {
+            MigrationVersion.fromVersion(it.removePrefix(filePrefix).substringBefore(separator))
+        }
+        assertEquals(flywayVersions.size, flywayVersions.distinct().size, "Flyway versions must be unique: $versions")
+        assertEquals(flywayVersions.sorted(), flywayVersions, "Flyway versions must preserve migration order: $versions")
     }
 }
