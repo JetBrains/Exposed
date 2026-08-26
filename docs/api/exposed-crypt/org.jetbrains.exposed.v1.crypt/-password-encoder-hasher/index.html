@@ -1,0 +1,175 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>PasswordEncoderHasher</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
+                    exposed
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">1.5.0
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":exposed-crypt/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":exposed-crypt/main" data-filter=":exposed-crypt/main">
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    exposed
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="exposed-crypt::org.jetbrains.exposed.v1.crypt/PasswordEncoderHasher///PointingToDeclaration//1075082607">
+  <div class="breadcrumbs"><a href="../../index.html">exposed-crypt</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.v1.crypt</a><span class="delimiter">/</span><span class="current">PasswordEncoderHasher</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Password</span><wbr><span>Encoder</span><wbr><span><span>Hasher</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="index.html">PasswordEncoderHasher</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">passwordEncoder<span class="token operator">: </span><span data-unresolved-link="org.springframework.security.crypto.password/PasswordEncoder///PointingToDeclaration/">PasswordEncoder</span></span></span><span class="token punctuation">)</span> : <a href="../-hasher/index.html">Hasher</a></div><p class="paragraph"><a href="../-hasher/index.html">Hasher</a> that delegates to a Spring Security <a href="../../../exposed-crypt/org.jetbrains.exposed.v1.crypt/-password-encoder-hasher/--root--.html">passwordEncoder</a>.</p><p class="paragraph">This is the base of <a href="../-b-crypt-hasher/index.html">BCryptHasher</a>, <a href="../-argon2-hasher/index.html">Argon2Hasher</a>, <a href="../-pbkdf2-hasher/index.html">Pbkdf2Hasher</a>, and <a href="../-s-crypt-hasher/index.html">SCryptHasher</a>, and can also be used directly with any other implementation, including a <code class="lang-kotlin">DelegatingPasswordEncoder</code> for a column whose existing values were hashed by an algorithm that is being migrated away from:</p><div class="sample-container"><pre><code class="block lang-kotlin" theme="idea">val hasher = PasswordEncoderHasher(<br>    DelegatingPasswordEncoder(<br>        "argon2",<br>        mapOf("argon2" to Argon2PasswordEncoder(...), "bcrypt" to BCryptPasswordEncoder())<br>    )<br>)</code></pre><span class="copy-tooltip"><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div><span class="copy-icon"></span></span></div><p class="paragraph">To hash with something that is not a <code class="lang-kotlin">PasswordEncoder</code> at all, implement <a href="../-hasher/index.html">Hasher</a> directly.</p><h4 class="tableheader">Inheritors</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":exposed-crypt/main" data-filterable-set=":exposed-crypt/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-argon2-hasher/index.html">Argon2Hasher</a></div></span></div><div></div></div></div><div class="table-row table-row_content" data-filterable-current=":exposed-crypt/main" data-filterable-set=":exposed-crypt/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-b-crypt-hasher/index.html">BCryptHasher</a></div></span></div><div></div></div></div><div class="table-row table-row_content" data-filterable-current=":exposed-crypt/main" data-filterable-set=":exposed-crypt/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-pbkdf2-hasher/index.html">Pbkdf2Hasher</a></div></span></div><div></div></div></div><div class="table-row table-row_content" data-filterable-current=":exposed-crypt/main" data-filterable-set=":exposed-crypt/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-s-crypt-hasher/index.html">SCryptHasher</a></div></span></div><div></div></div></div></div></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="tableheader">Constructors</h2>
+        <div class="table"><a data-name="-682640156%2FConstructors%2F1075082607" anchor-label="PasswordEncoderHasher" id="-682640156%2FConstructors%2F1075082607" data-filterable-set=":exposed-crypt/main"></a>
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":exposed-crypt/main" data-filterable-set=":exposed-crypt/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-password-encoder-hasher.html"><span>Password</span><wbr><span>Encoder</span><wbr><span><span>Hasher</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-682640156%2FConstructors%2F1075082607"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">passwordEncoder<span class="token operator">: </span><span data-unresolved-link="org.springframework.security.crypto.password/PasswordEncoder///PointingToDeclaration/">PasswordEncoder</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="-909978740%2FFunctions%2F1075082607" anchor-label="hash" id="-909978740%2FFunctions%2F1075082607" data-filterable-set=":exposed-crypt/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-crypt/main" data-filterable-set=":exposed-crypt/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="hash.html"><span><span>hash</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-909978740%2FFunctions%2F1075082607"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="hash.html"><span class="token function">hash</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">plainText<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-hashed/index.html">Hashed</a></div><div class="brief "><p class="paragraph">Hashes <a href="../-hasher/hash.html">plainText</a> into the value to be stored, salting it if the algorithm supports salting.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1077515512%2FFunctions%2F1075082607" anchor-label="matches" id="-1077515512%2FFunctions%2F1075082607" data-filterable-set=":exposed-crypt/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-crypt/main" data-filterable-set=":exposed-crypt/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="matches.html"><span><span>matches</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1077515512%2FFunctions%2F1075082607"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="matches.html"><span class="token function">matches</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">plainText<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">encodedValue<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Returns whether <a href="../-hasher/matches.html">plainText</a> hashes to <a href="../-hasher/matches.html">encodedValue</a>, which is expected to be an already hashed value.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2026 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

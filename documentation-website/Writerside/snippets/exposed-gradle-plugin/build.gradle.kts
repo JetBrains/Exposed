@@ -3,7 +3,7 @@ import org.jetbrains.exposed.v1.gradle.plugin.VersionFormat
 plugins {
     alias(libs.plugins.jvm)
 
-    id("org.jetbrains.exposed.plugin") version "1.4.0"
+    id("org.jetbrains.exposed.plugin") version "1.5.0"
 
     application
 }
