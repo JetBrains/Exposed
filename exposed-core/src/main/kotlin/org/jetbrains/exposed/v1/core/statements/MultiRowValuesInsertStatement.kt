@@ -49,8 +49,9 @@ open class MultiRowValuesInsertStatement(
                 }
             }.toString()
         }
+        val columnsToUse = values.firstOrNull()?.map { it.first }.orEmpty()
         return transaction.db.dialect.functionProvider
-            .insert(isIgnore, table, values.firstOrNull()?.map { it.first }.orEmpty(), sql, transaction)
+            .insertMultiRowValues(isIgnore, table, columnsToUse, sql, values.size, transaction)
     }
 
     override fun arguments() = listOfNotNull(

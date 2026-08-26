@@ -63,7 +63,9 @@ open class MultiRowValuesInsertSuspendExecutable(
 
     override suspend fun prepared(transaction: R2dbcTransaction, sql: String): R2dbcPreparedStatementApi {
         // [MariaDB] r2dbc returnGeneratedValues() does not support adding RETURNING clause automatically
-        val needsManualReturning = autoIncColumns.isNotEmpty() && currentDialect is MariaDBDialect
+        val needsManualReturning = statement.shouldReturnGeneratedValues &&
+            autoIncColumns.isNotEmpty() &&
+            currentDialect is MariaDBDialect
         return if (needsManualReturning) {
             @OptIn(InternalApi::class)
             val generatedColumns = autoIncColumns.map { it.name.inProperCase() }.toTypedArray()

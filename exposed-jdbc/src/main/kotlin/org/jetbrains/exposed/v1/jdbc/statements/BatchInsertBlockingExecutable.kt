@@ -61,7 +61,9 @@ open class MultiRowValuesInsertBlockingExecutable(
 
     override fun prepared(transaction: JdbcTransaction, sql: String): JdbcPreparedStatementApi {
         // [MariaDB] jdbc returnGeneratedValues() does not support adding RETURNING clause automatically
-        val needsManualReturning = autoIncColumns.isNotEmpty() && currentDialect is MariaDBDialect
+        val needsManualReturning = statement.shouldReturnGeneratedValues &&
+            autoIncColumns.isNotEmpty() &&
+            currentDialect is MariaDBDialect
         return if (needsManualReturning) {
             @OptIn(InternalApi::class)
             val generatedColumns = autoIncColumns.map { it.name.inProperCase() }.toTypedArray()

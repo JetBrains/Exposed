@@ -4316,6 +4316,7 @@ public abstract class org/jetbrains/exposed/v1/core/vendors/FunctionProvider {
 	public fun groupConcat (Lorg/jetbrains/exposed/v1/core/GroupConcat;Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 	public fun hour (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 	public fun insert (ZLorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/Transaction;)Ljava/lang/String;
+	public fun insertMultiRowValues (ZLorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Ljava/lang/String;ILorg/jetbrains/exposed/v1/core/Transaction;)Ljava/lang/String;
 	public fun insertValue (Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 	public fun jsonCast (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/IColumnType;Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 	public fun jsonContains (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/IColumnType;Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V

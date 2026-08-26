@@ -27,15 +27,32 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
      */
     private var affectedRowCounts: List<Int>? = null
 
-    @Suppress("MagicNumber")
-    private val mariaDBResult = -99
+    /**
+     * Number of rows affected, only set if the statement returns a `ResultSet` that is actively processed.
+     * When the `ResultSet` is iterated over, this property will be set with either a manual count of the result set rows,
+     * or the affected row count returned by `executeUpdate()` or `executeBatch()`.
+     */
+    private var processedAffectedRowCount: Int? = null
 
     protected open fun JdbcPreparedStatementApi.execInsertFunction(): Pair<Int, ResultSet?> {
         val inserted = if (statement.arguments().count() > 1 || isAlwaysBatch) {
             executeBatch().also { affectedRowCounts = it }.sum()
-        } else if (statement is MultiRowValuesInsertStatement && currentDialect is MariaDBDialect && autoIncColumns.isNotEmpty()) {
-            executeQuery()
-            mariaDBResult
+        } else if (
+            (statement as? MultiRowValuesInsertStatement)?.shouldReturnGeneratedValues == true &&
+            autoIncColumns.isNotEmpty() &&
+            currentDialect is MariaDBDialect
+        ) {
+            executeQuery().also {
+                // since MariaDB in this case must return a ResultSet (empty or not),
+                // Exposed must process it early to return a non-null (or non-placeholder) Int value
+                @OptIn(InternalApi::class)
+                statement.resultedValues = processResults(it.result, null)
+                statement.insertedCount = statement.resultedValues?.size ?: 0
+                it.result.close()
+            }
+            // because the ResultSet is processed early, it is also closed early;
+            // so nothing will be returned, to prevent attempts to read the ResultSet after cursor already moved to end.
+            return statement.insertedCount to null
         } else {
             executeUpdate()
         }
@@ -53,8 +70,10 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
         val (inserted, rs) = execInsertFunction()
         @OptIn(InternalApi::class)
         return inserted.apply {
-            statement.resultedValues = processResults(rs, this)
-            statement.insertedCount = if (this != mariaDBResult) this else statement.resultedValues?.size ?: 0
+            if (statement.resultedValues == null) {
+                statement.insertedCount = this
+                statement.resultedValues = processResults(rs, this)
+            }
             rs?.close()
         }
     }
@@ -91,11 +110,16 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
             }
         }
 
-    private fun processResults(rs: ResultSet?, inserted: Int): List<ResultRow> {
+    private fun processResults(rs: ResultSet?, inserted: Int?): List<ResultRow> {
         val allResultSetsValues = rs?.returnedValues(inserted)
 
+        // parameter 'inserted' will only be null when executeQuery() was called for INSERT;
+        // in which case returnedValues() will have performed a manual count (if a non-empty result set was used)
+        // and passed this count to processedAffectedRowCount by now.
+        val insertedToUse = inserted ?: processedAffectedRowCount ?: 0
+
         @Suppress("UNCHECKED_CAST")
-        return statement.arguments!!.insertedOnly(inserted, affectedRowCounts)
+        return statement.arguments!!.insertedOnly(insertedToUse, affectedRowCounts)
             // Join the values from ResultSet with arguments
             .mapIndexed { index, columnValues ->
                 val resultSetValues = allResultSetsValues?.getOrNull(index) ?: hashMapOf()
@@ -148,8 +172,11 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
     }
 
     @Suppress("NestedBlockDepth", "TooGenericExceptionCaught")
-    private fun ResultSet.returnedValues(inserted: Int): ArrayList<MutableMap<Column<*>, Any?>> {
+    private fun ResultSet.returnedValues(inserted: Int?): ArrayList<MutableMap<Column<*>, Any?>> {
         if (inserted == 0) return arrayListOf()
+        // parameter 'inserted' will only be null when executeQuery() was called for INSERT;
+        // since default ResultSet is not scrollable, the affected row count can only be attained during processing
+        var processedInserted = inserted ?: 0
 
         val resultSetsValues = arrayListOf<MutableMap<Column<*>, Any?>>()
 
@@ -166,6 +193,8 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
                         returnedValues[firstAutoIncColumn] = getObject(1)
                     }
                     resultSetsValues.add(returnedValues)
+                    // local var should only ever be incremented if argument provided to method was null (i.e. result of executeQuery)
+                    if (inserted == null) processedInserted++
                 } catch (cause: ArrayIndexOutOfBoundsException) {
                     // EXPOSED-191 Flaky Oracle test on TC build
                     // this try/catch should help to get information about the flaky test.
@@ -190,12 +219,12 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
                 }
             }
 
-            if (inserted > 1 && firstAutoIncColumn != null && resultSetsValues.isNotEmpty() && !currentDialect.supportsMultipleGeneratedKeys) {
+            if (processedInserted > 1 && firstAutoIncColumn != null && resultSetsValues.isNotEmpty() && !currentDialect.supportsMultipleGeneratedKeys) {
                 // H2/SQLite only returns one last generated key...
                 (resultSetsValues[0][firstAutoIncColumn] as? Number)?.toLong()?.let {
                     var id = it
 
-                    while (resultSetsValues.size < inserted) {
+                    while (resultSetsValues.size < processedInserted) {
                         id -= 1
                         resultSetsValues.add(0, mutableMapOf(firstAutoIncColumn to id))
                     }
@@ -203,11 +232,13 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
             }
 
             assert(
-                this@InsertBlockingExecutable.statement.isIgnore || resultSetsValues.isEmpty() || resultSetsValues.size == inserted ||
+                this@InsertBlockingExecutable.statement.isIgnore || resultSetsValues.isEmpty() || resultSetsValues.size == processedInserted ||
                     currentDialect.supportsTernaryAffectedRowValues
             ) {
-                "Number of autoincs (${resultSetsValues.size}) doesn't match number of batch entries ($inserted)"
+                "Number of autoincs (${resultSetsValues.size}) doesn't match number of batch entries ($processedInserted)"
             }
+
+            processedAffectedRowCount = processedInserted
         }
 
         return resultSetsValues

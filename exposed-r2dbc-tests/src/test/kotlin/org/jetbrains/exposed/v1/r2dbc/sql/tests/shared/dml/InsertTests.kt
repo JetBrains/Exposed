@@ -39,7 +39,9 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.fail
@@ -193,7 +195,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
             }
 
             val generatedIds = users.batchInsert(userNamesWithCityIds) { (userName, cityId) ->
-                this[users.id] = java.util.Random().nextInt().toString().take(6)
+                this[users.id] = userName.substringAfter("UserFrom")
                 this[users.name] = userName
                 this[users.cityId] = cityId.toInt()
             }
@@ -208,6 +210,8 @@ class InsertTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testBatchInsertUsingMultiRowValues() {
+        fun String.trimOracleSyntax(): String = if (currentTestDB in TestDB.ALL_ORACLE_LIKE) substringBefore(") DATA(\"name\")") else this
+
         withCitiesAndUsers { cities, users, _ ->
             val logCaptor = LogCaptor.forName(exposedLogger.name)
             logCaptor.setLogLevelToDebug()
@@ -218,7 +222,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
             val canReturnKeys = dialect !is OracleDialect && (dialect !is MysqlDialect || dialect is MariaDBDialect)
 
             val cityNames = listOf("Paris", "Moscow", "Helsinki")
-            val allCitiesID = cities.batchInsert(
+            val allCities = cities.batchInsert(
                 cityNames,
                 useMultiRowValues = true,
                 shouldReturnGeneratedValues = canReturnKeys,
@@ -226,10 +230,13 @@ class InsertTests : R2dbcDatabaseTestsBase() {
                 this[cities.name] = name
             }
 
-            assertEquals(cityNames.size, allCitiesID.size)
+            assertEquals(cityNames.size, allCities.size)
             val insertLogs = logCaptor.debugLogs.filter { it.startsWith("INSERT ", ignoreCase = true) }
             assertEquals(1, insertLogs.size, "Expected a single collapsed multi-row INSERT, got: $insertLogs")
-            assertTrue(insertLogs.single().count { it == '(' } >= cityNames.size + 1)
+            assertEquals(
+                cityNames.joinToString { "('$it')" },
+                insertLogs.single().substringAfter("VALUES").trim().trimOracleSyntax()
+            )
 
             logCaptor.clearLogs()
             logCaptor.resetLogLevel()
@@ -237,7 +244,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
 
             // now make sure the generated keys were returned properly even with the new syntax
             if (canReturnKeys) {
-                val userNamesWithCityIds = allCitiesID.mapIndexed { index, id ->
+                val userNamesWithCityIds = allCities.mapIndexed { index, id ->
                     "UserFrom${cityNames[index]}" to id[cities.id] as Number
                 }
 
@@ -245,7 +252,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
                     userNamesWithCityIds,
                     useMultiRowValues = true,
                 ) { (userName, cityId) ->
-                    this[users.id] = java.util.Random().nextInt().toString().take(6)
+                    this[users.id] = userName.substringAfter("UserFrom")
                     this[users.name] = userName
                     this[users.cityId] = cityId.toInt()
                 }
@@ -256,6 +263,44 @@ class InsertTests : R2dbcDatabaseTestsBase() {
                     users.selectAll().where { users.name inList userNamesWithCityIds.map { it.first } }.count()
                 )
             }
+        }
+    }
+
+    @Test
+    fun testBatchInsertWithoutGeneratedValues() {
+        withCitiesAndUsers { cities, _, _ ->
+            val cityNames = listOf("Paris", "Moscow", "Helsinki")
+            val allCities = cities.batchInsert(
+                cityNames,
+                shouldReturnGeneratedValues = false,
+            ) { name ->
+                this[cities.name] = name
+            }
+
+            assertEquals(cityNames.size, allCities.size)
+            // Stored InsertStatement (batched results) will only hold client-side provided row results
+            assertEqualLists(allCities.map { it[cities.name] }, cityNames)
+            val exception1 = assertFailsWith<IllegalStateException> {
+                allCities.map { it[cities.id] }
+            }
+            assertContains(exception1.message.orEmpty(), "not in record set")
+
+            val moreCityNames = listOf("Berlin", "Amsterdam")
+            val moreCities = cities.batchInsert(
+                moreCityNames,
+                useMultiRowValues = true,
+                shouldReturnGeneratedValues = false,
+            ) { name ->
+                this[cities.name] = name
+            }
+
+            assertEquals(moreCityNames.size, moreCities.size)
+            // Stored InsertStatement (multi-row values result) will only hold client-side provided row results
+            assertEqualLists(moreCities.map { it[cities.name] }, moreCityNames)
+            val exception2 = assertFailsWith<IllegalStateException> {
+                moreCities.map { it[cities.id] }
+            }
+            assertContains(exception2.message.orEmpty(), "not in record set")
         }
     }
 

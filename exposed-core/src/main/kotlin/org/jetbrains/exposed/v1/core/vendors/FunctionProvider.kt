@@ -483,30 +483,13 @@ abstract class FunctionProvider {
 
         val nextValExpression = autoIncColumn?.autoIncColumnType?.nextValExpression?.takeIf { autoIncColumn !in columns }
         val isInsertFromSelect = columns.isNotEmpty() && expr.isNotEmpty() && !expr.startsWith("VALUES")
-        val isOracle = transaction.db.dialect is OracleDialect
-        val isOracleLike = isOracle || (transaction.db.dialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
 
         val (columnsToInsert, valuesExpr) = when {
             isInsertFromSelect -> columns to expr
-            nextValExpression != null && columns.isNotEmpty() -> {
-                val multiRowValuesCount = if (!isOracleLike || !expr.startsWith("VALUES")) {
-                    0
-                } else {
-                    Regex("""\(([^)]+)\)""").findAll(expr).count()
-                }
-                val newExpr = if (multiRowValuesCount <= 1) {
-                    expr.dropLast(1) + ", $nextValExpression)"
-                } else {
-                    // Oracle requires special handling of sequence.NEXTVAL since Exposed does not map these to IDENTITY columns;
-                    // otherwise Oracle 12c+ could use INSERT ALL INTO ... INTO ... INTO ...
-                    val exprColumns = columns.joinToString { transaction.identity(it) }
-                    "SELECT DATA.*, $nextValExpression FROM ($expr) DATA($exprColumns)"
-                }
-                (columns + autoIncColumn) to newExpr
-            }
+            nextValExpression != null && columns.isNotEmpty() -> (columns + autoIncColumn) to expr.dropLast(1) + ", $nextValExpression)"
             nextValExpression != null -> listOf(autoIncColumn) to "VALUES ($nextValExpression)"
             columns.isNotEmpty() -> columns to expr
-            isOracle -> {
+            currentDialect is OracleDialect -> {
                 val oracleDefaults = table.columns.joinToString(prefix = "VALUES(", postfix = ")") { "DEFAULT" }
                 emptyList<Column<*>>() to oracleDefaults
             }
@@ -515,6 +498,30 @@ abstract class FunctionProvider {
         val columnsExpr = columnsToInsert.takeIf { it.isNotEmpty() }?.joinToString(prefix = "(", postfix = ")") { transaction.identity(it) } ?: ""
 
         return "INSERT INTO ${transaction.identity(table)} $columnsExpr $valuesExpr"
+    }
+
+    /**
+     * Returns the SQL command that inserts a new row into a table, specifically using the multi-row values syntax,
+     * like `INSERT ... VALUES (...), (...), ...`.
+     *
+     * **Note:** The `ignore` parameter is not supported by all vendors, please check the documentation.
+     *
+     * @param ignore Whether to ignore errors or not.
+     * @param table Table to insert the new row into.
+     * @param columns Columns to insert the values into.
+     * @param expr Expression with the values to insert.
+     * @param valuesSize The amount of rows included as part of the `VALUES` clause.
+     * @param transaction Transaction where the operation is executed.
+     */
+    open fun insertMultiRowValues(
+        ignore: Boolean,
+        table: Table,
+        columns: List<Column<*>>,
+        expr: String,
+        valuesSize: Int,
+        transaction: Transaction
+    ): String {
+        return insert(ignore, table, columns, expr, transaction)
     }
 
     /**
