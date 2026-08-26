@@ -7,6 +7,7 @@ import io.r2dbc.spi.RowMetadata
 import io.r2dbc.spi.Statement
 import io.r2dbc.spi.TransactionDefinition
 import io.r2dbc.spi.ValidationDepth
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.awaitFirstOrNull
@@ -15,7 +16,9 @@ import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactive.collect
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.exposedLogger
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
 import org.jetbrains.exposed.v1.core.transactions.withThreadLocalTransaction
@@ -105,14 +108,17 @@ class R2dbcConnectionImpl(
         withConnection { rollbackTransaction().awaitFirstOrNull() }
     }
 
-    override suspend fun isClosed(): Boolean = withConnection {
+    override suspend fun isClosed(): Boolean = localConnectionLock.withLock { localConnection }?.run {
         !validate(ValidationDepth.LOCAL).awaitSingle() || !validate(ValidationDepth.REMOTE).awaitSingle()
-    }
+    } ?: true
 
     override suspend fun close() {
-        withConnection { close().awaitFirstOrNull() }
-        localConnection = null
-        transactionDefinition = null
+        localConnectionLock.withLock {
+            localConnection.also {
+                localConnection = null
+                transactionDefinition = null
+            }
+        }?.let { releaseConnection(it) }
     }
 
     override suspend fun prepareStatement(
@@ -226,34 +232,51 @@ class R2dbcConnectionImpl(
     private val localConnectionLock = Mutex()
     private var localConnection: Connection? = null
 
+    @Suppress("TooGenericExceptionCaught")
     private suspend fun <T> withConnection(body: suspend Connection.() -> T): T {
         val acquiredConnection = localConnectionLock.withLock {
-            localConnection ?: connection.awaitLast().also { cx ->
-                // beginTransaction() starts an explicit transaction with autoCommit mode off
-                transactionDefinition
-                    ?.let { originalDefinition ->
-                        when (val definition = originalDefinition as? R2dbcTransactionDefinition) {
-                            is R2dbcTransactionDefinition if metadataProvider is OracleMetadata && definition.readOnly != null -> {
-                                // Oracle does not allow both isolation level + mutability to be set implicitly together;
-                                // instead it requires a specific order, with transaction isolation always set first.
-                                cx.beginTransaction(definition.toOracleDefinition()).awaitFirstOrNull()
-                                cx.executeSQL(metadataProvider.setReadOnlyMode(definition.readOnly))
+            localConnection ?: withContext(NonCancellable) { connection.awaitLast() }.also { cx ->
+                try {
+                    // beginTransaction() starts an explicit transaction with autoCommit mode off
+                    transactionDefinition
+                        ?.let { originalDefinition ->
+                            when (val definition = originalDefinition as? R2dbcTransactionDefinition) {
+                                is R2dbcTransactionDefinition if metadataProvider is OracleMetadata && definition.readOnly != null -> {
+                                    // Oracle does not allow both isolation level + mutability to be set implicitly together;
+                                    // instead it requires a specific order, with transaction isolation always set first.
+                                    cx.beginTransaction(definition.toOracleDefinition()).awaitFirstOrNull()
+                                    cx.executeSQL(metadataProvider.setReadOnlyMode(definition.readOnly))
+                                }
+                                is R2dbcTransactionDefinition if metadataProvider is MySQLMetadata && definition.isolationLevel != null -> {
+                                    // MySQL/MariaDB driver would set level only on next-next transaction, not the 1 about to start
+                                    cx.executeSQL(metadataProvider.setCurrentTransactionIsolation(definition.isolationLevel))
+                                    cx.beginTransaction(definition).awaitFirstOrNull()
+                                }
+                                else -> cx.beginTransaction(originalDefinition).awaitFirstOrNull()
                             }
-                            is R2dbcTransactionDefinition if metadataProvider is MySQLMetadata && definition.isolationLevel != null -> {
-                                // MySQL/MariaDB driver would set level only on next-next transaction, not the 1 about to start
-                                cx.executeSQL(metadataProvider.setCurrentTransactionIsolation(definition.isolationLevel))
-                                cx.beginTransaction(definition).awaitFirstOrNull()
-                            }
-                            else -> cx.beginTransaction(originalDefinition).awaitFirstOrNull()
                         }
-                    }
-                    ?: cx.beginTransaction().awaitFirstOrNull()
+                        ?: cx.beginTransaction().awaitFirstOrNull()
 
-                localConnection = cx
-                transactionDefinition = null
+                    localConnection = cx
+                    transactionDefinition = null
+                } catch (cause: Throwable) {
+                    releaseConnection(cx)
+                    throw cause
+                }
             }
         }
         return acquiredConnection.body()
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    private suspend fun releaseConnection(connection: Connection) {
+        withContext(NonCancellable) {
+            try {
+                connection.close().awaitFirstOrNull()
+            } catch (cause: Exception) {
+                exposedLogger.warn("Failed to release connection: ${cause.message}", cause)
+            }
+        }
     }
 }
 
