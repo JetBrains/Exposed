@@ -501,6 +501,30 @@ abstract class FunctionProvider {
     }
 
     /**
+     * Returns the SQL command that inserts a new row into a table, specifically using the multi-row values syntax,
+     * like `INSERT ... VALUES (...), (...), ...`.
+     *
+     * **Note:** The `ignore` parameter is not supported by all vendors, please check the documentation.
+     *
+     * @param ignore Whether to ignore errors or not.
+     * @param table Table to insert the new row into.
+     * @param columns Columns to insert the values into.
+     * @param expr Expression with the values to insert.
+     * @param valuesSize The amount of rows included as part of the `VALUES` clause.
+     * @param transaction Transaction where the operation is executed.
+     */
+    open fun insertMultiRowValues(
+        ignore: Boolean,
+        table: Table,
+        columns: List<Column<*>>,
+        expr: String,
+        valuesSize: Int,
+        transaction: Transaction
+    ): String {
+        return insert(ignore, table, columns, expr, transaction)
+    }
+
+    /**
      * Generates the SQL MERGE command which synchronizes two datasets by inserting new rows,
      * or updating/deleting existing ones in the target table based on data from another table.
      *

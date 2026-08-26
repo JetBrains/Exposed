@@ -4,22 +4,20 @@ import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.QueryBuilder
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 
-/** PostgreSQL's hard limit on bind parameters per statement (protocol int16 count field). */
-private const val POSTGRESQL_PARAMETER_LIMIT = 65535
+/** The documented hard limit on bind parameters per statement (protocol int16 count field) for most supported databases. */
+private const val DEFAULT_PARAMETER_LIMIT = 65535
+
+/** The documented hard limit on bind parameters per statement for SQLite. */
+private const val SQLITE_PARAMETER_LIMIT = 32766
 
 /**
- * Represents the SQL statement that batch inserts new rows into a table, specifically for the PostgreSQL
- * database, by rewriting the batch into a single multi-row `INSERT ... VALUES (...), (...), ...` statement
- * instead of executing one bound statement per row.
+ * Represents the SQL statement that batch inserts new rows into a table by using a single multi-row
+ * `INSERT ... VALUES (...), (...), ...` statement instead of executing one bound statement per row.
  *
- * Before adding each new batch, the class validates that PostgreSQL's maximum bind-parameter count (65535)
- * is not being exceeded.
- *
- * Note: collapsing to one multi-row `INSERT ... RETURNING` relies on PostgreSQL returning the `RETURNING`
- * rows in the same order as the `VALUES` list, so that generated values can be matched back to the input
- * row they belong to. This holds for plain multi-row `VALUES` inserts (no `BEFORE INSERT` trigger reordering)
- * and is the same assumption the JDBC driver's `reWriteBatchedInserts` rewrite relies on.
+ * Before adding each new batch, the class validates that the database's maximum bind-parameter count is not being exceeded.
  */
 open class MultiRowValuesInsertStatement(
     table: Table,
@@ -30,9 +28,10 @@ open class MultiRowValuesInsertStatement(
     override fun validateLastBatch() {
         super.validateLastBatch()
         val parameterCount = data.size.toLong() * table.columns.size.toLong()
-        if (parameterCount > POSTGRESQL_PARAMETER_LIMIT) {
+        val limit = if (currentDialect is SQLiteDialect) SQLITE_PARAMETER_LIMIT else DEFAULT_PARAMETER_LIMIT
+        if (parameterCount > limit) {
             throw BatchDataInconsistentException(
-                "Too many parameters in one batch. Exceeds the PostgreSQL limit of $POSTGRESQL_PARAMETER_LIMIT bind parameters."
+                "Too many parameters in one batch. Exceeds the database's limit of $limit bind parameters."
             )
         }
     }
@@ -43,14 +42,16 @@ open class MultiRowValuesInsertStatement(
             ""
         } else {
             QueryBuilder(prepared).apply {
-                values.appendTo(prefix = " VALUES") {
+                values.appendTo(prefix = "VALUES ") {
                     it.appendTo(prefix = "(", postfix = ")") { (col, value) ->
                         registerArgument(col, value)
                     }
                 }
             }.toString()
         }
-        return transaction.db.dialect.functionProvider.insert(isIgnore, table, values.firstOrNull()?.map { it.first }.orEmpty(), sql, transaction)
+        val columnsToUse = values.firstOrNull()?.map { it.first }.orEmpty()
+        return transaction.db.dialect.functionProvider
+            .insertMultiRowValues(isIgnore, table, columnsToUse, sql, values.size, transaction)
     }
 
     override fun arguments() = listOfNotNull(

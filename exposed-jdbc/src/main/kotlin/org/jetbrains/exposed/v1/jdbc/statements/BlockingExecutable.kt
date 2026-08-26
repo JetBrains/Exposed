@@ -103,6 +103,7 @@ fun <T : Any, S : Statement<T>> S.toExecutable(): BlockingExecutable<T, S> {
         is BatchUpsertStatement -> BatchUpsertBlockingExecutable(this)
         is UpsertStatement<*> -> UpsertBlockingExecutable(this as UpsertStatement<T>)
         is SQLServerBatchInsertStatement -> SQLServerBatchInsertBlockingExecutable(this)
+        is MultiRowValuesInsertStatement -> MultiRowValuesInsertBlockingExecutable(this)
         is BatchInsertStatement -> BatchInsertBlockingExecutable(this)
         is InsertStatement<*> -> InsertBlockingExecutable(this as InsertStatement<T>)
         is BatchUpdateStatement -> BatchUpdateBlockingExecutable(this)

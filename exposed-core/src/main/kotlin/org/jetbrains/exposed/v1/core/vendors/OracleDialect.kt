@@ -94,6 +94,7 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
     override fun hexToDb(hexString: String): String = "HEXTORAW('$hexString')"
 }
 
+@Suppress("TooManyFunctions")
 internal object OracleFunctionProvider : FunctionProvider() {
 
     /**
@@ -253,6 +254,29 @@ internal object OracleFunctionProvider : FunctionProvider() {
             }
             append(")")
         }
+    }
+
+    override fun insertMultiRowValues(
+        ignore: Boolean,
+        table: Table,
+        columns: List<Column<*>>,
+        expr: String,
+        valuesSize: Int,
+        transaction: Transaction
+    ): String {
+        val standardInsert = insert(ignore, table, columns, expr, transaction)
+        if (valuesSize <= 1 || columns.isEmpty()) return standardInsert
+
+        val autoIncColumn = table.autoIncColumn
+        val nextValExpression = autoIncColumn?.autoIncColumnType?.nextValExpression?.takeIf { autoIncColumn !in columns }
+        if (nextValExpression == null) return standardInsert
+
+        // Oracle requires special handling of sequence.NEXTVAL since Exposed does not map these to IDENTITY columns;
+        // otherwise Oracle 12c+ could use INSERT ALL INTO ... INTO ... INTO ...
+        val exprColumns = columns.joinToString { transaction.identity(it) }
+        val newExpr = "SELECT DATA.*, $nextValExpression FROM ($expr) DATA($exprColumns)"
+
+        return "${standardInsert.substringBefore(" VALUES ")} $newExpr"
     }
 
     override fun update(

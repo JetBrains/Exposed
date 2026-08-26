@@ -309,6 +309,16 @@ fun <T : Table> T.insertReturning(
 /**
  * Represents the SQL statement that batch inserts new rows into a table.
  *
+ * A single INSERT statement will be prepared and parameterized with new bindings for each row in [data],
+ * relying entirely on the underlying driver's statement-level batching mechanisms. Certain drivers, like for
+ * MySQL and PostgreSQL, may automatically rewrite a batched statement to use the optimized multi-row values
+ * constructor syntax. This behavior is usually dependent on the value set on specific connection configuration
+ * parameters. Regardless, the Exposed logger will still represent this batching operation by logging a new
+ * INSERT SQL line per row.
+ *
+ * Alternatively, a single INSERT statement that uses multi-row values constructor for batch inserting
+ * can be created by Exposed by setting `useMultiRowValues = true`.
+ *
  * @param data Collection of values to use in the batch insert.
  * @param ignore Whether to ignore errors or not.
  * **Note** [ignore] is not supported by all vendors. Please check the documentation.
@@ -322,10 +332,45 @@ fun <T : Table, E> T.batchInsert(
     ignore: Boolean = false,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchInsertStatement.(E) -> Unit
-): List<ResultRow> = batchInsert(data.iterator(), ignoreErrors = ignore, shouldReturnGeneratedValues, body)
+): List<ResultRow> = batchInsert(data.iterator(), false, ignoreErrors = ignore, shouldReturnGeneratedValues, body)
+
+/**
+ * Represents the SQL statement that batch inserts new rows into a table, either by using a single multi-row
+ * `INSERT ... VALUES (...), (...), ...` statement, or by executing one bound statement per row.
+ *
+ * Relying on this specific INSERT syntax instead of the driver's statement-level batching mechanisms may be
+ * recommended by certain drivers for improved performance optimization.
+ *
+ * @param data Collection of values to use in the batch insert.
+ * @param useMultiRowValues Whether to return a single INSERT statement that uses multi-row values constructor,
+ * like `INSERT ... VALUES (...), (...), ...`; if `false`, a regular statement will be prepared for driver batching.
+ * @param ignore Whether to ignore errors or not.
+ * **Note** [ignore] is not supported by all vendors. Please check the documentation.
+ * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs)
+ * should be returned. See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
+ * @return A list of [ResultRow] representing data from each newly inserted row.
+ * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.InsertTests.testBatchInsert01
+ */
+fun <T : Table, E> T.batchInsert(
+    data: Iterable<E>,
+    useMultiRowValues: Boolean,
+    ignore: Boolean = false,
+    shouldReturnGeneratedValues: Boolean = true,
+    body: BatchInsertStatement.(E) -> Unit
+): List<ResultRow> = batchInsert(data.iterator(), useMultiRowValues, ignoreErrors = ignore, shouldReturnGeneratedValues, body)
 
 /**
  * Represents the SQL statement that batch inserts new rows into a table.
+ *
+ * A single INSERT statement will be prepared and parameterized with new bindings for each row in [data],
+ * relying entirely on the underlying driver's statement-level batching mechanisms. Certain drivers, like for
+ * MySQL and PostgreSQL, may automatically rewrite a batched statement to use the optimized multi-row values
+ * constructor syntax. This behavior is usually dependent on the value set on specific connection configuration
+ * parameters. Regardless, the Exposed logger will still represent this batching operation by logging a new
+ * INSERT SQL line per row.
+ *
+ * Alternatively, a single INSERT statement that uses multi-row values constructor for batch inserting
+ * can be created by Exposed by setting `useMultiRowValues = true`.
  *
  * @param data Sequence of values to use in the batch insert.
  * @param ignore Whether to ignore errors or not.
@@ -340,15 +385,41 @@ fun <T : Table, E> T.batchInsert(
     ignore: Boolean = false,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchInsertStatement.(E) -> Unit
-): List<ResultRow> = batchInsert(data.iterator(), ignoreErrors = ignore, shouldReturnGeneratedValues, body)
+): List<ResultRow> = batchInsert(data.iterator(), false, ignoreErrors = ignore, shouldReturnGeneratedValues, body)
+
+/**
+ * Represents the SQL statement that batch inserts new rows into a table, either by using a single multi-row
+ * `INSERT ... VALUES (...), (...), ...` statement, or by executing one bound statement per row.
+ *
+ * Relying on this specific INSERT syntax instead of the driver's statement-level batching mechanisms may be
+ * recommended by certain drivers for improved performance optimization.
+ *
+ * @param data Sequence of values to use in the batch insert.
+ * @param useMultiRowValues Whether to return a single INSERT statement that uses multi-row values constructor,
+ * like `INSERT ... VALUES (...), (...), ...`; if `false`, a regular statement will be prepared for driver batching.
+ * @param ignore Whether to ignore errors or not.
+ * **Note** [ignore] is not supported by all vendors. Please check the documentation.
+ * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs)
+ * should be returned. See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
+ * @return A list of [ResultRow] representing data from each newly inserted row.
+ * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.InsertTests.testBatchInsert01
+ */
+fun <T : Table, E> T.batchInsert(
+    data: Sequence<E>,
+    useMultiRowValues: Boolean,
+    ignore: Boolean = false,
+    shouldReturnGeneratedValues: Boolean = true,
+    body: BatchInsertStatement.(E) -> Unit
+): List<ResultRow> = batchInsert(data.iterator(), useMultiRowValues, ignoreErrors = ignore, shouldReturnGeneratedValues, body)
 
 private fun <T : Table, E> T.batchInsert(
     data: Iterator<E>,
+    useMultiRowValues: Boolean,
     ignoreErrors: Boolean = false,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchInsertStatement.(E) -> Unit
 ): List<ResultRow> = executeBatch(data, body) {
-    val stmt = buildStatement { batchInsert(ignoreErrors, shouldReturnGeneratedValues, body) }
+    val stmt = buildStatement { batchInsert(useMultiRowValues, ignoreErrors, shouldReturnGeneratedValues, body) }
     stmt.executable()
 }
 

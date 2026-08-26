@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.tests.shared.dml
 
 import kotlinx.coroutines.runBlocking
+import nl.altindag.log.LogCaptor
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
@@ -8,7 +9,10 @@ import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.java.UUIDColumnType
 import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.core.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
+import org.jetbrains.exposed.v1.core.statements.MultiRowValuesInsertStatement
+import org.jetbrains.exposed.v1.core.vendors.OracleDialect
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
@@ -23,6 +27,7 @@ import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
 import org.jetbrains.exposed.v1.tests.TestDB
+import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.currentTestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
@@ -35,13 +40,16 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.sql.SQLException
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.fail
 import kotlin.uuid.Uuid
 import java.util.UUID as JavaUUID
 
+@Suppress("LargeClass")
 class InsertTests : DatabaseTestsBase() {
     @Test
     fun testInsertAndGetId01() {
@@ -186,7 +194,7 @@ class InsertTests : DatabaseTestsBase() {
             }
 
             val generatedIds = users.batchInsert(userNamesWithCityIds) { (userName, cityId) ->
-                this[users.id] = java.util.Random().nextInt().toString().take(6)
+                this[users.id] = userName.substringAfter("UserFrom")
                 this[users.name] = userName
                 this[users.cityId] = cityId.toInt()
             }
@@ -196,6 +204,127 @@ class InsertTests : DatabaseTestsBase() {
                 userNamesWithCityIds.size.toLong(),
                 users.selectAll().where { users.name inList userNamesWithCityIds.map { it.first } }.count()
             )
+        }
+    }
+
+    @Test
+    fun testBatchInsertUsingMultiRowValues() {
+        fun String.trimOracleSyntax(): String = if (currentTestDB in TestDB.ALL_ORACLE_LIKE) substringBefore(") DATA(\"name\")") else this
+
+        withCitiesAndUsers { cities, users, _ ->
+            val logCaptor = LogCaptor.forName(exposedLogger.name)
+            logCaptor.setLogLevelToDebug()
+
+            // Oracle driver tries to append RETURNING if keys must be generated, which is not compatible with any table value constructor syntax;
+            val canReturnKeys = currentDialectTest !is OracleDialect
+
+            val cityNames = listOf("Paris", "Moscow", "Helsinki")
+            val allCities = cities.batchInsert(
+                cityNames,
+                useMultiRowValues = true,
+                shouldReturnGeneratedValues = canReturnKeys,
+            ) { name ->
+                this[cities.name] = name
+            }
+
+            assertEquals(cityNames.size, allCities.size)
+            val insertLogs = logCaptor.debugLogs.filter { it.startsWith("INSERT ", ignoreCase = true) }
+            assertEquals(1, insertLogs.size, "Expected a single collapsed multi-row INSERT, got: $insertLogs")
+            assertEquals(
+                cityNames.joinToString { "('$it')" },
+                insertLogs.single().substringAfter("VALUES").trim().trimOracleSyntax()
+            )
+
+            logCaptor.clearLogs()
+            logCaptor.resetLogLevel()
+            logCaptor.close()
+
+            // now make sure the generated keys were returned properly even with the new syntax
+            if (canReturnKeys) {
+                val userNamesWithCityIds = allCities.mapIndexed { index, id ->
+                    "UserFrom${cityNames[index]}" to id[cities.id] as Number
+                }
+
+                val generatedIds = users.batchInsert(
+                    userNamesWithCityIds,
+                    useMultiRowValues = true,
+                ) { (userName, cityId) ->
+                    this[users.id] = userName.substringAfter("UserFrom")
+                    this[users.name] = userName
+                    this[users.cityId] = cityId.toInt()
+                }
+
+                assertEquals(userNamesWithCityIds.size, generatedIds.size)
+                assertEquals(
+                    userNamesWithCityIds.size.toLong(),
+                    users.selectAll().where { users.name inList userNamesWithCityIds.map { it.first } }.count()
+                )
+            }
+        }
+    }
+
+    @Tag(NOT_APPLICABLE_TO_R2DBC)
+    @Test
+    fun testMultiRowValuesInsertRejectsBatchExceedingParameterLimit() {
+        // DMLTestsData.Cities has 2 columns, so the 65535 bind-parameter limit
+        // is exceeded once more than 32767 rows are batched (for all db except SQLite).
+        // SQLite would be exceeded once more than 16383 rows are batched.
+        // validateLastBatch() requires a transaction in context, but the statement is never executed.
+        withTables(excludeSettings = listOf(TestDB.SQLSERVER), DMLTestsData.Cities) { testDb ->
+            val limit = if (testDb == TestDB.SQLITE) 16383 else 32767
+            val statement = MultiRowValuesInsertStatement(DMLTestsData.Cities)
+
+            repeat(limit) {
+                statement[DMLTestsData.Cities.name] = "City$it"
+                statement.addBatch()
+            }
+            assertDoesNotThrow("Batch at the parameter limit should not throw") {
+                statement[DMLTestsData.Cities.name] = "City32767"
+                statement.addBatch()
+            }
+
+            assertFailsWith<BatchDataInconsistentException>("Batch exceeding the parameter limit should throw") {
+                statement[DMLTestsData.Cities.name] = "OneRowTooMany"
+                statement.addBatch()
+            }
+        }
+    }
+
+    @Test
+    fun testBatchInsertWithoutGeneratedValues() {
+        withCitiesAndUsers { cities, _, _ ->
+            val cityNames = listOf("Paris", "Moscow", "Helsinki")
+            val allCities = cities.batchInsert(
+                cityNames,
+                shouldReturnGeneratedValues = false,
+            ) { name ->
+                this[cities.name] = name
+            }
+
+            assertEquals(cityNames.size, allCities.size)
+            // Stored InsertStatement (batched results) will only hold client-side provided row results
+            assertEqualLists(allCities.map { it[cities.name] }, cityNames)
+            val exception1 = assertFailsWith<IllegalStateException> {
+                allCities.map { it[cities.id] }
+            }
+            assertContains(exception1.message.orEmpty(), "not in record set")
+
+            val moreCityNames = listOf("Berlin", "Amsterdam")
+            val moreCities = cities.batchInsert(
+                moreCityNames,
+                useMultiRowValues = true,
+                shouldReturnGeneratedValues = false,
+            ) { name ->
+                this[cities.name] = name
+            }
+
+            assertEquals(moreCityNames.size, moreCities.size)
+            // Stored InsertStatement (multi-row values result) will only hold client-side provided row results
+            assertEqualLists(moreCities.map { it[cities.name] }, moreCityNames)
+            val exception2 = assertFailsWith<IllegalStateException> {
+                moreCities.map { it[cities.id] }
+            }
+            assertContains(exception2.message.orEmpty(), "not in record set")
         }
     }
 
@@ -217,7 +346,7 @@ class InsertTests : DatabaseTestsBase() {
         val cities = DMLTestsData.Cities
         withTables(cities) {
             val names = emptySequence<String>()
-            cities.batchInsert(names) { name -> this[cities.name] = name }
+            cities.batchInsert(names, useMultiRowValues = true) { name -> this[cities.name] = name }
 
             val batchesSize = cities.selectAll().count()
 

@@ -140,23 +140,6 @@
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
                         include-lines="83-95"/>
-            <note>
-                When using the JDBC driver, the <code>.batchInsert()</code> function will still create multiple
-                <code>INSERT</code> statements when interacting with your database.
-                <p>To convert the <code>INSERT</code> statements into a <code>BULK INSERT</code>, use the
-                    <code>rewriteBatchedInserts=true</code>
-                    (or <code>rewriteBatchedStatements=true</code>)
-                    option of your relevant JDBC driver.</p>
-                <p>For more information, see the documentation for this option for <a
-                    href="https://dev.mysql.com/doc/connector-j/en/connector-j-connp-props-performance-extensions.html#cj-conn-prop_rewriteBatchedStatements">MySQL</a>
-                    and
-                    <a href="https://jdbc.postgresql.org/documentation/use/">PostgresSQL</a>.</p>
-                <p>When using the R2DBC driver against PostgreSQL, no such option is needed: <code>.batchInsert()</code>
-                    automatically collapses the batch into a single multi-row <code>INSERT ... VALUES (...), (...), ...</code>
-                    statement, avoiding the per-row round trip that the r2dbc-postgresql driver otherwise performs for
-                    bound statement batches (see
-                    <a href="https://github.com/pgjdbc/r2dbc-postgresql/issues/527">pgjdbc/r2dbc-postgresql#527</a>).</p>
-            </note>
 
             <p>
                 If you don't need to get the newly generated values, such as the auto-incremented ID, set the
@@ -164,17 +147,56 @@
                 performance of batch inserts by batching them in chunks, instead of always waiting for the database to
                 synchronize the newly inserted object state.
             </p>
+            <note>
+                When using the JDBC driver, the <code>.batchInsert()</code> function will by default prepare a single
+                parameterized <code>PreparedStatement</code> and repeatedly call <code>.addBatch()</code> before periodically
+                flushing each batch to the database.
+                <p>To convert this statement-level batching into a true <code>BULK INSERT</code>, use
+                    connection configuration parameters, such as PostgreSQL's <code>reWriteBatchedInserts=true</code>
+                    or MySQL's <code>rewriteBatchedStatements=true</code>, from supporting JDBC drivers.
+                    Even if these flags are set to <code>true</code>, the Exposed logger will always show non-rewritten
+                    multiple insert SQL lines.
+                </p>
+            </note>
+            <note>
+                <p>When using the R2DBC driver, connection parameters similar to the above JDBC flags do not exist
+                    for most databases, forcing a reliance on the driver's underlying batch statement performance.
+                    Certain databases propose using the multiple-row values constructor syntax instead, to avoid these
+                    per-row round trips. And Exposed provides a <code>.batchInsert()</code> overload that enables this
+                    specific syntax when <code>useMultiRowValues=true</code>.
+                </p>
+            </note>
+
             <p>
-                If you want to check if <code>rewriteBatchedInserts</code> and <code>batchInsert</code> are working
+                If you want to check whether <code>.batchInsert()</code> is working with your connection configuration
                 correctly on JDBC, you need to enable JDBC logging for your driver. This is necessary, as Exposed will
                 always show the non-rewritten multiple inserts. For more information, see
                 <a href="https://jdbc.postgresql.org/documentation/logging/">
-                    how to enable logging in PostgresSQL
+                    how to enable logging in PostgreSQL
                 </a>
-                . On R2DBC with PostgreSQL, the collapsed multi-row statement is visible directly through Exposed's own
-                <code>SqlLogger</code> (for example <code>StdOutSqlLogger</code>), since the rewrite happens in Exposed
-                itself rather than inside the driver.
+                . For more information on these connection flags, see the documentation for these options for <a
+                href="https://dev.mysql.com/doc/connector-j/en/connector-j-connp-props-performance-extensions.html#cj-conn-prop_rewriteBatchedStatements">MySQL</a>
+                and
+                <a href="https://jdbc.postgresql.org/documentation/use/">PostgresSQL</a>.
             </p>
+
+            <p>
+                Regardless of which driver you are using, you can manually ensure that your batch inserts always
+                automatically collapse the batch into a single multi-row <code>INSERT ... VALUES (...), (...), ...</code>
+                statement, by using the dedicated <code>.batchInsert()</code> with the parameter <code>useMultiRowValues=true</code>.
+                This avoids any potential driver batching performance limitations. The logger will always show a single
+                insert SQL line because the rewrite happens by Exposed before the statement is prepared and sent to the database:
+            </p>
+            <code-block lang="kotlin"><![CDATA[
+                val cityNames = listOf("Paris", "Moscow", "Helsinki")
+
+                CitiesTable.batchInsert(
+                    cityNames,
+                    useMultiRowValues = true
+                ) { name ->
+                    this[CitiesTable.name] = name
+                }
+            ]]></code-block>
         </chapter>
     </chapter>
     <chapter title="Read" id="read">
