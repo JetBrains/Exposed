@@ -1,3 +1,29 @@
+# 1.5.0
+
+Infrastructure:
+* Flyway 13.3.0
+
+Features:
+* feat: EXPOSED-1049 Support hashing algorithms for the Crypt module by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2876
+* feat: Add multi-row values (single statement) batch insert for PostgreSQL with R2DBC by @mdedetrich in https://github.com/JetBrains/Exposed/pull/2880
+* feat: Add Amazon Redshift JDBC support by @hugoncosta in https://github.com/JetBrains/Exposed/pull/2883
+* feat: EXPOSED-924 Extend multi-row values batch insert to all DB and drivers by @bog-walk in https://github.com/JetBrains/Exposed/pull/2896
+
+Bug fixes:
+* fix: EXPOSED-1046 Deserialize JSON columns returned as a Clob by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2879
+* fix: EXPOSED-1048 Return only the rows batchInsert actually inserted by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2877
+* fix: EXPOSED-1027 Cast binary parameter in MERGE upsert to preserve high bytes by @ZR8C in https://github.com/JetBrains/Exposed/pull/2888
+* refactor: Extract transaction stack management to core interface for customization by @bog-walk in https://github.com/JetBrains/Exposed/pull/2878
+* fix: EXPOSED-169 Schedule DAO updates independently of the entity cache by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2891
+* fix: EXPOSED-1059 Regression in ExposedSpringTransactionAttributeSource by @ZR8C in https://github.com/JetBrains/Exposed/pull/2894
+* fix: EXPOSED-798 Declare Spring beans as role infrastructure to prevent warnings by @frederikpietzko in https://github.com/JetBrains/Exposed/pull/2885
+* fix: Nullable enumeration columns not handled by r2dbc-postgresql 1.0.5 or older by @bog-walk in https://github.com/JetBrains/Exposed/pull/2895
+* fix(r2dbc): EXPOSED-1047 Release R2DBC connection on failure of beginTransaction() by @codyworsnop in https://github.com/JetBrains/Exposed/pull/2843
+* fix(plugin): Prevent timestamp migration version collisions with generateMigrations by @cfcromn in https://github.com/JetBrains/Exposed/pull/2898
+
+Docs:
+* docs: EXPOSED-1044 Update the JSON and JSONB types section by @vnikolova in https://github.com/JetBrains/Exposed/pull/2884
+
 # 1.4.0
 
 Infrastructure:
