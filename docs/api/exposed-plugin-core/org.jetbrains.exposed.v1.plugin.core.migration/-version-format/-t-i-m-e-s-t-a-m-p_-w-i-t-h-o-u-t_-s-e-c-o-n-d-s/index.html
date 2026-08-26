@@ -38,7 +38,7 @@
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
-        <div class="library-version" id="library-version">1.4.0
+        <div class="library-version" id="library-version">1.5.0
         </div>
         <div class="navigation-controls">
         <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
@@ -93,7 +93,7 @@
   <div class="breadcrumbs"><a href="../../../index.html">exposed-plugin-core</a><span class="delimiter">/</span><a href="../../index.html">org.jetbrains.exposed.v1.plugin.core.migration</a><span class="delimiter">/</span><a href="../index.html">VersionFormat</a><span class="delimiter">/</span><span class="current">TIMESTAMP_WITHOUT_SECONDS</span></div>
   <div class="cover ">
     <h1 class="cover"><span>TIMESTAMP_</span><wbr><span>WITHOUT_</span><wbr><span>SECONDS</span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-plugin-core/main"><div class="symbol monospace"><div class="block"><a href="index.html">TIMESTAMP_WITHOUT_SECONDS</a></div></div><p class="paragraph">Uses the format <code class="lang-kotlin">&lt;prefix&gt;YYYYMMDDHHMM&lt;separator&gt;&lt;description&gt;&lt;extension&gt;</code></p><p class="paragraph">For example, V202604171955__create_table_users.sql</p></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-plugin-core/main"><div class="symbol monospace"><div class="block"><a href="index.html">TIMESTAMP_WITHOUT_SECONDS</a></div></div><p class="paragraph">Uses the format <code class="lang-kotlin">&lt;prefix&gt;YYYYMMDDHHMM&lt;separator&gt;&lt;description&gt;&lt;extension&gt;</code> and appends <code class="lang-kotlin">.&lt;index&gt;</code> to subsequent migrations generated in the same run.</p><p class="paragraph">For example, V202604171955__create_table_users.sql or V202604171955.1__create_table_cities.sql</p></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
