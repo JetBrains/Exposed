@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.util.*
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.expect
@@ -1450,5 +1451,20 @@ class DDLTests : DatabaseTestsBase() {
 
         // Test RawTableStorageParameter SQL generation
         assertEquals("parallel_workers=4", RawTableStorageParameter("parallel_workers=4").toSQL())
+    }
+
+    @Test
+    fun testBinaryDefaultPreservesNonUtf8Bytes() {
+        val expected = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47)
+        val table = object : Table("binary_default_test") {
+            val payload = binary("payload", 16).default(expected)
+        }
+
+        withTables(table) {
+            table.insert {}
+
+            val actual = table.selectAll().single()[table.payload]
+            assertContentEquals(expected, actual)
+        }
     }
 }
