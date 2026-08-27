@@ -213,6 +213,82 @@
 
         </chapter>
     </chapter>
+    <chapter id="tableless-select">
+        <title>Tableless <code>SELECT</code> queries</title>
+        <p>
+            Use the top-level <code>select()</code> function to query any number of expressions without specifying a table (without a <code>FROM</code> clause specifically). A
+            tableless query starts with one implicit row, so a projection returns one row unless a
+            <code>.where { ... }</code> condition filters it out. Exposed renders the database's native source-less
+            <code>SELECT</code> form, including a dual table on databases that require one.
+        </p>
+        <code-block lang="kotlin"><![CDATA[
+            val numberOne = intLiteral(1)
+            val query: Query = select(numberOne, CurrentTimestamp)
+            val one: Int = query.single()[numberOne]
+
+            val query2 = select(listOf(intLiteral(1), stringLiteral("ready")))
+
+            val noRows = select(intLiteral(1)).where { Op.FALSE }
+        ]]></code-block>
+        <p>On H2, <code>query</code> generates the following SQL:</p>
+        <code-block lang="sql">
+            SELECT 1, CURRENT_TIMESTAMP
+        </code-block>
+        <p>
+            For one expression, <code>selectValue()</code> executes immediately in the current transaction and returns
+            the typed value. Its R2DBC variant is a suspending function. This avoids retaining an expression only to
+            use it as a result-row key.
+        </p>
+        <code-block lang="kotlin"><![CDATA[
+            val one: Int = selectValue(intLiteral(1))
+            val serverTime = selectValue(CurrentTimestamp)
+        ]]></code-block>
+        <p>
+            For convenience, <code>selectValue()</code> accepts supported Kotlin scalar values directly and wraps
+            them as SQL literals internally. For example, <code>selectValue(1)</code> is equivalent to
+            <code>selectValue(intLiteral(1))</code>. Date and time types from optional modules continue to use their
+            module-specific literal functions.
+        </p>
+        <code-block lang="kotlin"><![CDATA[
+            val one: Int = selectValue(1)          // Executes SELECT 1 and returns Int
+            val ready = selectValue("ready")      // Executes SELECT 'ready' and returns String
+            val serverTime = selectValue(CurrentTimestamp)
+        ]]></code-block>
+        <p>
+            It is suitable for cases where you do not need explicit literal values and is equivalent to:
+        </p>
+        <code-block lang="kotlin"><![CDATA[
+            val one = literal(1)
+            val query = select(one)
+            val result: Int = query.single()[one]
+
+            val immediate: Int = selectValue(1)  // Equivalent SQL literal, returned immediately
+        ]]></code-block>
+        <p>
+            Tableless queries remain ordinary <code>Query</code> objects, so they can be filtered, combined with set
+            operations, aliased as derived tables, or passed to insert-from-select and other existing APIs. The
+            function does not infer a <code>FROM</code> clause from projected expressions: <code>select(Users.name)</code>
+            means the literal SQL shape <code>SELECT users.name</code>, not a query over <code>Users</code>.
+        </p>
+        <chapter id="tableless-select-limitations">
+            <title>Limitations</title>
+            <p>
+                A tableless <code>SELECT</code> have some database limitations:
+            </p>
+            <list>
+                <li>
+                    SQL Server and Oracle versions before 23ai cannot project an <code>EXISTS</code> predicate directly.
+                </li>
+                <li>
+                    Sequence, function, lateral-query, and merge support remains database-specific.
+                </li>
+            </list>
+            <p>
+                Exposed sends the SQL shape represented by the DSL; it does not rewrite expressions to make them
+                portable across databases.
+            </p>
+        </chapter>
+    </chapter>
     <chapter id="conditional-where">
         <title>Conditional <code>WHERE</code></title>
         <p>

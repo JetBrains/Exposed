@@ -35,6 +35,73 @@ import kotlin.sequences.Sequence
 fun FieldSet.selectAll(): Query = Query(this, null)
 
 /**
+ * Creates a `SELECT` [Query] without a `FROM` clause.
+ *
+ * Some queries without a `FROM` clause are valid, such as `select(intLiteral(1))`. Others are not. For example,
+ * Others are not. For example,
+ * `select(MyTable.id)` is rejected by the database during execution because `MyTable` is not a query source.
+ *
+ * For instance `SELECT 1` can be written as follows:
+ * ```kotlin
+ * val one = intLiteral(1)
+ * val result = select(one).single()[one]
+ * ```
+ */
+@LowPriorityInOverloadResolution
+fun select(expression: Expression<*>, vararg expressions: Expression<*>): Query =
+    Table.Dual.select(listOf(expression) + expressions)
+
+/**
+ * Creates a `SELECT` [Query] without a `FROM` clause.
+ *
+ * Some queries without a `FROM` clause are valid, such as `select(listOf(intLiteral(1)))`. Others are not. For
+ * example, `select(listOf(MyTable.id))` is rejected by the
+ * database during execution because `MyTable` is not a query source.
+ *
+ * ```kotlin
+ * val one = intLiteral(1)
+ * val status = stringLiteral("ready")
+ * val result = select(listOf(one, status)).single()
+ * ```
+ *
+ * @throws IllegalArgumentException If [expressions] is empty.
+ */
+@LowPriorityInOverloadResolution
+fun select(expressions: List<Expression<*>>): Query {
+    require(expressions.isNotEmpty()) { "Can't prepare SELECT statement without columns or expressions to retrieve" }
+    return Table.Dual.select(expressions)
+}
+
+/**
+ * Executes a `SELECT` of [expression] without a `FROM` clause and returns its single value. This function
+ * executes immediately in the current transaction.
+ * Some queries without a `FROM` clause are valid, such as `selectValue(intLiteral(1))`. Others are not. For example,
+ * `selectValue(MyTable.id)` is rejected by the database during execution because `MyTable` is not a query source.
+ *
+ * For example:
+ * ```kotlin
+ * val result: Int = selectValue(intLiteral(1))
+ * ```
+ */
+fun <T> selectValue(expression: Expression<T>): T = select(expression).single()[expression]
+
+/**
+ * Executes a `SELECT` of [value] as an SQL literal without a `FROM` clause and returns its single value.
+ *
+ * Some queries without a `FROM` clause are valid, such as `selectValue(1)`. Others are not. The database rejects the
+ * query during execution if the literal is not supported.
+ *
+ * For example:
+ * ```kotlin
+ * val result: Int = selectValue(1)
+ * ```
+ *
+ * @throws IllegalArgumentException If [value] is not supported by [literal].
+ */
+@LowPriorityInOverloadResolution
+fun <T : Any> selectValue(value: T): T = selectValue(literal(value))
+
+/**
  * Creates a `SELECT` [Query] by selecting either a single [column], or a subset of [columns], from this [ColumnSet].
  *
  * The column set selected from may be either a [Table] or a [Join].
