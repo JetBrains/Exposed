@@ -1645,6 +1645,73 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     ): Column<Wrapped?> = nullTransform(columnTransformer(unwrap, wrap))
 
     /**
+     * Applies a special transformation that allows a nullable database column
+     * to be exposed as a non-nullable type on the Kotlin side.
+     *
+     * This is the inverse of [nullTransform]: where `nullTransform` maps a non-nullable
+     * DB column to a nullable Kotlin type, `nonNullTransform` maps a nullable DB column
+     * to a non-nullable Kotlin type.
+     *
+     * The column remains nullable in the database schema. The transformation enables
+     * reflecting `null` values from the database as a concrete non-null value in Kotlin
+     * (e.g., an empty string, a default object, a sentinel value, etc.).
+     *
+     * Sample:
+     * ```kotlin
+     * object Users : Table() {
+     *     val description = text("description")
+     *         .nullable()
+     *         .nonNullTransform(
+     *             wrap = { it?.trim()?.ifEmpty { null } ?: "" },
+     *             unwrap = { if (it.isEmpty()) null else it }
+     *         )
+     * }
+     * ```
+     *
+     * @param Wrapped The non-nullable type into which the value of the underlying column will be transformed.
+     * @param Unwrapped The type of the original column (the non-null portion of the nullable column type).
+     * @param wrap A function to transform from the source type [Unwrapped]`?` to the target type [Wrapped].
+     *   Receives `null` when the database value is `null`, and must return a non-null [Wrapped] value.
+     * @param unwrap A function to transform from the target type [Wrapped] to the source type [Unwrapped]`?`.
+     *   May return `null` to store `null` in the database.
+     * @return A new column of type [Wrapped] (non-nullable) with the applied transformations.
+     */
+    @JvmName("nonNullTransform")
+    fun <Unwrapped : Any, Wrapped : Any> Column<Unwrapped?>.nonNullTransform(
+        wrap: (Unwrapped?) -> Wrapped,
+        unwrap: (Wrapped) -> Unwrapped?
+    ): Column<Wrapped> = nonNullTransform(columnTransformer(unwrap, wrap))
+
+    /**
+     * Applies a special transformation that allows a nullable database column
+     * to be exposed as a non-nullable type on the Kotlin side.
+     *
+     * This is the inverse of [nullTransform]: where `nullTransform` maps a non-nullable
+     * DB column to a nullable Kotlin type, `nonNullTransform` maps a nullable DB column
+     * to a non-nullable Kotlin type.
+     *
+     * The column remains nullable in the database schema. The transformation enables
+     * reflecting `null` values from the database as a concrete non-null value in Kotlin
+     * (e.g., an empty string, a default object, a sentinel value, etc.).
+     *
+     * @param Wrapped The non-nullable type into which the value of the underlying column will be transformed.
+     * @param Unwrapped The type of the original column (the non-null portion of the nullable column type).
+     * @param transformer An instance of [ColumnTransformer] to handle the transformations.
+     *   Its [ColumnTransformer.wrap] method must return a non-null value even when given `null`.
+     *   Its [ColumnTransformer.unwrap] method may return `null` to store `null` in the database.
+     * @return A new column of type [Wrapped] (non-nullable) with the applied transformations.
+     */
+    @JvmName("nonNullTransform")
+    fun <Unwrapped : Any, Wrapped : Any> Column<Unwrapped?>.nonNullTransform(
+        transformer: ColumnTransformer<Unwrapped?, Wrapped>
+    ): Column<Wrapped> {
+        val newColumn: Column<Wrapped> = copyWithAnotherColumnType<Wrapped>(NonNullableColumnWithTransform(this.columnType, transformer)) {
+            defaultValueFun = this@nonNullTransform.defaultValueFun?.let { { transformer.wrap(it()) } }
+        }
+        return replaceColumn(this, newColumn)
+    }
+
+    /**
      * Applies a special transformation that allows a non-nullable database column
      * to accept and/or return values as `null` on the client side.
      *

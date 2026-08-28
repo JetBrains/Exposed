@@ -1680,6 +1680,11 @@ public final class org/jetbrains/exposed/v1/core/NoOpConversion : org/jetbrains/
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 }
 
+public class org/jetbrains/exposed/v1/core/NonNullableColumnWithTransform : org/jetbrains/exposed/v1/core/NullableColumnWithTransform {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/IColumnType;Lorg/jetbrains/exposed/v1/core/ColumnTransformer;)V
+	public final fun valueFromDBOrNull (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
 public final class org/jetbrains/exposed/v1/core/NotEqSubQueryOp : org/jetbrains/exposed/v1/core/SubQueryOp {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/AbstractQuery;)V
 }
@@ -2457,6 +2462,8 @@ public class org/jetbrains/exposed/v1/core/Table : org/jetbrains/exposed/v1/core
 	public fun modifyStatement ()Ljava/util/List;
 	public final fun nameInDatabaseCase ()Ljava/lang/String;
 	public final fun nameInDatabaseCaseUnquoted ()Ljava/lang/String;
+	public final fun nonNullTransform (Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/core/Column;
+	public final fun nonNullTransform (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnTransformer;)Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun nullTransform (Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun nullTransform (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnTransformer;)Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun nullable (Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/core/Column;
