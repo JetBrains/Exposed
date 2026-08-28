@@ -27,6 +27,22 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
         return if (currentVersion.covers(supportedVersion)) blobType() else super.jsonBType()
     }
 
+    override fun processForDefaultValue(e: Expression<*>): String = when (e) {
+        is LiteralOp<*> -> (e.columnType as IColumnType<Any?>).valueAsDefaultString(e.value)
+        // The default value specified in a DEFAULT clause can be a literal constant or an expression. With one
+        // exception, enclose expression default values within parentheses to distinguish them from literal constant
+        // default values. The exception is that, for TIMESTAMP and DATETIME columns, you can specify any of the
+        // built-in time constant functions as the default, without enclosing parentheses.
+        is ExpressionWithColumnType<*> if (
+            e.columnType is IDateColumnType && acceptableDateTimeDefaults.any { e.toString().startsWith(it) }
+            ) ->
+            super.processForDefaultValue(e)
+        !is LiteralOp<*> -> "(${super.processForDefaultValue(e)})"
+        else -> super.processForDefaultValue(e)
+    }
+
+    private val acceptableDateTimeDefaults = mutableListOf("CURRENT_DATE", "CURRENT_TIME", "CURRENT_TIMESTAMP")
+
     override fun hexToDb(hexString: String): String = "X'$hexString'"
 }
 

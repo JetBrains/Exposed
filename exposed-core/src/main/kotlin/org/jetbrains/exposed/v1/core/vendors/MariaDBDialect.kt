@@ -14,9 +14,9 @@ internal object MariaDBDataTypeProvider : MysqlDataTypeProvider() {
         throw UnsupportedByDialectException("This vendor does not support timestamp with time zone data type", currentDialect)
     }
 
-    override fun processForDefaultValue(e: Expression<*>): String = when {
-        e is LiteralOp<*> -> (e.columnType as IColumnType<Any?>).valueAsDefaultString(e.value)
-        e is Function<*> || currentDialect is MariaDBDialect -> "$e"
+    override fun processForDefaultValue(e: Expression<*>): String = when (e) {
+        is LiteralOp<*> -> (e.columnType as IColumnType<Any?>).valueAsDefaultString(e.value)
+        is Function<*> -> "$e"
         else -> "($e)"
     }
 }

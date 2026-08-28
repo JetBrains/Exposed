@@ -1,16 +1,14 @@
 package org.jetbrains.exposed.v1.tests.shared.functions
 
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.core.decimalLiteral
-import org.jetbrains.exposed.v1.core.div
-import org.jetbrains.exposed.v1.core.doubleLiteral
-import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.functions.math.*
-import org.jetbrains.exposed.v1.core.intLiteral
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.tests.shared.assertFalse
+import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.expectException
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -175,6 +173,8 @@ class MathFunctionTests : FunctionsTestBase() {
             val defaultDecimal3 = decimal("defaultDecimal3", 3, 0).nullable().defaultExpression(RoundFunction(double, 0))
             val defaultInt3 = integer("defaultInt3").nullable().defaultExpression(SignFunction(integer))
             val defaultDecimal4 = decimal("defaultDecimal4", 3, 0).nullable().defaultExpression(SqrtFunction(defaultDecimal2))
+            val defaultInt4 = integer("defaultInt4").defaultExpression(defaultInt plus intLiteral(1))
+            val defaultBoolean = bool("defaultBoolean").defaultExpression(defaultDecimal.isNull())
         }
 
         // MySQL and MariaDB are the only supported databases that allow referencing another column in a default expression
@@ -188,12 +188,63 @@ class MathFunctionTests : FunctionsTestBase() {
             val result = foo.selectAll().where { foo.id eq id }.single()
 
             assertEquals(100, result[foo.defaultInt])
+            assertEquals(1, result[foo.defaultInt2])
             assertEquals(BigDecimal("2.718281828459"), result[foo.defaultDecimal])
             assertEquals(100, result[foo.defaultLong])
             assertEquals(BigDecimal(100), result[foo.defaultDecimal2])
             assertEquals(BigDecimal(101), result[foo.defaultDecimal3])
             assertEquals(-1, result[foo.defaultInt3])
             assertEquals(BigDecimal(10), result[foo.defaultDecimal4])
+            assertEquals(101, result[foo.defaultInt4])
+            assertFalse(result[foo.defaultBoolean])
+        }
+    }
+
+    @Test
+    fun testConstantFunctionsInDefaultExpression() {
+        val tester = object : IntIdTable("tester") {
+            val absolute = integer("absolute").defaultExpression(AbsFunction(intLiteral(-100)))
+            val length = integer("length").nullable().defaultExpression(stringLiteral("TEST").charLength())
+            val conditional = integer("conditional").defaultExpression(
+                Case().When(Op.TRUE, intLiteral(1) times intLiteral(10)).Else(intLiteral(0))
+            )
+        }
+
+        // MySQL 5 does not support functions in default values.
+        withTables(excludeSettings = listOf(TestDB.MYSQL_V5), tester) {
+            val id = tester.insertAndGetId { }
+            val result = tester.selectAll().where { tester.id eq id }.single()
+
+            assertEquals(100, result[tester.absolute])
+            assertEquals(4, result[tester.length])
+            assertEquals(10, result[tester.conditional])
+        }
+    }
+
+    @Test
+    fun testArithmeticExpressionsInDefaultExpression() {
+        val tester = object : IntIdTable("tester") {
+            // CustomOperator example (extends Function)
+            val addition = integer("addition").defaultExpression(intLiteral(2) plus intLiteral(3))
+
+            // ComparisonOp example (extends Op)
+            val comparison = bool("comparison").defaultExpression(intLiteral(2) less intLiteral(3))
+
+            // Mixed Function example
+            val extraLength = integer("extra_length").nullable().defaultExpression(
+                stringLiteral("TEST").charLength() plus intLiteral(1)
+            )
+        }
+
+        // SQL Server & Oracle only allow 3 column defaults: constants/literals, scalar/deterministic functions, system functions;
+        // MySQL 5 does not support functions in default values;
+        withTables(excludeSettings = TestDB.ALL_ORACLE_LIKE + TestDB.SQLSERVER + TestDB.MYSQL_V5, tester) {
+            val id = tester.insertAndGetId { }
+            val result = tester.selectAll().where { tester.id eq id }.single()
+
+            assertEquals(5, result[tester.addition])
+            assertTrue(result[tester.comparison])
+            assertEquals(5, result[tester.extraLength])
         }
     }
 }
