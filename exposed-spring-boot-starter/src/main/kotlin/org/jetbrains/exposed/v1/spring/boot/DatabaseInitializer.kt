@@ -3,28 +3,29 @@ package org.jetbrains.exposed.v1.spring.boot
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.InitializingBean
 import org.springframework.boot.ApplicationArguments
-import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.autoconfigure.AutoConfigurationPackages
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider
 import org.springframework.core.Ordered
 import org.springframework.core.type.filter.AssignableTypeFilter
 import org.springframework.core.type.filter.RegexPatternTypeFilter
-import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.support.TransactionTemplate
 import java.util.regex.Pattern
 
 /**
- * Base class responsible for the automatic creation of a database schema, using the results of [discoverExposedTables].
+ * Creates the database schema using discovered [Table][org.jetbrains.exposed.v1.core.Table] objects
+ * during the bean initialization phase.
  *
- * If more than just table creation is required, a derived class can be implemented to override the transactional
- * function, [run], so that other schema operations can be performed when initialized.
- *
- * @property applicationContext The Spring ApplicationContext container responsible for managing beans.
- * @property excludedPackages List of packages to exclude, so that their contained tables are not auto-created.
+ * A derived class can override [run] to perform additional schema operations.
  */
-open class DatabaseInitializer(private val applicationContext: ApplicationContext, private val excludedPackages: List<String>) :
-    ApplicationRunner, Ordered {
+open class DatabaseInitializer(
+    private val applicationContext: ApplicationContext,
+    private val excludedPackages: List<String>,
+    private val transactionManager: PlatformTransactionManager
+) : InitializingBean, Ordered {
     override fun getOrder(): Int = DATABASE_INITIALIZER_ORDER
 
     companion object {
@@ -33,8 +34,16 @@ open class DatabaseInitializer(private val applicationContext: ApplicationContex
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    @Transactional
-    override fun run(args: ApplicationArguments?) {
+    override fun afterPropertiesSet() {
+        TransactionTemplate(transactionManager).execute {
+            run(null)
+        }
+    }
+
+    /**
+     * Discovers and creates database tables. Subclasses can override this to add custom schema operations.
+     */
+    open fun run(args: ApplicationArguments?) {
         val exposedTables = discoverExposedTables(applicationContext, excludedPackages)
         logger.info("Schema generation for tables '{}'", exposedTables.map { it.tableName })
 
