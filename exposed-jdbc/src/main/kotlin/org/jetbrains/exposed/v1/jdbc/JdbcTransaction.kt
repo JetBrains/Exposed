@@ -297,7 +297,7 @@ open class JdbcTransaction(
 
     /** Closes all previously executed statements and resets or releases any used database and/or driver resources. */
     fun closeExecutedStatements() {
-        executedStatements.forEach {
+        executedStatements.asReversed().forEach {
             it.closeIfPossible()
         }
         openResultSetsCount = 0
