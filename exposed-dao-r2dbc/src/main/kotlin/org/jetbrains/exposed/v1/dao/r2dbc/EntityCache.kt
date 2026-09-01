@@ -1,13 +1,15 @@
 package org.jetbrains.exposed.v1.dao.r2dbc
 
-import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.Key
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
-import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.vendors.OracleDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.r2dbc.LazySizedCollection
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
@@ -127,7 +129,10 @@ class EntityCache(private val transaction: R2dbcTransaction) {
         if (column.referee != null) {
             val stagedPrevious = stagedValue(entity, column)
             val previous = if (stagedPrevious === NoStagedValue) entity._readValues?.getOrNull(column) else stagedPrevious
-            val staleParents = listOfNotNull(value, previous).filterIsInstance<EntityID<*>>()
+
+            val staleParents = listOfNotNull(value, previous)
+                .filterIsInstance<EntityID<*>>()
+                .filter { it._value != null }
 
             for (scope in scopeChain) {
                 val columnReferrers = scope.referrers[column] ?: continue
@@ -176,8 +181,10 @@ class EntityCache(private val transaction: R2dbcTransaction) {
         }
 
         removeFromIdentityMap(entity)
-        forget(entity)
-        updates[entity.klass.table]?.remove(entity)
+        for (scope in scopeChain) {
+            scope.forget(entity)
+            scope.updates[entity.klass.table]?.remove(entity)
+        }
     }
 
     private fun markCreatedInTheCurrentScope(entity: Entity<*>) {
@@ -452,17 +459,41 @@ class EntityCache(private val transaction: R2dbcTransaction) {
             // generated columns.
             val stagedSnapshots = currentBatch.map { LinkedHashMap(dirtyValues(it)) }
 
+            // The Oracle R2DBC driver rejects a statement that both batches rows and asks for generated values
+            // ("Batch execution returning generated values is not supported"), and the generated ids are exactly
+            // what has to come back here, so on Oracle every row is sent as a statement of its own.
+            val chunks = if (currentDialect is OracleDialect) currentBatch.map(::listOf) else listOf(currentBatch)
+
             val genRows = executeAsPartOfEntityLifecycle {
-                table.batchInsert(currentBatch) { entry ->
-                    for ((c, v) in dirtyValues(entry)) {
-                        this[c] = v
+                chunks.flatMap { chunk ->
+                    table.batchInsert(chunk) { entry ->
+                        for ((c, v) in dirtyValues(entry)) {
+                            this[c] = v
+                        }
                     }
                 }
             }
 
+            val incompleteIds = currentBatch.mapIndexedNotNull { idx, entity ->
+                val complete = adoptGeneratedValues(entity, genRows[idx], stagedSnapshots[idx], table)
+                (entity.id as EntityID<ID>).takeIf { !complete }
+            }
+
+            // Whatever the driver did not return -- a database-side default, for one -- has to be read back.
+            // The ids are known by now, so that is one query for the batch rather than one per row.
+            val rereadRows = if (incompleteIds.isEmpty()) {
+                emptyMap()
+            } else {
+                table.selectAll().where { table.id inList incompleteIds }.toList().associateBy { it[table.id] }
+            }
+
             currentBatch.forEachIndexed { idx, entity ->
-                val resultRow = genRows[idx]
-                adoptInsertResult(entity, resultRow, stagedSnapshots[idx], table)
+                val values = staged.acquire(entity, transaction)
+                values.dirty.clear()
+                values.stageRow(rereadRows[entity.id] ?: genRows[idx])
+
+                store(entity)
+                transaction.registerChange(entity.klass, entity.id, EntityChangeType.Created)
             }
         }
 
@@ -473,24 +504,33 @@ class EntityCache(private val transaction: R2dbcTransaction) {
         entities: List<Entity<*>>,
         table: IdTable<*>
     ): Pair<List<Entity<*>>, List<Entity<*>>> {
-        val firstEntityColumns = dirtyValues(entities.first()).keys
+        fun isAwaitingRowOfSameTable(entity: Entity<*>) = dirtyValues(entity).any { (column, value) ->
+            column.referee == table.id && value is EntityID<*> && value._value == null
+        }
+
+        val anchor = entities.firstOrNull { !isAwaitingRowOfSameTable(it) }
+        checkNotNull(anchor) {
+            "Cannot flush the inserts scheduled for ${table.tableName}: every one of them has a foreign key " +
+                "to a row of that table that has not been inserted yet, so there is none to send first. " +
+                "Either those references form a cycle, or one points at an entity whose insert was withdrawn."
+        }
+        val anchorColumns = dirtyValues(anchor).keys
+
         return entities.partition { entity ->
-            val values = dirtyValues(entity)
-            val refereeFromSameTableAlreadyCreated = values.none { (key, value) ->
-                key.referee == table.id && value is EntityID<*> && value._value == null
-            }
-            val columnSetAlignedWithFirstEntity = values.keys == firstEntityColumns
-            refereeFromSameTableAlreadyCreated && columnSetAlignedWithFirstEntity
+            !isAwaitingRowOfSameTable(entity) && dirtyValues(entity).keys == anchorColumns
         }
     }
 
+    /**
+     * @return whether the row is now complete; if it is not, the missing columns have to be read back.
+     */
     @Suppress("UNCHECKED_CAST")
-    private suspend fun <ID : Any> adoptInsertResult(
+    private fun <ID : Any> adoptGeneratedValues(
         entity: Entity<*>,
         resultRow: ResultRow,
         stagedSnapshot: Map<Column<Any?>, Any?>,
         table: IdTable<ID>
-    ) {
+    ): Boolean {
         val entityId = entity.id as EntityID<ID>
         val generatedId = resultRow[table.id]
         if (entityId._value == null) {
@@ -502,18 +542,7 @@ class EntityCache(private val transaction: R2dbcTransaction) {
             if (!resultRow.hasValue(column)) resultRow[column] = value
         }
 
-        val row = if (table.columns.any { !resultRow.hasValue(it) }) {
-            table.selectAll().where { table.id eq entityId }.firstOrNull() ?: resultRow
-        } else {
-            resultRow
-        }
-
-        val values = staged.acquire(entity, transaction)
-        values.dirty.clear()
-        values.stageRow(row)
-
-        store(entity)
-        transaction.registerChange(entity.klass, entity.id, EntityChangeType.Created)
+        return table.columns.all { resultRow.hasValue(it) }
     }
 }
 

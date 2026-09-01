@@ -533,13 +533,14 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
         // also need to drop the entity from the scheduled inserts. JDBC doesn't need this because
         // the lifecycle interceptor flushes inserts before the DELETE statement.
         cache.inserts[table]?.remove(entity)
-        cache.referrers.forEach { (col, referrers) ->
-            // Remove references from entity to other entities
-            referrers.remove(entity.id)
 
-            // Remove references from other entities to this entity
+        val cachedUnder = entity.id.takeIf { it._value != null }
+        cache.referrers.forEach { (col, referrers) ->
+            cachedUnder?.let { referrers.remove(it) }
+
             if (col.table == table) {
-                with(entity) { col.lookup() }?.let { referrers.remove(it as EntityID<*>) }
+                val parentId = with(entity) { col.lookup() } as EntityID<*>?
+                parentId?.takeIf { it._value != null }?.let { referrers.remove(it) }
             }
         }
     }
@@ -844,15 +845,15 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
                     targetEntities.getOrPut(targetId) { wrapRow(it) }
                 }
                 it[sourceRefColumn] to targetId
-            }
+            }.toList()
 
             if (optimizedLoad) {
-                forEntityIds(entitiesWithRefs.map { it.second }.toList()).collect {
+                forEntityIds(entitiesWithRefs.map { it.second }).collect {
                     targetEntities[it.id] = it
                 }
             }
 
-            val groupedBySourceId = entitiesWithRefs.toList().groupBy({ it.first }) { targetEntities.getValue(it.second) }
+            val groupedBySourceId = entitiesWithRefs.groupBy({ it.first }) { targetEntities.getValue(it.second) }
 
             idsToLoad.forEach {
                 transaction.entityCache.getOrPutReferrers(it, sourceRefColumn) {

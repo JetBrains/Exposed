@@ -73,8 +73,12 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
          * @param bindUntyped Sends the value as an untyped parameter on PostgreSQL, which the server then coerces
          * to the enum type. Use it to bind an enum over a connection with no [EnumCodec] registered; the resulting
          * value is not usable as a DDL default, so it is opt-in.
+         * @param ddlSafeName On PostgreSQL, converts the enum to its plain name (e.g. `Bar`) instead of the raw enum
+         * value. The raw enum's `toString()` is overridden here, so using it for a `DEFAULT` clause would emit an
+         * invalid literal (`'Foo Enum ToString: Bar'`); this option keeps the DDL default valid. Only suitable when
+         * the column value is never bound as a parameter (the insert relies on the database-side default).
          */
-        internal fun initEnumColumn(sql: String, bindUntyped: Boolean = false) {
+        internal fun initEnumColumn(sql: String, bindUntyped: Boolean = false, ddlSafeName: Boolean = false) {
             (columns as MutableList<Column<*>>).remove(enumColumn)
             enumColumn = customEnumeration(
                 "enumColumn", sql,
@@ -83,6 +87,7 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
                     when {
                         currentDialectTest !is PostgreSQLDialect -> value.name
                         bindUntyped -> Parameters.`in`(PostgresqlObjectId.UNSPECIFIED, value.name)
+                        ddlSafeName -> value.name
                         else -> value
                     }
                 }
@@ -158,7 +163,9 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
                     exec("DROP TYPE IF EXISTS FooEnum2;")
                     exec("CREATE TYPE FooEnum2 AS ENUM ('Bar', 'Baz');")
                 }
-                EnumTable.initEnumColumn(sqlType)
+                // `ddlSafeName` makes the PostgreSQL DEFAULT render as 'Bar' rather than the enum's overridden
+                // toString(); this test never binds the enum (the insert uses the database-side default).
+                EnumTable.initEnumColumn(sqlType, ddlSafeName = true)
                 with(EnumTable) {
                     enumColumn.default(Foo.Bar)
                 }
