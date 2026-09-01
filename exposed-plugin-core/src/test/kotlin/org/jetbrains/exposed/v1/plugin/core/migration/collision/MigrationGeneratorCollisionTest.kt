@@ -92,6 +92,7 @@ class MigrationGeneratorCollisionTest {
                 databaseUrl = "jdbc:h2:mem:${UUID.randomUUID()}",
                 databaseUser = "",
                 databasePassword = "",
+                tablesPackages = emptyList()
             ),
             logger = object : MigrationLogger {
                 override fun lifecycle(message: String) = Unit

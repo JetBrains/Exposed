@@ -14,7 +14,8 @@ import kotlin.math.abs
 import kotlin.test.assertTrue
 
 class VectorColumnTypeTests : R2dbcDatabaseTestsBase() {
-    private val vectorTypeSupportedDb = setOf(TestDB.ORACLE, TestDB.MARIADB, TestDB.POSTGRESQL, TestDB.SQLSERVER)
+    // SQL Server vector support relies on the JDBC-only `microsoft.sql.Vector` type, which is not available over R2DBC,
+    private val vectorTypeSupportedDb = setOf(TestDB.ORACLE, TestDB.MARIADB, TestDB.POSTGRESQL)
 
     object VectorEntityTable : IntIdTable("vector_tester") {
         val embedding = vector("embedding", dimensions = 5)

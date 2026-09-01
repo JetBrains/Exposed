@@ -9,9 +9,12 @@ import org.jetbrains.exposed.v1.dao.r2dbc.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.v1.dao.r2dbc.flushCache
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.tests.NOT_APPLICABLE_TO_JDBC
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
+import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
+import org.junit.jupiter.api.Tag
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -412,6 +415,30 @@ class AttachEntityTests : R2dbcDatabaseTestsBase() {
                 maxAttempts = 1
                 assertEquals("original", Items.selectAll().single()[Items.name])
             }
+        }
+    }
+
+    @Tag(NOT_APPLICABLE_TO_JDBC)
+    @Test
+    fun testForceDetachDiscardsOnlyUnissuedValuesFromEnclosingTransaction() {
+        withTables(Items, configure = { useNestedTransactions = true }) {
+            val item = Item.newSuspend { name = "original" }
+            flushCache()
+            commit()
+
+            item.name = "issued"
+            flushCache()
+            item.name = "discarded"
+
+            suspendTransaction {
+                maxAttempts = 1
+                Item.detach(item, force = true)
+            }
+
+            flushCache()
+            commit()
+
+            assertEquals("issued", Items.selectAll().single()[Items.name])
         }
     }
 

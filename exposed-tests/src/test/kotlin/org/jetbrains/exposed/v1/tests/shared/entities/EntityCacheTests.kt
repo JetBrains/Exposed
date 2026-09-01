@@ -40,8 +40,21 @@ class EntityCacheTests : DatabaseTestsBase() {
 
     class TestEntity(id: EntityID<Int>) : IntEntity(id) {
         var value by TestTable.value
+        val children by TestChildEntity referrersOn TestChildTable.parent
 
         companion object : IntEntityClass<TestEntity>(TestTable)
+    }
+
+    object TestChildTable : IntIdTable("TestCacheChild") {
+        val parent = reference("parent", TestTable)
+        val name = varchar("name", 50)
+    }
+
+    class TestChildEntity(id: EntityID<Int>) : IntEntity(id) {
+        var name by TestChildTable.name
+        var parent by TestEntity referencedOn TestChildTable.parent
+
+        companion object : IntEntityClass<TestChildEntity>(TestChildTable)
     }
 
     @Test
@@ -377,6 +390,55 @@ class EntityCacheTests : DatabaseTestsBase() {
             entityCache.flush()
 
             assertEquals(2, TestTable.selectAll().single()[TestTable.value])
+        }
+    }
+
+    @Test
+    fun testReferenceRepointedToEntityWithPendingInsert() {
+        withTables(TestTable, TestChildTable) {
+            val existing = TestEntity.new { value = 1 }
+            TestChildEntity.new {
+                name = "c"
+                parent = existing
+            }
+            flushCache()
+
+            // caches the referrer list under `existing.id` in entityCache.referrers[TestChildTable.parent]
+            assertEquals(1, existing.children.toList().size)
+
+            val pending = TestEntity.new { value = 2 }
+            val child = existing.children.toList().single()
+
+            child.parent = pending
+            flushCache()
+
+            assertEquals(pending.id.value, TestChildTable.selectAll().single()[TestChildTable.parent].value)
+            assertEquals(0, existing.children.toList().size)
+            assertEquals("c", pending.children.toList().single().name)
+        }
+    }
+
+    @Test
+    fun testDeletingEntityWithPendingInsert() {
+        withTables(TestTable, TestChildTable) {
+            val existing = TestEntity.new { value = 1 }
+            TestChildEntity.new {
+                name = "c"
+                parent = existing
+            }
+            flushCache()
+
+            // caches a referrer list, so removeFromCache has something to iterate
+            assertEquals(1, existing.children.toList().size)
+
+            val pending = TestEntity.new { value = 2 }
+            pending.delete()
+            flushCache()
+
+            val rows = TestTable.selectAll().toList()
+            assertEquals(1, rows.size)
+            assertEquals(1, rows.single()[TestTable.value])
+            assertEquals(1, existing.children.toList().size)
         }
     }
 }

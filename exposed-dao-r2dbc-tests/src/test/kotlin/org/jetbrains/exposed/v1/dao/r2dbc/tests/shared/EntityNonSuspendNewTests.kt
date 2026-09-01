@@ -5,8 +5,10 @@ import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.UuidTable
+import org.jetbrains.exposed.v1.core.intLiteral
 import org.jetbrains.exposed.v1.core.statements.StatementContext
 import org.jetbrains.exposed.v1.core.statements.StatementType
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.dao.r2dbc.EntityChangeType
 import org.jetbrains.exposed.v1.dao.r2dbc.IntEntity
 import org.jetbrains.exposed.v1.dao.r2dbc.IntEntityClass
@@ -20,6 +22,8 @@ import org.jetbrains.exposed.v1.r2dbc.statements.SuspendStatementInterceptor
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.v1.r2dbc.tests.NOT_APPLICABLE_TO_JDBC
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.Tag
 import kotlin.test.Test
@@ -45,11 +49,24 @@ class EntityNonSuspendNewTests : R2dbcDatabaseTestsBase() {
         val label = varchar("label", 50)
     }
 
+    /** Has a column that the insert neither sends nor gets back, so the flush has to read it. */
+    object Stamped : IntIdTable("stamped_nu") {
+        val name = varchar("name", 50)
+        val stamp = integer("stamp").defaultExpression(intLiteral(7))
+    }
+
     class Author(id: EntityID<Int>) : IntEntity(id) {
         var name by Authors.name
         val books by Book referrersOn Books.author
 
         companion object : IntEntityClass<Author>(Authors)
+    }
+
+    class StampedEntity(id: EntityID<Int>) : IntEntity(id) {
+        var name by Stamped.name
+        val stamp by Stamped.stamp
+
+        companion object : IntEntityClass<StampedEntity>(Stamped)
     }
 
     class Book(id: EntityID<Int>) : IntEntity(id) {
@@ -69,6 +86,7 @@ class EntityNonSuspendNewTests : R2dbcDatabaseTestsBase() {
         private val counts = mutableMapOf<StatementType, Int>()
 
         val inserts: Int get() = counts[StatementType.INSERT] ?: 0
+        val selects: Int get() = counts[StatementType.SELECT] ?: 0
         val updates: Int get() = counts[StatementType.UPDATE] ?: 0
         val deletes: Int get() = counts[StatementType.DELETE] ?: 0
 
@@ -122,7 +140,9 @@ class EntityNonSuspendNewTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testPendingInsertsShareASingleBatch() {
-        withTables(Authors) {
+        // Oracle's R2DBC driver cannot return generated values from a batched statement, so there the
+        // DAO sends one INSERT per entity instead.
+        withTables(excludeSettings = listOf(TestDB.ORACLE), Authors) { testDb ->
             val counter = StatementCounter()
             registerInterceptor(counter)
 
@@ -221,7 +241,8 @@ class EntityNonSuspendNewTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testExplicitIdIsUsableBeforeTheInsert() {
-        withTables(Authors) {
+        // SQL Server doesn't allow inserting an explicit value into an auto-increment (identity) column
+        withTables(excludeSettings = listOf(TestDB.SQLSERVER), Authors) {
             val counter = StatementCounter()
             registerInterceptor(counter)
 
@@ -294,6 +315,29 @@ class EntityNonSuspendNewTests : R2dbcDatabaseTestsBase() {
 
             assertEquals(1, counter.inserts)
             assertNotNull(author1.id._value)
+        }
+    }
+
+    @Tag(NOT_APPLICABLE_TO_JDBC)
+    @Test
+    fun testFlushReadsMissingValuesBackInOneQuery() {
+        withTables(Stamped) {
+            val counter = StatementCounter()
+            registerInterceptor(counter)
+
+            val entities = (1..5).map { number -> StampedEntity.new { name = "n$number" } }
+            flushCache()
+
+            // A database-side default is neither sent with the insert nor returned by the driver, so the flush has to
+            // read those values back -- with one query for the whole batch, not one per inserted row.
+            val insertReturnsAllColumns = currentDialectTest is PostgreSQLDialect
+            val expectedSelects = if (insertReturnsAllColumns) 0 else 1
+            assertEquals(
+                expectedSelects,
+                counter.selects,
+                "missing values are read back in one query unless the insert already returns all columns"
+            )
+            assertEquals(5, entities.count { it.stamp == 7 })
         }
     }
 }

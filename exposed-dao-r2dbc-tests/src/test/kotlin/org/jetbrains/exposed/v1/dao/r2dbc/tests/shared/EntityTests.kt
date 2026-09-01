@@ -356,6 +356,25 @@ class EntityTests : R2dbcDatabaseTestsBase() {
     }
 
     @Test
+    @Timeout(value = 30, unit = TimeUnit.SECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    fun testSelfReferenceToEntityWithPendingInsert() {
+        withTables(SelfReferenceTable) {
+            // the referring entity is scheduled first, so the insert order has to come from the reference
+            val child = SelfReferencedEntity.new { }
+            val parent = SelfReferencedEntity.new { }
+            child.parent = parent.id
+            flushCache()
+
+            val parentIds = SelfReferenceTable.selectAll()
+                .toList()
+                .associate { it[SelfReferenceTable.id] to it[SelfReferenceTable.parentId] }
+            assertEquals(2, parentIds.size)
+            assertEquals(parent.id, parentIds[child.id])
+            assertNull(parentIds[parent.id])
+        }
+    }
+
+    @Test
     fun testNonEntityIdReference() {
         withTables(Posts, Boards, Categories) {
             val category1 = Category.newSuspend {

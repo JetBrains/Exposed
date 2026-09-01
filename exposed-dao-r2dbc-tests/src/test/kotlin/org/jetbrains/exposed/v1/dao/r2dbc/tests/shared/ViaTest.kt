@@ -29,12 +29,14 @@ import org.jetbrains.exposed.v1.dao.r2dbc.flushCache
 import org.jetbrains.exposed.v1.dao.r2dbc.with
 import org.jetbrains.exposed.v1.r2dbc.SizedCollection
 import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.tests.NOT_APPLICABLE_TO_JDBC
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
+import org.junit.jupiter.api.Tag
 import java.util.Objects
 import kotlin.test.Test
 import kotlin.test.assertFalse
@@ -217,9 +219,13 @@ class ViaTest : R2dbcDatabaseTestsBase() {
      * created during the same transaction, and the relation is read back through `Flow.map`.
      */
     @Test
+    @Tag(NOT_APPLICABLE_TO_JDBC)
     fun testReadBackAssignedLinksAfterFindByIdWithoutExplicitFlush() {
         withTables(*ViaTestData.allTables) {
             val numberId = VNumber.newSuspend { number = 7 }.id
+            // The read-back below runs in a separate top-level transaction, so the parent must be committed first;
+            // otherwise a fresh connection cannot see the uncommitted row (e.g. on Oracle) and findById returns null.
+            commit()
 
             inTopLevelSuspendTransaction {
                 val n = VNumber.findById(numberId)!!
