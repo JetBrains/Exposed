@@ -45,24 +45,24 @@ class SequenceAutoIncrementTests : R2dbcDatabaseTestsBase() {
             when (testDb) {
                 in TestDB.ALL_POSTGRES -> {
                     assertEquals(3, statements.size)
-                    assertEquals(expectedCreateSequenceStatement("test_table_id_seq"), statements[0])
-                    assertEquals("ALTER TABLE test_table ALTER COLUMN id SET DEFAULT nextval('test_table_id_seq')", statements[1])
-                    assertEquals("ALTER SEQUENCE test_table_id_seq OWNED BY test_table.id", statements[2])
+                    assertEquals(expectedCreateSequenceStatement("r2dbc_autoinc_test_table_id_seq"), statements[0])
+                    assertEquals("ALTER TABLE r2dbc_autoinc_test_table ALTER COLUMN id SET DEFAULT nextval('r2dbc_autoinc_test_table_id_seq')", statements[1])
+                    assertEquals("ALTER SEQUENCE r2dbc_autoinc_test_table_id_seq OWNED BY r2dbc_autoinc_test_table.id", statements[2])
                 }
                 TestDB.SQLSERVER -> {
                     assertEquals(3, statements.size)
-                    assertEquals("ALTER TABLE test_table ADD NEW_id BIGINT IDENTITY(1,1)", statements[0])
-                    assertEquals("ALTER TABLE test_table DROP COLUMN id", statements[1])
-                    assertEquals("EXEC sp_rename 'test_table.NEW_id', 'id', 'COLUMN'", statements[2])
+                    assertEquals("ALTER TABLE r2dbc_autoinc_test_table ADD NEW_id BIGINT IDENTITY(1,1)", statements[0])
+                    assertEquals("ALTER TABLE r2dbc_autoinc_test_table DROP COLUMN id", statements[1])
+                    assertEquals("EXEC sp_rename 'r2dbc_autoinc_test_table.NEW_id', 'id', 'COLUMN'", statements[2])
                 }
                 in TestDB.ALL_ORACLE_LIKE -> {
                     assertEquals(1, statements.size)
-                    assertEquals(expectedCreateSequenceStatement("test_table_id_seq"), statements[0])
+                    assertEquals(expectedCreateSequenceStatement("r2dbc_autoinc_test_table_id_seq"), statements[0])
                 }
                 else -> {
                     assertEquals(1, statements.size)
                     val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
-                    assertTrue(statements[0].startsWith("ALTER TABLE test_table $alterColumnWord COLUMN id ", ignoreCase = true))
+                    assertTrue(statements[0].startsWith("ALTER TABLE r2dbc_autoinc_test_table $alterColumnWord COLUMN id ", ignoreCase = true))
                 }
             }
         }
@@ -82,7 +82,7 @@ class SequenceAutoIncrementTests : R2dbcDatabaseTestsBase() {
                 assertEquals(expectedCreateSequenceStatement(MigrationTestsData.SEQUENCE_NAME), statements[0])
             } else {
                 val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
-                assertTrue(statements[0].equals("ALTER TABLE TEST_TABLE $alterColumnWord COLUMN ID BIGINT AUTO_INCREMENT NOT NULL", ignoreCase = true))
+                assertTrue(statements[0].equals("ALTER TABLE r2dbc_autoinc_test_table $alterColumnWord COLUMN ID BIGINT AUTO_INCREMENT NOT NULL", ignoreCase = true))
             }
         }
     }
@@ -105,12 +105,12 @@ class SequenceAutoIncrementTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testDropAutoIncrementOnExistingColumn() {
-        val tableWithAutoIncrement = object : IdTable<Long>("test_table") {
+        val tableWithAutoIncrement = object : IdTable<Long>("r2dbc_autoinc_test_table") {
             override val id: Column<EntityID<Long>> = long("id").autoIncrement().entityId()
 
             override val primaryKey = PrimaryKey(id)
         }
-        val tableWithoutAutoIncrement = object : IdTable<Long>("test_table") {
+        val tableWithoutAutoIncrement = object : IdTable<Long>("r2dbc_autoinc_test_table") {
             override val id: Column<EntityID<Long>> = long("id").entityId()
 
             override val primaryKey = PrimaryKey(id)
@@ -123,17 +123,17 @@ class SequenceAutoIncrementTests : R2dbcDatabaseTestsBase() {
             when (testDb) {
                 in TestDB.ALL_POSTGRES -> {
                     assertEquals(2, statements.size)
-                    assertEquals("ALTER TABLE test_table ALTER COLUMN id TYPE BIGINT, ALTER COLUMN id DROP DEFAULT", statements[0])
-                    assertEquals(expectedDropSequenceStatement("test_table_id_seq"), statements[1])
+                    assertEquals("ALTER TABLE r2dbc_autoinc_test_table ALTER COLUMN id TYPE BIGINT, ALTER COLUMN id DROP DEFAULT", statements[0])
+                    assertEquals(expectedDropSequenceStatement("r2dbc_autoinc_test_table_id_seq"), statements[1])
                 }
                 in TestDB.ALL_ORACLE_LIKE -> {
                     assertEquals(1, statements.size)
-                    assertTrue(statements[0].equals(expectedDropSequenceStatement("test_table_id_seq"), ignoreCase = true))
+                    assertTrue(statements[0].equals(expectedDropSequenceStatement("r2dbc_autoinc_test_table_id_seq"), ignoreCase = true))
                 }
                 else -> {
                     assertEquals(1, statements.size)
                     val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
-                    assertTrue(statements[0].equals("ALTER TABLE test_table $alterColumnWord COLUMN id BIGINT", ignoreCase = true))
+                    assertTrue(statements[0].equals("ALTER TABLE r2dbc_autoinc_test_table $alterColumnWord COLUMN id BIGINT", ignoreCase = true))
                 }
             }
         }
@@ -142,12 +142,12 @@ class SequenceAutoIncrementTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testAddSequenceNameToExistingAutoIncrementColumn() {
         val sequenceName = "custom_sequence"
-        val tableWithAutoIncrement = object : IdTable<Long>("test_table") {
+        val tableWithAutoIncrement = object : IdTable<Long>("r2dbc_autoinc_test_table") {
             override val id: Column<EntityID<Long>> = long("id").autoIncrement().entityId()
 
             override val primaryKey = PrimaryKey(id)
         }
-        val tableWithAutoIncrementSequenceName = object : IdTable<Long>("test_table") {
+        val tableWithAutoIncrementSequenceName = object : IdTable<Long>("r2dbc_autoinc_test_table") {
             override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequenceName).entityId()
 
             override val primaryKey = PrimaryKey(id)
@@ -162,15 +162,15 @@ class SequenceAutoIncrementTests : R2dbcDatabaseTestsBase() {
                 when (testDb) {
                     in TestDB.ALL_POSTGRES -> {
                         assertEquals(3, statements.size)
-                        assertEquals("ALTER TABLE test_table ALTER COLUMN id TYPE BIGINT, ALTER COLUMN id DROP DEFAULT", statements[1])
-                        assertEquals(expectedDropSequenceStatement("test_table_id_seq"), statements[2])
+                        assertEquals("ALTER TABLE r2dbc_autoinc_test_table ALTER COLUMN id TYPE BIGINT, ALTER COLUMN id DROP DEFAULT", statements[1])
+                        assertEquals(expectedDropSequenceStatement("r2dbc_autoinc_test_table_id_seq"), statements[2])
                     }
                     in TestDB.ALL_ORACLE_LIKE -> {
-                        assertTrue(statements[1].equals(expectedDropSequenceStatement("test_table_id_seq"), ignoreCase = true))
+                        assertTrue(statements[1].equals(expectedDropSequenceStatement("r2dbc_autoinc_test_table_id_seq"), ignoreCase = true))
                     }
                     else -> {
                         val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
-                        assertTrue(statements[1].startsWith("ALTER TABLE test_table $alterColumnWord COLUMN id BIGINT", ignoreCase = true))
+                        assertTrue(statements[1].startsWith("ALTER TABLE r2dbc_autoinc_test_table $alterColumnWord COLUMN id BIGINT", ignoreCase = true))
                     }
                 }
             }
@@ -184,7 +184,7 @@ class SequenceAutoIncrementTests : R2dbcDatabaseTestsBase() {
                 try {
                     // MariaDB does not allow to create auto column without defining it as a key
                     val tableWithAutoIncrement = if (testDb == TestDB.MARIADB) {
-                        object : IdTable<Long>("test_table") {
+                        object : IdTable<Long>("r2dbc_autoinc_test_table") {
                             override val id: Column<EntityID<Long>> = long("id").autoIncrement().entityId()
                             override val primaryKey = PrimaryKey(id)
                         }
@@ -203,17 +203,17 @@ class SequenceAutoIncrementTests : R2dbcDatabaseTestsBase() {
                     when (testDb) {
                         in TestDB.ALL_POSTGRES -> {
                             assertEquals(3, statements.size)
-                            assertEquals("ALTER TABLE test_table ALTER COLUMN id TYPE BIGINT, ALTER COLUMN id DROP DEFAULT", statements[1])
-                            assertEquals(expectedDropSequenceStatement("test_table_id_seq"), statements[2])
+                            assertEquals("ALTER TABLE r2dbc_autoinc_test_table ALTER COLUMN id TYPE BIGINT, ALTER COLUMN id DROP DEFAULT", statements[1])
+                            assertEquals(expectedDropSequenceStatement("r2dbc_autoinc_test_table_id_seq"), statements[2])
                         }
                         in TestDB.ALL_ORACLE_LIKE -> {
                             assertEquals(2, statements.size)
-                            assertTrue(statements[1].equals(expectedDropSequenceStatement("test_table_id_seq"), ignoreCase = true))
+                            assertTrue(statements[1].equals(expectedDropSequenceStatement("r2dbc_autoinc_test_table_id_seq"), ignoreCase = true))
                         }
                         else -> {
                             assertEquals(2, statements.size)
                             val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
-                            assertTrue(statements[1].startsWith("ALTER TABLE test_table $alterColumnWord COLUMN id BIGINT", ignoreCase = true))
+                            assertTrue(statements[1].startsWith("ALTER TABLE r2dbc_autoinc_test_table $alterColumnWord COLUMN id BIGINT", ignoreCase = true))
                         }
                     }
                 } finally {
@@ -270,30 +270,30 @@ class SequenceAutoIncrementTests : R2dbcDatabaseTestsBase() {
                         in TestDB.ALL_POSTGRES -> {
                             // previous sequence used by column is altered but no longer dropped as not linked
                             assertEquals(3, statements.size)
-                            assertEquals(expectedCreateSequenceStatement("test_table_id_seq"), statements[0])
-                            assertEquals("ALTER TABLE test_table ALTER COLUMN id SET DEFAULT nextval('test_table_id_seq')", statements[1])
-                            assertEquals("ALTER SEQUENCE test_table_id_seq OWNED BY test_table.id", statements[2])
+                            assertEquals(expectedCreateSequenceStatement("r2dbc_autoinc_test_table_id_seq"), statements[0])
+                            assertEquals("ALTER TABLE r2dbc_autoinc_test_table ALTER COLUMN id SET DEFAULT nextval('r2dbc_autoinc_test_table_id_seq')", statements[1])
+                            assertEquals("ALTER SEQUENCE r2dbc_autoinc_test_table_id_seq OWNED BY r2dbc_autoinc_test_table.id", statements[2])
                         }
                         TestDB.SQLSERVER -> {
                             assertEquals(4, statements.size)
-                            assertEquals("ALTER TABLE test_table ADD NEW_id BIGINT IDENTITY(1,1)", statements[0])
-                            assertEquals("ALTER TABLE test_table DROP COLUMN id", statements[1])
-                            assertEquals("EXEC sp_rename 'test_table.NEW_id', 'id', 'COLUMN'", statements[2])
+                            assertEquals("ALTER TABLE r2dbc_autoinc_test_table ADD NEW_id BIGINT IDENTITY(1,1)", statements[0])
+                            assertEquals("ALTER TABLE r2dbc_autoinc_test_table DROP COLUMN id", statements[1])
+                            assertEquals("EXEC sp_rename 'r2dbc_autoinc_test_table.NEW_id', 'id', 'COLUMN'", statements[2])
                             assertEquals(expectedDropSequenceStatement(MigrationTestsData.SEQUENCE_NAME), statements[3])
                         }
                         in TestDB.ALL_ORACLE_LIKE -> {
                             assertEquals(2, statements.size)
-                            assertEquals(expectedCreateSequenceStatement("test_table_id_seq"), statements[0])
+                            assertEquals(expectedCreateSequenceStatement("r2dbc_autoinc_test_table_id_seq"), statements[0])
                             assertTrue(statements[1].equals(expectedDropSequenceStatement(MigrationTestsData.SEQUENCE_NAME), ignoreCase = true))
                         }
                         TestDB.MARIADB -> {
                             assertEquals(2, statements.size)
-                            assertEquals("ALTER TABLE test_table MODIFY COLUMN id BIGINT AUTO_INCREMENT NOT NULL", statements[0])
+                            assertEquals("ALTER TABLE r2dbc_autoinc_test_table MODIFY COLUMN id BIGINT AUTO_INCREMENT NOT NULL", statements[0])
                             assertEquals(expectedDropSequenceStatement(MigrationTestsData.SEQUENCE_NAME), statements[1])
                         }
                         else -> {
                             assertEquals(2, statements.size)
-                            assertTrue(statements[0].startsWith("ALTER TABLE TEST_TABLE ALTER COLUMN ID", ignoreCase = true))
+                            assertTrue(statements[0].startsWith("ALTER TABLE r2dbc_autoinc_test_table ALTER COLUMN ID", ignoreCase = true))
                             assertTrue(statements[1].equals(expectedDropSequenceStatement(MigrationTestsData.SEQUENCE_NAME), ignoreCase = true))
                         }
                     }
@@ -384,32 +384,32 @@ class SequenceAutoIncrementTests : R2dbcDatabaseTestsBase() {
                         in TestDB.ALL_POSTGRES -> {
                             // previous sequence used by column is altered but no longer dropped as not linked
                             assertEquals(3, statements.size)
-                            assertEquals(expectedCreateSequenceStatement("test_table_id_seq"), statements[0])
-                            assertEquals("ALTER TABLE test_table ALTER COLUMN id SET DEFAULT nextval('test_table_id_seq')", statements[1])
-                            assertEquals("ALTER SEQUENCE test_table_id_seq OWNED BY test_table.id", statements[2])
+                            assertEquals(expectedCreateSequenceStatement("r2dbc_autoinc_test_table_id_seq"), statements[0])
+                            assertEquals("ALTER TABLE r2dbc_autoinc_test_table ALTER COLUMN id SET DEFAULT nextval('r2dbc_autoinc_test_table_id_seq')", statements[1])
+                            assertEquals("ALTER SEQUENCE r2dbc_autoinc_test_table_id_seq OWNED BY r2dbc_autoinc_test_table.id", statements[2])
                         }
                         TestDB.SQLSERVER -> {
                             assertEquals(4, statements.size)
-                            assertEquals("ALTER TABLE test_table ADD NEW_id BIGINT IDENTITY(1,1)", statements[0])
-                            assertEquals("ALTER TABLE test_table DROP COLUMN id", statements[1])
-                            assertEquals("EXEC sp_rename 'test_table.NEW_id', 'id', 'COLUMN'", statements[2])
+                            assertEquals("ALTER TABLE r2dbc_autoinc_test_table ADD NEW_id BIGINT IDENTITY(1,1)", statements[0])
+                            assertEquals("ALTER TABLE r2dbc_autoinc_test_table DROP COLUMN id", statements[1])
+                            assertEquals("EXEC sp_rename 'r2dbc_autoinc_test_table.NEW_id', 'id', 'COLUMN'", statements[2])
                             assertEquals(expectedDropSequenceStatement(MigrationTestsData.customSequence.name), statements[3])
                         }
                         in TestDB.ALL_ORACLE_LIKE -> {
                             assertEquals(2, statements.size)
-                            assertEquals(expectedCreateSequenceStatement("test_table_id_seq"), statements[0])
+                            assertEquals(expectedCreateSequenceStatement("r2dbc_autoinc_test_table_id_seq"), statements[0])
                             assertTrue(
                                 statements[1].equals(expectedDropSequenceStatement(MigrationTestsData.customSequence.name), ignoreCase = true)
                             )
                         }
                         TestDB.MARIADB -> {
                             assertEquals(2, statements.size)
-                            assertEquals("ALTER TABLE test_table MODIFY COLUMN id BIGINT AUTO_INCREMENT NOT NULL", statements[0])
+                            assertEquals("ALTER TABLE r2dbc_autoinc_test_table MODIFY COLUMN id BIGINT AUTO_INCREMENT NOT NULL", statements[0])
                             assertEquals(expectedDropSequenceStatement(MigrationTestsData.customSequence.name), statements[1])
                         }
                         else -> {
                             assertEquals(2, statements.size)
-                            assertTrue(statements[0].startsWith("ALTER TABLE TEST_TABLE ALTER COLUMN ID", ignoreCase = true))
+                            assertTrue(statements[0].startsWith("ALTER TABLE r2dbc_autoinc_test_table ALTER COLUMN ID", ignoreCase = true))
                             assertTrue(
                                 statements[1].equals(expectedDropSequenceStatement(MigrationTestsData.customSequence.name), ignoreCase = true)
                             )
@@ -457,21 +457,21 @@ class SequenceAutoIncrementTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testOnlySpecifiedTableDropsSequence() {
-        val tableWithAutoIncrement = object : IntIdTable("test_table_auto") {}
+        val tableWithAutoIncrement = object : IntIdTable("r2dbc_autoinc_test_table_auto") {}
 
-        val tableWithoutAutoIncrement = object : IdTable<Int>("test_table_auto") {
+        val tableWithoutAutoIncrement = object : IdTable<Int>("r2dbc_autoinc_test_table_auto") {
             override val id: Column<EntityID<Int>> = integer("id").entityId()
             override val primaryKey = PrimaryKey(id)
         }
 
         val tableWithExplSequence by lazy {
-            object : Table("test_table_expl_seq") {
+            object : Table("r2dbc_autoinc_test_table_expl_seq") {
                 val counter = integer("counter").autoIncrement(MigrationTestsData.customSequence)
                 override val primaryKey = PrimaryKey(counter)
             }
         }
 
-        val tableWithImplSequence = object : IntIdTable("test_table_impl_seq") {}
+        val tableWithImplSequence = object : IntIdTable("r2dbc_autoinc_test_table_impl_seq") {}
 
         withDb(TestDB.ALL_POSTGRES) {
             try {
@@ -489,8 +489,8 @@ class SequenceAutoIncrementTests : R2dbcDatabaseTestsBase() {
 
                 val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tableWithoutAutoIncrement)
                 assertEquals(2, statements.size)
-                assertEquals("ALTER TABLE test_table_auto ALTER COLUMN id TYPE INT, ALTER COLUMN id DROP DEFAULT", statements[0])
-                assertEquals(expectedDropSequenceStatement("test_table_auto_id_seq"), statements[1])
+                assertEquals("ALTER TABLE r2dbc_autoinc_test_table_auto ALTER COLUMN id TYPE INT, ALTER COLUMN id DROP DEFAULT", statements[0])
+                assertEquals(expectedDropSequenceStatement("r2dbc_autoinc_test_table_auto_id_seq"), statements[1])
 
                 statements.forEach { exec(it) }
                 db.dialectMetadata.resetCaches()
