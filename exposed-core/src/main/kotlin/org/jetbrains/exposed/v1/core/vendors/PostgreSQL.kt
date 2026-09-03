@@ -392,6 +392,8 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
  */
 open class PostgreSQLDialect(override val name: String = dialectName) : VendorDialect(dialectName, PostgreSQLDataTypeProvider, PostgreSQLFunctionProvider) {
     override val supportsSubqueryUnions: Boolean = true
+    override val supportsCommonTableExpressions: Boolean = true
+    override val supportsRecursiveCommonTableExpressions: Boolean = true
 
     override val supportsOrderByNullsFirstLast: Boolean = true
 

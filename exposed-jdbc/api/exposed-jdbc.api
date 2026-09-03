@@ -54,7 +54,7 @@ public final class org/jetbrains/exposed/v1/jdbc/EmptySizedIterable : java/util/
 
 public final class org/jetbrains/exposed/v1/jdbc/Except : org/jetbrains/exposed/v1/jdbc/SetOperation {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery;)V
-	public fun copy ()Lorg/jetbrains/exposed/v1/jdbc/Intersect;
+	public fun copy ()Lorg/jetbrains/exposed/v1/jdbc/Except;
 	public synthetic fun copy ()Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
 	public fun getOperationName ()Ljava/lang/String;
 	public synthetic fun withDistinct (Z)Lorg/jetbrains/exposed/v1/core/AbstractQuery;
@@ -278,6 +278,7 @@ public class org/jetbrains/exposed/v1/jdbc/Query : org/jetbrains/exposed/v1/core
 	public static synthetic fun orderBy$default (Lorg/jetbrains/exposed/v1/jdbc/Query;Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/SortOrder;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/jdbc/Query;
 	public fun prepared (Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/jdbc/statements/api/JdbcPreparedStatementApi;
 	public fun setSet (Lorg/jetbrains/exposed/v1/core/FieldSet;)V
+	public fun snapshotForCte ()Lorg/jetbrains/exposed/v1/core/AbstractQuery;
 	public final fun where (Lkotlin/jvm/functions/Function0;)Lorg/jetbrains/exposed/v1/jdbc/Query;
 	public final fun where (Lorg/jetbrains/exposed/v1/core/Op;)Lorg/jetbrains/exposed/v1/jdbc/Query;
 	public final fun withDistinctOn ([Lkotlin/Pair;)Lorg/jetbrains/exposed/v1/jdbc/Query;
@@ -337,6 +338,8 @@ public final class org/jetbrains/exposed/v1/jdbc/SchemaUtils : org/jetbrains/exp
 public abstract class org/jetbrains/exposed/v1/jdbc/SetOperation : org/jetbrains/exposed/v1/core/AbstractQuery, org/jetbrains/exposed/v1/jdbc/SizedIterable, org/jetbrains/exposed/v1/jdbc/statements/BlockingExecutable {
 	public static final field Companion Lorg/jetbrains/exposed/v1/jdbc/SetOperation$Companion;
 	public synthetic fun <init> (Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun copyTo (Lorg/jetbrains/exposed/v1/core/AbstractQuery;)V
+	public fun copyTo (Lorg/jetbrains/exposed/v1/jdbc/SetOperation;)V
 	public fun count ()J
 	public fun empty ()Z
 	public synthetic fun execute (Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;)Ljava/lang/Object;
@@ -352,6 +355,7 @@ public abstract class org/jetbrains/exposed/v1/jdbc/SetOperation : org/jetbrains
 	public fun getStatement ()Lorg/jetbrains/exposed/v1/jdbc/SetOperation;
 	protected final fun getTransaction ()Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;
 	public fun isAlwaysBatch ()Z
+	public fun isGeneratedCteField (I)Z
 	public fun iterator ()Ljava/util/Iterator;
 	public fun limit (I)Lorg/jetbrains/exposed/v1/jdbc/SetOperation;
 	public synthetic fun limit (I)Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
@@ -365,6 +369,7 @@ public abstract class org/jetbrains/exposed/v1/jdbc/SetOperation : org/jetbrains
 	public fun prepareSQL (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)Ljava/lang/String;
 	protected fun prepareStatementSQL (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 	public fun prepared (Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/jdbc/statements/api/JdbcPreparedStatementApi;
+	public fun snapshotForCte ()Lorg/jetbrains/exposed/v1/core/AbstractQuery;
 }
 
 public final class org/jetbrains/exposed/v1/jdbc/SetOperation$Companion {
