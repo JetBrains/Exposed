@@ -315,6 +315,8 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
  * SQLite dialect implementation.
  */
 open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQLiteFunctionProvider) {
+    override val supportsCommonTableExpressions: Boolean = true
+    override val supportsRecursiveCommonTableExpressions: Boolean = true
     override val supportsCreateSequence: Boolean = false
 
     override val supportsMultipleGeneratedKeys: Boolean = false

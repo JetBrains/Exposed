@@ -1991,6 +1991,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Table) return false
+        if (this is CommonTableExpressionReference || other is CommonTableExpressionReference) return false
 
         if (tableName != other.tableName) return false
 
@@ -2226,6 +2227,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 /** Returns the list of tables to which the columns in this column set belong. */
 fun ColumnSet.targetTables(): List<Table> = when (this) {
     is Alias<*> -> listOf(this.delegate)
+    is CommonTableExpression -> targetTables()
     is QueryAlias -> this.query.set.source.targetTables()
     is Table -> listOf(this)
     is Join -> this.table.targetTables() + this.joinParts.flatMap { it.joinPart.targetTables() }

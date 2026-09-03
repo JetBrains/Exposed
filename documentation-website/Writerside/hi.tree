@@ -47,6 +47,7 @@
         <toc-element topic="DSL-CRUD-operations.topic"/>
         <toc-element topic="Working-with-Sequence.topic"/>
         <toc-element topic="DSL-Querying-data.topic"/>
+        <toc-element topic="Common-table-expressions.md"/>
         <toc-element topic="DSL-Statement-Builder.md"/>
     </toc-element>
     <toc-element toc-title="Deep Dive into DAO">

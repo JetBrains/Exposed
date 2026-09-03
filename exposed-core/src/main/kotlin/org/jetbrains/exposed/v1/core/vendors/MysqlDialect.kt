@@ -370,6 +370,10 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider.INSTA
     override val supportsTernaryAffectedRowValues: Boolean = true
 
     override val supportsSubqueryUnions: Boolean = true
+    override val supportsCommonTableExpressions: Boolean
+        get() = isMysql8
+    override val supportsRecursiveCommonTableExpressions: Boolean
+        get() = isMysql8
 
     override val supportsOrderByNullsFirstLast: Boolean = false
 

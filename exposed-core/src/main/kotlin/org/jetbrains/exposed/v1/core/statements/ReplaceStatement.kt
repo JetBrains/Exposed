@@ -39,7 +39,7 @@ open class ReplaceSelectStatement(
     selectQuery: AbstractQuery<*>
 ) : InsertSelectStatement(columns, selectQuery) {
     override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
-        val querySql = selectQuery.prepareSQL(transaction, prepared)
+        val querySql = selectQuery.prepareAsSubquerySQL(transaction, prepared)
         val dialect = transaction.db.dialect
         val functionProvider = when (dialect.h2Mode) {
             H2Dialect.H2CompatibilityMode.MySQL, H2Dialect.H2CompatibilityMode.MariaDB -> MysqlFunctionProvider.INSTANCE
