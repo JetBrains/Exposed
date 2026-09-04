@@ -36,6 +36,7 @@ dependencies {
 
     implementation(project(":exposed-core"))
     implementation(project(":exposed-r2dbc"))
+    implementation(project(":exposed-dao-r2dbc"))
     implementation(project(":exposed-kotlin-datetime"))
 
     implementation(libs.slf4j)

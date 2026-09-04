@@ -17,19 +17,19 @@ import kotlin.uuid.Uuid
 import java.util.UUID as JavaUUID
 
 object MigrationTestsData {
-    object TableWithoutAutoIncrement : IdTable<Long>("test_table") {
+    object TableWithoutAutoIncrement : IdTable<Long>("r2dbc_autoinc_test_table") {
         override val id: Column<EntityID<Long>> = long("id").entityId()
     }
 
-    object TableWithAutoIncrement : IdTable<Long>("test_table") {
+    object TableWithAutoIncrement : IdTable<Long>("r2dbc_autoinc_test_table") {
         override val id: Column<EntityID<Long>> = long("id").autoIncrement().entityId()
     }
 
-    object TableWithAutoIncrementCustomSequence : IdTable<Long>("test_table") {
+    object TableWithAutoIncrementCustomSequence : IdTable<Long>("r2dbc_autoinc_test_table") {
         override val id: Column<EntityID<Long>> = long("id").autoIncrement(customSequence).entityId()
     }
 
-    object TableWithAutoIncrementSequenceName : IdTable<Long>("test_table") {
+    object TableWithAutoIncrementSequenceName : IdTable<Long>("r2dbc_autoinc_test_table") {
         override val id: Column<EntityID<Long>> = long("id").autoIncrement(SEQUENCE_NAME).entityId()
     }
 
