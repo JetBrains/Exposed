@@ -585,7 +585,7 @@ abstract class FunctionProvider {
     ): String {
         validateMergeStatement(transaction, clauses)
 
-        val using = source.query.prepareSQL(transaction, prepared)
+        val using = source.query.prepareAsSubquerySQL(transaction, prepared)
 
         val onRaw = if (currentDialect is OracleDialect) "($on)" else "$on"
 
