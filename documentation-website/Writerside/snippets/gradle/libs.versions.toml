@@ -37,6 +37,7 @@ exposed-kotlin-datetime = { module = "org.jetbrains.exposed:exposed-kotlin-datet
 exposed-java-time = { module = "org.jetbrains.exposed:exposed-java-time", version.ref = "exposed" }
 exposed-jodatime = { module = "org.jetbrains.exposed:exposed-jodatime", version.ref = "exposed" }
 exposed-json = { module= "org.jetbrains.exposed:exposed-json", version.ref = "exposed" }
+exposed-postgres = { module = "org.jetbrains.exposed:exposed-postgres", version.ref = "exposed" }
 exposed-migration-core = { module = "org.jetbrains.exposed:exposed-migration-core", version.ref = "exposed" }
 exposed-migration-jdbc = { module = "org.jetbrains.exposed:exposed-migration-jdbc", version.ref = "exposed" }
 slf4j = { module = "org.slf4j:slf4j-nop", version.ref = "slf4j" }

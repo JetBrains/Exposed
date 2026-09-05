@@ -4,12 +4,14 @@ import org.example.examples.*
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 val jsonExamples = JSONandJSONBExamples()
 val enumExamples = EnumerationExamples()
 val binaryExamples = BinaryExamples()
+val hstoreExamples = HstoreExamples()
 
 fun main() {
 //    runMySQLExamples()
@@ -74,7 +76,21 @@ fun runPostgreSQLExamples() {
         binaryExamples.basicUsage()
         binaryExamples.parameterBinding()
         runKotlinDateTimeExamples()
+        runHstoreExamples()
     }
+}
+
+fun JdbcTransaction.runHstoreExamples() {
+    exec("CREATE EXTENSION IF NOT EXISTS hstore")
+    SchemaUtils.create(ProductsTable)
+    hstoreExamples.example()
+    hstoreExamples.update()
+    hstoreExamples.useGet()
+    hstoreExamples.useContains()
+    hstoreExamples.useExists()
+    hstoreExamples.useExistsAllAndAny()
+    hstoreExamples.useDelete()
+    hstoreExamples.useConcat()
 }
 
 fun runJSONandJSONBExamples() {
