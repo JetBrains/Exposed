@@ -9,6 +9,7 @@ slf4j = "2.0.16"
 jackson = "2.18.+"
 kotlin = "2.2.20"
 flyway = "10.15.0"
+bouncycastle = "1.85"
 
 h2 = "2.4.240"
 mysql ="8.4.0"
@@ -43,6 +44,7 @@ exposed-migration-jdbc = { module = "org.jetbrains.exposed:exposed-migration-jdb
 slf4j = { module = "org.slf4j:slf4j-nop", version.ref = "slf4j" }
 jackson-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
 flyway = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
+bouncycastle = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
 
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
 mysql = { module = "com.mysql:mysql-connector-j", version.ref = "mysql"}

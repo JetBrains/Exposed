@@ -1,4 +1,4 @@
-@Suppress("MagicNumber")
+@file:Suppress("MagicNumber")
 
 package org.example.tables
 

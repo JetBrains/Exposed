@@ -96,9 +96,6 @@ Exposed `Hasher` API.
 Use the configured `Hasher` to hash a plaintext value before storing it:
 
 ```kotlin
-Users.insert {
-    it[password] = hasher.hash("s3cret")
-}
 ```
 {src="exposed-hashing-data/src/main/kotlin/org/example/App.kt" include-lines="28,30-31"}
 

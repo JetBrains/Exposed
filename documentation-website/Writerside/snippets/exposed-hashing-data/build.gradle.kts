@@ -12,22 +12,12 @@ repositories {
 }
 
 dependencies {
-    // Use the Kotlin JUnit 5 integration.
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-
-    // Use the JUnit 5 integration.
-    testImplementation(libs.junit.jupiter.engine)
-
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
-    // This dependency is used by the application.
-    implementation(libs.guava)
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.crypt)
+    implementation(libs.bouncycastle)
 
     implementation(libs.h2)
-    implementation(libs.flyway)
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -40,16 +30,4 @@ java {
 application {
     // Define the main class for the application.
     mainClass = "org.example.AppKt"
-}
-
-tasks.named<Test>("test") {
-    // Use JUnit Platform for unit tests.
-    useJUnitPlatform()
-}
-
-tasks.register<JavaExec>("generateMigrationScript") {
-    group = "application"
-    description = "Generate a migration script in the path exposed-migrations/src/main/kotlin/org/example/migrations"
-    classpath = sourceSets.main.get().runtimeClasspath
-    mainClass = "org.example.GenerateMigrationScriptKt"
 }
