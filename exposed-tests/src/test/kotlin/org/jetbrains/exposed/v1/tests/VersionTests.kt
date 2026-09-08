@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.tests
 
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Version
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import kotlin.test.assertEquals
@@ -9,6 +10,7 @@ import kotlin.test.assertFails
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+@Tag(NOT_APPLICABLE_TO_R2DBC)
 class VersionTests {
     @OptIn(InternalApi::class)
     @Test
@@ -52,6 +54,8 @@ class VersionTests {
         assertFalse { version.covers("2") }
         assertFalse { version.covers("2.0") }
         assertFalse { version.covers("2.0.1") }
+        assertFalse { version.covers("1.5") }
+        assertFalse { version.covers("1.2.4") }
     }
 
     @OptIn(InternalApi::class)
