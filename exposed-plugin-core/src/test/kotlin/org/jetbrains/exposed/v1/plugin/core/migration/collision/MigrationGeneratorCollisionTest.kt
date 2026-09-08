@@ -14,6 +14,7 @@ import kotlin.test.assertEquals
 
 object Parent : Table("issue_2897_parent") {
     val id = integer("id")
+    val label = varchar("label", 255).uniqueIndex()
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -59,6 +60,7 @@ class MigrationGeneratorCollisionTest {
         )
 
         val generated = generator.generate()
+        val generatedFilenames = generated.map { it.substringAfter("__").substringBeforeLast('.') }
         val expectedTables = setOf(
             Parent.tableName,
             ChildOne.tableName,
@@ -74,6 +76,39 @@ class MigrationGeneratorCollisionTest {
 
         assertEquals(expectedTables.size, generated.size, "All table migrations must be preserved: $generated")
         assertEquals(expectedTables.size, generatedFiles.size)
+        assertEquals(expectedTables.size, generatedFilenames.distinct().size)
         assertEquals(expectedTables, createdTables, "All table DDL must be preserved")
+    }
+
+    @Test
+    fun testDependentTablesDoNotDuplicateParentConstraints() {
+        val generator = MigrationGenerator(
+            config = MigrationConfig(
+                tablesPackage = this::class.java.packageName,
+                classpathUrls = listOf(this::class.java.protectionDomain.codeSource.location),
+                fileDirectory = migrationsDirectory,
+                fileVersionFormat = VersionFormat.TIMESTAMP_WITHOUT_SECONDS,
+                databaseUrl = "jdbc:h2:mem:${UUID.randomUUID()}",
+                databaseUser = "",
+                databasePassword = "",
+            ),
+            logger = object : MigrationLogger {
+                override fun lifecycle(message: String) = Unit
+                override fun debug(message: String) = Unit
+                override val isDebugEnabled: Boolean = false
+            },
+        )
+
+        generator.generate()
+
+        val expectedTablesWithIndex = setOf(Parent.tableName)
+        val generatedFiles = migrationsDirectory.listFiles().orEmpty()
+        val alterTableRegex = Regex("""ALTER TABLE\s+"?([\w.]+)"?\s+ADD CONSTRAINT""", RegexOption.IGNORE_CASE)
+        val alteredTables = generatedFiles
+            .flatMap { file -> alterTableRegex.findAll(file.readText()).map { it.groupValues[1] }.toList() }
+            .map { it.substringAfterLast('.').lowercase() }
+
+        assertEquals(expectedTablesWithIndex.size, alteredTables.size, "Only files that generates table with index should contain its ALTER")
+        assertEquals(expectedTablesWithIndex, alteredTables.toSet())
     }
 }
