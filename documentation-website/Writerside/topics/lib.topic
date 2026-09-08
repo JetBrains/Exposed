@@ -14,6 +14,13 @@
         </p>
     </snippet>
 
+    <snippet id="required_dependency">
+        <p>
+            <b>Required dependency</b>:
+            <code>org.jetbrains.exposed:%artifact_name%</code>
+        </p>
+    </snippet>
+
     <snippet id="intellij_idea_restart_application">
         <p>
             In IntelliJ IDEA, click the rerun button (<img src="intellij_idea_rerun_icon.svg"

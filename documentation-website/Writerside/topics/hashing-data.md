@@ -2,11 +2,11 @@
 
 <show-structure for="chapter,procedure" depth="2"/>
 <var name="artifact_name" value="exposed-crypt"/>
+<var name="example_name" value="exposed-hashing-data"/>
 
 <tldr>
-
-**Required dependencies**: `org.jetbrains.exposed:%artifact_name%`
-
+<include from="lib.topic" element-id="required_dependency"/>
+<include from="lib.topic" element-id="code_example"/>
 <include from="lib.topic" element-id="jdbc-supported"/>
 <include from="lib.topic" element-id="r2dbc-supported"/>
 </tldr>
@@ -50,13 +50,8 @@ To use another hashing algorithm or customize its parameters,
 create a `Hasher` and pass it to the `.hashed()` function:
 
 ```kotlin
-val hasher = BCryptHasher()
-
-object Users : IntIdTable() {
-    val password = text("password").hashed(hasher)
-}
-
 ```
+{src="exposed-hashing-data/src/main/kotlin/org/example/tables/UsersTable.kt" include-symbol="hasher, Users"}
 
 ## Configure a hasher
 
@@ -64,26 +59,20 @@ Each hasher provides parameters for configuring the amount of work required to g
 you can configure the strength used by `BCryptHasher`:
 
 ```kotlin
-val hasher = BCryptHasher( strength = 12 )
 ```
+{src="exposed-hashing-data/src/main/kotlin/org/example/tables/UsersTable.kt" include-symbol="bCryptHasher"}
 
 For `Argon2Hasher`, you can configure parameters such as memory usage, iterations, and parallelism:
 
 ```kotlin
-val hasher = Argon2Hasher(
-    memory = 19_456,
-    iterations = 2,
-    parallelism = 1
-)
 ```
+{src="exposed-hashing-data/src/main/kotlin/org/example/tables/UsersTable.kt" include-symbol="argon2Hasher"}
 
 `Pbkdf2Hasher` also lets you select the pseudorandom function:
 
 ```kotlin
-val hasher = Pbkdf2Hasher(
-    algorithm = Pbkdf2Algorithm.SHA256
-)
 ```
+{src="exposed-hashing-data/src/main/kotlin/org/example/tables/UsersTable.kt" include-symbol="pbkdf2Hasher"}
 
 ## Use a Spring Security password encoder
 
@@ -111,6 +100,7 @@ Users.insert {
     it[password] = hasher.hash("s3cret")
 }
 ```
+{src="exposed-hashing-data/src/main/kotlin/org/example/App.kt" include-lines="28,30-31"}
 
 The `.hash()` function returns a `Hashed` value containing the encoded hash.
 
@@ -123,14 +113,8 @@ The `.hash()` function returns a `Hashed` value containing the encoded hash.
 To verify a plaintext value, use the `.matches()` function on the stored `Hashed` value:
 
 ```kotlin
-val user = Users.selectAll().where {
-    Users.email eq email
-}.single()
-
-if (user[Users.password].matches(submittedPassword)) {
-/* ... */ 
-}
 ```
+{src="exposed-hashing-data/src/main/kotlin/org/example/App.kt" include-lines="32-38"}
 
 The `.matches()` function returns `true` if the plaintext value matches the stored hash.
 

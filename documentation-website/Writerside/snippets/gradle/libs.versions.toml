@@ -30,6 +30,7 @@ sqlserver-r2dbc = "1.0.3.RELEASE"
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit-jupiter-engine" }
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
+exposed-crypt = { module = "org.jetbrains.exposed:exposed-crypt", version.ref = "exposed" }
 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
 exposed-r2dbc = { module = "org.jetbrains.exposed:exposed-r2dbc", version.ref = "exposed" }
 exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
@@ -60,5 +61,5 @@ r2dbc-postgresql = { group = "org.postgresql", name = "r2dbc-postgresql", versio
 r2dbc-sqlserver = { group = "io.r2dbc", name = "r2dbc-mssql", version.ref = "sqlserver-r2dbc" }
 
 [plugins]
-jvm = { id = "org.jetbrains.kotlin.jvm", version = "2.1.0" }
+jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

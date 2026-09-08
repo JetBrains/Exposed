@@ -31,7 +31,7 @@
             <toc-element topic="Custom-data-types.topic"/>
             <toc-element topic="Custom-type-mapping.md"/>
             <toc-element topic="Column-transformation.topic"/>
-            <toc-element topic="encryption-and-hashing.md"/>
+            <toc-element topic="hashing-data.md"/>
         </toc-element>
         <toc-element topic="SQL-Functions.md"/>
         <toc-element topic="Working-with-Schema.topic"/>
