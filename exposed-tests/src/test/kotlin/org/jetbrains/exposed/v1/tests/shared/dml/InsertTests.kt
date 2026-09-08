@@ -208,6 +208,28 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testBatchInsertKeepsGeneratedKeysPairedWithInputRows() {
+        val tester = object : Table("generated_key_order") {
+            val id = long("id").autoIncrement()
+            val label = varchar("label", 50)
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withTables(tester) {
+            for (size in listOf(0, 1, 2, 17, 128)) {
+                tester.deleteAll()
+                val labels = List(size) { "row-$size-$it" }
+                val inserted = tester.batchInsert(labels) { label ->
+                    this[tester.label] = label
+                }
+                val storedIds = tester.selectAll().associate { it[tester.label] to it[tester.id] }
+                assertEqualLists(inserted.map { it[tester.label] }, labels)
+                assertEqualLists(inserted.map { it[tester.id] }, labels.map(storedIds::getValue))
+            }
+        }
+    }
+
+    @Test
     fun testBatchInsertUsingMultiRowValues() {
         fun String.trimOracleSyntax(): String = if (currentTestDB in TestDB.ALL_ORACLE_LIKE) substringBefore(") DATA(\"name\")") else this
 
