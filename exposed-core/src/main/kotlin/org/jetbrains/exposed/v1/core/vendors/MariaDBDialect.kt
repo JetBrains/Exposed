@@ -140,7 +140,8 @@ open class MariaDBDialect : MysqlDialect() {
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
         if (e is LiteralOp<*>) return true
-        if (fullVersion >= "10.2.1") {
+        @Suppress("MagicNumber")
+        if (fullVersion.covers(10, 2, 1)) {
             return true
         }
 

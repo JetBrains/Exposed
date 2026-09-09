@@ -32,6 +32,10 @@ class TestDb(val name: String) {
         return name != "h2_v2" || dialect != "H2_V2"
     }
 
+    internal fun ignoresDBAgnosticTests(dialect: String): Boolean {
+        return name != "h2_v2" || dialect != "H2_V2"
+    }
+
     inner class DependencyBlock {
         fun dependency(dependencyNotation: String) {
             dependencies.add(dependencyNotation)
@@ -124,7 +128,15 @@ private fun Project.createDbTestTaskByDialect(db: TestDb, taskName: String, dial
                     "org/jetbrains/exposed/v1/plugin/core/*",
                     "org/jetbrains/exposed/v1/gradle/plugin/*",
                     "org/jetbrains/exposed/v1/maven/plugin/*",
-
+                )
+                isFailOnNoMatchingTests = false
+            }
+        }
+        if (db.ignoresDBAgnosticTests(dialect)) {
+            filter {
+                // exclude all test classes that are not dependent on any specific database
+                exclude(
+                    "org/jetbrains/exposed/v1/tests/VersionTests.class",
                 )
                 isFailOnNoMatchingTests = false
             }
