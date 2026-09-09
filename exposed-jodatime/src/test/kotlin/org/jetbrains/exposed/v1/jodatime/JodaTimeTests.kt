@@ -37,6 +37,7 @@ import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.LocalTime
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNull
 import kotlin.test.assertEquals
 
 class JodaTimeTests : DatabaseTestsBase() {
@@ -418,20 +419,26 @@ class JodaTimeTests : DatabaseTestsBase() {
         val defaultDateTimes = listOf(DateTime.now())
         val tester = object : Table("array_tester") {
             val dates = array("dates", JodaLocalDateColumnType()).default(defaultDates)
+            val optDates = array("opt_dates", JodaLocalDateColumnType()).nullable()
             val datetimes = array("datetimes", JodaLocalDateTimeColumnType()).default(defaultDateTimes)
+            val optDatetimes = array("opt_datetimes", JodaLocalDateTimeColumnType()).nullable()
         }
 
         withTables(excludeSettings = TestDB.ALL - TestDB.POSTGRESQL - TestDB.H2_V2 - TestDB.H2_V2_PSQL, tester) {
             tester.insert { }
             val result1 = tester.selectAll().single()
             assertEqualLists(result1[tester.dates], defaultDates)
+            assertNull(result1[tester.optDates])
             assertEqualLists(result1[tester.datetimes], defaultDateTimes)
+            assertNull(result1[tester.optDatetimes])
 
             val datesInput = List(3) { DateTime.parse("${2020 + it}-5-4") }
             val datetimeInput = List(3) { DateTime(2020 + it, 5, 4, 9, 9, 9) }
             tester.insert {
                 it[dates] = datesInput
+                it[optDates] = null
                 it[datetimes] = datetimeInput
+                it[optDatetimes] = null
             }
 
             val lastDate = tester.dates[3]

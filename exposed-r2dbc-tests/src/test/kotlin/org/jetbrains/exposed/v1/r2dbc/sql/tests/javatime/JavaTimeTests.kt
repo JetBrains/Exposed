@@ -29,6 +29,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNull
 import org.junit.jupiter.api.fail
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -398,20 +399,26 @@ class JavaTimeTests : R2dbcDatabaseTestsBase() {
         val defaultDateTimes = listOf(LocalDateTime.now().asJdk8())
         val tester = object : Table("array_tester") {
             val dates = array("dates", JavaLocalDateColumnType()).default(defaultDates)
+            val optDates = array("opt_dates", JavaLocalDateColumnType()).nullable()
             val datetimes = array("datetimes", JavaLocalDateTimeColumnType()).default(defaultDateTimes)
+            val optDatetimes = array("opt_datetimes", JavaLocalDateTimeColumnType()).nullable()
         }
 
         withTables(excludeSettings = TestDB.entries - TestDB.POSTGRESQL - TestDB.H2_V2, tester) {
             tester.insert { }
             val result1 = tester.selectAll().single()
             assertEqualLists(result1[tester.dates], defaultDates)
+            assertNull(result1[tester.optDates])
             assertEqualLists(result1[tester.datetimes], defaultDateTimes)
+            assertNull(result1[tester.optDatetimes])
 
             val datesInput = List(3) { LocalDate.of(2020 + it, 5, 4) }
             val datetimeInput = List(3) { LocalDateTime.of(2020 + it, 5, 4, 9, 9, 9) }
             tester.insert {
                 it[dates] = datesInput
+                it[optDates] = null
                 it[datetimes] = datetimeInput
+                it[optDatetimes] = null
             }
 
             val lastDate = tester.dates[3]
