@@ -9,6 +9,7 @@ slf4j = "2.0.16"
 jackson = "2.18.+"
 kotlin = "2.2.20"
 flyway = "10.15.0"
+bouncycastle = "1.85"
 
 h2 = "2.4.240"
 mysql ="8.4.0"
@@ -30,6 +31,7 @@ sqlserver-r2dbc = "1.0.3.RELEASE"
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit-jupiter-engine" }
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
+exposed-crypt = { module = "org.jetbrains.exposed:exposed-crypt", version.ref = "exposed" }
 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
 exposed-r2dbc = { module = "org.jetbrains.exposed:exposed-r2dbc", version.ref = "exposed" }
 exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
@@ -42,6 +44,7 @@ exposed-migration-jdbc = { module = "org.jetbrains.exposed:exposed-migration-jdb
 slf4j = { module = "org.slf4j:slf4j-nop", version.ref = "slf4j" }
 jackson-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
 flyway = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
+bouncycastle = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
 
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
 mysql = { module = "com.mysql:mysql-connector-j", version.ref = "mysql"}
@@ -60,5 +63,5 @@ r2dbc-postgresql = { group = "org.postgresql", name = "r2dbc-postgresql", versio
 r2dbc-sqlserver = { group = "io.r2dbc", name = "r2dbc-mssql", version.ref = "sqlserver-r2dbc" }
 
 [plugins]
-jvm = { id = "org.jetbrains.kotlin.jvm", version = "2.1.0" }
+jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
