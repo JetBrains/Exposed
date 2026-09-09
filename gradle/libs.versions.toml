@@ -19,7 +19,7 @@ oracle = "23.26.3.0.0"
 postgre = "42.7.13"
 redshift = "2.2.8"
 postgreNG = "0.8.9"
-sqlite3 = "3.53.2.1"
+sqlite3 = "3.53.4.0"
 sqlserver = "13.2.1.jre11"
 
 r2dbc-spi = "1.0.0.RELEASE"
