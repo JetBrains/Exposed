@@ -101,6 +101,15 @@ internal suspend fun <T : Comparable<T>> Flow<T>.sorted(): List<T> {
 
 internal suspend fun <T> Flow<T>.distinct(): List<T> = this.distinctUntilChanged().toList()
 
+/** Tag for R2DBC tests that will require creating a matching JDBC test, when possible. */
+const val MISSING_JDBC_TEST = "missing-jdbc-test"
+
+/** Tag for R2DBC tests that already have a matching JDBC test, but that are still missing some of the original logic. */
+const val INCOMPLETE_JDBC_TEST = "incomplete-jdbc-test"
+
+/** Tag for R2DBC tests that will most likely never require a matching JDBC test. */
+const val NOT_APPLICABLE_TO_JDBC = "not-applicable-to-jdbc"
+
 /**
  * The version of Uuid is always stored in the same place: the most significant 4 bits of the 7th byte;
  * i.e. the 13th hexadecimal digit in the string representation,

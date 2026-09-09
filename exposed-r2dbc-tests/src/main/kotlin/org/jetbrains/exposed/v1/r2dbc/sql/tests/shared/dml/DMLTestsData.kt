@@ -12,6 +12,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import java.math.BigDecimal
 
+@Suppress("MagicNumber")
 object DMLTestsData {
     object Cities : Table() {
         val id: Column<Int> = integer("cityId").autoIncrement()
@@ -50,7 +51,7 @@ object DMLTestsData {
     }
 }
 
-@Suppress("LongMethod")
+@Suppress("LongMethod", "MagicNumber")
 fun R2dbcDatabaseTestsBase.withCitiesAndUsers(
     exclude: Collection<TestDB> = emptyList(),
     statement: suspend R2dbcTransaction.(
@@ -152,6 +153,7 @@ fun R2dbcDatabaseTestsBase.withSales(
     }
 }
 
+@Suppress("MagicNumber")
 private suspend fun DMLTestsData.Sales.insertSaleData() {
     insertSale(2018, 11, "tea", "550.10")
     insertSale(2018, 12, "coffee", "1500.25")
@@ -171,6 +173,7 @@ private suspend fun DMLTestsData.Sales.insertSale(year: Int, month: Int, product
     }
 }
 
+@Suppress("MagicNumber")
 fun R2dbcDatabaseTestsBase.withSalesAndSomeAmounts(
     excludeSettings: Collection<TestDB> = emptyList(),
     statement: suspend R2dbcTransaction.(

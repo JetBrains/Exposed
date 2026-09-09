@@ -5,6 +5,7 @@ import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.max
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.dao.r2dbc.ExperimentalR2dbcDaoApi
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.batchInsert
 import org.jetbrains.exposed.v1.r2dbc.insert
@@ -31,12 +32,26 @@ class CountTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(ExperimentalR2dbcDaoApi::class)
     @Test
     fun `test that count() returns right value for Query with group by`() {
         withCitiesAndUsers { _, _, userData ->
             val uniqueUsersInData = userData.select(userData.user_id).withDistinct().count()
             val sameQueryWithGrouping = userData.select(userData.value.max()).groupBy(userData.user_id).count()
             assertEquals(uniqueUsersInData, sameQueryWithGrouping)
+        }
+
+        // it's the copy from the similar jdbc's test, but it looks a bit weird,
+        // the following part could be split into a separate test
+        withTables(OrgMemberships, Orgs) {
+            val org1 = Org.new {
+                name = "FOo"
+            }
+            OrgMembership.new {
+                org.set(org1)
+            }
+
+            assertEquals(1L, OrgMemberships.selectAll().count())
         }
     }
 

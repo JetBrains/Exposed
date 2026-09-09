@@ -16,15 +16,29 @@ import kotlin.reflect.full.primaryConstructor
 import kotlin.sequences.Sequence
 
 /**
- * Base class responsible for the management of [Entity] instances and the maintenance of their relation
- * to the provided [table].
+ * The entry point for the entities of one [table]: creating, finding, and deleting them.
  *
- * @param [table] The [IdTable] object that stores rows mapped to entities managed by this class.
- * @param [entityType] The expected [Entity] class type. This can be left `null` if it is the class of type
- * argument [T] provided to this [EntityClass] instance.
- * @param [entityCtor] The function invoked to instantiate an [Entity] using a provided [EntityID] value. If a
- * reference to a specific entity constructor or a custom function is not passed as an argument, reflection will
- * be used to determine the primary constructor of the associated entity class on first access (which can be slower).
+ * Declare it as the companion object of the entity, normally through the variant matching the id type
+ * ([IntEntityClass], [LongEntityClass], [UuidEntityClass], [CompositeEntityClass], ...):
+ *
+ * ```kotlin
+ * class Film(id: EntityID<Int>) : IntEntity(id) {
+ *     var title by Films.title
+ *
+ *     companion object : IntEntityClass<Film>(Films)
+ * }
+ *
+ * transaction {
+ *     val film = Film.new { title = "A New Hope" }
+ *     val titles = Film.all().map { it.title }
+ *     Film.findById(film.id.value)?.delete()
+ * }
+ * ```
+ *
+ * @param [table] The table whose rows are mapped to entities managed by this class.
+ * @param [entityType] The [Entity] class to map. Defaults to the class that encloses this companion object.
+ * @param [entityCtor] Called to instantiate an entity for a row. Defaults to the entity's primary constructor,
+ * looked up by reflection on first access; pass a reference such as `::Film` to skip that lookup.
  */
 @Suppress("UNCHECKED_CAST", "UnnecessaryAbstractClass", "TooManyFunctions")
 abstract class EntityClass<ID : Any, out T : Entity<ID>>(
