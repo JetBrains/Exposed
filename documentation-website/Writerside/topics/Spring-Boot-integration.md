@@ -144,7 +144,11 @@ spring.exposed.generate-ddl=true
 ```
 
 When enabled, the starter detects all classes extending `org.jetbrains.exposed.v1.core.Table` and creates the schema
-during application startup.
+during the bean initialization phase, before any bean that depends on the schema is initialized. Beans that need to
+access the database during their own initialization (for example, in `@PostConstruct` or
+`InitializingBean.afterPropertiesSet()`) can declare this requirement with Spring Boot's
+[`@DependsOnDatabaseInitialization`](https://docs.spring.io/spring-boot/api/kotlin/spring-boot-project/spring-boot/org.springframework.boot.sql.init.dependency/-depends-on-database-initialization/index.html)
+annotation. Beans that use built-in detection points such as `JdbcOperations` are ordered automatically.
 
 ### Exclude packages
 
@@ -256,17 +260,27 @@ When you build a native image, Spring Boot applies AOT processing. AOT restricts
 In particular, beans declared with `@ConditionalOnProperty` cannot change their behavior at runtime. As a result,
 setting `spring.exposed.generate-ddl=true` does not enable automatic schema creation in a native image.
 
-Instead, create the database schema programmatically. For example:
+Instead, create the database schema programmatically. Run it during the bean initialization phase via
+`InitializingBean` so that downstream beans can rely on the schema being ready when their own initialization runs:
 
 ```kotlin
 @Component
-@Transactional
-class SchemaInitialize : ApplicationRunner {
-    override fun run(args: ApplicationArguments) {
-        SchemaUtils.create(MessageEntity)
+class SchemaInitialize(
+    private val transactionManager: PlatformTransactionManager
+) : InitializingBean {
+    override fun afterPropertiesSet() {
+        TransactionTemplate(transactionManager).execute {
+            SchemaUtils.create(MessageEntity)
+        }
     }
 }
 ```
+
+> Use programmatic transaction management with `TransactionTemplate` here rather than `@Transactional`.
+> The AOP proxy that powers `@Transactional` is not yet active during `afterPropertiesSet()`, so the
+> annotation would be silently ignored.
+>
+{style="note"}
 
 ### Resolve `KotlinReflectionInternalError: Unresolved class`
 
