@@ -35,7 +35,7 @@ class ArrayTypeMapper : TypeMapper {
         if (columnType !is ArrayColumnType<*, *>) return false
 
         if (value == null) {
-            statement.bindNull(index - 1, columnType.arrayDeclaration())
+            statement.bindNull(index - 1, columnType.arrayDeclaration(dialect))
             return true
         }
 
@@ -201,7 +201,7 @@ private fun java.sql.Timestamp.toLocalDateTime(): LocalDateTime = toInstant().at
  * Extension function to get the Java class type for an array column type.
  */
 @OptIn(ExperimentalUuidApi::class)
-private fun ArrayColumnType<*, *>.arrayDeclaration(): Class<out Array<out Any>> = when (delegate) {
+private fun ArrayColumnType<*, *>.arrayDeclaration(dialect: DatabaseDialect): Class<out Array<out Any>> = when (delegate) {
     is ByteColumnType -> Array<Byte>::class.java
     is UByteColumnType -> Array<UByte>::class.java
     is ShortColumnType -> Array<Short>::class.java
@@ -220,11 +220,13 @@ private fun ArrayColumnType<*, *>.arrayDeclaration(): Class<out Array<out Any>> 
     is CharacterColumnType -> Array<Char>::class.java
     is BooleanColumnType -> Array<Boolean>::class.java
     is IDateColumnType -> {
+        val hasTimePart = (delegate as IDateColumnType).hasTimePart
         // For date/time types, use Date or Timestamp arrays depending on whether the column type has a time part
-        if ((delegate as IDateColumnType).hasTimePart) {
-            Array<java.sql.Timestamp>::class.java
-        } else {
-            Array<java.sql.Date>::class.java
+        when {
+            hasTimePart && dialect is PostgreSQLDialect -> Array<LocalDateTime>::class.java
+            hasTimePart -> Array<java.sql.Timestamp>::class.java
+            dialect is PostgreSQLDialect -> Array<LocalDate>::class.java
+            else -> Array<java.sql.Date>::class.java
         }
     }
     else -> Array<Any>::class.java
