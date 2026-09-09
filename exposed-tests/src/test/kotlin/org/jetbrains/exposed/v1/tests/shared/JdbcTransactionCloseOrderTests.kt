@@ -12,13 +12,16 @@ import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
 import org.jetbrains.exposed.v1.jdbc.statements.jdbc.JdbcResult
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.io.InputStream
 import kotlin.test.assertEquals
 
 class JdbcTransactionCloseOrderTests : DatabaseTestsBase() {
     @Test
+    @Tag(NOT_APPLICABLE_TO_R2DBC)
     fun testExecutedStatementsAreClosedInReverseOrder() {
         withConnection { database, _ ->
             Assumptions.assumeTrue(
