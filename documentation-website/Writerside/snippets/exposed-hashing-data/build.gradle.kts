@@ -15,7 +15,7 @@ dependencies {
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.crypt)
-    implementation(libs.bouncycastle)
+    runtimeOnly(libs.bouncycastle)
 
     implementation(libs.h2)
 }

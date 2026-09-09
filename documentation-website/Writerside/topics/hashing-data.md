@@ -16,15 +16,25 @@ Exposed supports one-way hashing for sensitive data such as passwords through th
 Unlike encryption, hashing does not allow the original value to be recovered. Instead, you verify a plaintext value
 against the stored hash.
 
-## Add dependencies {id="add-dependency"}
+## Add dependencies {id="add-dependencies"}
 
 To use hashing with Exposed, add the `%artifact_name%` module to your build script:
 
 <include from="lib.topic" element-id="add-dependency"/>
 
+Optionally, to use `scrypt` and `Argon2` hashing, add the [Bouncy Castle](https://www.bouncycastle.org/) library as a 
+runtime dependency:
+
+<var name="external_artifact_groupId" value="org.bouncycastle"/>
+<var name="external_artifact_name" value="bcprov-jdk18on"/>
+<var name="external_artifact_version" value="%bouncy_castle_version%"/>
+<include from="lib.topic" element-id="add-external-runtime-dependency"/>
+
+
 ## Basic usage
 
-To create a hashed column, apply the `.hashed()` function to a character column:
+To create a hashed column, apply the [`.hashed()`](https://jetbrains.github.io/Exposed/api/exposed-crypt/org.jetbrains.exposed.v1.crypt/hashed.html)
+function to a character column:
 
 ```kotlin
 object Users : IntIdTable() {
@@ -39,12 +49,12 @@ The `.hashed()` function changes the Kotlin type of the column from `String` to 
 The `.hashed()` function uses `BCryptHasher` by default. You can change the default hasher by choosing one of the
 supported `Hasher` implementations:
 
-| Hasher         | Algorithm |
-|----------------|-----------|
-| `BCryptHasher` | `bcrypt`  |
-| `Argon2Hasher` | `Argon2`  |
-| `Pbkdf2Hasher` | `PBKDF2`  |
-| `SCryptHasher` | `scrypt`  |
+| Hasher                                                                                                                            | Algorithm |
+|-----------------------------------------------------------------------------------------------------------------------------------|-----------|
+| [`BCryptHasher`](https://jetbrains.github.io/Exposed/api/exposed-crypt/org.jetbrains.exposed.v1.crypt/-b-crypt-hasher/index.html) | `bcrypt`  |
+| [`Argon2Hasher`](https://jetbrains.github.io/Exposed/api/exposed-crypt/org.jetbrains.exposed.v1.crypt/-argon2-hasher/index.html)  | `Argon2`  |
+| [`Pbkdf2Hasher`](https://jetbrains.github.io/Exposed/api/exposed-crypt/org.jetbrains.exposed.v1.crypt/-pbkdf2-hasher/index.html)  | `PBKDF2`  |
+| [`SCryptHasher`](https://jetbrains.github.io/Exposed/api/exposed-crypt/org.jetbrains.exposed.v1.crypt/-s-crypt-hasher/index.html) | `scrypt`  |
 
 To use another hashing algorithm or customize its parameters,
 create a `Hasher` and pass it to the `.hashed()` function:
@@ -68,16 +78,26 @@ For `Argon2Hasher`, you can configure parameters such as memory usage, iteration
 ```
 {src="exposed-hashing-data/src/main/kotlin/org/example/tables/UsersTable.kt" include-symbol="argon2Hasher"}
 
+> `Argon2Hasher` requires the [Bouncy Castle](https://www.bouncycastle.org/) library as a runtime dependency. For more
+> information, see [](#add-dependencies).
+> 
+{style="note"}
+
 `Pbkdf2Hasher` also lets you select the pseudorandom function:
 
 ```kotlin
 ```
 {src="exposed-hashing-data/src/main/kotlin/org/example/tables/UsersTable.kt" include-symbol="pbkdf2Hasher"}
 
+> For a complete list of the available configuration options, refer to [the API documentation](https://jetbrains.github.io/Exposed/api/exposed-crypt/org.jetbrains.exposed.v1.crypt/index.html).
+> 
+{style="tip"}
+
 ## Use a Spring Security password encoder
 
-If your application already uses a Spring Security `PasswordEncoder`, wrap it with `PasswordEncoderHasher` to adapt it to
-the `Hasher` type:
+If your application already uses a [Spring Security `PasswordEncoder`](https://docs.spring.io/spring-security/reference/features/authentication/password-storage.html#authentication-password-storage),
+wrap it with [`PasswordEncoderHasher`](https://jetbrains.github.io/Exposed/api/exposed-crypt/org.jetbrains.exposed.v1.crypt/-password-encoder-hasher/index.html) to
+adapt it to the `Hasher` type:
 
 ```kotlin
 val passwordEncoder = MyPasswordEncoder()
@@ -101,7 +121,8 @@ Use the configured `Hasher` to hash a plaintext value before storing it:
 
 The `.hash()` function returns a `Hashed` value containing the encoded hash.
 
-> Hashing is salted, so hashing the same plaintext value more than once can produce different encoded values.
+> Hashing is [_salted_](https://en.wikipedia.org/wiki/Salt_(cryptography)), so hashing the same plaintext value more than
+> once can produce different encoded values.
 >
 {style="note"}
 

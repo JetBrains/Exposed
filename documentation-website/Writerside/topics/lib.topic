@@ -107,6 +107,38 @@
         </tabs>
     </snippet>
 
+    <snippet id="add-external-runtime-dependency">
+        <tabs>
+            <tab title="Kotlin Gradle">
+                <code-block lang="kotlin">
+                dependencies {
+                    runtimeOnly("%external_artifact_groupId%:%external_artifact_name%:%external_artifact_version%")
+                }
+                </code-block>
+            </tab>
+            <tab title="Maven">
+                <code-block lang="xml"><![CDATA[
+                <dependencies>
+                    <dependency>
+                        <groupId>%external_artifact_groupId%</groupId>
+                        <artifactId>%external_artifact_name%</artifactId>
+                        <version>%external_artifact_version%</version>
+                        <scope>runtime</scope>
+                    </dependency>
+                </dependencies>
+                ]]></code-block>
+            </tab>
+            <tab title="Groovy Gradle">
+
+                <code-block lang="kotlin">
+                dependencies {
+                    runtimeOnly "%external_artifact_groupId%:%external_artifact_name%:%external_artifact_version%"
+                }
+                </code-block>
+            </tab>
+        </tabs>
+    </snippet>
+
     <snippet id="date-time-components">
         <deflist type="medium">
             <def id="%date_time_api_module%-year">
