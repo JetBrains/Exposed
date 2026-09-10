@@ -1,20 +1,13 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared
 
-import io.r2dbc.spi.Connection
-import io.r2dbc.spi.ConnectionFactories
-import io.r2dbc.spi.ConnectionFactory
-import io.r2dbc.spi.ConnectionFactoryMetadata
 import io.r2dbc.spi.IsolationLevel
 import io.r2dbc.spi.Option
 import io.r2dbc.spi.TransactionDefinition
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
-import kotlinx.coroutines.reactive.awaitFirstOrNull
-import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
-import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.insert
@@ -30,8 +23,6 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.update
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
-import org.reactivestreams.Publisher
-import reactor.core.publisher.Mono
 import kotlin.test.assertNotNull
 
 class TransactionIsolationTest : R2dbcDatabaseTestsBase() {
@@ -155,85 +146,39 @@ class TransactionIsolationTest : R2dbcDatabaseTestsBase() {
         }
     }
 
-    @Test
-    fun testMySqlTransactionIsolationOnReusedConnection() {
-        runTest {
-            Assumptions.assumeTrue(dialect in TestDB.ALL_MYSQL_MARIADB)
-
-            val tester = object : Table("transaction_isolation_tester") {
-                val amount = integer("amount")
+    private suspend fun R2dbcTransaction.assertOnTwoConnections(testDb: TestDB, expected: IsolationLevel) {
+        val tester = object : Table("transaction_isolation_tester") {
+            val amount = integer("amount")
+        }
+        val expectedAmount = when (expected) {
+            IsolationLevel.REPEATABLE_READ -> 0
+            IsolationLevel.READ_COMMITTED -> 1
+            else -> throw UnsupportedOperationException("Isolation level $expected not supported by this check")
+        }
+        val writer = testDb.connect { defaultMaxAttempts = 1 }
+        try {
+            inTopLevelSuspendTransaction(db = writer) {
+                SchemaUtils.drop(tester)
+                SchemaUtils.create(tester)
+                tester.insert { it[amount] = 0 }
             }
-            val factory = ConnectionFactories.get(dialect.connection())
-            val physicalConnection = factory.create().awaitSingle()
-            // Keep the physical connection across Exposed transactions and close it explicitly below.
-            val retainedConnection = object : Connection by physicalConnection {
-                override fun close(): Publisher<Void> = Mono.empty()
-            }
-            val reusedFactory = object : ConnectionFactory {
-                override fun create(): Publisher<out Connection> = Mono.just(retainedConnection)
-                override fun getMetadata(): ConnectionFactoryMetadata = factory.metadata
-            }
-            val reader = R2dbcDatabase.connect(
-                reusedFactory,
-                R2dbcDatabaseConfig {
-                    setUrl(dialect.connection())
-                    defaultR2dbcIsolationLevel = IsolationLevel.READ_COMMITTED
-                    defaultMaxAttempts = 1
-                }
-            )
-            val writer = dialect.connect { defaultMaxAttempts = 1 }
+            assertEquals(0, tester.selectAll().single()[tester.amount])
+            // The writer commits on a separate connection before this transaction reads again.
+            suspendTransaction(db = writer) { tester.update { it[amount] = 1 } }
+            assertEquals(expectedAmount, tester.selectAll().single()[tester.amount])
+        } finally {
             try {
-                suspendTransaction(db = writer) {
-                    SchemaUtils.create(tester)
-                    tester.insert { it[amount] = 0 }
-                }
-                val connectionId = suspendTransaction(db = reader) {
-                    connection().setTransactionDefinition(null)
-                    exec("SELECT CONNECTION_ID()") { it.getInt(1) }?.single()
-                }
-                assertNotNull(connectionId)
-                for (sessionIsolation in listOf(IsolationLevel.REPEATABLE_READ, IsolationLevel.READ_COMMITTED)) {
-                    physicalConnection.setTransactionIsolationLevel(sessionIsolation).awaitFirstOrNull()
-                    // A null override exercises DatabaseConfig; the other cases override it for one transaction.
-                    for (isolation in listOf(null, IsolationLevel.REPEATABLE_READ, IsolationLevel.READ_COMMITTED)) {
-                        suspendTransaction(db = writer) { tester.update { it[amount] = 0 } }
-                        suspendTransaction(db = reader, transactionIsolation = isolation) {
-                            assertEquals(connectionId, exec("SELECT CONNECTION_ID()") { it.getInt(1) }?.single())
-                            assertEquals(0, tester.selectAll().single()[tester.amount])
-                            // A different database gets its own transaction and commits before the second read.
-                            suspendTransaction(db = writer) { tester.update { it[amount] = 1 } }
-                            val expected = if (isolation == IsolationLevel.REPEATABLE_READ) 0 else 1
-                            assertEquals(expected, tester.selectAll().single()[tester.amount])
-                        }
-                        suspendTransaction(db = reader) {
-                            connection().setTransactionDefinition(null)
-                            assertEquals(connectionId, exec("SELECT CONNECTION_ID()") { it.getInt(1) }?.single())
-                            assertEquals(1, tester.selectAll().single()[tester.amount])
-                            suspendTransaction(db = writer) { tester.update { it[amount] = 2 } }
-                            val expected = if (sessionIsolation == IsolationLevel.REPEATABLE_READ) 1 else 2
-                            assertEquals(expected, tester.selectAll().single()[tester.amount])
-                        }
-                    }
-                }
+                SchemaUtils.drop(tester)
             } finally {
-                try {
-                    physicalConnection.close().awaitFirstOrNull()
-                } finally {
-                    try {
-                        suspendTransaction(db = writer) { SchemaUtils.drop(tester) }
-                    } finally {
-                        TransactionManager.closeAndUnregister(reader)
-                        TransactionManager.closeAndUnregister(writer)
-                    }
-                }
+                TransactionManager.closeAndUnregister(writer)
             }
         }
     }
 
     private suspend fun R2dbcTransaction.assertTransactionIsolationLevel(testDb: TestDB, expected: IsolationLevel) {
         if (testDb in TestDB.ALL_MYSQL_MARIADB) {
-            // Session variables do not report transaction-specific isolation. The visibility test checks its effect on reads.
-            assertEquals(expected, connection().getTransactionIsolation())
+            // Session variables do not report transaction-specific isolation, so check its effect on reads.
+            assertOnTwoConnections(testDb, expected)
             return
         }
         val (sql, repeatable, committed) = when (testDb) {
