@@ -3,23 +3,30 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared
 import io.r2dbc.spi.IsolationLevel
 import io.r2dbc.spi.Option
 import io.r2dbc.spi.TransactionDefinition
+import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.test.runTest
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
+import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
+import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.getInt
 import org.jetbrains.exposed.v1.r2dbc.tests.getString
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
+import org.jetbrains.exposed.v1.r2dbc.update
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
 
 class TransactionIsolationTest : R2dbcDatabaseTestsBase() {
-    private val transactionIsolationSupportDb = setOf(TestDB.MARIADB, TestDB.MYSQL_V5, TestDB.POSTGRESQL, TestDB.SQLSERVER)
+    private val transactionIsolationSupportDb = TestDB.ALL_MYSQL_MARIADB + TestDB.POSTGRESQL + TestDB.SQLSERVER
 
     @Test
     fun testWhatTransactionIsolationWasApplied() {
@@ -106,10 +113,87 @@ class TransactionIsolationTest : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testMySqlTransactionIsolationDoesNotChangeSessionDefault() {
+        runTest {
+            Assumptions.assumeTrue(dialect in TestDB.ALL_MYSQL_MARIADB)
+
+            val db = dialect.connect { defaultMaxAttempts = 1 }
+            val sql = if (dialect == TestDB.MYSQL_V8) {
+                "SELECT @@session.transaction_isolation"
+            } else {
+                "SELECT @@session.tx_isolation"
+            }
+            try {
+                val sessionDefault = suspendTransaction(db = db) {
+                    connection().setTransactionDefinition(null)
+                    exec(sql) { it.getString(1) }?.singleOrNull()
+                }
+                assertNotNull(sessionDefault)
+                val isolation = if (sessionDefault == "READ-COMMITTED") {
+                    IsolationLevel.REPEATABLE_READ
+                } else {
+                    IsolationLevel.READ_COMMITTED
+                }
+
+                suspendTransaction(db = db, transactionIsolation = isolation) {
+                    assertEquals(isolation, connection().getTransactionIsolation())
+                    assertEquals(sessionDefault, exec(sql) { it.getString(1) }?.singleOrNull())
+                }
+            } finally {
+                TransactionManager.closeAndUnregister(db)
+            }
+        }
+    }
+
+    @Test
+    fun testMySqlTransactionIsolationControlsVisibilityOfCommittedChanges() {
+        runTest {
+            Assumptions.assumeTrue(dialect in TestDB.ALL_MYSQL_MARIADB)
+
+            val tester = object : Table("transaction_isolation_tester") {
+                val amount = integer("amount")
+            }
+            val reader = dialect.connect {
+                defaultR2dbcIsolationLevel = IsolationLevel.READ_COMMITTED
+                defaultMaxAttempts = 1
+            }
+            val writer = dialect.connect { defaultMaxAttempts = 1 }
+            try {
+                suspendTransaction(db = writer) {
+                    SchemaUtils.create(tester)
+                    tester.insert { it[amount] = 0 }
+                }
+                // A null override exercises DatabaseConfig; the other cases override it for one transaction.
+                for (isolation in listOf(null, IsolationLevel.REPEATABLE_READ, IsolationLevel.READ_COMMITTED)) {
+                    suspendTransaction(db = writer) { tester.update { it[amount] = 0 } }
+                    suspendTransaction(db = reader, transactionIsolation = isolation) {
+                        assertEquals(0, tester.selectAll().single()[tester.amount])
+                        // A different database gets its own transaction and commits before the second read.
+                        suspendTransaction(db = writer) { tester.update { it[amount] = 1 } }
+                        val expected = if (isolation == IsolationLevel.REPEATABLE_READ) 0 else 1
+                        assertEquals(expected, tester.selectAll().single()[tester.amount])
+                    }
+                }
+            } finally {
+                try {
+                    suspendTransaction(db = writer) { SchemaUtils.drop(tester) }
+                } finally {
+                    TransactionManager.closeAndUnregister(reader)
+                    TransactionManager.closeAndUnregister(writer)
+                }
+            }
+        }
+    }
+
     private suspend fun R2dbcTransaction.assertTransactionIsolationLevel(testDb: TestDB, expected: IsolationLevel) {
+        if (testDb in TestDB.ALL_MYSQL_MARIADB) {
+            // Session variables do not report transaction-specific isolation. The visibility test checks its effect on reads.
+            assertEquals(expected, connection().getTransactionIsolation())
+            return
+        }
         val (sql, repeatable, committed) = when (testDb) {
             TestDB.POSTGRESQL -> Triple("SHOW TRANSACTION ISOLATION LEVEL", "repeatable read", "read committed")
-            in TestDB.ALL_MYSQL_MARIADB -> Triple("SELECT @@tx_isolation", "REPEATABLE-READ", "READ-COMMITTED")
             TestDB.SQLSERVER -> Triple("SELECT transaction_isolation_level FROM sys.dm_exec_sessions WHERE session_id = @@SPID", "3", "2")
             else -> throw UnsupportedOperationException("Cannot query isolation level using ${testDb.name}")
         }
