@@ -52,7 +52,7 @@ maven-publish = "0.35.0"
 gradle-plugin-publish = "2.1.1"
 maven-plugin-development = "1.0.3"
 maven-api = "3.9.16"
-maven-annotations = "3.15.2"
+maven-annotations = "3.16.0"
 
 testcontainers = "2.0.5"
 
