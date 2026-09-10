@@ -36,7 +36,6 @@ import org.jetbrains.exposed.v1.r2dbc.statements.api.getString
 import org.jetbrains.exposed.v1.r2dbc.transactions.R2dbcTransactionDefinition
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.MetadataProvider
-import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.MySQLMetadata
 import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.OracleMetadata
 import org.reactivestreams.Publisher
 import java.util.*
@@ -246,11 +245,6 @@ class R2dbcConnectionImpl(
                                     // instead it requires a specific order, with transaction isolation always set first.
                                     cx.beginTransaction(definition.toOracleDefinition()).awaitFirstOrNull()
                                     cx.executeSQL(metadataProvider.setReadOnlyMode(definition.readOnly))
-                                }
-                                is R2dbcTransactionDefinition if metadataProvider is MySQLMetadata && definition.isolationLevel != null -> {
-                                    // MySQL/MariaDB driver would set level only on next-next transaction, not the 1 about to start
-                                    cx.executeSQL(metadataProvider.setCurrentTransactionIsolation(definition.isolationLevel))
-                                    cx.beginTransaction(definition).awaitFirstOrNull()
                                 }
                                 else -> cx.beginTransaction(originalDefinition).awaitFirstOrNull()
                             }
