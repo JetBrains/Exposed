@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
 import org.jetbrains.exposed.v1.core.statements.api.RowApi
+import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
 import java.sql.ResultSet
 
 /**
@@ -15,6 +16,12 @@ class JdbcResult(
     val result: ResultSet
 ) : ResultApi, RowApi {
     private var consumed = false
+
+    /**
+     * The prepared statement that produced this result. It is registered with the transaction for as long as this
+     * result may still be read, and is released together with it. `null` for results created outside of statement execution.
+     */
+    internal var owner: JdbcPreparedStatementApi? = null
 
     override fun <T> mapRows(block: (RowApi) -> T?): Flow<T?> {
         if (consumed) error("Result is already consumed")
