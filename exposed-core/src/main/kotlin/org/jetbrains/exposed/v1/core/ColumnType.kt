@@ -1746,6 +1746,23 @@ internal fun Column<*>.isJsonBColumnForCasting(): Boolean {
 }
 
 /**
+ * Appends [expression] to this builder, wrapping it in [CastToJson] if it is a JSONB column that
+ * has to be cast when read.
+ *
+ * This is a rendering concern only: the unwrapped [expression] stays the identity used to look a
+ * value up in a [ResultRow], so every accessor on that row resolves it without having to
+ * reconstruct the cast.
+ */
+internal fun QueryBuilder.appendForJsonBCast(expression: Expression<*>) {
+    val column = expression as? Column<*>
+    if (column?.isJsonBColumnForCasting() == true) {
+        append(CastToJson(column, column.columnType))
+    } else {
+        append(expression)
+    }
+}
+
+/**
  * Returns the [ColumnType] commonly associated with storing values of type [T], or the [defaultType] if a mapping
  * does not exist for type [T].
  *

@@ -57,6 +57,19 @@ class JsonBColumnTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testAllAccessorsAgreeOnJsonBColumn() {
+        withJsonBTable(exclude = binaryJsonNotSupportedDB) { tester, _, data1, _ ->
+            val row = tester.selectAll().single()
+
+            // A JSONB column needing a cast is wrapped when the SELECT list is rendered, but the
+            // column itself remains the identity in the result row, so no accessor has to know.
+            assertEquals(data1, row[tester.jsonBColumn])
+            assertEquals(data1, row.getOrNull(tester.jsonBColumn))
+            assertTrue(row.hasValue(tester.jsonBColumn))
+        }
+    }
+
+    @Test
     fun testUpdate() {
         withJsonBTable(exclude = binaryJsonNotSupportedDB) { tester, _, data1, _ ->
             assertEquals(data1, tester.selectAll().single()[tester.jsonBColumn])
