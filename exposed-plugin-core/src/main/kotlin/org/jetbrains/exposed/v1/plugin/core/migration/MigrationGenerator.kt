@@ -112,6 +112,7 @@ class MigrationGenerator(
                     .getClassesInPackage(config.tablesPackage)
                     .mapNotNull { it.tableOrNull() }
                 val sortedTables = SchemaUtils.sortTablesByReferences(foundTables.toList())
+                val generatedSQL = mutableSetOf<String>()
                 sortedTables.mapIndexedNotNull { index, table ->
                     transaction(database) {
                         addLogger(GeneratorSqlLogger())
@@ -120,12 +121,14 @@ class MigrationGenerator(
                             withLogs = config.debug,
                         )
                         if (statements.isNotEmpty()) {
-                            val description = statements.first()
+                            val newSQL = statements.subtract(generatedSQL)
+                            generatedSQL.addAll(newSQL)
+                            val description = newSQL.first()
                                 .statementToFileDescription(config.useUpperCaseDescription)
                             val version = versionGenerator(index - ignored)
                             val fileName = "$version$description${config.fileExtension}"
                             val file = File(migrationsDirectory, fileName)
-                            file.writeText(statements.joinToString(";\n", postfix = ";"))
+                            file.writeText(newSQL.joinToString(";\n", postfix = ";"))
                             fileName
                         } else {
                             ignored++
