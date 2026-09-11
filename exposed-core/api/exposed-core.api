@@ -3,6 +3,8 @@ public abstract class org/jetbrains/exposed/v1/core/AbstractQuery : org/jetbrain
 	public final fun adjustComments (Lorg/jetbrains/exposed/v1/core/AbstractQuery$CommentPosition;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/AbstractQuery;
 	public static synthetic fun adjustComments$default (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery$CommentPosition;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/AbstractQuery;
 	public final fun adjustHaving (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/core/AbstractQuery;
+	protected final fun appendCommonTableExpressions (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
+	protected final fun appendStatementPreamble (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 	public synthetic fun arguments ()Ljava/lang/Iterable;
 	public fun arguments ()Ljava/util/List;
 	public final fun comment (Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/AbstractQuery$CommentPosition;)Lorg/jetbrains/exposed/v1/core/AbstractQuery;
@@ -23,9 +25,12 @@ public abstract class org/jetbrains/exposed/v1/core/AbstractQuery : org/jetbrain
 	public abstract fun getSet ()Lorg/jetbrains/exposed/v1/core/FieldSet;
 	public final fun getWhere ()Lorg/jetbrains/exposed/v1/core/Op;
 	public final fun groupBy ([Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/AbstractQuery;
+	protected final fun hasCommonTableExpressions ()Z
 	public final fun hasCustomForUpdateState ()Z
 	public final fun having (Lkotlin/jvm/functions/Function0;)Lorg/jetbrains/exposed/v1/core/AbstractQuery;
 	public final fun isForUpdate ()Z
+	public fun isGeneratedCteField (I)Z
+	public final fun prepareAsSubquerySQL (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)Ljava/lang/String;
 	public fun prepareSQL (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)Ljava/lang/String;
 	public fun prepareSQL (Lorg/jetbrains/exposed/v1/core/Transaction;Z)Ljava/lang/String;
 	protected final fun setCount (Z)V
@@ -35,6 +40,10 @@ public abstract class org/jetbrains/exposed/v1/core/AbstractQuery : org/jetbrain
 	protected final fun setLimit (Ljava/lang/Integer;)V
 	protected final fun setOffset (J)V
 	protected final fun setWhere (Lorg/jetbrains/exposed/v1/core/Op;)V
+	public fun snapshotForCte ()Lorg/jetbrains/exposed/v1/core/AbstractQuery;
+	protected final fun withCommonTableExpressionsDetached (Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	protected final fun withCommonTableExpressionsDetachedSuspending (Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun withCtes ([Lorg/jetbrains/exposed/v1/core/CommonTableExpression;)Lorg/jetbrains/exposed/v1/core/AbstractQuery;
 	public fun withDistinct (Z)Lorg/jetbrains/exposed/v1/core/AbstractQuery;
 	public static synthetic fun withDistinct$default (Lorg/jetbrains/exposed/v1/core/AbstractQuery;ZILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/AbstractQuery;
 	public final fun withDistinctOn ([Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/core/AbstractQuery;
@@ -487,6 +496,28 @@ public class org/jetbrains/exposed/v1/core/ColumnWithTransform : org/jetbrains/e
 	public fun unwrapRecursive (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/core/CommonTableExpression : org/jetbrains/exposed/v1/core/ColumnSet {
+	public fun crossJoin (Lorg/jetbrains/exposed/v1/core/ColumnSet;)Lorg/jetbrains/exposed/v1/core/Join;
+	public fun describe (Lorg/jetbrains/exposed/v1/core/Transaction;Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
+	public fun fullJoin (Lorg/jetbrains/exposed/v1/core/ColumnSet;)Lorg/jetbrains/exposed/v1/core/Join;
+	public final fun get (Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/core/Column;
+	public final fun get (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Expression;
+	public final fun get (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;
+	public fun getColumns ()Ljava/util/List;
+	public fun getFields ()Ljava/util/List;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getRecursive ()Z
+	public fun innerJoin (Lorg/jetbrains/exposed/v1/core/ColumnSet;)Lorg/jetbrains/exposed/v1/core/Join;
+	public fun join (Lorg/jetbrains/exposed/v1/core/ColumnSet;Lorg/jetbrains/exposed/v1/core/JoinType;Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;ZLkotlin/jvm/functions/Function0;)Lorg/jetbrains/exposed/v1/core/Join;
+	public fun leftJoin (Lorg/jetbrains/exposed/v1/core/ColumnSet;)Lorg/jetbrains/exposed/v1/core/Join;
+	public fun rightJoin (Lorg/jetbrains/exposed/v1/core/ColumnSet;)Lorg/jetbrains/exposed/v1/core/Join;
+}
+
+public final class org/jetbrains/exposed/v1/core/CommonTableExpressionKt {
+	public static final fun asCte (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/CommonTableExpression;
+	public static final fun recursiveCte (Ljava/lang/String;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/core/CommonTableExpression;
 }
 
 public abstract class org/jetbrains/exposed/v1/core/ComparisonOp : org/jetbrains/exposed/v1/core/Op, org/jetbrains/exposed/v1/core/ComplexExpression, org/jetbrains/exposed/v1/core/Op$OpBoolean {
@@ -4079,11 +4110,13 @@ public abstract interface class org/jetbrains/exposed/v1/core/vendors/DatabaseDi
 	public abstract fun getName ()Ljava/lang/String;
 	public fun getNeedsQuotesWhenSymbolsInNames ()Z
 	public fun getNeedsSequenceToAutoInc ()Z
+	public fun getRecursiveCteSyntax ()Lorg/jetbrains/exposed/v1/core/vendors/RecursiveCteSyntax;
 	public fun getRequiresAutoCommitOnCreateDrop ()Z
 	public fun getSequenceMaxValue ()J
 	public fun getSupportsAlterCheckConstraint ()Z
 	public fun getSupportsCheckConstraints ()Z
 	public fun getSupportsColumnTypeChange ()Z
+	public fun getSupportsCommonTableExpressions ()Z
 	public fun getSupportsCreateSchema ()Z
 	public fun getSupportsCreateSequence ()Z
 	public fun getSupportsDualTableConcept ()Z
@@ -4094,6 +4127,7 @@ public abstract interface class org/jetbrains/exposed/v1/core/vendors/DatabaseDi
 	public fun getSupportsOnUpdate ()Z
 	public fun getSupportsOnlyIdentifiersInGeneratedKeys ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z
+	public fun getSupportsRecursiveCommonTableExpressions ()Z
 	public fun getSupportsRestrictReferenceOption ()Z
 	public fun getSupportsSelectForUpdate ()Z
 	public fun getSupportsSequenceAsGeneratedKeys ()Z
@@ -4122,11 +4156,13 @@ public final class org/jetbrains/exposed/v1/core/vendors/DatabaseDialect$Default
 	public static fun getLikePatternSpecialChars (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Ljava/util/Map;
 	public static fun getNeedsQuotesWhenSymbolsInNames (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getNeedsSequenceToAutoInc (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
+	public static fun getRecursiveCteSyntax (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Lorg/jetbrains/exposed/v1/core/vendors/RecursiveCteSyntax;
 	public static fun getRequiresAutoCommitOnCreateDrop (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getSequenceMaxValue (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)J
 	public static fun getSupportsAlterCheckConstraint (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getSupportsCheckConstraints (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getSupportsColumnTypeChange (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
+	public static fun getSupportsCommonTableExpressions (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getSupportsCreateSchema (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getSupportsCreateSequence (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getSupportsDualTableConcept (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
@@ -4136,6 +4172,7 @@ public final class org/jetbrains/exposed/v1/core/vendors/DatabaseDialect$Default
 	public static fun getSupportsOnUpdate (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getSupportsOnlyIdentifiersInGeneratedKeys (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getSupportsOrderByNullsFirstLast (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
+	public static fun getSupportsRecursiveCommonTableExpressions (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getSupportsRestrictReferenceOption (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getSupportsSelectForUpdate (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
 	public static fun getSupportsSequenceAsGeneratedKeys (Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;)Z
@@ -4374,6 +4411,7 @@ public class org/jetbrains/exposed/v1/core/vendors/H2Dialect : org/jetbrains/exp
 	public final fun getOriginalDataTypeProvider ()Lorg/jetbrains/exposed/v1/core/vendors/DataTypeProvider;
 	public final fun getOriginalFunctionProvider ()Lorg/jetbrains/exposed/v1/core/vendors/FunctionProvider;
 	public fun getSupportsColumnTypeChange ()Z
+	public fun getSupportsCommonTableExpressions ()Z
 	public fun getSupportsCreateSchema ()Z
 	public fun getSupportsCreateSequence ()Z
 	public fun getSupportsDualTableConcept ()Z
@@ -4381,6 +4419,7 @@ public class org/jetbrains/exposed/v1/core/vendors/H2Dialect : org/jetbrains/exp
 	public fun getSupportsMultipleGeneratedKeys ()Z
 	public fun getSupportsOnlyIdentifiersInGeneratedKeys ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z
+	public fun getSupportsRecursiveCommonTableExpressions ()Z
 	public fun getSupportsSelectForUpdate ()Z
 	public fun getSupportsSequenceAsGeneratedKeys ()Z
 	public fun getSupportsSubqueryUnions ()Z
@@ -4432,8 +4471,10 @@ public class org/jetbrains/exposed/v1/core/vendors/MariaDBDialect : org/jetbrain
 	public fun getFunctionProvider ()Lorg/jetbrains/exposed/v1/core/vendors/FunctionProvider;
 	public fun getName ()Ljava/lang/String;
 	public fun getSequenceMaxValue ()J
+	public fun getSupportsCommonTableExpressions ()Z
 	public fun getSupportsCreateSequence ()Z
 	public fun getSupportsOnlyIdentifiersInGeneratedKeys ()Z
+	public fun getSupportsRecursiveCommonTableExpressions ()Z
 	public fun getSupportsSequenceAsGeneratedKeys ()Z
 	public fun getSupportsSetDefaultReferenceOption ()Z
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/v1/core/Expression;)Z
@@ -4453,8 +4494,10 @@ public class org/jetbrains/exposed/v1/core/vendors/MysqlDialect : org/jetbrains/
 	public fun dropSchema (Lorg/jetbrains/exposed/v1/core/Schema;Z)Ljava/lang/String;
 	protected final fun getNotAcceptableDefaults ()Ljava/util/List;
 	public fun getSupportsAlterCheckConstraint ()Z
+	public fun getSupportsCommonTableExpressions ()Z
 	public fun getSupportsCreateSequence ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z
+	public fun getSupportsRecursiveCommonTableExpressions ()Z
 	public fun getSupportsSelectForUpdate ()Z
 	public fun getSupportsSetDefaultReferenceOption ()Z
 	public fun getSupportsSubqueryUnions ()Z
@@ -4480,12 +4523,15 @@ public class org/jetbrains/exposed/v1/core/vendors/OracleDialect : org/jetbrains
 	public fun getDefaultReferenceOption ()Lorg/jetbrains/exposed/v1/core/ReferenceOption;
 	public fun getNeedsQuotesWhenSymbolsInNames ()Z
 	public fun getNeedsSequenceToAutoInc ()Z
+	public fun getRecursiveCteSyntax ()Lorg/jetbrains/exposed/v1/core/vendors/RecursiveCteSyntax;
+	public fun getSupportsCommonTableExpressions ()Z
 	public fun getSupportsDualTableConcept ()Z
 	public fun getSupportsIfNotExists ()Z
 	public fun getSupportsMultipleGeneratedKeys ()Z
 	public fun getSupportsOnUpdate ()Z
 	public fun getSupportsOnlyIdentifiersInGeneratedKeys ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z
+	public fun getSupportsRecursiveCommonTableExpressions ()Z
 	public fun getSupportsRestrictReferenceOption ()Z
 	public fun getSupportsSelectForUpdate ()Z
 	public fun getSupportsSetDefaultReferenceOption ()Z
@@ -4510,7 +4556,9 @@ public class org/jetbrains/exposed/v1/core/vendors/PostgreSQLDialect : org/jetbr
 	public fun dropIndex (Ljava/lang/String;Ljava/lang/String;ZZ)Ljava/lang/String;
 	public fun getName ()Ljava/lang/String;
 	public fun getRequiresAutoCommitOnCreateDrop ()Z
+	public fun getSupportsCommonTableExpressions ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z
+	public fun getSupportsRecursiveCommonTableExpressions ()Z
 	public fun getSupportsSelectForUpdate ()Z
 	public fun getSupportsSubqueryUnions ()Z
 	public fun getSupportsWindowFrameGroupsMode ()Z
@@ -4546,6 +4594,14 @@ public final class org/jetbrains/exposed/v1/core/vendors/PrimaryKeyMetadata {
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class org/jetbrains/exposed/v1/core/vendors/RecursiveCteSyntax : java/lang/Enum {
+	public static final field NO_RECURSIVE_KEYWORD Lorg/jetbrains/exposed/v1/core/vendors/RecursiveCteSyntax;
+	public static final field RECURSIVE_KEYWORD Lorg/jetbrains/exposed/v1/core/vendors/RecursiveCteSyntax;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/vendors/RecursiveCteSyntax;
+	public static fun values ()[Lorg/jetbrains/exposed/v1/core/vendors/RecursiveCteSyntax;
+}
+
 public class org/jetbrains/exposed/v1/core/vendors/RedshiftDialect : org/jetbrains/exposed/v1/core/vendors/VendorDialect {
 	public static final field Companion Lorg/jetbrains/exposed/v1/core/vendors/RedshiftDialect$Companion;
 	public fun <init> ()V
@@ -4557,6 +4613,7 @@ public class org/jetbrains/exposed/v1/core/vendors/RedshiftDialect : org/jetbrai
 	public fun getRequiresAutoCommitOnCreateDrop ()Z
 	public fun getSupportsAlterCheckConstraint ()Z
 	public fun getSupportsCheckConstraints ()Z
+	public fun getSupportsCommonTableExpressions ()Z
 	public fun getSupportsCreateSequence ()Z
 	public fun getSupportsGeneratedKeysRetrieval ()Z
 	public fun getSupportsMultipleGeneratedKeys ()Z
@@ -4564,6 +4621,7 @@ public class org/jetbrains/exposed/v1/core/vendors/RedshiftDialect : org/jetbrai
 	public fun getSupportsOnUpdate ()Z
 	public fun getSupportsOnlyIdentifiersInGeneratedKeys ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z
+	public fun getSupportsRecursiveCommonTableExpressions ()Z
 	public fun getSupportsRestrictReferenceOption ()Z
 	public fun getSupportsSetDefaultReferenceOption ()Z
 	public fun getSupportsSubqueryUnions ()Z
@@ -4589,8 +4647,11 @@ public class org/jetbrains/exposed/v1/core/vendors/SQLServerDialect : org/jetbra
 	public fun getDefaultReferenceOption ()Lorg/jetbrains/exposed/v1/core/ReferenceOption;
 	public fun getLikePatternSpecialChars ()Ljava/util/Map;
 	public fun getNeedsQuotesWhenSymbolsInNames ()Z
+	public fun getRecursiveCteSyntax ()Lorg/jetbrains/exposed/v1/core/vendors/RecursiveCteSyntax;
+	public fun getSupportsCommonTableExpressions ()Z
 	public fun getSupportsIfNotExists ()Z
 	public fun getSupportsOnlyIdentifiersInGeneratedKeys ()Z
+	public fun getSupportsRecursiveCommonTableExpressions ()Z
 	public fun getSupportsRestrictReferenceOption ()Z
 	public fun getSupportsSequenceAsGeneratedKeys ()Z
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/v1/core/Expression;)Z
@@ -4611,9 +4672,11 @@ public class org/jetbrains/exposed/v1/core/vendors/SQLiteDialect : org/jetbrains
 	public fun dropDatabase (Ljava/lang/String;)Ljava/lang/String;
 	public fun dropIndex (Ljava/lang/String;Ljava/lang/String;ZZ)Ljava/lang/String;
 	public fun getSupportsAlterCheckConstraint ()Z
+	public fun getSupportsCommonTableExpressions ()Z
 	public fun getSupportsCreateSchema ()Z
 	public fun getSupportsCreateSequence ()Z
 	public fun getSupportsMultipleGeneratedKeys ()Z
+	public fun getSupportsRecursiveCommonTableExpressions ()Z
 	public fun getSupportsWindowFrameGroupsMode ()Z
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/v1/core/Expression;)Z
 	public fun listDatabases ()Ljava/lang/String;
@@ -4657,11 +4720,13 @@ public abstract class org/jetbrains/exposed/v1/core/vendors/VendorDialect : org/
 	public fun getName ()Ljava/lang/String;
 	public fun getNeedsQuotesWhenSymbolsInNames ()Z
 	public fun getNeedsSequenceToAutoInc ()Z
+	public fun getRecursiveCteSyntax ()Lorg/jetbrains/exposed/v1/core/vendors/RecursiveCteSyntax;
 	public fun getRequiresAutoCommitOnCreateDrop ()Z
 	public fun getSequenceMaxValue ()J
 	public fun getSupportsAlterCheckConstraint ()Z
 	public fun getSupportsCheckConstraints ()Z
 	public fun getSupportsColumnTypeChange ()Z
+	public fun getSupportsCommonTableExpressions ()Z
 	public fun getSupportsCreateSchema ()Z
 	public fun getSupportsCreateSequence ()Z
 	public fun getSupportsDualTableConcept ()Z
@@ -4672,6 +4737,7 @@ public abstract class org/jetbrains/exposed/v1/core/vendors/VendorDialect : org/
 	public fun getSupportsOnUpdate ()Z
 	public fun getSupportsOnlyIdentifiersInGeneratedKeys ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z
+	public fun getSupportsRecursiveCommonTableExpressions ()Z
 	public fun getSupportsRestrictReferenceOption ()Z
 	public fun getSupportsSelectForUpdate ()Z
 	public fun getSupportsSequenceAsGeneratedKeys ()Z

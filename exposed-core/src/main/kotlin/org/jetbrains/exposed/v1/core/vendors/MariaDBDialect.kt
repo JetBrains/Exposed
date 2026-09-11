@@ -106,6 +106,11 @@ internal object MariaDBFunctionProvider : MysqlFunctionProvider() {
  * MariaDB dialect implementation.
  */
 open class MariaDBDialect : MysqlDialect() {
+    @OptIn(InternalApi::class)
+    override val supportsCommonTableExpressions: Boolean
+        get() = currentTransaction().db.version.covers(CTE_MIN_MAJOR_VERSION, CTE_MIN_MINOR_VERSION)
+    override val supportsRecursiveCommonTableExpressions: Boolean
+        get() = supportsCommonTableExpressions
     override val name: String = dialectName
     override val dataTypeProvider: DataTypeProvider = MariaDBDataTypeProvider
     override val functionProvider: FunctionProvider = MariaDBFunctionProvider
@@ -161,6 +166,8 @@ open class MariaDBDialect : MysqlDialect() {
     }
 
     companion object : DialectNameProvider("MariaDB") {
+        private const val CTE_MIN_MAJOR_VERSION = 10
+        private const val CTE_MIN_MINOR_VERSION = 2
         private const val SEQUENCE_MIN_MAJOR_VERSION = 10
         private const val SEQUENCE_MIN_MINOR_VERSION = 3
     }

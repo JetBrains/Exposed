@@ -465,6 +465,9 @@ private fun validateMergeCommandClauses(transaction: Transaction, clauses: List<
  * Oracle dialect implementation.
  */
 open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, OracleFunctionProvider) {
+    override val supportsCommonTableExpressions: Boolean = true
+    override val supportsRecursiveCommonTableExpressions: Boolean = true
+    override val recursiveCteSyntax: RecursiveCteSyntax = RecursiveCteSyntax.NO_RECURSIVE_KEYWORD
     override val supportsIfNotExists: Boolean = false
     override val needsSequenceToAutoInc: Boolean = true
     override val defaultReferenceOption: ReferenceOption = ReferenceOption.NO_ACTION

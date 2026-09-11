@@ -486,9 +486,10 @@ class Exists(
     /** Returns the query being checked. */
     val query: AbstractQuery<*>
 ) : Op<Boolean>(), Op.OpBoolean {
+    @OptIn(InternalApi::class)
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("EXISTS (")
-        query.prepareSQL(this)
+        query.prepareAsSubquerySQL(this)
         append(")")
     }
 }
@@ -500,9 +501,10 @@ class NotExists(
     /** Returns the query being checked. */
     val query: AbstractQuery<*>
 ) : Op<Boolean>(), Op.OpBoolean {
+    @OptIn(InternalApi::class)
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("NOT EXISTS (")
-        query.prepareSQL(this)
+        query.prepareAsSubquerySQL(this)
         append(")")
     }
 }
@@ -516,9 +518,10 @@ sealed class SubQueryOp<T>(
     /** Returns the query to check against. */
     val query: AbstractQuery<*>
 ) : Op<Boolean>(), ComplexExpression, Op.OpBoolean {
+    @OptIn(InternalApi::class)
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append(expr, " $operator (")
-        query.prepareSQL(this)
+        query.prepareAsSubquerySQL(this)
         +")"
     }
 }

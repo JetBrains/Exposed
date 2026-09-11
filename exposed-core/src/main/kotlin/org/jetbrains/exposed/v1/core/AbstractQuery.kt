@@ -5,7 +5,11 @@ import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
 import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
+import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.RecursiveCteSyntax
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
+import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 
 @Suppress("ForbiddenComment")
 // TODO: consider naming this as QueryState (or something related to state of the query) and check that it has only single responsibility
@@ -59,6 +63,8 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
     var comments: Map<CommentPosition, String> = mutableMapOf()
         private set
 
+    private var commonTableExpressions: List<CommonTableExpression> = emptyList()
+
     /**
      * Copies all stored properties of this `SELECT` query into the properties of [other].
      *
@@ -75,6 +81,82 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
         other.having = having
         other.forUpdate = forUpdate
         other.comments = comments.toMutableMap()
+        other.commonTableExpressions = commonTableExpressions.toList()
+    }
+
+    /** Attaches [ctes] to this outermost query in declaration order. */
+    fun withCtes(vararg ctes: CommonTableExpression): T = apply {
+        require(ctes.isNotEmpty()) { "At least one CTE must be provided" }
+        require(ctes.distinct().size == ctes.size) { "The same CTE cannot be attached more than once" }
+        require(commonTableExpressions.none { it in ctes }) { "The same CTE cannot be attached more than once" }
+        commonTableExpressions = commonTableExpressions + ctes
+    } as T
+
+    /** Creates an immutable snapshot suitable for use as a CTE definition. */
+    @InternalApi
+    open fun snapshotForCte(): AbstractQuery<*> = error(
+        "${this::class.simpleName} must override snapshotForCte() before it can be used as a CTE definition"
+    )
+
+    /** Returns whether this query owns an attached `WITH` clause. */
+    @InternalApi
+    protected fun hasCommonTableExpressions(): Boolean = commonTableExpressions.isNotEmpty()
+
+    /** Returns whether the field at [index] has a framework-generated alias. */
+    @InternalApi
+    open fun isGeneratedCteField(index: Int): Boolean = false
+
+    /** Runs [body] while this query's attached CTEs are temporarily detached. */
+    @InternalApi
+    protected fun <R> withCommonTableExpressionsDetached(body: (List<CommonTableExpression>) -> R): R {
+        val originalCtes = commonTableExpressions
+        commonTableExpressions = emptyList()
+        return try {
+            body(originalCtes)
+        } finally {
+            commonTableExpressions = originalCtes
+        }
+    }
+
+    /** Runs suspending [body] while this query's attached CTEs are temporarily detached. */
+    @InternalApi
+    protected suspend fun <R> withCommonTableExpressionsDetachedSuspending(
+        body: suspend (List<CommonTableExpression>) -> R
+    ): R {
+        val originalCtes = commonTableExpressions
+        commonTableExpressions = emptyList()
+        return try {
+            body(originalCtes)
+        } finally {
+            commonTableExpressions = originalCtes
+        }
+    }
+
+    /** Verifies that this query may be rendered as a nested query. */
+    internal fun validateAsSubquery() {
+        require(commonTableExpressions.isEmpty()) {
+            "A query owning a WITH clause cannot be used as a subquery; attach its CTEs to the outermost query instead"
+        }
+    }
+
+    /** Verifies that this query may be stored as a CTE definition. */
+    internal fun validateAsCteDefinition(name: String) {
+        require(commonTableExpressions.isEmpty()) {
+            "CTE '$name' definition already owns a WITH clause; attach all CTEs to the outermost query instead"
+        }
+    }
+
+    /** Renders this query as a nested query after enforcing CTE ownership rules. */
+    @InternalApi
+    fun prepareAsSubquerySQL(builder: QueryBuilder): String {
+        validateAsSubquery()
+        return prepareSQL(builder)
+    }
+
+    /** Renders this query as a nested query after enforcing CTE ownership rules. */
+    internal fun prepareAsSubquerySQL(transaction: Transaction, prepared: Boolean): String {
+        validateAsSubquery()
+        return prepareSQL(transaction, prepared)
     }
 
     override fun arguments() = QueryBuilder(true).let {
@@ -207,9 +289,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
         require(set.fields.isNotEmpty()) { "Can't prepare SELECT statement without columns or expressions to retrieve" }
 
         builder {
-            comments[CommentPosition.FRONT]?.let { comment ->
-                append("/*$comment*/ ")
-            }
+            appendStatementPreamble(this)
 
             append("SELECT ")
 
@@ -278,6 +358,63 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
             }
         }
         return builder.toString()
+    }
+
+    /** Appends the front comment and attached CTE definitions. */
+    protected fun appendStatementPreamble(builder: QueryBuilder) {
+        builder {
+            comments[CommentPosition.FRONT]?.let { comment -> append("/*$comment*/ ") }
+            appendCommonTableExpressions(this)
+        }
+    }
+
+    /** Appends attached CTE definitions without emitting comments. */
+    @OptIn(InternalApi::class)
+    protected fun appendCommonTableExpressions(builder: QueryBuilder) {
+        if (commonTableExpressions.isEmpty()) return
+
+        val dialect = currentDialect
+        if (!dialect.supportsCommonTableExpressions) {
+            val message = when (dialect) {
+                is MariaDBDialect -> "MariaDB 10.2 or newer is required for common table expressions"
+                is MysqlDialect -> "MySQL 8.0 or newer is required for common table expressions"
+                else -> "Common table expressions are unsupported"
+            }
+            throw UnsupportedByDialectException(message, dialect)
+        }
+        if (commonTableExpressions.any { it.recursive } && !dialect.supportsRecursiveCommonTableExpressions) {
+            throw UnsupportedByDialectException("Recursive common table expressions are unsupported", dialect)
+        }
+
+        val identifierManager = currentTransaction().db.identifierManager
+        val normalizedCteNames = commonTableExpressions.map { identifierManager.inProperCase(it.name) }
+        require(normalizedCteNames.distinct().size == normalizedCteNames.size) {
+            "A query cannot attach CTEs with duplicate names"
+        }
+        builder.registerCommonTableExpressions(commonTableExpressions)
+
+        builder {
+            append("WITH")
+            if (commonTableExpressions.any { it.recursive } && dialect.recursiveCteSyntax == RecursiveCteSyntax.RECURSIVE_KEYWORD) {
+                append(" RECURSIVE")
+            }
+            append(' ')
+            commonTableExpressions.appendTo { cte ->
+                cte.validatePhysicalSchema()
+                val normalizedOutputNames = cte.outputNames.map { identifierManager.inProperCase(it) }
+                require(normalizedOutputNames.distinct().size == normalizedOutputNames.size) {
+                    "CTE '${cte.name}' contains duplicate output names"
+                }
+                append(identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(cte.name))
+                cte.outputNames.appendTo(prefix = " (", postfix = ")") { outputName ->
+                    append(identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(outputName))
+                }
+                append(" AS (")
+                cte.definition.prepareAsSubquerySQL(this)
+                append(')')
+            }
+            append(' ')
+        }
     }
 
     /** Represents the position at which an SQL comment will be added in a `SELECT` query. */

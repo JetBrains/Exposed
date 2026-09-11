@@ -149,6 +149,7 @@ open class MergeSelectStatement(
     val on: Op<Boolean>
 ) : MergeStatement(dest) {
     override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> {
+        selectQuery.query.validateAsSubquery()
         val queryArguments = selectQuery.query.arguments().firstOrNull() ?: emptyList()
         val mergeStatementArguments = super.arguments().firstOrNull() ?: emptyList()
         return listOf(

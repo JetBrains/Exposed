@@ -213,6 +213,8 @@ internal object H2FunctionProvider : FunctionProvider() {
  * H2 dialect implementation.
  */
 open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2FunctionProvider) {
+    override val supportsCommonTableExpressions: Boolean = true
+    override val supportsRecursiveCommonTableExpressions: Boolean = true
 
     override fun toString(): String = "H2Dialect[$dialectName, $h2Mode]"
 
