@@ -140,11 +140,18 @@ abstract class SchemaUtilityApi {
     /**
      * Filters all table indices and returns those that are defined on a table with more than one index.
      * If [withLogs] is `true`, DROP statements for these indices will also be logged.
+     *
+     * Only indices whose definition can be fully read back are considered: those with at least one mapped
+     * column and no filter condition. An index whose columns could not be resolved against the table object
+     * (a functional index, or an index on a column that has since been removed from the table object) carries
+     * no reliable description of what it covers, and the filter condition of a partial index is not read back
+     * at all, so neither kind is ever reported as excessive.
      * @suppress
      */
     @InternalApi
     protected fun Map<Table, List<Index>>.filterAndLogExcessIndices(withLogs: Boolean): List<Index> {
         val excessiveIndices = flatMap { (_, indices) -> indices }
+            .filter { index -> index.columns.isNotEmpty() && index.filterCondition == null }
             .groupBy { index ->
                 Triple(index.table, index.unique, index.columns.joinToString { column -> column.name })
             }
