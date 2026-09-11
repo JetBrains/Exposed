@@ -119,6 +119,9 @@ class ResultRow private constructor(
     @Suppress("UNCHECKED_CAST")
     private fun <T> rawToColumnValue(raw: T?, expression: Expression<T>): T {
         return when {
+            // It covers the case when nullable database columns imitates non-nullable column on table object
+            expression is ExpressionWithColumnType<T> && expression.columnType is NonNullableColumnWithTransform<*, *> ->
+                (expression.columnType as NonNullableColumnWithTransform<Any, T>).valueFromDBOrNull(raw)
             raw == null -> null
             raw == NotInitializedValue -> error("$expression is not initialized yet")
             expression is ExpressionWithColumnTypeAlias<T> -> rawToColumnValue(raw, expression.delegate)
