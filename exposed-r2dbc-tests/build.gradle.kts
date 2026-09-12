@@ -48,6 +48,7 @@ dependencies {
     testImplementation(project(":exposed-money"))
     testImplementation(project(":exposed-crypt"))
     testImplementation(project(":exposed-json"))
+    testImplementation(project(":exposed-postgres"))
     testImplementation(project(":exposed-java-time"))
     testImplementation(project(":exposed-jodatime"))
     // --- end ----

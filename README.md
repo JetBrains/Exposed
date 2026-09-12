@@ -70,6 +70,7 @@ As well as the following extension modules:
 | `exposed-migration-jdbc`       | Provides utilities to support database schema migrations, with a reliance on a JDBC driver                                                                                      |
 | `exposed-migration-r2dbc`      | Provides utilities to support database schema migrations, with a reliance on a R2DBC driver                                                                                     |
 | `exposed-money`                | Extensions to support [`MonetaryAmount`](https://javamoney.github.io/apidocs/java.money/javax/money/MonetaryAmount.html) from the [JavaMoney API](https://javamoney.github.io/) |
+| `exposed-postgres`             | PostgreSQL-specific column types and DSL extensions that have no equivalent on other databases (e.g. `hstore`)                                                                  |
 | `exposed-spring-boot-starter`  | A starter for [Spring Boot 3](https://spring.io/projects/spring-boot) to utilize Exposed as the ORM                                                                             |
 | `exposed-spring-boot4-starter` | A starter for [Spring Boot 4](https://spring.io/projects/spring-boot) to utilize Exposed as the ORM                                                                             |
 | `spring-transaction`           | Transaction manager that builds on top of the standard transaction workflow from Spring Framework 6                                                                             |

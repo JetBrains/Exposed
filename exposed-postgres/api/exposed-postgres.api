@@ -1,0 +1,79 @@
+public final class org/jetbrains/exposed/v1/postgresql/hstore/HstoreColumnType : org/jetbrains/exposed/v1/core/ColumnType {
+	public fun <init> ()V
+	public synthetic fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueAsDefaultString (Ljava/util/Map;)Ljava/lang/String;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun notNullValueToDB (Ljava/util/Map;)Ljava/lang/Object;
+	public synthetic fun parameterMarker (Ljava/lang/Object;)Ljava/lang/String;
+	public fun parameterMarker (Ljava/util/Map;)Ljava/lang/String;
+	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
+	public fun sqlType ()Ljava/lang/String;
+	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueFromDB (Ljava/lang/Object;)Ljava/util/Map;
+}
+
+public final class org/jetbrains/exposed/v1/postgresql/hstore/HstoreColumnTypeKt {
+	public static final fun hstore (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Column;
+}
+
+public final class org/jetbrains/exposed/v1/postgresql/hstore/HstoreConcat : org/jetbrains/exposed/v1/core/Function {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)V
+	public final fun getOther ()Lorg/jetbrains/exposed/v1/core/Expression;
+	public final fun getTarget ()Lorg/jetbrains/exposed/v1/core/Expression;
+	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
+}
+
+public final class org/jetbrains/exposed/v1/postgresql/hstore/HstoreContains : org/jetbrains/exposed/v1/core/Op, org/jetbrains/exposed/v1/core/ComplexExpression {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)V
+	public final fun getCandidate ()Lorg/jetbrains/exposed/v1/core/Expression;
+	public final fun getTarget ()Lorg/jetbrains/exposed/v1/core/Expression;
+	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
+}
+
+public final class org/jetbrains/exposed/v1/postgresql/hstore/HstoreDelete : org/jetbrains/exposed/v1/core/Function {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)V
+	public final fun getArgument ()Lorg/jetbrains/exposed/v1/core/Expression;
+	public final fun getTarget ()Lorg/jetbrains/exposed/v1/core/Expression;
+	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
+}
+
+public final class org/jetbrains/exposed/v1/postgresql/hstore/HstoreExists : org/jetbrains/exposed/v1/core/Op, org/jetbrains/exposed/v1/core/ComplexExpression {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)V
+	public final fun getKey ()Lorg/jetbrains/exposed/v1/core/Expression;
+	public final fun getTarget ()Lorg/jetbrains/exposed/v1/core/Expression;
+	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
+}
+
+public final class org/jetbrains/exposed/v1/postgresql/hstore/HstoreExistsAll : org/jetbrains/exposed/v1/core/Op, org/jetbrains/exposed/v1/core/ComplexExpression {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)V
+	public final fun getKeys ()Lorg/jetbrains/exposed/v1/core/Expression;
+	public final fun getTarget ()Lorg/jetbrains/exposed/v1/core/Expression;
+	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
+}
+
+public final class org/jetbrains/exposed/v1/postgresql/hstore/HstoreExistsAny : org/jetbrains/exposed/v1/core/Op, org/jetbrains/exposed/v1/core/ComplexExpression {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)V
+	public final fun getKeys ()Lorg/jetbrains/exposed/v1/core/Expression;
+	public final fun getTarget ()Lorg/jetbrains/exposed/v1/core/Expression;
+	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
+}
+
+public final class org/jetbrains/exposed/v1/postgresql/hstore/HstoreFunctionsKt {
+	public static final fun concat (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/util/Map;)Lorg/jetbrains/exposed/v1/postgresql/hstore/HstoreConcat;
+	public static final fun contains (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/util/Map;)Lorg/jetbrains/exposed/v1/postgresql/hstore/HstoreContains;
+	public static final fun delete (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/postgresql/hstore/HstoreDelete;
+	public static final fun delete (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/util/List;)Lorg/jetbrains/exposed/v1/postgresql/hstore/HstoreDelete;
+	public static final fun delete (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/util/Map;)Lorg/jetbrains/exposed/v1/postgresql/hstore/HstoreDelete;
+	public static final fun exists (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/postgresql/hstore/HstoreExists;
+	public static final fun existsAll (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/util/List;)Lorg/jetbrains/exposed/v1/postgresql/hstore/HstoreExistsAll;
+	public static final fun existsAny (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/util/List;)Lorg/jetbrains/exposed/v1/postgresql/hstore/HstoreExistsAny;
+	public static final fun get (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/postgresql/hstore/HstoreGet;
+}
+
+public final class org/jetbrains/exposed/v1/postgresql/hstore/HstoreGet : org/jetbrains/exposed/v1/core/Function {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)V
+	public final fun getKey ()Lorg/jetbrains/exposed/v1/core/Expression;
+	public final fun getTarget ()Lorg/jetbrains/exposed/v1/core/Expression;
+	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
+}
+
