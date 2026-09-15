@@ -52,9 +52,12 @@ class MigrationGenerator(
      *
      * @return list of filenames (relative to [MigrationConfig.fileDirectory]) that were written.
      * @throws IOException if [MigrationConfig.fullFileName] resolves to a path outside [MigrationConfig.fileDirectory].
-     * @throws IllegalArgumentException if neither a live database nor a Testcontainer image is configured.
+     * @throws IllegalArgumentException if a necessary configuration if omitted, for example:
+     *     If neither a live database nor a Testcontainer image is configured;
+     *     If a package path String is not configured, either as a single String or as a collection of String paths.
      */
     fun generate(): List<String> {
+        val allPackageNames = config.tablesPackages.includeIfPresent(config.tablesPackage)
         val migrationsDirectory = config.fileDirectory
         if (!migrationsDirectory.exists()) {
             migrationsDirectory.mkdirs()
@@ -64,9 +67,9 @@ class MigrationGenerator(
         val migrationFile = expectedFileName?.validateFilePath(migrationsDirectory)
 
         val generated: List<String> = if (expectedFileName != null && migrationFile != null) {
-            generateSingleFile(expectedFileName, migrationFile)
+            generateSingleFile(allPackageNames, expectedFileName, migrationFile)
         } else {
-            generateVersionedFiles(migrationsDirectory)
+            generateVersionedFiles(allPackageNames, migrationsDirectory)
         }
 
         logger.lifecycle("")
@@ -77,11 +80,11 @@ class MigrationGenerator(
         return generated
     }
 
-    private fun generateSingleFile(expectedFileName: String, migrationFile: File): List<String> =
+    private fun generateSingleFile(allPackageNames: List<String>, expectedFileName: String, migrationFile: File): List<String> =
         withClassloader { classloader ->
             withDatabase { database ->
                 val tables = classloader
-                    .getClassesInPackage(config.tablesPackage)
+                    .getClassesInPackages(allPackageNames)
                     .mapNotNull { it.tableOrNull() }
                     .toList()
                     .toTypedArray()
@@ -97,7 +100,7 @@ class MigrationGenerator(
             }
         }
 
-    private fun generateVersionedFiles(migrationsDirectory: File): List<String> {
+    private fun generateVersionedFiles(allPackageNames: List<String>, migrationsDirectory: File): List<String> {
         val versionGenerator = config.fileVersionFormat.nextVersion(
             migrationsDirectory,
             Clock.System,
@@ -109,7 +112,7 @@ class MigrationGenerator(
             withDatabase { database ->
                 var ignored = 0
                 val foundTables = classloader
-                    .getClassesInPackage(config.tablesPackage)
+                    .getClassesInPackages(allPackageNames)
                     .mapNotNull { it.tableOrNull() }
                 val sortedTables = SchemaUtils.sortTablesByReferences(foundTables.toList())
                 sortedTables.mapIndexedNotNull { index, table ->
@@ -135,6 +138,14 @@ class MigrationGenerator(
                 }.distinct()
             }
         }
+    }
+
+    private fun List<String>.includeIfPresent(singlePackage: String): List<String> = when {
+        singlePackage.isEmpty() -> this.ifEmpty {
+            throw IllegalArgumentException("Package name(s) for Exposed table definitions must be set")
+        }
+        this.isEmpty() -> listOf(singlePackage)
+        else -> (this.toMutableSet() + singlePackage).toList()
     }
 
     private inline fun <A> withDatabase(block: (Database) -> A): A {
@@ -207,23 +218,24 @@ class MigrationGenerator(
         }
     }
 
-    private fun URLClassLoader.getClassesInPackage(packageName: String): Sequence<KClass<*>> = getResources(
-        packageName.replace('.', '/')
-    )
-        .asSequence()
-        .flatMap { resource ->
-            File(resource.toURI())
-                .walk()
-                .filter { file -> file.isFile && file.name.endsWith(CLASS_EXTENSION) }
-                .map { file ->
+    private fun URLClassLoader.getClassesInPackages(packageNames: List<String>): Sequence<KClass<*>> = packageNames.asSequence()
+        .flatMap { packageName ->
+            getResources(packageName.replace('.', '/'))
+                .asSequence()
+                .flatMap { resource ->
                     val baseDir = File(resource.toURI())
-                    val subPackageName = file.relativeTo(baseDir)
-                        .path
-                        .replace(separator, ".")
-                        .dropLast(file.name.length + 1)
-                    val fullPackage = "$packageName.${if (subPackageName.isBlank()) "" else "$subPackageName."}"
-                    val clazzName = file.name.dropLast(CLASS_EXTENSION.length)
-                    Class.forName("$fullPackage$clazzName", true, this).kotlin
+                    baseDir
+                        .walk()
+                        .filter { file -> file.isFile && file.name.endsWith(CLASS_EXTENSION) }
+                        .map { file ->
+                            val subPackageName = file.relativeTo(baseDir)
+                                .path
+                                .replace(separator, ".")
+                                .dropLast(file.name.length + 1)
+                            val fullPackage = "$packageName.${if (subPackageName.isBlank()) "" else "$subPackageName."}"
+                            val clazzName = file.name.dropLast(CLASS_EXTENSION.length)
+                            Class.forName("$fullPackage$clazzName", true, this).kotlin
+                        }
                 }
         }
 

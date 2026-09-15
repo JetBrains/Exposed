@@ -15,6 +15,11 @@ interface GenerateMigrationsParameters : WorkParameters {
     var tablesPackage: String
 
     /**
+     * All package names where Exposed table definitions are expected to be located.
+     */
+    var tablesPackages: List<String>
+
+    /**
      * Optional classpath that is scanned for Exposed table definitions.
      * Defaults to the project's runtime classpath.
      */

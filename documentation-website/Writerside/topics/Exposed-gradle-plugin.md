@@ -69,8 +69,38 @@ Configure the plugin using the `exposed.migrations` block in your
 
 At minimum, configure the following properties:
 
-* `tablesPackage` as the package name where Exposed table definitions are located.
+* `tablesPackage` (as the package name where Exposed table definitions are located) or
+  `tablesPackages` (as a collection of package names where Exposed table definitions are located).
 * A database configuration or a `Testcontainers` configuration.
+
+### Configure table package names
+
+To configure where Exposed table definitions are located, set either the `tablesPackage` or `tablesPackages` property,
+depending on whether all your tables are packaged together or across multiple specific paths:
+
+```kotlin
+exposed {
+    migrations {
+        tablesPackage = "com.example.db.tables"
+        // or
+        tablesPackages = listOf(
+            "com.example.db.auth",
+            "com.example.db.billing",
+        )
+        // ...
+    }
+}
+```
+
+> The multiple-value `tablesPackages` property is available from plugin version 1.6.0 and
+> should be preferentially configured whenever multiple packages are required.
+>
+{style="note"}
+
+> If the `tablesPackages` property is configured in addition to the single-value `tablesPackage` property,
+> then a list containing the distinct combined elements from both property values will be used.
+>
+{style="note"}
 
 ### Configure a database connection
 
@@ -79,10 +109,10 @@ To configure a database connection, set the `databaseUrl`, `databaseUser`, and `
 ```kotlin
 exposed {
     migrations {
-        tablesPackage.set("com.example.db.tables")
-        databaseUrl.set("jdbc:postgresql://localhost:5432/mydb")
-        databaseUser.set("postgres")
-        databasePassword.set("password")
+        tablesPackage = "com.example.db.tables"
+        databaseUrl = "jdbc:postgresql://localhost:5432/mydb"
+        databaseUser = "postgres"
+        databasePassword = "password"
     }
 }
 ```
@@ -94,8 +124,8 @@ To configure a `Testcontainers` connection, set the `testContainersImageName` pr
 ```kotlin
 exposed {
     migrations {
-        tablesPackage.set("com.example.db.tables")
-        testContainersImageName.set("postgres:latest")
+        tablesPackage = "com.example.db.tables"
+        testContainersImageName = "postgres:latest"
     }
 }
 ```
@@ -104,7 +134,8 @@ exposed {
 {style="tip"}
 
 > When `testContainersImageName` is configured, the plugin uses `Testcontainers` instead of a direct database
-> connection for schema generation.
+> connection for schema generation. If this property is configured in addition to the [database connection properties](#configure-a-database-connection),
+> its value will always take priority and `Testcontainers` will be used instead of a direct connection.
 >
 {style="note"}
 
@@ -171,12 +202,12 @@ exposed {
     migrations {
         // ...
         classpath = sourceSets.main.get().runtimeClasspath
-        fileDirectory.set(layout.projectDirectory.dir("src/main/resources/db/migration"))
-        filePrefix.set("V")
-        fileVersionFormat.set(VersionFormat.TIMESTAMP_ONLY)
-        fileSeparator.set("__")
-        useUpperCaseDescription.set(true)
-        fileExtension.set(".sql")
+        fileDirectory = layout.projectDirectory.dir("src/main/resources/db/migration")
+        filePrefix = "V"
+        fileVersionFormat = VersionFormat.TIMESTAMP_ONLY
+        fileSeparator = "__"
+        useUpperCaseDescription = true
+        fileExtension = ".sql"
     }
 }
 ```
