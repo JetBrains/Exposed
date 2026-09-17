@@ -42,7 +42,7 @@ object Users : IntIdTable() {
 }
 ```
 
-The `.hashed()` function changes the Kotlin type of the column from `String` to `Hashed`.
+The `.hashed()` function changes the Kotlin type of the column from `String` to [`Hashed`](https://jetbrains.github.io/Exposed/api/exposed-crypt/org.jetbrains.exposed.v1.crypt/-hashed/index.html).
 
 ## Supported algorithms
 
@@ -119,7 +119,9 @@ Use the configured `Hasher` to hash a plaintext value before storing it:
 ```
 {src="exposed-hashing-data/src/main/kotlin/org/example/App.kt" include-lines="28,30-31"}
 
-The `.hash()` function returns a `Hashed` value containing the encoded hash.
+The [`.hash()`](https://jetbrains.github.io/Exposed/api/exposed-crypt/org.jetbrains.exposed.v1.crypt/hash.html) function
+returns a [`Hashed`](https://jetbrains.github.io/Exposed/api/exposed-crypt/org.jetbrains.exposed.v1.crypt/-hashed/index.html)
+value containing the encoded hash.
 
 > Hashing is [_salted_](https://en.wikipedia.org/wiki/Salt_(cryptography)), so hashing the same plaintext value more than
 > once can produce different encoded values.
@@ -128,7 +130,8 @@ The `.hash()` function returns a `Hashed` value containing the encoded hash.
 
 ## Verify a value
 
-To verify a plaintext value, use the `.matches()` function on the stored `Hashed` value:
+To verify a plaintext value, use the [`.matches()`](https://jetbrains.github.io/Exposed/api/exposed-crypt/org.jetbrains.exposed.v1.crypt/-hashed/matches.html)
+function on the stored `Hashed` value:
 
 ```kotlin
 ```

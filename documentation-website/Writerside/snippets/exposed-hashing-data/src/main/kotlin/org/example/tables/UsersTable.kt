@@ -9,7 +9,7 @@ import org.jetbrains.exposed.v1.crypt.Pbkdf2Hasher
 import org.jetbrains.exposed.v1.crypt.hashed
 import org.springframework.security.crypto.password.Pbkdf2PasswordEncoder
 
-val hasher = BCryptHasher()
+val hasher = BCryptHasher(strength = 12)
 
 val bCryptHasher = BCryptHasher(strength = 12)
 
