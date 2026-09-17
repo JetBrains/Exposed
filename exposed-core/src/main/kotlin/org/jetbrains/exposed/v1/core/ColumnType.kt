@@ -436,6 +436,95 @@ open class NullableColumnWithTransform<Unwrapped, Wrapped>(
     }
 }
 
+/**
+ * A column type that handles the transformation of a nullable database column into a
+ * non-nullable Kotlin type.
+ *
+ * Unlike [NullableColumnWithTransform], which maps `null` database values to `null` on the
+ * Kotlin side, this type allows the transformer to map a `null` from the database to a
+ * concrete non-null value (e.g., an empty string, a default object, a sentinel value, etc.).
+ *
+ * This enables the use-case where a nullable DB column is exposed as a non-nullable
+ * property in Kotlin, with a "special value" representing the null state.
+ *
+ * For example:
+ * ```kotlin
+ * object Users : Table() {
+ *     val description = text("description")
+ *         .nullable()
+ *         .nonNullTransform(
+ *             wrap = { it?.trim()?.ifEmpty { null } ?: "" },
+ *             unwrap = { if (it.isEmpty()) null else it }
+ *         )
+ * }
+ * ```
+ * Here the DB column remains nullable, but the Kotlin type is `String` (non-nullable).
+ * A `null` in the database maps to `""` on the Kotlin side, and an empty string
+ * maps back to `null` when written.
+ *
+ * @param Wrapped The non-nullable type to which the column value is transformed
+ * @param Unwrapped The nullable type of the underlying database column
+ * @param delegate The original column's [IColumnType]
+ * @param transformer Instance of [ColumnTransformer] that handles null → non-null mapping
+ */
+open class NonNullableColumnWithTransform<Unwrapped, Wrapped>(
+    delegate: IColumnType<Unwrapped & Any>,
+    transformer: ColumnTransformer<Unwrapped, Wrapped>
+) : ColumnWithTransform<Unwrapped, Wrapped>(delegate, transformer) {
+    /**
+     * Transforms a value read from the database, handling `null` values by mapping them
+     * to a non-nullable [Wrapped] value via the transformer.
+     *
+     * This method is the entry point used when the raw database value is `null`.
+     * It calls [ColumnTransformer.wrap] with `null` to produce the non-nullable result.
+     * For non-null values, it first delegates to the underlying column type and then
+     * applies the transformer.
+     *
+     * @param value The raw value read from the database result set. May be `null`.
+     * @return The transformed non-nullable value.
+     */
+    fun valueFromDBOrNull(value: Any?): Wrapped {
+        return if (value == null) {
+            transformer.wrap(null as Unwrapped)
+        } else {
+            transformer.wrap(delegate.valueFromDB(value) as Unwrapped)
+        }
+    }
+
+    /**
+     * Recursively unwraps the given value by applying the delegate's transformation.
+     *
+     * This method will recursively call unwrap on the inner delegate if the delegate
+     * is also an instance of [ColumnWithTransform]. This is useful for handling nested
+     * transformations. Unlike [ColumnWithTransform.unwrapRecursive], this method allows
+     * transformation involving `null` values.
+     *
+     * @param value The value to unwrap. Could be `null`.
+     * @return The unwrapped value. Returns the value transformed by the transformer, which
+     * could be `null` if the transformer design allows it.
+     */
+    override fun unwrapRecursive(value: Wrapped?): Any? {
+        return if (delegate is ColumnWithTransform<*, *>) {
+            (delegate as ColumnWithTransform<Any, Unwrapped>).unwrapRecursive(transformer.unwrap(value as Wrapped))
+        } else {
+            transformer.unwrap(value as Wrapped)
+        }
+    }
+
+    override fun valueFromDB(value: Any): Wrapped? {
+        return transformer.wrap(delegate.valueFromDB(value) as Unwrapped)
+    }
+
+    override fun valueToDB(value: Wrapped?): Any? {
+        // All the values go through the transformer since it can map null values to non-null values
+        return delegate.valueToDB(transformer.unwrap(value as Wrapped))
+    }
+
+    override fun valueToString(value: Wrapped?): String {
+        return delegate.valueToString(transformer.unwrap(value as Wrapped))
+    }
+}
+
 // Numeric columns
 
 /**
