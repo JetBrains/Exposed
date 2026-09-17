@@ -17,5 +17,5 @@ on:
 
 jobs:
   call-workflow-passing-data:
-    uses: JetBrains/junie-workflows/.github/workflows/ej-issue.yml@b4f71597a0a5aaa196d1191efe33f6f77517f792    with:
+    uses: JetBrains/junie-workflows/.github/workflows/ej-issue.yml@b4f71597a0a5aaa196d1191efe33f6f77517f792
       workflow_params: ${{ inputs.workflow_params }}
