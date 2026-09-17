@@ -218,10 +218,18 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
         suspend fun insertTesting(db: R2dbcDatabase) = inTopLevelSuspendTransaction(db = db) {
             Testing.insert {}
         }
-        withTables(Testing) {
+        withTables(Testing) { testDb ->
             val mainJob = GlobalScope.async {
                 val job = launch(Dispatchers.IO) {
-                    inTopLevelSuspendTransaction(db = db, transactionIsolation = IsolationLevel.READ_COMMITTED) {
+                    inTopLevelSuspendTransaction(db = db) {
+                        // This way of setting the isolation level now aligns with JDBC test of same name;
+                        // But manually setting the isolation level within an active transaction results in vendor-specific behavior;
+                        // MySQL/MariaDB r2dbc drivers rely on standard SET TRANSACTION ISOLATION LEVEL, which,
+                        // when executed without modifiers, applies only to the next transaction in the session, NOT the active one...
+                        connection().setTransactionIsolation(IsolationLevel.READ_COMMITTED)
+                        // so these drivers must force start another transaction in the session to pass the asserts
+                        if (testDb in TestDB.ALL_MYSQL_MARIADB) commit()
+
                         assertEquals(
                             null,
                             Testing.selectAll().where { Testing.id.eq(1) }.singleOrNull()?.getOrNull(Testing.id)
