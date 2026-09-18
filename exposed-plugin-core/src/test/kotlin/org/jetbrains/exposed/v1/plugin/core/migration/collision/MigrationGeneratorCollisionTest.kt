@@ -45,6 +45,7 @@ class MigrationGeneratorCollisionTest {
         val generator = MigrationGenerator(
             config = MigrationConfig(
                 tablesPackage = this::class.java.packageName,
+                tablesPackages = listOf(this::class.java.packageName),
                 classpathUrls = listOf(this::class.java.protectionDomain.codeSource.location),
                 fileDirectory = migrationsDirectory,
                 fileVersionFormat = VersionFormat.TIMESTAMP_WITHOUT_SECONDS,

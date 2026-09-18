@@ -43,6 +43,7 @@ abstract class GenerateMigrationsWorker : WorkAction<GenerateMigrationsParameter
         }
         return MigrationConfig(
             tablesPackage = tablesPackage,
+            tablesPackages = tablesPackages,
             classpathUrls = classpathUrls,
             fileDirectory = fileDirectory,
             filePrefix = filePrefix,

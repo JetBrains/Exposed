@@ -23,6 +23,11 @@ data class MigrationConfig(
     val tablesPackage: String,
 
     /**
+     * All package names where Exposed `Table` definitions are expected to be located.
+     */
+    val tablesPackages: List<String>,
+
+    /**
      * Classpath URLs scanned for Exposed `Table` definitions.
      * Typically the consuming project's runtime classpath, plus the user's compiled `classes` dir.
      */

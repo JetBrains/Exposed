@@ -120,4 +120,24 @@ class ExposedGradlePluginTest {
         assertFalse(task.databaseUser.isPresent)
         assertFalse(task.databasePassword.isPresent)
     }
+
+    @Test
+    fun testMigrationsTaskConfigurationWithMultiplePackages() {
+        val extension = project.exposedExtensions.getByType(MigrationsExtension::class.java)
+        val allPackages = listOf("com.example1.tables", "com.example2.tables")
+
+        // Set custom values in the extension
+        extension.tablesPackages.set(allPackages)
+        extension.fileDirectory.set(project.layout.projectDirectory.dir("custom/migrations"))
+        extension.testContainersImageName.set("postgres:13-alpine")
+
+        // Get the task & force task configuration
+        val task = project.tasks.getByName(GENERATE_MIGRATIONS_TASK_NAME) as GenerateMigrationsTask
+        project.tasks.configureEach {}
+
+        // Verify that the task is configured with the expected extension values
+        assertTrue(task.tablesPackages.isPresent)
+        assertEquals(allPackages, task.tablesPackages.get())
+        assertFalse(task.tablesPackage.isPresent)
+    }
 }
