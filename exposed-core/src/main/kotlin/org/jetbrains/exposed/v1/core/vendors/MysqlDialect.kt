@@ -383,6 +383,8 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider.INSTA
 
     override val supportsSetDefaultReferenceOption: Boolean = false
 
+    override val supportsDualTableConcept: Boolean = true
+
     @Deprecated(
         "The parameter was moved to JdbcExposedDatabaseMetadata/R2dbcExposedDatabaseMetadata classes",
         ReplaceWith("TransactionManager.current().db.supportsSelectForUpdate")
