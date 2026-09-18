@@ -4,6 +4,7 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.dao.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.v1.jdbc.*
@@ -915,22 +916,50 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
             val findQuery = wrapRows(finalQuery)
             val entities = getEntities(forUpdate, findQuery).distinct()
 
-            entities.groupByReference(refColumn = refColumn).forEach { (id, values) ->
-                val castReferee = refColumn.referee
-                    .takeUnless { it?.columnType is EntityIDColumnType<*> && id !is EntityID<*> }
-                    ?: (refColumn.referee?.columnType as EntityIDColumnType<*>).idColumn
-                val parentEntityId: EntityID<*> = parentTable.selectAll().where { castReferee as Column<SID> eq id }
-                    .single()[parentTable.id]
+            val groupedEntities = entities.groupByReference(refColumn = refColumn)
+            val parentEntityIds = resolveParentEntityIds(groupedEntities.keys, refColumn, parentTable)
+
+            groupedEntities.forEach { (id, values) ->
+                val parentEntityId: EntityID<*> = parentEntityIds[id] ?: return@forEach
 
                 cache.getOrPutReferrers(parentEntityId, refColumn) { SizedCollection(values) }.also {
                     if (keepLoadedReferenceOutOfTransaction) {
-                        val childEntity = find { refColumn eq id }.firstOrNull()
-                        childEntity?.storeReferenceInCache(refColumn, it)
+                        values.firstOrNull()?.storeReferenceInCache(refColumn, it)
                     }
                 }
             }
             return entities
         }
+    }
+
+    /**
+     * Maps each value stored in a non-[EntityIDColumnType] [refColumn] to the [EntityID] of the parent row it points to.
+     */
+    private fun <SID> resolveParentEntityIds(
+        refereeValues: Set<SID>,
+        refColumn: Column<SID>,
+        parentTable: IdTable<*>
+    ): Map<SID, EntityID<*>> {
+        if (refereeValues.isEmpty()) return emptyMap()
+
+        val referee = refColumn.referee
+        val idColumn = (parentTable.id.columnType as EntityIDColumnType<*>).idColumn
+
+        if (referee == parentTable.id || referee == idColumn) {
+            return refereeValues.associateWith { value ->
+                val idValue = (value as? EntityID<*>)?.value ?: value
+                EntityIDFunctionProvider.createEntityID(idValue!!, parentTable as IdTable<Any>)
+            }
+        }
+
+        val castReferee = referee
+            .takeUnless { it?.columnType is EntityIDColumnType<*> && refereeValues.none { value -> value is EntityID<*> } }
+            ?: (referee?.columnType as EntityIDColumnType<*>).idColumn
+
+        return parentTable
+            .select(parentTable.id, castReferee as Column<SID>)
+            .where { castReferee inList refereeValues.toList() }
+            .associate { it[castReferee] to it[parentTable.id] }
     }
 
     internal fun warmUpCompositeIdReferences(
