@@ -75,14 +75,15 @@ internal object H2FunctionProvider : FunctionProvider() {
         val h2Dialect = transaction.db.dialect as H2Dialect
         val version = h2Dialect.version
         val isMySQLMode = h2Dialect.h2Mode == H2Dialect.H2CompatibilityMode.MySQL
+        @Suppress("MagicNumber")
         return when {
             // INSERT IGNORE support added in H2 version 1.4.197 (2018-03-18)
-            ignore && uniqueCols.isNotEmpty() && isMySQLMode && version < "1.4.197" -> {
-                val def = super.insert(false, table, columns, expr, transaction)
-                def + " ON DUPLICATE KEY UPDATE " + uniqueCols.joinToString { "${transaction.identity(it)}=VALUES(${transaction.identity(it)})" }
+            ignore && uniqueCols.isNotEmpty() && isMySQLMode && version.covers(1, 4, 197) -> {
+                super.insert(false, table, columns, expr, transaction).replace("INSERT", "INSERT IGNORE")
             }
             ignore && uniqueCols.isNotEmpty() && isMySQLMode -> {
-                super.insert(false, table, columns, expr, transaction).replace("INSERT", "INSERT IGNORE")
+                val def = super.insert(false, table, columns, expr, transaction)
+                def + " ON DUPLICATE KEY UPDATE " + uniqueCols.joinToString { "${transaction.identity(it)}=VALUES(${transaction.identity(it)})" }
             }
             ignore -> transaction.throwUnsupportedException("INSERT IGNORE supported only on H2 v1.4.197+ with MODE=MYSQL.")
             else -> super.insert(false, table, columns, expr, transaction)
@@ -223,8 +224,8 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     }
 
     @OptIn(InternalApi::class)
-    internal val version by lazy {
-        exactH2Version(currentTransaction())
+    internal val version: Version by lazy {
+        currentTransaction().db.version
     }
 
     /**
@@ -234,7 +235,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
      */
     val majorVersion: H2MajorVersion by lazy {
         when {
-            version.startsWith("2.") -> H2MajorVersion.Two
+            version.major == 2 -> H2MajorVersion.Two
             else -> error("Unsupported H2 version: $version")
         }
     }
@@ -245,8 +246,6 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
      * @throws IllegalStateException If the major version is not 2.x.x.
      */
     val isSecondVersion: Boolean get() = majorVersion == H2MajorVersion.Two
-
-    private fun exactH2Version(transaction: Transaction): String = transaction.db.version.toString()
 
     /** H2 database compatibility modes that emulate the behavior of other specific databases. */
     enum class H2CompatibilityMode {
