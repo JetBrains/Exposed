@@ -4466,6 +4466,7 @@ public class org/jetbrains/exposed/v1/core/vendors/MysqlDialect : org/jetbrains/
 	protected final fun getNotAcceptableDefaults ()Ljava/util/List;
 	public fun getSupportsAlterCheckConstraint ()Z
 	public fun getSupportsCreateSequence ()Z
+	public fun getSupportsDualTableConcept ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z
 	public fun getSupportsSelectForUpdate ()Z
 	public fun getSupportsSetDefaultReferenceOption ()Z

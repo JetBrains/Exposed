@@ -268,7 +268,7 @@
             Tableless queries remain ordinary <code>Query</code> objects, so they can be filtered, combined with set
             operations, aliased as derived tables, or passed to insert-from-select and other existing APIs. The
             function does not infer a <code>FROM</code> clause from projected expressions: <code>select(Users.name)</code>
-            means the literal SQL shape <code>SELECT users.name</code>, not a query over <code>Users</code>.
+            means the generated SQL <code>SELECT users.name</code>, not a query over <code>Users</code>.
         </p>
         <chapter id="tableless-select-limitations">
             <title>Limitations</title>
@@ -284,7 +284,7 @@
                 </li>
             </list>
             <p>
-                Exposed sends the SQL shape represented by the DSL; it does not rewrite expressions to make them
+                Exposed sends the generated SQL represented by the DSL; it does not rewrite expressions to make them
                 portable across databases.
             </p>
         </chapter>

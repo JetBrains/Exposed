@@ -142,7 +142,7 @@ class SelectExpressionTest : DatabaseTestsBase() {
 
     @Test
     fun testTablelessQueryAsJoinedDerivedTable() {
-        withTables(Users) {
+        withTables(excludeSettings = listOf(TestDB.MYSQL_V5), Users) {
             Users.insert { it[name] = "a" }
             Users.insert { it[name] = "b" }
             val selectedName = stringLiteral("a").alias("n")
