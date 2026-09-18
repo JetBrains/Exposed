@@ -20,4 +20,5 @@
     <var name="sqlite" value="3.50.2.0"/>
     <var name="slf4j_version" value="2.0.9"/>
     <var name="logback_version" value="1.5.20"/>
+    <var name="bouncy_castle_version" value="1.85"/>
 </vars>

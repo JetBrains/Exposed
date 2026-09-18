@@ -14,6 +14,13 @@
         </p>
     </snippet>
 
+    <snippet id="required_dependency">
+        <p>
+            <b>Required dependency</b>:
+            <code>org.jetbrains.exposed:%artifact_name%</code>
+        </p>
+    </snippet>
+
     <snippet id="intellij_idea_restart_application">
         <p>
             In IntelliJ IDEA, click the rerun button (<img src="intellij_idea_rerun_icon.svg"
@@ -70,15 +77,15 @@
     </snippet>
 
     <snippet id="add-dependency">
-        <tabs>
-            <tab title="Kotlin Gradle">
+        <tabs group="build-system">
+            <tab title="Kotlin Gradle" group-key="kotlin-gradle">
                 <code-block lang="kotlin">
                 dependencies {
                     implementation("org.jetbrains.exposed:%artifact_name%:%exposed_version%")
                 }
                 </code-block>
             </tab>
-            <tab title="Maven">
+            <tab title="Maven" group-key="maven">
                 <code-block lang="xml"><![CDATA[
                 <dependencies>
                     <dependency>
@@ -89,11 +96,43 @@
                 </dependencies>
                 ]]></code-block>
             </tab>
-            <tab title="Groovy Gradle">
+            <tab title="Groovy Gradle" group-key="groovy-gradle">
 
                 <code-block lang="kotlin">
                 dependencies {
                     implementation "org.jetbrains.exposed:%artifact_name%:%exposed_version%"
+                }
+                </code-block>
+            </tab>
+        </tabs>
+    </snippet>
+
+    <snippet id="add-external-runtime-dependency">
+        <tabs group="build-system">
+            <tab title="Kotlin Gradle" group-key="kotlin-gradle">
+                <code-block lang="kotlin">
+                dependencies {
+                    runtimeOnly("%external_artifact_groupId%:%external_artifact_name%:%external_artifact_version%")
+                }
+                </code-block>
+            </tab>
+            <tab title="Maven" group-key="maven">
+                <code-block lang="xml"><![CDATA[
+                <dependencies>
+                    <dependency>
+                        <groupId>%external_artifact_groupId%</groupId>
+                        <artifactId>%external_artifact_name%</artifactId>
+                        <version>%external_artifact_version%</version>
+                        <scope>runtime</scope>
+                    </dependency>
+                </dependencies>
+                ]]></code-block>
+            </tab>
+            <tab title="Groovy Gradle" group-key="groovy-gradle">
+
+                <code-block lang="kotlin">
+                dependencies {
+                    runtimeOnly "%external_artifact_groupId%:%external_artifact_name%:%external_artifact_version%"
                 }
                 </code-block>
             </tab>
