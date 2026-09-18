@@ -8,6 +8,7 @@ import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.dao.*
+import org.jetbrains.exposed.v1.jdbc.MutableSizedIterable
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.SizedIterable
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -186,8 +187,8 @@ class ViaTests : DatabaseTestsBase() {
         companion object : IntEntityClass<Node>(NodesTable)
 
         var name by NodesTable.name
-        var parents by Node.via(NodeToNodes.child, NodeToNodes.parent)
-        var children by Node.via(NodeToNodes.parent, NodeToNodes.child)
+        var parents: SizedIterable<Node> by Node.via(NodeToNodes.child, NodeToNodes.parent)
+        var children: SizedIterable<Node> by Node.via(NodeToNodes.parent, NodeToNodes.child)
 
         override fun equals(other: Any?): Boolean = (other as? Node)?.id == id
 
@@ -270,8 +271,8 @@ class ViaTests : DatabaseTestsBase() {
         companion object : IntEntityClass<NodeOrdered>(NodesTable)
 
         var name by NodesTable.name
-        var parents by NodeOrdered.via(NodeToNodes.child, NodeToNodes.parent)
-        var children by NodeOrdered.via(NodeToNodes.parent, NodeToNodes.child) orderBy (NodesTable.name to SortOrder.ASC)
+        var parents: SizedIterable<NodeOrdered> by NodeOrdered.via(NodeToNodes.child, NodeToNodes.parent)
+        var children: SizedIterable<NodeOrdered> by NodeOrdered.via(NodeToNodes.parent, NodeToNodes.child) orderBy (NodesTable.name to SortOrder.ASC)
 
         override fun equals(other: Any?): Boolean = (other as? NodeOrdered)?.id == id
 
@@ -379,6 +380,45 @@ class ViaTests : DatabaseTestsBase() {
                 assertEqualLists(p2Tasks.map { it.id }, listOf(t2.id, t3.id))
                 assertFalse { p1Tasks.all { task -> !task.approved } }
             }
+        }
+    }
+
+    @Test
+    fun `testIncrementalAddOperationOnManyToManyRelationship`() { // #348 Add/remove operations on InnerTableLink references
+        withTables(NodesTable, NodeToNodes) {
+            val root = Node.new { name = "root" }
+            val child1 = Node.new { name = "child1" }
+            val child2 = Node.new { name = "child2" }
+            val child3 = Node.new { name = "child3" }
+
+            // Start with two children
+            root.children = SizedCollection(listOf(child1, child2))
+            assertEquals(2L, root.children.count())
+            assertEqualCollections(root.children, listOf(child1, child2))
+
+            // Add a third child incrementally (without reassigning the entire collection)
+            (root.children as MutableSizedIterable<Node>).add(child3)
+            assertEquals(3L, root.children.count())
+            assertEqualCollections(root.children, listOf(child1, child2, child3))
+        }
+    }
+
+    @Test
+    fun `testIncrementalRemoveOperationOnManyToManyRelationship`() { // #348 Add/remove operations on InnerTableLink references
+        withTables(NodesTable, NodeToNodes) {
+            val root = Node.new { name = "root" }
+            val child1 = Node.new { name = "child1" }
+            val child2 = Node.new { name = "child2" }
+            val child3 = Node.new { name = "child3" }
+
+            // Start with three children
+            root.children = SizedCollection(listOf(child1, child2, child3))
+            assertEquals(3L, root.children.count())
+
+            // Remove one child incrementally (without reassigning the entire collection)
+            (root.children as MutableSizedIterable<Node>).remove(child2)
+            assertEquals(2L, root.children.count())
+            assertEqualCollections(root.children, listOf(child1, child3))
         }
     }
 }

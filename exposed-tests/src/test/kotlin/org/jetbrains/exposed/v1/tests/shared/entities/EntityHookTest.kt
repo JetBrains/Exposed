@@ -8,6 +8,7 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.dao.*
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
+import org.jetbrains.exposed.v1.jdbc.SizedIterable
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
@@ -42,14 +43,14 @@ object EntityHookTestData {
 
         var name by Users.name
         var age by Users.age
-        var cities by City via UsersToCities
+        var cities: SizedIterable<City> by City via UsersToCities
     }
 
     class City(id: EntityID<Int>) : IntEntity(id) {
         companion object : IntEntityClass<City>(Cities)
 
         var name by Cities.name
-        var users by User via UsersToCities
+        var users: SizedIterable<User> by User via UsersToCities
         var country by Country referencedOn Cities.country
     }
 
@@ -270,7 +271,7 @@ class EntityHookTest : DatabaseTestsBase() {
 
             val (_, events, txId) = trackChanges {
                 val john = EntityHookTestData.User.all().single()
-                john.cities = SizedCollection(emptyList())
+                john.cities = SizedCollection(emptyList<EntityHookTestData.City>())
             }
 
             assertEquals(2, events.count())
