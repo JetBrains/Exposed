@@ -228,7 +228,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
                     ?.let { columns ->
                         columns.appendTo(prefix = "DISTINCT ON (", postfix = ") ") { append(it) }
                     }
-                set.realFields.appendTo { +it }
+                set.realFields.appendTo { appendForJsonBCast(it) }
             }
             @OptIn(InternalApi::class)
             if (set.source != Table.Dual || currentDialect.supportsDualTableConcept) {
