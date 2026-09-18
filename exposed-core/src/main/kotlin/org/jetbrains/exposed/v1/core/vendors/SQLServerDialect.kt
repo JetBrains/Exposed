@@ -365,6 +365,9 @@ private fun validateMergeCommandClauses(transaction: Transaction, clauses: List<
  * SQLServer dialect implementation.
  */
 open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvider, SQLServerFunctionProvider) {
+    override val supportsCommonTableExpressions: Boolean = true
+    override val supportsRecursiveCommonTableExpressions: Boolean = true
+    override val recursiveCteSyntax: RecursiveCteSyntax = RecursiveCteSyntax.NO_RECURSIVE_KEYWORD
     override val supportsIfNotExists: Boolean = false
     override val defaultReferenceOption: ReferenceOption get() = ReferenceOption.NO_ACTION
     override val needsQuotesWhenSymbolsInNames: Boolean = false
