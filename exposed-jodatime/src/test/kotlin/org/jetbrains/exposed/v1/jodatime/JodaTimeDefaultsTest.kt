@@ -13,7 +13,6 @@ import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.dao.flushCache
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.constraintNamePart
 import org.jetbrains.exposed.v1.tests.currentDialectTest
@@ -26,7 +25,6 @@ import org.jetbrains.exposed.v1.tests.shared.expectException
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.LocalTime
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -61,7 +59,6 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
         companion object : IntEntityClass<DBDefault>(TableWithDBDefault)
     }
 
-    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testDefaultsWithExplicit01() {
         withTables(TableWithDBDefault) {
@@ -82,7 +79,6 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
         }
     }
 
-    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testDefaultsWithExplicit02() {
         // MySql 5 is excluded because it does not support `CURRENT_DATE()` as a default value
@@ -104,7 +100,6 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
         }
     }
 
-    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testDefaultsInvokedOnlyOncePerEntity() {
         withTables(TableWithDBDefault) {
@@ -529,7 +524,6 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
         var timestamp: DateTime by DefaultTimestampTable.timestamp
     }
 
-    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testCustomDefaultTimestampFunctionWithEntity() {
         withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES - TestDB.MYSQL_V8 - TestDB.ALL_H2_V2, DefaultTimestampTable) {

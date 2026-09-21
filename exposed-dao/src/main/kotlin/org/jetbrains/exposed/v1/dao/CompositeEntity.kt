@@ -4,23 +4,27 @@ import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 
-/** Base class for an [Entity] instance identified by an [id] comprised of multiple wrapped values. */
+/**
+ * Base class for an [Entity] with an id made of several columns ([CompositeID]), mapping a table declared as a `CompositeIdTable`.
+ * See [Entity] for how the entity and its properties are declared.
+ */
 abstract class CompositeEntity(id: EntityID<CompositeID>) : Entity<CompositeID>(id)
 
 /**
- * Base class representing the [EntityClass] that manages [CompositeEntity] instances and
- * maintains their relation to the provided [table].
+ * Base class for the companion object of a [CompositeEntity]: the entry point for creating, finding, and
+ * deleting the rows of [table].
  *
- * @param [table] The [IdTable] object that stores rows mapped to entities of this class.
- * @param [entityType] The expected [CompositeEntity] type. This can be left `null` if it is the class of type argument
- * [E] provided to this [CompositeEntityClass] instance. If this `CompositeEntityClass` is defined as a companion object
- * of a custom `CompositeEntity` class, the parameter will be set to this immediately enclosing class by default.
+ * ```kotlin
+ * class Film(id: EntityID<CompositeID>) : CompositeEntity(id) {
+ *     companion object : CompositeEntityClass<Film>(Films)
+ * }
+ * ```
+ *
+ * @param [table] The table whose rows are mapped to entities of this class.
+ * @param [entityType] The [CompositeEntity] class to map. Defaults to the class that encloses this companion object.
  * @sample org.jetbrains.exposed.v1.tests.shared.DDLTests.testDropTableFlushesCache
- * @param [entityCtor] The function invoked to instantiate a [CompositeEntity] using a provided [EntityID] value.
- * If a reference to a specific constructor or a custom function is not passed as an argument, reflection will be used
- * to determine the primary constructor of the associated entity class on first access. If this `CompositeEntityClass`
- * is defined as a companion object of a custom `CompositeEntity` class, the constructor will be set to that of the
- * immediately enclosing class by default.
+ * @param [entityCtor] Called to instantiate an entity for a row. Defaults to the entity's primary constructor,
+ * looked up by reflection on first access; pass a reference such as `::Film` to skip that lookup.
  * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.testExplicitEntityConstructor
  */
 abstract class CompositeEntityClass<out E : CompositeEntity>(

@@ -4,11 +4,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.dao.r2dbc.ExperimentalR2dbcDaoApi
+import org.jetbrains.exposed.v1.dao.r2dbc.IntEntity
+import org.jetbrains.exposed.v1.dao.r2dbc.IntEntityClass
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
-import org.jetbrains.exposed.v1.r2dbc.insert
-import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.LogDbInTestName
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
@@ -36,8 +38,7 @@ class ConnectionPoolTests : LogDbInTestName() {
             launch {
                 suspendTransaction {
                     delay(100.milliseconds)
-//                TestEntity.new { testValue = "test$it" }
-                    TestTable.insert { it[TestTable.testValue] = "test$i" }
+                    TestEntity.new { testValue = "test$i" }
                 }
             }
             // otherwise runTest skips delays
@@ -45,8 +46,7 @@ class ConnectionPoolTests : LogDbInTestName() {
         }
 
         suspendTransaction(h2PoolDB1) {
-//            assertEquals(exceedsPoolSize, TestEntity.all().toList().count())
-            assertEquals(exceedsPoolSize, TestTable.selectAll().toList().count())
+            assertEquals(exceedsPoolSize, TestEntity.all().toList().count())
 
             SchemaUtils.drop(TestTable)
         }
@@ -56,9 +56,10 @@ class ConnectionPoolTests : LogDbInTestName() {
         val testValue = varchar("test_value", 32)
     }
 
-//    class TestEntity(id: EntityID<Int>) : IntEntity(id) {
-//        companion object : IntEntityClass<TestEntity>(org.jetbrains.exposed.v1.sql.tests.h2.ConnectionPoolTests.TestTable)
-//
-//        var testValue by org.jetbrains.exposed.v1.sql.tests.h2.ConnectionPoolTests.TestTable.testValue
-//    }
+    @OptIn(ExperimentalR2dbcDaoApi::class)
+    class TestEntity(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<TestEntity>(TestTable)
+
+        var testValue by TestTable.testValue
+    }
 }
