@@ -83,16 +83,18 @@ class MigrationGeneratorCollisionTest {
 
     @Test
     fun testDependentTablesDoNotDuplicateParentConstraints() {
+        val config = MigrationConfig(
+            tablesPackage = this::class.java.packageName,
+            tablesPackages = listOf(this::class.java.packageName),
+            classpathUrls = listOf(this::class.java.protectionDomain.codeSource.location),
+            fileDirectory = migrationsDirectory,
+            fileVersionFormat = VersionFormat.TIMESTAMP_WITHOUT_SECONDS,
+            databaseUrl = "jdbc:h2:mem:${UUID.randomUUID()}",
+            databaseUser = "",
+            databasePassword = "",
+        )
         val generator = MigrationGenerator(
-            config = MigrationConfig(
-                tablesPackage = this::class.java.packageName,
-                classpathUrls = listOf(this::class.java.protectionDomain.codeSource.location),
-                fileDirectory = migrationsDirectory,
-                fileVersionFormat = VersionFormat.TIMESTAMP_WITHOUT_SECONDS,
-                databaseUrl = "jdbc:h2:mem:${UUID.randomUUID()}",
-                databaseUser = "",
-                databasePassword = "",
-            ),
+            config = config,
             logger = object : MigrationLogger {
                 override fun lifecycle(message: String) = Unit
                 override fun debug(message: String) = Unit
