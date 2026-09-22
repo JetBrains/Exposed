@@ -26,7 +26,11 @@ interface R2dbcTransactionInterface : TransactionInterface {
     /** Reverts all changes since the last commit or rollback operation, or to the last set savepoint, if applicable. */
     suspend fun rollback()
 
-    /** Closes the transaction and releases any savepoints. */
+    /**
+     * Closes the transaction and releases any savepoints.
+     *
+     * @throws Exception If closing the underlying connection or releasing a savepoint fails.
+     */
     suspend fun close()
 }
 

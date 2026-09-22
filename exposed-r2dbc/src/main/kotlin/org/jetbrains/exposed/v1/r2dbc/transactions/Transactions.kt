@@ -45,6 +45,7 @@ private suspend inline fun <T> executeR2dbcTransactionWithErrorHandling(
     } catch (cause: R2dbcException) {
         val currentStatement = transaction.currentStatement
         transaction.rollbackLoggingException {
+            cause.addSuppressed(it)
             exposedLogger.warn(
                 "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
                 it
@@ -55,6 +56,7 @@ private suspend inline fun <T> executeR2dbcTransactionWithErrorHandling(
         if (shouldCommit) {
             val currentStatement = transaction.currentStatement
             transaction.rollbackLoggingException {
+                cause.addSuppressed(it)
                 exposedLogger.warn(
                     "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
                     it
@@ -95,7 +97,9 @@ private fun resolveR2dbcDatabaseOrThrow(db: R2dbcDatabase?): R2dbcDatabase {
  * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
  *
  * **Note** This function catches all throwables (including errors) to ensure proper transaction rollback
- * and resource cleanup, even in exceptional circumstances.
+ * and resource cleanup, even in exceptional circumstances. Caught cleanup exceptions are added as suppressed
+ * exceptions to the original failure. Cleanup-only exceptions after a successful transaction are logged without
+ * changing its result.
  *
  * @param db Database to use for the transaction. Defaults to `null`.
  * @param transactionIsolation Transaction isolation level. Defaults to `db.transactionManager.defaultIsolationLevel`.
@@ -152,7 +156,9 @@ suspend fun <T> suspendTransaction(
  * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
  *
  * **Note** This function catches all throwables (including errors) to ensure proper transaction rollback
- * and resource cleanup, even in exceptional circumstances.
+ * and resource cleanup, even in exceptional circumstances. Caught cleanup exceptions are added as suppressed
+ * exceptions to the original failure. Cleanup-only exceptions after a successful transaction are logged without
+ * changing its result.
  *
  * @param db Database to use for the transaction. Defaults to `null`.
  * @param transactionIsolation Transaction isolation level. Defaults to `db.transactionManager.defaultIsolationLevel`.
@@ -163,6 +169,7 @@ suspend fun <T> suspendTransaction(
  * @throws R2dbcException If a database error occurs and retry attempts are exhausted
  * @throws Throwable If any other error occurs during execution
  */
+@Suppress("TooGenericExceptionCaught")
 suspend fun <T> inTopLevelSuspendTransaction(
     db: R2dbcDatabase? = null,
     transactionIsolation: IsolationLevel? = db?.transactionManager?.defaultIsolationLevel,
@@ -183,20 +190,26 @@ suspend fun <T> inTopLevelSuspendTransaction(
             outerTransaction
         )
 
+        var primaryFailure: Throwable? = null
+
         try {
-            @OptIn(InternalApi::class)
-            return withTransactionContext(transaction) {
-                try {
-                    executeR2dbcTransactionWithErrorHandling(transaction, shouldCommit = true) {
-                        transaction.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
-                        transaction.statement()
+            val retryCause = try {
+                @OptIn(InternalApi::class)
+                return withTransactionContext(transaction) {
+                    try {
+                        executeR2dbcTransactionWithErrorHandling(transaction, shouldCommit = true) {
+                            transaction.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
+                            transaction.statement()
+                        }
+                    } catch (cause: R2dbcException) {
+                        handleR2dbcException(cause, transaction, attempts)
+                        throw cause
                     }
-                } catch (cause: R2dbcException) {
-                    handleR2dbcException(cause, transaction, attempts)
-                    throw cause
                 }
+            } catch (cause: R2dbcException) {
+                cause
             }
-        } catch (cause: R2dbcException) {
+            primaryFailure = retryCause
             attempts++
 
             if (retryInterval == null) {
@@ -222,13 +235,17 @@ suspend fun <T> inTopLevelSuspendTransaction(
             }
 
             if (attempts >= transaction.maxAttempts) {
-                throw cause
+                throw retryCause
             }
+        } catch (cause: Throwable) {
+            // Cancellation during retry delay can replace the original driver exception.
+            primaryFailure = cause
+            throw cause
         } finally {
             @OptIn(InternalApi::class)
             withContext(NonCancellable) {
                 withTransactionContext(transaction) {
-                    closeStatementsAndConnection(transaction)
+                    closeStatementsAndConnection(transaction, primaryFailure)
                 }
             }
         }
@@ -256,6 +273,7 @@ internal suspend fun handleR2dbcException(cause: R2dbcException, transaction: R2
     }
     exposedLogger.debug(message, cause)
     transaction.rollbackLoggingException {
+        cause.addSuppressed(it)
         exposedLogger.debug("Transaction rollback failed: ${it.message}. See previous log line for statement", it)
     }
 }
@@ -267,8 +285,9 @@ internal suspend fun handleR2dbcException(cause: R2dbcException, transaction: R2
  * all executed statements, and closing the transaction connection. Any exceptions during cleanup are logged.
  *
  * @param transaction The transaction whose resources should be closed.
+ * @param failure The original failure to which cleanup exceptions are added as suppressed exceptions, if present.
  */
-internal suspend fun closeStatementsAndConnection(transaction: R2dbcTransaction) {
+internal suspend fun closeStatementsAndConnection(transaction: R2dbcTransaction, failure: Throwable?) {
     val currentStatement = transaction.currentStatement
     @Suppress("TooGenericExceptionCaught")
     try {
@@ -278,9 +297,11 @@ internal suspend fun closeStatementsAndConnection(transaction: R2dbcTransaction)
         }
         transaction.clearExecutedStatements()
     } catch (cause: Exception) {
+        failure?.addSuppressed(cause)
         exposedLogger.warn("Statements close failed", cause)
     }
     transaction.closeLoggingException {
+        failure?.addSuppressed(it)
         exposedLogger.warn("Transaction close failed: ${it.message}. Statement: $currentStatement", it)
     }
 }

@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.DatabaseApi
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Version
+import org.jetbrains.exposed.v1.core.exposedLogger
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.r2dbc.statements.R2dbcConnectionImpl
@@ -34,14 +35,24 @@ class R2dbcDatabase private constructor(
      * returns the retrieved metadata from the database as a result. If called outside a transaction block, a
      * temporary connection is instantiated to call [body] before being closed.
      */
+    @Suppress("TooGenericExceptionCaught")
     internal suspend fun <T> metadata(body: suspend R2dbcExposedDatabaseMetadata.() -> T): T {
         val transaction = TransactionManager.currentOrNull()
         return if (transaction == null) {
             val connection = connector()
+            var failure: Throwable? = null
             try {
                 connection.metadata(body)
+            } catch (cause: Throwable) {
+                failure = cause
+                throw cause
             } finally {
-                connection.close()
+                try {
+                    connection.close()
+                } catch (cause: Exception) {
+                    failure?.addSuppressed(cause)
+                    exposedLogger.warn("Failed to close metadata connection: ${cause.message}", cause)
+                }
             }
         } else {
             transaction.connection().metadata(body)

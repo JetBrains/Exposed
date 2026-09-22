@@ -1,5 +1,13 @@
 # Breaking Changes
 
+## Unreleased
+
+* `R2dbcConnectionImpl.close()` now propagates exceptions from the underlying driver's connection close operation
+  instead of only logging them. This also affects manually managed `R2dbcTransaction.close()` calls that close
+  the underlying connection. Manual callers should handle these exceptions where needed. Transaction helpers
+  attach caught cleanup exceptions to an existing failure as suppressed exceptions and continue to log
+  cleanup-only exceptions after a successful transaction without changing its result.
+
 ## 1.0.0
 
 * The interface `R2dbcPreparedStatementApi` no longer holds the unused methods `closeIfPossible()` or `cancel()`
