@@ -73,7 +73,13 @@ open class JdbcTransaction(
     /** Whether this [JdbcTransaction] should prevent any statement execution from proceeding. */
     internal var blockStatementExecution: Boolean = false
 
-    internal val executedStatements: MutableList<JdbcPreparedStatementApi> = arrayListOf()
+    /**
+     * Statements whose result set may still be open, in execution order.
+     *
+     * A statement is registered when its execution hands out a result set, and is removed once that result is
+     * released. Anything still registered when the transaction ends is closed by [closeExecutedStatements].
+     */
+    internal val executedStatements: MutableSet<JdbcPreparedStatementApi> = LinkedHashSet()
 
     internal var openResultSetsCount: Int = 0
 
@@ -292,7 +298,7 @@ open class JdbcTransaction(
         body((it as JdbcResult).result)
     }
 
-    internal fun execQuery(query: BlockingExecutable<ResultApi, *>): ResultSet = execQuery(query) { it }
+    internal fun execQuery(query: BlockingExecutable<ResultApi, *>): JdbcResult = exec(stmt = query) { it as JdbcResult }
         ?: error("A ResultSet was expected, but none was retrieved from the database")
 
     /** Closes all previously executed statements and resets or releases any used database and/or driver resources. */
@@ -302,6 +308,36 @@ open class JdbcTransaction(
         }
         openResultSetsCount = 0
         executedStatements.clear()
+    }
+
+    /**
+     * Registers a [statement] whose result set is still open, so that it is closed by [closeExecutedStatements]
+     * unless it has been released by [releaseStatement] before then.
+     */
+    internal fun registerStatement(statement: JdbcPreparedStatementApi) {
+        val threshold = db.config.logTooMuchResultSetsThreshold
+        if (threshold > 0 && threshold < openResultSetsCount) {
+            val message = "Current opened result sets size $openResultSetsCount exceeds $threshold threshold for transaction $transactionId "
+            exposedLogger.error(Exception(message).stackTraceToString())
+        }
+        if (executedStatements.add(statement)) openResultSetsCount++
+    }
+
+    /** Closes a [statement] and removes it from the registered statements, if it was registered. */
+    internal fun releaseStatement(statement: JdbcPreparedStatementApi) {
+        if (executedStatements.remove(statement)) openResultSetsCount--
+        statement.closeIfPossible()
+    }
+
+    /** Closes a [result] and releases the statement that produced it. */
+    internal fun releaseResult(result: JdbcResult) {
+        val resultSet = result.result
+        val owner = result.owner
+        // Read the fallback before closing: some drivers reject getStatement() on a closed result set.
+        val unregisteredStatement = if (owner == null && !resultSet.isClosed) resultSet.statement else null
+        // The result set is closed before its statement so that pools such as Agroal do not report a leak (EXPOSED-373).
+        if (!resultSet.isClosed) resultSet.close()
+        if (owner != null) releaseStatement(owner) else unregisteredStatement?.close()
     }
 
     final override fun addLogger(vararg logger: SqlLogger): CompositeSqlLogger {
