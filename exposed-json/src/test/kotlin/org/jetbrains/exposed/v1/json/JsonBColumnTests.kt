@@ -132,6 +132,18 @@ class JsonBColumnTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testCteWithJsonBCastProjection() {
+        val excluded = binaryJsonNotSupportedDB + TestDB.MYSQL_V5 + TestDB.MARIADB
+        withJsonBTable(exclude = excluded) { tester, _, data1, _ ->
+            val castJson = tester.jsonBColumn.castToJson()
+            val cte = tester.select(castJson).asCte("json_values")
+            val jsonValue = cte[tester.jsonBColumn]
+
+            assertEquals(data1, cte.select(jsonValue).withCtes(cte).single()[jsonValue])
+        }
+    }
+
+    @Test
     fun testDAOFunctionsWithJsonBColumn() {
         val dataTable = JsonTestsData.JsonBTable
         val dataEntity = JsonTestsData.JsonBEntity

@@ -12,9 +12,20 @@ class QueryBuilder(
 ) {
     private val internalBuilder = StringBuilder()
     private val _args = mutableListOf<Pair<IColumnType<*>, Any?>>()
+    private val attachedCommonTableExpressions = mutableSetOf<CommonTableExpression>()
 
     /** Returns the list of arguments used in this query. */
     val args: List<Pair<IColumnType<*>, Any?>> get() = _args
+
+    internal fun registerCommonTableExpressions(ctes: Iterable<CommonTableExpression>) {
+        attachedCommonTableExpressions.addAll(ctes)
+    }
+
+    internal fun requireCommonTableExpressionAttached(cte: CommonTableExpression) {
+        require(cte in attachedCommonTableExpressions) {
+            "CTE '${cte.name}' is referenced but not attached to the outermost query; call withCtes() on that query"
+        }
+    }
 
     operator fun invoke(body: QueryBuilder.() -> Unit): Unit = body()
 
