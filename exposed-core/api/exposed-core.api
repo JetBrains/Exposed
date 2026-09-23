@@ -3342,6 +3342,11 @@ public class org/jetbrains/exposed/v1/core/statements/BatchUpsertStatement : org
 	public fun storeUpdateValues (Lkotlin/jvm/functions/Function2;)V
 }
 
+public final class org/jetbrains/exposed/v1/core/statements/DefaultValueMarker {
+	public static final field INSTANCE Lorg/jetbrains/exposed/v1/core/statements/DefaultValueMarker;
+	public fun toString ()Ljava/lang/String;
+}
+
 public class org/jetbrains/exposed/v1/core/statements/DeleteStatement : org/jetbrains/exposed/v1/core/statements/Statement {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/ColumnSet;Lorg/jetbrains/exposed/v1/core/Op;ZLjava/lang/Integer;Ljava/util/List;)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/ColumnSet;Lorg/jetbrains/exposed/v1/core/Op;ZLjava/lang/Integer;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V

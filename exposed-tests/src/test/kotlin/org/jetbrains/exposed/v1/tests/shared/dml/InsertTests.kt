@@ -1005,6 +1005,91 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
+    /* EXPOSED-1088 */
+    @Test
+    fun testBatchInsertAppliesColumnDefaultsToRowsThatLeaveThemUnset() {
+        val tester = object : Table("test_batch_insert_mixed_defaults") {
+            val name = varchar("name", 32)
+            val score = integer("score").default(7)
+            val note = varchar("note", 32).nullable().default(null)
+        }
+
+        withTables(tester) {
+            tester.batchInsert(listOf("a", "b", "c")) { rowName ->
+                this[tester.name] = rowName
+                when (rowName) {
+                    "a" -> this[tester.score] = 5
+                    "c" -> this[tester.note] = "x"
+                }
+            }
+
+            val stored = tester.selectAll().orderBy(tester.name).map {
+                Triple(it[tester.name], it[tester.score], it[tester.note])
+            }
+            assertEqualLists(
+                stored,
+                listOf(
+                    Triple("a", 5, null),
+                    Triple("b", 7, null),
+                    Triple("c", 7, "x")
+                )
+            )
+        }
+    }
+
+    /* EXPOSED-1088 */
+    @Test
+    fun testBatchInsertUsingMultiRowValuesAppliesDatabaseDefaultToRowsThatLeaveItUnset() {
+        val tester = object : Table("test_batch_insert_database_default") {
+            val name = varchar("name", 32)
+            val note = varchar("note", 32).defaultExpression(stringLiteral("fromDb")).nullable()
+        }
+
+        withTables(tester) {
+            val inserted = tester.batchInsert(listOf("a", "b"), useMultiRowValues = true) { rowName ->
+                this[tester.name] = rowName
+                if (rowName == "a") this[tester.note] = "setByRow"
+            }
+
+            val stored = tester.selectAll().orderBy(tester.name).map { it[tester.name] to it[tester.note] }
+            assertEqualLists(stored, listOf("a" to "setByRow", "b" to "fromDb"))
+
+            val returnedNotes = assertDoesNotThrow { inserted.map { it[tester.note] } }
+            assertEquals("setByRow", returnedNotes.first())
+            // It's not null for Postgres and null for other
+            assertContains(listOf(null, "fromDb"), returnedNotes.last())
+        }
+    }
+
+    /* EXPOSED-1088 */
+    @Test
+    fun testBatchInsertFailsWhenOnlySomeRowsSetAColumnWithADatabaseEvaluatedDefault() {
+        val defaultExpressionTester = object : Table("test_batch_insert_database_default") {
+            val name = varchar("name", 32)
+            val note = varchar("note", 32).defaultExpression(stringLiteral("fromDb")).nullable()
+        }
+        val databaseGeneratedTester = object : Table("test_batch_insert_database_generated") {
+            val name = varchar("name", 32)
+            val generated = integer("generated").withDefinition("DEFAULT 1").databaseGenerated()
+        }
+
+        withTables(defaultExpressionTester, databaseGeneratedTester) {
+            expectException<BatchDataInconsistentException> {
+                defaultExpressionTester.batchInsert(listOf("a", "b")) { rowName ->
+                    this[defaultExpressionTester.name] = rowName
+                    if (rowName == "a") this[defaultExpressionTester.note] = "setByRow"
+                }
+            }
+
+            expectException<BatchDataInconsistentException> {
+                databaseGeneratedTester.batchInsert(listOf("a", "b"), useMultiRowValues = true) { rowName ->
+                    this[databaseGeneratedTester.name] = rowName
+                    if (rowName == "a") this[databaseGeneratedTester.generated] = 5
+                }
+            }
+        }
+    }
+
     @Test
     fun testInsertOfDefaultValuesOnly() {
         val defaultAmount = 101
