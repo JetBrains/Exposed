@@ -1,12 +1,18 @@
 package org.jetbrains.exposed.v1.core.statements
 
 import org.jetbrains.exposed.v1.core.IColumnType
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
 import java.util.*
 
-internal object DefaultValueMarker {
+/**
+ * Stands in for the value of a column that the statement leaves to the database to default.
+ * @suppress
+ */
+@InternalApi
+object DefaultValueMarker {
     override fun toString(): String = "DEFAULT"
 }
 

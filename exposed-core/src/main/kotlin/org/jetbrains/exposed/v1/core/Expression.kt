@@ -67,11 +67,11 @@ class QueryBuilder(
     operator fun Expression<*>.unaryPlus(): QueryBuilder = append(this)
 
     /** Adds the specified [argument] as a value of the specified [column]. */
+    @OptIn(InternalApi::class)
     fun <T> registerArgument(column: Column<*>, argument: T) {
         when (argument) {
             is Expression<*> -> append(argument)
             DefaultValueMarker -> append(
-                @OptIn(InternalApi::class)
                 currentTransaction()
                     .db.dialect.dataTypeProvider
                     .processForDefaultValue(column.dbDefaultValue!!)

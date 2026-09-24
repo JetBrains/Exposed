@@ -28,6 +28,16 @@ open class BatchInsertStatement(
 
     private fun Column<*>.isDefaultable() = columnType.nullable || defaultValueFun != null || isDatabaseGenerated
 
+    /**
+     * Whether [prepareSQL] renders the values of every batched row into the statement, instead of preparing a single
+     * statement that the driver binds and executes once per row.
+     *
+     * Only a statement that gives each row its own values clause can leave a column to its database-side default in
+     * some rows while setting it in others, because such a default can only be rendered as SQL and never bound as a
+     * parameter. The default `false` is the safe answer for any implementation that does not render the rows itself.
+     */
+    internal open val rendersEveryRowInSQL: Boolean get() = false
+
     override operator fun <S> set(column: Column<S>, value: S) {
         @OptIn(InternalApi::class)
         if (data.size > 1 && column !in data[data.size - 2] && !column.isDefaultable()) {
@@ -112,7 +122,16 @@ open class BatchInsertStatement(
                     columnsToInsert.map { column ->
                         column to when {
                             values.contains(column) -> values[column]
-                            column.dbDefaultValue != null || column.isDatabaseGenerated -> DefaultValueMarker
+                            column.defaultValueFun != null -> column.defaultValueFun!!()
+                            column.dbDefaultValue != null && rendersEveryRowInSQL -> DefaultValueMarker
+                            column.dbDefaultValue != null || column.isDatabaseGenerated -> {
+                                val fullIdentity = currentTransaction().fullIdentity(column)
+                                throw BatchDataInconsistentException(
+                                    "Can't insert a batch in which only some of the rows set $fullIdentity, because the " +
+                                        "default value of that column is only known to the database. Either set it in " +
+                                        "every row or in none of them."
+                                )
+                            }
                             else -> {
                                 require(column.columnType.nullable) {
                                     "The value for the column ${column.name} was not provided. " +
