@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.ApplicationContext
+import org.springframework.jdbc.datasource.DataSourceTransactionManager
+import org.springframework.jdbc.datasource.SimpleDriverDataSource
 
 @SpringBootTest(
     classes = [Application::class],
@@ -25,10 +27,14 @@ open class DatabaseInitializerTest {
     fun `should create schema for TestTable and not for IgnoreTable`() {
         Assertions.assertThrows(ExposedSQLException::class.java) {
             Database.connect("jdbc:h2:mem:test-spring", user = "sa", driver = "org.h2.Driver")
+            val dataSource = SimpleDriverDataSource(org.h2.Driver(), "jdbc:h2:mem:test-spring", "sa", "")
+            val txManager = DataSourceTransactionManager(dataSource)
             transaction {
-                DatabaseInitializer(applicationContext, listOf("org.jetbrains.exposed.v1.spring.boot.tables.ignore")).run(
-                    null
-                )
+                DatabaseInitializer(
+                    applicationContext,
+                    listOf("org.jetbrains.exposed.v1.spring.boot.tables.ignore"),
+                    txManager
+                ).run(null)
                 Assertions.assertEquals(0L, TestTable.selectAll().count())
                 IgnoreTable.selectAll().count()
             }
