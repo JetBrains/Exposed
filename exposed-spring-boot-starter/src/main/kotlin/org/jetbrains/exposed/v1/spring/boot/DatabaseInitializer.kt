@@ -4,27 +4,33 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.slf4j.LoggerFactory
 import org.springframework.boot.ApplicationArguments
-import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.autoconfigure.AutoConfigurationPackages
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider
 import org.springframework.core.Ordered
 import org.springframework.core.type.filter.AssignableTypeFilter
 import org.springframework.core.type.filter.RegexPatternTypeFilter
-import org.springframework.transaction.annotation.Transactional
 import java.util.regex.Pattern
 
 /**
  * Base class responsible for the automatic creation of a database schema, using the results of [discoverExposedTables].
  *
- * If more than just table creation is required, a derived class can be implemented to override the transactional
- * function, [run], so that other schema operations can be performed when initialized.
+ * [run] is invoked inside a transaction by `ExposedAutoConfiguration` while the auto-configured
+ * `SpringTransactionManager` bean is being created, so the schema exists before any bean can obtain the
+ * transaction manager. Every `DatabaseInitializer` bean in the context is executed at that point, in [Ordered] order.
+ *
+ * If more than just table creation is required, a derived class can be implemented to override [run], so that other
+ * schema operations can be performed when initialized. Because initializers run while the transaction manager is
+ * still being created, they must not depend on it, directly or transitively (for example via `JdbcTemplate` or a
+ * bean annotated with `@DependsOnDatabaseInitialization`); Spring would report a `BeanCurrentlyInCreationException`.
  *
  * @property applicationContext The Spring ApplicationContext container responsible for managing beans.
  * @property excludedPackages List of packages to exclude, so that their contained tables are not auto-created.
  */
-open class DatabaseInitializer(private val applicationContext: ApplicationContext, private val excludedPackages: List<String>) :
-    ApplicationRunner, Ordered {
+open class DatabaseInitializer(
+    private val applicationContext: ApplicationContext,
+    private val excludedPackages: List<String>
+) : Ordered {
     override fun getOrder(): Int = DATABASE_INITIALIZER_ORDER
 
     companion object {
@@ -33,8 +39,10 @@ open class DatabaseInitializer(private val applicationContext: ApplicationContex
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    @Transactional
-    override fun run(args: ApplicationArguments?) {
+    /**
+     * Discovers and creates database tables. Must be called inside an Exposed transaction.
+     */
+    open fun run(args: ApplicationArguments?) {
         val exposedTables = discoverExposedTables(applicationContext, excludedPackages)
         logger.info("Schema generation for tables '{}'", exposedTables.map { it.tableName })
 
