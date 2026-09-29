@@ -10,7 +10,7 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 fun Application.configureDatabase() {
-    Database.connect("jdbc:h2:mem:broker;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver")
+    Database.connect("jdbc:h2:mem:broker_jdbc;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver")
     transaction {
         SchemaUtils.create(Brokers, Clients, Portfolios, Instruments, Tags, InstrumentTags, Trades)
     }

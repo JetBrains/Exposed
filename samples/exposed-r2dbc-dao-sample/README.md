@@ -46,10 +46,21 @@ curl http://localhost:8081/instruments
 
 ## Note on the R2DBC DAO
 
-`exposed-dao-r2dbc` is an experimental preview: its API may change in incompatible ways between releases, which is why the build file opts in to
-`@ExperimentalR2dbcDaoApi`.
+`exposed-dao-r2dbc` is an experimental preview: its API may change in incompatible ways between releases. Every declaration is annotated
+`@ExperimentalR2dbcDaoApi`, so using it requires opting in. This sample does it once for the whole module, in `build.gradle.kts`:
+
+```kotlin
+kotlin {
+    compilerOptions {
+        optIn.add("org.jetbrains.exposed.v1.dao.r2dbc.ExperimentalR2dbcDaoApi")
+    }
+}
+```
+
+The narrower options are `@file:OptIn(ExperimentalR2dbcDaoApi::class)` at the top of a file, or `@OptIn(ExperimentalR2dbcDaoApi::class)` on a single declaration.
+Marking your own declaration `@ExperimentalR2dbcDaoApi` instead propagates the requirement to its callers.
 
 ## See also
 
 [`exposed-jdbc-dao-sample`](../exposed-jdbc-dao-sample) is the same application built on the JDBC DAO. It listens on port 8080, so both samples can run at the same
-time. What changes between the two APIs is covered by the JDBC DAO to R2DBC DAO migration guide in the Exposed documentation.
+time. They do not share data: each runs in its own JVM against its own in-memory database (`broker_jdbc` and `broker_r2dbc`), so seeding one leaves the other empty.

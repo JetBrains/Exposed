@@ -10,7 +10,7 @@ import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 
 suspend fun Application.configureDatabase() {
-    R2dbcDatabase.connect("r2dbc:h2:mem:///broker;DB_CLOSE_DELAY=-1")
+    R2dbcDatabase.connect("r2dbc:h2:mem:///broker_r2dbc;DB_CLOSE_DELAY=-1")
     suspendTransaction {
         SchemaUtils.create(Brokers, Clients, Portfolios, Instruments, Tags, InstrumentTags, Trades)
     }

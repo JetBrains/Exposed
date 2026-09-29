@@ -44,4 +44,4 @@ curl http://localhost:8080/instruments
 ## See also
 
 [`exposed-r2dbc-dao-sample`](../exposed-r2dbc-dao-sample) is the same application built on the R2DBC DAO. It listens on port 8081, so both samples can run at the same
-time. What changes between the two APIs is covered by the JDBC DAO to R2DBC DAO migration guide in the Exposed documentation.
+time. They do not share data: each runs in its own JVM against its own in-memory database (`broker_jdbc` and `broker_r2dbc`), so seeding one leaves the other empty.
