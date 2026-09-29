@@ -2,7 +2,7 @@ services:
     sqlserver:
         container_name: SQLServer
         restart: always
-        image: mcr.microsoft.com/mssql/server:2025-RC1-ubuntu-24.04
+        image: mcr.microsoft.com/mssql/server:2025-CU8-ubuntu-24.04
         platform: linux/amd64
         ports:
             - "3005:1433"

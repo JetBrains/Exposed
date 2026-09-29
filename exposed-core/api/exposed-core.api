@@ -1587,6 +1587,7 @@ public final class org/jetbrains/exposed/v1/core/LiteralOpKt {
 	public static final fun doubleLiteral (D)Lorg/jetbrains/exposed/v1/core/LiteralOp;
 	public static final fun floatLiteral (F)Lorg/jetbrains/exposed/v1/core/LiteralOp;
 	public static final fun intLiteral (I)Lorg/jetbrains/exposed/v1/core/LiteralOp;
+	public static final fun literal (Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/LiteralOp;
 	public static final fun longLiteral (J)Lorg/jetbrains/exposed/v1/core/LiteralOp;
 	public static final fun shortLiteral (S)Lorg/jetbrains/exposed/v1/core/LiteralOp;
 	public static final fun stringLiteral (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/LiteralOp;
@@ -4465,6 +4466,7 @@ public class org/jetbrains/exposed/v1/core/vendors/MysqlDialect : org/jetbrains/
 	protected final fun getNotAcceptableDefaults ()Ljava/util/List;
 	public fun getSupportsAlterCheckConstraint ()Z
 	public fun getSupportsCreateSequence ()Z
+	public fun getSupportsDualTableConcept ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z
 	public fun getSupportsSelectForUpdate ()Z
 	public fun getSupportsSetDefaultReferenceOption ()Z

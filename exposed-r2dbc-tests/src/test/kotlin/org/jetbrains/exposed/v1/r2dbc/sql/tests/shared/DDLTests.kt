@@ -30,6 +30,8 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 import java.util.*
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.expect
 
@@ -1294,45 +1296,60 @@ class DDLTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testTableModifiersAndStorageParametersSQL() {
         // Test TableEngine enum values
-        kotlin.test.assertEquals("InnoDB", Table.TableEngine.INNODB.engineName)
-        kotlin.test.assertEquals("MyISAM", Table.TableEngine.MYISAM.engineName)
-        kotlin.test.assertEquals("MEMORY", Table.TableEngine.MEMORY.engineName)
-        kotlin.test.assertEquals("ARCHIVE", Table.TableEngine.ARCHIVE.engineName)
-        kotlin.test.assertEquals("CSV", Table.TableEngine.CSV.engineName)
+        assertEquals("InnoDB", Table.TableEngine.INNODB.engineName)
+        assertEquals("MyISAM", Table.TableEngine.MYISAM.engineName)
+        assertEquals("MEMORY", Table.TableEngine.MEMORY.engineName)
+        assertEquals("ARCHIVE", Table.TableEngine.ARCHIVE.engineName)
+        assertEquals("CSV", Table.TableEngine.CSV.engineName)
 
         // Test Table.EngineOption SQL generation
-        kotlin.test.assertEquals("ENGINE=InnoDB", Table.EngineOption(Table.TableEngine.INNODB).toSQL())
-        kotlin.test.assertEquals("ENGINE=MEMORY", Table.EngineOption(Table.TableEngine.MEMORY).toSQL())
-        kotlin.test.assertEquals("ENGINE=MyISAM", Table.EngineOption(Table.TableEngine.MYISAM).toSQL())
+        assertEquals("ENGINE=InnoDB", Table.EngineOption(Table.TableEngine.INNODB).toSQL())
+        assertEquals("ENGINE=MEMORY", Table.EngineOption(Table.TableEngine.MEMORY).toSQL())
+        assertEquals("ENGINE=MyISAM", Table.EngineOption(Table.TableEngine.MYISAM).toSQL())
 
         // Test Table.CharsetOption SQL generation
-        kotlin.test.assertEquals("DEFAULT CHARSET=utf8mb4", Table.CharsetOption("utf8mb4").toSQL())
-        kotlin.test.assertEquals(
+        assertEquals("DEFAULT CHARSET=utf8mb4", Table.CharsetOption("utf8mb4").toSQL())
+        assertEquals(
             "DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
             Table.CharsetOption("utf8mb4", "utf8mb4_unicode_ci").toSQL()
         )
 
         // Test Table.RawTableOption SQL generation
-        kotlin.test.assertEquals("ROW_FORMAT=COMPRESSED", Table.RawTableOption("ROW_FORMAT=COMPRESSED").toSQL())
+        assertEquals("ROW_FORMAT=COMPRESSED", Table.RawTableOption("ROW_FORMAT=COMPRESSED").toSQL())
 
         // Test Table.FillFactorParameter SQL generation and validation
-        kotlin.test.assertEquals("fillfactor=70", Table.FillFactorParameter(70).toSQL())
-        kotlin.test.assertEquals("fillfactor=10", Table.FillFactorParameter(10).toSQL())
-        kotlin.test.assertEquals("fillfactor=100", Table.FillFactorParameter(100).toSQL())
+        assertEquals("fillfactor=70", Table.FillFactorParameter(70).toSQL())
+        assertEquals("fillfactor=10", Table.FillFactorParameter(10).toSQL())
+        assertEquals("fillfactor=100", Table.FillFactorParameter(100).toSQL())
         assertFailsWith<IllegalArgumentException> { Table.FillFactorParameter(9) }
         assertFailsWith<IllegalArgumentException> { Table.FillFactorParameter(101) }
 
         // Test AutovacuumEnabledParameter SQL generation
-        kotlin.test.assertEquals("autovacuum_enabled=true", Table.AutovacuumEnabledParameter(true).toSQL())
-        kotlin.test.assertEquals("autovacuum_enabled=false", Table.AutovacuumEnabledParameter(false).toSQL())
+        assertEquals("autovacuum_enabled=true", Table.AutovacuumEnabledParameter(true).toSQL())
+        assertEquals("autovacuum_enabled=false", Table.AutovacuumEnabledParameter(false).toSQL())
 
         // Test ToastTupleTargetParameter SQL generation and validation
-        kotlin.test.assertEquals("toast_tuple_target=8160", Table.ToastTupleTargetParameter(8160).toSQL())
-        kotlin.test.assertEquals("toast_tuple_target=1", Table.ToastTupleTargetParameter(1).toSQL())
+        assertEquals("toast_tuple_target=8160", Table.ToastTupleTargetParameter(8160).toSQL())
+        assertEquals("toast_tuple_target=1", Table.ToastTupleTargetParameter(1).toSQL())
         assertFailsWith<IllegalArgumentException> { Table.ToastTupleTargetParameter(0) }
         assertFailsWith<IllegalArgumentException> { Table.ToastTupleTargetParameter(-1) }
 
         // Test RawTableStorageParameter SQL generation
-        kotlin.test.assertEquals("parallel_workers=4", Table.RawTableStorageParameter("parallel_workers=4").toSQL())
+        assertEquals("parallel_workers=4", Table.RawTableStorageParameter("parallel_workers=4").toSQL())
+    }
+
+    @Test
+    fun testBinaryDefaultPreservesNonUtf8Bytes() {
+        val expected = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47)
+        val table = object : Table("binary_default_test") {
+            val payload = binary("payload", 16).default(expected)
+        }
+
+        withTables(excludeSettings = TestDB.ALL_ORACLE_LIKE, table) {
+            table.insert {}
+
+            val actual = table.selectAll().single()[table.payload]
+            assertContentEquals(expected, actual)
+        }
     }
 }
