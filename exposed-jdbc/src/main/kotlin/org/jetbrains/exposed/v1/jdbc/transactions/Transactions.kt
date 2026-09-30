@@ -36,7 +36,7 @@ private inline fun <T> executeBaseTransactionWithErrorHandling(
     transaction: JdbcTransaction,
     shouldCommit: Boolean,
     block: () -> T,
-    errorBlock: (JdbcPreparedStatementApi?) -> Unit,
+    errorBlock: (JdbcPreparedStatementApi?, Throwable) -> Unit,
 ): T {
     return try {
         block().also {
@@ -46,12 +46,12 @@ private inline fun <T> executeBaseTransactionWithErrorHandling(
         }
     } catch (cause: SQLException) {
         val currentStatement = transaction.currentStatement
-        errorBlock(currentStatement)
+        errorBlock(currentStatement, cause)
         throw cause
     } catch (cause: Throwable) {
         if (shouldCommit) {
             val currentStatement = transaction.currentStatement
-            errorBlock(currentStatement)
+            errorBlock(currentStatement, cause)
         }
         throw cause
     }
@@ -62,8 +62,9 @@ private inline fun <T> executeTransactionWithErrorHandling(
     shouldCommit: Boolean,
     block: () -> T,
 ): T {
-    return executeBaseTransactionWithErrorHandling(transaction, shouldCommit, block) { errorStatement ->
+    return executeBaseTransactionWithErrorHandling(transaction, shouldCommit, block) { errorStatement, cause ->
         transaction.rollbackLoggingException {
+            cause.addSuppressed(it)
             exposedLogger.warn(
                 "Transaction rollback failed: ${it.message}. Statement: $errorStatement",
                 it
@@ -77,8 +78,9 @@ private suspend inline fun <T> executeSuspendTransactionWithErrorHandling(
     shouldCommit: Boolean,
     block: () -> T,
 ): T {
-    return executeBaseTransactionWithErrorHandling(transaction, shouldCommit, block) { errorStatement ->
+    return executeBaseTransactionWithErrorHandling(transaction, shouldCommit, block) { errorStatement, cause ->
         transaction.rollbackSuspendLoggingException {
+            cause.addSuppressed(it)
             exposedLogger.warn(
                 "Transaction rollback failed: ${it.message}. Statement: $errorStatement",
                 it
@@ -117,7 +119,9 @@ private fun resolveDatabaseOrThrow(db: Database?): Database {
  * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
  *
  * **Note** This function catches all throwables (including errors) to ensure proper transaction rollback
- * and resource cleanup, even in exceptional circumstances.
+ * and resource cleanup, even in exceptional circumstances. Caught cleanup exceptions are added as suppressed
+ * exceptions to the original failure. Cleanup-only exceptions after a successful transaction are logged without
+ * changing its result.
  *
  * @param db Database to use for the transaction. Defaults to `null`.
  * @param transactionIsolation Transaction isolation level. Defaults to `db.transactionManager.defaultIsolationLevel`.
@@ -176,7 +180,9 @@ fun <T> transaction(
  * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
  *
  * **Note** This function catches all throwables (including errors) to ensure proper transaction rollback
- * and resource cleanup, even in exceptional circumstances.
+ * and resource cleanup, even in exceptional circumstances. Caught cleanup exceptions are added as suppressed
+ * exceptions to the original failure. Cleanup-only exceptions after a successful transaction are logged without
+ * changing its result.
  *
  * @param db Database to use for the transaction. Defaults to `null`.
  * @param transactionIsolation Transaction isolation level. Defaults to `db.transactionManager.defaultIsolationLevel`.
@@ -188,6 +194,7 @@ fun <T> transaction(
  * @throws Throwable If any other error occurs during execution
  * @sample org.jetbrains.exposed.v1.tests.shared.RollbackTransactionTest.testRollbackWithoutSavepoints
  */
+@Suppress("TooGenericExceptionCaught")
 fun <T> inTopLevelTransaction(
     db: Database? = null,
     transactionIsolation: Int? = db?.transactionManager?.defaultIsolationLevel,
@@ -208,23 +215,30 @@ fun <T> inTopLevelTransaction(
             outerTransaction
         )
 
+        var primaryFailure: Throwable? = null
+
         try {
-            @OptIn(InternalApi::class)
-            return withThreadLocalTransaction(transaction) {
-                try {
-                    executeTransactionWithErrorHandling(transaction, shouldCommit = true) {
-                        transaction.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
-                        transaction.statement()
+            val retryCause = try {
+                @OptIn(InternalApi::class)
+                return withThreadLocalTransaction(transaction) {
+                    try {
+                        executeTransactionWithErrorHandling(transaction, shouldCommit = true) {
+                            transaction.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
+                            transaction.statement()
+                        }
+                    } catch (cause: SQLException) {
+                        logSQLException(cause, transaction, attempts)
+                        transaction.rollbackLoggingException {
+                            cause.addSuppressed(it)
+                            exposedLogger.debug("Transaction rollback failed: ${it.message}. See previous log line for statement", it)
+                        }
+                        throw cause
                     }
-                } catch (cause: SQLException) {
-                    logSQLException(cause, transaction, attempts)
-                    transaction.rollbackLoggingException {
-                        exposedLogger.debug("Transaction rollback failed: ${it.message}. See previous log line for statement", it)
-                    }
-                    throw cause
                 }
+            } catch (cause: SQLException) {
+                cause
             }
-        } catch (cause: SQLException) {
+            primaryFailure = retryCause
             attempts++
 
             if (retryInterval == null) {
@@ -250,12 +264,16 @@ fun <T> inTopLevelTransaction(
             }
 
             if (attempts >= transaction.maxAttempts) {
-                throw cause
+                throw retryCause
             }
+        } catch (cause: Throwable) {
+            // Retry handling can fail after the original SQL exception.
+            primaryFailure = cause
+            throw cause
         } finally {
             @OptIn(InternalApi::class)
             withThreadLocalTransaction(transaction) {
-                closeStatementsAndConnection(transaction)
+                closeStatementsAndConnection(transaction, primaryFailure)
             }
         }
     }
@@ -269,7 +287,9 @@ fun <T> inTopLevelTransaction(
  * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
  *
  * **Note** This function catches all throwables (including errors) to ensure proper transaction rollback
- * and resource cleanup, even in exceptional circumstances.
+ * and resource cleanup, even in exceptional circumstances. Caught cleanup exceptions are added as suppressed
+ * exceptions to the original failure. Cleanup-only exceptions after a successful transaction are logged without
+ * changing its result.
  *
  * @param db Database to use for the transaction. Defaults to `null`.
  * @param transactionIsolation Transaction isolation level. Defaults to `db.transactionManager.defaultIsolationLevel`.
@@ -327,7 +347,9 @@ suspend fun <T> suspendTransaction(
  * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
  *
  * **Note** This function catches all throwables (including errors) to ensure proper transaction rollback
- * and resource cleanup, even in exceptional circumstances.
+ * and resource cleanup, even in exceptional circumstances. Caught cleanup exceptions are added as suppressed
+ * exceptions to the original failure. Cleanup-only exceptions after a successful transaction are logged without
+ * changing its result.
  *
  * @param db Database to use for the transaction. Defaults to `null`.
  * @param transactionIsolation Transaction isolation level. Defaults to `db.transactionManager.defaultIsolationLevel`.
@@ -338,6 +360,7 @@ suspend fun <T> suspendTransaction(
  * @throws SQLException If a database error occurs and retry attempts are exhausted
  * @throws Throwable If any other error occurs during execution
  */
+@Suppress("TooGenericExceptionCaught")
 suspend fun <T> inTopLevelSuspendTransaction(
     db: Database? = null,
     transactionIsolation: Int? = db?.transactionManager?.defaultIsolationLevel,
@@ -358,23 +381,30 @@ suspend fun <T> inTopLevelSuspendTransaction(
             outerTransaction
         )
 
+        var primaryFailure: Throwable? = null
+
         try {
-            @OptIn(InternalApi::class)
-            return withTransactionContext(transaction) {
-                try {
-                    executeSuspendTransactionWithErrorHandling(transaction, shouldCommit = true) {
-                        transaction.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
-                        transaction.statement()
+            val retryCause = try {
+                @OptIn(InternalApi::class)
+                return withTransactionContext(transaction) {
+                    try {
+                        executeSuspendTransactionWithErrorHandling(transaction, shouldCommit = true) {
+                            transaction.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
+                            transaction.statement()
+                        }
+                    } catch (cause: SQLException) {
+                        logSQLException(cause, transaction, attempts)
+                        transaction.rollbackSuspendLoggingException {
+                            cause.addSuppressed(it)
+                            exposedLogger.debug("Transaction rollback failed: ${it.message}. See previous log line for statement", it)
+                        }
+                        throw cause
                     }
-                } catch (cause: SQLException) {
-                    logSQLException(cause, transaction, attempts)
-                    transaction.rollbackSuspendLoggingException {
-                        exposedLogger.debug("Transaction rollback failed: ${it.message}. See previous log line for statement", it)
-                    }
-                    throw cause
                 }
+            } catch (cause: SQLException) {
+                cause
             }
-        } catch (cause: SQLException) {
+            primaryFailure = retryCause
             attempts++
 
             if (retryInterval == null) {
@@ -400,13 +430,17 @@ suspend fun <T> inTopLevelSuspendTransaction(
             }
 
             if (attempts >= transaction.maxAttempts) {
-                throw cause
+                throw retryCause
             }
+        } catch (cause: Throwable) {
+            // Cancellation during retry delay can replace the original driver exception.
+            primaryFailure = cause
+            throw cause
         } finally {
             @OptIn(InternalApi::class)
             withContext(NonCancellable) {
                 withTransactionContext(transaction) {
-                    closeStatementsAndConnection(transaction)
+                    closeStatementsAndConnection(transaction, primaryFailure)
                 }
             }
         }
@@ -445,8 +479,9 @@ private fun logSQLException(
  * all executed statements, and the transaction connection. Any exceptions during cleanup are logged.
  *
  * @param transaction The transaction whose resources should be closed.
+ * @param failure The original failure to which cleanup exceptions are added as suppressed exceptions, if present.
  */
-internal fun closeStatementsAndConnection(transaction: JdbcTransaction) {
+internal fun closeStatementsAndConnection(transaction: JdbcTransaction, failure: Throwable?) {
     val currentStatement = transaction.currentStatement
     @Suppress("TooGenericExceptionCaught")
     try {
@@ -456,9 +491,11 @@ internal fun closeStatementsAndConnection(transaction: JdbcTransaction) {
         }
         transaction.closeExecutedStatements()
     } catch (cause: Exception) {
+        failure?.addSuppressed(cause)
         exposedLogger.warn("Statements close failed", cause)
     }
     transaction.closeLoggingException {
+        failure?.addSuppressed(it)
         exposedLogger.warn("Transaction close failed: ${it.message}. Statement: $currentStatement", it)
     }
 }
