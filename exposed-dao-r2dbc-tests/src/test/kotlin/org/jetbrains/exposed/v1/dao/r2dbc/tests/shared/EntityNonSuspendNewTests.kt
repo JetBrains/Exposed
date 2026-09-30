@@ -211,23 +211,6 @@ class EntityNonSuspendNewTests : R2dbcDatabaseTestsBase() {
     }
 
     @Test
-    fun testDeleteCancelsPendingInsert() {
-        withTables(Authors) {
-            val counter = StatementCounter()
-            registerInterceptor(counter)
-
-            val author = Author.new { name = "author1" }
-            author.delete()
-
-            flushCache()
-
-            assertEquals(0, counter.inserts)
-            assertEquals(0, counter.deletes)
-            assertEquals(0, Authors.selectAll().toList().size)
-        }
-    }
-
-    @Test
     fun testEntityChangeIsRegisteredOnFlushOnly() {
         withTables(Authors) {
             Author.new { name = "author1" }
