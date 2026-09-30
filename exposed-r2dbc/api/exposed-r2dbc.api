@@ -251,6 +251,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabase$Companion {
 
 public abstract interface class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig : org/jetbrains/exposed/v1/core/DatabaseConfig {
 	public static final field Companion Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Companion;
+	public fun getCancelRunningStatementOnCancellation ()Z
 	public abstract fun getConnectionFactoryOptions ()Lio/r2dbc/spi/ConnectionFactoryOptions;
 	public abstract fun getDefaultR2dbcIsolationLevel ()Lio/r2dbc/spi/IsolationLevel;
 	public abstract fun getTypeMapping ()Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;
@@ -260,10 +261,12 @@ public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Builder : 
 	public fun <init> ()V
 	public final fun build ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig;
 	public final fun connectionFactoryOptions (Lkotlin/jvm/functions/Function1;)V
+	public final fun getCancelRunningStatementOnCancellation ()Z
 	public final fun getConnectionFactoryOptions ()Lio/r2dbc/spi/ConnectionFactoryOptions;
 	public fun getDefaultIsolationLevel ()I
 	public final fun getDefaultR2dbcIsolationLevel ()Lio/r2dbc/spi/IsolationLevel;
 	public final fun getTypeMapping ()Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;
+	public final fun setCancelRunningStatementOnCancellation (Z)V
 	public final fun setConnectionFactoryOptions (Lio/r2dbc/spi/ConnectionFactoryOptions;)V
 	public fun setDefaultIsolationLevel (I)V
 	public final fun setDefaultR2dbcIsolationLevel (Lio/r2dbc/spi/IsolationLevel;)V
@@ -276,8 +279,13 @@ public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Companion 
 	public static synthetic fun invoke$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Companion;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Builder;
 }
 
+public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$DefaultImpls {
+	public static fun getCancelRunningStatementOnCancellation (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig;)Z
+}
+
 public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfigImpl : org/jetbrains/exposed/v1/core/DatabaseConfig, org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig {
 	public fun <init> (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Builder;)V
+	public fun getCancelRunningStatementOnCancellation ()Z
 	public fun getConnectionFactoryOptions ()Lio/r2dbc/spi/ConnectionFactoryOptions;
 	public fun getDefaultFetchSize ()Ljava/lang/Integer;
 	public fun getDefaultIsolationLevel ()I
