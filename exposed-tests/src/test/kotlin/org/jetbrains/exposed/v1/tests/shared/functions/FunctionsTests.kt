@@ -365,6 +365,14 @@ class FunctionsTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testLocateWithSingleQuote() {
+        withCitiesAndUsers { cities, _, _ ->
+            val locate = stringLiteral("Joe's").locate("'")
+            assertEquals(4, cities.select(locate).first()[locate])
+        }
+    }
+
+    @Test
     fun testRandomFunction01() {
         val t = DMLTestsData.Cities
         withTables(t) {

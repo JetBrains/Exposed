@@ -154,7 +154,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         expr: Expression<T>,
         substring: String
     ) = queryBuilder {
-        append("INSTR(", expr, ",\'", substring, "\')")
+        append("INSTR(", expr, ",\'", substring.replace("'", "''"), "\')")
     }
 
     override fun <T> date(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {

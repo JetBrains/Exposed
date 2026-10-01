@@ -121,7 +121,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         expr: Expression<T>,
         substring: String
     ) = queryBuilder {
-        append("LOCATE(\'", substring, "\',", expr, ")")
+        append("LOCATE(\'", substring.replace("'", "''"), "\',", expr, ")")
     }
 
     override fun <T : String?> regexp(
