@@ -284,6 +284,8 @@ open class RedshiftDialect : VendorDialect(dialectName, RedshiftDataTypeProvider
     override val supportsGeneratedKeysRetrieval: Boolean = false
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
     override val supportsSubqueryUnions: Boolean = true
+    override val supportsCommonTableExpressions: Boolean = true
+    override val supportsRecursiveCommonTableExpressions: Boolean = true
     override val supportsOrderByNullsFirstLast: Boolean = true
     override val supportsOnUpdate: Boolean = false
     override val supportsOnDelete: Boolean = false

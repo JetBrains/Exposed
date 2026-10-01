@@ -4,6 +4,8 @@ Infrastructure:
 * Flyway 13.3.0
 
 Features:
+* feat: EXPOSED-868 Add common table expression support for JDBC and R2DBC
+* fix: Preserve `Except` when copying JDBC and R2DBC set operations
 * feat: EXPOSED-1049 Support hashing algorithms for the Crypt module by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2876
 * feat: Add multi-row values (single statement) batch insert for PostgreSQL with R2DBC by @mdedetrich in https://github.com/JetBrains/Exposed/pull/2880
 * feat: Add Amazon Redshift JDBC support by @hugoncosta in https://github.com/JetBrains/Exposed/pull/2883
