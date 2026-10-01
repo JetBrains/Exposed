@@ -25,11 +25,18 @@ class JdbcPreparedStatementImpl(
     val statement: PreparedStatement,
     val wasGeneratedKeysRequested: Boolean
 ) : JdbcPreparedStatementApi {
+    /** Statement used to read generated keys where the driver cannot return them itself (SQLite); closed with this one. */
+    private var generatedKeysStatement: PreparedStatement? = null
+
     override val resultSet: JdbcResult?
         get() = when {
             !wasGeneratedKeysRequested -> statement.resultSet?.let { JdbcResult(it) }
             currentDialect is SQLiteDialect -> {
-                statement.connection.prepareStatement("select last_insert_rowid();").executeQuery()?.let { JdbcResult(it) }
+                generatedKeysStatement?.close()
+                statement.connection.prepareStatement("select last_insert_rowid();")
+                    .also { generatedKeysStatement = it }
+                    .executeQuery()
+                    ?.let { JdbcResult(it) }
             }
             else -> statement.generatedKeys?.let { JdbcResult(it) }
         }
@@ -94,6 +101,8 @@ class JdbcPreparedStatementImpl(
     }
 
     override fun closeIfPossible() {
+        generatedKeysStatement?.let { if (!it.isClosed) it.close() }
+        generatedKeysStatement = null
         if (!statement.isClosed) statement.close()
     }
 
