@@ -113,7 +113,8 @@ class EntityCache(private val transaction: Transaction) {
 
     /** Removes the specified [Entity] from this [EntityCache] using its associated [table] as the key. */
     fun <ID : Any, T : Entity<ID>> remove(table: IdTable<ID>, o: T) {
-        getMap(table).remove(o.id.value)
+        val id = o.id._value ?: return
+        getMap(table).remove(id)
     }
 
     internal fun addNotInitializedEntityToQueue(entity: Entity<*>) {

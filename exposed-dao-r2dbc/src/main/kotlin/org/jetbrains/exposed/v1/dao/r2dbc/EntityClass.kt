@@ -529,9 +529,9 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
     fun removeFromCache(entity: Entity<ID>) {
         val cache = warmCache()
         cache.remove(table, entity)
-        // R2DBC's `Entity.delete` skips the round-trip INSERT+DELETE for unflushed entities, so we
-        // also need to drop the entity from the scheduled inserts. JDBC doesn't need this because
-        // the lifecycle interceptor flushes inserts before the DELETE statement.
+        // `Entity.delete` skips the round-trip INSERT+DELETE for unflushed entities, so we also
+        // need to drop the entity from the scheduled inserts. The JDBC DAO does the same since
+        // EXPOSED-1092.
         cache.inserts[table]?.remove(entity)
 
         val cachedUnder = entity.id.takeIf { it._value != null }
