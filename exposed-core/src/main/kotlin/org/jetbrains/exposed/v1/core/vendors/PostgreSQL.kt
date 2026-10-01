@@ -85,7 +85,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         expr: Expression<T>,
         substring: String
     ) = queryBuilder {
-        append("POSITION(\'", substring, "\' IN ", expr, ")")
+        append("POSITION(\'", substring.replace("'", "''"), "\' IN ", expr, ")")
     }
 
     override fun <T : String?> regexp(

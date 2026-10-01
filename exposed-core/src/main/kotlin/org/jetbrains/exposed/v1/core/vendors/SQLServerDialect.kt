@@ -116,7 +116,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         expr: Expression<T>,
         substring: String
     ) = queryBuilder {
-        append("CHARINDEX(\'", substring, "\',", expr, ")")
+        append("CHARINDEX(\'", substring.replace("'", "''"), "\',", expr, ")")
     }
 
     override fun <T : String?> regexp(
