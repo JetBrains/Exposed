@@ -112,6 +112,7 @@ open class InsertStatement<Key : Any>(
                 .apply { field = this }
         }
 
+    @OptIn(InternalApi::class)
     override fun arguments(): List<Iterable<Pair<IColumnType<*>, Any?>>> {
         return arguments?.map { args ->
             val builder = QueryBuilder(true)
