@@ -1,62 +1,81 @@
 <show-structure for="chapter,procedure" depth="2"/>
+<link-summary>
+Learn how to migrate a DAO-based application from JDBC to R2DBC.
+</link-summary>
 
-# Migrating from the JDBC DAO to the R2DBC DAO
+# Migrating from JDBC DAO to R2DBC DAO
 
-How to move a DAO-based application from `exposed-dao` (JDBC only) to `exposed-dao-r2dbc`.
+Exposed 1.6.0 introduces experimental R2DBC support for the DAO API through the `exposed-dao-r2dbc` artifact. In this
+topic, you will learn how to migrate an existing JDBC DAO application to R2DBC DAO.
 
-`exposed-dao-r2dbc` ships alongside `exposed-dao` in the same Exposed release, so this is a change of artifact
-rather than an API-version upgrade. It is a recent addition, though: if your build pins an older Exposed release,
-bump the version first. If you are also coming from a `0.x` release, apply
-[Migrating from 0.61.0 to 1.0.0](Migration-Guide-1-0-0.md) first.
+The migration changes the transport and DAO artifacts and requires source-code changes.
 
-<warning>
-The R2DBC DAO is an experimental preview: its API may change in incompatible ways between releases.
-</warning>
+<include from="lib.topic" element-id="r2dbc-dao-experimental-note"/>
 
-## Step 0. Check for blockers
+## Prerequisites
 
-These JDBC DAO features have no R2DBC equivalent. If you use one, you cannot finish the migration:
+Before you start, check whether your application uses JDBC DAO features that are not available in R2DBC DAO.
+If it does, you must change those parts of the application before completing the migration.
 
-| Not available                            | Note                                                             |
-|------------------------------------------|------------------------------------------------------------------|
-| `ImmutableEntityClass`                   | —                                                                |
-| `ImmutableCachedEntityClass`             | —                                                                |
-| `EntityClass.view { }` and `View`        | use `find { }` instead                                           |
-| `EntityClass.findWithCacheCondition()`   | —                                                                |
-| `EntityClass.testCache(predicate)`       | the `EntityID` overload does exist                               |
-| `EntityClass.wrapRows(rows, alias)`      | the `Alias`/`QueryAlias` overloads are missing                   |
-| `Entity.lookupInReadValues()`            | —                                                                |
-| `Entity.writeValues`, `storeWrittenValues()` | pending values belong to the transaction's `EntityCache` instead |
-| `EntityCache.maxEntitiesToStore`         | the R2DBC entity cache does not evict                            |
-| `EntityCache.invalidateGlobalCaches()`   | part of the `ImmutableCachedEntityClass` machinery               |
-| `warmUpReferences()`                     | the `forUpdate` parameter was dropped                            |
+| JDBC DAO                                     | R2DBC DAO                                                                                |
+|----------------------------------------------|------------------------------------------------------------------------------------------|
+| `ImmutableEntityClass`                       | Not available.                                                                           |
+| `ImmutableCachedEntityClass`                 | Not available.                                                                           |
+| `EntityClass.view()` and `View`              | Not available. Use `find()` instead.                                                     |
+| `EntityClass.findWithCacheCondition()`       | Not available.                                                                           |
+| `EntityClass.testCache(predicate)`           | Not available. Use `EntityClass.testCache(entityId)` instead.                            |
+| `Entity.writeValues`, `storeWrittenValues()` | Not available. Pending values belong to the transaction's `EntityCache` instead.         |
+| `EntityCache.maxEntitiesToStore`             | Not available. The R2DBC entity cache does not evict entities.                           |
+| `EntityCache.invalidateGlobalCaches()`       | Not available. This functionality is part of the `ImmutableCachedEntityClass` machinery. |
+| `warmUpReferences()`                         | Available, but does not support the `forUpdate` parameter.                               |
 
-## Step 1. Swap dependencies
+## Update dependencies
 
-<compare first-title="JDBC DAO" second-title="R2DBC DAO">
+Replace the JDBC transport and DAO artifacts with their R2DBC counterparts:
+
+<compare first-title="JDBC DAO" second-title="R2DBC DAO" type="top-bottom">
 
 ```kotlin
 implementation("org.jetbrains.exposed:exposed-core:%exposed_version%")
 implementation("org.jetbrains.exposed:exposed-jdbc:%exposed_version%")
 implementation("org.jetbrains.exposed:exposed-dao:%exposed_version%")
-implementation("com.h2database:h2:%h2_db_version%")
 ```
 
 ```kotlin
 implementation("org.jetbrains.exposed:exposed-core:%exposed_version%")
 implementation("org.jetbrains.exposed:exposed-r2dbc:%exposed_version%")
 implementation("org.jetbrains.exposed:exposed-dao-r2dbc:%exposed_version%")
+```
+
+</compare>
+
+> Do not keep both JDBC and R2DBC DAO artifacts in the same source set. They define classes, such as `Entity`, `EntityClass`, 
+> and `EntityCache` with the same simple names.
+> 
+{style="note"}
+
+Use the R2DBC driver that corresponds to your database, for example:
+
+<compare first-title="JDBC DAO" second-title="R2DBC DAO" type="top-bottom">
+
+```kotlin
+implementation("com.h2database:h2:%h2_db_version%")
+```
+
+```kotlin
 implementation("io.r2dbc:r2dbc-h2:%h2_r2dbc_version%")
 ```
 
 </compare>
 
-Do not keep both DAO artifacts in one source set — they define `Entity`, `EntityClass`, and `EntityCache` with the
-same simple names, so wildcard imports collide.
+> For the complete list of supported databases and their corresponding driver dependencies, see [](Working-with-Database.md).
+>
+{style="tip"}
 
-## Step 2. Opt in
+## Opt in to the experimental API
 
-Almost the whole API is annotated `@ExperimentalR2dbcDaoApi`, so opt in once per module:
+The R2DBC DAO API is experimental and requires an opt-in. To opt in for the entire module, add `ExperimentalR2dbcDaoApi`
+to the Kotlin compiler options:
 
 ```kotlin
 kotlin {
@@ -66,10 +85,14 @@ kotlin {
 }
 ```
 
-## Step 3. Update imports
+To opt in at a narrower scope, use `@OptIn(ExperimentalR2dbcDaoApi::class)` instead.
 
-Add `.r2dbc` to the DAO package. Nothing is renamed and nothing moves to a subpackage, so this is a
-search-and-replace of `org.jetbrains.exposed.v1.dao.` with `org.jetbrains.exposed.v1.dao.r2dbc.` across your imports.
+## Update imports
+
+The R2DBC DAO API is located in the `org.jetbrains.exposed.v1.dao.r2dbc` package.
+
+For DAO, replace the `org.jetbrains.exposed.v1.dao.` package with `org.jetbrains.exposed.v1.dao.r2dbc.` across your imports.
+For example:
 
 | JDBC DAO                                      | R2DBC DAO                                           |
 |-----------------------------------------------|-----------------------------------------------------|
@@ -81,37 +104,53 @@ search-and-replace of `org.jetbrains.exposed.v1.dao.` with `org.jetbrains.expose
 | `org.jetbrains.exposed.v1.dao.Referrers`      | `org.jetbrains.exposed.v1.dao.r2dbc.Referrers`      |
 | `org.jetbrains.exposed.v1.dao.InnerTableLink` | `org.jetbrains.exposed.v1.dao.r2dbc.InnerTableLink` |
 
-Table definitions need no changes: they come from `exposed-core` and are shared by both drivers.
+Table definitions don't require changes. They are provided by the `exposed-core` module and are shared by both JDBC and
+R2DBC drivers.
 
-## Step 4. Replace `transaction` with `suspendTransaction`
+## Update transaction handling
 
-Every DAO call must run inside it, and the enclosing functions become `suspend`.
+R2DBC DAO operations are suspending, so the functions that contain them must be `suspend` when required.
+Replace the `transaction()` function with `suspendTransaction()`:
 
 <compare first-title="JDBC DAO" second-title="R2DBC DAO">
 
 ```kotlin
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
-val client = transaction { Client.findById(id) }
+val client = transaction {
+    Client.findById(id)
+}
 ```
 
 ```kotlin
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 
-val client = suspendTransaction { Client.findById(id) }
+val client = suspendTransaction {
+    Client.findById(id)
+}
 ```
 
 </compare>
 
-<warning>
-Do not use <code>org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction</code>. It suspends while holding a
-blocking JDBC connection and is unrelated.
-</warning>
+> Do not use `org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction` with R2DBC DAO. It is intended for suspending 
+> while using a blocking JDBC connection and is unrelated to R2DBC.
+>
+{style="warning"}
 
-## Step 5. Rename `new { }` to `newSuspend { }`
+## Update entity creation
 
-Issuing the `INSERT` is the part that has to suspend, so the single JDBC factory is split in two. `new { }` exists
-in the R2DBC DAO too, but it only *schedules* the insert — `newSuspend { }` is the one with the JDBC semantics.
+R2DBC DAO provides two entity creation functions:
+
+| Function       | Suspends | When the `INSERT` is issued | ID available after the call                                                    |
+|----------------|----------|-----------------------------|--------------------------------------------------------------------------------|
+| `new()`        | No       | At the next flush           | Only if the ID is explicitly assigned or otherwise available without an insert |
+| `newSuspend()` | Yes      | Before the call returns     | Yes, including generated IDs                                                   |
+
+### Use `newSuspend()` for immediate inserts
+
+The `newSuspend()` function suspends and issues the `INSERT` before returning, so a generated ID is available immediately.
+
+Use `newSuspend()` when the entity must be inserted before the function returns:
 
 <compare first-title="JDBC DAO" second-title="R2DBC DAO">
 
@@ -131,28 +170,44 @@ val id = client.id.value
 
 </compare>
 
-| Factory          | Suspends | `INSERT` is issued      | Id right after the call              |
-|------------------|----------|-------------------------|--------------------------------------|
-| `new { }`        | no       | at the next flush       | only if explicit or client-generated |
-| `newSuspend { }` | yes      | before the call returns | populated                            |
+### Use `new()` for deferred and batch inserts
 
-<warning>
-The name <code>new { }</code> exists in both DAOs with different semantics, so this call site keeps compiling and
-silently changes behaviour: the row is not written when it returns and <code>entity.id.value</code> throws. Search
-for <code>.new {</code> and rename every occurrence that needs the row, or the id, to be there.
-</warning>
+The `new()` function does not issue the `INSERT` immediately. Instead, it schedules the insert in the transaction's 
+entity cache.
+This can be useful when you want to create multiple entities and flush them together:
 
-Once the migration is done, `new { }` is worth a second look in the other direction: it is the only factory callable
-without a coroutine, its entity can already be read, written, and used as the target of a reference, and several
-pending inserts flush as one batch. The next flush — an explicit `flushCache()`, any other statement in the
-transaction, or the commit — issues them.
+```kotlin
+suspendTransaction {
+    val tags = listOf("tech", "finance", "energy").map {
+        name -> Tag.new {
+            this.name = name
+        }
+    }
+    
+    flushCache()
+    
+    val ids = tags.map {
+        it.id.value
+    }
+}
+```
 
-## Step 6. Change reference properties to `val`
+The pending inserts are flushed when required by subsequent database operations or when the transaction commits. Call
+`flushCache()` when you need to explicitly control when the pending inserts are sent to the database.
 
-`referencedOn` and `optionalReferencedOn` now return an accessor, because reading a reference has to suspend and a
-property getter cannot. So: declare `val`, read with `()`, write with `set()`.
+> The `new()` function exists in both JDBC and R2DBC DAO but its behavior differs. During migration, review every `new{}`
+> call that expects the row or its generated ID to exist immediately.
+>
+{style="note"}
 
-<compare first-title="JDBC DAO" second-title="R2DBC DAO">
+## Update reference properties
+
+R2DBC reference properties use an accessor because reading a reference can require a suspending database operation.
+
+Change the `referencedOn` and `optionalReferencedOn` properties from `var` to `val`. Read the reference by calling the
+accessor and update it with the `.set()` function:
+
+<compare first-title="JDBC DAO" second-title="R2DBC DAO" type="top-bottom">
 
 ```kotlin
 var broker by Broker referencedOn Clients.broker
@@ -174,21 +229,27 @@ trade.portfolio.set(null)
 
 </compare>
 
-Leaving it as `var` fails to compile with `Property delegate must have a 'setValue(...)' method`.
+> Leaving the property as `var` causes a compilation error because the R2DBC reference accessor does not provide the
+> required `setValue()` operator.
+>
+{style="note"}
 
-<warning>
-Reading without the parentheses also compiles. <code>val b = client.broker</code> gives you the accessor, not the
-<code>Broker</code>. Always write <code>client.broker()</code>.
-</warning>
+> `client.broker` returns the reference accessor, not the `Broker` entity. Use `client.broker()` to retrieve the
+> referenced entity.
+> 
+{style="note"}
 
-`backReferencedOn` and `optionalBackReferencedOn` work the same way. `via` is unchanged — it stays a `var` and still
-takes a `SizedCollection`.
+The `backReferencedOn` and `optionalBackReferencedOn` properties remain unchanged. The `via` property remains a `var`
+and takes a `SizedCollection`.
 
-## Step 7. Collect collections
+## Collect DAO flows
 
-`SizedIterable` now extends `Flow`, so referrers, `via` relations, `all()`, and `find { }` are flows.
+In R2DBC DAO, `SizedIterable` extends `Flow`. As a result, DAO collections are represented as flows rather than Kotlin
+collections.
 
-<compare first-title="JDBC DAO" second-title="R2DBC DAO">
+This applies to DAO collections such as referrers, `via` relations, `all()`, and `find()`.
+
+<compare first-title="JDBC DAO" second-title="R2DBC DAO" type="top-bottom">
 
 ```kotlin
 val names = client.portfolios.map { it.name }
@@ -200,23 +261,29 @@ val names = client.portfolios.toList().map { it.name }
 
 </compare>
 
-`count()`, `first()`, `firstOrNull()`, and `single()` need no change.
+Terminal operations such as `count()`, `first()`, `firstOrNull()`, and `single()` do not require any additional changes.
 
-<warning>
-If <code>kotlinx.coroutines.flow.map</code> is in scope, <code>client.portfolios.map { }</code> still compiles but
-returns a <code>Flow</code> instead of a <code>List</code>. Add <code>.toList()</code> before any operator that
-should produce a collection.
-</warning>
+> If `kotlinx.coroutines.flow.map` is in scope, `client.portfolios.map()` still compiles but
+> returns a `Flow` instead of a `List`. Add `.toList()` before any operator that
+> should produce a collection.
+>
+{style="warning"}
 
-## Step 8. Add `attach()` across transactions
+## Attach entities across transactions
 
-The JDBC DAO silently re-registers an entity on first write in a new transaction. The R2DBC DAO cannot, because that
-check is a database round trip and a property setter cannot suspend. Call `attach()` yourself, or the write throws.
+Unline the JDBC DAO, in R2DBC DAO an entity loaded or created in one transaction is not automatically registered with
+another R2DBC transaction. This is because that requires a database check and a property setter cannot suspend.
+
+To reuse entities across transactions, call the `attach()` function before modifying an entity from another transaction:
 
 <compare first-title="JDBC DAO" second-title="R2DBC DAO">
 
 ```kotlin
-val item = transaction { Item.new { name = "foo" } }
+val item = transaction {
+    Item.new {
+        name = "foo"
+    }
+}
 
 transaction {
     item.name = "bar"
@@ -224,7 +291,11 @@ transaction {
 ```
 
 ```kotlin
-val item = suspendTransaction { Item.newSuspend { name = "foo" } }
+val item = suspendTransaction {
+    Item.newSuspend {
+        name = "foo"
+    }
+}
 
 suspendTransaction {
     Item.attach(item)
@@ -234,31 +305,7 @@ suspendTransaction {
 
 </compare>
 
-`attach()` throws `EntityNotFoundException` if the row is gone. It also refuses to replace a *different*
-instance of the same row that this transaction already tracks with unflushed changes, since that would drop them
-silently — pass `attach(item, force = true)` to discard them deliberately.
-
-## Optional: batch inserts with `new { }`
-
-In the R2DBC DAO, `newSuspend { }` costs one `INSERT` per entity. `new { }` only schedules, so creating several
-entities and flushing once persists them all with a single batched `INSERT` per table:
-
-```kotlin
-suspendTransaction {
-    val tags = listOf("tech", "finance", "energy")
-        .map { name -> Tag.new { this.name = name } }
-
-    flushCache()
-
-    // one INSERT was issued, and every tag now has its id
-    val ids = tags.map { it.id.value }
-}
-```
-
-<warning>
-Batching only holds as long as nothing else touches the database in between: an intervening
-<code>newSuspend { }</code> splits the batch, another <code>new { }</code> joins it. The explicit
-<code>flushCache()</code> only decides <i>where</i> the statement goes out — any other statement in the
-transaction, or its commit, flushes the pending inserts just as well.
-</warning>
+The `attach()` function throws `EntityNotFoundException` if the row no longer exists. If the current transaction already
+tracks a different instance of the same row with unflushed changes, `attach()` does not silently replace it.
+To replace the tracked instance and discard its unflushed changes, you can use `attach(item, force = true)`.
 

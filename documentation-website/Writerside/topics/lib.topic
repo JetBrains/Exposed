@@ -211,4 +211,9 @@
             </def>
         </deflist>
     </snippet>
+    <snippet id="r2dbc-dao-experimental-note">
+        <note>
+            The R2DBC DAO support is experimental. Its API may be dropped or changed at any time.
+        </note>
+    </snippet>
 </topic>
