@@ -111,6 +111,7 @@ Place the test appropriately:
 - **Primary test modules**: `exposed-tests` (JDBC) and `exposed-r2dbc-tests` (R2DBC)
   - Core DSL and DAO functionality tests go here
   - Many features that work with both drivers should have tests in both modules
+  - R2DBC DAO bugs (`exposed-dao-r2dbc`) go in `exposed-dao-r2dbc-tests` instead
 - **Extension module tests**: If the bug is in an extension module, add tests there:
   - `exposed-java-time`, `exposed-jodatime`, `exposed-kotlin-datetime` for date/time issues
   - `exposed-json` for JSON column type issues
