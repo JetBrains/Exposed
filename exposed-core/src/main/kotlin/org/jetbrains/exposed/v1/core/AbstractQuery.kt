@@ -78,7 +78,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
     }
 
     override fun arguments() = QueryBuilder(true).let {
-        prepareSQL(it)
+        val _ = prepareSQL(it)
         if (it.args.isNotEmpty()) listOf(it.args) else emptyList()
     }
 

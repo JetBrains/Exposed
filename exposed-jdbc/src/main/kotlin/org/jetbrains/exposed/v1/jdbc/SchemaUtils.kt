@@ -108,7 +108,7 @@ object SchemaUtils : SchemaUtilityApi() {
 
         @OptIn(InternalApi::class)
         for (table in tables) {
-            table.mapMissingColumnStatementsTo(
+            val _ = table.mapMissingColumnStatementsTo(
                 statements,
                 existingTablesColumns[table].orEmpty(),
                 existingPrimaryKeys[table],
@@ -124,7 +124,7 @@ object SchemaUtils : SchemaUtilityApi() {
             val existingColumnConstraints = logTimeSpent(CONSTRAINTS_LOG_MESSAGE, withLogs) {
                 currentDialectMetadata.columnConstraints(*tables)
             }
-            mapMissingConstraintsTo(statements, existingColumnConstraints, tables = tables)
+            val _ = mapMissingConstraintsTo(statements, existingColumnConstraints, tables = tables)
         }
 
         return statements
@@ -135,7 +135,7 @@ object SchemaUtils : SchemaUtilityApi() {
             execInBatch(statements)
         } else {
             for (statement in statements) {
-                exec(statement)
+                val _ = exec(statement)
             }
         }
     }
@@ -350,8 +350,8 @@ object SchemaUtils : SchemaUtilityApi() {
      */
     fun checkMappingConsistence(vararg tables: Table, withLogs: Boolean = true): List<String> {
         if (withLogs) {
-            checkExcessiveForeignKeyConstraints(tables = tables, withLogs = true)
-            checkExcessiveIndices(tables = tables, withLogs = true)
+            val _ = checkExcessiveForeignKeyConstraints(tables = tables, withLogs = true)
+            val _ = checkExcessiveIndices(tables = tables, withLogs = true)
         }
         return checkMissingAndUnmappedIndices(tables = tables, withLogs).flatMap { it.createStatement() }
     }
@@ -414,11 +414,11 @@ object SchemaUtils : SchemaUtilityApi() {
         create(buzyTable)
         val isBusy = buzyTable.selectAll().forUpdate().any()
         if (!isBusy) {
-            buzyTable.insert { it[buzyTable.busy] = true }
+            val _ = buzyTable.insert { it[buzyTable.busy] = true }
             try {
-                body()
+                val _ = body()
             } finally {
-                buzyTable.deleteAll()
+                val _ = buzyTable.deleteAll()
                 connection.commit()
             }
         }

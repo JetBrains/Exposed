@@ -165,7 +165,7 @@ class ExpressionWithColumnTypeAlias<T>(
 class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
     override fun describe(s: Transaction, queryBuilder: QueryBuilder) = queryBuilder {
         append("(")
-        query.prepareSQL(queryBuilder)
+        val _ = query.prepareSQL(queryBuilder)
         append(") ", alias)
     }
 
@@ -321,7 +321,7 @@ val Join.lastQueryAlias: QueryAlias?
 fun <T : Any> wrapAsExpression(query: AbstractQuery<*>) = object : Expression<T?>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         append("(")
-        query.prepareSQL(this)
+        val _ = query.prepareSQL(this)
         append(")")
     }
 }

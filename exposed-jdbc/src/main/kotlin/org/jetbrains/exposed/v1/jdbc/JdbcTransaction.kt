@@ -81,7 +81,7 @@ open class JdbcTransaction(
 
     init {
         defaultLogger = addLogger(db.config.sqlLogger)
-        globalInterceptors // init interceptors
+        val _ = globalInterceptors // init interceptors
     }
 
     override fun commit() {
@@ -181,7 +181,7 @@ open class JdbcTransaction(
                         (result as? StatementResult.Object)?.resultSet
                     }
                     else -> {
-                        executeUpdate()
+                        val _ = executeUpdate()
                         resultSet
                     }
                 }
@@ -308,7 +308,7 @@ open class JdbcTransaction(
         @OptIn(InternalApi::class)
         return withThreadLocalTransaction(this) {
             super.addLogger(*logger).apply {
-                registerInterceptor(this)
+                val _ = registerInterceptor(this)
             }
         }
     }

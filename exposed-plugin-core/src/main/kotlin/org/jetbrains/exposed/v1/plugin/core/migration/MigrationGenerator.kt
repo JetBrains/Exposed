@@ -89,7 +89,7 @@ class MigrationGenerator(
                     .toList()
                     .toTypedArray()
                 transaction(database) {
-                    addLogger(GeneratorSqlLogger())
+                    val _ = addLogger(GeneratorSqlLogger())
                     val statements = MigrationUtils.statementsRequiredForDatabaseMigration(
                         tables = tables,
                         withLogs = config.debug,
@@ -118,7 +118,7 @@ class MigrationGenerator(
                 val generatedSQL = mutableSetOf<String>()
                 sortedTables.mapIndexedNotNull { index, table ->
                     transaction(database) {
-                        addLogger(GeneratorSqlLogger())
+                        val _ = addLogger(GeneratorSqlLogger())
                         val statements = MigrationUtils.statementsRequiredForDatabaseMigration(
                             table,
                             withLogs = config.debug,
