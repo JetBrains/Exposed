@@ -282,7 +282,7 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
             @Suppress("UNCHECKED_CAST")
             transaction.registerChange(klass as EntityClass<*, Entity<*>>, id, EntityChangeType.Updated)
 
-            executeAsPartOfEntityLifecycle {
+            val _ = executeAsPartOfEntityLifecycle {
                 table.update({ table.id eq id }) {
                     for ((c, v) in pending) {
                         it[c] = v
@@ -318,7 +318,7 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
             @Suppress("UNCHECKED_CAST")
             transaction.registerChange(klass as EntityClass<*, Entity<*>>, entityId, EntityChangeType.Removed)
 
-            executeAsPartOfEntityLifecycle {
+            val _ = executeAsPartOfEntityLifecycle {
                 table.deleteWhere { table.id eq entityId }
             }
         }
@@ -362,7 +362,7 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
         val isNewEntity = isNewEntity()
         when {
             isNewEntity && flush -> cache.flushInserts(klass.table)
-            flush -> flush()
+            flush -> { val _ = flush() }
             isNewEntity -> throw EntityNotFoundException(this.id, this.klass)
             else -> cache.discardDirty(this)
         }

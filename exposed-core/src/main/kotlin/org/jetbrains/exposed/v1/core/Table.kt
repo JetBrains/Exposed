@@ -1146,7 +1146,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param idSeqName an optional parameter to provide a sequence name
      */
     fun <N : Any> Column<N>.autoIncrement(idSeqName: String? = null): Column<N> =
-        cloneWithAutoInc(idSeqName).also { replaceColumn(this, it) }
+        cloneWithAutoInc(idSeqName).also { val _ = replaceColumn(this, it) }
 
     /**
      * Make @receiver column an auto-increment column to generate its values in a database.
@@ -1157,7 +1157,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param sequence a parameter to provide a sequence
      */
     fun <N : Any> Column<N>.autoIncrement(sequence: Sequence): Column<N> =
-        cloneWithAutoInc(sequence).also { replaceColumn(this, it) }
+        cloneWithAutoInc(sequence).also { val _ = replaceColumn(this, it) }
 
     /** Sets the default value for this column in the database side. */
     fun <T> Column<T>.default(defaultValue: T): Column<T> = apply {
@@ -1169,7 +1169,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     fun <T> CompositeColumn<T>.default(defaultValue: T): CompositeColumn<T> = apply {
         with(this@Table) {
             this@default.getRealColumnsWithValues(defaultValue).forEach {
-                (it.key as Column<Any>).default(it.value as Any)
+                val _ = (it.key as Column<Any>).default(it.value as Any)
             }
         }
     }
@@ -1484,7 +1484,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     @LowPriorityInOverloadResolution
     fun <T : Any, C : CompositeColumn<T>> C.nullable(): CompositeColumn<T?> = apply {
         nullable = true
-        getRealColumns().filter { !it.columnType.nullable }.forEach { (it as Column<Any>).nullable() }
+        getRealColumns().filter { !it.columnType.nullable }.forEach { val _ = (it as Column<Any>).nullable() }
     } as CompositeColumn<T?>
 
     /**
@@ -1874,6 +1874,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * the database engine decides the default name.
      * @param op The expression against which the newly inserted values will be compared.
      */
+    @IgnorableReturnValue
     fun <T> Column<T>.check(name: String = "", op: (Column<T>) -> Op<Boolean>): Column<T> = apply {
         if (name.isEmpty() || table.checkConstraints.none { it.first.equals(name, true) }) {
             table.checkConstraints.add(name to op(this))

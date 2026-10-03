@@ -211,7 +211,7 @@ class R2dbcDatabaseMetadataImpl(
             val transaction = TransactionManager.current()
             val (catalog, tableSchema) = tableCatalogAndSchema(table)
 
-            existingIndicesCache.getOrPut(table) {
+            val _ = existingIndicesCache.getOrPut(table) {
                 val pkQuery = metadataProvider.getPrimaryKeys(catalog, tableSchema, table.nameInDatabaseCaseUnquoted())
                 val pkNames = connection.executeSQL(pkQuery) { row, _ ->
                     row.getString("PK_NAME")
@@ -229,7 +229,7 @@ class R2dbcDatabaseMetadataImpl(
 
                 val tmpIndices = hashMapOf<Triple<String, Boolean, Op.TRUE?>, MutableList<String>>()
 
-                connection.executeSQL(indexQuery) { row, _ ->
+                val _ = connection.executeSQL(indexQuery) { row, _ ->
                     row.getString("INDEX_NAME")?.let { indexName ->
                         val columnNameMetadata = row.getString("COLUMN_NAME") ?: when (currentDialect) {
                             is MysqlDialect -> "\"\""

@@ -488,7 +488,7 @@ class Exists(
 ) : Op<Boolean>(), Op.OpBoolean {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("EXISTS (")
-        query.prepareSQL(this)
+        val _ = query.prepareSQL(this)
         append(")")
     }
 }
@@ -502,7 +502,7 @@ class NotExists(
 ) : Op<Boolean>(), Op.OpBoolean {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("NOT EXISTS (")
-        query.prepareSQL(this)
+        val _ = query.prepareSQL(this)
         append(")")
     }
 }
@@ -518,7 +518,7 @@ sealed class SubQueryOp<T>(
 ) : Op<Boolean>(), ComplexExpression, Op.OpBoolean {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append(expr, " $operator (")
-        query.prepareSQL(this)
+        val _ = query.prepareSQL(this)
         +")"
     }
 }

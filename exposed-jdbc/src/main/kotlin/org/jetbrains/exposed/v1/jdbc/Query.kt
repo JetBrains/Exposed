@@ -77,7 +77,7 @@ open class Query(
         if (columns.isEmpty()) return@apply
 
         require(!distinct) { "DISTINCT ON cannot be used with the DISTINCT modifier. Only one of them should be applied." }
-        withDistinctOn(columns = columns.map { it.first }.toTypedArray())
+        val _ = withDistinctOn(columns = columns.map { it.first }.toTypedArray())
         return orderBy(order = columns)
     }
 
@@ -232,7 +232,7 @@ open class Query(
             val originalSet = set
             try {
                 var expInx = 0
-                adjustSelect {
+                val _ = adjustSelect {
                     select(
                         originalSet.fields.map {
                             when (it) {
