@@ -70,7 +70,7 @@ class R2dbcConnectionImpl(
     override suspend fun getAutoCommit(): Boolean = withConnection { isAutoCommit }
 
     override suspend fun setAutoCommit(value: Boolean) {
-        withConnection { setAutoCommit(value).awaitFirstOrNull() }
+        val _ = withConnection { setAutoCommit(value).awaitFirstOrNull() }
     }
 
     override suspend fun getReadOnly(): Boolean = withConnection {
@@ -86,7 +86,7 @@ class R2dbcConnectionImpl(
     override suspend fun getTransactionIsolation(): IsolationLevel = withConnection { transactionIsolationLevel }
 
     override suspend fun setTransactionIsolation(value: IsolationLevel) {
-        withConnection { setTransactionIsolationLevel(value).awaitFirstOrNull() }
+        val _ = withConnection { setTransactionIsolationLevel(value).awaitFirstOrNull() }
     }
 
     private var transactionDefinition: TransactionDefinition? = null
@@ -96,7 +96,7 @@ class R2dbcConnectionImpl(
     }
 
     override suspend fun commit() {
-        withConnection {
+        val _ = withConnection {
             // this has side effect of enabling auto-commit ON, which may cause unexpected rollback behavior
             commitTransaction().awaitFirstOrNull()
             // but attempting to revert or clean active tx state using beginTransaction() leads to another commit/abort
@@ -104,7 +104,7 @@ class R2dbcConnectionImpl(
     }
 
     override suspend fun rollback() {
-        withConnection { rollbackTransaction().awaitFirstOrNull() }
+        val _ = withConnection { rollbackTransaction().awaitFirstOrNull() }
     }
 
     override suspend fun isClosed(): Boolean = localConnectionLock.withLock { localConnection }?.run {
@@ -208,13 +208,13 @@ class R2dbcConnectionImpl(
     }
 
     override suspend fun releaseSavepoint(savepoint: ExposedSavepoint) {
-        withConnection {
+        val _ = withConnection {
             releaseSavepoint(savepoint.name).awaitFirstOrNull()
         }
     }
 
     override suspend fun rollback(savepoint: ExposedSavepoint) {
-        withConnection {
+        val _ = withConnection {
             rollbackTransactionToSavepoint(savepoint.name).awaitFirstOrNull()
         }
     }

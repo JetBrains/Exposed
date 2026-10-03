@@ -49,21 +49,27 @@ class QueryBuilder(
     }
 
     /** Appends the specified [value] to this [QueryBuilder]. */
+    @IgnorableReturnValue
     fun append(value: Char): QueryBuilder = apply { internalBuilder.append(value) }
 
     /** Appends the specified [value] to this [QueryBuilder]. */
+    @IgnorableReturnValue
     fun append(value: String): QueryBuilder = apply { internalBuilder.append(value) }
 
     /** Appends the specified [value] to this [QueryBuilder]. */
+    @IgnorableReturnValue
     fun append(value: Expression<*>): QueryBuilder = apply(value::toQueryBuilder)
 
     /** Appends the receiver [Char] to this [QueryBuilder]. */
+    @IgnorableReturnValue
     operator fun Char.unaryPlus(): QueryBuilder = append(this)
 
     /** Appends the receiver [String] to this [QueryBuilder]. */
+    @IgnorableReturnValue
     operator fun String.unaryPlus(): QueryBuilder = append(this)
 
     /** Appends the receiver [Expression] to this [QueryBuilder]. */
+    @IgnorableReturnValue
     operator fun Expression<*>.unaryPlus(): QueryBuilder = append(this)
 
     /** Adds the specified [argument] as a value of the specified [column]. */
@@ -120,6 +126,7 @@ class QueryBuilder(
 }
 
 /** Appends all arguments to this [QueryBuilder]. */
+@IgnorableReturnValue
 fun QueryBuilder.append(vararg expr: Any): QueryBuilder = apply {
     for (item in expr) {
         when (item) {
@@ -132,6 +139,7 @@ fun QueryBuilder.append(vararg expr: Any): QueryBuilder = apply {
 }
 
 /** Appends all the elements separated using [separator] and using the given [prefix] and [postfix] if supplied. */
+@IgnorableReturnValue
 fun <T> Iterable<T>.appendTo(
     builder: QueryBuilder,
     separator: CharSequence = ", ",

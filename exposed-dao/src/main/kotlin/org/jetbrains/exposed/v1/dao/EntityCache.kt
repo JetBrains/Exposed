@@ -164,7 +164,7 @@ class EntityCache(private val transaction: Transaction) {
             }
         }
 
-        executeAsPartOfEntityLifecycle {
+        val _ = executeAsPartOfEntityLifecycle {
             batch.execute(transaction)
         }
 
@@ -358,7 +358,7 @@ private fun <K, V> MutableMap<K, V>.trimToFirst(maxSize: Int) {
     if (sizeExceed <= 0) return
     val iterator = iterator()
     repeat(sizeExceed) {
-        iterator.next()
+        val _ = iterator.next()
         iterator.remove()
     }
 }

@@ -144,7 +144,7 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
                 get() = this
 
             override fun JdbcPreparedStatementApi.executeInternal(transaction: JdbcTransaction) {
-                executeUpdate()
+                val _ = executeUpdate()
             }
 
             override fun prepareSQL(transaction: Transaction, prepared: Boolean): String = sqls.joinToString("\n")
@@ -152,7 +152,7 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
             override fun arguments(): Iterable<Iterable<Pair<ColumnType<*>, Any?>>> = emptyList()
         }
 
-        prepStatement.execute(TransactionManager.current())
+        val _ = prepStatement.execute(TransactionManager.current())
     }
 
     override fun setSavepoint(name: String): ExposedSavepoint {

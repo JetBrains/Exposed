@@ -62,6 +62,7 @@ data class Schema(
 }
 
 /** Appends both [str1] and [str2] to the receiver [StringBuilder] if [str2] is not `null`. */
+@IgnorableReturnValue
 internal fun StringBuilder.appendIfNotNull(str1: String, str2: Any?) = apply {
     if (str2 != null) {
         this.append("$str1 $str2")

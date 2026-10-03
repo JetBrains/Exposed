@@ -210,8 +210,8 @@ private suspend fun <SID : Any, Source : Entity<SID>, ID : Any, Target : Entity<
     entityCache.referrers[link.sourceColumn]?.remove(entity.id)
 
     val targetIds = valueList.map { it.id }
-    executeAsPartOfEntityLifecycle {
-        link.table.deleteWhere { (link.sourceColumn eq entity.id) and (link.targetColumn notInList targetIds) }
+    val _ = executeAsPartOfEntityLifecycle {
+        val _ = link.table.deleteWhere { (link.sourceColumn eq entity.id) and (link.targetColumn notInList targetIds) }
         link.table.batchInsert(
             targetIds.filter { it !in existingIds },
             shouldReturnGeneratedValues = false

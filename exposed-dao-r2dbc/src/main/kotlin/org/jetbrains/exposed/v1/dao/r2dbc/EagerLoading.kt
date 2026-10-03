@@ -39,7 +39,7 @@ suspend fun <SRCID : Any, SRC : Entity<SRCID>, REF : Entity<*>, L : SizedIterabl
         @Suppress("UNCHECKED_CAST")
         (this@with as? LazySizedIterable<SRC>)?.loadedResult = this
         if (any { it.isNewEntity() }) {
-            TransactionManager.current().flushCache()
+            val _ = TransactionManager.current().flushCache()
         }
         preloadRelations(*relations)
     }
@@ -64,7 +64,7 @@ suspend fun <SRCID : Any, SRC : Entity<SRCID>, REF : Entity<*>, L : Iterable<SRC
 ): L {
     val asList = toList()
     if (asList.any { it.isNewEntity() }) {
-        TransactionManager.current().flushCache()
+        val _ = TransactionManager.current().flushCache()
     }
     asList.preloadRelations(*relations)
     return this
@@ -83,7 +83,7 @@ suspend fun <SRCID : Any, SRC : Entity<SRCID>, REF : Entity<*>, L : Iterable<SRC
 suspend fun <SRCID : Any, SRC : Entity<SRCID>> SRC.load(
     vararg relations: KProperty1<out Entity<*>, Any?>
 ): SRC = apply {
-    listOf(this).with(*relations)
+    val _ = listOf(this).with(*relations)
 }
 
 @Suppress("UNCHECKED_CAST", "NestedBlockDepth")
@@ -366,7 +366,7 @@ private suspend fun <ID : Any> List<Entity<ID>>.preloadInnerTableLink(
         .groupBy({ it.first }, { it.second })
 
     toLoad.forEach { id ->
-        cache.getOrPutReferrers(id, sourceColumn) {
+        val _ = cache.getOrPutReferrers(id, sourceColumn) {
             SizedCollection(groupedBySourceId[id] ?: emptyList())
         }
     }

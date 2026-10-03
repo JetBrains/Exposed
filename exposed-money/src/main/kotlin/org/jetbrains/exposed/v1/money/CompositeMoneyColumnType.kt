@@ -27,7 +27,7 @@ fun Table.compositeMoney(
 ): CompositeMoneyColumn<BigDecimal, CurrencyUnit, MonetaryAmount> {
     return CompositeMoneyColumn<BigDecimal, CurrencyUnit, MonetaryAmount>(amountColumn, currencyColumn).also {
         if (amountColumn !in columns && currencyColumn !in columns) {
-            registerCompositeColumn(it)
+            val _ = registerCompositeColumn(it)
         }
     }
 }
@@ -44,7 +44,7 @@ fun Table.compositeMoney(
 ): CompositeMoneyColumn<BigDecimal?, CurrencyUnit?, MonetaryAmount?> {
     return CompositeMoneyColumn<BigDecimal?, CurrencyUnit?, MonetaryAmount?>(amountColumn, currencyColumn, true).also {
         if (amountColumn !in columns && currencyColumn !in columns) {
-            registerCompositeColumn(it)
+            val _ = registerCompositeColumn(it)
         }
     }
 }

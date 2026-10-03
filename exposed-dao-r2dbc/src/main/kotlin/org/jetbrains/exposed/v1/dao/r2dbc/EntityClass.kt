@@ -277,7 +277,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
             if (entity.isNewEntity()) {
                 TransactionManager.current().entityCache.flushInserts(table)
             } else {
-                entity.flush()
+                val _ = entity.flush()
             }
         }
         removeFromCache(entity)
@@ -355,7 +355,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
             )
         }
 
-        findById(entity.id) ?: throw EntityNotFoundException(entity.id, this)
+        val _ = findById(entity.id) ?: throw EntityNotFoundException(entity.id, this)
 
         cache.store(entity)
     }
@@ -394,7 +394,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * @return A [SizedIterable] of all the entities that conform to this condition.
      */
     fun find(op: Op<Boolean>): SizedIterable<T> {
-        warmCache()
+        val _ = warmCache()
         return wrapRows(searchQuery(op))
     }
 
@@ -842,7 +842,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
             }.map {
                 val targetId = it[targetRefColumn]
                 if (!optimizedLoad) {
-                    targetEntities.getOrPut(targetId) { wrapRow(it) }
+                    val _ = targetEntities.getOrPut(targetId) { wrapRow(it) }
                 }
                 it[sourceRefColumn] to targetId
             }.toList()
@@ -856,7 +856,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
             val groupedBySourceId = entitiesWithRefs.groupBy({ it.first }) { targetEntities.getValue(it.second) }
 
             idsToLoad.forEach {
-                transaction.entityCache.getOrPutReferrers(it, sourceRefColumn) {
+                val _ = transaction.entityCache.getOrPutReferrers(it, sourceRefColumn) {
                     SizedCollection(groupedBySourceId[it] ?: emptyList())
                 }
             }

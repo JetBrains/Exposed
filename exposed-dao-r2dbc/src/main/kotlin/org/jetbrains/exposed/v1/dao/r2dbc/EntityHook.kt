@@ -126,7 +126,7 @@ fun R2dbcTransaction.registeredChanges(): List<EntityChange> = entityEvents.toLi
  */
 @ExperimentalR2dbcDaoApi
 suspend fun <T> withHook(action: suspend (EntityChange) -> Unit, body: suspend () -> T): T {
-    EntityHook.subscribe(action)
+    val _ = EntityHook.subscribe(action)
     return try {
         body().also {
             TransactionManager.currentOrNull()?.commit()

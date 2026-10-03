@@ -132,7 +132,7 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
         val isNewEntity = isNewEntity()
         when {
             isNewEntity && flush -> cache.flushInserts(klass.table)
-            flush -> flush()
+            flush -> { val _ = flush() }
             isNewEntity -> throw EntityNotFoundException(this.id, this.klass)
             else -> writeValues.clear()
         }
@@ -212,7 +212,7 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
         value: T
     ) {
         if (db != value.db) error("Can't link entities from different databases.")
-        value.id.value // flush before creating reference on it
+        val _ = value.id.value // flush before creating reference on it
         allReferences.forEach { (childColumn, parentColumn) ->
             val refValue = value.run { parentColumn.getValue(this, desc) }
             if (childColumn == reference) storeReferenceInCache(reference, value)
@@ -275,7 +275,7 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
         value: T?
     ) {
         if (value != null && db != value.db) error("Can't link entities from different databases.")
-        value?.id?.value // flush before creating reference on it
+        val _ = value?.id?.value // flush before creating reference on it
         allReferences.forEach { (childColumn, parentColumn) ->
             val refValue = value?.run { parentColumn.getValue(this, desc) }
             if (childColumn == reference) storeReferenceInCache(reference, value)
@@ -329,8 +329,9 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
             val transaction = TransactionManager.current()
             val entityCache = transaction.entityCache
             if (referee != null) {
-                if (value is EntityID<*> && value.table == referee!!.table) value.value // flush
-
+                if (value is EntityID<*> && value.table == referee!!.table) {
+                    val _ = value.value // flush
+                }
                 listOfNotNull<Any>(value, currentValue).forEach {
                     entityCache.referrers[this]?.remove(it)
                 }
@@ -401,7 +402,7 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
         // Capture reference to the field
         val entityId = this.id
         TransactionManager.current().registerChange(klass, entityId, EntityChangeType.Removed)
-        executeAsPartOfEntityLifecycle {
+        val _ = executeAsPartOfEntityLifecycle {
             table.deleteWhere { table.id eq entityId }
         }
         klass.removeFromCache(this)
@@ -430,7 +431,7 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
                 storeWrittenValues()
                 // In case of batch all changes will be registered after all entities flushed
                 TransactionManager.current().registerChange(klass, id, EntityChangeType.Updated)
-                executeAsPartOfEntityLifecycle {
+                val _ = executeAsPartOfEntityLifecycle {
                     table.update({ table.id eq id }) {
                         for ((c, v) in _writeValues) {
                             it[c] = v
