@@ -51,7 +51,22 @@ open class EntityFieldWithTransform<Unwrapped, Wrapped>(
 }
 
 /**
- * Class representing a mapping to values stored in a table record in a database.
+ * A row of [EntityClass.table], with the columns it should expose declared as delegated properties.
+ *
+ * Subclass one of the typed variants — [IntEntity], [LongEntity], [UuidEntity], [CompositeEntity] — and
+ * give the class a companion object of the matching [EntityClass]:
+ *
+ * ```kotlin
+ * class Film(id: EntityID<Int>) : IntEntity(id) {
+ *     var title by Films.title
+ *     var director by Director referencedOn Films.director
+ *
+ *     companion object : IntEntityClass<Film>(Films)
+ * }
+ * ```
+ *
+ * A write to such a property is held in [writeValues] until the entity is flushed — by [flush], by the next
+ * statement in the transaction that touches the same table, or by the commit.
  *
  * @param id The unique stored identity value for the mapped record.
  */

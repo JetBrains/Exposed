@@ -49,16 +49,7 @@ class EntityCache(private val transaction: Transaction) {
             val diff = value - field
             field = value
             if (diff < 0) {
-                data.values.forEach { map ->
-                    val sizeExceed = map.size - value
-                    if (sizeExceed > 0) {
-                        val iterator = map.iterator()
-                        repeat(sizeExceed) {
-                            iterator.next()
-                            iterator.remove()
-                        }
-                    }
-                }
+                data.values.forEach { it.trimToFirst(value) }
             }
         }
 
@@ -351,5 +342,23 @@ fun Transaction.flushCache(): List<Entity<*>> {
         val newEntities = inserts.flatMap { it.value }
         flush()
         return newEntities
+    }
+}
+
+/**
+ * Drops entries from the front of this map until its [size] is at most [maxSize].
+ *
+ * Extracted from `EntityCache.maxEntitiesToStore`'s setter so the setter reads as intent
+ * ("trim each per-table map to the new max") rather than carrying the iterator mechanics inline.
+ * Relies on insertion-order iteration of the per-table cache (see `EntityCache.LimitedHashMap`)
+ * to evict the oldest entries first.
+ */
+private fun <K, V> MutableMap<K, V>.trimToFirst(maxSize: Int) {
+    val sizeExceed = size - maxSize
+    if (sizeExceed <= 0) return
+    val iterator = iterator()
+    repeat(sizeExceed) {
+        iterator.next()
+        iterator.remove()
     }
 }

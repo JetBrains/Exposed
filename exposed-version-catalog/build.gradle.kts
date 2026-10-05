@@ -9,6 +9,7 @@ val excludedFromCatalog = setOf(
     "exposed-tests",
     "exposed-r2dbc-tests",
     "exposed-jdbc-r2dbc-tests",
+    "exposed-dao-r2dbc-tests",
     "exposed-version-catalog",
 )
 

@@ -13,10 +13,8 @@ import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.junit.jupiter.api.Assumptions
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.sql.Connection
 import kotlin.test.assertEquals
@@ -30,7 +28,6 @@ import kotlin.test.assertEquals
  *
  * @see <a href="https://github.com/JetBrains/Exposed/issues/1527">GitHub Issue #1527</a>
  */
-@Tag(MISSING_R2DBC_TEST)
 class EntityCacheRefreshTests : DatabaseTestsBase() {
     // Skip databases that don't support SELECT FOR UPDATE
     val excludedDbs = listOf(TestDB.SQLITE, TestDB.SQLSERVER)

@@ -105,7 +105,7 @@ class JSONandJSONBExamples {
     fun useExistsWithFilterPath() {
         val mainId = "Main"
         val hasMainProject = TeamsTable.project.exists(
-            ".name ? (@ == \\$main)",
+            ".name ? (@ == \$main)",
             optional = "{\"main\":\"$mainId\"}"
         )
         val mainProjects = TeamsTable

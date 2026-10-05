@@ -9,13 +9,10 @@ import org.jetbrains.exposed.v1.dao.entityCache
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 
-@Tag(MISSING_R2DBC_TEST)
 class EncryptedColumnDaoTests : DatabaseTestsBase() {
     object TestTable : IntIdTable() {
         val varchar = encryptedVarchar("varchar", 100, Algorithms.AES_256_PBE_GCM("passwd", "12345678"))

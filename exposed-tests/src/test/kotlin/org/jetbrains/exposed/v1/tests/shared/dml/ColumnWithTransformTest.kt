@@ -16,10 +16,8 @@ import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.dao.entityCache
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -214,7 +212,6 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
         companion object : IntEntityClass<TransformEntity>(TransformTable)
     }
 
-    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testTransformedValuesWithDAO() {
         withTables(TransformTable) {
@@ -232,7 +229,6 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
         }
     }
 
-    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testEntityWithDefaultValue() {
         withTables(TransformTable) {
@@ -399,7 +395,6 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
         }
     }
 
-    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testWrapRowWithAliases() {
         withTables(TransformTable) {

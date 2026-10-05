@@ -1,4 +1,4 @@
-import org.jetbrains.exposed.v1.gradle.plugin.VersionFormat
+import org.jetbrains.exposed.v1.plugin.core.migration.VersionFormat
 
 plugins {
     alias(libs.plugins.jvm)
