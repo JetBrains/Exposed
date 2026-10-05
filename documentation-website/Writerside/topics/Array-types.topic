@@ -73,6 +73,97 @@
         />
     </chapter>
 
+    <chapter title="Arrays of custom element types" id="array-literal">
+        <tldr>
+            <include from="lib.topic" element-id="jdbc-supported"/>
+            <include from="lib.topic" element-id="r2dbc-supported"/>
+        </tldr>
+        <p>
+            The <code>.array()</code> function relies on the driver's native array support, which only works for
+            element types that the driver can encode and decode. For PostgreSQL arrays of other element types, like
+            user-defined enum or composite types, use the
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/array-literal.html">
+                <code>.arrayLiteral()</code>
+            </a>
+            function instead. It reads and writes the array in its text form (<code>{elem,elem,...}</code>), so it
+            works the same way with both JDBC and R2DBC drivers.
+        </p>
+        <p>
+            Each element is converted using the column type passed to <code>.arrayLiteral()</code>:
+        </p>
+        <list>
+            <li>
+                When writing, the element's database value (from <code>notNullValueToDB()</code>) is converted to a
+                string, which must be a valid PostgreSQL input literal for the element type.
+            </li>
+            <li>
+                When reading, each element is passed to <code>valueFromDB()</code> as a <code>String</code>.
+            </li>
+        </list>
+        <p>
+            For example, the following table stores an array of a PostgreSQL enum type, using the same column type
+            that <a href="Enumeration-types.topic"><code>.customEnumeration()</code></a> uses:
+        </p>
+        <code-block lang="kotlin">
+        // CREATE TYPE mood AS ENUM ('happy', 'sad');
+        enum class Mood { HAPPY, SAD }
+
+        object Diary : Table("diary") {
+            val moods = arrayLiteral(
+                "moods",
+                CustomEnumerationColumnType(
+                    name = "moods",
+                    sql = "mood",
+                    fromDb = { value -&gt; Mood.valueOf(value.toString().uppercase()) },
+                    toDb = { it.name.lowercase() }
+                )
+            )
+        }
+        </code-block>
+        <p>
+            For a composite type, define a column type that renders and parses a single composite literal:
+        </p>
+        <code-block lang="kotlin">
+        // CREATE TYPE member AS (id BIGINT, role TEXT);
+        data class Member(val id: Long, val role: String)
+
+        class MemberColumnType : ColumnType&lt;Member&gt;() {
+            override fun sqlType(): String = "member"
+
+            // For example: (1,"admin")
+            override fun notNullValueToDB(value: Member): Any =
+                "(${value.id},\"${value.role.replace("\\", "\\\\").replace("\"", "\\\"")}\")"
+
+            override fun valueFromDB(value: Any): Member =
+                parseMemberLiteral(value.toString()) // parse the composite literal, e.g. (1,admin)
+        }
+
+        object Teams : Table("teams") {
+            val members = arrayLiteral("members", MemberColumnType())
+        }
+        </code-block>
+        <p>
+            Elements can be <code>null</code> if the element type of the list is nullable, for example
+            <code>arrayLiteral&lt;Mood?&gt;(...)</code>.
+        </p>
+        <p>
+            PostgreSQL defines the character that separates array elements per element type. This is a comma for
+            almost all types, but the built-in <code>box</code> type uses a semicolon, and user-defined base types can
+            set their own. Use the <code>delimiter</code> parameter for such types:
+        </p>
+        <code-block lang="kotlin">
+        val areas = arrayLiteral("areas", BoxColumnType(), delimiter = ';')
+        </code-block>
+        <note>
+            <p>
+                <code>.arrayLiteral()</code> is only supported by PostgreSQL, and only for one-dimensional arrays.
+                JDBC drivers decode the array themselves when reading, so the element column type must also handle
+                the element values they produce. For example, the pgjdbc-ng driver decodes composite elements into
+                <code>java.sql.Struct</code> objects and <code>box</code> elements into <code>DoubleArray</code> objects.
+            </p>
+        </note>
+    </chapter>
+
     <chapter title="Array indexing" id="array-indexing">
         <p>To access individual elements, use index operators:</p>
         <code-block lang="kotlin"
