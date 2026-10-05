@@ -12,6 +12,7 @@ plugins {
 
 rootProject.name = "snippets"
 include("exposed-dao")
+include("exposed-dao-r2dbc")
 include("exposed-dao-relationships")
 include("exposed-data-types")
 include("exposed-databases-jdbc")
