@@ -1,8 +1,5 @@
 package org.jetbrains.exposed.v1.core
 
-import org.jetbrains.exposed.v1.core.statements.DefaultValueMarker
-import org.jetbrains.exposed.v1.core.transactions.currentTransaction
-
 /**
  * An object to which SQL expressions and values can be appended.
  */
@@ -70,12 +67,6 @@ class QueryBuilder(
     fun <T> registerArgument(column: Column<*>, argument: T) {
         when (argument) {
             is Expression<*> -> append(argument)
-            DefaultValueMarker -> append(
-                @OptIn(InternalApi::class)
-                currentTransaction()
-                    .db.dialect.dataTypeProvider
-                    .processForDefaultValue(column.dbDefaultValue!!)
-            )
             else -> registerArgument(column.columnType, argument)
         }
     }
