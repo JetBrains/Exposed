@@ -2,7 +2,6 @@ package org.jetbrains.exposed.v1.jdbc.statements
 
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
-import org.jetbrains.exposed.v1.core.statements.DefaultValueMarker
 import org.jetbrains.exposed.v1.core.statements.InsertStatement
 import org.jetbrains.exposed.v1.core.statements.MultiRowValuesInsertStatement
 import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
@@ -111,7 +110,6 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
             }
         }
 
-    @OptIn(InternalApi::class)
     private fun processResults(rs: ResultSet?, inserted: Int?): List<ResultRow> {
         val allResultSetsValues = rs?.returnedValues(inserted)
 
@@ -126,7 +124,8 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
             .mapIndexed { index, columnValues ->
                 val resultSetValues = allResultSetsValues?.getOrNull(index) ?: hashMapOf()
                 val argumentValues = columnValues.toMap()
-                    .filterValues { it != DefaultValueMarker }
+                    // a value that is an expression is rendered into the statement, it is not a value of the row
+                    .filterValues { it !is Expression<*> }
                     .let { unwrapColumnValues(it) }
 
                 argumentValues + resultSetValues

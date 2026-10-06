@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.reduce
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
 import org.jetbrains.exposed.v1.core.statements.BatchReplaceStatement
-import org.jetbrains.exposed.v1.core.statements.DefaultValueMarker
 import org.jetbrains.exposed.v1.core.statements.InsertStatement
 import org.jetbrains.exposed.v1.core.statements.ReplaceStatement
 import org.jetbrains.exposed.v1.core.vendors.*
@@ -100,7 +99,6 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             }
         }
 
-    @OptIn(InternalApi::class)
     private fun processResults(returned: ReturnedValues?, affectedRowCount: Int): List<ResultRow> {
         val allResultSetsValues = returned?.values
 
@@ -109,7 +107,8 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             .mapIndexed { index, columnValues ->
                 val resultSetValues = allResultSetsValues?.getOrNull(index) ?: hashMapOf()
                 val argumentValues = columnValues.toMap()
-                    .filterValues { it != DefaultValueMarker }
+                    // a value that is an expression is rendered into the statement, it is not a value of the row
+                    .filterValues { it !is Expression<*> }
                     .let { unwrapColumnValues(it) }
 
                 argumentValues + resultSetValues

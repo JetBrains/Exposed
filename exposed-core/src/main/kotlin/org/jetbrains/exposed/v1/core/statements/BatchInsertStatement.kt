@@ -2,7 +2,9 @@ package org.jetbrains.exposed.v1.core.statements
 
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.EntityIDColumnType
+import org.jetbrains.exposed.v1.core.Expression
 import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.QueryBuilder
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.isAutoInc
@@ -10,6 +12,27 @@ import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 
 /** An exception thrown when the provided data cannot be validated or processed to prepare a batch statement. */
 class BatchDataInconsistentException(message: String) : Exception(message)
+
+/**
+ * Stands in for the value of [column] in a row that leaves the column to its database-side default.
+ *
+ * Such a default is only known to the database, so it can only be rendered into the SQL of the statement and never
+ * bound as a parameter. Being an [Expression] is what says that: the statement renders it like any other expression
+ * value, and the inserted rows reported back to the caller leave out the columns whose value was an expression,
+ * instead of mistaking this stand-in for a value of the row.
+ */
+private class DatabaseDefault(private val column: Column<*>) : Expression<Any?>() {
+    @OptIn(InternalApi::class)
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        queryBuilder.append(
+            currentTransaction()
+                .db.dialect.dataTypeProvider
+                .processForDefaultValue(column.dbDefaultValue!!)
+        )
+    }
+
+    override fun toString(): String = "DEFAULT"
+}
 
 /**
  * Represents the SQL statement that batch inserts new rows into a table.
@@ -123,7 +146,7 @@ open class BatchInsertStatement(
                         column to when {
                             values.contains(column) -> values[column]
                             column.defaultValueFun != null -> column.defaultValueFun!!()
-                            column.dbDefaultValue != null && rendersEveryRowInSQL -> DefaultValueMarker
+                            column.dbDefaultValue != null && rendersEveryRowInSQL -> DatabaseDefault(column)
                             column.dbDefaultValue != null || column.isDatabaseGenerated -> {
                                 val fullIdentity = currentTransaction().fullIdentity(column)
                                 throw BatchDataInconsistentException(
