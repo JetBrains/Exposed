@@ -259,11 +259,13 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
                 // H2 only returns one last generated key...
                 (resultSetsValues[0][firstAutoIncColumn] as? Number)?.toLong()?.let {
                     var id = it
+                    val generatedValues = arrayListOf<MutableMap<Column<*>, Any?>>()
 
-                    while (resultSetsValues.size < inserted) {
+                    while (resultSetsValues.size + generatedValues.size < inserted) {
                         id -= 1
-                        resultSetsValues.add(0, mutableMapOf(firstAutoIncColumn to id))
+                        generatedValues.add(mutableMapOf(firstAutoIncColumn to id))
                     }
+                    resultSetsValues.addAll(0, generatedValues.asReversed())
                 }
             }
 
