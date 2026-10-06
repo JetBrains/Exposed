@@ -62,7 +62,7 @@ internal object RedshiftFunctionProvider : FunctionProvider() {
     override fun random(seed: Int?): String = "RANDOM()"
 
     override fun concat(separator: String, queryBuilder: QueryBuilder, vararg expr: Expression<*>) {
-        val escapedSeparator = separator.replace("'", "''")
+        val escapedSeparator = separator.escapeSingleQuotes()
         queryBuilder {
             expr.appendTo(separator = " || '$escapedSeparator' || ") { +it }
         }
@@ -74,7 +74,7 @@ internal object RedshiftFunctionProvider : FunctionProvider() {
             if (expr.distinct) append("DISTINCT ")
             append(expr.expr)
             expr.separator?.let { separator ->
-                append(", '", separator.replace("'", "''"), "'")
+                append(", '", separator.escapeSingleQuotes(), "'")
             }
             append(")")
             if (expr.orderBy.isNotEmpty()) {
@@ -90,7 +90,7 @@ internal object RedshiftFunctionProvider : FunctionProvider() {
 
     override fun <T : String?> locate(queryBuilder: QueryBuilder, expr: Expression<T>, substring: String) {
         queryBuilder {
-            append("POSITION('", substring.replace("'", "''"), "' IN ", expr, ")")
+            append("POSITION('", substring.escapeSingleQuotes(), "' IN ", expr, ")")
         }
     }
 
@@ -343,7 +343,7 @@ open class RedshiftDialect : VendorDialect(dialectName, RedshiftDataTypeProvider
         val fullColumnIdentity = currentTransaction().fullIdentity(column)
         return listOf(
             if (comment != null) {
-                "COMMENT ON COLUMN $fullColumnIdentity IS '${comment.escapeComment()}'"
+                "COMMENT ON COLUMN $fullColumnIdentity IS '${comment.escapeSingleQuotes()}'"
             } else {
                 "COMMENT ON COLUMN $fullColumnIdentity IS NULL"
             }

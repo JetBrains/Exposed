@@ -154,7 +154,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         expr: Expression<T>,
         substring: String
     ) = queryBuilder {
-        append("INSTR(", expr, ",\'", substring.replace("'", "''"), "\')")
+        append("INSTR(", expr, ",\'", substring.escapeSingleQuotes(), "\')")
     }
 
     override fun <T> date(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
@@ -553,8 +553,7 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
         val tr = currentTransaction()
         val fullColumnIdentity = tr.fullIdentity(column)
 
-        @OptIn(InternalApi::class)
-        val commentStr = comment?.escapeComment() ?: ""
+        val commentStr = comment?.escapeSingleQuotes() ?: ""
 
         return listOf("COMMENT ON COLUMN $fullColumnIdentity IS '$commentStr'")
     }

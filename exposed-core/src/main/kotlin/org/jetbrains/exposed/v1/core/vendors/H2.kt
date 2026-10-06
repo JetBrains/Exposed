@@ -186,7 +186,7 @@ internal object H2FunctionProvider : FunctionProvider() {
         expr: Expression<T>,
         substring: String
     ) = queryBuilder {
-        append("LOCATE(\'", substring.replace("'", "''"), "\',", expr, ")")
+        append("LOCATE(\'", substring.escapeSingleQuotes(), "\',", expr, ")")
     }
 
     override fun explain(

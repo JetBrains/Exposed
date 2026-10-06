@@ -40,7 +40,7 @@ internal object MariaDBFunctionProvider : MysqlFunctionProvider() {
         expr: Expression<T>,
         substring: String
     ) = queryBuilder {
-        append("LOCATE(\'", substring.replace("'", "''"), "\',", expr, ")")
+        append("LOCATE(\'", substring.escapeSingleQuotes(), "\',", expr, ")")
     }
 
     override fun <T> vectorDistance(
