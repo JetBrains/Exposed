@@ -124,7 +124,14 @@ internal object OracleFunctionProvider : FunctionProvider() {
         if (separator == "") {
             expr.appendTo(separator = " || ") { +it }
         } else {
-            expr.appendTo(separator = " || '$separator' || ") { +it }
+            expr.forEachIndexed { index, expression ->
+                if (index > 0) {
+                    append(" || ")
+                    registerArgument(TextColumnType(), separator)
+                    append(" || ")
+                }
+                append(expression)
+            }
         }
     }
 
@@ -141,7 +148,8 @@ internal object OracleFunctionProvider : FunctionProvider() {
         append("LISTAGG(")
         append(expr.expr)
         expr.separator?.let {
-            append(", '$it'")
+            append(", ")
+            registerArgument(TextColumnType(), it)
         }
         +")"
         expr.orderBy.singleOrNull()?.let { (col, order) ->
@@ -154,7 +162,9 @@ internal object OracleFunctionProvider : FunctionProvider() {
         expr: Expression<T>,
         substring: String
     ) = queryBuilder {
-        append("INSTR(", expr, ",\'", substring.escapeSingleQuotes(), "\')")
+        append("INSTR(", expr, ",")
+        registerArgument(TextColumnType(), substring)
+        append(")")
     }
 
     override fun <T> date(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
@@ -227,10 +237,12 @@ internal object OracleFunctionProvider : FunctionProvider() {
         if (path.size > 1) {
             currentTransaction().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
         }
+        // Oracle rejects a bound path with ORA-40454: path expression not a literal
+        val jsonPath = path.firstOrNull().orEmpty().escapeSingleQuotes()
         queryBuilder {
             append(if (toScalar) "JSON_VALUE" else "JSON_QUERY")
             append("(", expression, ", ")
-            append("'$", path.firstOrNull() ?: "", "'")
+            append("'$", jsonPath, "'")
             append(")")
         }
     }
@@ -246,9 +258,11 @@ internal object OracleFunctionProvider : FunctionProvider() {
         if (path.size > 1) {
             currentTransaction().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
         }
+        // Oracle rejects a bound path with ORA-40454: path expression not a literal
+        val jsonPath = path.firstOrNull().orEmpty().escapeSingleQuotes()
         queryBuilder {
             append("JSON_EXISTS(", expression, ", ")
-            append("'$", path.firstOrNull() ?: "", "'")
+            append("'$", jsonPath, "'")
             optional?.let {
                 append(" $it")
             }

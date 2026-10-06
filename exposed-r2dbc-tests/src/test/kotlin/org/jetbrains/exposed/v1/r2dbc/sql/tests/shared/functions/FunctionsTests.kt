@@ -373,6 +373,36 @@ class FunctionsTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    /* EXPOSED-1093 */
+    @Test
+    fun testLocateTreatsSubstringAsData() {
+        withCitiesAndUsers { cities, _, _ ->
+            // a payload that would close the string literal and inject a predicate matches nothing
+            val payload = stringLiteral("Joe's Diner").locate("' IN name) > 0 OR 1=1 OR POSITION('")
+
+            assertEquals(0, cities.select(payload).first()[payload])
+        }
+    }
+
+    /* EXPOSED-1093 */
+    @Test
+    fun testGroupConcatSeparatorIsData() {
+        val tester = object : Table("group_concat_separator_tester") {
+            val name = varchar("name", 32)
+        }
+
+        withTables(tester) {
+            tester.insert { it[name] = "a" }
+            tester.insert { it[name] = "b" }
+
+            // a separator holding a quote is data, so it reaches the result verbatim instead of ending the literal
+            val separator = "' || '"
+            val concatenated = tester.name.groupConcat(separator = separator, orderBy = tester.name to SortOrder.ASC)
+
+            assertEquals("a" + separator + "b", tester.select(concatenated).single()[concatenated])
+        }
+    }
+
     @Test
     fun testLocateWithSingleQuote() {
         withCitiesAndUsers { cities, _, _ ->

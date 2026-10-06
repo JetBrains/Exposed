@@ -102,7 +102,9 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
 
     private class MATCH(val expr: Expression<*>, val pattern: String, val mode: MatchMode) : Op<Boolean>() {
         override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-            append("MATCH(", expr, ") AGAINST ('", pattern, "' ", mode.mode(), ")")
+            append("MATCH(", expr, ") AGAINST (")
+            registerArgument(TextColumnType(), pattern)
+            append(" ", mode.mode(), ")")
         }
     }
 
@@ -121,7 +123,9 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         expr: Expression<T>,
         substring: String
     ) = queryBuilder {
-        append("LOCATE(\'", substring.escapeSingleQuotes(), "\',", expr, ")")
+        append("LOCATE(")
+        registerArgument(TextColumnType(), substring)
+        append(",", expr, ")")
     }
 
     override fun <T : String?> regexp(
@@ -161,7 +165,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
     ) = queryBuilder {
         if (toScalar) append("JSON_UNQUOTE(")
         append("JSON_EXTRACT(", expression, ", ")
-        path.ifEmpty { arrayOf("") }.appendTo { +"\"$$it\"" }
+        path.ifEmpty { arrayOf("") }.appendTo { registerArgument(TextColumnType(), "$$it") }
         append(")${if (toScalar) ")" else ""}")
     }
 
@@ -174,7 +178,8 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
     ) = queryBuilder {
         append("JSON_CONTAINS(", target, ", ", candidate)
         path?.let {
-            append(", '$$it'")
+            append(", ")
+            registerArgument(TextColumnType(), "$$it")
         }
         append(")")
     }
@@ -194,7 +199,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         queryBuilder {
             append("JSON_CONTAINS_PATH(", expression, ", ")
             append("'$oneOrAll', ")
-            path.ifEmpty { arrayOf("") }.appendTo { +"'$$it'" }
+            path.ifEmpty { arrayOf("") }.appendTo { registerArgument(TextColumnType(), "$$it") }
             append(")")
         }
     }

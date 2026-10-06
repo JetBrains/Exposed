@@ -62,9 +62,15 @@ internal object RedshiftFunctionProvider : FunctionProvider() {
     override fun random(seed: Int?): String = "RANDOM()"
 
     override fun concat(separator: String, queryBuilder: QueryBuilder, vararg expr: Expression<*>) {
-        val escapedSeparator = separator.escapeSingleQuotes()
         queryBuilder {
-            expr.appendTo(separator = " || '$escapedSeparator' || ") { +it }
+            expr.forEachIndexed { index, expression ->
+                if (index > 0) {
+                    append(" || ")
+                    registerArgument(TextColumnType(), separator)
+                    append(" || ")
+                }
+                append(expression)
+            }
         }
     }
 
@@ -74,7 +80,8 @@ internal object RedshiftFunctionProvider : FunctionProvider() {
             if (expr.distinct) append("DISTINCT ")
             append(expr.expr)
             expr.separator?.let { separator ->
-                append(", '", separator.escapeSingleQuotes(), "'")
+                append(", ")
+                registerArgument(TextColumnType(), separator)
             }
             append(")")
             if (expr.orderBy.isNotEmpty()) {
@@ -90,7 +97,9 @@ internal object RedshiftFunctionProvider : FunctionProvider() {
 
     override fun <T : String?> locate(queryBuilder: QueryBuilder, expr: Expression<T>, substring: String) {
         queryBuilder {
-            append("POSITION('", substring.escapeSingleQuotes(), "' IN ", expr, ")")
+            append("POSITION(")
+            registerArgument(TextColumnType(), substring)
+            append(" IN ", expr, ")")
         }
     }
 

@@ -65,7 +65,8 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             else -> queryBuilder {
                 append("STRING_AGG(")
                 if (expr.distinct) append(" DISTINCT ")
-                append(expr.expr, ", '", expr.separator, "'")
+                append(expr.expr, ", ")
+                registerArgument(TextColumnType(), expr.separator)
                 if (expr.orderBy.isNotEmpty()) {
                     expr.orderBy.appendTo(prefix = " ORDER BY ") {
                         append(it.first, " ", it.second.name)
@@ -85,7 +86,9 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         expr: Expression<T>,
         substring: String
     ) = queryBuilder {
-        append("POSITION(\'", substring.escapeSingleQuotes(), "\' IN ", expr, ")")
+        append("POSITION(")
+        registerArgument(TextColumnType(), substring)
+        append(" IN ", expr, ")")
     }
 
     override fun <T : String?> regexp(
@@ -190,7 +193,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         append("${jsonType.sqlType()}_EXTRACT_PATH")
         if (toScalar) append("_TEXT")
         append("(", expression, ", ")
-        path.ifEmpty { arrayOf("$") }.appendTo { +"'$it'" }
+        path.ifEmpty { arrayOf("$") }.appendTo { registerArgument(TextColumnType(), it) }
         append(")")
     }
 
@@ -234,9 +237,16 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             } else {
                 append(expression, ", ")
             }
-            append("'$", path.firstOrNull() ?: "", "'")
+            // the inner cast pins the parameter to `text`. Cast straight to `jsonpath` or `jsonb` and PostgreSQL
+            // infers the parameter as that type, which pgjdbc-ng cannot put on the wire: it fails the statement
+            // with "type has no supported parameter format".
+            append("CAST(CAST(")
+            registerArgument(TextColumnType(), "\$" + (path.firstOrNull() ?: ""))
+            append(" AS text) AS jsonpath)")
             optional?.let {
-                append(", '$it'")
+                append(", CAST(CAST(")
+                registerArgument(TextColumnType(), it)
+                append(" AS text) AS jsonb)")
             }
             append(")")
         }

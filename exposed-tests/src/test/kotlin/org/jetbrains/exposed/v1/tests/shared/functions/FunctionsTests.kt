@@ -364,6 +364,29 @@ class FunctionsTests : DatabaseTestsBase() {
         }
     }
 
+    /* EXPOSED-1093 */
+    @Test
+    fun testLocateTreatsSubstringAsData() {
+        withCitiesAndUsers { cities, _, _ ->
+            // a payload that would close the string literal and inject a predicate matches nothing
+            val payload = stringLiteral("Joe's Diner").locate("' IN name) > 0 OR 1=1 OR POSITION('")
+
+            assertEquals(0, cities.select(payload).first()[payload])
+        }
+    }
+
+    /* EXPOSED-1093 */
+    @Test
+    fun testConcatSeparatorIsData() {
+        withCitiesAndUsers { cities, _, _ ->
+            // a separator holding a quote is data, so it reaches the result verbatim instead of ending the literal
+            val separator = "' || '"
+            val concatField = concat(separator, listOf(stringLiteral("Foo"), stringLiteral("Bar")))
+
+            assertEquals("Foo" + separator + "Bar", cities.select(concatField).first()[concatField])
+        }
+    }
+
     @Test
     fun testLocateWithSingleQuote() {
         withCitiesAndUsers { cities, _, _ ->

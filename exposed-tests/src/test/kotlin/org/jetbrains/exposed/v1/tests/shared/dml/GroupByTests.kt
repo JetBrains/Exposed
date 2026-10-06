@@ -3,6 +3,7 @@ package org.jetbrains.exposed.v1.tests.shared.dml
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
@@ -15,6 +16,25 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class GroupByTests : DatabaseTestsBase() {
+    /* EXPOSED-1093 */
+    @Test
+    fun testGroupConcatSeparatorIsData() {
+        val tester = object : Table("group_concat_separator_tester") {
+            val name = varchar("name", 32)
+        }
+
+        withTables(tester) {
+            tester.insert { it[name] = "a" }
+            tester.insert { it[name] = "b" }
+
+            // a separator holding a quote is data, so it reaches the result verbatim instead of ending the literal
+            val separator = "' || '"
+            val concatenated = tester.name.groupConcat(separator = separator, orderBy = tester.name to SortOrder.ASC)
+
+            assertEquals("a" + separator + "b", tester.select(concatenated).single()[concatenated])
+        }
+    }
+
     @Test
     fun testGroupBy01() {
         withCitiesAndUsers { cities, users, _ ->
