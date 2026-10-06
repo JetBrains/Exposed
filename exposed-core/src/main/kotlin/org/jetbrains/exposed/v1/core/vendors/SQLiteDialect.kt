@@ -81,7 +81,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         expr: Expression<T>,
         substring: String
     ) = queryBuilder {
-        append("INSTR(", expr, ",\'", substring, "\')")
+        append("INSTR(", expr, ",\'", substring.escapeSingleQuotes(), "\')")
     }
 
     override fun <T : String?> regexp(
