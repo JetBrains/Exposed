@@ -8,6 +8,8 @@ import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 
+val updateExamples = UpdateExamples()
+
 suspend fun main() {
     R2dbcDatabase.connect(
         url = "r2dbc:h2:mem:///test",
@@ -21,6 +23,9 @@ suspend fun main() {
         runReadExamples()
         runUpdateExamples()
         runDeleteExamples()
+        // These run last: H2 doesn't advance the auto-increment after the explicit insert with id = 2,
+        // so auto-generated inserts would collide with it while that row still exists
+        updateExamples.updateInNewTransaction()
     }
 }
 
@@ -38,6 +43,7 @@ suspend fun runCreateExamples() {
     val createExamples = CreateExamples()
     createExamples.createFilms()
     createExamples.createNewWithCompositeId()
+    createExamples.createScheduledFilm()
 }
 
 suspend fun runReadExamples() {
@@ -51,7 +57,6 @@ suspend fun runReadExamples() {
 }
 
 suspend fun runUpdateExamples() {
-    val updateExamples = UpdateExamples()
     updateExamples.updateFilms()
     updateExamples.updateFilmProperty()
 }

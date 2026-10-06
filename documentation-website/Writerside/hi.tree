@@ -52,8 +52,8 @@
     </toc-element>
     <toc-element toc-title="Deep Dive into DAO">
         <toc-element topic="DAO-Table-Types.topic"/>
-        <toc-element topic="DAO-Entity-definition.topic" accepts-web-file-names="dao-field-transformations.html"/>
-        <toc-element topic="DAO-CRUD-Operations.topic"/>
+        <toc-element topic="dao-entity-definition.md" accepts-web-file-names="dao-field-transformations.html"/>
+        <toc-element topic="dao-crud-operations.md"/>
         <toc-element topic="DAO-Relationships.topic"/>
         <toc-element topic="Migration-Guide-DAO-JDBC-to-R2DBC.md"/>
     </toc-element>

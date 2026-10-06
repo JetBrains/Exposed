@@ -69,18 +69,6 @@ class ReadExamples {
         users.toList().forEach { println(it.name) }
     }
 
-    /*
-        Find records by composite id.
-
-        Important: The SQL query is referenced by line number in `DAO-CRUD-operations.topic`.
-        If you add, remove, or modify any lines before the SELECT statement, ensure you update the corresponding
-        line numbers in the `code-block` element of the referenced file.
-
-        SELECT DIRECTORS."name", DIRECTORS.GUILD_ID, DIRECTORS.GENRE
-        FROM DIRECTORS
-        WHERE (DIRECTORS."name" = 'J.J. Abrams')
-        AND (DIRECTORS.GUILD_ID = '2cc64f4f-1a2c-41ce-bda1-ee492f787f4b')
-     */
     suspend fun findByCompositeId() {
         val directorId = CompositeID {
             it[DirectorsTable.name] = "J.J. Abrams"

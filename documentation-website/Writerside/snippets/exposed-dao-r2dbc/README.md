@@ -1,7 +1,7 @@
 # Exposed R2DBC DAO API examples
 
 A Gradle application that shows how to work with Exposed R2DBC DAO API.
-The files are referenced in the DAO's [CRUD operations](../../topics/DAO-CRUD-Operations.topic),
+The files are referenced in the DAO's [CRUD operations](../../topics/dao-crud-operations.md),
 [Table types](../../topics/DAO-Table-Types.topic) and [Entity definition](../../topics/dao-entity-definition.md)
 topics.
 
