@@ -400,9 +400,12 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
         val table = klass.table
         // Capture reference to the field
         val entityId = this.id
-        TransactionManager.current().registerChange(klass, entityId, EntityChangeType.Removed)
-        executeAsPartOfEntityLifecycle {
-            table.deleteWhere { table.id eq entityId }
+
+        if (!isNewEntity()) {
+            TransactionManager.current().registerChange(klass, entityId, EntityChangeType.Removed)
+            executeAsPartOfEntityLifecycle {
+                table.deleteWhere { table.id eq entityId }
+            }
         }
         klass.removeFromCache(this)
     }
