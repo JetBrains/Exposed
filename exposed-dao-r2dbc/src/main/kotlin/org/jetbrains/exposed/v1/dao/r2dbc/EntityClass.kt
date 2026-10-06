@@ -360,30 +360,6 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
         cache.store(entity)
     }
 
-    /**
-     * The inverse of [attach]: stops tracking [entity], so that this transaction no longer treats it as
-     * representing a row it is responsible for.
-     *
-     * Reads keep working and return the entity's committed values; writes throw
-     * [EntityNotFoundException], the same as for an entity that was never attached. The entity will not be
-     * flushed when the transaction commits.
-     *
-     * Tracking is a property of the whole transaction chain, so this detaches from any enclosing transaction
-     * too. Nothing already sent to the database is undone — if a write was flushed and then the entity
-     * detached, the row keeps the new value while the entity reports the old one.
-     *
-     * Does nothing if [entity] is not tracked, so it is safe to call twice. Unlike [attach] this needs no
-     * database access and does not suspend.
-     *
-     * @param entity The entity to stop tracking.
-     * @param force Detach even if it means discarding values that have not been committed.
-     * @throws IllegalStateException if [entity] holds uncommitted values and [force] is `false`, or if its
-     *   row was created by a transaction that is still open — use [Entity.delete] to withdraw such a row.
-     */
-    fun detach(entity: Entity<ID>, force: Boolean = false) {
-        warmCache().detach(entity, force)
-    }
-
     /** Gets all the [Entity] instances associated with this [EntityClass]. */
     open fun all(): SizedIterable<T> = wrapRows(table.selectAll().notForUpdate())
 
