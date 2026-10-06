@@ -45,6 +45,47 @@ To pass additional context to either `suspendTransaction()`, wrap it in a corout
 [`withContext()`](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-context.html)
 or [`async()`](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/async.html).
 
+### Cancelling a suspend transaction
+
+R2DBC drivers do not abort a statement when the subscription to its results is cancelled. Instead, they keep reading
+its results until the database has finished executing it. This means that cancelling a coroutine running
+`suspendTransaction()` from `exposed-r2dbc` would otherwise only complete once any statement that was executing at the
+time has run to completion, as the transaction's rollback and connection release have to wait for it.
+
+To avoid this, when a coroutine is cancelled while a statement is still executing, Exposed sends a request to the
+database to abort that statement before rolling back the transaction:
+
+```kotlin
+val job = scope.launch {
+    suspendTransaction {
+        exec("SELECT pg_sleep(60)")
+    }
+}
+
+// the running statement is aborted, so this completes promptly instead of after 60 seconds
+job.cancelAndJoin()
+```
+
+The cancel request is only sent if a statement is still executing on the transaction's connection, and it is completed
+before the connection is used again or released back to a connection pool.
+
+>This is currently only supported by the PostgreSQL driver, which sends the cancel request over a separate,
+> short-lived connection to the database. With other drivers, cancelling a coroutine still waits for the executing
+> statement to complete.
+{style="note"}
+
+To disable this behavior, set `cancelRunningStatementOnCancellation` to `false` in
+[`R2dbcDatabaseConfig`](https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/-r2dbc-database-config/index.html):
+
+```kotlin
+val db = R2dbcDatabase.connect(
+    url = "r2dbc:postgresql://localhost:5432/test",
+    databaseConfig = R2dbcDatabaseConfig {
+        cancelRunningStatementOnCancellation = false
+    }
+)
+```
+
 
 ## Accessing returned values
 
