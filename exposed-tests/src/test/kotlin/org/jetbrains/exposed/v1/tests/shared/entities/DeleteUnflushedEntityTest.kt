@@ -81,6 +81,8 @@ class DeleteUnflushedEntityTest : DatabaseTestsBase() {
         }
     }
 
+    // Belongs here without calling delete(): assigning the reference reads the author's id, which flushes its pending
+    // insert, so JDBC never reaches the deleted-but-still-referenced state that the R2DBC DAO has to handle at flush.
     @Test
     fun testAssigningReferenceFlushesTheReferencedEntity() {
         withTables(Authors, Books) {
