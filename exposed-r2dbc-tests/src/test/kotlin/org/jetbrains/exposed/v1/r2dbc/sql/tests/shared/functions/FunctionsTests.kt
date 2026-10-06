@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.functions
 
 import kotlinx.coroutines.flow.any
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
@@ -25,6 +26,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.forEach
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.junit.jupiter.api.Test
+import kotlin.collections.first
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -368,6 +370,14 @@ class FunctionsTests : R2dbcDatabaseTestsBase() {
             assertEquals(if (isNotCaseSensitiveDialect) 5 else 0, results[0][locate]) // St. Petersburg
             assertEquals(0, results[1][locate]) // Munich
             assertEquals(if (isNotCaseSensitiveDialect) 1 else 0, results[2][locate]) // Prague
+        }
+    }
+
+    @Test
+    fun testLocateWithSingleQuote() {
+        withCitiesAndUsers { cities, _, _ ->
+            val locate = stringLiteral("Joe's").locate("'")
+            assertEquals(4, cities.select(locate).first()[locate])
         }
     }
 
