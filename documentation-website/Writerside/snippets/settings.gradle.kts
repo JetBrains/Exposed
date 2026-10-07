@@ -14,6 +14,7 @@ rootProject.name = "snippets"
 include("exposed-dao")
 include("exposed-dao-r2dbc")
 include("exposed-dao-relationships")
+include("exposed-dao-r2dbc-relationships")
 include("exposed-data-types")
 include("exposed-databases-jdbc")
 include("exposed-databases-r2dbc")

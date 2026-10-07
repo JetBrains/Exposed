@@ -7,8 +7,8 @@ import org.example.tables.StarWarsFilmsWithCompositeRefTable
 import org.example.tables.StarWarsFilmsWithDirectorTable
 import org.example.tables.UserRatingsTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.IntEntity
-import org.jetbrains.exposed.v1.dao.IntEntityClass
+import org.jetbrains.exposed.v1.dao.r2dbc.IntEntity
+import org.jetbrains.exposed.v1.dao.r2dbc.IntEntityClass
 
 /*
     Important: This file is referenced by line number in `dao-relationships.md`.
@@ -30,7 +30,7 @@ class StarWarsFilmWithParentAndChildEntity(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<StarWarsFilmWithParentAndChildEntity>(StarWarsFilmsWithDirectorTable)
 
     var name by StarWarsFilmsWithDirectorTable.name
-    var director by DirectorEntity referencedOn StarWarsFilmsWithDirectorTable.director
+    val director by DirectorEntity referencedOn StarWarsFilmsWithDirectorTable.director
 
     // Define hierarchical relationships
     var sequels by StarWarsFilmWithParentAndChildEntity.via(StarWarsFilmRelationsTable.parentFilm, StarWarsFilmRelationsTable.childFilm)
@@ -42,5 +42,5 @@ class StarWarsFilmWithCompositeRefEntity(id: EntityID<Int>) : IntEntity(id) {
 
     var sequelId by StarWarsFilmsWithCompositeRefTable.sequelId
     var name by StarWarsFilmsWithCompositeRefTable.name
-    var director by DirectorCompositeIDEntity referencedOn StarWarsFilmsWithCompositeRefTable
+    val director by DirectorCompositeIDEntity referencedOn StarWarsFilmsWithCompositeRefTable
 }

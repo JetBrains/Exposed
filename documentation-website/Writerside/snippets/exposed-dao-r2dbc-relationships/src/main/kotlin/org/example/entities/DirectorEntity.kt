@@ -5,10 +5,10 @@ import org.example.tables.DirectorsTable
 import org.example.tables.StarWarsFilmsWithCompositeRefTable
 import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.CompositeEntity
-import org.jetbrains.exposed.v1.dao.CompositeEntityClass
-import org.jetbrains.exposed.v1.dao.IntEntity
-import org.jetbrains.exposed.v1.dao.IntEntityClass
+import org.jetbrains.exposed.v1.dao.r2dbc.CompositeEntity
+import org.jetbrains.exposed.v1.dao.r2dbc.CompositeEntityClass
+import org.jetbrains.exposed.v1.dao.r2dbc.IntEntity
+import org.jetbrains.exposed.v1.dao.r2dbc.IntEntityClass
 
 /*
     Important: This file is referenced by line number in `dao-relationships.md`.

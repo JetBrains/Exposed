@@ -5,8 +5,8 @@ import org.example.tables.UserRatingsTable
 import org.example.tables.UsersTable
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.IntEntity
-import org.jetbrains.exposed.v1.dao.IntEntityClass
+import org.jetbrains.exposed.v1.dao.r2dbc.IntEntity
+import org.jetbrains.exposed.v1.dao.r2dbc.IntEntityClass
 
 /*
     Important: This file is referenced by line number in `dao-relationships.md`.

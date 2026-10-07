@@ -1,9 +1,10 @@
 package org.example.examples
 
+import kotlinx.coroutines.flow.toList
 import org.example.entities.DirectorEntity
 import org.example.entities.StarWarsFilmWithParentAndChildEntity
 import org.example.tables.Genre
-import org.jetbrains.exposed.v1.jdbc.SizedCollection
+import org.jetbrains.exposed.v1.r2dbc.SizedCollection
 
 /*
     Important: This file is referenced by line number in `dao-relationships.md`.
@@ -12,25 +13,25 @@ import org.jetbrains.exposed.v1.jdbc.SizedCollection
 */
 
 class ParentChildExamples {
-    fun querySequels() {
-        val director1 = DirectorEntity.new {
+    suspend fun querySequels() {
+        val director1 = DirectorEntity.newSuspend {
             name = "George Lucas"
             genre = Genre.SCI_FI
         }
 
-        val film1 = StarWarsFilmWithParentAndChildEntity.new {
+        val film1 = StarWarsFilmWithParentAndChildEntity.newSuspend {
             name = "Star Wars: A New Hope"
-            director = director1
+            director.set( director1)
         }
 
-        val film2 = StarWarsFilmWithParentAndChildEntity.new {
+        val film2 = StarWarsFilmWithParentAndChildEntity.newSuspend {
             name = "Star Wars: The Empire Strikes Back"
-            director = director1
+            director.set(director1)
         }
 
-        val film3 = StarWarsFilmWithParentAndChildEntity.new {
+        val film3 = StarWarsFilmWithParentAndChildEntity.newSuspend {
             name = "Star Wars: Return of the Jedi"
-            director = director1
+            director.set(director1)
         }
 
         // Assign parent-child relationships
@@ -39,11 +40,11 @@ class ParentChildExamples {
         film1.sequels = SizedCollection(listOf(film2, film3)) // A New Hope has Empire Strikes Back as a sequel
         film2.sequels = SizedCollection(listOf(film3)) // Empire Strikes Back has Return of the Jedi as a sequel
 
-        film1.sequels.forEach { sequel ->
+        film1.sequels.toList().forEach { sequel ->
             println("${sequel.name} is a sequel to ${film1.name}")
         }
 
-        film3.prequels.forEach { prequel ->
+        film3.prequels.toList().forEach { prequel ->
             println("${film3.name} has a prequel: ${prequel.name}")
         }
     }

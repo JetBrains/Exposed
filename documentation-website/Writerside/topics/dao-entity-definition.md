@@ -145,7 +145,7 @@ var director by StarWarsFilmsTable.director
 </tabs>
 
 Column properties are unchanged. Reference properties are not: they must become `val`. See
-[](DAO-Relationships.topic#r2dbc-differences).
+[](dao-relationships.md#r2dbc-differences).
 
 [Field transformations](#field-transformations), including memoized ones, work the same way. [Immutable entities](#immutable-entities)
 are the one feature on this page with no R2DBC equivalent yet.

@@ -1,6 +1,6 @@
-# Exposed DAO Relationships examples
+# Exposed DAO R2DBC Relationships examples
 
-A Gradle application that shows how to create relationships between entities with Exposed DAO API.
+A Gradle application that shows how to create relationships between entities with Exposed DAO R2DBC API.
 The files are referenced in the DAO's [Relationships](../../topics/dao-relationships.md)
 topic.
 
@@ -9,7 +9,7 @@ topic.
 To build the application, in a terminal window navigate to the `snippets` folder and run the following command:
 
 ```shell
-./gradlew :exposed-dao-relationships:build
+./gradlew :exposed-dao-r2dbc-relationships:build
 ```
 
 ## Run
@@ -17,7 +17,7 @@ To build the application, in a terminal window navigate to the `snippets` folder
 To run the application, in a terminal window navigate to the `snippets` folder and run the following command:
 
 ```shell
-./gradlew :exposed-dao-relationships:run
+./gradlew :exposed-dao-r2dbc-relationships:run
 ```
 
 This will run queries to create new tables and run all functions in the `/examples` folder.
