@@ -14,7 +14,6 @@ import org.jetbrains.exposed.v1.jdbc.statements.StatementIterator
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
 import org.jetbrains.exposed.v1.jdbc.statements.jdbc.JdbcResult
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
-import java.sql.ResultSet
 
 /**
  * Represents an SQL operation that combines the results of multiple queries into a single result.
@@ -74,12 +73,13 @@ sealed class SetOperation(
     override fun count(): Long {
         try {
             count = true
-            return transaction.execQuery(this) { rs ->
+            val rs = transaction.execQuery(this)
+            return try {
                 rs.next()
-                rs.getLong(1).also {
-                    rs.close()
-                }
-            }!!
+                rs.result.getLong(1)
+            } finally {
+                transaction.releaseResult(rs)
+            }
         } finally {
             count = false
         }
@@ -91,7 +91,11 @@ sealed class SetOperation(
         try {
             limit = 1
             val rs = transaction.execQuery(this)
-            return !rs.next().also { rs.close() }
+            return try {
+                !rs.next()
+            } finally {
+                transaction.releaseResult(rs)
+            }
         } finally {
             limit = oldLimit
         }
@@ -163,7 +167,7 @@ sealed class SetOperation(
         }
     }
 
-    private inner class ResultIterator(rs: ResultSet) : StatementIterator<Expression<*>, ResultRow>(rs) {
+    private inner class ResultIterator(rs: JdbcResult) : StatementIterator<Expression<*>, ResultRow>(rs) {
         override val fieldIndex = set.realFields.toSet()
             .mapIndexed { index, expression -> expression to index }
             .toMap()
@@ -174,25 +178,13 @@ sealed class SetOperation(
 
         init {
             hasNext = result.next()
-            if (hasNext) trackResultSet(transaction)
         }
 
         @OptIn(InternalApi::class)
-        override fun createResultRow(): ResultRow = ResultRow.create(JdbcResult(result), fieldIndex, columnTypes)
+        override fun createResultRow(): ResultRow = ResultRow.create(jdbcResult, fieldIndex, columnTypes)
     }
 
-    companion object {
-        private fun trackResultSet(transaction: JdbcTransaction) {
-            val threshold = transaction.db.config.logTooMuchResultSetsThreshold
-            if (threshold > 0 && threshold < transaction.openResultSetsCount) {
-                val message = "Current opened result sets size ${transaction.openResultSetsCount} " +
-                    "exceeds $threshold threshold for transaction ${transaction.transactionId} "
-                val stackTrace = Exception(message).stackTraceToString()
-                exposedLogger.error(stackTrace)
-            }
-            transaction.openResultSetsCount++
-        }
-    }
+    companion object
 }
 
 /** Represents an SQL operation that combines all results from two queries, without any duplicates. */
