@@ -9,7 +9,7 @@
         Everything on this page applies to both the JDBC and the R2DBC DAO. Table types come from
         <code>exposed-core</code> and are shared by both drivers, so table definitions need no changes when moving
         between them. For the parts of the DAO that do differ, see
-        <a href="Migration-Guide-DAO-JDBC-to-R2DBC.md"/>.
+        <a href="migrating-from-jdbc-to-r2dbc-dao.md"/>.
     </note>
     <chapter title="Auto-incrementing ID column tables" id="defining-tables">
         <snippet id="dao-table-types">

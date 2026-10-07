@@ -2,6 +2,8 @@
 
 # Entity definition
 
+<link-summary>Learn how to define DAO entities and map them to database tables.</link-summary>
+
 <tldr>
 
 **Required dependencies**: `org.jetbrains.exposed:exposed-dao` (JDBC), `org.jetbrains.exposed:exposed-dao-r2dbc` (R2DBC)

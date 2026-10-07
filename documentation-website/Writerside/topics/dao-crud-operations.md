@@ -2,6 +2,8 @@
 
 # CRUD operations
 
+<link-summary>Learn how to perform SQL CRUD operations using Exposed's DAO (Data Access Object) API.</link-summary>
+
 <tldr>
 
 **Required dependencies**: `org.jetbrains.exposed:exposed-dao` (JDBC), `org.jetbrains.exposed:exposed-dao-r2dbc` (R2DBC)

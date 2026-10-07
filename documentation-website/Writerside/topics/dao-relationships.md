@@ -2,6 +2,8 @@
 
 # Relationships
 
+<link-summary>Learn how to define and work with relationships between database tables and DAO entities.</link-summary>
+
 <tldr>
 
 **Required dependencies**: `org.jetbrains.exposed:exposed-dao` (JDBC), `org.jetbrains.exposed:exposed-dao-r2dbc` (R2DBC)

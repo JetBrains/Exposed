@@ -203,8 +203,8 @@ abstractions for working with database data. Pick the one matching your transpor
 | `exposed-dao`       | Provides the Data Access Object (DAO) API.<br/> Requires `exposed-jdbc` and is not compatible with `exposed-r2dbc`.                          |
 | `exposed-dao-r2dbc` | Provides the DAO API for R2DBC.<br/> Requires `exposed-r2dbc`, and is an experimental preview whose API may still change between releases.   |
 
-> Do not put both DAO modules in one source set: they declare `Entity`, `EntityClass`, and `EntityCache` under the
-> same simple names. For the differences between them, see [](Migration-Guide-DAO-JDBC-to-R2DBC.md).
+> Do not use both DAO modules in one source set: they declare `Entity`, `EntityClass`, and `EntityCache` under the
+> same simple names. For the differences between them, see [](migrating-from-jdbc-to-r2dbc-dao.md).
 > {style="note"}
 
 ### Extension modules
