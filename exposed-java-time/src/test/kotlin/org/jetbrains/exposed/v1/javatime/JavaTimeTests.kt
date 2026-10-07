@@ -543,11 +543,17 @@ class JavaTimeTests : DatabaseTestsBase() {
     fun testDateTimeAsArray() {
         val defaultDates = listOf(today)
         val defaultDateTimes = listOf(LocalDateTime.now().asJdk8())
+        val defaultTimes = listOf(LocalTime.of(13, 0))
+        val defaultTimestamps = listOf(Instant.now().asJdk8())
         val tester = object : Table("array_tester") {
             val dates = array("dates", JavaLocalDateColumnType()).default(defaultDates)
             val optDates = array("opt_dates", JavaLocalDateColumnType()).nullable()
             val datetimes = array("datetimes", JavaLocalDateTimeColumnType()).default(defaultDateTimes)
             val optDatetimes = array("opt_datetimes", JavaLocalDateTimeColumnType()).nullable()
+            val times = array("times", JavaLocalTimeColumnType()).default(defaultTimes)
+            val optTimes = array("opt_times", JavaLocalTimeColumnType()).nullable()
+            val timestamps = array("timestamps", JavaInstantColumnType()).default(defaultTimestamps)
+            val optTimestamps = array("opt_timestamps", JavaInstantColumnType()).nullable()
         }
 
         withTables(excludeSettings = TestDB.entries - TestDB.POSTGRESQL - TestDB.H2_V2, tester) {
@@ -557,23 +563,37 @@ class JavaTimeTests : DatabaseTestsBase() {
             assertNull(result1[tester.optDates])
             assertEqualLists(result1[tester.datetimes], defaultDateTimes)
             assertNull(result1[tester.optDatetimes])
+            assertEqualLists(result1[tester.times], defaultTimes)
+            assertNull(result1[tester.optTimes])
+            assertEqualLists(result1[tester.timestamps], defaultTimestamps)
+            assertNull(result1[tester.optTimestamps])
 
             val datesInput = List(3) { LocalDate.of(2020 + it, 5, 4) }
             val datetimeInput = List(3) { LocalDateTime.of(2020 + it, 5, 4, 9, 9, 9) }
+            val timesInput = List(3) { LocalTime.of(9, 9, 9) }
+            val timestampsInput = List(3) { Instant.parse("2020-05-04T09:09:09.000Z") }
             tester.insert {
                 it[dates] = datesInput
                 it[optDates] = null
                 it[datetimes] = datetimeInput
                 it[optDatetimes] = null
+                it[times] = timesInput
+                it[optTimes] = null
+                it[timestamps] = timestampsInput
+                it[optTimestamps] = null
             }
 
             val lastDate = tester.dates[3]
             val firstTwoDatetimes = tester.datetimes.slice(1, 2)
-            val result2 = tester.select(lastDate, firstTwoDatetimes).where {
+            val secondTime = tester.times[2]
+            val firstTwoTimestamps = tester.timestamps.slice(1, 2)
+            val result2 = tester.select(lastDate, firstTwoDatetimes, secondTime, firstTwoTimestamps).where {
                 tester.dates[1].year() eq 2020
             }.single()
             assertEqualDateTime(datesInput.last(), result2[lastDate])
             assertEqualLists(result2[firstTwoDatetimes], datetimeInput.take(2))
+            assertEqualDateTime(timesInput[1], result2[secondTime])
+            assertEqualLists(result2[firstTwoTimestamps], timestampsInput.take(2))
         }
     }
 

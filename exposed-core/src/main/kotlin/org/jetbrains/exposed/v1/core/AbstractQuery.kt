@@ -231,7 +231,9 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
                 set.realFields.appendTo { +it }
             }
             @OptIn(InternalApi::class)
-            if (set.source != Table.Dual || currentDialect.supportsDualTableConcept) {
+            if (set.source == Table.Dual) {
+                if (currentDialect.supportsDualTableConcept) append(" FROM dual")
+            } else {
                 append(" FROM ")
                 set.source.describe(currentTransaction(), this)
             }

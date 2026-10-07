@@ -121,7 +121,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         expr: Expression<T>,
         substring: String
     ) = queryBuilder {
-        append("LOCATE(\'", substring, "\',", expr, ")")
+        append("LOCATE(\'", substring.escapeSingleQuotes(), "\',", expr, ")")
     }
 
     override fun <T : String?> regexp(
@@ -382,6 +382,8 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider.INSTA
     override val supportsOrderByNullsFirstLast: Boolean = false
 
     override val supportsSetDefaultReferenceOption: Boolean = false
+
+    override val supportsDualTableConcept: Boolean = true
 
     @Deprecated(
         "The parameter was moved to JdbcExposedDatabaseMetadata/R2dbcExposedDatabaseMetadata classes",
