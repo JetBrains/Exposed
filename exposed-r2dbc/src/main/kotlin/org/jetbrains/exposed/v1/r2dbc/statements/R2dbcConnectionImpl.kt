@@ -111,6 +111,11 @@ class R2dbcConnectionImpl(
         !validate(ValidationDepth.LOCAL).awaitSingle() || !validate(ValidationDepth.REMOTE).awaitSingle()
     } ?: true
 
+    /**
+     * Closes the underlying connection and releases its resources.
+     *
+     * @throws Exception If the driver fails to close the connection.
+     */
     override suspend fun close() {
         localConnectionLock.withLock {
             localConnection.also {
@@ -254,7 +259,7 @@ class R2dbcConnectionImpl(
                     localConnection = cx
                     transactionDefinition = null
                 } catch (cause: Throwable) {
-                    releaseConnection(cx)
+                    releaseConnection(cx, cause)
                     throw cause
                 }
             }
@@ -263,11 +268,13 @@ class R2dbcConnectionImpl(
     }
 
     @Suppress("TooGenericExceptionCaught")
-    private suspend fun releaseConnection(connection: Connection) {
+    private suspend fun releaseConnection(connection: Connection, failure: Throwable? = null) {
         withContext(NonCancellable) {
             try {
                 connection.close().awaitFirstOrNull()
             } catch (cause: Exception) {
+                if (failure == null) throw cause
+                failure.addSuppressed(cause)
                 exposedLogger.warn("Failed to release connection: ${cause.message}", cause)
             }
         }
