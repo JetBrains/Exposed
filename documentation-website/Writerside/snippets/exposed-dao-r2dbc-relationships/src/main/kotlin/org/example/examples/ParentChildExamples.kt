@@ -21,7 +21,7 @@ class ParentChildExamples {
 
         val film1 = StarWarsFilmWithParentAndChildEntity.newSuspend {
             name = "Star Wars: A New Hope"
-            director.set( director1)
+            director.set(director1)
         }
 
         val film2 = StarWarsFilmWithParentAndChildEntity.newSuspend {

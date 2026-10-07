@@ -5,12 +5,12 @@ Learn how to migrate a DAO-based application from JDBC to R2DBC.
 
 # Migrating from JDBC DAO to R2DBC DAO
 
+<primary-label ref="experimental"/>
+
 Exposed 1.6.0 introduces experimental R2DBC support for the DAO API through the `exposed-dao-r2dbc` artifact. In this
 topic, you will learn how to migrate an existing JDBC DAO application to R2DBC DAO.
 
 The migration changes the transport and DAO artifacts and requires source-code changes.
-
-<include from="lib.topic" element-id="r2dbc-dao-experimental-note"/>
 
 ## Prerequisites
 

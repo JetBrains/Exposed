@@ -9,7 +9,7 @@ const val NEW_MOVIE_SEQUEL_ID = 6
 
 class UpdateExamples {
     suspend fun updateFilmProperty() {
-        val movie = StarWarsFilmEntity.findById(2)
+        val movie = StarWarsFilmEntity.findById(10)
         if (movie != null) {
             movie.name = "Episode VIII – The Last Jedi"
             println("The movie has been renamed to ${movie.name}")
@@ -17,7 +17,7 @@ class UpdateExamples {
     }
     suspend fun updateFilms() {
         // Find by id and update
-        val updatedMovie = StarWarsFilmEntity.findByIdAndUpdate(2) {
+        val updatedMovie = StarWarsFilmEntity.findByIdAndUpdate(10) {
             it.name = "Episode VIII – The Last Jedi"
         }
         println(updatedMovie?.name)

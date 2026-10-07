@@ -213,7 +213,8 @@
     </snippet>
     <snippet id="r2dbc-dao-experimental-note">
         <note>
-            The R2DBC DAO support is experimental. Its API may be dropped or changed at any time.
+            The R2DBC DAO support is experimental. Its API may be dropped or changed at any time. For more information,
+            see <a href="Migration-Guide-DAO-JDBC-to-R2DBC.md" />.
         </note>
     </snippet>
 </topic>

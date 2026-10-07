@@ -28,9 +28,9 @@ mechanisms to query and manipulate these associations. There are four ways entit
 
 <tldr>
 
-**JDBC**: [`referencedOn`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/referenced-on.html)
+**JDBC**: [`referencedOn()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/referenced-on.html)
 
-**R2DBC**: [`referencedOn`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/referenced-on.html)
+**R2DBC**: [`referencedOn()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/referenced-on.html)
 
 </tldr>
 
@@ -70,7 +70,7 @@ function:
 ```
 {src="exposed-dao-relationships/src/main/kotlin/org/example/tables/UserRatingsTable.kt" include-symbol="UserRatingsTable"}
 
-In the corresponding entity class, use the `referencedOn` function to register the reference:
+In the corresponding entity class, use the `referencedOn()` infix function to register the reference:
 
 <tabs group="connectivity">
 <tab group-key="JDBC" id="user-ratings-entity" title="JDBC">
@@ -89,8 +89,8 @@ In the corresponding entity class, use the `referencedOn` function to register t
 </tab>
 </tabs>
 
-* With JDBC, `referencedOn` returns the referenced entity directly, so properties are declared as `var`.
-* With R2DBC, `referencedOn` return an accessor instead of the referenced entity, so properties are declared as `val`.
+* With JDBC, `referencedOn()` returns the referenced entity directly, so properties are declared as `var`.
+* With R2DBC, `referencedOn()` return an accessor instead of the referenced entity, so properties are declared as `val`.
 
 ### Accessing data {id="accessing-data"}
 
@@ -120,14 +120,14 @@ To retrieve the referenced film from a `UserRatingEntity`, use the syntax approp
 
 <tldr>
 
-**JDBC**: [`referrersOn`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/referrers-on.html)
+**JDBC**: [`referrersOn()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/referrers-on.html)
 
-**R2DBC**: [`referrersOn`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/referrers-on.html)
+**R2DBC**: [`referrersOn()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/referrers-on.html)
 
 </tldr>
 
-While you can use the `.find()` function of the entity class to get all ratings for a film, it is preferred to add a 
-`referrersOn` field to the class representing the film:
+While you can use the `.find()` function of the entity class to get all ratings for a film, it is preferred to use the 
+`referrersOn()` infix function on the class representing the film:
 
 <tabs group="connectivity">
 <tab group-key="JDBC" id="reverse-access-jdbc" title="JDBC">
@@ -165,22 +165,17 @@ You can then access this field on an entity object:
 </tab>
 </tabs>
 
-> With R2DBC, referrer collections are `SizedIterable`, which extends `kotlinx.coroutines.flow.Flow`.
-> Collect them before using operators that produce a collection.
->
-{style="note"}
-
 ### Back reference {id="back-reference"}
 
 <tldr>
 
-**JDBC**: [`backReferencedOn`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/back-referenced-on.html)
+**JDBC**: [`backReferencedOn()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/back-referenced-on.html)
 
-**R2DBC**: [`backReferencedOn`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/back-referenced-on.html)
+**R2DBC**: [`backReferencedOn()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/back-referenced-on.html)
 
 </tldr>
 
-If each user rates only one film, you can define a `backReferencedOn` field to the entity class to access the
+If each user rates only one film, you can use the `backReferencedOn()` infix function on the entity class to access the
 `UserRatingsTable` data:
 
 ```kotlin
@@ -210,9 +205,9 @@ user1.rating()
 
 <tldr>
 
-**JDBC**: [`optionalReferencedOn`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/optional-referenced-on.html)
+**JDBC**: [`optionalReferencedOn()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/optional-referenced-on.html)
 
-**R2DBC**: [`optionalReferencedOn`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/optional-referenced-on.html)
+**R2DBC**: [`optionalReferencedOn()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/optional-referenced-on.html)
 
 </tldr>
 
@@ -270,7 +265,7 @@ for each:
 {src="exposed-dao-relationships/src/main/kotlin/org/example/entities/UserEntity.kt" include-lines="23-27,37-41"}
 
 Without using the [infix notation](https://kotlinlang.org/docs/functions.html#infix-notation),
-the `orderBy` method is chained after `referrersOn`:
+the `orderBy()` function is chained after `referrersOn()`:
 
 ```kotlin
 ```
@@ -469,6 +464,14 @@ by using the respective overloads that accept an `IdTable` as an argument.
 These overloads will automatically resolve the foreign key constraint associated with the composite primary key.
 
 ## Eager Loading {id="eager-loading"}
+
+<tldr>
+
+**JDBC**: [`load()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/load.html)
+
+**R2DBC**: [`load()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/load.html)
+
+</tldr>
 
 References in Exposed are lazily loaded, meaning queries to fetch the data for the reference are made at
 the moment the reference is first utilised. In cases where you know you will require references

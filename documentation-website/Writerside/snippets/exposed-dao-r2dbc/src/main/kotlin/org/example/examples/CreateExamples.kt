@@ -24,7 +24,7 @@ class CreateExamples {
         println("Created a new record with name " + movie.name)
 
         // Create a new record with id
-        val movie2 = StarWarsFilmEntity.newSuspend(id = 2) {
+        val movie2 = StarWarsFilmEntity.newSuspend(id = 10) {
             name = "The Rise of Skywalker"
             sequelId = MOVIE2_SEQUEL_ID
             director = "J.J. Abrams"

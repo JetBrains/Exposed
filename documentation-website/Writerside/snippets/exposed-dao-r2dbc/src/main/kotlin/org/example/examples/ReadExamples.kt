@@ -40,7 +40,7 @@ class ReadExamples {
 
     suspend fun find() {
         // Get an entity by its id value
-        val movie = StarWarsFilmEntity.findById(2)
+        val movie = StarWarsFilmEntity.findById(10)
 
         if (movie != null) {
             // Read a property value

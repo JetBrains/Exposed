@@ -4,9 +4,9 @@ import org.example.examples.*
 import org.example.tables.*
 import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 
 suspend fun main() {
     R2dbcDatabase.connect(
@@ -28,7 +28,7 @@ suspend fun main() {
     }
 }
 
-fun runOneToManyExample() {
+suspend fun runOneToManyExample() {
     val oneToManyExamples = OneToManyExamples()
     oneToManyExamples.queryRatings()
 }

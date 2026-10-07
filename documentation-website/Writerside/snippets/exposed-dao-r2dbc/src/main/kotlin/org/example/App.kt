@@ -23,8 +23,6 @@ suspend fun main() {
         runReadExamples()
         runUpdateExamples()
         runDeleteExamples()
-        // These run last: H2 doesn't advance the auto-increment after the explicit insert with id = 2,
-        // so auto-generated inserts would collide with it while that row still exists
         updateExamples.updateInNewTransaction()
     }
 }

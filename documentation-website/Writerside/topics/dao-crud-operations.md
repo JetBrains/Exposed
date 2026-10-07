@@ -3,12 +3,15 @@
 # CRUD operations
 
 <tldr>
-<p>
-    <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-dao</code> (JDBC),
-    <code>org.jetbrains.exposed:exposed-dao-r2dbc</code> (R2DBC)
-</p>
+
+**Required dependencies**: `org.jetbrains.exposed:exposed-dao` (JDBC), `org.jetbrains.exposed:exposed-dao-r2dbc` (R2DBC)
+
 <include from="lib.topic" element-id="jdbc-supported"/>
 <include from="lib.topic" element-id="r2dbc-limited-support"/>
+
+**Code examples**: [`exposed-dao`](https://github.com/JetBrains/Exposed/tree/main/documentation-website/Writerside/snippets/exposed-dao/),
+[`exposed-dao-r2dbc`](https://github.com/JetBrains/Exposed/tree/main/documentation-website/Writerside/snippets/exposed-dao-r2dbc/)
+
 </tldr>
 
 CRUD (Create, Read, Update, Delete) are the four basic operations supported by any database. This section demonstrates how
@@ -24,10 +27,17 @@ associated with the table. For more information, see [Entity definition](dao-ent
 
 #### Create and insert an entity
 
-To create a new table row, use the [`.new()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/new.html)
-function with JDBC or [`.newSuspend()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/newSuspend.html) with
+<tldr>
+
+**JDBC**: [`.new()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/new.html)
+
+**R2DBC**: [`.newSuspend()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/newSuspend.html)
+
+</tldr>
+
+To create a new table row, use the `.new()` function with JDBC or `.newSuspend()` with
 R2DBC on the entity class associated with the table.
-They issue the `INSERT` before the creation function returns:
+Both functions issue the `INSERT` before the creation function returns:
 
 <tabs group="connectivity">
 <tab id="jdbc-new-row" title="JDBC" group-key="jdbc">
@@ -160,15 +170,13 @@ To read a value from a property, simply access it as you would with any property
 >
 {style="note"}
 
-To retrieve entities, use one of the following methods:
-
 ### Retrieve all
 
 <tldr>
 
-JDBC: [`.all()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/all.html)
+**JDBC**: [`.all()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/all.html)
 
-R2DBC: [`.all()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/all.html)
+**R2DBC**: [`.all()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/all.html)
 
 </tldr>
 
@@ -182,9 +190,9 @@ To get all the entity instances associated with this entity class, use the `.all
 
 <tldr>
 
-JDBC: [`.find()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/find.html)
+**JDBC**: [`.find()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/find.html)
 
-R2DBC: [`.find()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/find.html)
+**R2DBC**: [`.find()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/find.html)
 
 </tldr>
 
@@ -198,9 +206,9 @@ To get all the entity instances that conform to the conditional expression, use 
 
 <tldr>
 
-JDBC: [`.findById()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/find-by-id.html)
+**JDBC**: [`.findById()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/find-by-id.html)
 
-R2DBC: [`.findById()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/find-by-id.html)
+**R2DBC**: [`.findById()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/find-by-id.html)
 
 </tldr>
 
@@ -231,9 +239,9 @@ The SQL query would result in something like the following:
 
 <tldr>
 
-JDBC: [`.wrapRows()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/wrap-rows.html)
+**JDBC**: [`.wrapRows()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/wrap-rows.html)
 
-R2DBC: [`.wrapRows()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/wrap-rows.html)
+**R2DBC**: [`.wrapRows()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/wrap-rows.html)
 
 </tldr>
 
@@ -327,9 +335,9 @@ database. The change is flushed to the database at the end of the transaction or
 
 <tldr>
 
-JDBC: [`.findByIdAndUpdate()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/find-by-id-and-update.html)
+**JDBC**: [`.findByIdAndUpdate()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/find-by-id-and-update.html)
 
-R2DBC: [`.findByIdAndUpdate()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/find-by-id-and-update.html)
+**R2DBC**: [`.findByIdAndUpdate()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/find-by-id-and-update.html)
 
 </tldr>
 
@@ -343,9 +351,9 @@ To search for an entity by its ID and apply an update, use the `.findByIdAndUpda
 
 <tldr>
 
-JDBC: [`.findSingleByAndUpdate()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/find-single-by-and-update.html)
+**JDBC**: [`.findSingleByAndUpdate()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/find-single-by-and-update.html)
 
-R2DBC: [`.findSingleByAndUpdate()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/find-single-by-and-update.html)
+**R2DBC**: [`.findSingleByAndUpdate()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/find-single-by-and-update.html)
 
 </tldr>
 
@@ -382,9 +390,9 @@ To deliberately discard the existing changes and attach the specified entity, us
 
 <tldr>
 
-JDBC: [`.delete()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity/delete.html)
+**JDBC**: [`.delete()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity/delete.html)
 
-R2DBC: [`.delete()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity/delete.html)
+**R2DBC**: [`.delete()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity/delete.html)
 
 </tldr>
 
@@ -413,9 +421,9 @@ function:
 
 <tldr>
 
-JDBC: [`searchQuery()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/search-query.html)
+**JDBC**: [`searchQuery()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/search-query.html)
 
-R2DBC: [`searchQuery()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/search-query.html)
+**R2DBC**: [`searchQuery()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/search-query.html)
 
 </tldr>
 
@@ -544,10 +552,3 @@ Additionally, every change (creation, update, or deletion) is logged using the
 > [DSL Statement Interceptors](Statement-Interceptors.md).
 >
 {style="tip"}
-
-
-
-### Not available
-
-`EntityClass.view { }`, `findWithCacheCondition()`, `testCache(predicate)`, and the `Alias` overloads of `wrapRows()` have
-no R2DBC equivalent yet.
