@@ -91,7 +91,7 @@
                 }
             </code-block>
             <p>
-                For the complete list of differences, see <a href="Migration-Guide-DAO-JDBC-to-R2DBC.md"/>.
+                For the complete list of differences, see <a href="migrating-from-jdbc-to-r2dbc-dao.md"/>.
             </p>
         </warning>
     </snippet>
@@ -214,7 +214,7 @@
     <snippet id="r2dbc-dao-experimental-note">
         <note>
             The R2DBC DAO support is experimental. Its API may be dropped or changed at any time. For more information,
-            see <a href="Migration-Guide-DAO-JDBC-to-R2DBC.md" />.
+            see <a href="migrating-from-jdbc-to-r2dbc-dao.md" />.
         </note>
     </snippet>
 </topic>

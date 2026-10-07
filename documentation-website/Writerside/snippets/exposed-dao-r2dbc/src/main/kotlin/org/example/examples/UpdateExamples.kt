@@ -6,18 +6,20 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 
 const val NEW_MOVIE_SEQUEL_ID = 6
+const val UPDATED_MOVIE_ID = 10
 
 class UpdateExamples {
     suspend fun updateFilmProperty() {
-        val movie = StarWarsFilmEntity.findById(10)
+        val movie = StarWarsFilmEntity.findById(UPDATED_MOVIE_ID)
         if (movie != null) {
             movie.name = "Episode VIII – The Last Jedi"
             println("The movie has been renamed to ${movie.name}")
         }
     }
+
     suspend fun updateFilms() {
         // Find by id and update
-        val updatedMovie = StarWarsFilmEntity.findByIdAndUpdate(10) {
+        val updatedMovie = StarWarsFilmEntity.findByIdAndUpdate(UPDATED_MOVIE_ID) {
             it.name = "Episode VIII – The Last Jedi"
         }
         println(updatedMovie?.name)

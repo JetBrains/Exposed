@@ -379,7 +379,7 @@ suspend. Therefore, with R2DBC, use the `attach()` function before updating the 
 
 ```kotlin
 ```
-{src="exposed-dao-r2dbc/src/main/kotlin/org/example/examples/UpdateExamples.kt" include-lines="33-43"}
+{src="exposed-dao-r2dbc/src/main/kotlin/org/example/examples/UpdateExamples.kt" include-lines="35-45"}
 
 If the corresponding row no longer exist, `sattach()` throws `EntityNotFoundException`.
 
