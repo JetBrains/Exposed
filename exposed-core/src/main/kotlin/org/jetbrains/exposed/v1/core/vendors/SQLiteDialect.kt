@@ -67,7 +67,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
             expr.forEachIndexed { index, expression ->
                 if (index > 0) {
                     append(" || ")
-                    registerArgument(TextColumnType(), separator)
+                    appendStringArgument(separator)
                     append(" || ")
                 }
                 append(expression)
@@ -85,7 +85,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
             +expr.expr
             expr.separator?.let {
                 +", "
-                registerArgument(TextColumnType(), it)
+                appendStringArgument(it)
             }
             if (expr.orderBy.isNotEmpty()) {
                 expr.orderBy.appendTo(prefix = " ORDER BY ") { (expression, sortOrder) ->
@@ -106,7 +106,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         substring: String
     ) = queryBuilder {
         append("INSTR(", expr, ",")
-        registerArgument(TextColumnType(), substring)
+        appendStringArgument(substring)
         append(")")
     }
 
@@ -220,7 +220,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ) = queryBuilder {
         append("JSON_EXTRACT(", expression, ", ")
-        path.ifEmpty { arrayOf("") }.appendTo { registerArgument(TextColumnType(), "$$it") }
+        path.ifEmpty { arrayOf("") }.appendTo { appendStringArgument("$$it") }
         append(")")
     }
 
@@ -241,7 +241,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         }
         queryBuilder {
             append("JSON_TYPE(", expression, ", ")
-            registerArgument(TextColumnType(), "\$" + (path.firstOrNull() ?: ""))
+            appendStringArgument("\$" + (path.firstOrNull() ?: ""))
             append(") IS NOT NULL")
         }
     }

@@ -8,6 +8,7 @@ import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.currentDialectTest
+import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -32,6 +33,38 @@ class GroupByTests : DatabaseTestsBase() {
             val concatenated = tester.name.groupConcat(separator = separator, orderBy = tester.name to SortOrder.ASC)
 
             assertEquals("a" + separator + "b", tester.select(concatenated).single()[concatenated])
+        }
+    }
+
+    /* EXPOSED-1093 */
+    @Test
+    fun testGroupByConcat() {
+        withCitiesAndUsers { cities, users, _ ->
+            // the expression is rendered into every clause that uses it, so the separator it carries has to be
+            // rendered the same way each time for the database to match the GROUP BY against the select list
+            val label = concat(" from ", listOf(users.name, cities.name))
+            val count = users.id.count()
+
+            val result = (cities innerJoin users).select(label, count).groupBy(label).orderBy(label).toList()
+
+            assertEqualLists(
+                result.map { it[label] to it[count] },
+                listOf("Andrey from St. Petersburg" to 1L, "Eugene from Munich" to 1L, "Sergey from Munich" to 1L)
+            )
+        }
+    }
+
+    /* EXPOSED-1093 */
+    @Test
+    fun testGroupByLocate() {
+        withCitiesAndUsers { cities, _, _ ->
+            val position = cities.name.locate("e")
+            val count = cities.id.count()
+
+            val result = cities.select(position, count).groupBy(position).orderBy(position).toList()
+
+            // "St. Petersburg" and "Prague" both hold an "e" in sixth place, "Munich" holds none
+            assertEqualLists(result.map { it[position] to it[count] }, listOf(0 to 1L, 6 to 2L))
         }
     }
 

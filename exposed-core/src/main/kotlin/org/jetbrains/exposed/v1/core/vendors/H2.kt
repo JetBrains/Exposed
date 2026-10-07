@@ -187,7 +187,7 @@ internal object H2FunctionProvider : FunctionProvider() {
         substring: String
     ) = queryBuilder {
         append("LOCATE(")
-        registerArgument(TextColumnType(), substring)
+        appendStringArgument(substring)
         append(",", expr, ")")
     }
 

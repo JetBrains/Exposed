@@ -100,16 +100,14 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
             expr.separator == null -> tr.throwUnsupportedException("SQL Server requires explicit separator in STRING_AGG")
             expr.distinct -> tr.throwUnsupportedException("SQL Server doesn't support DISTINCT in STRING_AGG")
             expr.orderBy.size > 1 -> tr.throwUnsupportedException("SQL Server supports only single column in ORDER BY clause in STRING_AGG")
-            else -> {
-                // STRING_AGG rejects a bound separator: nvarchar(max) is an invalid type there, and it takes no CAST expression
-                val separator = expr.separator.escapeSingleQuotes()
-                queryBuilder {
-                    append("STRING_AGG(")
-                    append(expr.expr)
-                    append(", '", separator, "')")
-                    expr.orderBy.singleOrNull()?.let { (col, order) ->
-                        append(" WITHIN GROUP (ORDER BY ", col, " ", order.name, ")")
-                    }
+            else -> queryBuilder {
+                append("STRING_AGG(")
+                append(expr.expr)
+                append(", ")
+                appendStringArgument(expr.separator)
+                append(")")
+                expr.orderBy.singleOrNull()?.let { (col, order) ->
+                    append(" WITHIN GROUP (ORDER BY ", col, " ", order.name, ")")
                 }
             }
         }
@@ -121,7 +119,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         substring: String
     ) = queryBuilder {
         append("CHARINDEX(")
-        registerArgument(TextColumnType(), substring)
+        appendStringArgument(substring)
         append(",", expr, ")")
     }
 
@@ -213,7 +211,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         queryBuilder {
             append(if (toScalar) "JSON_VALUE" else "JSON_QUERY")
             append("(", expression, ", ")
-            path.ifEmpty { arrayOf("") }.appendTo { registerArgument(TextColumnType(), "$$it") }
+            path.ifEmpty { arrayOf("") }.appendTo { appendStringArgument("$$it") }
             append(")")
         }
     }

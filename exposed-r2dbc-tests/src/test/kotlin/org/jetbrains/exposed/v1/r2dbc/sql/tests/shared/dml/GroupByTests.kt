@@ -1,15 +1,18 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml
 
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
+import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.select
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
 import org.jetbrains.exposed.v1.r2dbc.tests.forEach
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -18,6 +21,59 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class GroupByTests : R2dbcDatabaseTestsBase() {
+    /* EXPOSED-1093 */
+    @Test
+    fun testGroupConcatSeparatorIsData() {
+        val tester = object : Table("group_concat_separator_tester") {
+            val name = varchar("name", 32)
+        }
+
+        withTables(tester) {
+            tester.insert { it[name] = "a" }
+            tester.insert { it[name] = "b" }
+
+            // a separator holding a quote is data, so it reaches the result verbatim instead of ending the literal
+            val separator = "' || '"
+            val concatenated = tester.name.groupConcat(separator = separator, orderBy = tester.name to SortOrder.ASC)
+
+            assertEquals("a" + separator + "b", tester.select(concatenated).single()[concatenated])
+        }
+    }
+
+    /* EXPOSED-1093 */
+    @Test
+    fun testGroupByConcat() {
+        withCitiesAndUsers { cities, users, _ ->
+            // the expression is rendered into every clause that uses it, so the separator it carries has to be
+            // rendered the same way each time for the database to match the GROUP BY against the select list
+            val label = concat(" from ", listOf(users.name, cities.name))
+            val count = users.id.count()
+
+            val result = (cities innerJoin users).select(label, count).groupBy(label).orderBy(label)
+                .map { it[label] to it[count] }.toList()
+
+            assertEqualLists(
+                result,
+                listOf("Andrey from St. Petersburg" to 1L, "Eugene from Munich" to 1L, "Sergey from Munich" to 1L)
+            )
+        }
+    }
+
+    /* EXPOSED-1093 */
+    @Test
+    fun testGroupByLocate() {
+        withCitiesAndUsers { cities, _, _ ->
+            val position = cities.name.locate("e")
+            val count = cities.id.count()
+
+            val result = cities.select(position, count).groupBy(position).orderBy(position)
+                .map { it[position] to it[count] }.toList()
+
+            // "St. Petersburg" and "Prague" both hold an "e" in sixth place, "Munich" holds none
+            assertEqualLists(result, listOf(0 to 1L, 6 to 2L))
+        }
+    }
+
     @Test
     fun testGroupBy01() {
         withCitiesAndUsers { cities, users, _ ->

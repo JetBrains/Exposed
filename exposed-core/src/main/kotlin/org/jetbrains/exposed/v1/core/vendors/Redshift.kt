@@ -66,7 +66,7 @@ internal object RedshiftFunctionProvider : FunctionProvider() {
             expr.forEachIndexed { index, expression ->
                 if (index > 0) {
                     append(" || ")
-                    registerArgument(TextColumnType(), separator)
+                    appendStringArgument(separator)
                     append(" || ")
                 }
                 append(expression)
@@ -81,7 +81,7 @@ internal object RedshiftFunctionProvider : FunctionProvider() {
             append(expr.expr)
             expr.separator?.let { separator ->
                 append(", ")
-                registerArgument(TextColumnType(), separator)
+                appendStringArgument(separator)
             }
             append(")")
             if (expr.orderBy.isNotEmpty()) {
@@ -98,7 +98,7 @@ internal object RedshiftFunctionProvider : FunctionProvider() {
     override fun <T : String?> locate(queryBuilder: QueryBuilder, expr: Expression<T>, substring: String) {
         queryBuilder {
             append("POSITION(")
-            registerArgument(TextColumnType(), substring)
+            appendStringArgument(substring)
             append(" IN ", expr, ")")
         }
     }

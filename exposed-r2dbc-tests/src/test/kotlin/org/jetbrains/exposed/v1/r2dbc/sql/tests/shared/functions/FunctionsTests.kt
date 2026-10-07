@@ -384,30 +384,23 @@ class FunctionsTests : R2dbcDatabaseTestsBase() {
         }
     }
 
-    /* EXPOSED-1093 */
-    @Test
-    fun testGroupConcatSeparatorIsData() {
-        val tester = object : Table("group_concat_separator_tester") {
-            val name = varchar("name", 32)
-        }
-
-        withTables(tester) {
-            tester.insert { it[name] = "a" }
-            tester.insert { it[name] = "b" }
-
-            // a separator holding a quote is data, so it reaches the result verbatim instead of ending the literal
-            val separator = "' || '"
-            val concatenated = tester.name.groupConcat(separator = separator, orderBy = tester.name to SortOrder.ASC)
-
-            assertEquals("a" + separator + "b", tester.select(concatenated).single()[concatenated])
-        }
-    }
-
     @Test
     fun testLocateWithSingleQuote() {
         withCitiesAndUsers { cities, _, _ ->
             val locate = stringLiteral("Joe's").locate("'")
             assertEquals(4, cities.select(locate).first()[locate])
+        }
+    }
+
+    /* EXPOSED-1093 */
+    @Test
+    fun testConcatSeparatorIsData() {
+        withCitiesAndUsers { cities, _, _ ->
+            // a separator holding a quote is data, so it reaches the result verbatim instead of ending the literal
+            val separator = "' || '"
+            val concatField = concat(separator, listOf(stringLiteral("Foo"), stringLiteral("Bar")))
+
+            assertEquals("Foo" + separator + "Bar", cities.select(concatField).first()[concatField])
         }
     }
 

@@ -77,7 +77,7 @@ abstract class FunctionProvider {
             append("CONCAT(")
         } else {
             append("CONCAT_WS(")
-            registerArgument(TextColumnType(), separator)
+            appendStringArgument(separator)
             append(",")
         }
         expr.appendTo { +it }
@@ -104,7 +104,7 @@ abstract class FunctionProvider {
         }
         expr.separator?.let {
             append(" SEPARATOR ")
-            registerArgument(TextColumnType(), it)
+            appendStringArgument(it)
         }
         append(")")
     }

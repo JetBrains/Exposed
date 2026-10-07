@@ -85,6 +85,27 @@ class JsonColumnTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    /* EXPOSED-1093 */
+    @Test
+    fun testGroupByExtract() {
+        withJsonTable(exclude = TestDB.ALL_H2_V2) { tester, user1, data1, _ ->
+            repeat(2) {
+                tester.insert { it[jsonColumn] = data1.copy(user = User("Pro", null)) }
+            }
+
+            // the expression is rendered into every clause that uses it, so the path it carries has to be rendered
+            // the same way each time for the database to match the GROUP BY against the select list
+            val path = if (currentDialectTest is PostgreSQLDialect) arrayOf("user", "name") else arrayOf(".user.name")
+            val username = tester.jsonColumn.extract<String>(*path)
+            val count = tester.id.count()
+
+            val result = tester.select(username, count).groupBy(username).orderBy(username)
+                .map { it[username] to it[count] }.toList()
+
+            assertEqualLists(result, listOf(user1.name to 1L, "Pro" to 2L))
+        }
+    }
+
     @Test
     fun testSelectWhereWithExtract() {
         withJsonTable(exclude = TestDB.ALL_H2_V2) { tester, _, data1, _ ->

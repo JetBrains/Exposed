@@ -128,6 +128,29 @@ abstract class VendorDialect(
 internal fun String.escapeSingleQuotes(): String = replace("'", "''")
 
 /**
+ * Whether a string argument of a SQL function has to be written into the statement text as a literal on this
+ * dialect, instead of being bound as a query parameter.
+ */
+internal val DatabaseDialect.requiresLiteralStringArguments: Boolean
+    get() = this is PostgreSQLDialect || this is OracleDialect || this is SQLServerDialect || this is RedshiftDialect ||
+        this is H2Dialect
+
+/**
+ * Appends [value] as the string argument of a SQL function, so that the database can only ever read it as data
+ * and never as SQL.
+ *
+ * The value is bound as a query parameter, or written as an escaped string literal on the dialects that
+ * [requiresLiteralStringArguments] names.
+ */
+internal fun QueryBuilder.appendStringArgument(value: String) {
+    if (currentDialect.requiresLiteralStringArguments) {
+        append("'", value.escapeSingleQuotes(), "'")
+    } else {
+        registerArgument(TextColumnType(), value)
+    }
+}
+
+/**
  * Checks if the current dialect uses inline comments (MySQL syntax).
  * Returns true for MySQL and H2 in MySQL/MariaDB compatibility modes.
  * @suppress

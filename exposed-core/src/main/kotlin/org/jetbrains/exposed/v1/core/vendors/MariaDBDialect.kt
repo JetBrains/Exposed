@@ -41,7 +41,7 @@ internal object MariaDBFunctionProvider : MysqlFunctionProvider() {
         substring: String
     ) = queryBuilder {
         append("LOCATE(")
-        registerArgument(TextColumnType(), substring)
+        appendStringArgument(substring)
         append(",", expr, ")")
     }
 

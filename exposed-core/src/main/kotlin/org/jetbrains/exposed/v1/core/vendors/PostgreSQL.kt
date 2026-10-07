@@ -66,7 +66,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
                 append("STRING_AGG(")
                 if (expr.distinct) append(" DISTINCT ")
                 append(expr.expr, ", ")
-                registerArgument(TextColumnType(), expr.separator)
+                appendStringArgument(expr.separator)
                 if (expr.orderBy.isNotEmpty()) {
                     expr.orderBy.appendTo(prefix = " ORDER BY ") {
                         append(it.first, " ", it.second.name)
@@ -87,7 +87,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         substring: String
     ) = queryBuilder {
         append("POSITION(")
-        registerArgument(TextColumnType(), substring)
+        appendStringArgument(substring)
         append(" IN ", expr, ")")
     }
 
@@ -193,7 +193,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         append("${jsonType.sqlType()}_EXTRACT_PATH")
         if (toScalar) append("_TEXT")
         append("(", expression, ", ")
-        path.ifEmpty { arrayOf("$") }.appendTo { registerArgument(TextColumnType(), it) }
+        path.ifEmpty { arrayOf("$") }.appendTo { appendStringArgument(it) }
         append(")")
     }
 
@@ -237,16 +237,10 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             } else {
                 append(expression, ", ")
             }
-            // the inner cast pins the parameter to `text`. Cast straight to `jsonpath` or `jsonb` and PostgreSQL
-            // infers the parameter as that type, which pgjdbc-ng cannot put on the wire: it fails the statement
-            // with "type has no supported parameter format".
-            append("CAST(CAST(")
-            registerArgument(TextColumnType(), "\$" + (path.firstOrNull() ?: ""))
-            append(" AS text) AS jsonpath)")
+            appendStringArgument("\$" + (path.firstOrNull() ?: ""))
             optional?.let {
-                append(", CAST(CAST(")
-                registerArgument(TextColumnType(), it)
-                append(" AS text) AS jsonb)")
+                append(", ")
+                appendStringArgument(it)
             }
             append(")")
         }

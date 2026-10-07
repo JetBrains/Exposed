@@ -127,7 +127,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
             expr.forEachIndexed { index, expression ->
                 if (index > 0) {
                     append(" || ")
-                    registerArgument(TextColumnType(), separator)
+                    appendStringArgument(separator)
                     append(" || ")
                 }
                 append(expression)
@@ -149,7 +149,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         append(expr.expr)
         expr.separator?.let {
             append(", ")
-            registerArgument(TextColumnType(), it)
+            appendStringArgument(it)
         }
         +")"
         expr.orderBy.singleOrNull()?.let { (col, order) ->
@@ -163,7 +163,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         substring: String
     ) = queryBuilder {
         append("INSTR(", expr, ",")
-        registerArgument(TextColumnType(), substring)
+        appendStringArgument(substring)
         append(")")
     }
 
@@ -237,12 +237,10 @@ internal object OracleFunctionProvider : FunctionProvider() {
         if (path.size > 1) {
             currentTransaction().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
         }
-        // Oracle rejects a bound path with ORA-40454: path expression not a literal
-        val jsonPath = path.firstOrNull().orEmpty().escapeSingleQuotes()
         queryBuilder {
             append(if (toScalar) "JSON_VALUE" else "JSON_QUERY")
             append("(", expression, ", ")
-            append("'$", jsonPath, "'")
+            appendStringArgument("\$" + path.firstOrNull().orEmpty())
             append(")")
         }
     }
@@ -258,11 +256,9 @@ internal object OracleFunctionProvider : FunctionProvider() {
         if (path.size > 1) {
             currentTransaction().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
         }
-        // Oracle rejects a bound path with ORA-40454: path expression not a literal
-        val jsonPath = path.firstOrNull().orEmpty().escapeSingleQuotes()
         queryBuilder {
             append("JSON_EXISTS(", expression, ", ")
-            append("'$", jsonPath, "'")
+            appendStringArgument("\$" + path.firstOrNull().orEmpty())
             optional?.let {
                 append(" $it")
             }

@@ -103,7 +103,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
     private class MATCH(val expr: Expression<*>, val pattern: String, val mode: MatchMode) : Op<Boolean>() {
         override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
             append("MATCH(", expr, ") AGAINST (")
-            registerArgument(TextColumnType(), pattern)
+            appendStringArgument(pattern)
             append(" ", mode.mode(), ")")
         }
     }
@@ -124,7 +124,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         substring: String
     ) = queryBuilder {
         append("LOCATE(")
-        registerArgument(TextColumnType(), substring)
+        appendStringArgument(substring)
         append(",", expr, ")")
     }
 
@@ -165,7 +165,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
     ) = queryBuilder {
         if (toScalar) append("JSON_UNQUOTE(")
         append("JSON_EXTRACT(", expression, ", ")
-        path.ifEmpty { arrayOf("") }.appendTo { registerArgument(TextColumnType(), "$$it") }
+        path.ifEmpty { arrayOf("") }.appendTo { appendStringArgument("$$it") }
         append(")${if (toScalar) ")" else ""}")
     }
 
@@ -179,7 +179,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         append("JSON_CONTAINS(", target, ", ", candidate)
         path?.let {
             append(", ")
-            registerArgument(TextColumnType(), "$$it")
+            appendStringArgument("$$it")
         }
         append(")")
     }
@@ -199,7 +199,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         queryBuilder {
             append("JSON_CONTAINS_PATH(", expression, ", ")
             append("'$oneOrAll', ")
-            path.ifEmpty { arrayOf("") }.appendTo { registerArgument(TextColumnType(), "$$it") }
+            path.ifEmpty { arrayOf("") }.appendTo { appendStringArgument("$$it") }
             append(")")
         }
     }
