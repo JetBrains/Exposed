@@ -19,3 +19,5 @@ To run the application, execute the following command:
 ```bash
 ./gradlew :get-started-with-exposed-dao:run
 ```
+./gradlew :get-started-with-exposed-dao:run
+
