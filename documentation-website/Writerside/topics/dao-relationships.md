@@ -6,7 +6,7 @@
 
 <tldr>
 
-**Required dependencies**: `org.jetbrains.exposed:exposed-dao` (JDBC), `org.jetbrains.exposed:exposed-dao-r2dbc` (R2DBC)
+**Required dependencies**: `org.jetbrains.exposed:exposed-dao` (JDBC) or `org.jetbrains.exposed:exposed-dao-r2dbc` (R2DBC)
 
 <include from="lib.topic" element-id="jdbc-supported"/>
 <include from="lib.topic" element-id="r2dbc-limited-support"/>

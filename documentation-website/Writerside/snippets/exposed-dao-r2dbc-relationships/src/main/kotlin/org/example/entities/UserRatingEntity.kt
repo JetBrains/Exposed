@@ -16,7 +16,7 @@ class UserRatingEntity(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<UserRatingEntity>(UserRatingsTable)
 
     var value by UserRatingsTable.value
-    val film by StarWarsFilmEntity referencedOn UserRatingsTable.film // use referencedOn for normal references
+    val film by StarWarsFilmEntity referencedOn UserRatingsTable.film
     val user by UserEntity referencedOn UserRatingsTable.user
 }
 
@@ -24,6 +24,6 @@ class UserRatingWithOptionalUserEntity(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<UserRatingWithOptionalUserEntity>(UserRatingsWithOptionalUserTable)
 
     var value by UserRatingsWithOptionalUserTable.value
-    val film by StarWarsFilmEntity referencedOn UserRatingsWithOptionalUserTable.film // use referencedOn for normal references
+    val film by StarWarsFilmEntity referencedOn UserRatingsWithOptionalUserTable.film
     val user by UserEntity optionalReferencedOn UserRatingsWithOptionalUserTable.user
 }

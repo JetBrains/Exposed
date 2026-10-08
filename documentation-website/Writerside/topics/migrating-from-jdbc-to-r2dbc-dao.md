@@ -271,7 +271,7 @@ Terminal operations such as `count()`, `first()`, `firstOrNull()`, and `single()
 
 ## Attach entities across transactions
 
-Unline the JDBC DAO, in R2DBC DAO an entity loaded or created in one transaction is not automatically registered with
+Unlike the JDBC DAO, in R2DBC DAO an entity loaded or created in one transaction is not automatically registered with
 another R2DBC transaction. This is because that requires a database check and a property setter cannot suspend.
 
 To reuse entities across transactions, call the `attach()` function before modifying an entity from another transaction:
@@ -306,6 +306,7 @@ suspendTransaction {
 </compare>
 
 The `attach()` function throws `EntityNotFoundException` if the row no longer exists. If the current transaction already
-tracks a different instance of the same row with unflushed changes, `attach()` does not silently replace it.
-To replace the tracked instance and discard its unflushed changes, you can use `attach(item, force = true)`.
+caches a different instance of the same row with unflushed changes, `attach()` throws `IllegalStateException`.
+
+To replace the cached instance and discard its unflushed changes, use `attach(item, force = true)`.
 

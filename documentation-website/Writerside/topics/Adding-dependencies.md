@@ -144,10 +144,9 @@ Then reference the modules through the catalog accessors in your Gradle build sc
 The accessor for each module is its name with the `exposed-` prefix removed and any dashes turned into nested
 accessors. For example, `exposed-kotlin-datetime` becomes `exposedLibs.kotlin.datetime`.
 
-> {style="note"}
-
 > Version catalogs are a Gradle feature. Maven users should declare dependencies directly, as shown above.
-> {style="note"}
+> 
+{style="note"}
 
 All modules share the same `exposed` version, which you can override for the whole catalog in one place:
 
