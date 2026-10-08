@@ -237,13 +237,31 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             } else {
                 append(expression, ", ")
             }
-            appendStringArgument("\$" + (path.firstOrNull() ?: ""))
+            appendCastStringArgument("\$" + (path.firstOrNull() ?: ""), "jsonpath")
             optional?.let {
                 append(", ")
-                appendStringArgument(it)
+                appendCastStringArgument(it, "jsonb")
             }
             append(")")
         }
+    }
+
+    /**
+     * Binds [value] as a parameter cast to [type], since a bound parameter is not resolved to the type that the
+     * function expects the way an untyped string literal is.
+     *
+     * pgjdbc-ng cannot send a parameter that PostgreSQL infers as `jsonpath` or `jsonb`, so on that driver the
+     * parameter is first pinned to `text`.
+     */
+    private fun QueryBuilder.appendCastStringArgument(value: String, type: String) {
+        if (currentDialect is PostgreSQLNGDialect) {
+            append("CAST(")
+            appendStringArgument(value)
+            append(" AS text)")
+        } else {
+            appendStringArgument(value)
+        }
+        append("::", type)
     }
 
     private const val ON_CONFLICT_IGNORE = "ON CONFLICT DO NOTHING"

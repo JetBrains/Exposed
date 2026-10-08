@@ -44,13 +44,16 @@ class GroupByTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testGroupByConcat() {
         withCitiesAndUsers { cities, users, _ ->
-            // the expression is rendered into every clause that uses it, so the separator it carries has to be
-            // rendered the same way each time for the database to match the GROUP BY against the select list
-            val label = concat(" from ", listOf(users.name, cities.name))
-            val count = users.id.count()
+            // a bound argument becomes a separate parameter in every clause that renders the expression, which the
+            // database does not match to the select list, so the expression is computed once in a subquery
+            val label = concat(" from ", listOf(users.name, cities.name)).alias("label")
+            val labelled = (cities innerJoin users).select(label, users.id).alias("labelled")
+            val count = labelled[users.id].count()
 
-            val result = (cities innerJoin users).select(label, count).groupBy(label).orderBy(label)
-                .map { it[label] to it[count] }.toList()
+            val result = labelled.select(labelled[label], count)
+                .groupBy(labelled[label])
+                .orderBy(labelled[label])
+                .map { it[labelled[label]] to it[count] }.toList()
 
             assertEqualLists(
                 result,
@@ -63,11 +66,16 @@ class GroupByTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testGroupByLocate() {
         withCitiesAndUsers { cities, _, _ ->
-            val position = cities.name.locate("e")
-            val count = cities.id.count()
+            // a bound argument becomes a separate parameter in every clause that renders the expression, which the
+            // database does not match to the select list, so the expression is computed once in a subquery
+            val position = cities.name.locate("e").alias("position")
+            val located = cities.select(position, cities.id).alias("located")
+            val count = located[cities.id].count()
 
-            val result = cities.select(position, count).groupBy(position).orderBy(position)
-                .map { it[position] to it[count] }.toList()
+            val result = located.select(located[position], count)
+                .groupBy(located[position])
+                .orderBy(located[position])
+                .map { it[located[position]] to it[count] }.toList()
 
             // "St. Petersburg" and "Prague" both hold an "e" in sixth place, "Munich" holds none
             assertEqualLists(result, listOf(0 to 1L, 6 to 2L))

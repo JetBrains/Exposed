@@ -240,7 +240,8 @@ internal object OracleFunctionProvider : FunctionProvider() {
         queryBuilder {
             append(if (toScalar) "JSON_VALUE" else "JSON_QUERY")
             append("(", expression, ", ")
-            appendStringArgument("\$" + path.firstOrNull().orEmpty())
+            // Oracle rejects a bound path with ORA-40454: path expression not a literal
+            appendStringLiteral("\$" + path.firstOrNull().orEmpty())
             append(")")
         }
     }
@@ -258,7 +259,8 @@ internal object OracleFunctionProvider : FunctionProvider() {
         }
         queryBuilder {
             append("JSON_EXISTS(", expression, ", ")
-            appendStringArgument("\$" + path.firstOrNull().orEmpty())
+            // Oracle rejects a bound path with ORA-40454: path expression not a literal
+            appendStringLiteral("\$" + path.firstOrNull().orEmpty())
             optional?.let {
                 append(" $it")
             }

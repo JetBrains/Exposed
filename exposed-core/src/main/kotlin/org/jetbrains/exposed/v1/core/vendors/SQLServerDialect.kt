@@ -104,7 +104,8 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
                 append("STRING_AGG(")
                 append(expr.expr)
                 append(", ")
-                appendStringArgument(expr.separator)
+                // STRING_AGG requires its arguments to share a type, and the driver binds a string as NVARCHAR
+                appendStringLiteral(expr.separator)
                 append(")")
                 expr.orderBy.singleOrNull()?.let { (col, order) ->
                     append(" WITHIN GROUP (ORDER BY ", col, " ", order.name, ")")

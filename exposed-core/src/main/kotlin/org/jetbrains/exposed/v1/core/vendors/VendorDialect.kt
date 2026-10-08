@@ -128,26 +128,19 @@ abstract class VendorDialect(
 internal fun String.escapeSingleQuotes(): String = replace("'", "''")
 
 /**
- * Whether a string argument of a SQL function has to be written into the statement text as a literal on this
- * dialect, instead of being bound as a query parameter.
- */
-internal val DatabaseDialect.requiresLiteralStringArguments: Boolean
-    get() = this is PostgreSQLDialect || this is OracleDialect || this is SQLServerDialect || this is RedshiftDialect ||
-        this is H2Dialect
-
-/**
- * Appends [value] as the string argument of a SQL function, so that the database can only ever read it as data
- * and never as SQL.
- *
- * The value is bound as a query parameter, or written as an escaped string literal on the dialects that
- * [requiresLiteralStringArguments] names.
+ * Appends [value] as the string argument of a SQL function, bound as a query parameter, so that the database can
+ * only ever read it as data and never as SQL.
  */
 internal fun QueryBuilder.appendStringArgument(value: String) {
-    if (currentDialect.requiresLiteralStringArguments) {
-        append("'", value.escapeSingleQuotes(), "'")
-    } else {
-        registerArgument(TextColumnType(), value)
-    }
+    registerArgument(TextColumnType(), value)
+}
+
+/**
+ * Appends [value] as an escaped SQL string literal, for the positions where the database does not accept a bound
+ * parameter.
+ */
+internal fun QueryBuilder.appendStringLiteral(value: String) {
+    append("'", value.escapeSingleQuotes(), "'")
 }
 
 /**

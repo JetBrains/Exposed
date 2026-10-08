@@ -66,7 +66,8 @@ internal object RedshiftFunctionProvider : FunctionProvider() {
             expr.forEachIndexed { index, expression ->
                 if (index > 0) {
                     append(" || ")
-                    appendStringArgument(separator)
+                    // Redshift keeps escaped literals, as binding is not validated on it: no Redshift test task exists
+                    appendStringLiteral(separator)
                     append(" || ")
                 }
                 append(expression)
@@ -81,7 +82,7 @@ internal object RedshiftFunctionProvider : FunctionProvider() {
             append(expr.expr)
             expr.separator?.let { separator ->
                 append(", ")
-                appendStringArgument(separator)
+                appendStringLiteral(separator)
             }
             append(")")
             if (expr.orderBy.isNotEmpty()) {
@@ -98,7 +99,7 @@ internal object RedshiftFunctionProvider : FunctionProvider() {
     override fun <T : String?> locate(queryBuilder: QueryBuilder, expr: Expression<T>, substring: String) {
         queryBuilder {
             append("POSITION(")
-            appendStringArgument(substring)
+            appendStringLiteral(substring)
             append(" IN ", expr, ")")
         }
     }

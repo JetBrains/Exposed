@@ -84,15 +84,19 @@ class JsonColumnTests : DatabaseTestsBase() {
                 tester.insert { it[jsonColumn] = data1.copy(user = User("Pro", null)) }
             }
 
-            // the expression is rendered into every clause that uses it, so the path it carries has to be rendered
-            // the same way each time for the database to match the GROUP BY against the select list
+            // a bound argument becomes a separate parameter in every clause that renders the expression, which the
+            // database does not match to the select list, so the expression is computed once in a subquery
             val path = if (currentDialectTest is PostgreSQLDialect) arrayOf("user", "name") else arrayOf(".user.name")
-            val username = tester.jsonColumn.extract<String>(*path)
-            val count = tester.id.count()
+            val username = tester.jsonColumn.extract<String>(*path).alias("username")
+            val extracted = tester.select(username, tester.id).alias("extracted")
+            val count = extracted[tester.id].count()
 
-            val result = tester.select(username, count).groupBy(username).orderBy(username).toList()
+            val result = extracted.select(extracted[username], count)
+                .groupBy(extracted[username])
+                .orderBy(extracted[username])
+                .toList()
 
-            assertEqualLists(result.map { it[username] to it[count] }, listOf(user1.name to 1L, "Pro" to 2L))
+            assertEqualLists(result.map { it[extracted[username]] to it[count] }, listOf(user1.name to 1L, "Pro" to 2L))
         }
     }
 
