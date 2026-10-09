@@ -11,6 +11,7 @@ import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHold
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.statements.api.ExposedConnection
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -106,7 +107,7 @@ class TransactionManager(
          * Each transaction manager gets a unique context key for transaction isolation.
          */
         private val contextKeys =
-            mutableMapOf<JdbcTransactionManager, CoroutineContext.Key<TransactionContextHolder>>()
+            ConcurrentHashMap<JdbcTransactionManager, CoroutineContext.Key<TransactionContextHolder>>()
 
         /**
          * Returns the context key for the given transaction manager.
