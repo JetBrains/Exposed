@@ -62,9 +62,16 @@ internal object RedshiftFunctionProvider : FunctionProvider() {
     override fun random(seed: Int?): String = "RANDOM()"
 
     override fun concat(separator: String, queryBuilder: QueryBuilder, vararg expr: Expression<*>) {
-        val escapedSeparator = separator.replace("'", "''")
         queryBuilder {
-            expr.appendTo(separator = " || '$escapedSeparator' || ") { +it }
+            expr.forEachIndexed { index, expression ->
+                if (index > 0) {
+                    append(" || ")
+                    // Redshift keeps escaped literals, as binding is not validated on it: no Redshift test task exists
+                    appendStringLiteral(separator)
+                    append(" || ")
+                }
+                append(expression)
+            }
         }
     }
 
@@ -74,7 +81,8 @@ internal object RedshiftFunctionProvider : FunctionProvider() {
             if (expr.distinct) append("DISTINCT ")
             append(expr.expr)
             expr.separator?.let { separator ->
-                append(", '", separator.replace("'", "''"), "'")
+                append(", ")
+                appendStringLiteral(separator)
             }
             append(")")
             if (expr.orderBy.isNotEmpty()) {
@@ -90,7 +98,9 @@ internal object RedshiftFunctionProvider : FunctionProvider() {
 
     override fun <T : String?> locate(queryBuilder: QueryBuilder, expr: Expression<T>, substring: String) {
         queryBuilder {
-            append("POSITION('", substring.replace("'", "''"), "' IN ", expr, ")")
+            append("POSITION(")
+            appendStringLiteral(substring)
+            append(" IN ", expr, ")")
         }
     }
 
@@ -343,7 +353,7 @@ open class RedshiftDialect : VendorDialect(dialectName, RedshiftDataTypeProvider
         val fullColumnIdentity = currentTransaction().fullIdentity(column)
         return listOf(
             if (comment != null) {
-                "COMMENT ON COLUMN $fullColumnIdentity IS '${comment.escapeComment()}'"
+                "COMMENT ON COLUMN $fullColumnIdentity IS '${comment.escapeSingleQuotes()}'"
             } else {
                 "COMMENT ON COLUMN $fullColumnIdentity IS NULL"
             }

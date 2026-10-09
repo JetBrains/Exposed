@@ -97,7 +97,9 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
 
     private class MATCH(val expr: Expression<*>, val pattern: String, val mode: MatchMode) : Op<Boolean>() {
         override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-            append("MATCH(", expr, ") AGAINST ('", pattern, "' ", mode.mode(), ")")
+            append("MATCH(", expr, ") AGAINST (")
+            appendStringArgument(pattern)
+            append(" ", mode.mode(), ")")
         }
     }
 
@@ -116,7 +118,9 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         expr: Expression<T>,
         substring: String
     ) = queryBuilder {
-        append("LOCATE(\'", substring, "\',", expr, ")")
+        append("LOCATE(")
+        appendStringArgument(substring)
+        append(",", expr, ")")
     }
 
     override fun <T : String?> regexp(
@@ -156,7 +160,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
     ) = queryBuilder {
         if (toScalar) append("JSON_UNQUOTE(")
         append("JSON_EXTRACT(", expression, ", ")
-        path.ifEmpty { arrayOf("") }.appendTo { +"\"$$it\"" }
+        path.ifEmpty { arrayOf("") }.appendTo { appendStringArgument("$$it") }
         append(")${if (toScalar) ")" else ""}")
     }
 
@@ -169,7 +173,8 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
     ) = queryBuilder {
         append("JSON_CONTAINS(", target, ", ", candidate)
         path?.let {
-            append(", '$$it'")
+            append(", ")
+            appendStringArgument("$$it")
         }
         append(")")
     }
@@ -189,7 +194,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         queryBuilder {
             append("JSON_CONTAINS_PATH(", expression, ", ")
             append("'$oneOrAll', ")
-            path.ifEmpty { arrayOf("") }.appendTo { +"'$$it'" }
+            path.ifEmpty { arrayOf("") }.appendTo { appendStringArgument("$$it") }
             append(")")
         }
     }

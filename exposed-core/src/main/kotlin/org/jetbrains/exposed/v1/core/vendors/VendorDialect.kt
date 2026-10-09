@@ -122,12 +122,26 @@ abstract class VendorDialect(
 }
 
 /**
- * Escapes special characters in comments to prevent SQL injection.
- * Single quotes are doubled per SQL standard.
- * @suppress
+ * Returns this string with its single quotes doubled, so that it can be placed inside a SQL string literal
+ * without ending it.
  */
-@InternalApi
-internal fun String.escapeComment(): String = this.replace("'", "''")
+internal fun String.escapeSingleQuotes(): String = replace("'", "''")
+
+/**
+ * Appends [value] as the string argument of a SQL function, bound as a query parameter, so that the database can
+ * only ever read it as data and never as SQL.
+ */
+internal fun QueryBuilder.appendStringArgument(value: String) {
+    registerArgument(TextColumnType(), value)
+}
+
+/**
+ * Appends [value] as an escaped SQL string literal, for the positions where the database does not accept a bound
+ * parameter.
+ */
+internal fun QueryBuilder.appendStringLiteral(value: String) {
+    append("'", value.escapeSingleQuotes(), "'")
+}
 
 /**
  * Checks if the current dialect uses inline comments (MySQL syntax).
