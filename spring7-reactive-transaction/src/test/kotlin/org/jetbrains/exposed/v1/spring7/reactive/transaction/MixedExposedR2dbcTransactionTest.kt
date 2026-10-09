@@ -7,8 +7,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
-import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
@@ -33,26 +31,16 @@ class MixedExposedR2dbcTransactionTest : SpringReactiveTransactionTestBase() {
     @Autowired
     private lateinit var mixedTransactionService: MixedTransactionService
 
-    /**
-     * The database backing this test's Spring context, resolved explicitly rather than relying on the
-     * ambient primary database: other tests in this module, for example `SpringMultiContainerTransactionTest`,
-     * register additional databases in the same JVM, which would otherwise make bare
-     * `suspendTransaction` calls resolve to whichever database happens to be primary given class order.
-     */
-    private lateinit var database: R2dbcDatabase
-
     @BeforeEach
     fun setUp() = runTest {
-        transactionManager.execute { database = TransactionManager.current().db }
-
-        suspendTransaction(db = database) {
+        suspendTransaction {
             SchemaUtils.create(CustomerTable)
         }
     }
 
     @AfterEach
     fun tearDown() = runTest {
-        suspendTransaction(db = database) {
+        suspendTransaction {
             SchemaUtils.drop(CustomerTable)
         }
     }
@@ -61,7 +49,7 @@ class MixedExposedR2dbcTransactionTest : SpringReactiveTransactionTestBase() {
     fun testSuccessfulMixedTransaction() = runTest {
         mixedTransactionService.saveTwoThingsSpringTransactional(fail = false)
 
-        val customers = suspendTransaction(db = database) { CustomerTable.selectAll().toList() }
+        val customers = suspendTransaction { CustomerTable.selectAll().toList() }
 
         assertEquals(2, customers.size)
     }
@@ -72,7 +60,7 @@ class MixedExposedR2dbcTransactionTest : SpringReactiveTransactionTestBase() {
             mixedTransactionService.saveTwoThingsSpringTransactional(fail = true)
         }
 
-        val customers = suspendTransaction(db = database) { CustomerTable.selectAll().toList() }
+        val customers = suspendTransaction { CustomerTable.selectAll().toList() }
 
         assertEquals(0, customers.size)
     }
@@ -86,7 +74,7 @@ class MixedExposedR2dbcTransactionTest : SpringReactiveTransactionTestBase() {
             }
         }
 
-        val customers = suspendTransaction(db = database) { CustomerTable.selectAll().toList() }
+        val customers = suspendTransaction { CustomerTable.selectAll().toList() }
 
         assertEquals(4, customers.size)
     }
@@ -102,7 +90,7 @@ class MixedExposedR2dbcTransactionTest : SpringReactiveTransactionTestBase() {
             }
         }
 
-        val customers = suspendTransaction(db = database) { CustomerTable.selectAll().toList() }
+        val customers = suspendTransaction { CustomerTable.selectAll().toList() }
 
         assertEquals(2, customers.size)
     }
@@ -116,7 +104,7 @@ class MixedExposedR2dbcTransactionTest : SpringReactiveTransactionTestBase() {
             }
         }
 
-        val customers = suspendTransaction(db = database) { CustomerTable.selectAll().toList() }
+        val customers = suspendTransaction { CustomerTable.selectAll().toList() }
 
         assertEquals(4, customers.size)
     }
@@ -132,7 +120,7 @@ class MixedExposedR2dbcTransactionTest : SpringReactiveTransactionTestBase() {
             }
         }
 
-        val customers = suspendTransaction(db = database) { CustomerTable.selectAll().toList() }
+        val customers = suspendTransaction { CustomerTable.selectAll().toList() }
 
         assertEquals(2, customers.size)
     }
@@ -172,7 +160,7 @@ class MixedExposedR2dbcTransactionTest : SpringReactiveTransactionTestBase() {
             awaitAll(firstTransaction, secondTransaction)
         }
 
-        val customers = suspendTransaction(db = database) { CustomerTable.selectAll().count() }
+        val customers = suspendTransaction { CustomerTable.selectAll().count() }
 
         assertEquals(2, customers)
     }
@@ -213,26 +201,6 @@ open class MixedTransactionService {
         }
     }
 
-    @Transactional
-    open suspend fun saveCustomerThenNestedSuspendTransactionCustomer(fail: Boolean) {
-        CustomerTable.insert {
-            it[id] = UUID.randomUUID()
-            it[name] = "Test-${UUID.randomUUID()}"
-        }
-
-        suspendTransaction {
-            CustomerTable.insert {
-                it[id] = UUID.randomUUID()
-                it[name] = "Test-${UUID.randomUUID()}"
-            }
-        }
-
-        @Suppress("UseCheckOrError")
-        if (fail) {
-            throw IllegalStateException("Fail")
-        }
-    }
-
     private suspend fun saveTwoThings(fail: Boolean) {
         CustomerTable.insert {
             it[id] = UUID.randomUUID()
@@ -250,9 +218,4 @@ open class MixedTransactionService {
             throw IllegalStateException("Fail")
         }
     }
-}
-
-// originally should be in SpringTransactionEntityTest (but this does not exist for R2DBC)
-object CustomerTable : UUIDTable(name = "customer") {
-    val name = varchar(name = "name", length = 255).uniqueIndex()
 }

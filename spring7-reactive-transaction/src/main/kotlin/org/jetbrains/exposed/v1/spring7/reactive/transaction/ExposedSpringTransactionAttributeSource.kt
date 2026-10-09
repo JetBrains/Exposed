@@ -29,7 +29,11 @@ class ExposedSpringTransactionAttributeSource(
         // The delegate (e.g. AnnotationTransactionAttributeSource) caches the returned attribute,
         // so mutating it here would be a data race across concurrent callers. Make a defensive
         // copy and only modify the copy.
-        val copy = RuleBasedTransactionAttribute(original)
+        val copy = RuleBasedTransactionAttribute(original).apply {
+            qualifier = original.qualifier
+            descriptor = original.descriptor
+            labels = original.labels
+        }
         val rules = copy.rollbackRules.toMutableList()
         rollbackExceptions.forEach { exception ->
             val containsException = rules.any {

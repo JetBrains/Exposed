@@ -3,11 +3,9 @@ package org.jetbrains.exposed.v1.spring7.reactive.transaction
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
-import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -20,15 +18,6 @@ import java.util.*
 import kotlin.test.assertFailsWith
 
 open class ExposedTransactionManagerTest : SpringReactiveTransactionTestBase() {
-
-    /**
-     * The database backing this test's Spring context, resolved explicitly rather than relying on the
-     * ambient primary database: other tests in this module, for example `SpringMultiContainerTransactionTest`,
-     * register additional databases in the same JVM, which would otherwise make bare
-     * `suspendTransaction` calls resolve to whichever database happens to be primary given class order.
-     */
-    private lateinit var database: R2dbcDatabase
-
     object T1 : Table() {
         val c1 = varchar("c1", Int.MIN_VALUE.toString().length)
     }
@@ -42,7 +31,6 @@ open class ExposedTransactionManagerTest : SpringReactiveTransactionTestBase() {
     @BeforeEach
     fun beforeTest() = runTest {
         transactionManager.execute {
-            database = TransactionManager.current().db
             SchemaUtils.create(T1)
         }
     }
@@ -55,17 +43,17 @@ open class ExposedTransactionManagerTest : SpringReactiveTransactionTestBase() {
     }
 
     @RepeatedTest(5)
-    //    @Transactional // see [runTestWithMockTransactional]
-    @Commit
-    open fun testConnection() = runTestWithMockTransactional {
+//    @Transactional // see [runTestWithMockTransactional]
+//    @Commit // see [runTestWithMockTransactional]
+    open fun testConnection() = runTestWithMockTransactional(doCommit = true) {
         T1.insertRandom()
         assertEquals(1, T1.selectAll().count())
     }
 
     @RepeatedTest(5)
-    //    @Transactional // see [runTestWithMockTransactional]
-    @Commit
-    open fun testConnection2() = runTestWithMockTransactional {
+//    @Transactional // see [runTestWithMockTransactional]
+//    @Commit // see [runTestWithMockTransactional]
+    open fun testConnection2() = runTestWithMockTransactional(doCommit = true) {
         val rnd = Random().nextInt().toString()
         T1.insert {
             it[c1] = rnd
@@ -76,7 +64,7 @@ open class ExposedTransactionManagerTest : SpringReactiveTransactionTestBase() {
     @RepeatedTest(5)
     @Commit
     open fun testConnectionCombineWithExposedTransaction() = runTest {
-        suspendTransaction(db = database) {
+        suspendTransaction {
             val rnd = Random().nextInt().toString()
             T1.insert {
                 it[c1] = rnd
@@ -91,16 +79,16 @@ open class ExposedTransactionManagerTest : SpringReactiveTransactionTestBase() {
     }
 
     @RepeatedTest(5)
-    @Commit
+//    @Commit // see [runTestWithMockTransactional]
 //    @Transactional // see [runTestWithMockTransactional]
-    open fun testConnectionCombineWithExposedTransaction2() = runTestWithMockTransactional {
+    open fun testConnectionCombineWithExposedTransaction2() = runTestWithMockTransactional(doCommit = true) {
         val rnd = Random().nextInt().toString()
         T1.insert {
             it[c1] = rnd
         }
         assertEquals(rnd, T1.selectAll().single()[T1.c1])
 
-        suspendTransaction(db = database) {
+        suspendTransaction {
             T1.insertRandom()
             assertEquals(2, T1.selectAll().count())
         }
@@ -167,7 +155,7 @@ open class ExposedTransactionManagerTest : SpringReactiveTransactionTestBase() {
      * Create a new transaction, and suspend the current transaction if one exists.
      */
     @RepeatedTest(5)
-    //    @Transactional // see [runTestWithMockTransactional]
+//    @Transactional // see [runTestWithMockTransactional]
     open fun testConnectionWithRequiresNew() = runTestWithMockTransactional {
         T1.insertRandom()
         assertEquals(1, T1.selectAll().count())

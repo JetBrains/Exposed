@@ -77,17 +77,17 @@ open class R2dbcExposedTransactionManagerTest : SpringReactiveTransactionTestBas
     }
 
     @RepeatedTest(5)
-    //    @Transactional // see [runTestWithMockTransactional]
-    @Commit
-    open fun testConnection() = runTestWithMockTransactional {
+//    @Transactional // see [runTestWithMockTransactional]
+//    @Commit // see [runTestWithMockTransactional]
+    open fun testConnection() = runTestWithMockTransactional(doCommit = true) {
         insertRandom()
         assertEquals(1, getCount())
     }
 
     @RepeatedTest(5)
-    //    @Transactional // see [runTestWithMockTransactional]
-    @Commit
-    open fun testConnection2() = runTestWithMockTransactional {
+//    @Transactional // see [runTestWithMockTransactional]
+//    @Commit // see [runTestWithMockTransactional]
+    open fun testConnection2() = runTestWithMockTransactional(doCommit = true) {
         val rnd = Random().nextInt().toString()
         insert(rnd)
         assertEquals(rnd, getSingleValue())
@@ -109,9 +109,9 @@ open class R2dbcExposedTransactionManagerTest : SpringReactiveTransactionTestBas
     }
 
     @RepeatedTest(5)
-    @Commit
+//    @Commit // see [runTestWithMockTransactional]
 //    @Transactional // see [runTestWithMockTransactional]
-    open fun testConnectionCombineWithExposedTransaction2() = runTestWithMockTransactional {
+    open fun testConnectionCombineWithExposedTransaction2() = runTestWithMockTransactional(doCommit = true) {
         val rnd = Random().nextInt().toString()
         insert(rnd)
         assertEquals(rnd, getSingleValue())
@@ -183,7 +183,7 @@ open class R2dbcExposedTransactionManagerTest : SpringReactiveTransactionTestBas
      * Create a new transaction, and suspend the current transaction if one exists.
      */
     @RepeatedTest(5)
-    //    @Transactional // see [runTestWithMockTransactional]
+//    @Transactional // see [runTestWithMockTransactional]
     open fun testConnectionWithRequiresNew() = runTestWithMockTransactional {
         insertRandom()
         assertEquals(1, getCount())

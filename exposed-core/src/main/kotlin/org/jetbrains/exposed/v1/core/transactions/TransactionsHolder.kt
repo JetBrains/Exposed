@@ -83,14 +83,6 @@ interface TransactionsHolder {
      * @suppress
      */
     fun snapshot(): List<Transaction>
-
-    /**
-     * Replaces the contents of the underlying data structure with the provided [snapshot],
-     * assumed in order from oldest to most recently active transaction. If the [snapshot] is empty,
-     * the underlying data structure will be cleared entirely.
-     * @suppress
-     */
-    fun restore(snapshot: List<Transaction>)
 }
 
 /**

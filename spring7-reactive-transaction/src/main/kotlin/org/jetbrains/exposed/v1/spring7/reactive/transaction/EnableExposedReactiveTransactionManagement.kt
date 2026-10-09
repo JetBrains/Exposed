@@ -58,6 +58,19 @@ import kotlin.coroutines.CoroutineContext
  * [org.springframework.transaction.reactive.TransactionalOperator], are outside the annotation-driven
  * management overseen by [EnableExposedReactiveTransactionManagement]. Using `TransactionalOperator` directly always
  * requires context being explicitly set by a wrapping [withExposedReactiveContext].
+ *
+ * ```kotlin
+ * val trxDef = DefaultTransactionDefinition(TransactionDefinition.PROPAGATION_REQUIRED).apply {
+ *     this.isolationLevel = TransactionDefinition.ISOLATION_DEFAULT
+ * }
+ * val trxOp = TransactionalOperator.create(transactionManager, trxDef)
+ *
+ * withExposedReactiveContext {
+ *     trxOp.executeAndAwait {
+ *         fooRepository.findAllByStatus("ACTIVE")
+ *     }
+ * }
+ * ```
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)

@@ -3883,7 +3883,6 @@ public final class org/jetbrains/exposed/v1/core/transactions/ThreadLocalTransac
 	public fun getTransactionOrNull (Lorg/jetbrains/exposed/v1/core/DatabaseApi;)Lorg/jetbrains/exposed/v1/core/Transaction;
 	public fun isEmpty ()Z
 	public fun removeTransaction ()Lorg/jetbrains/exposed/v1/core/Transaction;
-	public fun restore (Ljava/util/List;)V
 	public fun snapshot ()Ljava/util/List;
 	public fun storeTransaction (Lorg/jetbrains/exposed/v1/core/Transaction;)V
 }
@@ -3940,7 +3939,6 @@ public abstract interface class org/jetbrains/exposed/v1/core/transactions/Trans
 	public abstract fun getTransactionOrNull (Lorg/jetbrains/exposed/v1/core/DatabaseApi;)Lorg/jetbrains/exposed/v1/core/Transaction;
 	public abstract fun isEmpty ()Z
 	public abstract fun removeTransaction ()Lorg/jetbrains/exposed/v1/core/Transaction;
-	public abstract fun restore (Ljava/util/List;)V
 	public abstract fun snapshot ()Ljava/util/List;
 	public abstract fun storeTransaction (Lorg/jetbrains/exposed/v1/core/Transaction;)V
 }

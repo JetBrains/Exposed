@@ -70,7 +70,7 @@ class SpringTransactionAttributeSourceConcurrencyTest {
                                 attr.rollbackRules.any {
                                     it is RollbackRuleAttribute && it.exceptionName == r2dbcExceptionName
                                 }
-                            ) { "SQLException rollback rule is missing from the returned attribute" }
+                            ) { "R2dbcException rollback rule is missing from the returned attribute" }
                         }.onFailure { errors.add(it) }
                     }
                 }
