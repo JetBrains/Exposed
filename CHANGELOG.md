@@ -1,6 +1,7 @@
-# Unreleased
+# 1.5.1
 
 Bug fixes:
+* fix: EXPOSED-909 Escape single quotes in locate() substring by @kwy404 in https://github.com/JetBrains/Exposed/pull/2946
 * fix: EXPOSED-1093 Bind string arguments of SQL functions instead of concatenating them into SQL by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2957
   * The string arguments of `locate()`, `concat()`, `groupConcat()`, `match()` and the JSON `extract()`, `exists()` and
     `contains()` are now bound as query parameters, so they are always treated as data.
