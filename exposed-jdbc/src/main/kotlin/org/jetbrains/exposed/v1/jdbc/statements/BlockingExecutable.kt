@@ -143,7 +143,7 @@ internal fun <T, S : Statement<T>> BlockingExecutable<T, S>.executeIn(
         throw ExposedSQLException(e, contexts, transaction)
     }
     contexts.forEachIndexed { _, context ->
-        statement.fillParameters(context.args)
+        val _ = statement.fillParameters(context.args)
         // REVIEW
         if (contexts.size > 1 || isAlwaysBatch) statement.addBatch()
     }

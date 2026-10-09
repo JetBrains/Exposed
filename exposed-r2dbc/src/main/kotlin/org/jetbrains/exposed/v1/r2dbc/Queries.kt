@@ -251,7 +251,7 @@ suspend fun <T : Table> T.insert(
     body: T.(InsertStatement<Number>) -> Unit
 ): InsertStatement<Number> {
     val stmt = buildStatement { insert(body) }
-    return InsertSuspendExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
+    return InsertSuspendExecutable(stmt).apply { val _ = execute(TransactionManager.current()) }.statement
 }
 
 /**
@@ -266,7 +266,7 @@ suspend fun <Key : Any, T : IdTable<Key>> T.insertAndGetId(
 ): EntityID<Key> {
     val stmt = buildStatement { insert(body as T.(InsertStatement<*>) -> Unit) }
     return InsertSuspendExecutable(stmt).run {
-        execute(TransactionManager.current())
+        val _ = execute(TransactionManager.current())
         statement[id]
     }
 }
@@ -285,7 +285,7 @@ suspend fun <T : Table> T.insertIgnore(
 ): InsertStatement<Long> {
     val stmt = buildStatement { insertIgnore(body) }
     return InsertSuspendExecutable(stmt).apply {
-        execute(TransactionManager.current())
+        val _ = execute(TransactionManager.current())
     }.statement
 }
 
@@ -325,7 +325,7 @@ suspend fun <T : Table> T.insert(
     columns: List<Column<*>>? = null
 ): InsertSelectStatement {
     val stmt = buildStatement { insert(selectQuery, columns) }
-    return InsertSelectSuspendExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
+    return InsertSelectSuspendExecutable(stmt).apply { val _ = execute(TransactionManager.current()) }.statement
 }
 
 /**
@@ -515,7 +515,7 @@ suspend fun <T : Table> T.replace(
     body: T.(UpdateBuilder<*>) -> Unit
 ): ReplaceStatement<Long> {
     val stmt = buildStatement { replace(body) }
-    return InsertSuspendExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
+    return InsertSuspendExecutable(stmt).apply { val _ = execute(TransactionManager.current()) }.statement
 }
 
 /**
@@ -605,7 +605,7 @@ private suspend fun <E, S1 : BatchInsertStatement, S2 : BatchInsertSuspendExecut
                 if (removeLastData) {
                     statement.removeLastBatch()
                 }
-                execute(TransactionManager.current())
+                val _ = execute(TransactionManager.current())
                 result += statement.resultedValues.orEmpty()
             }
             executable = newBatchStatement()
@@ -622,7 +622,7 @@ private suspend fun <E, S1 : BatchInsertStatement, S2 : BatchInsertSuspendExecut
         executable.handleBatchException(true) { body(element) }
     }
     if (executable.statement.arguments().isNotEmpty()) {
-        executable.execute(TransactionManager.current())
+        val _ = executable.execute(TransactionManager.current())
         result += executable.statement.resultedValues.orEmpty()
     }
     return result
@@ -760,7 +760,7 @@ suspend fun <T : Table> T.upsert(
     body: T.(UpsertStatement<Long>) -> Unit
 ): UpsertStatement<Long> {
     val stmt = buildStatement { upsert(keys = keys, onUpdate, onUpdateExclude, where, body) }
-    return UpsertSuspendExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
+    return UpsertSuspendExecutable(stmt).apply { val _ = execute(TransactionManager.current()) }.statement
 }
 
 /**
@@ -895,7 +895,7 @@ suspend fun <D : Table, S : Table> D.mergeFrom(
     body: MergeTableStatement.() -> Unit
 ): MergeTableStatement {
     val stmt = buildStatement { mergeFrom(source, on, body) }
-    return MergeSuspendExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
+    return MergeSuspendExecutable(stmt).apply { val _ = execute(TransactionManager.current()) }.statement
 }
 
 /**
@@ -914,7 +914,7 @@ suspend fun <D : Table, S : Table> D.mergeFrom(
     body: MergeTableStatement.() -> Unit
 ): MergeTableStatement {
     val stmt = buildStatement { mergeFrom(source, null, body) }
-    return MergeSuspendExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
+    return MergeSuspendExecutable(stmt).apply { val _ = execute(TransactionManager.current()) }.statement
 }
 
 /**
@@ -935,5 +935,5 @@ suspend fun <T : Table> T.mergeFrom(
     body: MergeSelectStatement.() -> Unit
 ): MergeSelectStatement {
     val stmt = buildStatement { mergeFrom(selectQuery, on, body) }
-    return MergeSuspendExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
+    return MergeSuspendExecutable(stmt).apply { val _ = execute(TransactionManager.current()) }.statement
 }

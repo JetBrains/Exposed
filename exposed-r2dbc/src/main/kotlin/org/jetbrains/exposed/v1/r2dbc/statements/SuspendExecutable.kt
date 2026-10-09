@@ -143,7 +143,7 @@ internal suspend fun <T, S : Statement<T>> SuspendExecutable<T, S>.executeIn(
         throw ExposedR2dbcException(cause, contexts, transaction)
     }
     contexts.forEachIndexed { index, context ->
-        statement.fillParameters(context.args)
+        val _ = statement.fillParameters(context.args)
         // REVIEW
 
         // We don't need to add batch for the last item in the batch and if there is only one item in the batch

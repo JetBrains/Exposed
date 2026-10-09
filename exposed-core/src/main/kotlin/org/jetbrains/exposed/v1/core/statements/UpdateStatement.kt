@@ -81,7 +81,7 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
 
     private fun QueryBuilder.registerAdditionalArgs(join: Join) {
         join.joinParts.forEach {
-            (it.joinPart as? QueryAlias)?.query?.prepareSQL(this)
+            val _ = (it.joinPart as? QueryAlias)?.query?.prepareSQL(this)
             it.additionalConstraint?.invoke()?.toQueryBuilder(this)
         }
     }

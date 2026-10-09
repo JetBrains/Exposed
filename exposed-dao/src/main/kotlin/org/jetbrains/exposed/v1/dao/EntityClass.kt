@@ -122,7 +122,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
             if (entity.isNewEntity()) {
                 TransactionManager.current().entityCache.flushInserts(table)
             } else {
-                entity.flush()
+                val _ = entity.flush()
             }
         }
         removeFromCache(entity)
@@ -136,7 +136,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
 
         val currentEntityInCache = testCache(o.id)
         if (currentEntityInCache == null) {
-            get(o.id) // Check that entity is still exists in database
+            val _ = get(o.id) // Check that entity is still exists in database
             warmCache().store(o)
         } else if (currentEntityInCache !== o) {
             exposedLogger.error(
@@ -318,7 +318,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * @return A [SizedIterable] of all the entities that conform to this condition.
      */
     fun find(op: Op<Boolean>): SizedIterable<T> {
-        warmCache()
+        val _ = warmCache()
         return wrapRows(searchQuery(op))
     }
 
@@ -1052,7 +1052,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
             }.map {
                 val targetId = it[targetRefColumn]
                 if (!optimizedLoad) {
-                    targetEntities.getOrPut(targetId) { wrapRow(it) }
+                    val _ = targetEntities.getOrPut(targetId) { wrapRow(it) }
                 }
                 it[sourceRefColumn] to targetId
             }
@@ -1066,7 +1066,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
             val groupedBySourceId = entitiesWithRefs.groupBy({ it.first }) { targetEntities.getValue(it.second) }
 
             idsToLoad.forEach {
-                transaction.entityCache.getOrPutReferrers(it, sourceRefColumn) {
+                val _ = transaction.entityCache.getOrPutReferrers(it, sourceRefColumn) {
                     SizedCollection(groupedBySourceId[it] ?: emptyList())
                 }
             }
@@ -1138,7 +1138,7 @@ abstract class ImmutableEntityClass<ID : Any, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.v1.tests.shared.entities.ImmutableEntityTest.immutableEntityReadAfterUpdate
      */
     open fun <T> forceUpdateEntity(entity: Entity<ID>, column: Column<T>, value: T) {
-        table.update({ table.id eq entity.id }) {
+        val _ = table.update({ table.id eq entity.id }) {
             it[column] = value
         }
 
@@ -1176,7 +1176,7 @@ abstract class ImmutableCachedEntityClass<ID : Any, out T : Entity<ID>>(
     private var _cachedValues: MutableMap<Database, MutableMap<Any, Entity<*>>> = ConcurrentHashMap()
 
     override fun invalidateEntityInCache(o: Entity<ID>) {
-        warmCache()
+        val _ = warmCache()
     }
 
     final override fun warmCache(): EntityCache {
@@ -1191,9 +1191,9 @@ abstract class ImmutableCachedEntityClass<ID : Any, out T : Entity<ID>>(
 
         transactionCache.data[table] = _cachedValues.computeIfAbsent(db) {
             tr.putUserData(cacheLoadingState, this)
-            super.all().toList() // force iteration to initialize lazy collection
+            val _ = super.all().toList() // force iteration to initialize lazy collection
             val entityMap = transactionCache.data[table] ?: mutableMapOf()
-            tr.removeUserData(cacheLoadingState)
+            val _ = tr.removeUserData(cacheLoadingState)
             entityMap
         }
         return transactionCache
