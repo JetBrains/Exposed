@@ -1,5 +1,6 @@
 package org.example.examples
 
+import kotlinx.coroutines.flow.toList
 import org.example.entities.StarWarsFilmEntity
 import org.example.entities.UserEntity
 import org.example.entities.UserRatingEntity
@@ -10,7 +11,7 @@ const val MOVIE_RATING = 4L
 class OneToManyExamples {
     suspend fun queryRatings() {
         // create film
-        val starWarsFilm = StarWarsFilmEntity.newSuspend {
+        val starWarsFilm = StarWarsFilmEntity.new {
             name = "The Last Jedi"
             sequelId = MOVIE_SEQUEL_ID
             director = "Rian Johnson"
@@ -19,10 +20,10 @@ class OneToManyExamples {
             name = "johnsmith"
         }
 
-        val filmRating = UserRatingEntity.newSuspend {
+        val filmRating = UserRatingEntity.new {
             value = MOVIE_RATING
-            film.set(starWarsFilm)
-            user.set(user1)
+            film = starWarsFilm
+            user = user1
         }
 
         // returns a StarWarsFilmEntity object
@@ -30,7 +31,7 @@ class OneToManyExamples {
         println(film)
 
         // returns all UserRatingWithOptionalUserEntity objects with this movie as film
-        val filmRatings = starWarsFilm.ratings
+        val filmRatings = starWarsFilm.ratings.toList()
         println(filmRatings)
 
         // returns a UserRatingEntity object

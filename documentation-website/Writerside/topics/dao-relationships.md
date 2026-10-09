@@ -379,7 +379,7 @@ Here’s how you can create and query the parent-child hierarchy for `StarWarsFi
 
 ```kotlin
 ```
-{src="exposed-dao-r2dbc-relationships/src/main/kotlin/org/example/examples/ParentChildExamples.kt" include-lines="16-40"}
+{src="exposed-dao-r2dbc-relationships/src/main/kotlin/org/example/examples/ParentChildExamples.kt" include-lines="17-41"}
 
 </tab>
 </tabs>
@@ -439,12 +439,25 @@ Then, add the field to the entity using the `referencedOn()` function:
 >
 {style="tip"}
 
-Now you can get the director for a `StarWarsFilm` object, `movie`,
-in the same way you would get any other field:
+With JDBC, you can access a referenced entity through the property directly. With R2DBC, reference
+properties use an accessor, so you must invoke the accessor to retrieve the referenced entity:
+
+<tabs group="connectivity">
+<tab group-key="JDBC" id="access-jdbc-field" title="JDBC">
 
 ```kotlin
-movie.director // returns a Director object
+movie.director
 ```
+
+</tab>
+<tab group-key="R2DBC" id="access-r2dbc-field" title="R2DBC">
+
+```kotlin
+movie.director()
+```
+
+</tab>
+</tabs>
 
 If you wanted to get all the films made by a director, you could add a `referrersOn`
 field to the `DirectorCompositeIDEntity` class:
@@ -455,9 +468,23 @@ field to the `DirectorCompositeIDEntity` class:
 
 You can then access this field on a `DirectorCompositeIDEntity` object, `director`:
 
+<tabs group="connectivity">
+<tab group-key="JDBC" id="access-jdbc-field-2" title="JDBC">
+
 ```kotlin
-director.films // returns all StarWarsFilm objects that reference this director
+director.films
 ```
+
+</tab>
+<tab group-key="R2DBC" id="access-r2dbc-field-2" title="R2DBC">
+
+```kotlin
+director.films()
+```
+
+</tab>
+</tabs>
+
 
 Using other previously mentioned [infix functions](https://kotlinlang.org/docs/functions.html#infix-notation),
 like `optionalReferencedOn`, `backReferencedOn`, and `optionalReferrersOn`, is also supported for referencing or

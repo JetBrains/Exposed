@@ -22,6 +22,7 @@ const val MOVIE_SEQUELID = 8
 const val MIN_MOVIE_RATING = 5
 const val MOVIE_RATING = 4.2
 
+@Suppress("MagicNumber")
 class ReadExamples {
 
     suspend fun readAll() {
@@ -114,6 +115,7 @@ class ReadExamples {
         suspendTransaction {
             StarWarsFilmWithRankEntity
                 .find { StarWarsFilmsWithRankTable.name like "The%" }
+                .toList()
                 .map { it.name to it.rank }
         }
     }

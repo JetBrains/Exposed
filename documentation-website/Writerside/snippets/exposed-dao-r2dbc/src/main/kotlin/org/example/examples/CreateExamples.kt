@@ -24,7 +24,7 @@ class CreateExamples {
         println("Created a new record with name " + movie.name)
 
         // Create a new record with id
-        val movie2 = StarWarsFilmEntity.newSuspend(id = 10) {
+        val movie2 = StarWarsFilmEntity.new(id = 10) {
             name = "The Rise of Skywalker"
             sequelId = MOVIE2_SEQUEL_ID
             director = "J.J. Abrams"
@@ -49,7 +49,7 @@ class CreateExamples {
             it[DirectorsTable.guildId] = Uuid.random()
         }
 
-        val director = DirectorEntity.newSuspend(directorId) {
+        val director = DirectorEntity.new(directorId) {
             genre = Genre.SCI_FI
         }
         println("Created a new director with id " + director.id)
