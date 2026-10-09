@@ -32,6 +32,7 @@ dependencies {
     dokka(projects.exposed.exposedCore)
     dokka(projects.exposed.exposedCrypt)
     dokka(projects.exposed.exposedDao)
+    dokka(projects.exposed.exposedDaoR2dbc)
     dokka(projects.exposed.exposedPluginCore)
     dokka(projects.exposed.exposedGradlePlugin)
     dokka(projects.exposed.exposedMavenPlugin)
@@ -47,9 +48,9 @@ dependencies {
     dokka(projects.exposed.exposedR2dbc)
     dokka(projects.exposed.exposedSpringBootStarter)
     dokka(projects.exposed.exposedSpringBoot4Starter)
+    dokka(projects.exposed.exposedSpringBoot4StarterR2dbc)
     dokka(projects.exposed.springTransaction)
     dokka(projects.exposed.spring7Transaction)
-    dokka(projects.exposed.exposedDaoR2dbc)
     dokka(projects.exposed.spring7ReactiveTransaction)
 
     // Kover aggregated coverage dependencies
@@ -66,6 +67,7 @@ dependencies {
     kover(project(":spring7-reactive-transaction"))
     kover(project(":exposed-spring-boot-starter"))
     kover(project(":exposed-spring-boot4-starter"))
+    kover(project(":exposed-spring-boot4-starter-r2dbc"))
     kover(project(":exposed-jdbc"))
     kover(project(":exposed-money"))
     kover(project(":exposed-kotlin-datetime"))

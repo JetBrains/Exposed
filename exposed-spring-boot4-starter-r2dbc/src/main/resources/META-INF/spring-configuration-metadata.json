@@ -1,0 +1,26 @@
+{
+    "properties": [
+        {
+            "name": "spring.exposed.generate-ddl",
+            "type": "java.lang.Boolean",
+            "description": "Auto generate the database schema.",
+            "defaultValue": false
+        },
+        {
+            "name": "spring.exposed.show-sql",
+            "type": "java.lang.Boolean",
+            "description": "Log SQL when execute query.",
+            "defaultValue": false
+        },
+        {
+            "name": "spring.exposed.excluded-packages",
+            "type": "java.util.List",
+            "description": "Packages to exclude from schema generation."
+        },
+        {
+            "name": "spring.exposed.database-driver",
+            "type": "java.lang.String",
+            "description": "The database driver to use when creating a ConnectionFactory, which determines the exact dialect."
+        }
+    ]
+}
