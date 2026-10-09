@@ -106,8 +106,8 @@ class SpringReactiveTransactionManager(
             // only non-null when Spring itself is nesting inside an existing Spring-managed transaction
             // (for example PROPAGATION_NESTED with useNestedTransactions).
             // 2. The call-site handoff snapshot captured synchronously, on the same calling thread, at the actual
-            // suspend `@Transactional` call site, so it reflects real existing Exposed transaction(s).
-            // 3. The live stack object
+            // suspend `@Transactional` call site, so it reflects real existing Exposed transactions.
+            // 3. The live stack object as determined by the Exposed database's core transaction manager.
             val outerTransactionToUse = trxObject.connectionHolder?.transaction?.takeIf { it.db == database }
                 ?: if (definition.propagationBehavior == TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
                     // PROPAGATION_REQUIRES_NEW must never adopt an existing outer transaction

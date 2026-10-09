@@ -1,11 +1,16 @@
-package org.jetbrains.exposed.v1.spring7.transaction
+@file:OptIn(ExperimentalR2dbcDaoApi::class)
 
+package org.jetbrains.exposed.v1.spring7.reactive.transaction
+
+import kotlinx.coroutines.flow.singleOrNull
+import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.dao.java.UUIDEntity
-import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
-import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.dao.r2dbc.ExperimentalR2dbcDaoApi
+import org.jetbrains.exposed.v1.dao.r2dbc.java.UUIDEntity
+import org.jetbrains.exposed.v1.dao.r2dbc.java.UUIDEntityClass
+import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -34,7 +39,7 @@ object OrderTable : UUIDTable(name = "orders") {
 class OrderDAO(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<OrderDAO>(OrderTable)
 
-    var customer by CustomerDAO.referencedOn(OrderTable.customer)
+    val customer by CustomerDAO.referencedOn(OrderTable.customer)
     var product by OrderTable.product
 }
 
@@ -42,75 +47,74 @@ class OrderDAO(id: EntityID<UUID>) : UUIDEntity(id) {
 @Transactional
 open class Service {
 
-    open fun init() {
+    open suspend fun init() {
         SchemaUtils.create(CustomerTable, OrderTable)
     }
 
-    open fun createCustomer(name: String): CustomerDAO {
+    open suspend fun createCustomer(name: String): CustomerDAO {
         return CustomerDAO.new {
             this.name = name
         }
     }
 
-    open fun createOrder(customer: CustomerDAO, product: String): OrderDAO {
+    open suspend fun createOrder(customer: CustomerDAO, product: String): OrderDAO {
         return OrderDAO.new {
-            this.customer = customer
+            this.customer.set(customer)
             this.product = product
         }
     }
 
-    open fun doBoth(name: String, product: String): OrderDAO {
+    open suspend fun doBoth(name: String, product: String): OrderDAO {
         return createOrder(createCustomer(name), product)
     }
 
-    open fun findOrderByProduct(product: String): OrderDAO? {
+    open suspend fun findOrderByProduct(product: String): OrderDAO? {
         return OrderDAO.find { OrderTable.product eq product }.singleOrNull()
     }
 
-    open fun transaction(block: () -> Unit) {
+    open suspend fun suspendTransaction(block: suspend () -> Unit) {
         block()
     }
 
-    open fun cleanUp() {
+    open suspend fun cleanUp() {
         SchemaUtils.drop(CustomerTable, OrderTable)
     }
 }
 
-open class SpringTransactionEntityTest : SpringTransactionTestBase() {
-
+open class SpringTransactionEntityTest : SpringReactiveTransactionTestBase() {
     @Autowired
     lateinit var service: Service
 
     @BeforeEach
-    open fun beforeTest() {
+    open fun beforeTest() = runTest {
         service.init()
+    }
+
+    @AfterEach
+    fun afterTest() = runTest {
+        service.cleanUp()
     }
 
     @Test
     @Commit
-    open fun test01() {
+    open fun test01() = runTest {
         val customer = service.createCustomer("Alice1")
         service.createOrder(customer, "Product1")
         val order = service.findOrderByProduct("Product1")
         assertNotNull(order)
-        service.transaction {
-            assertEquals("Alice1", order.customer.name)
+        service.suspendTransaction {
+            assertEquals("Alice1", order.customer().name)
         }
     }
 
     @Test
     @Commit
-    fun test02() {
+    fun test02() = runTest {
         service.doBoth("Bob", "Product2")
         val order = service.findOrderByProduct("Product2")
         assertNotNull(order)
-        service.transaction {
-            assertEquals("Bob", order.customer.name)
+        service.suspendTransaction {
+            assertEquals("Bob", order.customer().name)
         }
-    }
-
-    @AfterEach
-    fun afterTest() {
-        service.cleanUp()
     }
 }

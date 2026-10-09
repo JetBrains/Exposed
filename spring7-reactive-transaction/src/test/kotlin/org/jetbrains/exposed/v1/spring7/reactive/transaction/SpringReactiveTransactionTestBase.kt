@@ -43,6 +43,9 @@ open class TestConfig : TransactionManagementConfigurer {
     )
 
     @Bean
+    open fun service(): Service = Service()
+
+    @Bean
     open fun mixedTransactionService(): MixedTransactionService = MixedTransactionService()
 }
 
@@ -66,10 +69,14 @@ abstract class SpringReactiveTransactionTestBase {
      * so it is completely unusable for Spring-R2dbc unit tests.
      *
      * [Open Issue](https://github.com/spring-projects/spring-framework/issues/24226)
+     *
+     * By default, the `@Transactional` block will be set to rollback only. Any test use of `@Commit`, requiring the
+     * transaction to commit at the end, should set [doCommit] to `true`.
      */
     fun runTestWithMockTransactional(
         propagationBehavior: Int = TransactionDefinition.PROPAGATION_REQUIRED,
         isolationLevel: Int = TransactionDefinition.ISOLATION_DEFAULT,
+        doCommit: Boolean = false,
         testBody: suspend TestScope.(ReactiveTransaction) -> Unit
     ) {
         if (transactionManager !is SpringReactiveTransactionManager) error("Wrong txManager instance: ${this.javaClass.name}")
@@ -83,7 +90,7 @@ abstract class SpringReactiveTransactionTestBase {
             withExposedReactiveContext {
                 trxOp.executeAndAwait {
                     testBody(it)
-                    it.setRollbackOnly()
+                    if (!doCommit) it.setRollbackOnly()
                 }
             }
         }

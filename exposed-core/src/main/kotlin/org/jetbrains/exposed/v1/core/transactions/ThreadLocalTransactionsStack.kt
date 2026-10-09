@@ -104,14 +104,4 @@ object ThreadLocalTransactionsStack : TransactionsHolder {
     }
 
     override fun snapshot(): List<Transaction> = transactions.get()?.toList().orEmpty()
-
-    override fun restore(snapshot: List<Transaction>) {
-        if (snapshot.isEmpty()) {
-            // Remove the ThreadLocal entirely when stack is empty.
-            transactions.remove()
-        } else {
-            // otherwise replace entirely
-            transactions.set(Stack<Transaction>().apply { addAll(snapshot) })
-        }
-    }
 }

@@ -23,6 +23,7 @@ dependencies {
     api(libs.spring7.context)
     implementation(libs.kotlinx.coroutines.reactor)
 
+    testImplementation(project(":exposed-dao-r2dbc"))
     testImplementation(project(":exposed-r2dbc-tests"))
     testImplementation(kotlin("test"))
     testImplementation(libs.junit6)
