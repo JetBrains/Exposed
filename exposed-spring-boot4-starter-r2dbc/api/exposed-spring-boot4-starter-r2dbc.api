@@ -1,0 +1,28 @@
+public class org/jetbrains/exposed/v1/spring/boot4/r2dbc/DatabaseInitializer : org/springframework/boot/ApplicationRunner, org/springframework/core/Ordered {
+	public static final field Companion Lorg/jetbrains/exposed/v1/spring/boot4/r2dbc/DatabaseInitializer$Companion;
+	public static final field DATABASE_INITIALIZER_ORDER I
+	public fun <init> (Lorg/springframework/context/ApplicationContext;Ljava/util/List;Lorg/springframework/transaction/reactive/TransactionalOperator;)V
+	public fun getOrder ()I
+	public fun run (Lorg/springframework/boot/ApplicationArguments;)V
+}
+
+public final class org/jetbrains/exposed/v1/spring/boot4/r2dbc/DatabaseInitializer$Companion {
+}
+
+public final class org/jetbrains/exposed/v1/spring/boot4/r2dbc/DatabaseInitializerKt {
+	public static final fun discoverExposedTables (Lorg/springframework/context/ApplicationContext;Ljava/util/List;)Ljava/util/List;
+}
+
+public final class org/jetbrains/exposed/v1/spring/boot4/r2dbc/ExposedAotContribution : org/springframework/beans/factory/aot/BeanFactoryInitializationAotProcessor {
+	public fun <init> ()V
+	public fun processAheadOfTime (Lorg/springframework/beans/factory/config/ConfigurableListableBeanFactory;)Lorg/springframework/beans/factory/aot/BeanFactoryInitializationAotContribution;
+}
+
+public class org/jetbrains/exposed/v1/spring/boot4/r2dbc/autoconfigure/ExposedReactiveAutoConfiguration {
+	public fun <init> (Lorg/springframework/context/ApplicationContext;)V
+	public fun databaseConfig ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Builder;
+	public fun databaseInitializer (Lorg/jetbrains/exposed/v1/spring7/reactive/transaction/SpringReactiveTransactionManager;)Lorg/jetbrains/exposed/v1/spring/boot4/r2dbc/DatabaseInitializer;
+	public fun exposedSpringTransactionAttributeSource ()Lorg/jetbrains/exposed/v1/spring7/reactive/transaction/ExposedSpringTransactionAttributeSource;
+	public fun springTransactionManager (Lio/r2dbc/spi/ConnectionFactory;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Builder;)Lorg/jetbrains/exposed/v1/spring7/reactive/transaction/SpringReactiveTransactionManager;
+}
+
