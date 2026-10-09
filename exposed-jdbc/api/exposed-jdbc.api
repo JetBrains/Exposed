@@ -54,7 +54,8 @@ public final class org/jetbrains/exposed/v1/jdbc/EmptySizedIterable : java/util/
 
 public final class org/jetbrains/exposed/v1/jdbc/Except : org/jetbrains/exposed/v1/jdbc/SetOperation {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery;)V
-	public fun copy ()Lorg/jetbrains/exposed/v1/jdbc/Intersect;
+	public fun copy ()Lorg/jetbrains/exposed/v1/jdbc/Except;
+	public final synthetic fun copy ()Lorg/jetbrains/exposed/v1/jdbc/Intersect;
 	public synthetic fun copy ()Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
 	public fun getOperationName ()Ljava/lang/String;
 	public synthetic fun withDistinct (Z)Lorg/jetbrains/exposed/v1/core/AbstractQuery;

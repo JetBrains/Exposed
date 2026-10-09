@@ -2,6 +2,8 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml
 
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
+import org.jetbrains.exposed.v1.core.QueryBuilder
+import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.eq
@@ -13,9 +15,13 @@ import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
+import org.jetbrains.exposed.v1.r2dbc.Except
+import org.jetbrains.exposed.v1.r2dbc.Intersect
 import org.jetbrains.exposed.v1.r2dbc.Query
+import org.jetbrains.exposed.v1.r2dbc.SizedIterable
 import org.jetbrains.exposed.v1.r2dbc.except
 import org.jetbrains.exposed.v1.r2dbc.intersect
+import org.jetbrains.exposed.v1.r2dbc.mapLazy
 import org.jetbrains.exposed.v1.r2dbc.select
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
@@ -27,6 +33,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.jetbrains.exposed.v1.r2dbc.union
 import org.jetbrains.exposed.v1.r2dbc.unionAll
 import org.junit.jupiter.api.Test
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class UnionTests : R2dbcDatabaseTestsBase() {
@@ -123,6 +130,56 @@ class UnionTests : R2dbcDatabaseTestsBase() {
             usersQuery.except(sergeyQuery).map { it[users.id] }.toList().apply {
                 assertEquals(4, size)
                 assertEqualCollections(this, expectedUsers)
+            }
+        }
+    }
+
+    @Test
+    fun testExceptCopyPreservesOperation() {
+        withCitiesAndUsers(TestDB.ALL_MYSQL + TestDB.SQLSERVER) { _, users, _ ->
+            val usersQuery = users.selectAll()
+            val expectedUsers = usersQuery.map { it[users.id] }.toList() - "sergey"
+            val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
+
+            usersQuery.except(sergeyQuery).mapLazy { it[users.id] }.limit(10).toList().apply {
+                assertEquals(4, size)
+                assertEqualCollections(this, expectedUsers)
+            }
+        }
+    }
+
+    @Test
+    fun testExceptCopyCompatibilityBridges() {
+        withCitiesAndUsers(TestDB.ALL_MYSQL) { _, users, _ ->
+            val usersQuery = users.selectAll()
+            val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
+            val original = usersQuery.except(sergeyQuery)
+            original.orderBy(users.id).limit(2)
+
+            val directCopy = original.copy()
+            assertIs<Except>(directCopy)
+            assertEquals(original.limit, directCopy.limit)
+            assertEqualLists(directCopy.orderByExpressions, original.orderByExpressions)
+            assertTrue(directCopy.prepareSQL(QueryBuilder(false)).let { " EXCEPT " in it || " MINUS " in it })
+
+            val interfaceCopy = (original as SizedIterable<ResultRow>).copy()
+            assertIs<Except>(interfaceCopy)
+
+            val copyMethods = Except::class.java.declaredMethods.filter { it.name == "copy" }
+            assertEquals(
+                setOf(Except::class.java, Intersect::class.java, SizedIterable::class.java),
+                copyMethods.map { it.returnType }.toSet()
+            )
+
+            val sizedIterableBridge = copyMethods.single { it.returnType == SizedIterable::class.java }
+            assertTrue(sizedIterableBridge.isBridge)
+            assertIs<Except>(sizedIterableBridge.invoke(original))
+
+            val legacyBridge = copyMethods.single { it.returnType == Intersect::class.java }
+            assertTrue(legacyBridge.isSynthetic)
+            assertIs<Intersect>(legacyBridge.invoke(original)).also {
+                assertEquals(original.limit, it.limit)
+                assertEqualLists(it.orderByExpressions, original.orderByExpressions)
             }
         }
     }

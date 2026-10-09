@@ -14,6 +14,7 @@ import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.expectException
 import org.junit.jupiter.api.Test
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class UnionTests : DatabaseTestsBase() {
@@ -110,6 +111,56 @@ class UnionTests : DatabaseTestsBase() {
             usersQuery.except(sergeyQuery).map { it[users.id] }.apply {
                 assertEquals(4, size)
                 assertEqualCollections(this, expectedUsers)
+            }
+        }
+    }
+
+    @Test
+    fun testExceptCopyPreservesOperation() {
+        withCitiesAndUsers(TestDB.ALL_MYSQL + TestDB.SQLSERVER) { _, users, _ ->
+            val usersQuery = users.selectAll()
+            val expectedUsers = usersQuery.map { it[users.id] } - "sergey"
+            val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
+
+            usersQuery.except(sergeyQuery).mapLazy { it[users.id] }.limit(10).toList().apply {
+                assertEquals(4, size)
+                assertEqualCollections(this, expectedUsers)
+            }
+        }
+    }
+
+    @Test
+    fun testExceptCopyCompatibilityBridges() {
+        withCitiesAndUsers(TestDB.ALL_MYSQL) { _, users, _ ->
+            val usersQuery = users.selectAll()
+            val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
+            val original = usersQuery.except(sergeyQuery)
+            original.orderBy(users.id).limit(2)
+
+            val directCopy = original.copy()
+            assertIs<Except>(directCopy)
+            assertEquals(original.limit, directCopy.limit)
+            assertEqualLists(directCopy.orderByExpressions, original.orderByExpressions)
+            assertTrue(directCopy.prepareSQL(QueryBuilder(false)).let { " EXCEPT " in it || " MINUS " in it })
+
+            val interfaceCopy = (original as SizedIterable<ResultRow>).copy()
+            assertIs<Except>(interfaceCopy)
+
+            val copyMethods = Except::class.java.declaredMethods.filter { it.name == "copy" }
+            assertEquals(
+                setOf(Except::class.java, Intersect::class.java, SizedIterable::class.java),
+                copyMethods.map { it.returnType }.toSet()
+            )
+
+            val sizedIterableBridge = copyMethods.single { it.returnType == SizedIterable::class.java }
+            assertTrue(sizedIterableBridge.isBridge)
+            assertIs<Except>(sizedIterableBridge.invoke(original))
+
+            val legacyBridge = copyMethods.single { it.returnType == Intersect::class.java }
+            assertTrue(legacyBridge.isSynthetic)
+            assertIs<Intersect>(legacyBridge.invoke(original)).also {
+                assertEquals(original.limit, it.limit)
+                assertEqualLists(it.orderByExpressions, original.orderByExpressions)
             }
         }
     }

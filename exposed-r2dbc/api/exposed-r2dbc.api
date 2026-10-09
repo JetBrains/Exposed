@@ -19,7 +19,8 @@ public final class org/jetbrains/exposed/v1/r2dbc/EmptySizedIterable : org/jetbr
 
 public final class org/jetbrains/exposed/v1/r2dbc/Except : org/jetbrains/exposed/v1/r2dbc/SetOperation {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery;)V
-	public fun copy ()Lorg/jetbrains/exposed/v1/r2dbc/Intersect;
+	public fun copy ()Lorg/jetbrains/exposed/v1/r2dbc/Except;
+	public final synthetic fun copy ()Lorg/jetbrains/exposed/v1/r2dbc/Intersect;
 	public synthetic fun copy ()Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
 	public fun getOperationName ()Ljava/lang/String;
 	public synthetic fun withDistinct (Z)Lorg/jetbrains/exposed/v1/core/AbstractQuery;
