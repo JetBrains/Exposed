@@ -76,7 +76,9 @@ abstract class FunctionProvider {
         if (separator == "") {
             append("CONCAT(")
         } else {
-            append("CONCAT_WS('", separator, "',")
+            append("CONCAT_WS(")
+            appendStringArgument(separator)
+            append(",")
         }
         expr.appendTo { +it }
         append(")")
@@ -101,7 +103,8 @@ abstract class FunctionProvider {
             }
         }
         expr.separator?.let {
-            append(" SEPARATOR '$it'")
+            append(" SEPARATOR ")
+            appendStringArgument(it)
         }
         append(")")
     }

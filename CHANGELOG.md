@@ -1,3 +1,16 @@
+# Unreleased
+
+Bug fixes:
+* fix: EXPOSED-1093 Bind string arguments of SQL functions instead of concatenating them into SQL by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2957
+  * The string arguments of `locate()`, `concat()`, `groupConcat()`, `match()` and the JSON `extract()`, `exists()` and
+    `contains()` are now bound as query parameters, so they are always treated as data.
+  * Where a database does not accept a parameter in that position, the argument is written into the statement as a string
+    literal with its single quotes escaped instead:
+    * Oracle: the JSON path of `extract()` and `exists()`
+    * SQL Server: the separator of `groupConcat()`
+  * These arguments must be passed as is. A value that was escaped on the client side, for example with its single
+    quotes doubled, now reaches the database with the escaping intact.
+
 # 1.5.0
 
 Infrastructure:
