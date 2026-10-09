@@ -54,7 +54,7 @@ enum class TestDB(
     MYSQL_V8(
         {
             "r2dbc:mysql://${MYSQL_V8.user}:${MYSQL_V8.pass}@127.0.0.1:3002/testdb" +
-                "?sslMode=DISABLED&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&allowPublicKeyRetrieval=true"
+                "?sslMode=PREFERRED&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&allowPublicKeyRetrieval=true"
         },
         "com.mysql.cj.jdbc.Driver"
     ),

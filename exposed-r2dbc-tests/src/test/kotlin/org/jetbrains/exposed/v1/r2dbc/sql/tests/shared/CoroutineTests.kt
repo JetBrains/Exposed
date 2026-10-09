@@ -12,10 +12,12 @@ import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualCollections
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
@@ -215,13 +217,16 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
     @RepeatedTest(10)
     @CoroutinesTimeout(60000)
     fun nestedSuspendTxTest() {
-        suspend fun insertTesting(db: R2dbcDatabase) = inTopLevelSuspendTransaction(db = db) {
-            Testing.insert {}
+        suspend fun insertTesting(db: R2dbcDatabase): Int = inTopLevelSuspendTransaction(db = db) {
+            maxAttempts = 1
+            Testing.insertAndGetId {}.value
         }
         withTables(Testing) { testDb ->
             val mainJob = GlobalScope.async {
-                val job = launch(Dispatchers.IO) {
+                val insertedId = async(Dispatchers.IO) {
                     inTopLevelSuspendTransaction(db = db) {
+                        maxAttempts = 1
+
                         // This way of setting the isolation level now aligns with JDBC test of same name;
                         // But manually setting the isolation level within an active transaction results in vendor-specific behavior;
                         // MySQL/MariaDB r2dbc drivers rely on standard SET TRANSACTION ISOLATION LEVEL, which,
@@ -230,33 +235,28 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
                         // so these drivers must force start another transaction in the session to pass the asserts
                         if (testDb in TestDB.ALL_MYSQL_MARIADB) commit()
 
-                        assertEquals(
-                            null,
-                            Testing.selectAll().where { Testing.id.eq(1) }.singleOrNull()?.getOrNull(Testing.id)
-                        )
+                        assertEqualLists(emptyList(), Testing.selectAll().map { it[Testing.id].value })
 
-                        insertTesting(db)
+                        val id = insertTesting(db)
+                        assertEqualLists(listOf(id), Testing.selectAll().map { it[Testing.id].value })
 
-                        assertEquals(
-                            1,
-                            Testing.selectAll().where { Testing.id.eq(1) }.singleOrNull()?.getOrNull(Testing.id)?.value
-                        )
+                        id
                     }
-                }
+                }.await()
 
-                job.join()
-                val result = withContext(Dispatchers.Default) {
+                withContext(Dispatchers.Default) {
                     inTopLevelSuspendTransaction(db = db) {
-                        Testing.selectAll().where { Testing.id.eq(1) }.single()[Testing.id].value
+                        maxAttempts = 1
+                        val id = Testing.selectAll().where { Testing.id eq insertedId }.single()[Testing.id].value
+                        assertEquals(insertedId, id)
                     }
                 }
 
-                kotlin.test.assertEquals(1, result)
+                insertedId
             }
 
-            while (!mainJob.isCompleted) delay(100.milliseconds)
-            mainJob.getCompletionExceptionOrNull()?.let { throw it }
-            assertEquals(1, Testing.selectAll().where { Testing.id.eq(1) }.single()[Testing.id].value)
+            val insertedId = mainJob.await()
+            assertEquals(insertedId, Testing.selectAll().where { Testing.id eq insertedId }.single()[Testing.id].value)
         }
     }
 

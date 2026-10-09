@@ -85,7 +85,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         expr: Expression<T>,
         substring: String
     ) = queryBuilder {
-        append("POSITION(\'", substring, "\' IN ", expr, ")")
+        append("POSITION(\'", substring.escapeSingleQuotes(), "\' IN ", expr, ")")
     }
 
     override fun <T : String?> regexp(
@@ -495,9 +495,8 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
         val tr = currentTransaction()
         val fullColumnIdentity = tr.fullIdentity(column)
 
-        @OptIn(InternalApi::class)
         return if (comment != null) {
-            listOf("COMMENT ON COLUMN $fullColumnIdentity IS '${comment.escapeComment()}'")
+            listOf("COMMENT ON COLUMN $fullColumnIdentity IS '${comment.escapeSingleQuotes()}'")
         } else {
             listOf("COMMENT ON COLUMN $fullColumnIdentity IS NULL")
         }
