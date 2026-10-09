@@ -93,6 +93,7 @@ spring-boot3-configuration-processor = { group = "org.springframework.boot", nam
 spring-boot3-starter-test = { group = "org.springframework.boot", name = "spring-boot-starter-test", version.ref = "springBoot3" }
 spring-boot3-starter-webflux = { group = "org.springframework.boot", name = "spring-boot-starter-webflux", version.ref = "springBoot3" }
 spring-boot4-starter-jdbc = { group = "org.springframework.boot", name = "spring-boot-starter-jdbc", version.ref = "springBoot4" }
+spring-boot4-starter-r2dbc = { group = "org.springframework.boot", name = "spring-boot-starter-r2dbc", version.ref = "springBoot4" }
 spring-boot4-autoconfigure = { group = "org.springframework.boot", name = "spring-boot-autoconfigure", version.ref = "springBoot4" }
 spring-boot4-configuration-processor = { group = "org.springframework.boot", name = "spring-boot-configuration-processor", version.ref = "springBoot4" }
 spring-boot4-starter-test = { group = "org.springframework.boot", name = "spring-boot-starter-test", version.ref = "springBoot4" }
