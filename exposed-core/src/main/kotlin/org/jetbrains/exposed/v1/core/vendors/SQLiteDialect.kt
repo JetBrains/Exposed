@@ -48,7 +48,14 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         if (separator == "") {
             expr.asList().appendTo(this, separator = " || ") { +it }
         } else {
-            expr.asList().appendTo(this, separator = " || '$separator' || ") { +it }
+            expr.forEachIndexed { index, expression ->
+                if (index > 0) {
+                    append(" || ")
+                    appendStringArgument(separator)
+                    append(" || ")
+                }
+                append(expression)
+            }
         }
     }
 
@@ -61,7 +68,8 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
             +"GROUP_CONCAT("
             +expr.expr
             expr.separator?.let {
-                +", '$it'"
+                +", "
+                appendStringArgument(it)
             }
             if (expr.orderBy.isNotEmpty()) {
                 expr.orderBy.appendTo(prefix = " ORDER BY ") { (expression, sortOrder) ->
@@ -81,7 +89,9 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         expr: Expression<T>,
         substring: String
     ) = queryBuilder {
-        append("INSTR(", expr, ",\'", substring.escapeSingleQuotes(), "\')")
+        append("INSTR(", expr, ",")
+        appendStringArgument(substring)
+        append(")")
     }
 
     override fun <T : String?> regexp(
@@ -194,7 +204,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ) = queryBuilder {
         append("JSON_EXTRACT(", expression, ", ")
-        path.ifEmpty { arrayOf("") }.appendTo { +"'$$it'" }
+        path.ifEmpty { arrayOf("") }.appendTo { appendStringArgument("$$it") }
         append(")")
     }
 
@@ -215,7 +225,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         }
         queryBuilder {
             append("JSON_TYPE(", expression, ", ")
-            append("'$", path.firstOrNull() ?: "", "'")
+            appendStringArgument("\$" + (path.firstOrNull() ?: ""))
             append(") IS NOT NULL")
         }
     }

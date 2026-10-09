@@ -3,10 +3,12 @@ package org.jetbrains.exposed.v1.tests.shared.dml
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.currentDialectTest
+import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -15,6 +17,67 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class GroupByTests : DatabaseTestsBase() {
+    /* EXPOSED-1093 */
+    @Test
+    fun testGroupConcatSeparatorIsData() {
+        val tester = object : Table("group_concat_separator_tester") {
+            val name = varchar("name", 32)
+        }
+
+        withTables(tester) {
+            tester.insert { it[name] = "a" }
+            tester.insert { it[name] = "b" }
+
+            // a separator holding a quote is data, so it reaches the result verbatim instead of ending the literal
+            val separator = "' || '"
+            val concatenated = tester.name.groupConcat(separator = separator, orderBy = tester.name to SortOrder.ASC)
+
+            assertEquals("a" + separator + "b", tester.select(concatenated).single()[concatenated])
+        }
+    }
+
+    /* EXPOSED-1093 */
+    @Test
+    fun testGroupByConcat() {
+        withCitiesAndUsers { cities, users, _ ->
+            // a bound argument becomes a separate parameter in every clause that renders the expression, which the
+            // database does not match to the select list, so the expression is computed once in a subquery
+            val label = concat(" from ", listOf(users.name, cities.name)).alias("label")
+            val labelled = (cities innerJoin users).select(label, users.id).alias("labelled")
+            val count = labelled[users.id].count()
+
+            val result = labelled.select(labelled[label], count)
+                .groupBy(labelled[label])
+                .orderBy(labelled[label])
+                .toList()
+
+            assertEqualLists(
+                result.map { it[labelled[label]] to it[count] },
+                listOf("Andrey from St. Petersburg" to 1L, "Eugene from Munich" to 1L, "Sergey from Munich" to 1L)
+            )
+        }
+    }
+
+    /* EXPOSED-1093 */
+    @Test
+    fun testGroupByLocate() {
+        withCitiesAndUsers { cities, _, _ ->
+            // a bound argument becomes a separate parameter in every clause that renders the expression, which the
+            // database does not match to the select list, so the expression is computed once in a subquery
+            val position = cities.name.locate("e").alias("position")
+            val located = cities.select(position, cities.id).alias("located")
+            val count = located[cities.id].count()
+
+            val result = located.select(located[position], count)
+                .groupBy(located[position])
+                .orderBy(located[position])
+                .toList()
+
+            // "St. Petersburg" and "Prague" both hold an "e" in sixth place, "Munich" holds none
+            assertEqualLists(result.map { it[located[position]] to it[count] }, listOf(0 to 1L, 6 to 2L))
+        }
+    }
+
     @Test
     fun testGroupBy01() {
         withCitiesAndUsers { cities, users, _ ->

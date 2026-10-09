@@ -124,7 +124,14 @@ internal object OracleFunctionProvider : FunctionProvider() {
         if (separator == "") {
             expr.appendTo(separator = " || ") { +it }
         } else {
-            expr.appendTo(separator = " || '$separator' || ") { +it }
+            expr.forEachIndexed { index, expression ->
+                if (index > 0) {
+                    append(" || ")
+                    appendStringArgument(separator)
+                    append(" || ")
+                }
+                append(expression)
+            }
         }
     }
 
@@ -141,7 +148,8 @@ internal object OracleFunctionProvider : FunctionProvider() {
         append("LISTAGG(")
         append(expr.expr)
         expr.separator?.let {
-            append(", '$it'")
+            append(", ")
+            appendStringArgument(it)
         }
         +")"
         expr.orderBy.singleOrNull()?.let { (col, order) ->
@@ -154,7 +162,9 @@ internal object OracleFunctionProvider : FunctionProvider() {
         expr: Expression<T>,
         substring: String
     ) = queryBuilder {
-        append("INSTR(", expr, ",\'", substring.escapeSingleQuotes(), "\')")
+        append("INSTR(", expr, ",")
+        appendStringArgument(substring)
+        append(")")
     }
 
     override fun <T> date(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
@@ -230,7 +240,8 @@ internal object OracleFunctionProvider : FunctionProvider() {
         queryBuilder {
             append(if (toScalar) "JSON_VALUE" else "JSON_QUERY")
             append("(", expression, ", ")
-            append("'$", path.firstOrNull() ?: "", "'")
+            // Oracle rejects a bound path with ORA-40454: path expression not a literal
+            appendStringLiteral("\$" + path.firstOrNull().orEmpty())
             append(")")
         }
     }
@@ -248,7 +259,8 @@ internal object OracleFunctionProvider : FunctionProvider() {
         }
         queryBuilder {
             append("JSON_EXISTS(", expression, ", ")
-            append("'$", path.firstOrNull() ?: "", "'")
+            // Oracle rejects a bound path with ORA-40454: path expression not a literal
+            appendStringLiteral("\$" + path.firstOrNull().orEmpty())
             optional?.let {
                 append(" $it")
             }

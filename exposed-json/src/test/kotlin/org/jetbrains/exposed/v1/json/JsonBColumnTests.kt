@@ -33,6 +33,17 @@ import kotlin.test.assertNull
 class JsonBColumnTests : DatabaseTestsBase() {
     private val binaryJsonNotSupportedDB = listOf(TestDB.SQLSERVER, TestDB.ORACLE)
 
+    /* EXPOSED-1093 */
+    @Test
+    fun testJsonExtractPathIsData() {
+        withJsonBTable(exclude = TestDB.entries - TestDB.ALL_POSTGRES) { tester, _, _, _ ->
+            // a quote in the path is data: it names a key that does not exist, rather than ending the literal
+            val extracted = tester.jsonBColumn.extract<String>("user's")
+
+            assertNull(tester.select(extracted).single()[extracted])
+        }
+    }
+
     @Test
     fun testInsertAndSelect() {
         withJsonBTable(exclude = binaryJsonNotSupportedDB) { tester, _, _, _ ->

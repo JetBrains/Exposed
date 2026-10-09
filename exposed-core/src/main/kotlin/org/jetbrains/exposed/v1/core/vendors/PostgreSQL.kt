@@ -65,7 +65,8 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             else -> queryBuilder {
                 append("STRING_AGG(")
                 if (expr.distinct) append(" DISTINCT ")
-                append(expr.expr, ", '", expr.separator, "'")
+                append(expr.expr, ", ")
+                appendStringArgument(expr.separator)
                 if (expr.orderBy.isNotEmpty()) {
                     expr.orderBy.appendTo(prefix = " ORDER BY ") {
                         append(it.first, " ", it.second.name)
@@ -85,7 +86,9 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         expr: Expression<T>,
         substring: String
     ) = queryBuilder {
-        append("POSITION(\'", substring.escapeSingleQuotes(), "\' IN ", expr, ")")
+        append("POSITION(")
+        appendStringArgument(substring)
+        append(" IN ", expr, ")")
     }
 
     override fun <T : String?> regexp(
@@ -190,7 +193,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         append("${jsonType.sqlType()}_EXTRACT_PATH")
         if (toScalar) append("_TEXT")
         append("(", expression, ", ")
-        path.ifEmpty { arrayOf("$") }.appendTo { +"'$it'" }
+        path.ifEmpty { arrayOf("$") }.appendTo { appendStringArgument(it) }
         append(")")
     }
 
@@ -234,12 +237,31 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             } else {
                 append(expression, ", ")
             }
-            append("'$", path.firstOrNull() ?: "", "'")
+            appendCastStringArgument("\$" + (path.firstOrNull() ?: ""), "jsonpath")
             optional?.let {
-                append(", '$it'")
+                append(", ")
+                appendCastStringArgument(it, "jsonb")
             }
             append(")")
         }
+    }
+
+    /**
+     * Binds [value] as a parameter cast to [type], since a bound parameter is not resolved to the type that the
+     * function expects the way an untyped string literal is.
+     *
+     * pgjdbc-ng cannot send a parameter that PostgreSQL infers as `jsonpath` or `jsonb`, so on that driver the
+     * parameter is first pinned to `text`.
+     */
+    private fun QueryBuilder.appendCastStringArgument(value: String, type: String) {
+        if (currentDialect is PostgreSQLNGDialect) {
+            append("CAST(")
+            appendStringArgument(value)
+            append(" AS text)")
+        } else {
+            appendStringArgument(value)
+        }
+        append("::", type)
     }
 
     private const val ON_CONFLICT_IGNORE = "ON CONFLICT DO NOTHING"

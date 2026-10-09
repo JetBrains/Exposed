@@ -564,10 +564,20 @@ infix fun <T : String?> Expression<T>.like(expression: ExpressionWithColumnType<
 infix fun Expression<EntityID<String>>.like(expression: ExpressionWithColumnType<String>): LikeEscapeOp =
     LikeEscapeOp(this, expression, true, null)
 
-/** Checks if this expression matches the specified [pattern]. */
+/**
+ * Checks if this expression matches the specified [pattern].
+ *
+ * [pattern] is bound as a query parameter, so it is treated as data and must be passed as is, without being escaped
+ * on the client side.
+ */
 infix fun <T : String?> Expression<T>.match(pattern: String): Op<Boolean> = match(pattern, null)
 
-/** Checks if this expression matches the specified [pattern] using the specified match [mode]. */
+/**
+ * Checks if this expression matches the specified [pattern] using the specified match [mode].
+ *
+ * [pattern] is bound as a query parameter, so it is treated as data and must be passed as is, without being escaped
+ * on the client side.
+ */
 fun <T : String?> Expression<T>.match(
     pattern: String,
     mode: FunctionProvider.MatchMode?
