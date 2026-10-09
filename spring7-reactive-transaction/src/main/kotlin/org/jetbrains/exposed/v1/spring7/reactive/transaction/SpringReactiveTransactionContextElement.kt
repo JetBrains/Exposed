@@ -26,10 +26,15 @@ internal interface ExposedTransactionResource {
  * Spring's reactive [TransactionContext] onto [SpringReactiveTransactionsStack] every time the coroutine with
  * this element in the context is resumed on a thread.
  *
- * Spring's [TransactionContext] is the single source of truth for any transactions lifetime in this case.
+ * Spring's [TransactionContext] is the single source of truth for any transaction's lifetime in this case.
  * This element is a per-resume projection only. This means that: on [updateThreadContext] it snapshots whatever is
  * currently on the stack, then replaces it with all the transactions found by walking bound resources from
  * the current Reactor `Context`. Then on [restoreThreadContext], it always restores the previous snapshot.
+ *
+ * Exposed's built-in JDBC and R2DBC transaction managers utilize their own custom `TransactionContextElement` with a
+ * similar implementation. They differ from this Spring class in that their thread context element is a single current
+ * transaction instance; whereas this implementation requires a snapshot of the transactions stack in its entirety.
+ * This requirement avoids the potential situation when Spring's transaction context chain nests multiple bound resources.
  */
 @OptIn(InternalApi::class)
 internal class SpringReactiveTransactionContextElement :
@@ -51,14 +56,14 @@ internal class SpringReactiveTransactionContextElement :
             val merged = LinkedHashMap<String, Transaction>()
             previous.transactions.forEach { merged[it.transactionId] = it }
             springManaged.forEach { merged[it.transactionId] = it }
-            TransactionsHolderProvider.holder.restore(merged.values.toList())
+            TransactionsHolderProvider.holder.restoreSpringStack(merged.values.toList())
         }
 
         return previous
     }
 
     override fun restoreThreadContext(context: CoroutineContext, oldState: TransactionStackState) {
-        TransactionsHolderProvider.holder.restore(oldState.transactions)
+        TransactionsHolderProvider.holder.restoreSpringStack(oldState.transactions)
     }
 
     /**
@@ -108,7 +113,7 @@ internal object SpringReactiveTransactionHandoff {
 }
 
 /**
- * Calls the specified suspending [block] with a [SpringReactiveTransactionContextElement] installed in the coroutine context,
+ * Calls the specified suspending [block] with a custom Spring thread context element installed in the coroutine context,
  * suspends until it completes, and returns the result.
  *
  * This wrapper must be used when relying on [org.springframework.transaction.reactive.TransactionalOperator],
