@@ -260,7 +260,24 @@ class Except(
             else -> "EXCEPT"
         }
 
-    override fun copy() = Intersect(firstStatement, secondStatement).also {
+    override fun copy(): Except = Except(firstStatement, secondStatement).also {
+        copyTo(it)
+    }
+
+    /**
+     * Compatibility method retained for code compiled against Exposed 1.5.0 or earlier, where `copy()` was declared as
+     * returning [Intersect]. This preserves the previous JVM descriptor and behavior for those callers.
+     *
+     * @suppress
+     */
+    @Deprecated(
+        message = "Except.copy(): Intersect is retained for compatibility with binaries compiled against Exposed " +
+            "1.5.0 or earlier. Recompile to use copy(): Except. This method will be removed in the next major " +
+            "release (2.0).",
+        level = DeprecationLevel.HIDDEN
+    )
+    @JvmName("copy")
+    fun copyLegacy(): Intersect = Intersect(firstStatement, secondStatement).also {
         copyTo(it)
     }
 

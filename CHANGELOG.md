@@ -1,6 +1,12 @@
 # Unreleased
 
 Bug fixes:
+* fix: Preserve `EXCEPT` semantics when copying set operations by @hugoncosta
+  * `Except.copy()` now returns `Except` instead of `Intersect`, preventing copied operations from silently executing
+    `INTERSECT` semantics in JDBC and R2DBC.
+  * A hidden, deprecated method retains the previous `copy(): Intersect` JVM signature for binary compatibility with code
+    compiled against Exposed 1.5.0 or earlier. Recompile to use the corrected return type; the method will be removed in
+    the next major release (2.0).
 * fix: EXPOSED-1093 Bind string arguments of SQL functions instead of concatenating them into SQL by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2957
   * The string arguments of `locate()`, `concat()`, `groupConcat()`, `match()` and the JSON `extract()`, `exists()` and
     `contains()` are now bound as query parameters, so they are always treated as data.

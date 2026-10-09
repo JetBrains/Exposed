@@ -1,5 +1,13 @@
 # Breaking Changes
 
+## Unreleased
+
+* The return type of `Except.copy()` has been corrected from `Intersect` to `Except` in both JDBC and R2DBC. Code that
+  explicitly declares the copied result as `Intersect` must update that type to `Except`. A hidden, deprecated method
+  retains the previous JVM signature for code compiled against Exposed 1.5.0 or earlier, but it also retains the previous
+  behavior for direct calls from that compiled code. Recompile against the release containing this fix to receive the
+  corrected behavior. The compatibility method will be removed in the next major release (2.0).
+
 ## 1.0.0
 
 * The interface `R2dbcPreparedStatementApi` no longer holds the unused methods `closeIfPossible()` or `cancel()`
