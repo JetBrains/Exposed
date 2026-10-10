@@ -77,3 +77,12 @@ internal fun Transaction.throwUnsupportedException(message: String): Nothing = t
     message,
     db.dialect
 )
+
+/**
+ * An exception thrown when a value read from a `ResultRow` cannot be converted to the type expected by
+ * the column's `IColumnType`.
+ *
+ * The [message] describes only the expected and actual types. The value itself is intentionally not included,
+ * because it may contain sensitive data (for example, a decrypted value whose `toString()` exposes plaintext).
+ */
+class UnexpectedValueTypeException(message: String) : IllegalStateException(message)
