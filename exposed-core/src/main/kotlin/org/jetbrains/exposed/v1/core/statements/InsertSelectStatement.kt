@@ -26,8 +26,17 @@ open class InsertSelectStatement(
         if (columns.size != selectQuery.set.fields.size) error("Columns count doesn't equal to query columns count")
     }
 
-    override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> = selectQuery.arguments()
+    override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> {
+        selectQuery.validateAsSubquery()
+        return selectQuery.arguments()
+    }
 
     override fun prepareSQL(transaction: Transaction, prepared: Boolean): String =
-        transaction.db.dialect.functionProvider.insert(isIgnore, targets.single(), columns, selectQuery.prepareSQL(transaction, prepared), transaction)
+        transaction.db.dialect.functionProvider.insert(
+            isIgnore,
+            targets.single(),
+            columns,
+            selectQuery.prepareAsSubquerySQL(transaction, prepared),
+            transaction
+        )
 }

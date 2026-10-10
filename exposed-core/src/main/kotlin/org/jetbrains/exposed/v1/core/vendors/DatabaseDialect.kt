@@ -4,6 +4,15 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.core.transactions.currentTransactionOrNull
 
+/** Syntax used by a dialect to declare recursive common table expressions. */
+enum class RecursiveCteSyntax {
+    /** The dialect requires `WITH RECURSIVE`. */
+    RECURSIVE_KEYWORD,
+
+    /** The dialect uses `WITH` without a `RECURSIVE` keyword. */
+    NO_RECURSIVE_KEYWORD,
+}
+
 /**
  * Common interface for all database dialects.
  */
@@ -53,6 +62,15 @@ interface DatabaseDialect {
 
     /** Returns `true` if the dialect supports subqueries within a UNION/EXCEPT/INTERSECT statement. */
     val supportsSubqueryUnions: Boolean get() = false
+
+    /** Returns `true` if the dialect supports common table expressions. */
+    val supportsCommonTableExpressions: Boolean get() = false
+
+    /** Returns `true` if the dialect supports recursive common table expressions. */
+    val supportsRecursiveCommonTableExpressions: Boolean get() = false
+
+    /** Returns the syntax used to declare recursive common table expressions. */
+    val recursiveCteSyntax: RecursiveCteSyntax get() = RecursiveCteSyntax.RECURSIVE_KEYWORD
 
     /** Returns `true` if the dialect provides a special dummy DUAL table, accessible by all users. */
     val supportsDualTableConcept: Boolean get() = false
