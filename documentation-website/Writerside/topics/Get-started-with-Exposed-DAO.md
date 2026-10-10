@@ -127,7 +127,7 @@ creates the blueprint for the `tasks` table.
 ## Define an entity
 
 When using the DAO approach, each table defined using `IntIdTable` must be associated with a corresponding
-[entity class](DAO-Entity-definition.topic).
+[entity class](dao-entity-definition.md).
 The entity class represents individual records in the table and is uniquely identified by a primary key.
 
 To define the entity, update your **Task.kt** file with the following code:
@@ -276,5 +276,5 @@ Great job! You've built a simple console application using Exposed's DAO API to 
 data in an in-memory database.
 
 Now that you've covered the fundamentals, you're ready to dive deeper into what the DAO API offers. Continue exploring
-[CRUD operations](DAO-CRUD-Operations.topic) or learn how to [define relationships between entities](DAO-Relationships.topic).
+[CRUD operations](dao-crud-operations.md) or learn how to [define relationships between entities](dao-relationships.md).
 These next chapters will help you build more complex, real-world data models using Exposed’s type-safe, object-oriented approach.

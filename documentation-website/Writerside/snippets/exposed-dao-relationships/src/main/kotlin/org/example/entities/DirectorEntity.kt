@@ -11,7 +11,7 @@ import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 
 /*
-    Important: This file is referenced by line number in `DAO-Relationships.topic`.
+    Important: This file is referenced by line number in `dao-relationships.md`.
     If you add, remove, or modify any lines, ensure you update the corresponding
     line numbers in the `code-block` element of the referenced file.
 */
