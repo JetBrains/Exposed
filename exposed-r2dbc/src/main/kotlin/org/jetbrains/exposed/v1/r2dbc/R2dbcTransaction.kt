@@ -23,6 +23,7 @@ import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
 import org.jetbrains.exposed.v1.core.statements.StatementResult
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
+import org.jetbrains.exposed.v1.core.statements.inferStatementType
 import org.jetbrains.exposed.v1.exceptions.LongQueryException
 import org.jetbrains.exposed.v1.r2dbc.statements.GlobalStatementInterceptorWrapper
 import org.jetbrains.exposed.v1.r2dbc.statements.GlobalSuspendStatementInterceptor
@@ -188,7 +189,8 @@ open class R2dbcTransaction(
     ): Flow<T?>? {
         if (stmt.isEmpty()) return emptyFlow()
 
-        val type = explicitStatementType ?: StatementType.entries.find { stmt.trim().startsWith(it.name, true) } ?: StatementType.OTHER
+        @OptIn(InternalApi::class)
+        val type = explicitStatementType ?: inferStatementType(stmt) ?: StatementType.OTHER
 
         return exec(object : Statement<Flow<T?>>(type, emptyList()), SuspendExecutable<Flow<T?>, Statement<Flow<T?>>> {
             override val statement: Statement<Flow<T?>>
