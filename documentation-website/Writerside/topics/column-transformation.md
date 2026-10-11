@@ -71,8 +71,11 @@ class MealTimeTransformer : ColumnTransformer<LocalTime, Meal> {
     }
 }
 
+fun Column<LocalTime>.mealTransform(): Column<Meal> =
+    transform(MealTimeTransformer())
+
 object Meals : Table() {
-    val mealTime: Column<Meal> = time("meal_time").transform(MealTimeTransformer())
+    val mealTime: Column<Meal> = time("meal_time").mealTransform()
 }
 ```
 
