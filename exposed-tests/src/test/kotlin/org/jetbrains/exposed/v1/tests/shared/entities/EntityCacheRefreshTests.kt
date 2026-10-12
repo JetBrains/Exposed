@@ -69,7 +69,15 @@ class EntityCacheRefreshTests : DatabaseTestsBase() {
         }
 
         withTables(TestTable) {
-            val db = dialect.connect()
+            // MariaDB 11.6.2+ defaults innodb_snapshot_isolation to ON, so a locking read of a row
+            // that changed since the transaction's snapshot fails with ER_CHECKREAD (1020) instead of
+            // blocking, and the documented response is to restart the transaction. With 20 of them on
+            // one row that is routine, and the defaults (3 attempts, no delay) retry them in lockstep.
+            val db = dialect.connect {
+                defaultMaxAttempts = 20
+                defaultMinRetryDelay = 20
+                defaultMaxRetryDelay = 200
+            }
 
             // Create a single entity with initial value 0
             val entityIdValue = transaction(db = db) {

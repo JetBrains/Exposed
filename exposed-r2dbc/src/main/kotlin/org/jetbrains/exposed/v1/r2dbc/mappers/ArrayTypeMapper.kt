@@ -49,6 +49,7 @@ class ArrayTypeMapper : TypeMapper {
                 when (element) {
                     is java.sql.Date -> element.toLocalDate()
                     is java.sql.Timestamp -> element.toLocalDateTime()
+                    is java.sql.Time -> element.toLocalTime()
                     else -> element
                 }
             }.toTypedArray()

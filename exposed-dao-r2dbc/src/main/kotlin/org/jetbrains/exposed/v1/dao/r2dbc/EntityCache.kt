@@ -164,38 +164,12 @@ class EntityCache(private val transaction: R2dbcTransaction) {
         createdInScope.remove(entity)
     }
 
-    /**
-     * Stops tracking [entity]: reads fall back to its committed values and writes throw. Safe to call twice.
-     *
-     * @throws IllegalStateException if it holds uncommitted values and [force] is `false`, or its row was
-     *   created by a transaction that is still open.
-     */
-    internal fun detach(entity: Entity<*>, force: Boolean) {
-        check(!wasCreatedInScope(entity)) {
-            "Cannot detach ${entity.id}: its row was created by a transaction that is still open, which owns " +
-                "whether that row comes to exist at all. Use delete() to withdraw it instead."
-        }
-        check(force || !holdsUncommittedValues(entity)) {
-            "Cannot detach ${entity.id}: it holds values that have not been committed, and detaching would " +
-                "drop them. Commit first, or pass `force = true` to discard them."
-        }
-
-        removeFromIdentityMap(entity)
-        for (scope in scopeChain) {
-            scope.forget(entity)
-            scope.updates[entity.klass.table]?.remove(entity)
-        }
-    }
-
     private fun markCreatedInTheCurrentScope(entity: Entity<*>) {
         createdInScope.add(entity)
     }
 
     private fun holdsUncommittedValues(entity: Entity<*>): Boolean =
         scopeChain.any { entity in it.staged }
-
-    private fun wasCreatedInScope(entity: Entity<*>): Boolean =
-        scopeChain.any { entity in it.createdInScope }
 
     /**
      * Takes a freshly fetched [row] into this scope's staged values when [entity] already holds uncommitted

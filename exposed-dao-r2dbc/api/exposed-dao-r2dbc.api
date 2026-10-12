@@ -122,8 +122,6 @@ public abstract class org/jetbrains/exposed/v1/dao/r2dbc/EntityClass {
 	public final fun count (Lorg/jetbrains/exposed/v1/core/Op;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun count$default (Lorg/jetbrains/exposed/v1/dao/r2dbc/EntityClass;Lorg/jetbrains/exposed/v1/core/Op;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	protected fun createInstance (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;Lorg/jetbrains/exposed/v1/core/ResultRow;)Lorg/jetbrains/exposed/v1/dao/r2dbc/Entity;
-	public final fun detach (Lorg/jetbrains/exposed/v1/dao/r2dbc/Entity;Z)V
-	public static synthetic fun detach$default (Lorg/jetbrains/exposed/v1/dao/r2dbc/EntityClass;Lorg/jetbrains/exposed/v1/dao/r2dbc/Entity;ZILjava/lang/Object;)V
 	public final fun find (Lkotlin/jvm/functions/Function0;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
 	public final fun find (Lorg/jetbrains/exposed/v1/core/Op;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
 	public final fun findById (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

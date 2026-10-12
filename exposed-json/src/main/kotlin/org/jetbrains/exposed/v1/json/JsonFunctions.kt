@@ -38,6 +38,9 @@ class Extract<T>(
  * @param path String(s) representing JSON path/keys that match fields to be extracted.
  * If none are provided, the root context item `'$'` will be used by default.
  * **Note:** Multiple [path] arguments are not supported by all vendors; please check the documentation.
+ * It is bound as a query parameter, except on Oracle, where it is written into the statement as a string literal with
+ * its single quotes escaped, because Oracle requires a JSON path to be a literal. Either way it is treated as data, so
+ * it must be passed as is, without being escaped on the client side.
  * @param toScalar If `true`, the extracted result is a scalar or text value; otherwise, it is a JSON object.
  * @sample org.jetbrains.exposed.v1.json.JsonColumnTests.testJsonExtractWithArrays
  */

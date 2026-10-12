@@ -47,6 +47,8 @@ class Exists(
  * @param candidate Expression to search for in [this] JSON expression.
  * @param path String representing JSON path/keys that match specific fields to search for [candidate].
  * **Note:** Optional [path] argument is not supported by all vendors; please check the documentation.
+ * It is bound as a query parameter, so it is treated as data and must be passed as is, without being escaped on the
+ * client side.
  * @sample org.jetbrains.exposed.v1.json.JsonColumnTests.testJsonContains
  */
 fun ExpressionWithColumnType<*>.contains(candidate: Expression<*>, path: String? = null): Contains =
@@ -58,6 +60,8 @@ fun ExpressionWithColumnType<*>.contains(candidate: Expression<*>, path: String?
  * @param candidate Value to search for in [this] JSON expression.
  * @param path String representing JSON path/keys that match specific fields to search for [candidate].
  * **Note:** Optional [path] argument is not supported by all vendors; please check the documentation.
+ * It is bound as a query parameter, so it is treated as data and must be passed as is, without being escaped on the
+ * client side.
  * @sample org.jetbrains.exposed.v1.json.JsonColumnTests.testJsonContains
  */
 fun <T> ExpressionWithColumnType<*>.contains(candidate: T, path: String? = null): Contains = when (candidate) {
@@ -71,8 +75,14 @@ fun <T> ExpressionWithColumnType<*>.contains(candidate: T, path: String? = null)
  * @param path String(s) representing JSON path/keys that match fields to check for existing data.
  * If none are provided, the root context item `'$'` will be used by default.
  * **Note:** Multiple [path] arguments are not supported by all vendors; please check the documentation.
+ * It is bound as a query parameter, except on Oracle, where it is written into the statement as a string literal with
+ * its single quotes escaped, because Oracle requires a JSON path to be a literal. Either way it is treated as data, so
+ * it must be passed as is, without being escaped on the client side.
  * @param optional String representing any optional vendor-specific clause or argument.
  * **Note:** [optional] function arguments are not supported by all vendors; please check the documentation.
+ * It is bound as a query parameter on PostgreSQL, and must be either `one` or `all` on MySQL and MariaDB. On Oracle it
+ * is a clause of the function and is appended to the statement as is, without being escaped, so it must never contain
+ * user input there.
  * @sample org.jetbrains.exposed.v1.json.JsonColumnTests.testJsonExists
  */
 fun ExpressionWithColumnType<*>.exists(vararg path: String, optional: String? = null): Exists =

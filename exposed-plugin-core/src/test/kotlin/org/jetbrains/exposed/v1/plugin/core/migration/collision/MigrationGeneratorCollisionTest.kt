@@ -6,11 +6,11 @@ import org.jetbrains.exposed.v1.plugin.core.migration.MigrationConfig
 import org.jetbrains.exposed.v1.plugin.core.migration.MigrationGenerator
 import org.jetbrains.exposed.v1.plugin.core.migration.MigrationLogger
 import org.jetbrains.exposed.v1.plugin.core.migration.VersionFormat
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import java.util.UUID
-import kotlin.test.assertEquals
 
 object Parent : Table("issue_2897_parent") {
     val id = integer("id")
@@ -83,17 +83,18 @@ class MigrationGeneratorCollisionTest {
 
     @Test
     fun testDependentTablesDoNotDuplicateParentConstraints() {
+        val config = MigrationConfig(
+            tablesPackage = this::class.java.packageName,
+            tablesPackages = listOf(this::class.java.packageName),
+            classpathUrls = listOf(this::class.java.protectionDomain.codeSource.location),
+            fileDirectory = migrationsDirectory,
+            fileVersionFormat = VersionFormat.TIMESTAMP_WITHOUT_SECONDS,
+            databaseUrl = "jdbc:h2:mem:${UUID.randomUUID()}",
+            databaseUser = "",
+            databasePassword = ""
+        )
         val generator = MigrationGenerator(
-            config = MigrationConfig(
-                tablesPackage = this::class.java.packageName,
-                classpathUrls = listOf(this::class.java.protectionDomain.codeSource.location),
-                fileDirectory = migrationsDirectory,
-                fileVersionFormat = VersionFormat.TIMESTAMP_WITHOUT_SECONDS,
-                databaseUrl = "jdbc:h2:mem:${UUID.randomUUID()}",
-                databaseUser = "",
-                databasePassword = "",
-                tablesPackages = emptyList()
-            ),
+            config = config,
             logger = object : MigrationLogger {
                 override fun lifecycle(message: String) = Unit
                 override fun debug(message: String) = Unit

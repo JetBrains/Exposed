@@ -321,11 +321,14 @@ class JodaTimeTests : R2dbcDatabaseTestsBase() {
     fun testDateTimeAsArray() {
         val defaultDates = listOf(today)
         val defaultDateTimes = listOf(DateTime.now())
+        val defaultTimes = listOf(LocalTime(13, 0))
         val tester = object : Table("array_tester") {
             val dates = array("dates", JodaLocalDateColumnType()).default(defaultDates)
             val optDates = array("opt_dates", JodaLocalDateColumnType()).nullable()
             val datetimes = array("datetimes", JodaLocalDateTimeColumnType()).default(defaultDateTimes)
             val optDatetimes = array("opt_datetimes", JodaLocalDateTimeColumnType()).nullable()
+            val times = array("times", JodaLocalTimeColumnType()).default(defaultTimes)
+            val optTimes = array("opt_times", JodaLocalTimeColumnType()).nullable()
         }
 
         withTables(excludeSettings = TestDB.ALL - TestDB.POSTGRESQL - TestDB.H2_V2 - TestDB.H2_V2_PSQL, tester) {
@@ -335,23 +338,30 @@ class JodaTimeTests : R2dbcDatabaseTestsBase() {
             assertNull(result1[tester.optDates])
             assertEqualLists(result1[tester.datetimes], defaultDateTimes)
             assertNull(result1[tester.optDatetimes])
+            assertEqualLists(result1[tester.times], defaultTimes)
+            assertNull(result1[tester.optTimes])
 
             val datesInput = List(3) { DateTime.parse("${2020 + it}-5-4") }
             val datetimeInput = List(3) { DateTime(2020 + it, 5, 4, 9, 9, 9) }
+            val timesInput = List(3) { LocalTime(9, 9, 9) }
             tester.insert {
                 it[dates] = datesInput
                 it[optDates] = null
                 it[datetimes] = datetimeInput
                 it[optDatetimes] = null
+                it[times] = timesInput
+                it[optTimes] = null
             }
 
             val lastDate = tester.dates[3]
             val firstTwoDatetimes = tester.datetimes.slice(1, 2)
-            val result2 = tester.select(lastDate, firstTwoDatetimes).where {
+            val secondTime = tester.times[2]
+            val result2 = tester.select(lastDate, firstTwoDatetimes, secondTime).where {
                 tester.dates[1].year() eq 2020
             }.single()
             assertEqualDateTime(datesInput.last(), result2[lastDate])
             assertEqualLists(result2[firstTwoDatetimes], datetimeInput.take(2))
+            assertEquals(timesInput[1], result2[secondTime])
         }
     }
 

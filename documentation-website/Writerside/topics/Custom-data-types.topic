@@ -384,7 +384,7 @@
             }
         ]]></code-block>
         <tip>
-            See <a href="Column-transformation.topic">column
+            See <a href="column-transformation.md">column
             transformations</a> for more details about <code>ColumnTransformer</code>.
         </tip>
         <p>The new column type and transformer can then be used in a table definition:</p>
@@ -465,7 +465,7 @@
             }
         </code-block>
         <tip>
-            See <a href="Column-transformation.topic">column
+            See <a href="column-transformation.md">column
             transformations</a> for more details about <code>transform()</code>.
         </tip>
         <note>
