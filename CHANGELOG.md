@@ -1,5 +1,9 @@
 # 1.5.1
 
+Security:
+* Fixes [CVE-2026-108474](https://www.cve.org/CVERecord?id=CVE-2026-108474): SQL injection through the string arguments
+  of SQL functions, fixed by EXPOSED-1093 below
+
 Bug fixes:
 * fix: EXPOSED-909 Escape single quotes in locate() substring by @kwy404 in https://github.com/JetBrains/Exposed/pull/2946
 * fix: EXPOSED-1093 Bind string arguments of SQL functions instead of concatenating them into SQL by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2957
