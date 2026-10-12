@@ -1,3 +1,5 @@
+<show-structure for="chapter,procedure" depth="2"/>
+
 # What's new in Exposed 1.6.0
 
 ## R2DBC DAO support
@@ -38,4 +40,111 @@ R2DBC DAO introduces several API differences required by its suspending nature:
 
 > For a complete overview of the required changes, see the [R2DBC DAO migration guide](migrating-from-jdbc-to-r2dbc-dao.md).
 > 
+{style="tip"}
+
+## Non-null column transformations
+
+You can now use the new [`.nonNullTransform()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/non-null-transform.html)
+function to represent a nullable database column as a non-nullable Exposed column.
+
+Use this function when a database column allows `null`, but your application has a meaningful non-null representation
+for that value.
+
+In the following example, the `UNSCHEDULED` enum entry represents a missing meal time:
+
+```kotlin
+enum class Meal {
+    BREAKFAST,
+    LUNCH,
+    DINNER,
+    UNSCHEDULED
+}
+
+class MealTimeNonNullTransformer : ColumnTransformer<LocalTime?, Meal> {
+    override fun wrap(value: LocalTime?): Meal = when {
+        value == null -> Meal.UNSCHEDULED
+        value.hour < 10 -> Meal.BREAKFAST
+        value.hour < 15 -> Meal.LUNCH
+        else -> Meal.DINNER
+    }
+
+    override fun unwrap(value: Meal): LocalTime? = when (value) {
+        Meal.BREAKFAST -> LocalTime(8, 0)
+        Meal.LUNCH -> LocalTime(12, 0)
+        Meal.DINNER -> LocalTime(18, 0)
+        Meal.UNSCHEDULED -> null
+    }
+}
+
+object Meals : Table() {
+    val mealTime: Column<Meal> = time("meal_time")
+        .nullable()
+        .nonNullTransform(MealTimeNonNullTransformer())
+}
+```
+
+> For more information, see [](column-transformation.md).
+> 
+{style="tip"}
+
+## Tableless SELECT queries
+
+Exposed 1.6.0 introduces tableless `SELECT` queries, allowing you to select expressions without specifying a table or
+a `FROM` clause.
+
+Use the top-level `select()` function to create a query that returns a single row by default. A `WHERE` condition can 
+filter out that row, resulting in an empty result:
+
+```kotlin
+val numberOne = intLiteral(1)
+val query: Query = select(numberOne, CurrentTimestamp)
+val one: Int = query.single()[numberOne]
+
+val query2 = select(listOf(intLiteral(1), stringLiteral("ready")))
+
+val noRows = select(intLiteral(1)).where { Op.FALSE }
+```
+
+For queries that select a single expression, use the `selectValue()` function to execute the query immediately and return
+the typed result without requiring an expression as a result-row key. The function also accepts supported Kotlin scalar
+values directly and wraps them as SQL literals:
+
+```kotlin
+val one: Int = selectValue(1)
+val ready = selectValue("ready")
+val serverTime = selectValue(CurrentTimestamp)
+```
+
+Tableless queries are regular `Query` objects and support existing query operations, such as filtering, set operations,
+derived-table aliases, and insert-from-select operations.
+
+> For more information, see [](DSL-Querying-data.topic#tableless-select).
+>
+{style="tip"}
+
+## Configure multiple table packages in migration plugins
+
+You can configure the [Exposed Gradle](Exposed-gradle-plugin.md) and [Maven](exposed-maven-plugin.md) plugins to use multiple table packages when generating
+migrations. This is useful when your table definitions are organized into separate packages.
+
+For example, in the Gradle configuration, use the `tablesPackage` property to specify a single package or the
+`tablesPackages` property to specify multiple packages:
+
+```kotlin
+exposed {
+    migrations {
+        tablesPackage = "com.example.db.tables"
+        // or
+        tablesPackages = listOf(
+            "com.example.db.auth",
+            "com.example.db.billing",
+        )
+        // ...
+    }
+}
+```
+
+> For more information, see the [Exposed Gradle plugin](Exposed-gradle-plugin.md#configuration) and [Exposed Maven plugin](exposed-maven-plugin.md#configuration)
+> documentation.
+>
 {style="tip"}
