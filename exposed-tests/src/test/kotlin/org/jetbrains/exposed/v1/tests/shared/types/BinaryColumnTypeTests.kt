@@ -22,7 +22,7 @@ class BinaryColumnTypeTests : DatabaseTestsBase() {
 
     private object SecretTable : Table("binary_secret") {
         val id = integer("id")
-        val secret = binary("secret").transform(
+        val secret = binary("secret", 32).transform(
             wrap = { Secret(it.toString(Charsets.UTF_8)) },
             unwrap = { it.plain.toByteArray(Charsets.UTF_8) },
         )
