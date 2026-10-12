@@ -7,10 +7,6 @@ import org.jetbrains.exposed.v1.r2dbc.ExposedR2dbcException
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcPreparedStatementApi
 
-internal object DefaultValueMarker {
-    override fun toString(): String = "DEFAULT"
-}
-
 /**
  * Executable provides a customizable execution mechanism for SQL statements within a transaction.
  *

@@ -6,10 +6,6 @@ import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
 import java.util.*
 
-internal object DefaultValueMarker {
-    override fun toString(): String = "DEFAULT"
-}
-
 /**
  * Base class representing an SQL statement that can be executed.
  *

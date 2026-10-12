@@ -197,6 +197,16 @@
                     this[CitiesTable.name] = name
                 }
             ]]></code-block>
+
+            <p>
+                The rows of a batch may set different columns. A column that none of them set is left out of the
+                statement entirely, so the database applies its default. A column that only some of them set still
+                needs a value in the rows that leave it unset, and Exposed uses the default declared by
+                <code>default()</code> there. A default that only the database can evaluate, as declared by
+                <code>defaultExpression()</code> or <code>databaseGenerated()</code>, cannot be sent as a parameter:
+                such a batch fails with <code>BatchDataInconsistentException</code> unless each row is rendered with
+                its own values clause, which is what <code>useMultiRowValues = true</code> does.
+            </p>
         </chapter>
     </chapter>
     <chapter title="Read" id="read">

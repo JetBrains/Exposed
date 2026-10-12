@@ -107,7 +107,8 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             .mapIndexed { index, columnValues ->
                 val resultSetValues = allResultSetsValues?.getOrNull(index) ?: hashMapOf()
                 val argumentValues = columnValues.toMap()
-                    .filterValues { it != DefaultValueMarker }
+                    // a value that is an expression is rendered into the statement, it is not a value of the row
+                    .filterValues { it !is Expression<*> }
                     .let { unwrapColumnValues(it) }
 
                 argumentValues + resultSetValues
