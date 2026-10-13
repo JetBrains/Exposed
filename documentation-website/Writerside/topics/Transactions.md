@@ -380,5 +380,9 @@ transaction {
 
 This value is not directly managed by Exposed, but is relayed to the JDBC or R2DBC driver.
 
+With R2DBC, if no timeout is set (and `defaultQueryTimeout` is left at `0`), Exposed doesn't change the connection's
+statement timeout, so any timeout configured on the database side, such as PostgreSQL's `statement_timeout`, still applies.
+Set `queryTimeout = 0` explicitly to disable it for a transaction.
+
 >Some drivers may not support implementing this limit. For more information, refer to the relevant driver documentation.
 {style="note"}
