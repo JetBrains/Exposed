@@ -81,8 +81,9 @@ class DeleteUnflushedEntityTest : R2dbcDatabaseTestsBase() {
         }
     }
 
+    // EXPOSED-1094
     @Test
-    fun testDeletingNewEntityThatIsStillReferencedFailsOnFlush() {
+    fun testDeletingNewEntityReferencedByPendingInsertIsRejected() {
         withTables(Authors, Books) {
             val author = Author.new { name = "author1" }
             Book.new {
@@ -90,9 +91,24 @@ class DeleteUnflushedEntityTest : R2dbcDatabaseTestsBase() {
                 this.author.set(author)
             }
 
-            author.delete()
+            assertFailsWith<IllegalStateException> { author.delete() }
+            entityCache.clear(flush = false)
+        }
+    }
 
-            assertFailsWith<IllegalStateException> { flushCache() }
+    // EXPOSED-1094
+    @Test
+    fun testDeletingNewEntityReferencedByPendingUpdateIsRejected() {
+        withTables(Authors, Books) {
+            val book = Book.newSuspend {
+                title = "book1"
+                this.author.set(Author.newSuspend { name = "author1" })
+            }
+
+            val newAuthor = Author.new { name = "author2" }
+            book.author.set(newAuthor)
+
+            assertFailsWith<IllegalStateException> { newAuthor.delete() }
         }
     }
 
