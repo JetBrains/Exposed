@@ -130,9 +130,18 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
     }
 
     internal open fun invalidateEntityInCache(o: Entity<ID>) {
+        if (TransactionManager.current().db != o.db) {
+            return
+        }
+
         val entityAlreadyFlushed = o.id._value != null
-        val sameDatabase = TransactionManager.current().db == o.db
-        if (!entityAlreadyFlushed || !sameDatabase) return
+        if (!entityAlreadyFlushed) {
+            // If id is empty the entity cannot be looked up in the database.
+            // But writing to it is still legitimate while it is initializing or its insert is scheduled
+            val cache = warmCache()
+            if (cache.isEntityInInitializationState(o) || o.isNewEntity(cache)) return
+            throw EntityNotFoundException(o.id, this)
+        }
 
         val currentEntityInCache = testCache(o.id)
         if (currentEntityInCache == null) {
@@ -167,14 +176,18 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      */
     fun removeFromCache(entity: Entity<ID>) {
         val cache = warmCache()
+        cache.inserts[table]?.remove(entity)
         cache.remove(table, entity)
+
+        val entityId = entity.id.takeIf { it._value != null }
         cache.referrers.forEach { (col, referrers) ->
             // Remove references from entity to other entities
-            referrers.remove(entity.id)
+            entityId?.let { referrers.remove(it) }
 
             // Remove references from other entities to this entity
             if (col.table == table) {
-                with(entity) { col.lookup() }?.let { referrers.remove(it as EntityID<*>) }
+                val referencedId = with(entity) { col.lookup() } as EntityID<*>?
+                referencedId?.takeIf { it._value != null }?.let { referrers.remove(it) }
             }
         }
     }
