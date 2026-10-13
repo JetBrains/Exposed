@@ -305,10 +305,23 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
      * For entities that have not yet been flushed (i.e. still scheduled for insert), no DELETE statement
      * is issued — the entity is simply removed from the scheduled inserts. This differs from JDBC, which
      * issues an INSERT followed by a DELETE.
+     *
+     * @throws IllegalStateException If this entity has not been flushed yet and another pending insert or update
+     * still references it, because that statement could then never be sent.
      */
     open suspend fun delete() {
         val table = klass.table
         val entityId = this.id
+
+        if (isNewEntity()) {
+            cache.findPendingReferrer(entityId)?.let { (referrer, column) ->
+                error(
+                    "Cannot delete ${javaClass.simpleName}, which has not been inserted yet: ${referrer.javaClass.simpleName} " +
+                        "still references it through ${column.table.tableName}.${column.name}, and its pending insert or update " +
+                        "could not be sent without it. Remove or reassign that reference first."
+                )
+            }
+        }
 
         // This behaves differently from the JDBC module. In JDBC, the entity is inserted first and then
         // removed from the database. Here we don't do that at the moment, and just remove it from cache if it was not inserted yet.
