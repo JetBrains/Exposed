@@ -5,7 +5,6 @@ import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.transactions.TransactionsHolder
-import org.jetbrains.exposed.v1.r2dbc.transactions.R2dbcTransactionManager
 import java.util.*
 import kotlin.concurrent.getOrSet
 
@@ -55,7 +54,7 @@ internal object SpringReactiveTransactionsStack : TransactionsHolder {
     }
 
     override suspend fun getTransactionFromContextOrNull(manager: TransactionManagerApi): Transaction? {
-        return getTransactionOrNull((manager as R2dbcTransactionManager).db)
+        return transactions.get()?.findLast { it.transactionManager == manager }
     }
 
     override fun isEmpty(): Boolean {

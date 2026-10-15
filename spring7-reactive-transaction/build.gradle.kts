@@ -25,6 +25,8 @@ dependencies {
 
     testImplementation(project(":exposed-dao-r2dbc"))
     testImplementation(project(":exposed-r2dbc-tests"))
+    // Included solely to test/ensure that the service loader gets the expected manager type from all on the classpath
+    testImplementation(project(":exposed-jdbc"))
     testImplementation(kotlin("test"))
     testImplementation(libs.junit6)
     testRuntimeOnly(libs.junit.platform.launcher)
