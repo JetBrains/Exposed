@@ -28,6 +28,7 @@ dependencies {
     testImplementation(libs.spring.boot4.starter.webflux)
     testImplementation(libs.h2)
     testImplementation(project(":exposed-jdbc"))
+    testImplementation(project(":exposed-java-time"))
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.junit6)
 }
