@@ -11,6 +11,7 @@ import org.jetbrains.exposed.v1.core.Version
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.v1.core.utils.CacheWithSuspendableDefault
 import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
+import org.jetbrains.exposed.v1.core.vendors.OracleDialect
 import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
 import org.jetbrains.exposed.v1.core.vendors.SchemaMetadata
 import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.MetadataProvider
@@ -60,7 +61,9 @@ open class R2dbcLocalMetadataImpl(
             "Please use `metadata()` to ensure that a connection is retrieved to send a query, if one is not already open."
     }
 
-    override val identifierManager: IdentifierManagerApi get() = error(CONNECTION_REQUIRED_ERROR)
+    override val identifierManager: IdentifierManagerApi by lazy {
+        R2dbcIdentifierManager(metadataProvider, isOracle = vendorDialect == OracleDialect.dialectName)
+    }
 
     override fun getVersion(): Version = error(CONNECTION_REQUIRED_ERROR)
 

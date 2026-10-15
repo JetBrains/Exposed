@@ -118,7 +118,10 @@ class R2dbcDatabase private constructor(
 
     override val supportsSelectForUpdate: Boolean by lazy { localMetadata { supportsSelectForUpdate } }
 
-    override val identifierManager: IdentifierManagerApi by lazy { connectionMetadata { identifierManager } }
+    override val identifierManager: IdentifierManagerApi by lazy {
+        // resolved locally when possible, so the lazy lock is never held while waiting for a connection
+        if (resolvedVendor != null) localMetadata { identifierManager } else connectionMetadata { identifierManager }
+    }
 
     companion object {
 
