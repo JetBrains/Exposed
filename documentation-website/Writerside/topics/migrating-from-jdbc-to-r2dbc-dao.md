@@ -132,10 +132,15 @@ val client = suspendTransaction {
 
 </compare>
 
-> Do not use `org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction` with R2DBC DAO. It is intended for suspending 
-> while using a blocking JDBC connection and is unrelated to R2DBC.
+>  For R2DBC DAO, import `suspendTransaction()` from `org.jetbrains.exposed.v1.r2dbc.transactions`.
 >
-{style="warning"}
+> The `suspendTransaction()` function in `org.jetbrains.exposed.v1.jdbc.transactions` is intended for suspending
+> operations with a blocking JDBC connection.
+> 
+> If you're migrating from JDBC to R2DBC, see the [](Migration-Guide-1-0-0.md) guide for changes to core Exposed APIs and
+> database operations.
+> 
+{style="note"}
 
 ## Update entity creation
 
@@ -195,8 +200,10 @@ suspendTransaction {
 The pending inserts are flushed when required by subsequent database operations or when the transaction commits. Call
 `flushCache()` when you need to explicitly control when the pending inserts are sent to the database.
 
-> The `new()` function exists in both JDBC and R2DBC DAO but its behavior differs. During migration, review every `new{}`
-> call that expects the row or its generated ID to exist immediately.
+> Even though the `new()` function exists in both JDBC and R2DBC DAO and both result in scheduled inserts, the behavior
+> of the new entity's property getters differs. During migration, review every `new()` call that expects the row or its
+> generated ID to exist immediately. Continuing to use `new()` in these cases will throw an exception, and they should
+> be replaced with `newSuspend()`.
 >
 {style="note"}
 

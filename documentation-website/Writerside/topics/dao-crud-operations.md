@@ -49,7 +49,8 @@ In the above example, `movie` is the [entity instance](dao-entity-definition.md)
 The `.new()` function schedules the entity for insert in the transaction's cache. The insert is flushed when you 
 explicitly call the `flushCache()` function, when another statement is executed in the same transaction, or when the transaction is committed.
 
-* With JDBC, the entity's ID and any database-generated columns are available when the function returns.
+* With JDBC, the entity's ID and any database-generated columns appear to be available immediately, but accessing these
+  values triggers a flush of the pending `INSERT` to retrieve the generated values.
 * With R2DBC, any database-generated columns are not accessible. Attempting to access `movie.id.value` before the insert
   is flushed throws an error.
 

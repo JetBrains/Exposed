@@ -14,8 +14,8 @@ R2DBC DAO provides the same core DAO concepts as JDBC DAO, including [entities](
 [references](dao-relationships.md), [queries](dao-crud-operations.md), and [transactions](Transactions.md),
 with APIs adapted for suspending database operations.
 
-To use R2DBC DAO, replace the JDBC DAO dependency with `exposed-dao-r2dbc` and use the `suspendTransaction()` function 
-for database operations:
+For example, to create and insert an entity with R2DBC DAO, use the `newSuspend()` function inside a `suspendTransaction {}`
+block:
 
 ```kotlin
 suspendTransaction {
@@ -25,6 +25,12 @@ suspendTransaction {
     println(film.id.value)
 }
 ```
+
+>  For R2DBC DAO, import `suspendTransaction()` from `org.jetbrains.exposed.v1.r2dbc.transactions`.
+> 
+> The `suspendTransaction()` function in `org.jetbrains.exposed.v1.jdbc.transactions` is intended for suspending operations with a blocking JDBC connection.
+> 
+{style="note"}
 
 R2DBC DAO introduces several API differences required by its suspending nature:
 
