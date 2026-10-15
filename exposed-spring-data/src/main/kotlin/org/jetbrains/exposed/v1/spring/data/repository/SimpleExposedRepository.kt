@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.util.*
 
 @Suppress("UNCHECKED_CAST")
+@Transactional(readOnly = true)
 open class SimpleExposedRepository<T : Any, ID : Any>(
     private val table: IdTable<ID>,
     private val entityInformation: ExposedEntityInformation<T, ID>,
