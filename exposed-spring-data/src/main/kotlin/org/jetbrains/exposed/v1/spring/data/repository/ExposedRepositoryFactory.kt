@@ -3,6 +3,7 @@ package org.jetbrains.exposed.v1.spring.data.repository
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.spring.data.ExposedRepository
 import org.jetbrains.exposed.v1.spring.data.mapping.ReflectionEntityMapper
+import org.jetbrains.exposed.v1.spring.data.query.ExposedQueryLookupStrategy
 import org.springframework.data.domain.Persistable
 import org.springframework.data.repository.core.EntityInformation
 import org.springframework.data.repository.core.RepositoryInformation
@@ -11,18 +12,17 @@ import org.springframework.data.repository.core.support.RepositoryFactorySupport
 import org.springframework.data.repository.query.QueryLookupStrategy
 import org.springframework.data.repository.query.ValueExpressionDelegate
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 
 class ExposedRepositoryFactory : RepositoryFactorySupport() {
+    private val mappers = ConcurrentHashMap<Class<*>, ReflectionEntityMapper<Any, Any>>()
+
     @Suppress("UNCHECKED_CAST")
     override fun getTargetRepository(metadata: RepositoryInformation): Any {
-        val exposedRepositoryAnnotation = checkNotNull(metadata.repositoryInterface.annotations.singleOrNull { it.annotationClass == ExposedRepository::class }) {
-            "ExposedRepository annotation not found on domain type ${metadata.repositoryName}"
-        } as ExposedRepository
-
-        val table = exposedRepositoryAnnotation.table.objectInstance as IdTable<Any>
+        val table = tableFor(metadata)
         val entityInformation = getEntityInformation(metadata) as ExposedEntityInformation<Any, Any>
-        val entityMapper = ReflectionEntityMapper(table, metadata.domainType.kotlin as KClass<Any>)
+        val entityMapper = mapperFor(metadata)
 
         return SimpleExposedRepository(
             table = table,
@@ -43,8 +43,21 @@ class ExposedRepositoryFactory : RepositoryFactorySupport() {
     }
 
     override fun getQueryLookupStrategy(key: QueryLookupStrategy.Key?, valueExpressionDelegate: ValueExpressionDelegate): Optional<QueryLookupStrategy> {
-        // TODO
-        return Optional.empty()
+        return Optional.of(ExposedQueryLookupStrategy(::tableFor, ::mapperFor))
     }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun tableFor(metadata: RepositoryMetadata): IdTable<Any> {
+        val annotation = checkNotNull(metadata.repositoryInterface.getAnnotation(ExposedRepository::class.java)) {
+            "@ExposedRepository not found on ${metadata.repositoryInterface.name}"
+        }
+        return checkNotNull(annotation.table.objectInstance) { "${annotation.table} must be an object" } as IdTable<Any>
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun mapperFor(metadata: RepositoryMetadata) = mappers.getOrPut(metadata.repositoryInterface) {
+        ReflectionEntityMapper(tableFor(metadata), metadata.domainType.kotlin as KClass<Any>)
+    }
+
 }
 
