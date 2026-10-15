@@ -39,6 +39,7 @@ into nested accessors, for example:
 | `exposed-core`            | `exposedLibs.core`                |
 | `exposed-jdbc`            | `exposedLibs.jdbc`                |
 | `exposed-r2dbc`           | `exposedLibs.r2dbc`               |
+| `exposed-dao-r2dbc`       | `exposedLibs.dao.r2dbc`           |
 | `exposed-kotlin-datetime` | `exposedLibs.kotlin.datetime`     |
 | `spring7-transaction`     | `exposedLibs.spring7.transaction` |
 

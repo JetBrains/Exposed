@@ -1,7 +1,7 @@
 # Exposed DAO Relationships examples
 
 A Gradle application that shows how to create relationships between entities with Exposed DAO API.
-The files are referenced in the DAO's [Relationships](../../topics/DAO-Relationships.topic)
+The files are referenced in the DAO's [Relationships](../../topics/dao-relationships.md)
 topic.
 
 ## Build

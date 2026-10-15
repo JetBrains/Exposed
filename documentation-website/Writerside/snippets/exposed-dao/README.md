@@ -1,8 +1,8 @@
 # Exposed DAO API examples
 
 A Gradle application that shows how to work with Exposed DAO API.
-The files are referenced in the DAO's [CRUD operations](../../topics/DAO-CRUD-Operations.topic),
-[Table types](../../topics/DAO-Table-Types.topic) and [Entity definition](../../topics/DAO-Entity-definition.topic)
+The files are referenced in the DAO's [CRUD operations](../../topics/dao-crud-operations.md),
+[Table types](../../topics/DAO-Table-Types.topic) and [Entity definition](../../topics/dao-entity-definition.md)
 topics.
 
 ## Build

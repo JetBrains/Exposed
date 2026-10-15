@@ -5,6 +5,8 @@ import org.example.entities.StarWarsFilmEntity
 import org.example.tables.DirectorsTable
 import org.example.tables.Genre
 import org.jetbrains.exposed.v1.core.dao.id.CompositeID
+import org.jetbrains.exposed.v1.dao.flushCache
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import kotlin.uuid.Uuid
 
 const val MOVIE_SEQUEL_ID = 8
@@ -37,6 +39,24 @@ class CreateExamples {
 
         val director = DirectorEntity.new(directorId) {
             genre = Genre.SCI_FI
+        }
+    }
+
+    fun batchInsert() {
+        transaction {
+            val films = listOf("A New Hope", "The Empire Strikes Back")
+                .map { title ->
+                    StarWarsFilmEntity.new {
+                        name = title
+                    }
+                }
+
+            flushCache()
+
+            val ids = films.map {
+                it.id.value
+            }
+            println("Created new records with ids $ids")
         }
     }
 }
