@@ -72,10 +72,23 @@ open class ExposedReactiveAutoConfiguration(private val applicationContext: Appl
     }
 
     /**
-     * Database config with default values.
+     * Database configuration with all default values except the [R2dbcDatabaseConfig.Builder.explicitDialect].
      *
-     * At minimum, the property `spring.exposed.database-driver` must be set to avoid incompatibility issues
-     * when a future `R2dbcDatabase` attempts to get a connection from Spring's created `ConnectionFactory`.
+     * At minimum, one of the following situations must be met to avoid exceptions:
+     * - Either the property `spring.exposed.database-driver` must be set to one of the following supported values:
+     * `h2 | postgresql | mysql | mariadb | oracle | mssql`
+     * - Or a `R2dbcDatabaseConfig.Builder` bean must be autowired with a custom configuration that sets `explicitDialect`
+     * ```kotlin
+     * @Bean
+     * open fun customDatabaseConfig(): R2dbcDatabaseConfig.Builder {
+     *     return R2dbcDatabaseConfig {
+     *         defaultMaxAttempts = 1
+     *         explicitDialect = MysqlDialect()
+     *     }
+     * }
+     * ```
+     * Either option avoids incompatibility exceptions when a future `R2dbcDatabase` attempts to retrieve a connection
+     * from Spring's created `ConnectionFactory`.
      */
     @Bean
     @ConditionalOnMissingBean(R2dbcDatabaseConfig.Builder::class)

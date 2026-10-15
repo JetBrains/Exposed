@@ -47,7 +47,7 @@ class ExposedReactiveAutoConfigurationTest {
     private var databaseInitializer: DatabaseInitializer? = null
 
     @Autowired
-    private var databaseConfig: R2dbcDatabaseConfig? = null
+    private var databaseConfig: R2dbcDatabaseConfig.Builder? = null
 
     @Autowired
     private var transactionAttributeSource: TransactionAttributeSource? = null
@@ -76,7 +76,6 @@ class ExposedReactiveAutoConfigurationTest {
     fun testClassExcludedFromAutoConfig() {
         val contextRunner = ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(Application::class.java))
-            .withPropertyValues("spring.exposed.database-driver=h2")
         contextRunner.run { context ->
             assertThrows(NoSuchBeanDefinitionException::class.java) {
                 context.getBean<R2dbcTransactionManagerAutoConfiguration>()
@@ -95,7 +94,7 @@ class ExposedReactiveAutoConfigurationTest {
     open class CustomDatabaseConfigConfiguration {
 
         @Bean
-        open fun customDatabaseConfig(): R2dbcDatabaseConfig {
+        open fun customDatabaseConfig(): R2dbcDatabaseConfig.Builder {
             return expectedConfig
         }
 
@@ -103,7 +102,7 @@ class ExposedReactiveAutoConfigurationTest {
             val expectedConfig = R2dbcDatabaseConfig {
                 maxEntitiesToStoreInCachePerEntity = 777
                 explicitDialect = H2Dialect()
-            }.build()
+            }
         }
     }
 }
