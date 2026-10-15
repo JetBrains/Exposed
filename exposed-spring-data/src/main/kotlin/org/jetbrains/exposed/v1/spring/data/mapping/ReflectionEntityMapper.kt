@@ -37,5 +37,7 @@ class ReflectionEntityMapper<T : Any, ID : Any>(
         }
     }
 
+    override fun columnFor(property: String): Column<*>? = columnsByName[property]
+
     private fun Any?.unwrapEntityId() = if (this is EntityID<*>) value else this
 }

@@ -46,12 +46,12 @@ open class ExposedSpringDataTest {
         assertEquals(saved, customerRepository.findByIdOrNull(saved.id))
     }
 
-//    @Test
-//    fun testFindByEmail() {
-//        customerRepository.save(Customer(name = "Ann", email = "ann@x.io"))
-//        assertEquals("Ann", customerRepository.findByEmail("ann@x.io")?.name)
-//        assertNull(customerRepository.findByEmail("nobody@x.io"))
-//    }
+    @Test
+    fun testFindByEmail() {
+        customerRepository.save(Customer(name = "Ann", email = "ann@x.io"))
+        assertEquals("Ann", customerRepository.findByEmail("ann@x.io")?.name)
+        assertNull(customerRepository.findByEmail("nobody@x.io"))
+    }
 
     @Test
     fun testFindByIdReturnsNullWhenMissing() {
@@ -87,6 +87,6 @@ data class Customer(
 
 @ExposedRepository(table = Customers::class)
 interface CustomerRepository : ExposedCrudRepository<Customer, Long> {
-//    fun findByEmail(email: String): Customer?
+    fun findByEmail(email: String): Customer?
 }
 
