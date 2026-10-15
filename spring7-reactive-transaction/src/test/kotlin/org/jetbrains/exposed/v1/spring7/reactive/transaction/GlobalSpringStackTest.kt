@@ -4,6 +4,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.transactions.TransactionsHolderProvider
+import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.RepeatedTest
@@ -108,5 +109,16 @@ class GlobalSpringStackTest : SpringReactiveTransactionTestBase() {
     @RepeatedTest(200)
     fun `concurrent transactions on real threads retain their own current transaction`() {
         concurrentBurst()
+    }
+
+    @Test
+    fun `plain JDBC suspendTransaction works with reactive spring module on classpath`() {
+        println("[repro] holder=${TransactionsHolderProvider.holder::class.simpleName}")
+        val db = Database.connect("jdbc:h2:mem:repro_cce;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver")
+        val result = runBlocking {
+            // keep this full package to ensure the correct JDBC path to internal getCurrentContextTransaction() is being reached
+            org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction(db) { 42 }
+        }
+        assertEquals(42, result)
     }
 }
