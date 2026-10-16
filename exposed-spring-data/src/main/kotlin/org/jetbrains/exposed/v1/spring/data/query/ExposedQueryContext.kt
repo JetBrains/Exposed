@@ -18,6 +18,7 @@ internal object ExposedQueryContextHolder {
 
     fun get(): ExposedQueryContext? = currentContext.get()
     fun set(ctx: ExposedQueryContext) = currentContext.set(ctx)
+    fun clear() = currentContext.remove()
 
     inline fun <R> withContext(ctx: ExposedQueryContext, block: () -> R): R {
         val previousContext = get()
@@ -25,7 +26,7 @@ internal object ExposedQueryContextHolder {
         try {
             return block()
         } finally {
-            previousContext?.let { set(it) }
+            if (previousContext != null) set(previousContext) else clear()
         }
     }
 }
