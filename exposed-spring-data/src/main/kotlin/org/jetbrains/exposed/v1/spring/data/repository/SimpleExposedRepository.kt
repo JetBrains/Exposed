@@ -10,7 +10,12 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.spring.data.ExposedCrudRepository
 import org.jetbrains.exposed.v1.spring.data.mapping.ExposedEntityMapper
+import org.jetbrains.exposed.v1.spring.data.query.ExposedQueryCreator.Companion.orderBy
 import org.springframework.dao.IncorrectUpdateSemanticsDataAccessException
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
+import org.springframework.data.support.PageableExecutionUtils
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
 
@@ -35,6 +40,17 @@ open class SimpleExposedRepository<T : Any, ID : Any>(
     override fun findAll(): List<T> = table
         .selectAll()
         .map(entityMapper::toEntity)
+
+    override fun findAll(sort: Sort): List<T> = table
+        .selectAll()
+        .orderBy(sort, entityMapper, table)
+        .map(entityMapper::toEntity)
+
+    override fun findAll(pageable: Pageable): Page<T> {
+        val query = table.selectAll().orderBy(pageable.sort, entityMapper, table)
+        if (pageable.isPaged) query.limit(pageable.pageSize).offset(pageable.offset)
+        return PageableExecutionUtils.getPage(query.map(entityMapper::toEntity), pageable) { count() }
+    }
 
     override fun findAllById(ids: Iterable<ID>): List<T> = table
         .selectAll()

@@ -8,4 +8,5 @@ interface ExposedEntityMapper<T : Any> {
     fun toEntity(row: ResultRow): T
     fun fill(statement: UpdateBuilder<*>, entity: T)
     fun columnFor(property: String): Column<*>?
+    fun propertyFor(column: Column<*>): String?
 }

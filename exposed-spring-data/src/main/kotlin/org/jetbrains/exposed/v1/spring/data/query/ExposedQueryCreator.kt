@@ -18,6 +18,7 @@ class ExposedQueryCreator(
     parameterAccessor: ParameterAccessor,
     private val table: IdTable<*>,
     private val mapper: ExposedEntityMapper<*>,
+    private val sortCustomizer: (Sort) -> Sort = { it },
 ) : AbstractQueryCreator<Query, Op<Boolean>>(tree, parameterAccessor) {
     companion object {
         val SUPPORTED = setOf(
@@ -61,7 +62,22 @@ class ExposedQueryCreator(
 
         internal fun Column<*>.isStringColumn() = columnType is StringColumnType
 
-        /** Whether [part] should be compared case-insensitively against [column]. */
+        internal fun Query.orderBy(sort: Sort, mapper: ExposedEntityMapper<*>, table: Table): Query = apply {
+            sort.forEach { order ->
+                val column = requireNotNull(mapper.columnFor(order.property)) {
+                    "Unknown sort property '${order.property}' for table ${table.tableName}"
+                }
+                orderBy(column, if (order.isAscending) SortOrder.ASC else SortOrder.DESC)
+            }
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        internal fun Column<*>.toDbValue(value: Any?): Any? {
+            val idColumnType = columnType as? EntityIDColumnType<*> ?: return value
+            if (value == null || value is EntityID<*>) return value
+            return EntityID(value, idColumnType.idColumn.table as IdTable<Any>)
+        }
+
         internal fun ignoreCase(part: Part, column: Column<*>): Boolean = when (part.shouldIgnoreCase()) {
             Part.IgnoreCaseType.NEVER -> false
             Part.IgnoreCaseType.ALWAYS -> true
@@ -90,12 +106,7 @@ class ExposedQueryCreator(
         sort: Sort
     ): Query = table.selectAll().apply {
         criteria?.let { where(it) }
-        sort.forEach { order ->
-            val column = requireNotNull(mapper.columnFor(order.property)) {
-                "Unknown sort property '${order.property}' for table ${table.tableName}"
-            }
-            orderBy(column, if (order.isAscending) SortOrder.ASC else SortOrder.DESC)
-        }
+        orderBy(sortCustomizer(sort), mapper, table)
     }
 
     @Suppress("UNCHECKED_CAST", "CyclomaticComplexMethod")
@@ -143,12 +154,4 @@ class ExposedQueryCreator(
 
     private fun containing(text: String): LikePattern =
         LikePattern("%", ESCAPE_CHAR) + LikePattern.ofLiteral(text, ESCAPE_CHAR) + "%"
-
-    /** Raw ids are wrapped in [EntityID] so they can be compared with `EntityID` columns. */
-    @Suppress("UNCHECKED_CAST")
-    private fun Column<*>.toDbValue(value: Any?): Any? {
-        val idColumnType = columnType as? EntityIDColumnType<*> ?: return value
-        if (value == null || value is EntityID<*>) return value
-        return EntityID(value, idColumnType.idColumn.table as IdTable<Any>)
-    }
 }
