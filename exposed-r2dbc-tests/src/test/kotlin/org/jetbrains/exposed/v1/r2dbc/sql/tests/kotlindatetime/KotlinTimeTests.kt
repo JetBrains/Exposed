@@ -644,6 +644,20 @@ class KotlinTimeTests : R2dbcDatabaseTestsBase() {
             assertEquals(preEpoch, readBack)
         }
     }
+
+    @Test
+    fun testLocalDateTimeBeforeEpochRoundTrip() {
+        val tester = object : Table("datetime_pre_epoch") {
+            val datetime = datetime("datetime")
+        }
+
+        withTables(tester) {
+            val preEpoch = LocalDateTime(1965, 12, 7, 12, 0, 0, 8_000_000)
+            tester.insert { it[datetime] = preEpoch }
+
+            assertEquals(preEpoch, tester.selectAll().single()[tester.datetime])
+        }
+    }
 }
 
 fun <T> assertEqualDateTime(d1: T?, d2: T?) {
