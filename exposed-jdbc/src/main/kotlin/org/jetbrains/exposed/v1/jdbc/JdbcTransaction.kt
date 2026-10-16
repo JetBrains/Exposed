@@ -12,6 +12,7 @@ import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
 import org.jetbrains.exposed.v1.core.statements.StatementResult
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
+import org.jetbrains.exposed.v1.core.statements.inferStatementType
 import org.jetbrains.exposed.v1.core.transactions.withThreadLocalTransaction
 import org.jetbrains.exposed.v1.exceptions.LongQueryException
 import org.jetbrains.exposed.v1.jdbc.statements.BlockingExecutable
@@ -163,8 +164,9 @@ open class JdbcTransaction(
     ): T? {
         if (stmt.isEmpty()) return null
 
+        @OptIn(InternalApi::class)
         val type = explicitStatementType
-            ?: StatementType.entries.find { stmt.trim().startsWith(it.name, true) }
+            ?: inferStatementType(stmt)
             ?: StatementType.OTHER
 
         return exec(object : Statement<T>(type, emptyList()), BlockingExecutable<T, Statement<T>> {
