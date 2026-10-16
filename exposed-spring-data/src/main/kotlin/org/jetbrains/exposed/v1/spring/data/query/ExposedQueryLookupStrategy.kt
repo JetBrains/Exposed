@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.v1.spring.data.query
 
-import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.spring.data.mapping.ExposedEntityMapper
 import org.springframework.data.projection.ProjectionFactory
@@ -12,8 +11,7 @@ import org.springframework.data.repository.query.QueryMethod
 import org.springframework.data.repository.query.RepositoryQuery
 import java.lang.reflect.Method
 
-@InternalApi
-class ExposedQueryLookupStrategy(
+internal class ExposedQueryLookupStrategy(
     private val tableFor: (RepositoryMetadata) -> IdTable<Any>,
     private val mapperFor: (RepositoryMetadata) -> ExposedEntityMapper<Any>,
 ) : QueryLookupStrategy {

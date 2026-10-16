@@ -19,8 +19,7 @@ import org.springframework.data.repository.query.parser.Part
 import org.springframework.data.repository.query.parser.PartTree
 import org.springframework.data.support.PageableExecutionUtils
 
-@InternalApi
-class PartTreeExposedQuery(
+internal class PartTreeExposedQuery(
     private val method: QueryMethod,
     private val table: IdTable<Any>,
     private val mapper: ExposedEntityMapper<Any>,
