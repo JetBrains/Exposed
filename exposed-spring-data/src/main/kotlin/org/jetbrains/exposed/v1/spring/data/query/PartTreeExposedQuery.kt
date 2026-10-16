@@ -15,7 +15,6 @@ import org.jetbrains.exposed.v1.spring.data.query.ExposedQueryCreator.Companion.
 import org.jetbrains.exposed.v1.spring.data.query.ExposedQueryCreator.Companion.toDbValue
 import org.springframework.dao.IncorrectResultSizeDataAccessException
 import org.springframework.data.domain.*
-import org.springframework.data.projection.ProjectionFactory
 import org.springframework.data.repository.query.ParametersParameterAccessor
 import org.springframework.data.repository.query.QueryMethod
 import org.springframework.data.repository.query.RepositoryQuery
@@ -27,16 +26,10 @@ internal class PartTreeExposedQuery(
     private val method: QueryMethod,
     private val table: IdTable<Any>,
     private val mapper: ExposedEntityMapper<Any>,
-    projectionFactory: ProjectionFactory,
+    private val projectionResolver: ProjectionResolver,
 ) : RepositoryQuery {
     private val tree = PartTree(method.name, method.entityInformation.javaType)
     private val idProperty = checkNotNull(mapper.propertyFor(table.id)) { "No property found for the id column of ${table.tableName}" }
-    private val projectionResolver = ProjectionResolver(
-        table = table,
-        mapper = mapper,
-        entityType = method.entityInformation.javaType,
-        factory = projectionFactory,
-    )
 
     init {
         tree.parts.forEach { part ->

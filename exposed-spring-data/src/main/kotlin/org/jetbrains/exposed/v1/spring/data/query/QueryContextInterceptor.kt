@@ -1,14 +1,17 @@
 package org.jetbrains.exposed.v1.spring.data.query
 
+import org.aopalliance.intercept.MethodInterceptor
 import org.aopalliance.intercept.MethodInvocation
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.spring.data.mapping.ExposedEntityMapper
+import org.jetbrains.exposed.v1.spring.data.mapping.ProjectionResolver
 import org.springframework.aop.ProxyMethodInvocation
 
 internal class QueryContextInterceptor(
     private val table: IdTable<*>,
     private val mapper: ExposedEntityMapper<Any>,
-) : org.aopalliance.intercept.MethodInterceptor {
+    private val projectionResolver: ProjectionResolver,
+) : MethodInterceptor {
     override fun invoke(invocation: MethodInvocation): Any? {
         val method = invocation.method
         if (!method.isDefault) return invocation.proceed()
@@ -19,6 +22,7 @@ internal class QueryContextInterceptor(
                 mapper = mapper,
                 table = table,
                 method = method,
+                projectionResolver = projectionResolver,
             )
         ) {
             invocation.proceed()
