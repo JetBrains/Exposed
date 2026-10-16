@@ -98,9 +98,16 @@ interface DatabaseConfig {
 
         /**
          * Should all connections/transactions be executed in read-only mode by default or not.
-         * Default state is false.
+         * Defaults to the DataSource setting for JDBC connections obtained from a DataSource, or false otherwise.
          */
-        var defaultReadOnly: Boolean = false
+        var defaultReadOnly: Boolean
+            get() = explicitReadOnly ?: false
+            set(value) {
+                explicitReadOnly = value
+            }
+
+        internal var explicitReadOnly: Boolean? = null
+            private set
 
         /**
          * How many seconds the driver should wait for a statement to execute in a transaction before timing out.
@@ -199,9 +206,19 @@ interface DatabaseConfig {
             require(builder.defaultMaxAttempts > 0) { "defaultMaxAttempts must be set to perform at least 1 attempt." }
 
             @OptIn(InternalApi::class)
-            return DatabaseConfigImpl(builder)
+            return BuiltDatabaseConfig(builder)
         }
     }
+}
+
+@OptIn(InternalApi::class)
+private class BuiltDatabaseConfig(val builder: DatabaseConfig.Builder) : DatabaseConfigImpl(builder)
+
+/** Returns the explicitly configured read-only setting, or null if the standard builder left it unspecified. @suppress */
+@InternalApi
+fun DatabaseConfig.explicitReadOnly(): Boolean? = when (this) {
+    is BuiltDatabaseConfig -> builder.explicitReadOnly
+    else -> defaultReadOnly
 }
 
 /** @suppress */

@@ -87,14 +87,29 @@ class Database private constructor(
      *
      * This should only hold a value other than -1 if [connectsViaDataSource] has been set to `true`.
      */
-    internal var dataSourceIsolationLevel: Int = -1
+    internal val dataSourceIsolationLevel: Int
+        get() = dataSourceSettings?.isolationLevel ?: -1
 
     /**
      * The read-only setting defined by a [DataSource] connection.
      *
      * This value should only be adjusted if [connectsViaDataSource] has been set to `true`.
      */
-    internal var dataSourceReadOnly: Boolean = false
+    internal val dataSourceReadOnly: Boolean
+        get() = dataSourceSettings?.readOnly ?: false
+
+    @Volatile
+    private var dataSourceSettings: DataSourceSettings? = null
+
+    internal fun dataSourceSettings(connection: ExposedConnection<*>): DataSourceSettings {
+        dataSourceSettings?.let { return it }
+        val settings = DataSourceSettings(connection.transactionIsolation, connection.readOnly)
+        return synchronized(this) {
+            dataSourceSettings ?: settings.also { dataSourceSettings = it }
+        }
+    }
+
+    internal class DataSourceSettings(val isolationLevel: Int, val readOnly: Boolean)
 
     companion object {
         private val connectionInstanceImpl: DatabaseConnectionAutoRegistration by lazy {
