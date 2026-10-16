@@ -1,0 +1,748 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>org.jetbrains.exposed.v1.dao.r2dbc</title>
+<link href="../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../styles/style.css" rel="Stylesheet">
+<link href="../../styles/main.css" rel="Stylesheet">
+<link href="../../styles/prism.css" rel="Stylesheet">
+<link href="../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../ui-kit/ui-kit.min.js" defer></script></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../index.html" tabindex="1">
+                    exposed
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">1.6.0
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":exposed-dao-r2dbc/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":exposed-dao-r2dbc/main" data-filter=":exposed-dao-r2dbc/main">
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    exposed
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="package" id="content" pageids="exposed-dao-r2dbc::org.jetbrains.exposed.v1.dao.r2dbc////PointingToDeclaration//-1586150741">
+  <div class="breadcrumbs"><a href="../index.html">exposed-dao-r2dbc</a><span class="delimiter">/</span><span class="current">org.jetbrains.exposed.v1.dao.r2dbc</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>Package-level</span></span> <span><span>declarations</span></span></h1>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="TYPE">Types</button><button class="section-tab" data-togglable="FUNCTION,EXTENSION_FUNCTION">Functions</button><button class="section-tab" data-togglable="PROPERTY,EXTENSION_PROPERTY">Properties</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="TYPE">
+        <h2 class="tableheader">Types</h2>
+        <div class="table"><a data-name="-1915959391%2FClasslikes%2F-1586150741" anchor-label="Accessor" id="-1915959391%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-accessor/index.html"><span><span>Accessor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1915959391%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-accessor/index.html">Accessor</a><span class="token operator">&lt;</span><a href="-accessor/index.html">ID</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><a href="-accessor/index.html">Parent</a><span class="token operator"> : </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="-accessor/index.html">ID</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="-accessor/index.html">REF</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">reference<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="-accessor/index.html">REF</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">factory<span class="token operator">: </span><a href="-entity-class/index.html">EntityClass</a><span class="token operator">&lt;</span><a href="-accessor/index.html">ID</a><span class="token punctuation">, </span><a href="-accessor/index.html">Parent</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">entity<span class="token operator">: </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">references<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">What a non-nullable many-to-one reference declared with <code class="lang-kotlin">referencedOn</code> gives back. Declare the property as a <code class="lang-kotlin">val</code>, read the referenced entity by invoking it, and write it with <a href="-accessor/set.html">set</a>:</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2063218410%2FClasslikes%2F-1586150741" anchor-label="BackReference" id="-2063218410%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-back-reference/index.html"><span>Back</span><wbr><span><span>Reference</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2063218410%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-back-reference/index.html">BackReference</a><span class="token operator">&lt;</span><a href="-back-reference/index.html">ParentID</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><span class="token keyword">out </span><a href="-back-reference/index.html">Parent</a><span class="token operator"> : </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="-back-reference/index.html">ParentID</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="-back-reference/index.html">ChildID</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><span class="token keyword">in </span><a href="-back-reference/index.html">Child</a><span class="token operator"> : </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="-back-reference/index.html">ChildID</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="-back-reference/index.html">REF</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">reference<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="-back-reference/index.html">REF</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">factory<span class="token operator">: </span><a href="-entity-class/index.html">EntityClass</a><span class="token operator">&lt;</span><a href="-back-reference/index.html">ParentID</a><span class="token punctuation">, </span><a href="-back-reference/index.html">Parent</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">references<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">What a one-to-one relationship declared with <code class="lang-kotlin">backReferencedOn</code> gives back: the single child entity that references this one, read by invoking the property.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1696755312%2FClasslikes%2F-1586150741" anchor-label="CompositeEntity" id="1696755312%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-composite-entity/index.html"><span>Composite</span><wbr><span><span>Entity</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1696755312%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-composite-entity/index.html">CompositeEntity</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">id<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-composite-i-d/index.html">CompositeID</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-composite-i-d/index.html">CompositeID</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Base class for an <a href="-entity/index.html">Entity</a> with an id made of several columns (<a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-composite-i-d/index.html">CompositeID</a>), mapping a table declared as a <code class="lang-kotlin">CompositeIdTable</code>. See <a href="-entity/index.html">Entity</a> for how the entity and its properties are declared.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="262571770%2FClasslikes%2F-1586150741" anchor-label="CompositeEntityClass" id="262571770%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-composite-entity-class/index.html"><span>Composite</span><wbr><span>Entity</span><wbr><span><span>Class</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="262571770%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-composite-entity-class/index.html">CompositeEntityClass</a><span class="token operator">&lt;</span><span class="token keyword">out </span><a href="-composite-entity-class/index.html">E</a><span class="token operator"> : </span><a href="-composite-entity/index.html">CompositeEntity</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">table<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-id-table/index.html">IdTable</a><span class="token operator">&lt;</span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-composite-i-d/index.html">CompositeID</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">entityType<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Class.html">Class</a><span class="token operator">&lt;</span><a href="-composite-entity-class/index.html">E</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">entityCtor<span class="token operator">: </span><span class="token punctuation">(</span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-composite-i-d/index.html">CompositeID</a><span class="token operator">&gt;</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="-composite-entity-class/index.html">E</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-entity-class/index.html">EntityClass</a><span class="token operator">&lt;</span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-composite-i-d/index.html">CompositeID</a><span class="token punctuation">, </span><a href="-composite-entity-class/index.html">E</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Base class for the companion object of a <a href="-composite-entity/index.html">CompositeEntity</a>: the entry point for creating, finding, and deleting the rows of <a href="../../exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-composite-entity-class/--root--.html">table</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-82137846%2FClasslikes%2F-1586150741" anchor-label="DaoEntityID" id="-82137846%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-dao-entity-i-d/index.html"><span>Dao</span><wbr><span>Entity</span><wbr><span><span>ID</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-82137846%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-dao-entity-i-d/index.html">DaoEntityID</a><span class="token operator">&lt;</span><a href="-dao-entity-i-d/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">id<span class="token operator">: </span><a href="-dao-entity-i-d/index.html">T</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">table<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-id-table/index.html">IdTable</a><span class="token operator">&lt;</span><a href="-dao-entity-i-d/index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="-dao-entity-i-d/index.html">T</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph"><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a> implementation for R2DBC DAOs. This is the R2DBC equivalent of org.jetbrains.exposed.v1.dao.DaoEntityID.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1359032133%2FClasslikes%2F-1586150741" anchor-label="Entity" id="1359032133%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-entity/index.html"><span><span>Entity</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1359032133%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="-entity/index.html">ID</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>id<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="-entity/index.html">ID</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">A row of <a href="-entity-class/table.html">EntityClass.table</a>, with the columns it should expose declared as delegated properties.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="196379002%2FClasslikes%2F-1586150741" anchor-label="EntityBatchUpdate" id="196379002%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-entity-batch-update/index.html"><span>Entity</span><wbr><span>Batch</span><wbr><span><span>Update</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="196379002%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-entity-batch-update/index.html">EntityBatchUpdate</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">klass<span class="token operator">: </span><a href="-entity-class/index.html">EntityClass</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token punctuation">, </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Class responsible for performing a batch update operation on multiple instances of an <a href="-entity/index.html">Entity</a> class.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2001534075%2FClasslikes%2F-1586150741" anchor-label="EntityCache" id="2001534075%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-entity-cache/index.html"><span>Entity</span><wbr><span><span>Cache</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2001534075%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-entity-cache/index.html">EntityCache</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">transaction<span class="token operator">: </span><a href="../../exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/-r2dbc-transaction/index.html">R2dbcTransaction</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Class responsible for the storage of <a href="-entity/index.html">Entity</a> instances in a specific <a href="../../exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-cache/--root--.html">transaction</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="490437237%2FClasslikes%2F-1586150741" anchor-label="EntityChange" id="490437237%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-entity-change/index.html"><span>Entity</span><wbr><span><span>Change</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="490437237%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-entity-change/index.html">EntityChange</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>entityClass<span class="token operator">: </span><a href="-entity-class/index.html">EntityClass</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token punctuation">, </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>entityId<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>changeType<span class="token operator">: </span><a href="-entity-change-type/index.html">EntityChangeType</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>transactionId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Stores details about a state-change event for an <a href="-entity/index.html">Entity</a> instance.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="989875803%2FClasslikes%2F-1586150741" anchor-label="EntityChangeType" id="989875803%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-entity-change-type/index.html"><span>Entity</span><wbr><span>Change</span><wbr><span><span>Type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="989875803%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">enum </span><a href="-entity-change-type/index.html">EntityChangeType</a> : <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="-entity-change-type/index.html">EntityChangeType</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Represents the possible states of an <a href="-entity/index.html">Entity</a> throughout its lifecycle.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-327679163%2FClasslikes%2F-1586150741" anchor-label="EntityClass" id="-327679163%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-entity-class/index.html"><span>Entity</span><wbr><span><span>Class</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-327679163%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-entity-class/index.html">EntityClass</a><span class="token operator">&lt;</span><a href="-entity-class/index.html">ID</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><span class="token keyword">out </span><a href="-entity-class/index.html">T</a><span class="token operator"> : </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="-entity-class/index.html">ID</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>table<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-id-table/index.html">IdTable</a><span class="token operator">&lt;</span><a href="-entity-class/index.html">ID</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">entityType<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Class.html">Class</a><span class="token operator">&lt;</span><a href="-entity-class/index.html">T</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">entityCtor<span class="token operator">: </span><span class="token punctuation">(</span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="-entity-class/index.html">ID</a><span class="token operator">&gt;</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="-entity-class/index.html">T</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">The entry point for the entities of one <a href="../../exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/--root--.html">table</a>: creating, finding, and deleting them.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1302741703%2FClasslikes%2F-1586150741" anchor-label="EntityFieldWithTransform" id="-1302741703%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-entity-field-with-transform/index.html"><span>Entity</span><wbr><span>Field</span><wbr><span>With</span><wbr><span><span>Transform</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1302741703%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-entity-field-with-transform/index.html">EntityFieldWithTransform</a><span class="token operator">&lt;</span><a href="-entity-field-with-transform/index.html">Unwrapped</a><span class="token punctuation">, </span><a href="-entity-field-with-transform/index.html">Wrapped</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>column<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="-entity-field-with-transform/index.html">Unwrapped</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">transformer<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column-transformer/index.html">ColumnTransformer</a><span class="token operator">&lt;</span><a href="-entity-field-with-transform/index.html">Unwrapped</a><span class="token punctuation">, </span><a href="-entity-field-with-transform/index.html">Wrapped</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">cacheResult<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span></span></span><span class="token punctuation">)</span> : <a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column-transformer/index.html">ColumnTransformer</a><span class="token operator">&lt;</span><a href="-entity-field-with-transform/index.html">Unwrapped</a><span class="token punctuation">, </span><a href="-entity-field-with-transform/index.html">Wrapped</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Class responsible for enabling <a href="-entity/index.html">Entity</a> field transformations, which may be useful when advanced database type conversions are necessary for entity mappings.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1914502498%2FClasslikes%2F-1586150741" anchor-label="EntityHook" id="1914502498%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-entity-hook/index.html"><span>Entity</span><wbr><span><span>Hook</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1914502498%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">object </span><a href="-entity-hook/index.html">EntityHook</a></div><div class="brief "><p class="paragraph">Class responsible for providing functions that expose <a href="-entity-change/index.html">EntityChange</a> state logic and entity lifecycle features for alerting triggers or customizing additional functionality. Subscribers are <code class="lang-kotlin">suspend</code> because the R2DBC lifecycle runs inside coroutines.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1412184362%2FClasslikes%2F-1586150741" anchor-label="EntityLifecycleInterceptor" id="1412184362%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-entity-lifecycle-interceptor/index.html"><span>Entity</span><wbr><span>Lifecycle</span><wbr><span><span>Interceptor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1412184362%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-entity-lifecycle-interceptor/index.html">EntityLifecycleInterceptor</a> : <a href="../../exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc.statements/-global-suspend-statement-interceptor/index.html">GlobalSuspendStatementInterceptor</a></div><div class="brief "><p class="paragraph">Represents a <a href="../../exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc.statements/-global-suspend-statement-interceptor/index.html">GlobalSuspendStatementInterceptor</a> specifically responsible for the statement lifecycle of <a href="-entity/index.html">Entity</a> instances, which is loaded whenever an <a href="../../exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/-r2dbc-transaction/index.html">R2dbcTransaction</a> instance is initialized.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-543434251%2FClasslikes%2F-1586150741" anchor-label="ExperimentalR2dbcDaoApi" id="-543434251%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-experimental-r2dbc-dao-api/index.html"><span>Experimental</span><wbr><span>R2dbc</span><wbr><span>Dao</span><wbr><span><span>Api</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-543434251%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-requires-opt-in/index.html"><span class="token annotation builtin">RequiresOptIn</span></a><span class="token punctuation">(</span><span>message<span class="token operator"> = </span><span class="breakable-word"><span class="token string">"This is an experimental Exposed R2DBC DAO API. Its shape may change in incompatible ways, even in patch releases. Opt in with '@OptIn(org.jetbrains.exposed.v1.dao.r2dbc.ExperimentalR2dbcDaoApi::class)' or '@org.jetbrains.exposed.v1.dao.r2dbc.ExperimentalR2dbcDaoApi'."</span></span></span><wbr><span class="token punctuation">)</span></div><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.annotation/-target/index.html"><span class="token annotation builtin">Target</span></a><span class="token punctuation">(</span><span>allowedTargets<span class="token operator"> = </span><span class="token punctuation">[</span><span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.annotation/-annotation-target/-c-l-a-s-s/index.html">AnnotationTarget.CLASS</a><span class="token punctuation">, </span></span><wbr><span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.annotation/-annotation-target/-f-u-n-c-t-i-o-n/index.html">AnnotationTarget.FUNCTION</a><span class="token punctuation">, </span></span><wbr><span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.annotation/-annotation-target/-p-r-o-p-e-r-t-y/index.html">AnnotationTarget.PROPERTY</a><span class="token punctuation">, </span></span><wbr><span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.annotation/-annotation-target/-c-o-n-s-t-r-u-c-t-o-r/index.html">AnnotationTarget.CONSTRUCTOR</a><span class="token punctuation">, </span></span><wbr><span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.annotation/-annotation-target/-t-y-p-e-a-l-i-a-s/index.html">AnnotationTarget.TYPEALIAS</a></span><wbr><span class="token punctuation">]</span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">annotation class </span><a href="-experimental-r2dbc-dao-api/index.html">ExperimentalR2dbcDaoApi</a></div><div class="brief "><p class="paragraph">API marked with this annotation is experimental. The shape of the R2DBC DAO API may change in incompatible ways while it stabilizes even in patch releases.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="65648598%2FClasslikes%2F-1586150741" anchor-label="InnerTableLink" id="65648598%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-inner-table-link/index.html"><span>Inner</span><wbr><span>Table</span><wbr><span><span>Link</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="65648598%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-inner-table-link/index.html">InnerTableLink</a><span class="token operator">&lt;</span><a href="-inner-table-link/index.html">SID</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><a href="-inner-table-link/index.html">Source</a><span class="token operator"> : </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="-inner-table-link/index.html">SID</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="-inner-table-link/index.html">ID</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><a href="-inner-table-link/index.html">Target</a><span class="token operator"> : </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="-inner-table-link/index.html">ID</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>table<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-table/index.html">Table</a><span class="token punctuation">, </span></span><span class="parameter ">sourceTable<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-id-table/index.html">IdTable</a><span class="token operator">&lt;</span><a href="-inner-table-link/index.html">SID</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>target<span class="token operator">: </span><a href="-entity-class/index.html">EntityClass</a><span class="token operator">&lt;</span><a href="-inner-table-link/index.html">ID</a><span class="token punctuation">, </span><a href="-inner-table-link/index.html">Target</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">_sourceColumn<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="-inner-table-link/index.html">SID</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">_targetColumn<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="-inner-table-link/index.html">ID</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">What a many-to-many relationship declared with <code class="lang-kotlin">via</code> gives back: the entities linked to this one through an intermediate table.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1969231439%2FClasslikes%2F-1586150741" anchor-label="InnerTableLinkAccessor" id="1969231439%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-inner-table-link-accessor/index.html"><span>Inner</span><wbr><span>Table</span><wbr><span>Link</span><wbr><span><span>Accessor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1969231439%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-inner-table-link-accessor/index.html">InnerTableLinkAccessor</a><span class="token operator">&lt;</span><a href="-inner-table-link-accessor/index.html">SID</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><a href="-inner-table-link-accessor/index.html">Source</a><span class="token operator"> : </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="-inner-table-link-accessor/index.html">SID</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="-inner-table-link-accessor/index.html">ID</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><a href="-inner-table-link-accessor/index.html">Target</a><span class="token operator"> : </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="-inner-table-link-accessor/index.html">ID</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>link<span class="token operator">: </span><a href="-inner-table-link/index.html">InnerTableLink</a><span class="token operator">&lt;</span><a href="-inner-table-link-accessor/index.html">SID</a><span class="token punctuation">, </span><a href="-inner-table-link-accessor/index.html">Source</a><span class="token punctuation">, </span><a href="-inner-table-link-accessor/index.html">ID</a><span class="token punctuation">, </span><a href="-inner-table-link-accessor/index.html">Target</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>entity<span class="token operator">: </span><a href="-inner-table-link-accessor/index.html">Source</a></span></span><span class="token punctuation">)</span> : <a href="../../exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/-sized-iterable/index.html">SizedIterable</a><span class="token operator">&lt;</span><a href="-inner-table-link-accessor/index.html">Target</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Property delegate companion to <a href="-inner-table-link/index.html">InnerTableLink</a> — implements <a href="../../exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/-sized-iterable/index.html">SizedIterable</a> over the linked targets of <a href="../../exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-inner-table-link-accessor/--root--.html">entity</a> via the join table defined by <a href="../../exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-inner-table-link-accessor/--root--.html">link</a>. R2DBC-specific because the iteration is built around <code class="lang-kotlin">Flow.collect</code>, whereas the JDBC implementation uses blocking iteration directly on <code class="lang-kotlin">InnerTableLink</code>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-451328312%2FClasslikes%2F-1586150741" anchor-label="IntEntity" id="-451328312%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-int-entity/index.html"><span>Int</span><wbr><span><span>Entity</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-451328312%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-int-entity/index.html">IntEntity</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">id<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Base class for an <a href="-entity/index.html">Entity</a> with an <code class="lang-kotlin">Int</code> id, mapping a table declared as an <code class="lang-kotlin">IntIdTable</code>. See <a href="-entity/index.html">Entity</a> for how the entity and its properties are declared.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1180771746%2FClasslikes%2F-1586150741" anchor-label="IntEntityClass" id="1180771746%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-int-entity-class/index.html"><span>Int</span><wbr><span>Entity</span><wbr><span><span>Class</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1180771746%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-int-entity-class/index.html">IntEntityClass</a><span class="token operator">&lt;</span><span class="token keyword">out </span><a href="-int-entity-class/index.html">E</a><span class="token operator"> : </span><a href="-int-entity/index.html">IntEntity</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">table<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-id-table/index.html">IdTable</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">entityType<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Class.html">Class</a><span class="token operator">&lt;</span><a href="-int-entity-class/index.html">E</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">entityCtor<span class="token operator">: </span><span class="token punctuation">(</span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">&gt;</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="-int-entity-class/index.html">E</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-entity-class/index.html">EntityClass</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span><a href="-int-entity-class/index.html">E</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Base class for the companion object of an <a href="-int-entity/index.html">IntEntity</a>: the entry point for creating, finding, and deleting the rows of <a href="../../exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-int-entity-class/--root--.html">table</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1256189353%2FClasslikes%2F-1586150741" anchor-label="LongEntity" id="1256189353%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-long-entity/index.html"><span>Long</span><wbr><span><span>Entity</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1256189353%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-long-entity/index.html">LongEntity</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">id<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Base class for an <a href="-entity/index.html">Entity</a> with a <code class="lang-kotlin">Long</code> id, mapping a table declared as a <code class="lang-kotlin">LongIdTable</code>. See <a href="-entity/index.html">Entity</a> for how the entity and its properties are declared.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1355064161%2FClasslikes%2F-1586150741" anchor-label="LongEntityClass" id="1355064161%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-long-entity-class/index.html"><span>Long</span><wbr><span>Entity</span><wbr><span><span>Class</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1355064161%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-long-entity-class/index.html">LongEntityClass</a><span class="token operator">&lt;</span><span class="token keyword">out </span><a href="-long-entity-class/index.html">E</a><span class="token operator"> : </span><a href="-long-entity/index.html">LongEntity</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">table<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-id-table/index.html">IdTable</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">entityType<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Class.html">Class</a><span class="token operator">&lt;</span><a href="-long-entity-class/index.html">E</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">entityCtor<span class="token operator">: </span><span class="token punctuation">(</span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token operator">&gt;</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="-long-entity-class/index.html">E</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-entity-class/index.html">EntityClass</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span><a href="-long-entity-class/index.html">E</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Base class for the companion object of a <a href="-long-entity/index.html">LongEntity</a>: the entry point for creating, finding, and deleting the rows of <a href="../../exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-long-entity-class/--root--.html">table</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1513496865%2FClasslikes%2F-1586150741" anchor-label="OptionalAccessor" id="1513496865%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-optional-accessor/index.html"><span>Optional</span><wbr><span><span>Accessor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1513496865%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-optional-accessor/index.html">OptionalAccessor</a><span class="token operator">&lt;</span><a href="-optional-accessor/index.html">ID</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><a href="-optional-accessor/index.html">Parent</a><span class="token operator"> : </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="-optional-accessor/index.html">ID</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="-optional-accessor/index.html">REF</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">reference<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="-optional-accessor/index.html">REF</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">factory<span class="token operator">: </span><a href="-entity-class/index.html">EntityClass</a><span class="token operator">&lt;</span><a href="-optional-accessor/index.html">ID</a><span class="token punctuation">, </span><a href="-optional-accessor/index.html">Parent</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">entity<span class="token operator">: </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">references<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">What a nullable many-to-one reference declared with <code class="lang-kotlin">optionalReferencedOn</code> gives back. Same <code class="lang-kotlin">val</code> + <code class="lang-kotlin">invoke()</code>/<a href="-optional-accessor/set.html">set</a> shape as <a href="-accessor/index.html">Accessor</a>, except that both ends accept <code class="lang-kotlin">null</code>:</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-872915050%2FClasslikes%2F-1586150741" anchor-label="OptionalBackReference" id="-872915050%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-optional-back-reference/index.html"><span>Optional</span><wbr><span>Back</span><wbr><span><span>Reference</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-872915050%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-optional-back-reference/index.html">OptionalBackReference</a><span class="token operator">&lt;</span><a href="-optional-back-reference/index.html">ParentID</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><span class="token keyword">out </span><a href="-optional-back-reference/index.html">Parent</a><span class="token operator"> : </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="-optional-back-reference/index.html">ParentID</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="-optional-back-reference/index.html">ChildID</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><span class="token keyword">in </span><a href="-optional-back-reference/index.html">Child</a><span class="token operator"> : </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="-optional-back-reference/index.html">ChildID</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="-optional-back-reference/index.html">REF</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">reference<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="-optional-back-reference/index.html">REF</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">factory<span class="token operator">: </span><a href="-entity-class/index.html">EntityClass</a><span class="token operator">&lt;</span><a href="-optional-back-reference/index.html">ParentID</a><span class="token punctuation">, </span><a href="-optional-back-reference/index.html">Parent</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">references<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">What a one-to-one relationship declared with <code class="lang-kotlin">optionalBackReferencedOn</code> gives back: the single child entity that references this one, or <code class="lang-kotlin">null</code> if there is none.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-510278449%2FClasslikes%2F-1586150741" anchor-label="OptionalReference" id="-510278449%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-optional-reference/index.html"><span>Optional</span><wbr><span><span>Reference</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-510278449%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-optional-reference/index.html">OptionalReference</a><span class="token operator">&lt;</span><a href="-optional-reference/index.html">ID</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><a href="-optional-reference/index.html">Parent</a><span class="token operator"> : </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="-optional-reference/index.html">ID</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="-optional-reference/index.html">REF</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>reference<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="-optional-reference/index.html">REF</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>factory<span class="token operator">: </span><a href="-entity-class/index.html">EntityClass</a><span class="token operator">&lt;</span><a href="-optional-reference/index.html">ID</a><span class="token punctuation">, </span><a href="-optional-reference/index.html">Parent</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>references<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Class representing an optional table relation between two <a href="-entity/index.html">Entity</a> classes, which is responsible for retrieving the parent entity optionally referenced by the child entity. R2DBC counterpart of JDBC's <code class="lang-kotlin">OptionalReference</code>; the property delegate yields an <a href="-optional-accessor/index.html">OptionalAccessor</a> for suspending lookups.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="550760015%2FClasslikes%2F-1586150741" anchor-label="Reference" id="550760015%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-reference/index.html"><span><span>Reference</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="550760015%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-reference/index.html">Reference</a><span class="token operator">&lt;</span><a href="-reference/index.html">ID</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><a href="-reference/index.html">Parent</a><span class="token operator"> : </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="-reference/index.html">ID</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="-reference/index.html">REF</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>reference<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="-reference/index.html">REF</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>factory<span class="token operator">: </span><a href="-entity-class/index.html">EntityClass</a><span class="token operator">&lt;</span><a href="-reference/index.html">ID</a><span class="token punctuation">, </span><a href="-reference/index.html">Parent</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>references<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Class representing a table relation between two <a href="-entity/index.html">Entity</a> classes, which is responsible for retrieving the parent entity referenced by the child entity. R2DBC counterpart of JDBC's <code class="lang-kotlin">Reference</code> from <code class="lang-kotlin">References.kt</code>; the property delegate yields an <a href="-accessor/index.html">Accessor</a> for suspending lookups.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="942394758%2FClasslikes%2F-1586150741" anchor-label="Referrers" id="942394758%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-referrers/index.html"><span><span>Referrers</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="942394758%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-referrers/index.html">Referrers</a><span class="token operator">&lt;</span><a href="-referrers/index.html">ParentID</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><span class="token keyword">in </span><a href="-referrers/index.html">Parent</a><span class="token operator"> : </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="-referrers/index.html">ParentID</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="-referrers/index.html">ChildID</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><span class="token keyword">out </span><a href="-referrers/index.html">Child</a><span class="token operator"> : </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="-referrers/index.html">ChildID</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="-referrers/index.html">REF</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>reference<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><a href="-referrers/index.html">REF</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>factory<span class="token operator">: </span><a href="-entity-class/index.html">EntityClass</a><span class="token operator">&lt;</span><a href="-referrers/index.html">ChildID</a><span class="token punctuation">, </span><a href="-referrers/index.html">Child</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>cache<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter ">references<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core/-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">What a one-to-many relationship declared with <code class="lang-kotlin">referrersOn</code> gives back: every child entity whose reference column points at this one.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1069888213%2FClasslikes%2F-1586150741" anchor-label="UIntEntity" id="-1069888213%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-u-int-entity/index.html"><span>UInt</span><wbr><span><span>Entity</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1069888213%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-u-int-entity/index.html">UIntEntity</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">id<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-u-int/index.html">UInt</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-u-int/index.html">UInt</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Base class for an <a href="-entity/index.html">Entity</a> with a <code class="lang-kotlin">UInt</code> id, mapping a table declared as a <code class="lang-kotlin">UIntIdTable</code>. See <a href="-entity/index.html">Entity</a> for how the entity and its properties are declared.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1976359649%2FClasslikes%2F-1586150741" anchor-label="UIntEntityClass" id="-1976359649%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-u-int-entity-class/index.html"><span>UInt</span><wbr><span>Entity</span><wbr><span><span>Class</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1976359649%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-u-int-entity-class/index.html">UIntEntityClass</a><span class="token operator">&lt;</span><span class="token keyword">out </span><a href="-u-int-entity-class/index.html">E</a><span class="token operator"> : </span><a href="-u-int-entity/index.html">UIntEntity</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">table<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-id-table/index.html">IdTable</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-u-int/index.html">UInt</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">entityType<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Class.html">Class</a><span class="token operator">&lt;</span><a href="-u-int-entity-class/index.html">E</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">entityCtor<span class="token operator">: </span><span class="token punctuation">(</span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-u-int/index.html">UInt</a><span class="token operator">&gt;</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="-u-int-entity-class/index.html">E</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-entity-class/index.html">EntityClass</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-u-int/index.html">UInt</a><span class="token punctuation">, </span><a href="-u-int-entity-class/index.html">E</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Base class for the companion object of a <a href="-u-int-entity/index.html">UIntEntity</a>: the entry point for creating, finding, and deleting the rows of <a href="../../exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-u-int-entity-class/--root--.html">table</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-739298394%2FClasslikes%2F-1586150741" anchor-label="ULongEntity" id="-739298394%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-u-long-entity/index.html"><span>ULong</span><wbr><span><span>Entity</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-739298394%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-u-long-entity/index.html">ULongEntity</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">id<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-u-long/index.html">ULong</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-u-long/index.html">ULong</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Base class for an <a href="-entity/index.html">Entity</a> with a <code class="lang-kotlin">ULong</code> id, mapping a table declared as a <code class="lang-kotlin">ULongIdTable</code>. See <a href="-entity/index.html">Entity</a> for how the entity and its properties are declared.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2026728572%2FClasslikes%2F-1586150741" anchor-label="ULongEntityClass" id="-2026728572%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-u-long-entity-class/index.html"><span>ULong</span><wbr><span>Entity</span><wbr><span><span>Class</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2026728572%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-u-long-entity-class/index.html">ULongEntityClass</a><span class="token operator">&lt;</span><span class="token keyword">out </span><a href="-u-long-entity-class/index.html">E</a><span class="token operator"> : </span><a href="-u-long-entity/index.html">ULongEntity</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">table<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-id-table/index.html">IdTable</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-u-long/index.html">ULong</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">entityType<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Class.html">Class</a><span class="token operator">&lt;</span><a href="-u-long-entity-class/index.html">E</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">entityCtor<span class="token operator">: </span><span class="token punctuation">(</span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-u-long/index.html">ULong</a><span class="token operator">&gt;</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="-u-long-entity-class/index.html">E</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-entity-class/index.html">EntityClass</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-u-long/index.html">ULong</a><span class="token punctuation">, </span><a href="-u-long-entity-class/index.html">E</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Base class for the companion object of a <a href="-u-long-entity/index.html">ULongEntity</a>: the entry point for creating, finding, and deleting the rows of <a href="../../exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-u-long-entity-class/--root--.html">table</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1232459914%2FClasslikes%2F-1586150741" anchor-label="UuidEntity" id="1232459914%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-uuid-entity/index.html"><span>Uuid</span><wbr><span><span>Entity</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1232459914%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-uuid-entity/index.html">UuidEntity</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">id<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.uuid/-uuid/index.html">Uuid</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.uuid/-uuid/index.html">Uuid</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Base class for an <a href="-entity/index.html">Entity</a> with a client-generated <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.uuid/-uuid/index.html">kotlin.uuid.Uuid</a> id, mapping a table declared as a <code class="lang-kotlin">UuidTable</code>. See <a href="-entity/index.html">Entity</a> for how the entity and its properties are declared.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-180134624%2FClasslikes%2F-1586150741" anchor-label="UuidEntityClass" id="-180134624%2FClasslikes%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-uuid-entity-class/index.html"><span>Uuid</span><wbr><span>Entity</span><wbr><span><span>Class</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-180134624%2FClasslikes%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-uuid-entity-class/index.html">UuidEntityClass</a><span class="token operator">&lt;</span><span class="token keyword">out </span><a href="-uuid-entity-class/index.html">E</a><span class="token operator"> : </span><a href="-uuid-entity/index.html">UuidEntity</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">table<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-id-table/index.html">IdTable</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.uuid/-uuid/index.html">Uuid</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">entityType<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Class.html">Class</a><span class="token operator">&lt;</span><a href="-uuid-entity-class/index.html">E</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">entityCtor<span class="token operator">: </span><span class="token punctuation">(</span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.uuid/-uuid/index.html">Uuid</a><span class="token operator">&gt;</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="-uuid-entity-class/index.html">E</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-entity-class/index.html">EntityClass</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.uuid/-uuid/index.html">Uuid</a><span class="token punctuation">, </span><a href="-uuid-entity-class/index.html">E</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Base class for the companion object of a <a href="-uuid-entity/index.html">UuidEntity</a>: the entry point for creating, finding, and deleting the rows of <a href="../../exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-uuid-entity-class/--root--.html">table</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="EXTENSION_PROPERTY">
+        <h2 class="tableheader">Properties</h2>
+        <div class="table"><a data-name="1231842269%2FProperties%2F-1586150741" anchor-label="entityCache" id="1231842269%2FProperties%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="entity-cache.html"><span>entity</span><wbr><span><span>Cache</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1231842269%2FProperties%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="../../exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/-r2dbc-transaction/index.html">R2dbcTransaction</a><span class="token punctuation">.</span><a href="entity-cache.html">entityCache</a><span class="token operator">: </span><a href="-entity-cache/index.html">EntityCache</a></div><div class="brief "><p class="paragraph">The <a href="-entity-cache/index.html">EntityCache</a> belonging to the transaction, created on first access.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="171640985%2FFunctions%2F-1586150741" anchor-label="alertSubscribers" id="171640985%2FFunctions%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="alert-subscribers.html"><span>alert</span><wbr><span><span>Subscribers</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="171640985%2FFunctions%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="../../exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/-r2dbc-transaction/index.html">R2dbcTransaction</a><span class="token punctuation">.</span><a href="alert-subscribers.html"><span class="token function">alertSubscribers</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Triggers alerts for all unprocessed entity events using any state-change actions previously registered via <a href="-entity-hook/subscribe.html">EntityHook.subscribe</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1300660504%2FFunctions%2F-1586150741" anchor-label="flushCache" id="-1300660504%2FFunctions%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="flush-cache.html"><span>flush</span><wbr><span><span>Cache</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1300660504%2FFunctions%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="../../exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/-r2dbc-transaction/index.html">R2dbcTransaction</a><span class="token punctuation">.</span><a href="flush-cache.html"><span class="token function">flushCache</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Sends all pending <a href="-entity/index.html">Entity</a> inserts and updates stored in this transaction's <a href="-entity-cache/index.html">EntityCache</a> to the database.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="484209329%2FFunctions%2F-1586150741" anchor-label="load" id="484209329%2FFunctions%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="load.html"><span><span>load</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="484209329%2FFunctions%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="load.html">SRCID</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><a href="load.html">SRC</a><span class="token operator"> : </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="load.html">SRCID</a><span class="token operator">&gt;</span><span class="token operator">&gt; </span><a href="load.html">SRC</a><span class="token punctuation">.</span><a href="load.html"><span class="token function">load</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>relations<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.reflect/-k-property1/index.html">KProperty1</a><span class="token operator">&lt;</span><span class="token keyword">out </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="load.html">SRC</a></div><div class="brief "><p class="paragraph">Loads the given <a href="load.html">relations</a> for this single entity up front:</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2065988501%2FFunctions%2F-1586150741" anchor-label="registerChange" id="2065988501%2FFunctions%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="register-change.html"><span>register</span><wbr><span><span>Change</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2065988501%2FFunctions%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../../exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/-r2dbc-transaction/index.html">R2dbcTransaction</a><span class="token punctuation">.</span><a href="register-change.html"><span class="token function">registerChange</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">entityClass<span class="token operator">: </span><a href="-entity-class/index.html">EntityClass</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token punctuation">, </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">entityId<span class="token operator">: </span><a href="../../exposed-core/org.jetbrains.exposed.v1.core.dao.id/-entity-i-d/index.html">EntityID</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">changeType<span class="token operator">: </span><a href="-entity-change-type/index.html">EntityChangeType</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Creates a new <a href="-entity-change/index.html">EntityChange</a> with <a href="../../exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/-r2dbc-transaction/index.html">this</a> id and registers it as an entity event.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1640092383%2FFunctions%2F-1586150741" anchor-label="registeredChanges" id="1640092383%2FFunctions%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="registered-changes.html"><span>registered</span><wbr><span><span>Changes</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1640092383%2FFunctions%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../../exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/-r2dbc-transaction/index.html">R2dbcTransaction</a><span class="token punctuation">.</span><a href="registered-changes.html"><span class="token function">registeredChanges</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="-entity-change/index.html">EntityChange</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a list of all <a href="-entity-change/index.html">EntityChange</a> events that have been registered in this <a href="../../exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/-r2dbc-transaction/index.html">R2dbcTransaction</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-320101274%2FFunctions%2F-1586150741" anchor-label="toEntity" id="-320101274%2FFunctions%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="to-entity.html"><span>to</span><wbr><span><span>Entity</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-320101274%2FFunctions%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="to-entity.html">ID</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><a href="to-entity.html">T</a><span class="token operator"> : </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="to-entity.html">ID</a><span class="token operator">&gt;</span><span class="token operator">&gt; </span><a href="-entity-change/index.html">EntityChange</a><span class="token punctuation">.</span><a href="to-entity.html"><span class="token function">toEntity</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="to-entity.html">T</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Returns the actual <a href="-entity/index.html">Entity</a> instance associated with <a href="-entity-change/index.html">this</a> event, or <code class="lang-kotlin">null</code> if the entity is not found.</p></div><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="to-entity.html">ID</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><a href="to-entity.html">T</a><span class="token operator"> : </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="to-entity.html">ID</a><span class="token operator">&gt;</span><span class="token operator">&gt; </span><a href="-entity-change/index.html">EntityChange</a><span class="token punctuation">.</span><a href="to-entity.html"><span class="token function">toEntity</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">klass<span class="token operator">: </span><a href="-entity-class/index.html">EntityClass</a><span class="token operator">&lt;</span><a href="to-entity.html">ID</a><span class="token punctuation">, </span><a href="to-entity.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="to-entity.html">T</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Returns the actual <a href="-entity/index.html">Entity</a> instance associated with <a href="-entity-change/index.html">this</a> event, or <code class="lang-kotlin">null</code> if either its class type is neither equivalent to nor a subclass of <a href="to-entity.html">klass</a>, or if the entity is not found.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="119674163%2FFunctions%2F-1586150741" anchor-label="with" id="119674163%2FFunctions%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="with.html"><span><span>with</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="119674163%2FFunctions%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="with.html">SRCID</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><a href="with.html">SRC</a><span class="token operator"> : </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="with.html">SRCID</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="with.html">REF</a><span class="token operator"> : </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="with.html">L</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-iterable/index.html">Iterable</a><span class="token operator">&lt;</span><a href="with.html">SRC</a><span class="token operator">&gt;</span><span class="token operator">&gt; </span><a href="with.html">L</a><span class="token punctuation">.</span><a href="with.html"><span class="token function">with</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>relations<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.reflect/-k-property1/index.html">KProperty1</a><span class="token operator">&lt;</span><span class="token keyword">out </span><a href="with.html">REF</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="with.html">L</a></div><div class="brief "><p class="paragraph">Loads the given <a href="with.html">relations</a> for entities that are already in memory, one query per relation:</p></div><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="with.html">SRCID</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><a href="with.html">SRC</a><span class="token operator"> : </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><a href="with.html">SRCID</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="with.html">REF</a><span class="token operator"> : </span><a href="-entity/index.html">Entity</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="with.html">L</a><span class="token operator"> : </span><a href="../../exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/-sized-iterable/index.html">SizedIterable</a><span class="token operator">&lt;</span><a href="with.html">SRC</a><span class="token operator">&gt;</span><span class="token operator">&gt; </span><a href="with.html">L</a><span class="token punctuation">.</span><a href="with.html"><span class="token function">with</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>relations<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.reflect/-k-property1/index.html">KProperty1</a><span class="token operator">&lt;</span><span class="token keyword">out </span><a href="with.html">REF</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="with.html">L</a></div><div class="brief "><p class="paragraph">Loads the given <a href="with.html">relations</a> for every entity of this <a href="../../exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/-sized-iterable/index.html">SizedIterable</a> up front, one query per relation, instead of one query per entity as it is traversed:</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="643476752%2FFunctions%2F-1586150741" anchor-label="withHook" id="643476752%2FFunctions%2F-1586150741" data-filterable-set=":exposed-dao-r2dbc/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="with-hook.html"><span>with</span><wbr><span><span>Hook</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="643476752%2FFunctions%2F-1586150741"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="with-hook.html">T</a><span class="token operator">&gt; </span><a href="with-hook.html"><span class="token function">withHook</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">action<span class="token operator">: </span><span class="token keyword">suspend </span><span class="token punctuation">(</span><a href="-entity-change/index.html">EntityChange</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-unit/index.html">Unit</a><span class="token punctuation">, </span></span><span class="parameter ">body<span class="token operator">: </span><span class="token keyword">suspend </span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="with-hook.html">T</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="with-hook.html">T</a></div><div class="brief "><p class="paragraph">Calls the specified <a href="with-hook.html">body</a> with the given state-change <a href="with-hook.html">action</a>, registers the action, and returns its result.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2026 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

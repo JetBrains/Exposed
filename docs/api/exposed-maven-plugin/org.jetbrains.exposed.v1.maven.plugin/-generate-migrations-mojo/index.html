@@ -38,7 +38,7 @@
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
-        <div class="library-version" id="library-version">1.5.0
+        <div class="library-version" id="library-version">1.6.0
         </div>
         <div class="navigation-controls">
         <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
@@ -309,7 +309,22 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-maven-plugin/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="org.apache.maven.plugins.annotations/Parameter///PointingToDeclaration/"><span class="token annotation builtin">Parameter</span></span><span class="token punctuation">(</span><span>property<span class="token operator"> = </span><span class="breakable-word"><span class="token string">"exposed.migrations.tablesPackage"</span></span><span class="token punctuation">, </span></span><wbr><span>required<span class="token operator"> = </span><span class="breakable-word"><span class="token boolean">true</span></span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">lateinit </span><span class="token keyword">var </span><a href="tables-package.html">tablesPackage</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Package name where Exposed table definitions are located.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-maven-plugin/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="org.apache.maven.plugins.annotations/Parameter///PointingToDeclaration/"><span class="token annotation builtin">Parameter</span></span><span class="token punctuation">(</span><span>property<span class="token operator"> = </span><span class="breakable-word"><span class="token string">"exposed.migrations.tablesPackage"</span></span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">var </span><a href="tables-package.html">tablesPackage</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Package name where Exposed table definitions are located. If multiple package names are required, pass all possible strings to the <a href="tables-packages.html">tablesPackages</a> property instead. If the <a href="tables-package.html">tablesPackage</a> and <a href="tables-packages.html">tablesPackages</a> properties have inconsistent elements, the final list of package names used will be a distinct combination of both properties' values.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="551869267%2FProperties%2F-2099378878" anchor-label="tablesPackages" id="551869267%2FProperties%2F-2099378878" data-filterable-set=":exposed-maven-plugin/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":exposed-maven-plugin/main" data-filterable-set=":exposed-maven-plugin/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="tables-packages.html"><span>tables</span><wbr><span><span>Packages</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="551869267%2FProperties%2F-2099378878"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-maven-plugin/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="org.apache.maven.plugins.annotations/Parameter///PointingToDeclaration/"><span class="token annotation builtin">Parameter</span></span><span class="token punctuation">(</span><span>property<span class="token operator"> = </span><span class="breakable-word"><span class="token string">"exposed.migrations.tablesPackages"</span></span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">var </span><a href="tables-packages.html">tablesPackages</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">All package names where Exposed table definitions are located. If this property is not manually set, then it will be set to a list containing the single element package string configured for the property <a href="tables-package.html">tablesPackage</a>. If the <a href="tables-package.html">tablesPackage</a> property is not manually set, then this property defaults to an empty list and the task fails.</p></div></div></div>
                 </div>
               </div>
             </div>
