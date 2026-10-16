@@ -27,6 +27,7 @@
             <toc-element topic="Enumeration-types.topic"/>
             <toc-element topic="date-and-time-types.md"/>
             <toc-element topic="json-and-jsonb-types.md"/>
+            <toc-element topic="hstore-type.md"/>
             <toc-element topic="Vector-types.topic"/>
             <toc-element topic="Custom-data-types.topic"/>
             <toc-element topic="Custom-type-mapping.md"/>
