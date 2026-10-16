@@ -5,12 +5,8 @@ import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
-import org.jetbrains.exposed.v1.jdbc.Query
-import org.jetbrains.exposed.v1.jdbc.deleteAll
-import org.jetbrains.exposed.v1.jdbc.deleteWhere
-import org.jetbrains.exposed.v1.jdbc.insertAndGetId
-import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.update
+import org.jetbrains.exposed.v1.core.statements.UpdateBuilder
+import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.spring.data.ExposedCrudRepository
 import org.jetbrains.exposed.v1.spring.data.mapping.ProjectionResolver
 import org.jetbrains.exposed.v1.spring.data.mapping.orderBy
@@ -35,14 +31,32 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
     private val entityConverter = projectionResolver.entityConverter
     private val versionColumn: Column<Any?>? = metadata.versionColumn
 
+    /**
+     * New entities are inserted with one batch insert per shape (with or without an assigned id), existing ones are updated
+     * one by one (each update needs its own row count for the checks). Afterwards every saved row is read back with as few
+     * queries as possible, so values set by the database (e.g. defaults) are part of the result.
+     */
     @Transactional
     override fun <S : T> saveAll(entities: Iterable<S>): List<S> {
-        return entities.map { save(it) }
+        val toSave = entities.toList()
+        if (toSave.isEmpty()) return emptyList()
+
+        val ids = arrayOfNulls<Any>(toSave.size) as Array<ID?>
+        val (newIndices, existingIndices) = toSave.indices.partition { entityInformation.isNew(toSave[it]) }
+        newIndices.groupBy { entityInformation.getId(toSave[it]) != null }.values.forEach { indices ->
+            insertRows(indices.map(toSave::get)).forEachIndexed { i, id -> ids[indices[i]] = id }
+        }
+        existingIndices.forEach { ids[it] = updateRow(toSave[it]) }
+
+        val rows = findRows(ids.map { checkNotNull(it) })
+        return ids.map { id -> checkNotNull(rows[id]) { "Saved row with id $id not found in table ${table.tableName}" } as S }
     }
 
     @Transactional
-    override fun <S : T> save(entity: S): S =
-        if (entityInformation.isNew(entity)) insert(entity) else update(entity)
+    override fun <S : T> save(entity: S): S {
+        val id = if (entityInformation.isNew(entity)) insertRow(entity) else updateRow(entity)
+        return checkNotNull(findRow(id)) { "Saved row with id $id not found in table ${table.tableName}" } as S
+    }
 
     override fun findAll(): List<T> = table
         .selectAll()
@@ -59,17 +73,18 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
         return PageableExecutionUtils.getPage(query.toEntities(), pageable) { count() }
     }
 
-    override fun findAllById(ids: Iterable<ID>): List<T> = table
-        .selectAll()
-        .where { table.id inList ids }
-        .toEntities()
+    override fun findAllById(ids: Iterable<ID>): List<T> =
+        ids.distinct().chunked(IN_LIST_CHUNK_SIZE).flatMap { chunk ->
+            table.selectAll().where { table.id inList chunk }.toEntities()
+        }
 
     override fun findById(id: ID): Optional<T> = Optional.ofNullable(findRow(id))
 
-    override fun existsById(id: ID): Boolean = table
-        .selectAll()
+    // only the id is selected, and `empty()` stops at the first row instead of counting all of them
+    override fun existsById(id: ID): Boolean = !table
+        .select(table.id)
         .where { table.id eq id }
-        .count() > 0
+        .empty()
 
     override fun count(): Long = table
         .selectAll()
@@ -91,14 +106,14 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
 
     @Transactional
     override fun deleteAllById(ids: Iterable<ID>) {
-        table.deleteWhere { table.id inList ids }
+        ids.distinct().chunked(IN_LIST_CHUNK_SIZE).forEach { chunk -> table.deleteWhere { table.id inList chunk } }
     }
 
     @Transactional
     override fun deleteAll(entities: Iterable<T>) {
         // every versioned entity needs its own check, so a stale one can be reported
         if (versionColumn != null) return entities.forEach(::delete)
-        table.deleteWhere { table.id inList entities.map(entityInformation::getRequiredId) }
+        deleteAllById(entities.map(entityInformation::getRequiredId))
     }
 
     @Transactional
@@ -106,17 +121,23 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
         table.deleteAll()
     }
 
-    private fun <S : T> insert(entity: S): S {
-        val id = table.insertAndGetId { statement ->
-            projectionResolver.fill(statement, entity)
-            // ids assigned by the application (e.g. a new `Persistable`) are written, otherwise the database or the column default generates one
-            entityInformation.getId(entity)?.let { statement[table.id] = it }
-            versionColumn?.let { statement[it] = metadata.initialVersion() }
-        }.value
-        return checkNotNull(findRow(id)) as S
+    private fun insertRow(entity: T): ID = table.insertAndGetId { writeInsert(it, entity) }.value
+
+    private fun insertRows(entities: List<T>): List<ID> {
+        if (entities.size == 1) return listOf(insertRow(entities.single()))
+        val rows = table.batchInsert(entities, shouldReturnGeneratedValues = true) { writeInsert(this, it) }
+        check(rows.size == entities.size) { "Batch insert into ${table.tableName} returned ${rows.size} rows for ${entities.size} entities" }
+        return rows.map { it[table.id].value }
     }
 
-    private fun <S : T> update(entity: S): S {
+    private fun writeInsert(statement: UpdateBuilder<*>, entity: T) {
+        projectionResolver.fill(statement, entity)
+        // ids assigned by the application (e.g. a new `Persistable`) are written, otherwise the database or the column default generates one
+        entityInformation.getId(entity)?.let { statement[table.id] = it }
+        versionColumn?.let { statement[it] = metadata.initialVersion() }
+    }
+
+    private fun updateRow(entity: T): ID {
         val id = entityInformation.getRequiredId(entity)
         if (versionColumn == null) {
             val updated = table.update({ table.id eq id }) { projectionResolver.fill(it, entity) }
@@ -128,7 +149,7 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
             }
             if (updated == 0) throw OptimisticLockingFailureException(versionConflict(id, entity))
         }
-        return checkNotNull(findRow(id)) as S
+        return id
     }
 
     private fun matchesIdAndVersion(id: ID, entity: T, versionColumn: Column<Any?>): Op<Boolean> =
@@ -147,5 +168,16 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
         .singleOrNull()
         ?.let(entityConverter::convert)
 
+    /** Reads the rows with [ids] in as few queries as possible, keyed by id. */
+    private fun findRows(ids: List<ID>): Map<ID, T> =
+        ids.distinct().chunked(IN_LIST_CHUNK_SIZE).flatMap { chunk ->
+            table.selectAll().where { table.id inList chunk }.map { it[table.id].value to entityConverter.convert(it) }
+        }.toMap()
+
     private fun Query.toEntities(): List<T> = map(entityConverter::convert)
+
+    private companion object {
+        // Oracle allows at most 1000 values in an IN list
+        const val IN_LIST_CHUNK_SIZE = 1000
+    }
 }
