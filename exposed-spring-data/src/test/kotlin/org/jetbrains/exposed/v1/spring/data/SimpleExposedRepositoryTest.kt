@@ -6,6 +6,7 @@ import org.jetbrains.exposed.v1.core.statements.Statement
 import org.jetbrains.exposed.v1.core.statements.StatementContext
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.spring.data.mapping.ExposedMappingContext
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -41,6 +42,14 @@ open class SimpleExposedRepositoryTest : ExposedSpringDataTestBase() {
     @Test
     fun testFindByIdReturnsNullWhenMissing() {
         assertNull(repository.findByIdOrNull(42L))
+    }
+
+    @Autowired
+    private lateinit var mappingContext: ExposedMappingContext
+
+    @Test
+    fun testRepositoriesShareTheMappingContextBean() {
+        assertTrue(mappingContext.hasPersistentEntityFor(Customer::class.java))
     }
 
     @Test

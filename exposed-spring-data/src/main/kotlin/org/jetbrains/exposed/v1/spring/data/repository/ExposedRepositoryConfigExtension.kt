@@ -1,7 +1,11 @@
 package org.jetbrains.exposed.v1.spring.data.repository
 
 import org.jetbrains.exposed.v1.spring.data.ExposedCrudRepository
+import org.jetbrains.exposed.v1.spring.data.mapping.ExposedMappingContext
+import org.springframework.beans.factory.support.BeanDefinitionRegistry
+import org.springframework.beans.factory.support.RootBeanDefinition
 import org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport
+import org.springframework.data.repository.config.RepositoryConfigurationSource
 
 internal class ExposedRepositoryConfigExtension : RepositoryConfigurationExtensionSupport() {
     @Deprecated("Deprecated in Java")
@@ -25,5 +29,17 @@ internal class ExposedRepositoryConfigExtension : RepositoryConfigurationExtensi
 
     override fun getIdentifyingTypes(): Collection<Class<*>> {
         return listOf(ExposedCrudRepository::class.java)
+    }
+
+    /** Registers one mapping context for all Exposed repositories of the application context, unless there already is one. */
+    override fun registerBeansForRoot(registry: BeanDefinitionRegistry, configurationSource: RepositoryConfigurationSource) {
+        super.registerBeansForRoot(registry, configurationSource)
+        if (!registry.containsBeanDefinition(MAPPING_CONTEXT_BEAN_NAME)) {
+            registry.registerBeanDefinition(MAPPING_CONTEXT_BEAN_NAME, RootBeanDefinition(ExposedMappingContext::class.java))
+        }
+    }
+
+    private companion object {
+        const val MAPPING_CONTEXT_BEAN_NAME = "exposedMappingContext"
     }
 }

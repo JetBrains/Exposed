@@ -13,10 +13,8 @@ import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.jdbc.Query
 import org.springframework.data.domain.Sort
 
-/** Converts a value read from a row to the value of the entity property, i.e. `EntityID<Long>` to `Long`. */
 internal fun Any?.unwrapEntityId(): Any? = if (this is EntityID<*>) value else this
 
-/** Converts a property value to the value of this column, i.e. `Long` to `EntityID<Long>` for id and reference columns. */
 @Suppress("UNCHECKED_CAST")
 internal fun Column<*>.toDbValue(value: Any?): Any? {
     val idColumnType = columnType as? EntityIDColumnType<*> ?: return value
@@ -24,7 +22,6 @@ internal fun Column<*>.toDbValue(value: Any?): Any? {
     return EntityID(value, idColumnType.idColumn.table as IdTable<Any>)
 }
 
-/** Adds an `ORDER BY` for every property of [sort], failing for properties that have no column. */
 internal fun Query.orderBy(sort: Sort, metadata: EntityMetadata<*, *>): Query = apply {
     sort.forEach { order ->
         val column = requireNotNull(metadata.columnFor(order.property)) {
@@ -40,10 +37,6 @@ private fun Sort.Order.toSortOrder(): SortOrder = when (nullHandling) {
     else -> if (isAscending) SortOrder.ASC else SortOrder.DESC
 }
 
-/**
- * Whether the current database sorts `NULL` as larger than every other value when no `NULLS FIRST` / `NULLS LAST` is given
- * (so last in ascending and first in descending order). Needs an active transaction.
- */
 internal fun nullsSortHigh(): Boolean = when (val dialect = currentDialect) {
     is PostgreSQLDialect, is OracleDialect, is RedshiftDialect -> true
     is H2Dialect -> dialect.h2Mode == H2Dialect.H2CompatibilityMode.PostgreSQL || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle

@@ -3,21 +3,24 @@ package org.jetbrains.exposed.v1.spring.data.repository
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.spring.data.ExposedRepository
 import org.jetbrains.exposed.v1.spring.data.mapping.EntityMetadata
+import org.jetbrains.exposed.v1.spring.data.mapping.ExposedMappingContext
+import org.jetbrains.exposed.v1.spring.data.mapping.ExposedPersistentEntity
 import org.jetbrains.exposed.v1.spring.data.mapping.ProjectionResolver
 import org.jetbrains.exposed.v1.spring.data.query.ExposedQueryLookupStrategy
 import org.jetbrains.exposed.v1.spring.data.query.QueryContextInterceptor
-import org.springframework.data.domain.Persistable
 import org.springframework.data.repository.core.EntityInformation
 import org.springframework.data.repository.core.RepositoryInformation
 import org.springframework.data.repository.core.RepositoryMetadata
+import org.springframework.data.repository.core.support.PersistentEntityInformation
 import org.springframework.data.repository.core.support.RepositoryFactorySupport
 import org.springframework.data.repository.query.QueryLookupStrategy
 import org.springframework.data.repository.query.ValueExpressionDelegate
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.reflect.KClass
 
-internal class ExposedRepositoryFactory : RepositoryFactorySupport() {
+internal class ExposedRepositoryFactory(
+    private val mappingContext: ExposedMappingContext = ExposedMappingContext(),
+) : RepositoryFactorySupport() {
     private val projectionResolvers = ConcurrentHashMap<Class<*>, ProjectionResolver<Any, Any>>()
 
     init {
@@ -37,22 +40,21 @@ internal class ExposedRepositoryFactory : RepositoryFactorySupport() {
     override fun getRepositoryBaseClass(metadata: RepositoryMetadata): Class<*> = SimpleExposedRepository::class.java
 
     override fun getEntityInformation(metadata: RepositoryMetadata): EntityInformation<*, *> =
-        if (Persistable::class.java.isAssignableFrom(metadata.domainType)) {
-            PersistableEntityInformation<Persistable<Any>, Any>(metadata)
-        } else {
-            ExposedEntityInformation(metadata, projectionResolverFor(metadata).metadata)
-        }
+        PersistentEntityInformation<Any, Any>(projectionResolverFor(metadata).metadata.persistentEntity)
 
     override fun getQueryLookupStrategy(key: QueryLookupStrategy.Key?, valueExpressionDelegate: ValueExpressionDelegate): Optional<QueryLookupStrategy> =
         Optional.of(ExposedQueryLookupStrategy(::projectionResolverFor))
 
-    /** One resolver per repository interface, shared by the base repository, derived queries and `query { }`. */
     @Suppress("UNCHECKED_CAST")
     private fun projectionResolverFor(metadata: RepositoryMetadata): ProjectionResolver<Any, Any> =
         projectionResolvers.getOrPut(metadata.repositoryInterface) {
             ProjectionResolver(
-                metadata = EntityMetadata(tableFor(metadata), metadata.domainType.kotlin as KClass<Any>),
+                metadata = EntityMetadata(
+                    table = tableFor(metadata),
+                    persistentEntity = mappingContext.getRequiredPersistentEntity(metadata.domainType) as ExposedPersistentEntity<Any>,
+                ),
                 factory = projectionFactory,
+                instantiators = mappingContext.instantiators,
             )
         }
 

@@ -37,6 +37,9 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
     }
+    plugins {
+        kotlin("plugin.spring") version "2.3.20"
+    }
 }
 
 dependencyResolutionManagement {
