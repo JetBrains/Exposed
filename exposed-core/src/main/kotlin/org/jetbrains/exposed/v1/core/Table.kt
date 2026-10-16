@@ -1098,6 +1098,25 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         registerColumn(name, ArrayColumnType(columnType, maximumCardinality, dimensions))
 
     /**
+     * Creates a one-dimensional array column, with the specified [name], for storing elements of a `List` using a
+     * base [columnType], where values are exchanged with the database using the PostgreSQL array text representation.
+     *
+     * Unlike [array], this does not rely on the driver's native array support, so it can be used with both JDBC and
+     * R2DBC drivers to store elements of types that the driver has no codec for, like user-defined enum or
+     * composite types. See [ArrayLiteralColumnType] for details on how individual elements are converted.
+     *
+     * **Note** This column type is only supported by PostgreSQL dialects.
+     *
+     * @param name Name of the column.
+     * @param columnType Base column type for the individual elements.
+     * @param delimiter The character that separates elements in the array's text representation. This must match
+     * the delimiter PostgreSQL defines for the element type, which is a comma for all built-in types except `box`
+     * (which uses a semicolon).
+     */
+    fun <E> arrayLiteral(name: String, columnType: IColumnType<E & Any>, delimiter: Char = ','): Column<List<E>> =
+        registerColumn(name, ArrayLiteralColumnType(columnType, delimiter))
+
+    /**
      * Creates a vector column, with the specified [name], for storing elements of a `FloatArray`.
      * By default, this stores vectors with each dimension formatted as 32-bit floating-point numbers.
      *
