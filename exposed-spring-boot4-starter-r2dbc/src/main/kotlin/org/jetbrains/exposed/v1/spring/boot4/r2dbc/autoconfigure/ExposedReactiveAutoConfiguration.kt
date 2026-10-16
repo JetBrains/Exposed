@@ -1,12 +1,6 @@
 package org.jetbrains.exposed.v1.spring.boot4.r2dbc.autoconfigure
 
 import io.r2dbc.spi.ConnectionFactory
-import org.jetbrains.exposed.v1.core.vendors.H2Dialect
-import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
-import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.core.vendors.OracleDialect
-import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.spring.boot4.r2dbc.DatabaseInitializer
 import org.jetbrains.exposed.v1.spring7.reactive.transaction.EnableExposedReactiveTransactionManagement
@@ -18,6 +12,7 @@ import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.r2dbc.autoconfigure.R2dbcAutoConfiguration
+import org.springframework.boot.r2dbc.autoconfigure.R2dbcConnectionDetails
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Primary
@@ -46,13 +41,13 @@ import org.springframework.transaction.reactive.TransactionalOperator
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 @EnableTransactionManagement
 @EnableExposedReactiveTransactionManagement
-open class ExposedReactiveAutoConfiguration(private val applicationContext: ApplicationContext) {
+open class ExposedReactiveAutoConfiguration(
+    private val applicationContext: ApplicationContext,
+    private val connectionDetails: R2dbcConnectionDetails
+) {
 
     @Value($$"${spring.exposed.excluded-packages:}#{T(java.util.Collections).emptyList()}")
     private lateinit var excludedPackages: List<String>
-
-    @Value($$"${spring.exposed.database-driver:}")
-    private lateinit var databaseDriver: String
 
     @Value($$"${spring.exposed.show-sql:false}")
     private var showSql: Boolean = false
@@ -72,30 +67,31 @@ open class ExposedReactiveAutoConfiguration(private val applicationContext: Appl
     }
 
     /**
-     * Database configuration with all default values except the [R2dbcDatabaseConfig.Builder.explicitDialect].
+     * Database configuration with all default values. The database url is determined by Spring's
+     * [R2dbcConnectionDetails] parsed from the property `spring.r2dbc.url`.
      *
-     * At minimum, one of the following situations must be met to avoid exceptions:
-     * - Either the property `spring.exposed.database-driver` must be set to one of the following supported values:
-     * `h2 | postgresql | mysql | mariadb | oracle | mssql`
-     * - Or a `R2dbcDatabaseConfig.Builder` bean must be autowired with a custom configuration that sets `explicitDialect`
+     * If a `R2dbcDatabaseConfig.Builder` bean is autowired with a custom configuration, then the url string must
+     * either be manually set or seeded by Spring's [R2dbcConnectionDetails.getConnectionFactoryOptions]:
      * ```kotlin
      * @Bean
      * open fun customDatabaseConfig(): R2dbcDatabaseConfig.Builder {
      *     return R2dbcDatabaseConfig {
      *         defaultMaxAttempts = 1
-     *         explicitDialect = MysqlDialect()
+     *         setUrl("r2dbc:h2:mem:///h2db;DB_CLOSE_DELAY=-1;MODE=PostgreSQL")
+     *         explicitDialect = H2Dialect()
      *     }
      * }
      * ```
-     * Either option avoids incompatibility exceptions when a future `R2dbcDatabase` attempts to retrieve a connection
+     * This avoids incompatibility exceptions when a future `R2dbcDatabase` attempts to retrieve a connection
      * from Spring's created `ConnectionFactory`.
      */
     @Bean
     @ConditionalOnMissingBean(R2dbcDatabaseConfig.Builder::class)
-    @ConditionalOnProperty("spring.exposed.database-driver", havingValue = "", matchIfMissing = false)
     open fun databaseConfig(): R2dbcDatabaseConfig.Builder {
         return R2dbcDatabaseConfig {
-            setExplicitDialect(this@ExposedReactiveAutoConfiguration.databaseDriver)
+            connectionFactoryOptions {
+                from(connectionDetails.connectionFactoryOptions)
+            }
         }
     }
 
@@ -127,17 +123,5 @@ open class ExposedReactiveAutoConfiguration(private val applicationContext: Appl
     @Primary
     open fun exposedSpringTransactionAttributeSource(): ExposedSpringTransactionAttributeSource {
         return ExposedSpringTransactionAttributeSource()
-    }
-
-    private fun R2dbcDatabaseConfig.Builder.setExplicitDialect(input: String) {
-        explicitDialect = when (input) {
-            "h2" -> H2Dialect()
-            "postgresql" -> PostgreSQLDialect()
-            "mysql" -> MysqlDialect()
-            "mariadb" -> MariaDBDialect()
-            "oracle" -> OracleDialect()
-            "mssql" -> SQLServerDialect()
-            else -> error("Unsupported driver dialect configured: $input")
-        }
     }
 }
