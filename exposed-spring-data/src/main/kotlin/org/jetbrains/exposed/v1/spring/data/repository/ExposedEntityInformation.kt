@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.v1.spring.data.repository
 
+import org.jetbrains.exposed.v1.spring.data.mapping.EntityMetadata
 import org.springframework.data.annotation.Id
 import org.springframework.data.repository.core.RepositoryMetadata
 import org.springframework.data.repository.core.support.AbstractEntityInformation
@@ -13,6 +14,7 @@ import kotlin.reflect.jvm.javaGetter
 @Suppress("UNCHECKED_CAST")
 internal class ExposedEntityInformation<T : Any, ID : Any>(
     metadata: RepositoryMetadata,
+    private val entityMetadata: EntityMetadata<T, ID>,
 ) : AbstractEntityInformation<T, ID>(metadata.domainType as Class<T>) {
     private val domainTypeName: String = metadata.domainTypeName
     private val idType = metadata.idType as Class<ID>
@@ -33,6 +35,10 @@ internal class ExposedEntityInformation<T : Any, ID : Any>(
     private fun KProperty<*>.hasIdAnnotation() =
         javaField?.isAnnotationPresent(Id::class.java) == true ||
             javaGetter?.isAnnotationPresent(Id::class.java) == true
+
+    /** With a `@Version` property the version decides (as in Spring Data JDBC), otherwise the id does. */
+    override fun isNew(entity: T): Boolean =
+        if (entityMetadata.versionProperty != null) entityMetadata.isNewByVersion(entity) else super.isNew(entity)
 
     override fun getId(entity: T): ID? = idGetter.invoke(entity) as ID?
 

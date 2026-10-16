@@ -18,8 +18,7 @@ internal class ProjectionResolver<T : Any, ID : Any>(
 ) {
     val entityConverter: RowConverter<T> = ConstructorConverter(metadata.domainType, metadata, narrowsSelect = false)
 
-    // every mapped property except the id, which the database generates on insert and the update uses in WHERE
-    private val writtenProperties = metadata.mappedProperties.filterValues { it != metadata.table.id }
+    private val writtenProperties = metadata.mappedProperties.filterValues { it != metadata.table.id && it != metadata.versionColumn }
 
     private val converters = ConcurrentHashMap<Class<*>, RowConverter<*>>()
 

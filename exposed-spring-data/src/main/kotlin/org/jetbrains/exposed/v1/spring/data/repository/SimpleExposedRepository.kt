@@ -1,5 +1,8 @@
 package org.jetbrains.exposed.v1.spring.data.repository
 
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.jdbc.Query
@@ -12,6 +15,7 @@ import org.jetbrains.exposed.v1.spring.data.ExposedCrudRepository
 import org.jetbrains.exposed.v1.spring.data.mapping.ProjectionResolver
 import org.jetbrains.exposed.v1.spring.data.mapping.orderBy
 import org.springframework.dao.IncorrectUpdateSemanticsDataAccessException
+import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
@@ -29,6 +33,7 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
     private val metadata = projectionResolver.metadata
     private val table = metadata.table
     private val entityConverter = projectionResolver.entityConverter
+    private val versionColumn: Column<Any?>? = metadata.versionColumn
 
     @Transactional
     override fun <S : T> saveAll(entities: Iterable<S>): List<S> {
@@ -77,7 +82,11 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
 
     @Transactional
     override fun delete(entity: T) {
-        deleteById(entityInformation.getRequiredId(entity))
+        val id = entityInformation.getRequiredId(entity)
+        if (versionColumn == null) return deleteById(id)
+
+        val deleted = table.deleteWhere { matchesIdAndVersion(id, entity, versionColumn) }
+        if (deleted == 0) throw OptimisticLockingFailureException(versionConflict(id, entity))
     }
 
     @Transactional
@@ -87,6 +96,8 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
 
     @Transactional
     override fun deleteAll(entities: Iterable<T>) {
+        // every versioned entity needs its own check, so a stale one can be reported
+        if (versionColumn != null) return entities.forEach(::delete)
         table.deleteWhere { table.id inList entities.map(entityInformation::getRequiredId) }
     }
 
@@ -100,18 +111,35 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
             projectionResolver.fill(statement, entity)
             // ids assigned by the application (e.g. a new `Persistable`) are written, otherwise the database or the column default generates one
             entityInformation.getId(entity)?.let { statement[table.id] = it }
+            versionColumn?.let { statement[it] = metadata.initialVersion() }
         }.value
         return checkNotNull(findRow(id)) as S
     }
 
     private fun <S : T> update(entity: S): S {
         val id = entityInformation.getRequiredId(entity)
-        val updated = table.update({ table.id eq id }) {
-            projectionResolver.fill(it, entity)
+        if (versionColumn == null) {
+            val updated = table.update({ table.id eq id }) { projectionResolver.fill(it, entity) }
+            if (updated == 0) throw IncorrectUpdateSemanticsDataAccessException("No row with id $id in table ${table.tableName}")
+        } else {
+            val updated = table.update({ matchesIdAndVersion(id, entity, versionColumn) }) {
+                projectionResolver.fill(it, entity)
+                it[versionColumn] = metadata.nextVersion(requiredVersion(entity))
+            }
+            if (updated == 0) throw OptimisticLockingFailureException(versionConflict(id, entity))
         }
-        if (updated == 0) throw IncorrectUpdateSemanticsDataAccessException("No row with id $id in table ${table.tableName}")
         return checkNotNull(findRow(id)) as S
     }
+
+    private fun matchesIdAndVersion(id: ID, entity: T, versionColumn: Column<Any?>): Op<Boolean> =
+        (table.id eq id) and (versionColumn eq requiredVersion(entity))
+
+    private fun requiredVersion(entity: T): Number = checkNotNull(metadata.versionOf(entity)) {
+        "${metadata.domainType.simpleName} with id ${entityInformation.getId(entity)} is not new, but has no version"
+    }
+
+    private fun versionConflict(id: ID, entity: T): String =
+        "No row with id $id and version ${metadata.versionOf(entity)} in table ${table.tableName}: it was changed or deleted in the meantime"
 
     private fun findRow(id: ID): T? = table
         .selectAll()
