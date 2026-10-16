@@ -9,7 +9,6 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
 import org.jetbrains.exposed.v1.jdbc.statements.jdbc.JdbcResult
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
-import java.sql.ResultSet
 
 /**
  * Represents the execution logic for an underlying SQL statement that returns a result with data from any modified rows.
@@ -25,7 +24,7 @@ open class ReturningBlockingExecutable(
         return Iterable { resultIterator }.iterator()
     }
 
-    private inner class ResultIterator(rs: ResultSet) : StatementIterator<Expression<*>, ResultRow>(rs) {
+    private inner class ResultIterator(rs: JdbcResult) : StatementIterator<Expression<*>, ResultRow>(rs) {
         override val fieldIndex = statement.returningExpressions.withIndex()
             .associateBy({ it.value }, { it.index })
 
@@ -38,6 +37,6 @@ open class ReturningBlockingExecutable(
         }
 
         @OptIn(InternalApi::class)
-        override fun createResultRow(): ResultRow = ResultRow.create(JdbcResult(result), fieldIndex, columnTypes)
+        override fun createResultRow(): ResultRow = ResultRow.create(jdbcResult, fieldIndex, columnTypes)
     }
 }
