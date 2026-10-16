@@ -5,7 +5,11 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.example.tables.BaseTable
 import org.jetbrains.exposed.v1.core.exposedLogger
-import org.jetbrains.exposed.v1.dao.r2dbc.*
+import org.jetbrains.exposed.v1.dao.r2dbc.EntityChangeType
+import org.jetbrains.exposed.v1.dao.r2dbc.EntityHook
+import org.jetbrains.exposed.v1.dao.r2dbc.IntEntityClass
+import org.jetbrains.exposed.v1.dao.r2dbc.toEntity
+import kotlin.let
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -19,7 +23,6 @@ abstract class BaseEntityClass<out E : BaseEntity>(
                 EntityChangeType.Updated -> {
                     val now = nowUTC()
                     changedEntity?.let {
-                        // R2DBC DAO stages property writes in the transaction's entity cache.
                         it.modified = now
                     }
                     logChange(changedEntity, type, now)
