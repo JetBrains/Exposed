@@ -1,3 +1,60 @@
+# 1.6.0
+
+Features:
+* feat: Nullable column transform should be able to produce non-null type by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2905
+* feat(plugin): EXPOSED-1078 Allow multiple tables packages for migrations plugins by @bog-walk in https://github.com/JetBrains/Exposed/pull/2928
+* feat: EXPOSED-819 Exposed R2DBC DAO by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2831
+
+Bug fixes:
+* fix: EXPOSED-1061 DDL generation for column defaults using Op [MariaDB] and Function [SQLite] by @bog-walk in https://github.com/JetBrains/Exposed/pull/2904
+* fix: EXPOSED-1071 Closing executed statements performance issue by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2907
+* fix: EXPOSED-1038 Avoid redundant MySQL R2DBC transaction isolation settings by @devksh930 in https://github.com/JetBrains/Exposed/pull/2921
+* fix: pin Junie branch in junie.yml by @e5l in https://github.com/JetBrains/Exposed/pull/2931
+* fix: Migration generator mistakes different indices for duplicates and drops one by @rasharab in https://github.com/JetBrains/Exposed/pull/2924
+* fix: EXPOSED-1021 [PostgreSQL][R2DBC] Inserting null on nullable datetime array column throws by @bog-walk in https://github.com/JetBrains/Exposed/pull/2920
+* fix(plugin): EXPOSED-1033 Child tables that reference parent with index generate duplicate ALTER statements by @bog-walk in https://github.com/JetBrains/Exposed/pull/2919
+* fix: EXPOSED-1040 Support SELECT without FROM table clause by @e5l in https://github.com/JetBrains/Exposed/pull/2902
+* fix: EXPOSED-1026 [PostgreSQL, H2] Array<LocalTime> mapping and null-type casting fails in R2DBC by @bog-walk in https://github.com/JetBrains/Exposed/pull/2953
+* fix: EXPOSED-1088 Bind column defaults in batch insert rows that leav… by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2939
+* fix: EXPOSED-1092 Don't insert a JDBC DAO entity that is deleted befo… by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2943
+* fix: EXPOSED-851 Not use Cached Entity when reference column defined with `.references()` by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2614
+
+Documentation:
+* docs: EXPOSED-1062 Add docs for hashing data by @vnikolova in https://github.com/JetBrains/Exposed/pull/2917
+* docs: EXPOSED-1085 Add the JDBC and R2DBC DAO sample applications by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2937
+* docs: EXPOSED-1080 Add docs for non-null transform by @vnikolova in https://github.com/JetBrains/Exposed/pull/2941
+* docs: EXPOSED-1086 Add docs for R2DBC DAO and a what's new topic by @vnikolova in https://github.com/JetBrains/Exposed/pull/2949
+* docs: chore: Update the auto-fill columns section in the DAO CRUD topic by @vnikolova in https://github.com/JetBrains/Exposed/pull/2974
+
+Tests:
+* test: Fix MySQL/MariaDB test that sets isolation level during active transaction by @bog-walk in https://github.com/JetBrains/Exposed/pull/2929
+* test: Give testConcurrentIncrementsWithSelectForUpdate room to retry on MariaDB by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2944
+
+Refactoring:
+* refactor: Replace String database version comparisons with Version class comparisons by @bog-walk in https://github.com/JetBrains/Exposed/pull/2918
+* refactor: EXPOSED-1095 Remove detach() from the R2DBC DAO by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2956
+
+Performance:
+* perf: Avoid repeated front insertion for generated keys by @JunggiKim in https://github.com/JetBrains/Exposed/pull/2916
+
+Infrastructure:
+* redshift-jdbc42 2.2.8
+* flyway 13.6.0
+* binary-compatibility-validator 0.18.2
+* sqlite-jdbc 3.53.4.0
+* bcprov-jdk18on 1.86
+* plugin-publish 2.2.1
+* r2dbc-postgresql 1.1.3.RELEASE
+* joda-time 2.14.4
+
+
+## New Contributors
+* @devksh930 made their first contribution in https://github.com/JetBrains/Exposed/pull/2921
+* @JunggiKim made their first contribution in https://github.com/JetBrains/Exposed/pull/2916
+* @kwy404 made their first contribution in https://github.com/JetBrains/Exposed/pull/2946
+
+**Full Changelog**: https://github.com/JetBrains/Exposed/compare/1.5.1...1.6.0
+
 # 1.5.1
 
 Security:
