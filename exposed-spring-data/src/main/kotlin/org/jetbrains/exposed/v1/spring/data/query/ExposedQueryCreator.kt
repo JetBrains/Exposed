@@ -4,7 +4,7 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.jdbc.Query
-import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.spring.data.mapping.ExposedEntityMapper
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.query.ParameterAccessor
@@ -18,6 +18,8 @@ internal class ExposedQueryCreator(
     parameterAccessor: ParameterAccessor,
     private val table: IdTable<*>,
     private val mapper: ExposedEntityMapper<*>,
+    private val columns: List<Column<*>>,
+    private val selectSortColumns: Boolean = false,
     private val sortCustomizer: (Sort) -> Sort = { it },
 ) : AbstractQueryCreator<Query, Op<Boolean>>(tree, parameterAccessor) {
     companion object {
@@ -104,9 +106,18 @@ internal class ExposedQueryCreator(
     override fun complete(
         criteria: Op<Boolean>?,
         sort: Sort
-    ): Query = table.selectAll().apply {
-        criteria?.let { where(it) }
-        orderBy(sortCustomizer(sort), mapper, table)
+    ): Query {
+        val finalSort = sortCustomizer(sort)
+        val selected = if (selectSortColumns) {
+            (columns + finalSort.mapNotNull { mapper.columnFor(it.property) }).distinct()
+        } else {
+            columns
+        }
+
+        return table.select(selected).apply {
+            criteria?.let { where(it) }
+            orderBy(finalSort, mapper, table)
+        }
     }
 
     @Suppress("UNCHECKED_CAST", "CyclomaticComplexMethod")

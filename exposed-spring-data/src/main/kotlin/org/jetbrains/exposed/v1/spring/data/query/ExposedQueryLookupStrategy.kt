@@ -22,6 +22,6 @@ internal class ExposedQueryLookupStrategy(
         namedQueries: NamedQueries
     ): RepositoryQuery {
         val queryMethod = QueryMethod(method, metadata, factory) { DefaultParameters(it) }
-        return PartTreeExposedQuery(queryMethod, tableFor(metadata), mapperFor(metadata))
+        return PartTreeExposedQuery(queryMethod, tableFor(metadata), mapperFor(metadata), factory)
     }
 }
