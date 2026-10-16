@@ -36,12 +36,12 @@ internal class ExposedRepositoryFactory : RepositoryFactorySupport() {
 
     override fun getRepositoryBaseClass(metadata: RepositoryMetadata): Class<*> = SimpleExposedRepository::class.java
 
-    override fun getEntityInformation(metadata: RepositoryMetadata): EntityInformation<*, *> {
+    override fun getEntityInformation(metadata: RepositoryMetadata): EntityInformation<*, *> =
         if (Persistable::class.java.isAssignableFrom(metadata.domainType)) {
-            TODO("Persistable Support not implemented")
+            PersistableEntityInformation<Persistable<Any>, Any>(metadata)
+        } else {
+            ExposedEntityInformation<Any, Any>(metadata)
         }
-        return ExposedEntityInformation<Any, Any>(metadata)
-    }
 
     override fun getQueryLookupStrategy(key: QueryLookupStrategy.Key?, valueExpressionDelegate: ValueExpressionDelegate): Optional<QueryLookupStrategy> =
         Optional.of(ExposedQueryLookupStrategy(::projectionResolverFor))
