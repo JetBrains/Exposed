@@ -12,6 +12,7 @@ import org.jetbrains.exposed.v1.core.transactions.suspend.TransactionContextHold
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
+import org.jetbrains.exposed.v1.r2dbc.statements.R2dbcConnectionImpl
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedConnection
 import kotlin.coroutines.CoroutineContext
 
@@ -173,7 +174,7 @@ class TransactionManager(
         override val transactionIsolation: IsolationLevel?,
         override val readOnly: Boolean,
         override val outerTransaction: R2dbcTransaction?,
-    ) : R2dbcTransactionInterface {
+    ) : R2dbcTransactionInterface, RunningStatementCanceller {
 
         override val transactionManager: TransactionManagerApi
             get() = db.transactionManager
@@ -245,6 +246,10 @@ class TransactionManager(
                     savepoint = null
                 }
             }
+        }
+
+        override suspend fun cancelRunningStatement() {
+            (connectionLazy as? R2dbcConnectionImpl)?.cancelRunningStatement()
         }
 
         private fun R2dbcExposedConnection<*>?.isInitialized(): Boolean = this != null

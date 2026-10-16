@@ -31,6 +31,15 @@ interface R2dbcTransactionInterface : TransactionInterface {
 }
 
 /**
+ * Implemented by transactions that can abort a statement still executing on their connection,
+ * without acquiring a new connection if none has been used yet.
+ */
+internal interface RunningStatementCanceller {
+    /** Asks the database to abort the statement that may still be executing on the transaction's connection. */
+    suspend fun cancelRunningStatement()
+}
+
+/**
  * The [R2dbcTransactionManager] instance that is associated with this [R2dbcDatabase].
  *
  * @throws IllegalStateException if no transaction manager is registered for the given database.
