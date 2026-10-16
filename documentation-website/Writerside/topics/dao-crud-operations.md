@@ -524,55 +524,76 @@ Then, creating and fetching entities would look like this:
 ## Auto-fill columns on entity change
 
 Suppose that you need all your table objects to have at minimum two columns for storing the date and time when a record is
-created and modified. You could define a `BaseTable` to automatically handle registering these columns to any table that
-extends this abstract class. An abstract `BaseEntity` could also be defined to automatically associate fields to the
-relevant columns:
-
-<tabs>
-<tab id="abstract-base-table" title="BaseTable">
+created and modified. You can define a `BaseTable` to automatically handle registering these columns to any table that
+extends this abstract class:
 
 ```kotlin
 ```
 {src="exposed-dao/src/main/kotlin/org/example/tables/BaseTable.kt"}
 
-</tab>
-<tab id="abstract-base-entity" title="BaseEntity">
+You can then define an abstract `BaseEntity` to automatically associate fields to the relevant columns:
+
+<tabs group="connectivity">
+<tab id="jdbc-base-entity" title="JDBC" group-key="jdbc">
 
 ```kotlin
 ```
 {src="exposed-dao/src/main/kotlin/org/example/entities/BaseEntity.kt"}
 
 </tab>
+<tab id="r2dbc-base-entity" title="R2DBC" group-key="r2dbc">
+
+```kotlin
+```
+{src="exposed-dao-r2dbc/src/main/kotlin/org/example/entities/BaseEntity.kt"}
+
+</tab>
 </tabs>
 
-Whenever a new entity is instantiated, the `created` column will be filled with the database default defined by
+When a new entity is instantiated, the `created` column is filled with the database default defined by
 [`CurrentDateTime`](https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.datetime/-current-date-time/index.html),
-while the `modified` column will be filled with a null value.
+while the `modified` column is filled with a `null` value.
 
-An entity lifecycle interceptor,
-[`EntityHook`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-hook/index.html),
-can then be subscribed to in order to automatically populate the `modified` field whenever an existing entity is later
-updated:
+To automatically populate the `modified` field when an existing entity is updated, you can subscribe the entity to an
+entity lifecycle interceptor, [`EntityHook`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-hook/index.html):
+
+<tabs group="connectivity">
+<tab id="jdbc-base-entity-class" title="JDBC" group-key="jdbc">
 
 ```kotlin
 ```
 {src="exposed-dao/src/main/kotlin/org/example/entities/BaseEntityClass.kt"}
 
+</tab>
+<tab id="r2dbc-base-entity-class" title="R2DBC" group-key="r2dbc">
+
+```kotlin
+```
+{src="exposed-dao-r2dbc/src/main/kotlin/org/example/entities/BaseEntityClass.kt"}
+
+</tab>
+</tabs>
+
+
 The example above invokes `EntityHook.subscribe()` in an abstract `BaseEntityClass` that can be used as a companion object
-for any `BaseEntity` implementation, but the interceptor could be subscribed to (and unsubscribed from) on the transaction
+for any `BaseEntity` implementation. The interceptor can be subscribed to and unsubscribed from on the transaction
 level as well.
 
 The subscription only performs an action when a record is updated (detected by `EntityChangeType.Updated`).
 
-> Other actions could be detected for when an entity is created (`EntityChangeType.Created`) or removed
-> (`EntityChangeType.Removed`).
+> You can also detect `EntityChangeType.Created` for when an entity is created and `EntityChangeType.Removed` for when
+> an entity is removed.
 >
 {style="tip"}
 
-When an update occurs, the `modified` column is populated with the current UTC time using the `nowUTC()` method. However,
-the update only happens if the `modified` field has not already been set. This is checked by using `Entity.writeValues`,
+When an update occurs, the `modified` column is populated with the current UTC time using the `nowUTC()` method.
+
+With JDBC, you can check if the `modified` field has already been set by using `Entity.writeValues`,
 which holds the column-value mappings for an entity instance before being flushed to the database. Performing this check
 ensures that filling the `modified` column does not trigger the interceptor itself.
+
+With R2DBC, pending changes are tracked internally in the entity cache and are not exposed through an equivalent public
+API. Therefore, an additional check on the `modified` field using `Entity.writeValues` cannot be implemented.
 
 Additionally, every change (creation, update, or deletion) is logged using the
 [`exposedLogger`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/exposed-logger.html).
