@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.v1.spring.data.repository
 
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.spring.data.ExposedRepository
 import org.jetbrains.exposed.v1.spring.data.mapping.ReflectionEntityMapper
@@ -15,6 +16,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 
+@InternalApi
 class ExposedRepositoryFactory : RepositoryFactorySupport() {
     private val mappers = ConcurrentHashMap<Class<*>, ReflectionEntityMapper<Any, Any>>()
 

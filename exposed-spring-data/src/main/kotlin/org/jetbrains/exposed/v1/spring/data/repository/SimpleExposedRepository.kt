@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.v1.spring.data.repository
 
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
@@ -21,6 +22,7 @@ import java.util.*
 
 @Suppress("UNCHECKED_CAST")
 @Transactional(readOnly = true)
+@InternalApi
 open class SimpleExposedRepository<T : Any, ID : Any>(
     private val table: IdTable<ID>,
     private val entityInformation: ExposedEntityInformation<T, ID>,

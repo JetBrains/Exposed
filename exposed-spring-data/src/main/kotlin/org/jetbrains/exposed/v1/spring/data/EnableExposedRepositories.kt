@@ -1,5 +1,8 @@
+@file:OptIn(InternalApi::class)
+
 package org.jetbrains.exposed.v1.spring.data
 
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.spring.data.repository.ExposedRepositoriesRegistrar
 import org.jetbrains.exposed.v1.spring.data.repository.ExposedRepositoryFactoryBean
 import org.springframework.context.annotation.ComponentScan
