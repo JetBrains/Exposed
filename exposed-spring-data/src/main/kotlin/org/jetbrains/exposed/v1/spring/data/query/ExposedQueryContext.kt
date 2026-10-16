@@ -1,16 +1,13 @@
 package org.jetbrains.exposed.v1.spring.data.query
 
-import org.jetbrains.exposed.v1.core.dao.id.IdTable
-import org.jetbrains.exposed.v1.spring.data.mapping.ExposedEntityMapper
 import org.jetbrains.exposed.v1.spring.data.mapping.ProjectionResolver
 import java.lang.reflect.Method
 
+/** The repository call a `query { }` block runs in. */
 internal class ExposedQueryContext(
     val repository: Any,
-    val mapper: ExposedEntityMapper<*>,
-    val table: IdTable<*>,
     val method: Method,
-    val projectionResolver: ProjectionResolver,
+    val projectionResolver: ProjectionResolver<*, *>,
 )
 
 internal object ExposedQueryContextHolder {

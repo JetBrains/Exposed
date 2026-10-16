@@ -1,11 +1,11 @@
 package org.jetbrains.exposed.v1.spring.data.query
 
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.jdbc.Query
 import org.jetbrains.exposed.v1.jdbc.select
-import org.jetbrains.exposed.v1.spring.data.mapping.ExposedEntityMapper
+import org.jetbrains.exposed.v1.spring.data.mapping.EntityMetadata
+import org.jetbrains.exposed.v1.spring.data.mapping.orderBy
+import org.jetbrains.exposed.v1.spring.data.mapping.toDbValue
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.query.ParameterAccessor
 import org.springframework.data.repository.query.parser.AbstractQueryCreator
@@ -16,8 +16,7 @@ import org.springframework.data.repository.query.parser.PartTree
 internal class ExposedQueryCreator(
     tree: PartTree,
     parameterAccessor: ParameterAccessor,
-    private val table: IdTable<*>,
-    private val mapper: ExposedEntityMapper<*>,
+    private val metadata: EntityMetadata<*, *>,
     private val columns: List<Column<*>>,
     private val selectSortColumns: Boolean = false,
     private val sortCustomizer: (Sort) -> Sort = { it },
@@ -64,22 +63,6 @@ internal class ExposedQueryCreator(
 
         internal fun Column<*>.isStringColumn() = columnType is StringColumnType
 
-        internal fun Query.orderBy(sort: Sort, mapper: ExposedEntityMapper<*>, table: Table): Query = apply {
-            sort.forEach { order ->
-                val column = requireNotNull(mapper.columnFor(order.property)) {
-                    "Unknown sort property '${order.property}' for table ${table.tableName}"
-                }
-                orderBy(column, if (order.isAscending) SortOrder.ASC else SortOrder.DESC)
-            }
-        }
-
-        @Suppress("UNCHECKED_CAST")
-        internal fun Column<*>.toDbValue(value: Any?): Any? {
-            val idColumnType = columnType as? EntityIDColumnType<*> ?: return value
-            if (value == null || value is EntityID<*>) return value
-            return EntityID(value, idColumnType.idColumn.table as IdTable<Any>)
-        }
-
         internal fun ignoreCase(part: Part, column: Column<*>): Boolean = when (part.shouldIgnoreCase()) {
             Part.IgnoreCaseType.NEVER -> false
             Part.IgnoreCaseType.ALWAYS -> true
@@ -109,22 +92,20 @@ internal class ExposedQueryCreator(
     ): Query {
         val finalSort = sortCustomizer(sort)
         val selected = if (selectSortColumns) {
-            (columns + finalSort.mapNotNull { mapper.columnFor(it.property) }).distinct()
+            (columns + finalSort.mapNotNull { metadata.columnFor(it.property) }).distinct()
         } else {
             columns
         }
 
-        return table.select(selected).apply {
+        return metadata.table.select(selected).apply {
             criteria?.let { where(it) }
-            orderBy(finalSort, mapper, table)
+            orderBy(finalSort, metadata)
         }
     }
 
     @Suppress("UNCHECKED_CAST", "CyclomaticComplexMethod")
     private fun predicate(part: Part, values: Iterator<Any?>): Op<Boolean> {
-        val column = checkNotNull(mapper.columnFor(part.property.segment)) {
-            "No column found for property ${part.property}"
-        } as Column<Any?>
+        val column = metadata.requireColumn(part.property.segment)
         val ignoreCase = ignoreCase(part, column)
         val expr: ExpressionWithColumnType<Any?> =
             if (ignoreCase) (column as Column<String?>).lowerCase() as ExpressionWithColumnType<Any?> else column

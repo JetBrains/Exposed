@@ -1,18 +1,15 @@
 package org.jetbrains.exposed.v1.spring.data.query
 
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.ops.SingleValueInListOp
 import org.jetbrains.exposed.v1.jdbc.Query
 import org.jetbrains.exposed.v1.jdbc.andWhere
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
-import org.jetbrains.exposed.v1.spring.data.mapping.EntityConverter
-import org.jetbrains.exposed.v1.spring.data.mapping.ExposedEntityMapper
 import org.jetbrains.exposed.v1.spring.data.mapping.ProjectionResolver
 import org.jetbrains.exposed.v1.spring.data.mapping.RowConverter
+import org.jetbrains.exposed.v1.spring.data.mapping.toDbValue
+import org.jetbrains.exposed.v1.spring.data.mapping.unwrapEntityId
 import org.jetbrains.exposed.v1.spring.data.query.ExposedQueryCreator.Companion.isStringColumn
-import org.jetbrains.exposed.v1.spring.data.query.ExposedQueryCreator.Companion.toDbValue
 import org.springframework.dao.IncorrectResultSizeDataAccessException
 import org.springframework.data.domain.*
 import org.springframework.data.repository.query.ParametersParameterAccessor
@@ -22,21 +19,18 @@ import org.springframework.data.repository.query.parser.Part
 import org.springframework.data.repository.query.parser.PartTree
 import org.springframework.data.support.PageableExecutionUtils
 
-internal class PartTreeExposedQuery(
+internal class PartTreeExposedQuery<T : Any, ID : Any>(
     private val method: QueryMethod,
-    private val table: IdTable<Any>,
-    private val mapper: ExposedEntityMapper<Any>,
-    private val projectionResolver: ProjectionResolver,
+    private val projectionResolver: ProjectionResolver<T, ID>,
 ) : RepositoryQuery {
+    private val metadata = projectionResolver.metadata
+    private val table = metadata.table
     private val tree = PartTree(method.name, method.entityInformation.javaType)
-    private val idProperty = checkNotNull(mapper.propertyFor(table.id)) { "No property found for the id column of ${table.tableName}" }
 
     init {
         tree.parts.forEach { part ->
             require(!part.property.hasNext()) { "Nested paths are not supported: ${part.property.toDotPath()} in $method" }
-            val column = requireNotNull(mapper.columnFor(part.property.segment)) {
-                "No column found for property ${part.property.segment} in ${table.tableName}"
-            }
+            val column = metadata.requireColumn(part.property.segment)
             require(part.type in ExposedQueryCreator.SUPPORTED) { "${part.type} is not supported yet ($method)" }
             require(part.shouldIgnoreCase() != Part.IgnoreCaseType.ALWAYS || column.isStringColumn()) {
                 "IgnoreCase is only supported for string properties, but ${part.property.segment} is not ($method)"
@@ -44,8 +38,8 @@ internal class PartTreeExposedQuery(
         }
     }
 
-    private val staticConverter: RowConverter? = when {
-        tree.isCountProjection || tree.isExistsProjection || tree.isDelete -> EntityConverter(mapper)
+    private val staticConverter: RowConverter<*>? = when {
+        tree.isCountProjection || tree.isExistsProjection || tree.isDelete -> projectionResolver.entityConverter
         method.parameters.hasDynamicProjection() -> null
         else -> projectionResolver.converterFor(method.returnedObjectType)
     }
@@ -54,7 +48,7 @@ internal class PartTreeExposedQuery(
         val accessor = ParametersParameterAccessor(method.parameters, parameters)
         val converter = converter(accessor)
         if (method.isScrollQuery) return scroll(accessor, converter)
-        val query = ExposedQueryCreator(tree, accessor, table, mapper, converter.columns).createQuery()
+        val query = ExposedQueryCreator(tree, accessor, metadata, converter.columns).createQuery()
         if (tree.isDistinct) query.withDistinct()
 
         return when {
@@ -91,7 +85,7 @@ internal class PartTreeExposedQuery(
     override fun getQueryMethod(): QueryMethod = method
 
     /** Deletes the matching rows and returns them if the method returns a collection, otherwise their number. */
-    private fun delete(query: Query, converter: RowConverter): Any {
+    private fun delete(query: Query, converter: RowConverter<*>): Any {
         val where = query.where ?: Op.TRUE
         if (!method.isCollectionQuery) {
             return table.deleteWhere { where }.toLong()
@@ -111,7 +105,7 @@ internal class PartTreeExposedQuery(
         accessor.limit.takeIf { it.isLimited }?.max(),
     ).minOrNull()
 
-    private fun scroll(accessor: ParametersParameterAccessor, converter: RowConverter): Window<Any> {
+    private fun scroll(accessor: ParametersParameterAccessor, converter: RowConverter<*>): Window<Any> {
         val limit = maxResults(accessor)
         return when (val position = accessor.scrollPosition ?: ScrollPosition.offset()) {
             is OffsetScrollPosition -> offsetScroll(accessor, converter, position, limit)
@@ -120,9 +114,9 @@ internal class PartTreeExposedQuery(
         }
     }
 
-    private fun offsetScroll(accessor: ParametersParameterAccessor, converter: RowConverter, position: OffsetScrollPosition, limit: Int?): Window<Any> {
+    private fun offsetScroll(accessor: ParametersParameterAccessor, converter: RowConverter<*>, position: OffsetScrollPosition, limit: Int?): Window<Any> {
         val start = if (position.isInitial) 0L else position.offset + 1
-        val query = ExposedQueryCreator(tree, accessor, table, mapper, converter.columns).createQuery()
+        val query = ExposedQueryCreator(tree, accessor, metadata, converter.columns).createQuery()
         if (tree.isDistinct) query.withDistinct()
         if (start > 0) query.offset(start)
         limit?.let { query.limit(it + 1) }
@@ -131,10 +125,11 @@ internal class PartTreeExposedQuery(
         return Window.from(content, { index -> ScrollPosition.offset(start + index) }, limit != null && rows.size > limit)
     }
 
-    private fun keysetScroll(accessor: ParametersParameterAccessor, converter: RowConverter, position: KeysetScrollPosition, limit: Int?): Window<Any> {
+    private fun keysetScroll(accessor: ParametersParameterAccessor, converter: RowConverter<*>, position: KeysetScrollPosition, limit: Int?): Window<Any> {
         val backward = position.scrollsBackward()
+        val idProperty = metadata.idProperty
         var sort = Sort.unsorted()
-        val query = ExposedQueryCreator(tree, accessor, table, mapper, converter.columns, selectSortColumns = true) { declared ->
+        val query = ExposedQueryCreator(tree, accessor, metadata, converter.columns, selectSortColumns = true) { declared ->
             sort = if (declared.getOrderFor(idProperty) == null) declared.and(Sort.by(idProperty)) else declared
             if (backward) Sort.by(sort.map { it.reverse() }.toList()) else sort
         }.createQuery()
@@ -158,7 +153,7 @@ internal class PartTreeExposedQuery(
         val keys = position.keys
         fun columnAndValue(order: Sort.Order): Pair<Column<Any?>, Any?> {
             require(keys.containsKey(order.property)) { "Keyset position $position has no key for sort property '${order.property}'" }
-            val column = mapper.columnFor(order.property) as Column<Any?>
+            val column = metadata.requireColumn(order.property)
             return column to column.toDbValue(keys[order.property])
         }
         return orders.indices.map { i ->
@@ -175,13 +170,12 @@ internal class PartTreeExposedQuery(
     }
 
     private fun keysOf(row: ResultRow, sort: Sort): Map<String, Any?> = sort.associate { order ->
-        val value = row[mapper.columnFor(order.property)!!]
-        order.property to if (value is EntityID<*>) value.value else value
+        order.property to row[metadata.requireColumn(order.property)].unwrapEntityId()
     }
 
     private fun Query.paged(p: Pageable) = apply { if (p.isPaged) limit(p.pageSize).offset(p.offset) }
 
-    private fun converter(accessor: ParametersParameterAccessor): RowConverter =
+    private fun converter(accessor: ParametersParameterAccessor): RowConverter<*> =
         staticConverter ?: projectionResolver.converterFor(
             method.resultProcessor.withDynamicProjection(accessor).returnedType.returnedType
         )
