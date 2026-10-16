@@ -5,6 +5,7 @@ import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.spring.data.ExposedRepository
 import org.jetbrains.exposed.v1.spring.data.mapping.ReflectionEntityMapper
 import org.jetbrains.exposed.v1.spring.data.query.ExposedQueryLookupStrategy
+import org.jetbrains.exposed.v1.spring.data.query.QueryContextInterceptor
 import org.springframework.data.domain.Persistable
 import org.springframework.data.repository.core.EntityInformation
 import org.springframework.data.repository.core.RepositoryInformation
@@ -19,6 +20,14 @@ import kotlin.reflect.KClass
 @InternalApi
 class ExposedRepositoryFactory : RepositoryFactorySupport() {
     private val mappers = ConcurrentHashMap<Class<*>, ReflectionEntityMapper<Any, Any>>()
+
+    init {
+        addRepositoryProxyPostProcessor { proxyFactory, information ->
+            if (information.repositoryInterface.methods.any { it.isDefault }) {
+                proxyFactory.addAdvice(QueryContextInterceptor(tableFor(information), mapperFor(information)))
+            }
+        }
+    }
 
     @Suppress("UNCHECKED_CAST")
     override fun getTargetRepository(metadata: RepositoryInformation): Any {
@@ -60,6 +69,5 @@ class ExposedRepositoryFactory : RepositoryFactorySupport() {
     private fun mapperFor(metadata: RepositoryMetadata) = mappers.getOrPut(metadata.repositoryInterface) {
         ReflectionEntityMapper(tableFor(metadata), metadata.domainType.kotlin as KClass<Any>)
     }
-
 }
 
