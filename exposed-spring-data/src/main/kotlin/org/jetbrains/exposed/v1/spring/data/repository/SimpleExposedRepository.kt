@@ -96,7 +96,11 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
     }
 
     private fun <S : T> insert(entity: S): S {
-        val id = table.insertAndGetId { projectionResolver.fill(it, entity) }.value
+        val id = table.insertAndGetId { statement ->
+            projectionResolver.fill(statement, entity)
+            // ids assigned by the application (e.g. a new `Persistable`) are written, otherwise the database or the column default generates one
+            entityInformation.getId(entity)?.let { statement[table.id] = it }
+        }.value
         return checkNotNull(findRow(id)) as S
     }
 
