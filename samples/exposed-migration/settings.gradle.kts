@@ -6,7 +6,7 @@ dependencyResolutionManagement {
     }
     versionCatalogs {
         create("exposedLibs") {
-            from("org.jetbrains.exposed:exposed-version-catalog:1.5.1")
+            from("org.jetbrains.exposed:exposed-version-catalog:1.6.0")
         }
     }
 }

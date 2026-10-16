@@ -15,7 +15,7 @@ dependencyResolutionManagement {
     }
     versionCatalogs {
         create("exposedLibs") {
-            from("org.jetbrains.exposed:exposed-version-catalog:1.5.1")
+            from("org.jetbrains.exposed:exposed-version-catalog:1.6.0")
         }
     }
 }
@@ -48,8 +48,8 @@ All libraries share the `exposed` version, so you can override the whole Exposed
 ```kotlin
 versionCatalogs {
     create("exposedLibs") {
-        from("org.jetbrains.exposed:exposed-version-catalog:1.5.1")
-        version("exposed", "1.5.1")
+        from("org.jetbrains.exposed:exposed-version-catalog:1.6.0")
+        version("exposed", "1.6.0")
     }
 }
 ```
