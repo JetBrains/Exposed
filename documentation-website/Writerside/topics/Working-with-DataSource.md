@@ -51,3 +51,14 @@ Database.connect(
 >It is therefore recommended to not set these values in `DatabaseConfig`
 >unless the intention is for the new value to override the Hikari settings.
 {style="note"}
+
+With the built-in JDBC transaction manager and its default connection setup, `transaction()` and `suspendTransaction()` inherit DataSource settings
+when the corresponding options are omitted. Explicit transaction options take precedence over explicitly configured
+manager or `DatabaseConfig` defaults, which in turn take precedence over DataSource settings.
+For example, `DatabaseConfig { defaultReadOnly = false }` overrides a read-only DataSource,
+while `DatabaseConfig { }` inherits its read-only setting.
+
+Inherited settings are resolved when the transaction first acquires its connection. Before that,
+the transaction's `transactionIsolation` and `readOnly` properties expose explicit options or the manager defaults for unspecified options;
+after successful connection initialization, they expose the resolved transaction settings.
+Reading these properties does not acquire a connection.

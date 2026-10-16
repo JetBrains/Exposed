@@ -713,6 +713,10 @@ public class org/jetbrains/exposed/v1/core/DatabaseConfigImpl : org/jetbrains/ex
 	public fun getWarnLongQueriesDuration ()Ljava/lang/Long;
 }
 
+public final class org/jetbrains/exposed/v1/core/DatabaseConfigKt {
+	public static final fun explicitReadOnly (Lorg/jetbrains/exposed/v1/core/DatabaseConfig;)Ljava/lang/Boolean;
+}
+
 public abstract interface class org/jetbrains/exposed/v1/core/DdlAware {
 	public abstract fun createStatement ()Ljava/util/List;
 	public abstract fun dropStatement ()Ljava/util/List;
