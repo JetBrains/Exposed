@@ -7,6 +7,7 @@ plugins {
     kotlin("jvm")
 
     alias(libs.plugins.dokka)
+    kotlin("plugin.spring")
 }
 
 repositories {
@@ -31,6 +32,7 @@ dependencies {
     testImplementation(project(":exposed-java-time"))
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.junit6)
+    testImplementation(kotlin("test"))
 }
 
 tasks.withType<KotlinCompile>().configureEach {

@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.spring.data.mapping
 
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.statements.UpdateBuilder
+import org.springframework.data.mapping.model.EntityInstantiators
 import org.springframework.data.projection.ProjectionFactory
 import java.util.concurrent.ConcurrentHashMap
 
@@ -15,8 +16,9 @@ import java.util.concurrent.ConcurrentHashMap
 internal class ProjectionResolver<T : Any, ID : Any>(
     val metadata: EntityMetadata<T, ID>,
     private val factory: ProjectionFactory,
+    instantiators: EntityInstantiators,
 ) {
-    val entityConverter: RowConverter<T> = ConstructorConverter(metadata.domainType, metadata, narrowsSelect = false)
+    val entityConverter: RowConverter<T> = EntityConverter(metadata, instantiators)
 
     private val writtenProperties = metadata.mappedProperties.filterValues { it != metadata.table.id && it != metadata.versionColumn }
 
@@ -35,6 +37,6 @@ internal class ProjectionResolver<T : Any, ID : Any>(
         type.isPrimitive || type.isArray || type.name.startsWith("java.") || type.name.startsWith("kotlin.") ->
             error("Rows can't be converted to ${type.name}, map the rows yourself (e.g. `.map { it[column] }`)")
         type.isInterface -> InterfaceConverter(type, factory, metadata)
-        else -> ConstructorConverter(type.kotlin, metadata, narrowsSelect = true)
+        else -> ConstructorConverter(type.kotlin, metadata)
     }
 }

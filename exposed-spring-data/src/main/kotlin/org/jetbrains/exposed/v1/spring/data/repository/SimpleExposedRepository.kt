@@ -80,7 +80,6 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
 
     override fun findById(id: ID): Optional<T> = Optional.ofNullable(findRow(id))
 
-    // only the id is selected, and `empty()` stops at the first row instead of counting all of them
     override fun existsById(id: ID): Boolean = !table
         .select(table.id)
         .where { table.id eq id }
@@ -111,7 +110,6 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
 
     @Transactional
     override fun deleteAll(entities: Iterable<T>) {
-        // every versioned entity needs its own check, so a stale one can be reported
         if (versionColumn != null) return entities.forEach(::delete)
         deleteAllById(entities.map(entityInformation::getRequiredId))
     }
@@ -132,7 +130,6 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
 
     private fun writeInsert(statement: UpdateBuilder<*>, entity: T) {
         projectionResolver.fill(statement, entity)
-        // ids assigned by the application (e.g. a new `Persistable`) are written, otherwise the database or the column default generates one
         entityInformation.getId(entity)?.let { statement[table.id] = it }
         versionColumn?.let { statement[it] = metadata.initialVersion() }
     }
@@ -168,7 +165,6 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
         .singleOrNull()
         ?.let(entityConverter::convert)
 
-    /** Reads the rows with [ids] in as few queries as possible, keyed by id. */
     private fun findRows(ids: List<ID>): Map<ID, T> =
         ids.distinct().chunked(IN_LIST_CHUNK_SIZE).flatMap { chunk ->
             table.selectAll().where { table.id inList chunk }.map { it[table.id].value to entityConverter.convert(it) }

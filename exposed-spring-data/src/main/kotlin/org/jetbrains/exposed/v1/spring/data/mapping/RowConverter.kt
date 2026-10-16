@@ -2,6 +2,10 @@ package org.jetbrains.exposed.v1.spring.data.mapping
 
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.springframework.data.mapping.Parameter
+import org.springframework.data.mapping.PreferredConstructor
+import org.springframework.data.mapping.model.EntityInstantiators
+import org.springframework.data.mapping.model.ParameterValueProvider
 import org.springframework.data.projection.ProjectionFactory
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
@@ -16,13 +20,8 @@ import kotlin.reflect.jvm.kotlinFunction
  * Turns a [ResultRow] into [R]. Instances are created and cached by [ProjectionResolver].
  */
 internal sealed class RowConverter<out R : Any>(private val targetType: Class<*>) {
-    /** The columns to select so that rows can be converted. */
     abstract val columns: List<Column<*>>
-
-    /** Whether a plain `selectAll()` may be narrowed to [columns], which is only the case for projections. */
     abstract val narrowsSelect: Boolean
-
-    /** The columns a row must contain to be converted. */
     protected open val requiredColumns: List<Column<*>> get() = columns
 
     fun convert(row: ResultRow): R {
@@ -45,15 +44,66 @@ internal class RawRowConverter(override val columns: List<Column<*>>) : RowConve
 }
 
 /**
- * Calls the primary constructor of [type] with the values of the columns named like its parameters.
- * Used for the entity itself and for DTO projections, so both follow the same rules:
+ * Creates the entity through the [ExposedMappingContext], with Spring Data's instantiation rules: the preferred constructor
+ * (`@PersistenceCreator` or the primary constructor, with Kotlin default values) gets the values of the columns named like
+ * its parameters, and mapped properties that aren't constructor parameters are set afterwards.
+ */
+internal class EntityConverter<T : Any>(
+    private val metadata: EntityMetadata<T, *>,
+    instantiators: EntityInstantiators,
+) : RowConverter<T>(metadata.domainType.java) {
+    private val entity = metadata.persistentEntity
+    private val instantiator = instantiators.getInstantiatorFor(entity)
+
+    private val parameterColumns: Map<String, Column<Any?>> = run {
+        val creator = checkNotNull(entity.instanceCreatorMetadata) { "${metadata.domainType.simpleName} has no constructor to create it with" }
+        val optional = (creator as? PreferredConstructor<*, *>)?.constructor?.kotlinFunction?.parameters
+            ?.filter { it.isOptional }
+            ?.mapNotNull { it.name }
+            .orEmpty()
+        creator.parameters.mapNotNull { parameter ->
+            val name = checkNotNull(parameter.name) { "${metadata.domainType.simpleName} has an unnamed constructor parameter" }
+            val column = metadata.columnFor(name)
+            when {
+                column != null -> name to column
+                name in optional -> null
+                else -> error("No column found for ${metadata.domainType.simpleName}.$name in table ${metadata.table.tableName}")
+            }
+        }.toMap()
+    }
+
+    private val populatedProperties: Map<ExposedPersistentProperty, Column<Any?>> = entity
+        .filter { !entity.isCreatorArgument(it) && it.isWritable }
+        .mapNotNull { property -> metadata.columnFor(property.name)?.let { property to it } }
+        .toMap()
+
+    override val columns: List<Column<*>> = (parameterColumns.values + populatedProperties.values).distinct()
+    override val narrowsSelect: Boolean = false
+
+    override fun read(row: ResultRow): T {
+        val provider = object : ParameterValueProvider<ExposedPersistentProperty> {
+            @Suppress("UNCHECKED_CAST")
+            override fun <V : Any> getParameterValue(parameter: Parameter<V, ExposedPersistentProperty>): V? =
+                parameterColumns[parameter.name]?.let { row[it].unwrapEntityId() } as V?
+        }
+        val instance: T = instantiator.createInstance(entity, provider)
+        if (populatedProperties.isEmpty()) return instance
+        val accessor = entity.getPropertyAccessor(instance)
+        populatedProperties.forEach { (property, column) -> accessor.setProperty(property, row[column].unwrapEntityId()) }
+        return accessor.bean
+    }
+}
+
+/**
+ * Calls the primary constructor of the DTO [type] with the values of the columns named like its parameters:
  * optional parameters without a column are left out, and every value must fit the entity property it comes from.
  */
 internal class ConstructorConverter<R : Any>(
     type: KClass<R>,
     metadata: EntityMetadata<*, *>,
-    override val narrowsSelect: Boolean,
 ) : RowConverter<R>(type.java) {
+    override val narrowsSelect: Boolean = true
+
     private val constructor = checkNotNull(type.primaryConstructor) { "${type.qualifiedName} needs a primary constructor" }.also {
         require(it.visibility == KVisibility.PUBLIC) { "The primary constructor of ${type.qualifiedName} must be public" }
     }
@@ -102,7 +152,6 @@ internal class InterfaceConverter<R : Any>(
         factory.createProjection(type, propertyColumns.mapValues { (_, column) -> row[column].unwrapEntityId() })
 }
 
-/** Fails unless a value of the entity property [name] can be assigned to [target]. */
 private fun EntityMetadata<*, *>.requireAssignable(owner: String?, name: String, target: KType) {
     val source = checkNotNull(propertyType(name)) { "No entity property '$name' for $owner.$name" }
     require(source.jvmErasure.isSubclassOf(target.jvmErasure)) {
