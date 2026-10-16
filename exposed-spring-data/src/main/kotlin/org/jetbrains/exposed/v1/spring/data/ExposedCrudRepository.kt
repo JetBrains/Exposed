@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.spring.data
 
 import org.springframework.data.repository.ListCrudRepository
+import org.springframework.data.repository.ListPagingAndSortingRepository
 import org.springframework.data.repository.NoRepositoryBean
 import org.springframework.transaction.annotation.Transactional
 
@@ -10,4 +11,6 @@ import org.springframework.transaction.annotation.Transactional
  */
 @NoRepositoryBean
 @Transactional(readOnly = true)
-interface ExposedCrudRepository<T : Any, ID : Any> : ListCrudRepository<T, ID>
+interface ExposedCrudRepository<T : Any, ID : Any> :
+    ListCrudRepository<T, ID>,
+    ListPagingAndSortingRepository<T, ID>

@@ -18,15 +18,22 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.FilterType
 import org.springframework.dao.IncorrectResultSizeDataAccessException
+import org.springframework.data.domain.KeysetScrollPosition
 import org.springframework.data.domain.Limit
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.ScrollPosition
 import org.springframework.data.domain.Slice
 import org.springframework.data.domain.Sort
+import org.springframework.data.domain.Window
+import org.springframework.data.repository.ListPagingAndSortingRepository
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.data.support.WindowIterator
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig
@@ -628,12 +635,431 @@ open class ExposedSpringDataTest {
         assertEquals(listOf("Dan", "Bob", "Carla", "Ann"), page.content.orderedNames())
     }
 
+    // ---- More paging: metadata, boundaries, iteration ----
+
+    @Test
+    fun testPageMetadata() {
+        seed()
+        val page = customerRepository.findPageByAgeGreaterThan(0, PageRequest.of(0, 3, Sort.by("age")))
+        assertEquals(0, page.number)
+        assertEquals(3, page.size)
+        assertEquals(3, page.numberOfElements)
+        assertEquals(Sort.by("age"), page.sort)
+        assertTrue(page.isFirst)
+        assertFalse(page.isLast)
+        assertFalse(page.hasPrevious())
+    }
+
+    @Test
+    fun testLastFullPageStillCountsTotal() {
+        seed()
+        // the page is full, so the total can't be derived from the content and needs the count query
+        val page = customerRepository.findPageByAgeGreaterThan(0, PageRequest.of(1, 2, Sort.by("age")))
+        assertEquals(listOf("Carla", "Dan"), page.content.orderedNames())
+        assertEquals(4L, page.totalElements)
+        assertEquals(2, page.totalPages)
+        assertTrue(page.isLast)
+        assertFalse(page.hasNext())
+        assertTrue(page.hasPrevious())
+    }
+
+    @Test
+    fun testIteratingAllPagesWithNextPageable() {
+        seed()
+        val names = mutableListOf<String>()
+        var pages = 0
+        var page = customerRepository.findPageByAgeGreaterThan(0, PageRequest.of(0, 3, Sort.by("age")))
+        while (true) {
+            pages++
+            names += page.content.orderedNames()
+            if (!page.hasNext()) break
+            page = customerRepository.findPageByAgeGreaterThan(0, page.nextPageable())
+        }
+        assertEquals(2, pages)
+        assertEquals(listOf("Ann", "Bob", "Carla", "Dan"), names)
+    }
+
+    @Test
+    fun testPageOnEmptyTable() {
+        val page = customerRepository.findPageByAgeGreaterThan(0, PageRequest.of(0, 2))
+        assertTrue(page.content.isEmpty())
+        assertEquals(0L, page.totalElements)
+        assertEquals(0, page.totalPages)
+        assertFalse(page.hasNext())
+    }
+
+    @Test
+    fun testPageWithNoMatches() {
+        seed()
+        val page = customerRepository.findPageByAgeGreaterThan(100, PageRequest.of(0, 2))
+        assertTrue(page.content.isEmpty())
+        assertEquals(0L, page.totalElements)
+        assertEquals(0, page.totalPages)
+    }
+
+    @Test
+    fun testPageableSortByUnknownPropertyFails() {
+        seed()
+        assertThrows<Exception> { customerRepository.findPageByAgeGreaterThan(0, PageRequest.of(0, 2, Sort.by("doesNotExist"))) }
+    }
+
+    @Test
+    fun testSliceUnpaged() {
+        seed()
+        val slice = customerRepository.findSliceByAgeGreaterThan(0, Pageable.unpaged())
+        assertEquals(listOf("Ann", "Bob", "Carla", "Dan"), slice.content.names())
+        assertFalse(slice.hasNext())
+    }
+
+    @Test
+    fun testSliceOnExactBoundaryHasNoNext() {
+        seed()
+        val last = customerRepository.findSliceByAgeGreaterThan(0, PageRequest.of(1, 2, Sort.by("age")))
+        assertEquals(listOf("Carla", "Dan"), last.content.orderedNames())
+        assertFalse(last.hasNext())
+        assertTrue(last.hasPrevious())
+
+        val all = customerRepository.findSliceByAgeGreaterThan(0, PageRequest.of(0, 4, Sort.by("age")))
+        assertEquals(4, all.numberOfElements)
+        assertFalse(all.hasNext())
+    }
+
+    @Test
+    fun testIteratingAllSlicesWithNextPageable() {
+        seed()
+        val names = mutableListOf<String>()
+        var slice = customerRepository.findSliceByAgeGreaterThan(0, PageRequest.of(0, 3, Sort.by("age")))
+        names += slice.content.orderedNames()
+        while (slice.hasNext()) {
+            slice = customerRepository.findSliceByAgeGreaterThan(0, slice.nextPageable())
+            names += slice.content.orderedNames()
+        }
+        assertEquals(listOf("Ann", "Bob", "Carla", "Dan"), names)
+    }
+
+    // ---- Scrolling: offset ----
+
+    @Test
+    fun testOffsetScrollInitialWindow() {
+        seed()
+        val window = customerRepository.findFirst2ByAgeGreaterThanOrderByAgeAsc(0, ScrollPosition.offset())
+        assertEquals(listOf("Ann", "Bob"), window.content.orderedNames())
+        assertEquals(2, window.size())
+        assertTrue(window.hasNext())
+        assertFalse(window.isLast)
+    }
+
+    @Test
+    fun testOffsetScrollContinuesAfterLastElement() {
+        seed()
+        val first = customerRepository.findFirst2ByAgeGreaterThanOrderByAgeAsc(0, ScrollPosition.offset())
+        val second = customerRepository.findFirst2ByAgeGreaterThanOrderByAgeAsc(0, first.positionAt(first.size() - 1))
+        assertEquals(listOf("Carla", "Dan"), second.content.orderedNames())
+        assertFalse(second.hasNext())
+        assertTrue(second.isLast)
+    }
+
+    @Test
+    fun testOffsetScrollPositionMeansAfterThatIndex() {
+        seed()
+        // offset(1) is the position of the element at index 1 (Bob), so scrolling continues after it
+        val window = customerRepository.findFirst2ByAgeGreaterThanOrderByAgeAsc(0, ScrollPosition.offset(1))
+        assertEquals(listOf("Carla", "Dan"), window.content.orderedNames())
+    }
+
+    @Test
+    fun testOffsetScrollBeyondEndIsEmpty() {
+        seed()
+        val window = customerRepository.findFirst2ByAgeGreaterThanOrderByAgeAsc(0, ScrollPosition.offset(10))
+        assertTrue(window.isEmpty)
+        assertFalse(window.hasNext())
+    }
+
+    @Test
+    fun testOffsetScrollShiftsWhenRowsAreInsertedBeforePosition() {
+        seed()
+        val first = customerRepository.findFirst2ByAgeGreaterThanOrderByAgeAsc(0, ScrollPosition.offset())
+        customerRepository.save(Customer(name = "Aaron", email = "aaron@x.io", age = 20))
+        val second = customerRepository.findFirst2ByAgeGreaterThanOrderByAgeAsc(0, first.positionAt(first.size() - 1))
+        // offsets count rows, so the new row pushes Bob into the next window
+        assertEquals(listOf("Bob", "Carla"), second.content.orderedNames())
+    }
+
+    @Test
+    fun testWindowIteratorWithOffset() {
+        seed()
+        val names = WindowIterator.of<Customer> { customerRepository.findFirst2ByAgeGreaterThanOrderByAgeAsc(0, it) }
+            .startingAt(ScrollPosition.offset())
+            .asSequence()
+            .map { it.name }
+            .toList()
+        assertEquals(listOf("Ann", "Bob", "Carla", "Dan"), names)
+    }
+
+    // ---- Scrolling: keyset ----
+
+    @Test
+    fun testKeysetScrollForward() {
+        seed()
+        val first = customerRepository.findFirst2ByAgeGreaterThanOrderByAgeAsc(0, ScrollPosition.keyset())
+        assertEquals(listOf("Ann", "Bob"), first.content.orderedNames())
+        assertTrue(first.hasNext())
+
+        val second = customerRepository.findFirst2ByAgeGreaterThanOrderByAgeAsc(0, first.positionAt(first.size() - 1))
+        assertEquals(listOf("Carla", "Dan"), second.content.orderedNames())
+        assertFalse(second.hasNext())
+    }
+
+    @Test
+    fun testKeysetPositionContainsSortKeys() {
+        seed()
+        val window = customerRepository.findFirst2ByAgeGreaterThanOrderByAgeAsc(0, ScrollPosition.keyset())
+        val position = window.positionAt(1)
+        assertTrue(position is KeysetScrollPosition) { "Expected a keyset position, got $position" }
+        assertEquals(30, (position as KeysetScrollPosition).keys["age"])
+        assertTrue(position.scrollsForward())
+    }
+
+    @Test
+    fun testKeysetScrollDescending() {
+        seed()
+        val first = customerRepository.findFirst2ByAgeGreaterThanOrderByAgeDesc(0, ScrollPosition.keyset())
+        assertEquals(listOf("Dan", "Carla"), first.content.orderedNames())
+
+        val second = customerRepository.findFirst2ByAgeGreaterThanOrderByAgeDesc(0, first.positionAt(first.size() - 1))
+        assertEquals(listOf("Bob", "Ann"), second.content.orderedNames())
+        assertFalse(second.hasNext())
+    }
+
+    @Test
+    fun testKeysetScrollBackward() {
+        seed()
+        val first = customerRepository.findFirst2ByAgeGreaterThanOrderByAgeAsc(0, ScrollPosition.keyset())
+        val second = customerRepository.findFirst2ByAgeGreaterThanOrderByAgeAsc(0, first.positionAt(first.size() - 1))
+
+        val backFromCarla = (second.positionAt(0) as KeysetScrollPosition).backward()
+        val previous = customerRepository.findFirst2ByAgeGreaterThanOrderByAgeAsc(0, backFromCarla)
+        // content keeps the declared sort order, even when scrolling backward
+        assertEquals(listOf("Ann", "Bob"), previous.content.orderedNames())
+        assertFalse(previous.hasNext())
+    }
+
+    @Test
+    fun testKeysetScrollIsStableWhenRowsAreInsertedBeforePosition() {
+        seed()
+        val first = customerRepository.findFirst2ByAgeGreaterThanOrderByAgeAsc(0, ScrollPosition.keyset())
+        customerRepository.save(Customer(name = "Aaron", email = "aaron@x.io", age = 20))
+        val second = customerRepository.findFirst2ByAgeGreaterThanOrderByAgeAsc(0, first.positionAt(first.size() - 1))
+        // keyset continues after Bob's age, so the new row doesn't shift the next window
+        assertEquals(listOf("Carla", "Dan"), second.content.orderedNames())
+    }
+
+    @Test
+    fun testKeysetScrollWithNonUniqueSortVisitsEveryRowOnce() {
+        seed()
+        // `active` has duplicates, so the keyset needs a unique tie-breaker (the id) to not skip or repeat rows
+        val names = WindowIterator.of<Customer> { customerRepository.findFirstByAgeGreaterThanOrderByActiveAsc(0, it) }
+            .startingAt(ScrollPosition.keyset())
+            .asSequence()
+            .map { it.name }
+            .toList()
+        assertEquals(4, names.size)
+        assertEquals(listOf("Ann", "Bob", "Carla", "Dan"), names.sorted())
+        assertEquals(setOf("Bob", "Dan"), names.take(2).toSet())
+    }
+
+    @Test
+    fun testKeysetScrollWithCriteria() {
+        seed()
+        val first = customerRepository.findFirstByActiveTrueOrderByAgeAsc(ScrollPosition.keyset())
+        assertEquals(listOf("Ann"), first.content.orderedNames())
+        assertTrue(first.hasNext())
+
+        val second = customerRepository.findFirstByActiveTrueOrderByAgeAsc(first.positionAt(0))
+        assertEquals(listOf("Carla"), second.content.orderedNames())
+        assertFalse(second.hasNext())
+    }
+
+    @Test
+    fun testWindowIteratorWithKeyset() {
+        seed()
+        val names = WindowIterator.of<Customer> { customerRepository.findFirst2ByAgeGreaterThanOrderByAgeAsc(0, it) }
+            .startingAt(ScrollPosition.keyset())
+            .asSequence()
+            .map { it.name }
+            .toList()
+        assertEquals(listOf("Ann", "Bob", "Carla", "Dan"), names)
+    }
+
+    // ---- Scrolling: Limit / Sort parameters and no limit ----
+
+    @Test
+    fun testScrollWithLimitAndSortParameters() {
+        seed()
+        val first = customerRepository.findWindowByAgeGreaterThan(0, ScrollPosition.keyset(), Limit.of(3), Sort.by("age").descending())
+        assertEquals(listOf("Dan", "Carla", "Bob"), first.content.orderedNames())
+        assertTrue(first.hasNext())
+
+        val second = customerRepository.findWindowByAgeGreaterThan(0, first.positionAt(first.size() - 1), Limit.of(3), Sort.by("age").descending())
+        assertEquals(listOf("Ann"), second.content.orderedNames())
+        assertFalse(second.hasNext())
+    }
+
+    @Test
+    fun testScrollWithOffsetAndLimitParameter() {
+        seed()
+        val window = customerRepository.findWindowByAgeGreaterThan(0, ScrollPosition.offset(0), Limit.of(2), Sort.by("age"))
+        assertEquals(listOf("Bob", "Carla"), window.content.orderedNames())
+        assertTrue(window.hasNext())
+    }
+
+    @Test
+    fun testScrollWithoutLimitReturnsEverything() {
+        seed()
+        val offset = customerRepository.findByAgeGreaterThanOrderByAgeAsc(0, ScrollPosition.offset())
+        assertEquals(listOf("Ann", "Bob", "Carla", "Dan"), offset.content.orderedNames())
+        assertFalse(offset.hasNext())
+
+        val keyset = customerRepository.findByAgeGreaterThanOrderByAgeAsc(0, ScrollPosition.keyset())
+        assertEquals(listOf("Ann", "Bob", "Carla", "Dan"), keyset.content.orderedNames())
+        assertFalse(keyset.hasNext())
+    }
+
+    @Test
+    fun testScrollOnEmptyResult() {
+        seed()
+        val window = customerRepository.findFirst2ByAgeGreaterThanOrderByAgeAsc(100, ScrollPosition.keyset())
+        assertTrue(window.isEmpty)
+        assertFalse(window.hasNext())
+    }
+
     companion object {
         val JAN: Instant = Instant.parse("2024-01-01T00:00:00Z")
         val FEB: Instant = Instant.parse("2024-02-01T00:00:00Z")
         val MAR: Instant = Instant.parse("2024-03-01T00:00:00Z")
         val APR: Instant = Instant.parse("2024-04-01T00:00:00Z")
     }
+}
+
+/**
+ * `findAll(Sort)` and `findAll(Pageable)` from [ListPagingAndSortingRepository].
+ *
+ * Uses its own context with a nested repository, so a missing base-class implementation only fails these tests.
+ */
+@SpringJUnitConfig(PagingAndSortingTestConfiguration::class)
+@Transactional
+open class ExposedSpringDataPagingAndSortingRepositoryTest {
+
+    @Autowired
+    lateinit var repository: PagingCustomerRepository
+
+    @Autowired
+    lateinit var tm: PlatformTransactionManager
+
+    @BeforeEach
+    fun setUp() = TransactionTemplate(tm).executeWithoutResult { SchemaUtils.create(Customers) }
+
+    @AfterEach
+    fun tearDown() = TransactionTemplate(tm).executeWithoutResult { SchemaUtils.drop(Customers) }
+
+    private fun seed() {
+        repository.saveAll(
+            listOf(
+                Customer(name = "Ann", email = "ann@x.io", age = 25, active = true),
+                Customer(name = "Bob", email = "bob@x.io", age = 30, active = false),
+                Customer(name = "Carla", email = "carla@example.com", age = 35, active = true),
+                Customer(name = "Dan", email = "dan@x.io", age = 40, active = false),
+            )
+        )
+    }
+
+    private fun Iterable<Customer>.orderedNames() = map { it.name }
+
+    @Test
+    fun testFindAllWithPageable() {
+        seed()
+        val page = repository.findAll(PageRequest.of(0, 3, Sort.by("age")))
+        assertEquals(listOf("Ann", "Bob", "Carla"), page.content.orderedNames())
+        assertEquals(4L, page.totalElements)
+        assertEquals(2, page.totalPages)
+        assertEquals(Sort.by("age"), page.sort)
+        assertTrue(page.hasNext())
+    }
+
+    @Test
+    fun testFindAllWithPageableOnLastFullPage() {
+        seed()
+        val page = repository.findAll(PageRequest.of(1, 2, Sort.by("age")))
+        assertEquals(listOf("Carla", "Dan"), page.content.orderedNames())
+        assertEquals(4L, page.totalElements)
+        assertTrue(page.isLast)
+    }
+
+    @Test
+    fun testFindAllWithPageableDescending() {
+        seed()
+        assertEquals(listOf("Bob", "Ann"), repository.findAll(PageRequest.of(1, 2, Sort.by("age").descending())).content.orderedNames())
+    }
+
+    @Test
+    fun testFindAllWithPageableOnEmptyTable() {
+        val page = repository.findAll(PageRequest.of(0, 2))
+        assertTrue(page.content.isEmpty())
+        assertEquals(0L, page.totalElements)
+        assertEquals(0, page.totalPages)
+    }
+
+    @Test
+    fun testFindAllUnpaged() {
+        seed()
+        val page = repository.findAll(Pageable.unpaged())
+        assertEquals(4, page.numberOfElements)
+        assertEquals(4L, page.totalElements)
+        assertEquals(1, page.totalPages)
+    }
+
+    @Test
+    fun testFindAllWithSort() {
+        seed()
+        assertEquals(listOf("Dan", "Carla", "Bob", "Ann"), repository.findAll(Sort.by("age").descending()).orderedNames())
+        assertEquals(listOf("Bob", "Dan", "Ann", "Carla"), repository.findAll(Sort.by("active", "age")).orderedNames())
+    }
+
+    @Test
+    fun testFindAllWithUnknownSortPropertyFails() {
+        seed()
+        assertThrows<Exception> { repository.findAll(Sort.by("doesNotExist")) }
+        assertThrows<Exception> { repository.findAll(PageRequest.of(0, 2, Sort.by("doesNotExist"))) }
+    }
+
+    @ExposedRepository(table = Customers::class)
+    interface PagingCustomerRepository :
+        ExposedCrudRepository<Customer, Long>,
+        ListPagingAndSortingRepository<Customer, Long>
+}
+
+@Configuration
+@EnableExposedRepositories(
+    basePackageClasses = [ExposedSpringDataPagingAndSortingRepositoryTest::class],
+    considerNestedRepositories = true,
+    includeFilters = [
+        ComponentScan.Filter(
+            type = FilterType.ASSIGNABLE_TYPE,
+            classes = [ExposedSpringDataPagingAndSortingRepositoryTest.PagingCustomerRepository::class],
+        ),
+    ],
+)
+@EnableTransactionManagement
+open class PagingAndSortingTestConfiguration {
+    @Bean
+    open fun dataSource(): DataSource = EmbeddedDatabaseBuilder()
+        .setType(EmbeddedDatabaseType.H2)
+        .generateUniqueName(true)
+        .build()
+
+    @Bean
+    open fun transactionManager(dataSource: DataSource): PlatformTransactionManager =
+        SpringTransactionManager(dataSource)
 }
 
 /**
@@ -669,6 +1095,16 @@ class ExposedSpringDataUnsupportedPartTypesTest {
     @Test
     fun testNestedPropertyPathFailsAtCreation() {
         assertThrows<Exception> { ExposedRepositoryFactory().getRepository(NestedPathRepository::class.java) }
+    }
+
+    @Test
+    fun testScrollPositionWithoutWindowReturnTypeFailsAtCreation() {
+        assertThrows<Exception> { ExposedRepositoryFactory().getRepository(ScrollWithoutWindowRepository::class.java) }
+    }
+
+    @Test
+    fun testWindowWithoutScrollPositionFailsAtCreation() {
+        assertThrows<Exception> { ExposedRepositoryFactory().getRepository(WindowWithoutScrollPositionRepository::class.java) }
     }
 
     @Retention(AnnotationRetention.RUNTIME)
@@ -712,6 +1148,16 @@ class ExposedSpringDataUnsupportedPartTypesTest {
     @ExposedRepository(table = Customers::class)
     interface NestedPathRepository : ExposedCrudRepository<Customer, Long> {
         fun findByEmailBytes(bytes: ByteArray): List<Customer>
+    }
+
+    @ExposedRepository(table = Customers::class)
+    interface ScrollWithoutWindowRepository : ExposedCrudRepository<Customer, Long> {
+        fun findFirst2ByAgeGreaterThanOrderByAgeAsc(age: Int, position: ScrollPosition): List<Customer>
+    }
+
+    @ExposedRepository(table = Customers::class)
+    interface WindowWithoutScrollPositionRepository : ExposedCrudRepository<Customer, Long> {
+        fun findFirst2ByAgeGreaterThanOrderByAgeAsc(age: Int): Window<Customer>
     }
 }
 
@@ -900,4 +1346,12 @@ interface CustomerRepository : ExposedCrudRepository<Customer, Long> {
     fun findSliceByAgeGreaterThan(age: Int, pageable: Pageable): Slice<Customer>
     fun findListByAgeGreaterThan(age: Int, pageable: Pageable): List<Customer>
     fun findByAgeGreaterThanOrderByActiveAsc(age: Int, pageable: Pageable): Page<Customer>
+
+    // Scrolling
+    fun findFirst2ByAgeGreaterThanOrderByAgeAsc(age: Int, position: ScrollPosition): Window<Customer>
+    fun findFirst2ByAgeGreaterThanOrderByAgeDesc(age: Int, position: ScrollPosition): Window<Customer>
+    fun findFirstByAgeGreaterThanOrderByActiveAsc(age: Int, position: ScrollPosition): Window<Customer>
+    fun findFirstByActiveTrueOrderByAgeAsc(position: ScrollPosition): Window<Customer>
+    fun findWindowByAgeGreaterThan(age: Int, position: ScrollPosition, limit: Limit, sort: Sort): Window<Customer>
+    fun findByAgeGreaterThanOrderByAgeAsc(age: Int, position: ScrollPosition): Window<Customer>
 }
