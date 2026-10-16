@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.spring.data.repository
 
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.spring.data.ExposedRepository
+import org.jetbrains.exposed.v1.spring.data.mapping.ProjectionResolver
 import org.jetbrains.exposed.v1.spring.data.mapping.ReflectionEntityMapper
 import org.jetbrains.exposed.v1.spring.data.query.ExposedQueryLookupStrategy
 import org.jetbrains.exposed.v1.spring.data.query.QueryContextInterceptor
@@ -18,11 +19,14 @@ import kotlin.reflect.KClass
 
 internal class ExposedRepositoryFactory : RepositoryFactorySupport() {
     private val mappers = ConcurrentHashMap<Class<*>, ReflectionEntityMapper<Any, Any>>()
+    private val projectionResolvers = ConcurrentHashMap<Class<*>, ProjectionResolver>()
 
     init {
         addRepositoryProxyPostProcessor { proxyFactory, information ->
             if (information.repositoryInterface.methods.any { it.isDefault }) {
-                proxyFactory.addAdvice(QueryContextInterceptor(tableFor(information), mapperFor(information)))
+                proxyFactory.addAdvice(
+                    QueryContextInterceptor(tableFor(information), mapperFor(information), projectionResolverFor(information))
+                )
             }
         }
     }
@@ -52,7 +56,7 @@ internal class ExposedRepositoryFactory : RepositoryFactorySupport() {
     }
 
     override fun getQueryLookupStrategy(key: QueryLookupStrategy.Key?, valueExpressionDelegate: ValueExpressionDelegate): Optional<QueryLookupStrategy> {
-        return Optional.of(ExposedQueryLookupStrategy(::tableFor, ::mapperFor))
+        return Optional.of(ExposedQueryLookupStrategy(::tableFor, ::mapperFor, ::projectionResolverFor))
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -67,5 +71,13 @@ internal class ExposedRepositoryFactory : RepositoryFactorySupport() {
     private fun mapperFor(metadata: RepositoryMetadata) = mappers.getOrPut(metadata.repositoryInterface) {
         ReflectionEntityMapper(tableFor(metadata), metadata.domainType.kotlin as KClass<Any>)
     }
-}
 
+    private fun projectionResolverFor(metadata: RepositoryMetadata) = projectionResolvers.getOrPut(metadata.repositoryInterface) {
+        ProjectionResolver(
+            table = tableFor(metadata),
+            mapper = mapperFor(metadata),
+            entityType = metadata.domainType,
+            factory = projectionFactory,
+        )
+    }
+}

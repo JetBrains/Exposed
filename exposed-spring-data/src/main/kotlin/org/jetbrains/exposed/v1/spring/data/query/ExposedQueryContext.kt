@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.spring.data.query
 
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.spring.data.mapping.ExposedEntityMapper
+import org.jetbrains.exposed.v1.spring.data.mapping.ProjectionResolver
 import java.lang.reflect.Method
 
 internal class ExposedQueryContext(
@@ -9,6 +10,7 @@ internal class ExposedQueryContext(
     val mapper: ExposedEntityMapper<*>,
     val table: IdTable<*>,
     val method: Method,
+    val projectionResolver: ProjectionResolver,
 )
 
 internal object ExposedQueryContextHolder {
@@ -30,4 +32,3 @@ internal object ExposedQueryContextHolder {
         }
     }
 }
-

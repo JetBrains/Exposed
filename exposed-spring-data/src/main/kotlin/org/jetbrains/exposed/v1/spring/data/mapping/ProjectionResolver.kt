@@ -18,9 +18,9 @@ internal class ProjectionResolver(
     private fun create(type: Class<*>): RowConverter = when {
         type == ResultRow::class.java -> RawRowConverter(table.columns)
         type.isAssignableFrom(entityType) -> EntityConverter(mapper)
+        type.isPrimitive || type.isArray || type.name.startsWith("java.") || type.name.startsWith("kotlin.") ->
+            error("Rows can't be converted to ${type.name}, map the rows yourself (e.g. `.map { it[column] }`)")
         type.isInterface -> InterfaceConverter(type, factory, mapper)
         else -> DtoConverter(type.kotlin, mapper)
     }
 }
-
-

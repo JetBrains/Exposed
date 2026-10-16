@@ -1,8 +1,13 @@
 package org.jetbrains.exposed.v1.spring.data
 
+import org.jetbrains.exposed.v1.core.SqlLogger
+import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.core.statements.StatementContext
+import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.spring7.transaction.SpringTransactionManager
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -56,6 +61,29 @@ abstract class ExposedSpringDataTestBase {
 
     /** Names in result order, for results with a defined order. */
     protected fun Iterable<Customer>.orderedNames() = map { it.name }
+
+    /** Runs [block] and returns the SQL of every SELECT it executed in the current (test) transaction. */
+    protected fun captureSelects(block: () -> Unit): List<String> {
+        val statements = mutableListOf<String>()
+        TransactionManager.current().addLogger(
+            object : SqlLogger {
+                override fun log(context: StatementContext, transaction: Transaction) {
+                    if (context.statement.type == StatementType.SELECT) statements += context.sql(transaction)
+                }
+            }
+        )
+        block()
+        return statements
+    }
+
+    /** The column names in the select list of [sql], lower case and without table prefix or quotes. */
+    protected fun selectedColumns(sql: String): Set<String> = sql
+        .substringAfter("SELECT ")
+        .removePrefix("DISTINCT ")
+        .substringBefore(" FROM ")
+        .split(',')
+        .map { it.trim().substringAfterLast('.').trim('"', '`').lowercase() }
+        .toSet()
 
     companion object {
         val JAN: Instant = Instant.parse("2024-01-01T00:00:00Z")
