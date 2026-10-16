@@ -1,9 +1,13 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared
 
+import io.r2dbc.spi.ConnectionFactories
+import io.r2dbc.spi.ConnectionFactory
+import io.r2dbc.spi.ConnectionFactoryMetadata
 import io.r2dbc.spi.R2dbcException
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.test.runTest
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
@@ -21,6 +25,8 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
+import reactor.core.publisher.Mono
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertContains
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
@@ -213,6 +219,60 @@ class NestedTransactionsTest : R2dbcDatabaseTestsBase() {
 
         suspendTransaction(db) {
             SchemaUtils.drop(DMLTestsData.Cities)
+        }
+    }
+
+    @Test
+    fun testNestedTransactionSetsSavepointOnlyWhenConnectionIsUsed() = runTest {
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+
+        val connectionsOpened = AtomicInteger(0)
+        val countingFactory = object : ConnectionFactory {
+            private val factory = ConnectionFactories.get("r2dbc:h2:mem:///db1;DB_CLOSE_DELAY=-1;USER=root")
+
+            override fun create() = Mono.defer {
+                connectionsOpened.incrementAndGet()
+                Mono.from(factory.create())
+            }
+
+            override fun getMetadata(): ConnectionFactoryMetadata = factory.metadata
+        }
+        val countingDb = R2dbcDatabase.connect(
+            connectionFactory = countingFactory,
+            databaseConfig = R2dbcDatabaseConfig {
+                useNestedTransactions = true
+                explicitDialect = H2Dialect()
+            }
+        )
+
+        suspendTransaction(countingDb) {
+            suspendTransaction {
+                rollback()
+            }
+            assertEquals(0, connectionsOpened.get())
+
+            suspendTransaction {
+                connection()
+            }
+            assertEquals(1, connectionsOpened.get())
+        }
+    }
+
+    @Test
+    fun testRollbackOfIdleNestedTransactionUndoesItsInnerTransaction() {
+        withTables(DMLTestsData.Cities, configure = { useNestedTransactions = true }) {
+            DMLTestsData.Cities.insert { it[name] = "city1" }
+
+            suspendTransaction {
+                // runs no statements itself, so its savepoint is set only when the inner transaction needs the connection
+                suspendTransaction {
+                    DMLTestsData.Cities.insert { it[name] = "city2" }
+                }
+                assertEqualLists(listOf("city1", "city2"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
+                rollback()
+            }
+
+            assertEqualLists(listOf("city1"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
         }
     }
 
