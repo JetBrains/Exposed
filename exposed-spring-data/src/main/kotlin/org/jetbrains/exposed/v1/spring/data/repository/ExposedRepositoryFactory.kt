@@ -2,8 +2,8 @@ package org.jetbrains.exposed.v1.spring.data.repository
 
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.spring.data.ExposedRepository
+import org.jetbrains.exposed.v1.spring.data.mapping.EntityMetadata
 import org.jetbrains.exposed.v1.spring.data.mapping.ProjectionResolver
-import org.jetbrains.exposed.v1.spring.data.mapping.ReflectionEntityMapper
 import org.jetbrains.exposed.v1.spring.data.query.ExposedQueryLookupStrategy
 import org.jetbrains.exposed.v1.spring.data.query.QueryContextInterceptor
 import org.springframework.data.domain.Persistable
@@ -18,35 +18,23 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 
 internal class ExposedRepositoryFactory : RepositoryFactorySupport() {
-    private val mappers = ConcurrentHashMap<Class<*>, ReflectionEntityMapper<Any, Any>>()
-    private val projectionResolvers = ConcurrentHashMap<Class<*>, ProjectionResolver>()
+    private val projectionResolvers = ConcurrentHashMap<Class<*>, ProjectionResolver<Any, Any>>()
 
     init {
         addRepositoryProxyPostProcessor { proxyFactory, information ->
             if (information.repositoryInterface.methods.any { it.isDefault }) {
-                proxyFactory.addAdvice(
-                    QueryContextInterceptor(tableFor(information), mapperFor(information), projectionResolverFor(information))
-                )
+                proxyFactory.addAdvice(QueryContextInterceptor(projectionResolverFor(information)))
             }
         }
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun getTargetRepository(metadata: RepositoryInformation): Any {
-        val table = tableFor(metadata)
-        val entityInformation = getEntityInformation(metadata) as ExposedEntityInformation<Any, Any>
-        val entityMapper = mapperFor(metadata)
+    override fun getTargetRepository(metadata: RepositoryInformation): Any = SimpleExposedRepository(
+        entityInformation = getEntityInformation(metadata) as EntityInformation<Any, Any>,
+        projectionResolver = projectionResolverFor(metadata),
+    )
 
-        return SimpleExposedRepository(
-            table = table,
-            entityInformation = entityInformation,
-            entityMapper = entityMapper,
-        )
-    }
-
-    override fun getRepositoryBaseClass(metadata: RepositoryMetadata): Class<*> {
-        return SimpleExposedRepository::class.java
-    }
+    override fun getRepositoryBaseClass(metadata: RepositoryMetadata): Class<*> = SimpleExposedRepository::class.java
 
     override fun getEntityInformation(metadata: RepositoryMetadata): EntityInformation<*, *> {
         if (Persistable::class.java.isAssignableFrom(metadata.domainType)) {
@@ -55,9 +43,18 @@ internal class ExposedRepositoryFactory : RepositoryFactorySupport() {
         return ExposedEntityInformation<Any, Any>(metadata)
     }
 
-    override fun getQueryLookupStrategy(key: QueryLookupStrategy.Key?, valueExpressionDelegate: ValueExpressionDelegate): Optional<QueryLookupStrategy> {
-        return Optional.of(ExposedQueryLookupStrategy(::tableFor, ::mapperFor, ::projectionResolverFor))
-    }
+    override fun getQueryLookupStrategy(key: QueryLookupStrategy.Key?, valueExpressionDelegate: ValueExpressionDelegate): Optional<QueryLookupStrategy> =
+        Optional.of(ExposedQueryLookupStrategy(::projectionResolverFor))
+
+    /** One resolver per repository interface, shared by the base repository, derived queries and `query { }`. */
+    @Suppress("UNCHECKED_CAST")
+    private fun projectionResolverFor(metadata: RepositoryMetadata): ProjectionResolver<Any, Any> =
+        projectionResolvers.getOrPut(metadata.repositoryInterface) {
+            ProjectionResolver(
+                metadata = EntityMetadata(tableFor(metadata), metadata.domainType.kotlin as KClass<Any>),
+                factory = projectionFactory,
+            )
+        }
 
     @Suppress("UNCHECKED_CAST")
     private fun tableFor(metadata: RepositoryMetadata): IdTable<Any> {
@@ -65,19 +62,5 @@ internal class ExposedRepositoryFactory : RepositoryFactorySupport() {
             "@ExposedRepository not found on ${metadata.repositoryInterface.name}"
         }
         return checkNotNull(annotation.table.objectInstance) { "${annotation.table} must be an object" } as IdTable<Any>
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun mapperFor(metadata: RepositoryMetadata) = mappers.getOrPut(metadata.repositoryInterface) {
-        ReflectionEntityMapper(tableFor(metadata), metadata.domainType.kotlin as KClass<Any>)
-    }
-
-    private fun projectionResolverFor(metadata: RepositoryMetadata) = projectionResolvers.getOrPut(metadata.repositoryInterface) {
-        ProjectionResolver(
-            table = tableFor(metadata),
-            mapper = mapperFor(metadata),
-            entityType = metadata.domainType,
-            factory = projectionFactory,
-        )
     }
 }

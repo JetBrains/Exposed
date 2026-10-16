@@ -1,20 +1,21 @@
 package org.jetbrains.exposed.v1.spring.data.repository
 
-import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.jdbc.Query
 import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.spring.data.ExposedCrudRepository
-import org.jetbrains.exposed.v1.spring.data.mapping.ExposedEntityMapper
-import org.jetbrains.exposed.v1.spring.data.query.ExposedQueryCreator.Companion.orderBy
+import org.jetbrains.exposed.v1.spring.data.mapping.ProjectionResolver
+import org.jetbrains.exposed.v1.spring.data.mapping.orderBy
 import org.springframework.dao.IncorrectUpdateSemanticsDataAccessException
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
+import org.springframework.data.repository.core.EntityInformation
 import org.springframework.data.support.PageableExecutionUtils
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
@@ -22,10 +23,12 @@ import java.util.*
 @Suppress("UNCHECKED_CAST")
 @Transactional(readOnly = true)
 internal open class SimpleExposedRepository<T : Any, ID : Any>(
-    private val table: IdTable<ID>,
-    private val entityInformation: ExposedEntityInformation<T, ID>,
-    private val entityMapper: ExposedEntityMapper<T>,
+    private val entityInformation: EntityInformation<T, ID>,
+    private val projectionResolver: ProjectionResolver<T, ID>,
 ) : ExposedCrudRepository<T, ID> {
+    private val metadata = projectionResolver.metadata
+    private val table = metadata.table
+    private val entityConverter = projectionResolver.entityConverter
 
     @Transactional
     override fun <S : T> saveAll(entities: Iterable<S>): List<S> {
@@ -36,33 +39,27 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
     override fun <S : T> save(entity: S): S =
         if (entityInformation.isNew(entity)) insert(entity) else update(entity)
 
-
     override fun findAll(): List<T> = table
         .selectAll()
-        .map(entityMapper::toEntity)
+        .toEntities()
 
     override fun findAll(sort: Sort): List<T> = table
         .selectAll()
-        .orderBy(sort, entityMapper, table)
-        .map(entityMapper::toEntity)
+        .orderBy(sort, metadata)
+        .toEntities()
 
     override fun findAll(pageable: Pageable): Page<T> {
-        val query = table.selectAll().orderBy(pageable.sort, entityMapper, table)
+        val query = table.selectAll().orderBy(pageable.sort, metadata)
         if (pageable.isPaged) query.limit(pageable.pageSize).offset(pageable.offset)
-        return PageableExecutionUtils.getPage(query.map(entityMapper::toEntity), pageable) { count() }
+        return PageableExecutionUtils.getPage(query.toEntities(), pageable) { count() }
     }
 
     override fun findAllById(ids: Iterable<ID>): List<T> = table
         .selectAll()
         .where { table.id inList ids }
-        .map(entityMapper::toEntity)
+        .toEntities()
 
-    override fun findById(id: ID): Optional<T> = table
-        .selectAll()
-        .where { table.id eq id }
-        .map(entityMapper::toEntity)
-        .firstOrNull()
-        .let { Optional.ofNullable(it) }
+    override fun findById(id: ID): Optional<T> = Optional.ofNullable(findRow(id))
 
     override fun existsById(id: ID): Boolean = table
         .selectAll()
@@ -99,16 +96,24 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
     }
 
     private fun <S : T> insert(entity: S): S {
-        val id = table.insertAndGetId { entityMapper.fill(it, entity) }.value
-        return entityMapper.toEntity(table.selectAll().where { table.id eq id }.single()) as S
+        val id = table.insertAndGetId { projectionResolver.fill(it, entity) }.value
+        return checkNotNull(findRow(id)) as S
     }
 
     private fun <S : T> update(entity: S): S {
         val id = entityInformation.getRequiredId(entity)
         val updated = table.update({ table.id eq id }) {
-            entityMapper.fill(it, entity)
+            projectionResolver.fill(it, entity)
         }
         if (updated == 0) throw IncorrectUpdateSemanticsDataAccessException("No row with id $id in table ${table.tableName}")
-        return entityMapper.toEntity(table.selectAll().where { table.id eq id }.single()) as S
+        return checkNotNull(findRow(id)) as S
     }
+
+    private fun findRow(id: ID): T? = table
+        .selectAll()
+        .where { table.id eq id }
+        .singleOrNull()
+        ?.let(entityConverter::convert)
+
+    private fun Query.toEntities(): List<T> = map(entityConverter::convert)
 }

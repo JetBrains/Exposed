@@ -1,7 +1,5 @@
 package org.jetbrains.exposed.v1.spring.data.query
 
-import org.jetbrains.exposed.v1.core.dao.id.IdTable
-import org.jetbrains.exposed.v1.spring.data.mapping.ExposedEntityMapper
 import org.jetbrains.exposed.v1.spring.data.mapping.ProjectionResolver
 import org.springframework.data.projection.ProjectionFactory
 import org.springframework.data.repository.core.NamedQueries
@@ -13,9 +11,7 @@ import org.springframework.data.repository.query.RepositoryQuery
 import java.lang.reflect.Method
 
 internal class ExposedQueryLookupStrategy(
-    private val tableFor: (RepositoryMetadata) -> IdTable<Any>,
-    private val mapperFor: (RepositoryMetadata) -> ExposedEntityMapper<Any>,
-    private val projectionResolverFor: (RepositoryMetadata) -> ProjectionResolver,
+    private val projectionResolverFor: (RepositoryMetadata) -> ProjectionResolver<Any, Any>,
 ) : QueryLookupStrategy {
     override fun resolveQuery(
         method: Method,
@@ -24,6 +20,6 @@ internal class ExposedQueryLookupStrategy(
         namedQueries: NamedQueries
     ): RepositoryQuery {
         val queryMethod = QueryMethod(method, metadata, factory) { DefaultParameters(it) }
-        return PartTreeExposedQuery(queryMethod, tableFor(metadata), mapperFor(metadata), projectionResolverFor(metadata))
+        return PartTreeExposedQuery(queryMethod, projectionResolverFor(metadata))
     }
 }
