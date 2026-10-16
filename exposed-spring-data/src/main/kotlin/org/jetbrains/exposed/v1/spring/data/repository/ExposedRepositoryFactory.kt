@@ -40,7 +40,7 @@ internal class ExposedRepositoryFactory : RepositoryFactorySupport() {
         if (Persistable::class.java.isAssignableFrom(metadata.domainType)) {
             PersistableEntityInformation<Persistable<Any>, Any>(metadata)
         } else {
-            ExposedEntityInformation<Any, Any>(metadata)
+            ExposedEntityInformation(metadata, projectionResolverFor(metadata).metadata)
         }
 
     override fun getQueryLookupStrategy(key: QueryLookupStrategy.Key?, valueExpressionDelegate: ValueExpressionDelegate): Optional<QueryLookupStrategy> =
