@@ -19,7 +19,7 @@ public final class org/jetbrains/exposed/v1/spring/boot4/r2dbc/ExposedAotContrib
 }
 
 public class org/jetbrains/exposed/v1/spring/boot4/r2dbc/autoconfigure/ExposedReactiveAutoConfiguration {
-	public fun <init> (Lorg/springframework/context/ApplicationContext;)V
+	public fun <init> (Lorg/springframework/context/ApplicationContext;Lorg/springframework/boot/r2dbc/autoconfigure/R2dbcConnectionDetails;)V
 	public fun databaseConfig ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Builder;
 	public fun databaseInitializer (Lorg/jetbrains/exposed/v1/spring7/reactive/transaction/SpringReactiveTransactionManager;)Lorg/jetbrains/exposed/v1/spring/boot4/r2dbc/DatabaseInitializer;
 	public fun exposedSpringTransactionAttributeSource ()Lorg/jetbrains/exposed/v1/spring7/reactive/transaction/ExposedSpringTransactionAttributeSource;

@@ -34,9 +34,12 @@ val ConnectionFactoryOptions.urlString: String get() {
     val host = getValue(ConnectionFactoryOptions.HOST)
     val port = getValue(ConnectionFactoryOptions.PORT)
     val database = getValue(ConnectionFactoryOptions.DATABASE)
+    val protocol = getValue(ConnectionFactoryOptions.PROTOCOL)
 
     return buildString {
-        append("r2dbc:$driver://")
+        append("r2dbc:$driver")
+        if (protocol != null) append(":$protocol")
+        append("://")
 
         if (host != null) append(host)
         if (port != null) append(":$port")

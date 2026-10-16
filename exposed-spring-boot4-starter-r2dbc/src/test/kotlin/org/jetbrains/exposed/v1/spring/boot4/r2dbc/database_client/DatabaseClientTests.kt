@@ -23,7 +23,6 @@ open class DatabaseClientApplication
     properties = [
         "spring.r2dbc.url=r2dbc:h2:mem:///test;DB_CLOSE_DELAY=-1;",
         "spring.exposed.generate-ddl=true",
-        "spring.exposed.database-driver=h2",
     ]
 )
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
