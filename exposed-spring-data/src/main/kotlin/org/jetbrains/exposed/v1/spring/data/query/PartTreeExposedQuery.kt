@@ -7,11 +7,15 @@ import org.jetbrains.exposed.v1.core.ops.SingleValueInListOp
 import org.jetbrains.exposed.v1.jdbc.Query
 import org.jetbrains.exposed.v1.jdbc.andWhere
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.spring.data.mapping.EntityConverter
 import org.jetbrains.exposed.v1.spring.data.mapping.ExposedEntityMapper
+import org.jetbrains.exposed.v1.spring.data.mapping.ProjectionResolver
+import org.jetbrains.exposed.v1.spring.data.mapping.RowConverter
 import org.jetbrains.exposed.v1.spring.data.query.ExposedQueryCreator.Companion.isStringColumn
 import org.jetbrains.exposed.v1.spring.data.query.ExposedQueryCreator.Companion.toDbValue
 import org.springframework.dao.IncorrectResultSizeDataAccessException
 import org.springframework.data.domain.*
+import org.springframework.data.projection.ProjectionFactory
 import org.springframework.data.repository.query.ParametersParameterAccessor
 import org.springframework.data.repository.query.QueryMethod
 import org.springframework.data.repository.query.RepositoryQuery
@@ -23,9 +27,16 @@ internal class PartTreeExposedQuery(
     private val method: QueryMethod,
     private val table: IdTable<Any>,
     private val mapper: ExposedEntityMapper<Any>,
+    projectionFactory: ProjectionFactory,
 ) : RepositoryQuery {
     private val tree = PartTree(method.name, method.entityInformation.javaType)
     private val idProperty = checkNotNull(mapper.propertyFor(table.id)) { "No property found for the id column of ${table.tableName}" }
+    private val projectionResolver = ProjectionResolver(
+        table = table,
+        mapper = mapper,
+        entityType = method.entityInformation.javaType,
+        factory = projectionFactory,
+    )
 
     init {
         tree.parts.forEach { part ->
@@ -40,39 +51,46 @@ internal class PartTreeExposedQuery(
         }
     }
 
+    private val staticConverter: RowConverter? = when {
+        tree.isCountProjection || tree.isExistsProjection || tree.isDelete -> EntityConverter(mapper)
+        method.parameters.hasDynamicProjection() -> null
+        else -> projectionResolver.converterFor(method.returnedObjectType)
+    }
+
     override fun execute(parameters: Array<out Any?>): Any? {
         val accessor = ParametersParameterAccessor(method.parameters, parameters)
-        if (method.isScrollQuery) return scroll(accessor)
-        val query = ExposedQueryCreator(tree, accessor, table, mapper).createQuery()
+        val converter = converter(accessor)
+        if (method.isScrollQuery) return scroll(accessor, converter)
+        val query = ExposedQueryCreator(tree, accessor, table, mapper, converter.columns).createQuery()
         if (tree.isDistinct) query.withDistinct()
 
         return when {
             tree.isCountProjection -> query.count()
             tree.isExistsProjection -> !query.empty()
-            tree.isDelete -> delete(query)
+            tree.isDelete -> delete(query, converter)
             method.isPageQuery -> {
                 val pageable = accessor.pageable
                 val countQuery = query.copy()
-                val content = query.paged(pageable).map(mapper::toEntity)
+                val content = query.paged(pageable).map(converter::convert)
                 PageableExecutionUtils.getPage(content, pageable, countQuery::count)
             }
             method.isSliceQuery -> {
                 val pageable = accessor.pageable
                 if (pageable.isUnpaged) {
-                    SliceImpl(query.map(mapper::toEntity), pageable, false)
+                    SliceImpl(query.map(converter::convert), pageable, false)
                 } else {
-                    val rows = query.limit(pageable.pageSize + 1).offset(pageable.offset).map(mapper::toEntity)
+                    val rows = query.limit(pageable.pageSize + 1).offset(pageable.offset).map(converter::convert)
                     SliceImpl(rows.take(pageable.pageSize), pageable, rows.size > pageable.pageSize)
                 }
             }
             method.isCollectionQuery || method.isStreamQuery -> {
-                val result = query.paged(accessor.pageable).limited(accessor).map(mapper::toEntity)
+                val result = query.paged(accessor.pageable).limited(accessor).map(converter::convert)
                 if (method.isStreamQuery) result.stream() else result
             }
             else -> {
                 val rows = query.limit(if (tree.isLimiting) tree.maxResults!! else 2).toList()
                 if (rows.size > 1) throw IncorrectResultSizeDataAccessException(1, rows.size)
-                rows.singleOrNull()?.let(mapper::toEntity)
+                rows.singleOrNull()?.let(converter::convert)
             }
         }
     }
@@ -80,7 +98,7 @@ internal class PartTreeExposedQuery(
     override fun getQueryMethod(): QueryMethod = method
 
     /** Deletes the matching rows and returns them if the method returns a collection, otherwise their number. */
-    private fun delete(query: Query): Any {
+    private fun delete(query: Query, converter: RowConverter): Any {
         val where = query.where ?: Op.TRUE
         if (!method.isCollectionQuery) {
             return table.deleteWhere { where }.toLong()
@@ -88,7 +106,7 @@ internal class PartTreeExposedQuery(
         val rows = query.toList()
         val ids = rows.map { it[table.id] }
         if (ids.isNotEmpty()) table.deleteWhere { SingleValueInListOp(table.id, ids, isInList = true) }
-        return rows.map(mapper::toEntity)
+        return rows.map(converter::convert)
     }
 
     private fun Query.limited(accessor: ParametersParameterAccessor) = apply {
@@ -100,30 +118,30 @@ internal class PartTreeExposedQuery(
         accessor.limit.takeIf { it.isLimited }?.max(),
     ).minOrNull()
 
-    private fun scroll(accessor: ParametersParameterAccessor): Window<Any> {
+    private fun scroll(accessor: ParametersParameterAccessor, converter: RowConverter): Window<Any> {
         val limit = maxResults(accessor)
         return when (val position = accessor.scrollPosition ?: ScrollPosition.offset()) {
-            is OffsetScrollPosition -> offsetScroll(accessor, position, limit)
-            is KeysetScrollPosition -> keysetScroll(accessor, position, limit)
+            is OffsetScrollPosition -> offsetScroll(accessor, converter, position, limit)
+            is KeysetScrollPosition -> keysetScroll(accessor, converter, position, limit)
             else -> throw UnsupportedOperationException("Unsupported scroll position ${position::class.qualifiedName}")
         }
     }
 
-    private fun offsetScroll(accessor: ParametersParameterAccessor, position: OffsetScrollPosition, limit: Int?): Window<Any> {
+    private fun offsetScroll(accessor: ParametersParameterAccessor, converter: RowConverter, position: OffsetScrollPosition, limit: Int?): Window<Any> {
         val start = if (position.isInitial) 0L else position.offset + 1
-        val query = ExposedQueryCreator(tree, accessor, table, mapper).createQuery()
+        val query = ExposedQueryCreator(tree, accessor, table, mapper, converter.columns).createQuery()
         if (tree.isDistinct) query.withDistinct()
         if (start > 0) query.offset(start)
         limit?.let { query.limit(it + 1) }
-        val rows = query.map(mapper::toEntity)
+        val rows = query.map(converter::convert)
         val content = if (limit != null) rows.take(limit) else rows
         return Window.from(content, { index -> ScrollPosition.offset(start + index) }, limit != null && rows.size > limit)
     }
 
-    private fun keysetScroll(accessor: ParametersParameterAccessor, position: KeysetScrollPosition, limit: Int?): Window<Any> {
+    private fun keysetScroll(accessor: ParametersParameterAccessor, converter: RowConverter, position: KeysetScrollPosition, limit: Int?): Window<Any> {
         val backward = position.scrollsBackward()
         var sort = Sort.unsorted()
-        val query = ExposedQueryCreator(tree, accessor, table, mapper) { declared ->
+        val query = ExposedQueryCreator(tree, accessor, table, mapper, converter.columns, selectSortColumns = true) { declared ->
             sort = if (declared.getOrderFor(idProperty) == null) declared.and(Sort.by(idProperty)) else declared
             if (backward) Sort.by(sort.map { it.reverse() }.toList()) else sort
         }.createQuery()
@@ -135,7 +153,7 @@ internal class PartTreeExposedQuery(
         val rows = (if (limit != null) fetched.take(limit) else fetched).let { if (backward) it.reversed() else it }
         val keys = rows.map { row -> keysOf(row, sort) }
         return Window.from(
-            rows.map(mapper::toEntity),
+            rows.map(converter::convert),
             { index -> ScrollPosition.of(keys[index], position.direction) },
             limit != null && fetched.size > limit,
         )
@@ -169,4 +187,9 @@ internal class PartTreeExposedQuery(
     }
 
     private fun Query.paged(p: Pageable) = apply { if (p.isPaged) limit(p.pageSize).offset(p.offset) }
+
+    private fun converter(accessor: ParametersParameterAccessor): RowConverter =
+        staticConverter ?: projectionResolver.converterFor(
+            method.resultProcessor.withDynamicProjection(accessor).returnedType.returnedType
+        )
 }
