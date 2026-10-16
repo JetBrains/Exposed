@@ -26,10 +26,6 @@ Documentation:
 * docs: EXPOSED-1086 Add docs for R2DBC DAO and a what's new topic by @vnikolova in https://github.com/JetBrains/Exposed/pull/2949
 * docs: chore: Update the auto-fill columns section in the DAO CRUD topic by @vnikolova in https://github.com/JetBrains/Exposed/pull/2974
 
-Tests:
-* test: Fix MySQL/MariaDB test that sets isolation level during active transaction by @bog-walk in https://github.com/JetBrains/Exposed/pull/2929
-* test: Give testConcurrentIncrementsWithSelectForUpdate room to retry on MariaDB by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2944
-
 Refactoring:
 * refactor: Replace String database version comparisons with Version class comparisons by @bog-walk in https://github.com/JetBrains/Exposed/pull/2918
 * refactor: EXPOSED-1095 Remove detach() from the R2DBC DAO by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2956
@@ -46,14 +42,6 @@ Infrastructure:
 * plugin-publish 2.2.1
 * r2dbc-postgresql 1.1.3.RELEASE
 * joda-time 2.14.4
-
-
-## New Contributors
-* @devksh930 made their first contribution in https://github.com/JetBrains/Exposed/pull/2921
-* @JunggiKim made their first contribution in https://github.com/JetBrains/Exposed/pull/2916
-* @kwy404 made their first contribution in https://github.com/JetBrains/Exposed/pull/2946
-
-**Full Changelog**: https://github.com/JetBrains/Exposed/compare/1.5.1...1.6.0
 
 # 1.5.1
 
