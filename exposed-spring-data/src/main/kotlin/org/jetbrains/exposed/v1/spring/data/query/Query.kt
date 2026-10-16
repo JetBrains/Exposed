@@ -36,6 +36,31 @@ fun <T> ExposedCrudRepository<*, *>.query(block: () -> ResultRow): T {
     return block().let { ctx.mapper.toEntity(it) as T }
 }
 
+@OverloadResolutionByLambdaReturnType
+@JvmName("queryOneTyped")
+fun <T> ExposedCrudRepository<*, *>.query(block: () -> T): T {
+    requireContext()
+    return block()
+}
+
+@OverloadResolutionByLambdaReturnType
+@JvmName("queryManyIterable")
+fun <T> ExposedCrudRepository<*, *>.query(block: () -> Iterable<T>): Iterable<T> {
+    requireContext()
+    // read lazy results while the transaction of the repository method is still active
+    return when (val result = block()) {
+        is Collection<T> -> result
+        else -> result.toList()
+    }
+}
+
+@OverloadResolutionByLambdaReturnType
+@JvmName("queryManyList")
+fun <T> ExposedCrudRepository<*, *>.query(block: () -> List<T>): List<T> {
+    requireContext()
+    return block()
+}
+
 private fun ExposedCrudRepository<*, *>.requireContext(): ExposedQueryContext {
     val ctx = checkNotNull(ExposedQueryContextHolder.get()) {
         "query { } can only be used inside a default method of an Exposed repository interface"
