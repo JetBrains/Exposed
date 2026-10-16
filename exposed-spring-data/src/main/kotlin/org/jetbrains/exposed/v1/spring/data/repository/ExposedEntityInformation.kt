@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.v1.spring.data.repository
 
-import org.jetbrains.exposed.v1.core.InternalApi
 import org.springframework.data.annotation.Id
 import org.springframework.data.repository.core.RepositoryMetadata
 import org.springframework.data.repository.core.support.AbstractEntityInformation
@@ -12,8 +11,7 @@ import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.javaGetter
 
 @Suppress("UNCHECKED_CAST")
-@InternalApi
-class ExposedEntityInformation<T : Any, ID : Any>(
+internal class ExposedEntityInformation<T : Any, ID : Any>(
     metadata: RepositoryMetadata,
 ) : AbstractEntityInformation<T, ID>(metadata.domainType as Class<T>) {
     private val domainTypeName: String = metadata.domainTypeName

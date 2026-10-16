@@ -13,8 +13,7 @@ import org.springframework.data.repository.query.parser.Part
 import org.springframework.data.repository.query.parser.Part.Type.*
 import org.springframework.data.repository.query.parser.PartTree
 
-@InternalApi
-class ExposedQueryCreator(
+internal class ExposedQueryCreator(
     tree: PartTree,
     parameterAccessor: ParameterAccessor,
     private val table: IdTable<*>,

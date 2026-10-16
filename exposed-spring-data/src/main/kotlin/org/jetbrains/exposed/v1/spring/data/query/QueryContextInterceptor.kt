@@ -5,7 +5,7 @@ import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.spring.data.mapping.ExposedEntityMapper
 import org.springframework.aop.ProxyMethodInvocation
 
-class QueryContextInterceptor(
+internal class QueryContextInterceptor(
     private val table: IdTable<*>,
     private val mapper: ExposedEntityMapper<Any>,
 ) : org.aopalliance.intercept.MethodInterceptor {

@@ -12,7 +12,7 @@ import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.jvm.isAccessible
 
-class ReflectionEntityMapper<T : Any, ID : Any>(
+internal class ReflectionEntityMapper<T : Any, ID : Any>(
     private val table: IdTable<ID>,
     domainType: KClass<T>,
 ) : ExposedEntityMapper<T> {

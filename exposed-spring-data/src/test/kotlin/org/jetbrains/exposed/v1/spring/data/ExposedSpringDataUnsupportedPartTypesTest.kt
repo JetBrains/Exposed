@@ -1,8 +1,5 @@
-@file:OptIn(InternalApi::class)
-
 package org.jetbrains.exposed.v1.spring.data
 
-import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.spring.data.repository.ExposedRepositoryFactory
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test

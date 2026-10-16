@@ -1,11 +1,9 @@
 package org.jetbrains.exposed.v1.spring.data.repository
 
-import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.spring.data.ExposedCrudRepository
 import org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport
 
-@InternalApi
-class ExposedRepositoryConfigExtension : RepositoryConfigurationExtensionSupport() {
+internal class ExposedRepositoryConfigExtension : RepositoryConfigurationExtensionSupport() {
     @Deprecated("Deprecated in Java")
     override fun getModulePrefix(): String {
         return "exposed"
