@@ -9,6 +9,7 @@ import org.jetbrains.exposed.v1.core.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.v1.core.statements.api.RowApi
 import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.core.vendors.*
+import org.jetbrains.exposed.v1.exceptions.UnexpectedValueTypeException
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import java.io.InputStream
 import java.math.BigDecimal
@@ -537,7 +538,7 @@ class ByteColumnType : ColumnType<Byte>() {
         is Byte -> value
         is Number -> value.toByte()
         is String -> value.toByte()
-        else -> error("Unexpected value of type Byte: $value of ${value::class.qualifiedName}")
+        else -> unexpectedValue("Byte", value)
     }
 
     override fun valueToDB(value: Byte?): Any? {
@@ -566,7 +567,7 @@ class UByteColumnType : ColumnType<UByte>() {
             is Byte -> value.toUByte()
             is Number -> value.toShort().toUByte()
             is String -> value.toUByte()
-            else -> error("Unexpected value of type Byte: $value of ${value::class.qualifiedName}")
+            else -> unexpectedValue("Byte", value)
         }
     }
 
@@ -590,7 +591,7 @@ class ShortColumnType : ColumnType<Short>() {
         is Short -> value
         is Number -> value.toShort()
         is String -> value.toShort()
-        else -> error("Unexpected value of type Short: $value of ${value::class.qualifiedName}")
+        else -> unexpectedValue("Short", value)
     }
 }
 
@@ -608,7 +609,7 @@ class UShortColumnType : ColumnType<UShort>() {
             is Short -> value.toUShort()
             is Number -> value.toInt().toUShort()
             is String -> value.toUShort()
-            else -> error("Unexpected value of type Short: $value of ${value::class.qualifiedName}")
+            else -> unexpectedValue("Short", value)
         }
     }
 
@@ -632,7 +633,7 @@ class IntegerColumnType : ColumnType<Int>() {
         is Int -> value
         is Number -> value.toInt()
         is String -> value.toInt()
-        else -> error("Unexpected value of type Int: $value of ${value::class.qualifiedName}")
+        else -> unexpectedValue("Int", value)
     }
 }
 
@@ -651,7 +652,7 @@ class UIntegerColumnType : ColumnType<UInt>() {
             is Int -> value.toUInt()
             is Number -> value.toLong().toUInt()
             is String -> value.toUInt()
-            else -> error("Unexpected value of type Int: $value of ${value::class.qualifiedName}")
+            else -> unexpectedValue("Int", value)
         }
     }
 
@@ -675,7 +676,7 @@ class LongColumnType : ColumnType<Long>() {
         is Long -> value
         is Number -> value.toLong()
         is String -> value.toLong()
-        else -> error("Unexpected value of type Long: $value of ${value::class.qualifiedName}")
+        else -> unexpectedValue("Long", value)
     }
 }
 
@@ -699,7 +700,7 @@ class ULongColumnType : ColumnType<ULong>() {
                 }?.toString()?.toULong()
             }
 
-            else -> error("Unexpected value of type Long: $value of ${value::class.qualifiedName}")
+            else -> unexpectedValue("Long", value)
         } ?: error("Negative value but type is ULong: $value")
     }
 
@@ -727,7 +728,7 @@ class FloatColumnType : ColumnType<Float>() {
         is Float -> value
         is Number -> value.toFloat()
         is String -> value.toFloat()
-        else -> error("Unexpected value of type Float: $value of ${value::class.qualifiedName}")
+        else -> unexpectedValue("Float", value)
     }
 
     override fun nonNullValueAsDefaultString(value: Float): String {
@@ -754,7 +755,7 @@ class DoubleColumnType : ColumnType<Double>() {
         is Float -> value.toString().toDouble()
         is Number -> value.toDouble()
         is String -> value.toDouble()
-        else -> error("Unexpected value of type Double: $value of ${value::class.qualifiedName}")
+        else -> unexpectedValue("Double", value)
     }
 
     override fun nonNullValueAsDefaultString(value: Double): String {
@@ -802,7 +803,7 @@ class DecimalColumnType(
         is Long -> value.toBigDecimal()
         is Int -> value.toBigDecimal()
         is Short -> value.toLong().toBigDecimal()
-        else -> error("Unexpected value of type Decimal: $value of ${value::class.qualifiedName}")
+        else -> unexpectedValue("Decimal", value)
     }.setScale(scale, RoundingMode.HALF_EVEN)
 
     override fun equals(other: Any?): Boolean {
@@ -841,7 +842,7 @@ class CharacterColumnType : ColumnType<Char>() {
         is Char -> value
         is Number -> value.toInt().toChar()
         is String -> value.single()
-        else -> error("Unexpected value of type Char: $value of ${value::class.qualifiedName}")
+        else -> unexpectedValue("Char", value)
     }
 
     override fun notNullValueToDB(value: Char): Any = value.toString()
@@ -1050,7 +1051,7 @@ open class BasicBinaryColumnType : ColumnType<ByteArray>() {
         is ByteArray -> value
         is String -> value.toByteArray()
         is ByteBuffer -> value.array()
-        else -> error("Unexpected value $value of type ${value::class.qualifiedName}")
+        else -> unexpectedValue("ByteArray", value)
     }
 
     override fun nonNullValueToString(value: ByteArray): String = value.toString(Charsets.UTF_8)
@@ -1110,7 +1111,7 @@ class BlobColumnType(
         is ByteArray -> ExposedBlob(value)
         is Blob -> ExposedBlob(value.binaryStream)
         is ByteBuffer -> ExposedBlob(value.array())
-        else -> error("Unexpected value of type Blob: $value of ${value::class.qualifiedName}")
+        else -> unexpectedValue("Blob", value)
     }
 
     override fun nonNullValueToString(value: ExposedBlob): String {
@@ -1180,7 +1181,7 @@ class UuidColumnType : BasicUuidColumnType<Uuid>() {
                 ?: error("Amazon Redshift UUID columns require dashed or undashed hexadecimal text: $value")
         is String -> valueFromDB(value.toByteArray())
         is ByteBuffer -> value.getUuid()
-        else -> error("Unexpected value of type Uuid: $value of ${value::class.qualifiedName}")
+        else -> unexpectedValue("Uuid", value)
     }
 
     override fun notNullValueToDB(value: Uuid): Any {
@@ -1627,7 +1628,7 @@ class FloatVectorColumnType(
         is Array<*> -> (value as Array<Float>).toFloatArray()
         is ByteArray -> value.toFloatArray()
         is String -> value.trim('[', ']').split(",").map { it.toFloat() }.toFloatArray()
-        else -> error("Unexpected value of type FloatArray: $value of ${value::class.qualifiedName}")
+        else -> unexpectedValue("FloatArray", value)
     }
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
@@ -1668,7 +1669,7 @@ class IntVectorColumnType(
         is Array<*> -> (value as Array<Int>).toIntArray()
         is ByteArray -> value.toIntArray()
         is String -> value.trim('[', ']').split(",").map { it.toInt() }.toIntArray()
-        else -> error("Unexpected value of type IntArray: $value of ${value::class.qualifiedName}")
+        else -> unexpectedValue("IntArray", value)
     }
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
@@ -1797,7 +1798,7 @@ private object SqlServerVectorBinder {
     fun valueToBind(value: Any): Any = when (value) {
         is FloatArray -> vectorConstructor.newInstance(value.size, 4, value.toTypedArray())
         is IntArray -> vectorConstructor.newInstance(value.size, 4, value.toTypedArray())
-        else -> error("Unexpected value when setting statement parameters: $value of ${value::class.qualifiedName}}")
+        else -> unexpectedValue("FloatArray or IntArray", value)
     }
 
     fun readData(rs: RowApi, index: Int): Any? {
@@ -1900,3 +1901,8 @@ fun <T : Any> resolveVectorColumnType(
             "Check the available VectorFormat options for your database & provide a corresponding primitive array type."
     )
 }
+
+private fun unexpectedValue(expected: String, value: Any): Nothing =
+    throw UnexpectedValueTypeException(
+        "expected type: $expected, actual type: ${value::class.qualifiedName}"
+    )
