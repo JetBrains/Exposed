@@ -174,6 +174,70 @@ open class DerivedQueryScrollTest : ExposedSpringDataTestBase() {
         assertEquals(listOf("Ann", "Bob", "Carla", "Dan"), names)
     }
 
+    // ---- Keyset over a nullable sort column ----
+    // Bob has no nickname. Where NULL sorts (first or last) depends on the database, so the expected order
+    // is taken from findAll(Sort), which uses the same ORDER BY.
+
+    private fun referenceOrder(sort: Sort): List<String> = repository.findAll(sort.and(Sort.by("id"))).map { it.name }
+
+    private fun scrollNames(page: (ScrollPosition) -> Window<Customer>): List<String> =
+        WindowIterator.of<Customer> { page(it) }
+            .startingAt(ScrollPosition.keyset())
+            .asSequence()
+            .map { it.name }
+            .toList()
+
+    @Test
+    fun testKeysetScrollOverNullableColumnAscendingVisitsEveryRowOnce() {
+        seed()
+        val names = scrollNames { repository.findFirstByAgeGreaterThanOrderByNicknameAsc(0, it) }
+        assertEquals(referenceOrder(Sort.by("nickname").ascending()), names)
+    }
+
+    @Test
+    fun testKeysetScrollOverNullableColumnDescendingVisitsEveryRowOnce() {
+        seed()
+        val names = scrollNames { repository.findFirst2ByAgeGreaterThanOrderByNicknameDesc(0, it) }
+        assertEquals(referenceOrder(Sort.by("nickname").descending()), names)
+    }
+
+    @Test
+    fun testKeysetScrollOverNullableSecondarySortColumnVisitsEveryRowOnce() {
+        seed()
+        val names = scrollNames { repository.findFirstByAgeGreaterThanOrderByActiveAscNicknameAsc(0, it) }
+        assertEquals(referenceOrder(Sort.by("active", "nickname")), names)
+    }
+
+    @Test
+    fun testKeysetPositionWithNullKeyContinuesAfterThatRow() {
+        val bob = seed().single { it.name == "Bob" }
+        val expected = referenceOrder(Sort.by("nickname")).let { it.drop(it.indexOf("Bob") + 1) }
+
+        val position = ScrollPosition.forward(mapOf("nickname" to null, "id" to bob.id))
+        val window = repository.findByAgeGreaterThanOrderByNicknameAsc(0, position)
+        assertEquals(expected, window.content.orderedNames())
+    }
+
+    @Test
+    fun testKeysetPositionWithNullKeyScrollsBackwardBeforeThatRow() {
+        val bob = seed().single { it.name == "Bob" }
+        val expected = referenceOrder(Sort.by("nickname")).let { it.take(it.indexOf("Bob")) }
+
+        val position = ScrollPosition.backward(mapOf("nickname" to null, "id" to bob.id))
+        val window = repository.findByAgeGreaterThanOrderByNicknameAsc(0, position)
+        assertEquals(expected, window.content.orderedNames())
+    }
+
+    @Test
+    fun testKeysetWindowPositionKeepsNullKey() {
+        seed()
+        val window = repository.findByAgeGreaterThanOrderByNicknameAsc(0, ScrollPosition.keyset())
+        val bobIndex = window.content.indexOfFirst { it.name == "Bob" }
+        val position = window.positionAt(bobIndex) as KeysetScrollPosition
+        assertTrue(position.keys.containsKey("nickname")) { "Expected a nickname key in $position" }
+        assertEquals(null, position.keys["nickname"])
+    }
+
     // ---- Limit / Sort parameters and no limit ----
 
     @Test
@@ -249,4 +313,8 @@ interface ScrollCustomerRepository : ExposedCrudRepository<Customer, Long> {
     fun findFirstByActiveTrueOrderByAgeAsc(position: ScrollPosition): Window<Customer>
     fun findWindowByAgeGreaterThan(age: Int, position: ScrollPosition, limit: Limit, sort: Sort): Window<Customer>
     fun findByAgeGreaterThanOrderByAgeAsc(age: Int, position: ScrollPosition): Window<Customer>
+    fun findFirstByAgeGreaterThanOrderByNicknameAsc(age: Int, position: ScrollPosition): Window<Customer>
+    fun findFirst2ByAgeGreaterThanOrderByNicknameDesc(age: Int, position: ScrollPosition): Window<Customer>
+    fun findFirstByAgeGreaterThanOrderByActiveAscNicknameAsc(age: Int, position: ScrollPosition): Window<Customer>
+    fun findByAgeGreaterThanOrderByNicknameAsc(age: Int, position: ScrollPosition): Window<Customer>
 }

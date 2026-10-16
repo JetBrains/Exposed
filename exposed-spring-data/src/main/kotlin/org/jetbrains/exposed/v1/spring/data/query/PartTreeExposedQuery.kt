@@ -7,6 +7,7 @@ import org.jetbrains.exposed.v1.jdbc.andWhere
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.spring.data.mapping.ProjectionResolver
 import org.jetbrains.exposed.v1.spring.data.mapping.RowConverter
+import org.jetbrains.exposed.v1.spring.data.mapping.nullsSortHigh
 import org.jetbrains.exposed.v1.spring.data.mapping.toDbValue
 import org.jetbrains.exposed.v1.spring.data.mapping.unwrapEntityId
 import org.jetbrains.exposed.v1.spring.data.query.ExposedQueryCreator.Companion.isStringColumn
@@ -128,13 +129,18 @@ internal class PartTreeExposedQuery<T : Any, ID : Any>(
     private fun keysetScroll(accessor: ParametersParameterAccessor, converter: RowConverter<*>, position: KeysetScrollPosition, limit: Int?): Window<Any> {
         val backward = position.scrollsBackward()
         val idProperty = metadata.idProperty
+        val nullsHigh = nullsSortHigh()
         var sort = Sort.unsorted()
+        var effectiveSort = Sort.unsorted()
         val query = ExposedQueryCreator(tree, accessor, metadata, converter.columns, selectSortColumns = true) { declared ->
-            sort = if (declared.getOrderFor(idProperty) == null) declared.and(Sort.by(idProperty)) else declared
-            if (backward) Sort.by(sort.map { it.reverse() }.toList()) else sort
+            val withId = if (declared.getOrderFor(idProperty) == null) declared.and(Sort.by(idProperty)) else declared
+            // NULL positions are made explicit, so the keyset predicate knows on which side of the other values they are
+            sort = Sort.by(withId.map { it.withExplicitNullHandling(nullsHigh) }.toList())
+            effectiveSort = if (backward) Sort.by(sort.map { it.reversedWithNulls() }.toList()) else sort
+            effectiveSort
         }.createQuery()
         if (tree.isDistinct) query.withDistinct()
-        if (!position.isInitial) query.andWhere { keysetPredicate(sort, position) }
+        if (!position.isInitial) query.andWhere { keysetPredicate(effectiveSort, position) }
         limit?.let { query.limit(it + 1) }
 
         val fetched = query.toList()
@@ -147,7 +153,26 @@ internal class PartTreeExposedQuery<T : Any, ID : Any>(
         )
     }
 
-    @Suppress("UNCHECKED_CAST")
+    /** Pins the position of `NULL`s for nullable columns to what the database does natively, unless the order already sets it. */
+    private fun Sort.Order.withExplicitNullHandling(nullsHigh: Boolean): Sort.Order {
+        // unknown properties are left as they are, the ORDER BY reports them
+        if (nullHandling != Sort.NullHandling.NATIVE || metadata.columnFor(property)?.columnType?.nullable != true) return this
+        return if (isAscending != nullsHigh) nullsFirst() else nullsLast()
+    }
+
+    /** Reverses the direction and the position of `NULL`s, so the order is exactly the opposite. */
+    private fun Sort.Order.reversedWithNulls(): Sort.Order = reverse().with(
+        when (nullHandling) {
+            Sort.NullHandling.NULLS_FIRST -> Sort.NullHandling.NULLS_LAST
+            Sort.NullHandling.NULLS_LAST -> Sort.NullHandling.NULLS_FIRST
+            else -> nullHandling
+        }
+    )
+
+    /**
+     * Matches the rows that come strictly after the position's keys in [sort], the order the query actually uses
+     * (already reversed when scrolling backward): `(a > ?) OR (a = ? AND b > ?) OR ...`, with explicit handling of `NULL`.
+     */
     private fun keysetPredicate(sort: Sort, position: KeysetScrollPosition): Op<Boolean> {
         val orders = sort.toList()
         val keys = position.keys
@@ -159,14 +184,20 @@ internal class PartTreeExposedQuery<T : Any, ID : Any>(
         return orders.indices.map { i ->
             val equalities = orders.take(i).map { order ->
                 val (column, value) = columnAndValue(order)
-                column eq value
+                if (value == null) column.isNull() else column eq value
             }
             val (column, value) = columnAndValue(orders[i])
-            checkNotNull(value) { "Keyset scrolling over null values is not supported (property '${orders[i].property}')" }
-            val greater = orders[i].isAscending != position.scrollsBackward()
-            val comparison: Op<Boolean> = if (greater) GreaterOp(column, column.wrap(value)) else LessOp(column, column.wrap(value))
-            (equalities + comparison).reduce { acc, op -> acc and op }
+            (equalities + after(orders[i], column, value)).reduce { acc, op -> acc and op }
         }.reduce { acc, op -> acc or op }
+    }
+
+    /** Matches the values of [column] that come strictly after [value] in [order]. */
+    private fun after(order: Sort.Order, column: Column<Any?>, value: Any?): Op<Boolean> {
+        val nullsFirst = order.nullHandling == Sort.NullHandling.NULLS_FIRST
+        if (value == null) return if (nullsFirst) column.isNotNull() else Op.FALSE
+        val comparison: Op<Boolean> = if (order.isAscending) GreaterOp(column, column.wrap(value)) else LessOp(column, column.wrap(value))
+        // with NULLS LAST, the NULLs come after every value; SQL comparisons never match NULL, so add them explicitly
+        return if (order.nullHandling == Sort.NullHandling.NULLS_LAST) comparison or column.isNull() else comparison
     }
 
     private fun keysOf(row: ResultRow, sort: Sort): Map<String, Any?> = sort.associate { order ->
