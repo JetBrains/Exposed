@@ -46,11 +46,13 @@ internal class RawRowConverter(override val columns: List<Column<*>>) : RowConve
 /**
  * Creates the entity through the [ExposedMappingContext], with Spring Data's instantiation rules: the preferred constructor
  * (`@PersistenceCreator` or the primary constructor, with Kotlin default values) gets the values of the columns named like
- * its parameters, and mapped properties that aren't constructor parameters are set afterwards.
+ * its parameters, and mapped properties that aren't constructor parameters are set afterwards. The created instance is
+ * passed to [afterConvert], and its result is what [read] returns.
  */
 internal class EntityConverter<T : Any>(
     private val metadata: EntityMetadata<T, *>,
     instantiators: EntityInstantiators,
+    private val afterConvert: (T) -> T = { it },
 ) : RowConverter<T>(metadata.domainType.java) {
     private val entity = metadata.persistentEntity
     private val instantiator = instantiators.getInstantiatorFor(entity)
@@ -80,7 +82,9 @@ internal class EntityConverter<T : Any>(
     override val columns: List<Column<*>> = (parameterColumns.values + populatedProperties.values).distinct()
     override val narrowsSelect: Boolean = false
 
-    override fun read(row: ResultRow): T {
+    override fun read(row: ResultRow): T = afterConvert(instantiate(row))
+
+    private fun instantiate(row: ResultRow): T {
         val provider = object : ParameterValueProvider<ExposedPersistentProperty> {
             @Suppress("UNCHECKED_CAST")
             override fun <V : Any> getParameterValue(parameter: Parameter<V, ExposedPersistentProperty>): V? =

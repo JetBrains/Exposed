@@ -39,7 +39,7 @@ internal class ExposedRepositoryConfigExtension : RepositoryConfigurationExtensi
         }
     }
 
-    private companion object {
+    companion object {
         const val MAPPING_CONTEXT_BEAN_NAME = "exposedMappingContext"
     }
 }
