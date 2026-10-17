@@ -68,6 +68,28 @@ class IndexConstraintsTests : R2dbcDatabaseTestsBase() {
     }
 
     @Test
+    fun testForeignKeyBackingIndicesAreNotDroppedOnH2() {
+        val parents = object : Table("parents") {
+            val id = integer("id")
+
+            override val primaryKey = PrimaryKey(id)
+        }
+        val children = object : Table("children") {
+            val id = integer("id")
+            val parent = reference("parent", parents.id)
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        // H2 creates a backing index for every foreign key, as MySQL does
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_H2_V2, parents, children) {
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(parents, children, withLogs = false)
+            assertEquals(0, statements.size)
+            assertEquals(0, MigrationUtils.dropUnmappedIndices(parents, children, withLogs = false).size)
+        }
+    }
+
+    @Test
     fun testDifferentCheckConstraintForSameUnderlyingColumnType() {
         val oldTable = object : Table("tester") {
             val tester_col = byte("tester_col")
