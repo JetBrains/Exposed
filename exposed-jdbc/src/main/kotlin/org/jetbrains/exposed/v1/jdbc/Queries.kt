@@ -261,7 +261,7 @@ fun <T : Table> T.insert(
     body: T.(InsertStatement<Number>) -> Unit
 ): InsertStatement<Number> {
     val stmt = buildStatement { insert(body) }
-    return InsertBlockingExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
+    return InsertBlockingExecutable(stmt).apply { val _ = execute(TransactionManager.current()) }.statement
 }
 
 /**
@@ -275,7 +275,7 @@ fun <Key : Any, T : IdTable<Key>> T.insertAndGetId(
 ): EntityID<Key> {
     val stmt = buildStatement { insert(body as T.(InsertStatement<*>) -> Unit) }
     return InsertBlockingExecutable(stmt).run {
-        execute(TransactionManager.current())
+        val _ = execute(TransactionManager.current())
         statement[id]
     }
 }
@@ -293,7 +293,7 @@ fun <T : Table> T.insertIgnore(
     body: T.(UpdateBuilder<*>) -> Unit
 ): InsertStatement<Long> {
     val stmt = buildStatement { insertIgnore(body) }
-    return InsertBlockingExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
+    return InsertBlockingExecutable(stmt).apply { val _ = execute(TransactionManager.current()) }.statement
 }
 
 /**
@@ -502,7 +502,7 @@ fun <T : Table> T.replace(
     body: T.(UpdateBuilder<*>) -> Unit
 ): ReplaceStatement<Long> {
     val stmt = buildStatement { replace(body) }
-    return InsertBlockingExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
+    return InsertBlockingExecutable(stmt).apply { val _ = execute(TransactionManager.current()) }.statement
 }
 
 /**
@@ -592,7 +592,7 @@ private fun <E, S1 : BatchInsertStatement, S2 : BatchInsertBlockingExecutable<S1
                 if (removeLastData) {
                     statement.removeLastBatch()
                 }
-                execute(TransactionManager.current())
+                val _ = execute(TransactionManager.current())
                 result += statement.resultedValues.orEmpty()
             }
             executable = newBatchStatement()
@@ -609,7 +609,7 @@ private fun <E, S1 : BatchInsertStatement, S2 : BatchInsertBlockingExecutable<S1
         executable.handleBatchException(true) { body(element) }
     }
     if (executable.statement.arguments().isNotEmpty()) {
-        executable.execute(TransactionManager.current())
+        val _ = executable.execute(TransactionManager.current())
         result += executable.statement.resultedValues.orEmpty()
     }
     return result
@@ -747,7 +747,7 @@ fun <T : Table> T.upsert(
     body: T.(UpsertStatement<Long>) -> Unit
 ): UpsertStatement<Long> {
     val stmt = buildStatement { upsert(keys = keys, onUpdate, onUpdateExclude, where, body) }
-    return UpsertBlockingExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
+    return UpsertBlockingExecutable(stmt).apply { val _ = execute(TransactionManager.current()) }.statement
 }
 
 /**
@@ -874,7 +874,7 @@ fun <D : Table, S : Table> D.mergeFrom(
     body: MergeTableStatement.() -> Unit
 ): MergeTableStatement {
     val stmt = buildStatement { mergeFrom(source, on, body) }
-    return MergeBlockingExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
+    return MergeBlockingExecutable(stmt).apply { val _ = execute(TransactionManager.current()) }.statement
 }
 
 /**
@@ -893,7 +893,7 @@ fun <D : Table, S : Table> D.mergeFrom(
     body: MergeTableStatement.() -> Unit
 ): MergeTableStatement {
     val stmt = buildStatement { mergeFrom(source, null, body) }
-    return MergeBlockingExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
+    return MergeBlockingExecutable(stmt).apply { val _ = execute(TransactionManager.current()) }.statement
 }
 
 /**
@@ -914,5 +914,5 @@ fun <T : Table> T.mergeFrom(
     body: MergeSelectStatement.() -> Unit
 ): MergeSelectStatement {
     val stmt = buildStatement { mergeFrom(selectQuery, on, body) }
-    return MergeBlockingExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
+    return MergeBlockingExecutable(stmt).apply { val _ = execute(TransactionManager.current()) }.statement
 }

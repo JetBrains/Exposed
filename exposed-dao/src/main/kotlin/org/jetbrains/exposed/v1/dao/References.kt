@@ -85,7 +85,7 @@ internal class BackReference<ParentID : Any, out Parent : Entity<ParentID>, Chil
     internal val delegate = Referrers<ChildID, Child, ParentID, Parent, REF>(reference, factory, true, references)
 
     override operator fun getValue(thisRef: Child, property: KProperty<*>) =
-        delegate.getValue(thisRef.apply { thisRef.id.value }, property).single() // flush entity before to don't miss newly created entities
+        delegate.getValue(thisRef.apply { val _ = thisRef.id.value }, property).single() // flush entity before to don't miss newly created entities
 }
 
 /**
@@ -113,7 +113,7 @@ class OptionalBackReference<ParentID : Any, out Parent : Entity<ParentID>, Child
     internal val delegate = Referrers<ChildID, Child, ParentID, Parent, REF?>(reference, factory, true, references)
 
     override operator fun getValue(thisRef: Child, property: KProperty<*>) =
-        delegate.getValue(thisRef.apply { thisRef.id.value }, property).singleOrNull() // flush entity before to don't miss newly created entities
+        delegate.getValue(thisRef.apply { val _ = thisRef.id.value }, property).singleOrNull() // flush entity before to don't miss newly created entities
 }
 
 /**
@@ -149,7 +149,7 @@ open class Referrers<ParentID : Any, in Parent : Entity<ParentID>, ChildID : Any
     internal fun getOrderByExpressions(): Array<Pair<Expression<*>, SortOrder>> = orderByExpressions.toTypedArray()
 
     val allReferences = references ?: run {
-        reference.referee ?: error("Column $reference is not a reference")
+        val _ = reference.referee ?: error("Column $reference is not a reference")
 
         if (factory.table != reference.table) {
             error("Column and factory point to different tables")
@@ -301,7 +301,7 @@ private fun <ID : Any> List<Entity<ID>>.preloadRelations(
                 refObject.allReferences.let { refColumns ->
                     val isSingleIdReference = hasSingleReferenceWithReferee(refColumns)
                     val delegateRefColumn = refObject.reference
-                    this.map { entity ->
+                    val _ = this.map { entity ->
                         entity.getReferenceId(delegateRefColumn, refColumns, isSingleIdReference) as ID
                     }.takeIf { it.isNotEmpty() }?.let { refIds ->
                         val condition = if (isSingleIdReference) {
@@ -322,7 +322,7 @@ private fun <ID : Any> List<Entity<ID>>.preloadRelations(
                 refObject.allReferences.let { refColumns ->
                     val isSingleIdReference = hasSingleReferenceWithReferee(refColumns)
                     val delegateRefColumn = refObject.reference
-                    this.mapNotNull { entity ->
+                    val _ = this.mapNotNull { entity ->
                         entity.getReferenceId(delegateRefColumn, refColumns, isSingleIdReference) as? ID
                     }.takeIf { it.isNotEmpty() }?.let { refIds ->
                         val condition = if (isSingleIdReference) {
@@ -342,17 +342,17 @@ private fun <ID : Any> List<Entity<ID>>.preloadRelations(
                     if (hasSingleReferenceWithReferee(refColumns)) {
                         val castReferee = delegateRefColumn.referee<Any>()!!
                         val refIds = this.map { entity -> entity.getRefereeId(castReferee, delegateRefColumn) }
-                        refObject.factory.warmUpReferences(refIds, delegateRefColumn, null, orderByExpressions)
+                        val _ = refObject.factory.warmUpReferences(refIds, delegateRefColumn, null, orderByExpressions)
                     } else {
                         val refIds = this.map { it.getCompositeReferrerId(refColumns) }
-                        refObject.factory.warmUpCompositeIdReferences(refIds, refColumns, delegateRefColumn, orderBy = orderByExpressions)
+                        val _ = refObject.factory.warmUpCompositeIdReferences(refIds, refColumns, delegateRefColumn, orderBy = orderByExpressions)
                     }
                     storeReferenceCache(delegateRefColumn, prop)
                 }
             }
             is InnerTableLink<*, *, *, *> -> {
                 (refObject as InnerTableLink<ID, Entity<ID>, Any, Entity<Any>>).let { innerTableLink ->
-                    innerTableLink.target.warmUpLinkedReferences(
+                    val _ = innerTableLink.target.warmUpLinkedReferences(
                         references = this.map { it.id },
                         sourceRefColumn = innerTableLink.sourceColumn,
                         targetRefColumn = innerTableLink.targetColumn,
@@ -368,10 +368,10 @@ private fun <ID : Any> List<Entity<ID>>.preloadRelations(
                     if (hasSingleReferenceWithReferee(refColumns)) {
                         val castReferee = delegateRefColumn.referee<Any>()!!
                         val refIds = this.map { entity -> entity.getRefereeId(castReferee, delegateRefColumn) }
-                        refObject.delegate.factory.warmUpReferences(refIds, delegateRefColumn, null, orderByExpressions)
+                        val _ = refObject.delegate.factory.warmUpReferences(refIds, delegateRefColumn, null, orderByExpressions)
                     } else {
                         val refIds = this.map { it.getCompositeReferrerId(refColumns) }
-                        refObject.delegate.factory.warmUpCompositeIdReferences(refIds, refColumns, delegateRefColumn, orderBy = orderByExpressions)
+                        val _ = refObject.delegate.factory.warmUpCompositeIdReferences(refIds, refColumns, delegateRefColumn, orderBy = orderByExpressions)
                     }
                     storeReferenceCache(delegateRefColumn, prop)
                 }
@@ -382,10 +382,10 @@ private fun <ID : Any> List<Entity<ID>>.preloadRelations(
                     val orderByExpressions = refObject.delegate.getOrderByExpressions()
                     if (hasSingleReferenceWithReferee(refColumns)) {
                         val refIds = this.map { it.run { delegateRefColumn.referee<Any>()!!.lookup() } }
-                        refObject.delegate.factory.warmUpOptReferences(refIds, delegateRefColumn, orderBy = orderByExpressions)
+                        val _ = refObject.delegate.factory.warmUpOptReferences(refIds, delegateRefColumn, orderBy = orderByExpressions)
                     } else {
                         val refIds = this.map { it.getCompositeReferrerId(refColumns) }
-                        refObject.delegate.factory.warmUpCompositeIdReferences(refIds, refColumns, delegateRefColumn, orderBy = orderByExpressions)
+                        val _ = refObject.delegate.factory.warmUpCompositeIdReferences(refIds, refColumns, delegateRefColumn, orderBy = orderByExpressions)
                     }
                     storeReferenceCache(delegateRefColumn, prop)
                 }
@@ -428,7 +428,7 @@ fun <SRCID : Any, SRC : Entity<SRCID>, REF : Entity<*>, L : Iterable<SRC>> L.wit
     toList().apply {
         (this@with as? LazySizedIterable<SRC>)?.loadedResult = this
         if (any { it.isNewEntity() }) {
-            TransactionManager.current().flushCache()
+            val _ = TransactionManager.current().flushCache()
         }
         preloadRelations(*relations)
     }
@@ -444,7 +444,7 @@ fun <SRCID : Any, SRC : Entity<SRCID>, REF : Entity<*>, L : Iterable<SRC>> L.wit
  * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.preloadOptionalReferencesOnAnEntity
  */
 fun <SRCID : Any, SRC : Entity<SRCID>> SRC.load(vararg relations: KProperty1<out Entity<*>, Any?>): SRC = apply {
-    listOf(this).with(*relations)
+    val _ = listOf(this).with(*relations)
 }
 
 internal fun hasSingleReferenceWithReferee(allReferences: Map<Column<*>, Column<*>>?): Boolean {

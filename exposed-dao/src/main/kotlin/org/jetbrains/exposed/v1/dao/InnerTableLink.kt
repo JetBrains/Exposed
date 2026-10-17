@@ -122,8 +122,8 @@ class InnerTableLink<SID : Any, Source : Entity<SID>, ID : Any, Target : Entity<
         entityCache.referrers[sourceColumn]?.remove(o.id)
 
         val targetIds = value.map { it.id }
-        executeAsPartOfEntityLifecycle {
-            table.deleteWhere { (sourceColumn eq o.id) and (targetColumn notInList targetIds) }
+        val _ = executeAsPartOfEntityLifecycle {
+            val _ = table.deleteWhere { (sourceColumn eq o.id) and (targetColumn notInList targetIds) }
             table.batchInsert(targetIds.filter { !existingIds.contains(it) }, shouldReturnGeneratedValues = false) { targetId ->
                 this[sourceColumn] = o.id
                 this[targetColumn] = targetId

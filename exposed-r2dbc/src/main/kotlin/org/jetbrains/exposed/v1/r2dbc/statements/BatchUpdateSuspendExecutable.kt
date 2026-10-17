@@ -12,7 +12,7 @@ open class BatchUpdateSuspendExecutable(
     override val statement: BatchUpdateStatement
 ) : UpdateSuspendExecutable(statement) {
     override suspend fun R2dbcPreparedStatementApi.executeInternal(transaction: R2dbcTransaction): Int {
-        if (this@BatchUpdateSuspendExecutable.statement.data.size == 1) executeUpdate() else executeBatch().sum()
+        val _ = if (this@BatchUpdateSuspendExecutable.statement.data.size == 1) executeUpdate() else executeBatch().sum()
 
         return try {
             this.getResultRow()?.rowsUpdated()?.reduce(Int::plus) ?: 0

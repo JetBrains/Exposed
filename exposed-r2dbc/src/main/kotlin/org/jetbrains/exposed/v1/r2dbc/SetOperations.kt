@@ -134,10 +134,10 @@ sealed class SetOperation(
                     is Query -> {
                         val isSubQuery = it.orderByExpressions.isNotEmpty() || it.limit != null
                         if (isSubQuery) append("(")
-                        it.prepareSQL(this)
+                        val _ = it.prepareSQL(this)
                         if (isSubQuery) append(")")
                     }
-                    is SetOperation -> it.prepareSQL(this)
+                    is SetOperation -> { val _ = it.prepareSQL(this) }
                 }
             }
         }

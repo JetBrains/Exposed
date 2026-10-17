@@ -165,7 +165,7 @@ class GenerateMigrationsMojo : AbstractMojo() {
         )
 
         try {
-            migrationGenerator.generate()
+            val _ = migrationGenerator.generate()
         } catch (e: IllegalArgumentException) {
             throw MojoFailureException("Unable to generate migration, likely due to misconfiguration: ${e.message}", e)
         } catch (e: IOException) {
