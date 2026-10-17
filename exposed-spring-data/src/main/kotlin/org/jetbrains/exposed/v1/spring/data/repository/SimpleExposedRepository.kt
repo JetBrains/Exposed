@@ -29,34 +29,46 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
     private val metadata = projectionResolver.metadata
     private val table = metadata.table
     private val entityConverter = projectionResolver.entityConverter
+    private val lifecycle = projectionResolver.lifecycle
     private val versionColumn: Column<Any?>? = metadata.versionColumn
 
     /**
      * New entities are inserted with one batch insert per shape (with or without an assigned id), existing ones are updated
      * one by one (each update needs its own row count for the checks). Afterwards every saved row is read back with as few
      * queries as possible, so values set by the database (e.g. defaults) are part of the result.
+     *
+     * The `BeforeConvert` and `BeforeSave` callbacks run for each entity before any statement, the `AfterSave` callbacks
+     * for each saved row after all statements, both in the order of [entities].
      */
     @Transactional
     override fun <S : T> saveAll(entities: Iterable<S>): List<S> {
-        val toSave = entities.toList()
-        if (toSave.isEmpty()) return emptyList()
+        val passed = entities.toList()
+        if (passed.isEmpty()) return emptyList()
 
+        val isNew = passed.map(entityInformation::isNew)
+        val toSave = passed.map(::prepareSave)
         val ids = arrayOfNulls<Any>(toSave.size) as Array<ID?>
-        val (newIndices, existingIndices) = toSave.indices.partition { entityInformation.isNew(toSave[it]) }
+        val (newIndices, existingIndices) = toSave.indices.partition { isNew[it] }
         newIndices.groupBy { entityInformation.getId(toSave[it]) != null }.values.forEach { indices ->
             insertRows(indices.map(toSave::get)).forEachIndexed { i, id -> ids[indices[i]] = id }
         }
         existingIndices.forEach { ids[it] = updateRow(toSave[it]) }
 
         val rows = findRows(ids.map { checkNotNull(it) })
-        return ids.map { id -> checkNotNull(rows[id]) { "Saved row with id $id not found in table ${table.tableName}" } as S }
+        return ids.map { id ->
+            lifecycle.afterSave(checkNotNull(rows[id]) { "Saved row with id $id not found in table ${table.tableName}" }) as S
+        }
     }
 
     @Transactional
     override fun <S : T> save(entity: S): S {
-        val id = if (entityInformation.isNew(entity)) insertRow(entity) else updateRow(entity)
-        return checkNotNull(findRow(id)) { "Saved row with id $id not found in table ${table.tableName}" } as S
+        val isNew = entityInformation.isNew(entity)
+        val toSave = prepareSave(entity)
+        val id = if (isNew) insertRow(toSave) else updateRow(toSave)
+        return lifecycle.afterSave(checkNotNull(findRow(id)) { "Saved row with id $id not found in table ${table.tableName}" }) as S
     }
+
+    private fun prepareSave(entity: T): T = lifecycle.beforeSave(lifecycle.beforeConvert(entity))
 
     override fun findAll(): List<T> = table
         .selectAll()
@@ -96,6 +108,12 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
 
     @Transactional
     override fun delete(entity: T) {
+        val toDelete = lifecycle.beforeDelete(entity)
+        deleteRow(toDelete)
+        lifecycle.afterDelete(toDelete)
+    }
+
+    private fun deleteRow(entity: T) {
         val id = entityInformation.getRequiredId(entity)
         if (versionColumn == null) return deleteById(id)
 
@@ -110,8 +128,9 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
 
     @Transactional
     override fun deleteAll(entities: Iterable<T>) {
-        if (versionColumn != null) return entities.forEach(::delete)
-        deleteAllById(entities.map(entityInformation::getRequiredId))
+        val toDelete = entities.map(lifecycle::beforeDelete)
+        if (versionColumn != null) toDelete.forEach(::deleteRow) else deleteAllById(toDelete.map(entityInformation::getRequiredId))
+        toDelete.forEach { lifecycle.afterDelete(it) }
     }
 
     @Transactional
@@ -129,7 +148,7 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
     }
 
     private fun writeInsert(statement: UpdateBuilder<*>, entity: T) {
-        projectionResolver.fill(statement, entity)
+        projectionResolver.fillInsert(statement, entity)
         entityInformation.getId(entity)?.let { statement[table.id] = it }
         versionColumn?.let { statement[it] = metadata.initialVersion() }
     }
@@ -137,11 +156,11 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
     private fun updateRow(entity: T): ID {
         val id = entityInformation.getRequiredId(entity)
         if (versionColumn == null) {
-            val updated = table.update({ table.id eq id }) { projectionResolver.fill(it, entity) }
+            val updated = table.update({ table.id eq id }) { projectionResolver.fillUpdate(it, entity) }
             if (updated == 0) throw IncorrectUpdateSemanticsDataAccessException("No row with id $id in table ${table.tableName}")
         } else {
             val updated = table.update({ matchesIdAndVersion(id, entity, versionColumn) }) {
-                projectionResolver.fill(it, entity)
+                projectionResolver.fillUpdate(it, entity)
                 it[versionColumn] = metadata.nextVersion(requiredVersion(entity))
             }
             if (updated == 0) throw OptimisticLockingFailureException(versionConflict(id, entity))

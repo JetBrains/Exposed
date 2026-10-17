@@ -2,12 +2,15 @@ package org.jetbrains.exposed.v1.spring.data.repository
 
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.spring.data.ExposedRepository
+import org.jetbrains.exposed.v1.spring.data.event.EntityLifecycle
 import org.jetbrains.exposed.v1.spring.data.mapping.EntityMetadata
 import org.jetbrains.exposed.v1.spring.data.mapping.ExposedMappingContext
 import org.jetbrains.exposed.v1.spring.data.mapping.ExposedPersistentEntity
 import org.jetbrains.exposed.v1.spring.data.mapping.ProjectionResolver
 import org.jetbrains.exposed.v1.spring.data.query.ExposedQueryLookupStrategy
 import org.jetbrains.exposed.v1.spring.data.query.QueryContextInterceptor
+import org.springframework.context.ApplicationEventPublisher
+import org.springframework.data.mapping.callback.EntityCallbacks
 import org.springframework.data.repository.core.EntityInformation
 import org.springframework.data.repository.core.RepositoryInformation
 import org.springframework.data.repository.core.RepositoryMetadata
@@ -18,8 +21,15 @@ import org.springframework.data.repository.query.ValueExpressionDelegate
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
+/**
+ * Creates Exposed repositories. Their entity callbacks come from [entityCallbacks], their lifecycle events are published
+ * through [eventPublisher]; with [auditing], updates keep the stored `@CreatedDate` / `@CreatedBy` values.
+ */
 internal class ExposedRepositoryFactory(
     private val mappingContext: ExposedMappingContext = ExposedMappingContext(),
+    private val entityCallbacks: EntityCallbacks? = null,
+    private val eventPublisher: ApplicationEventPublisher? = null,
+    private val auditing: Boolean = false,
 ) : RepositoryFactorySupport() {
     private val projectionResolvers = ConcurrentHashMap<Class<*>, ProjectionResolver<Any, Any>>()
 
@@ -48,13 +58,16 @@ internal class ExposedRepositoryFactory(
     @Suppress("UNCHECKED_CAST")
     private fun projectionResolverFor(metadata: RepositoryMetadata): ProjectionResolver<Any, Any> =
         projectionResolvers.getOrPut(metadata.repositoryInterface) {
+            val table = tableFor(metadata)
             ProjectionResolver(
                 metadata = EntityMetadata(
-                    table = tableFor(metadata),
+                    table = table,
                     persistentEntity = mappingContext.getRequiredPersistentEntity(metadata.domainType) as ExposedPersistentEntity<Any>,
                 ),
                 factory = projectionFactory,
                 instantiators = mappingContext.instantiators,
+                lifecycle = EntityLifecycle(table, entityCallbacks, eventPublisher),
+                keepCreatedOnUpdate = auditing,
             )
         }
 
