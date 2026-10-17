@@ -165,9 +165,10 @@ class ExpressionWithColumnTypeAlias<T>(
 
 /** Represents a temporary SQL identifier, [alias], for a [query]. */
 class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
+    @OptIn(InternalApi::class)
     override fun describe(s: Transaction, queryBuilder: QueryBuilder) = queryBuilder {
         append("(")
-        query.prepareSQL(queryBuilder)
+        query.prepareAsSubquerySQL(queryBuilder)
         append(") ", alias)
     }
 
@@ -321,9 +322,10 @@ val Join.lastQueryAlias: QueryAlias?
  * @sample org.jetbrains.exposed.v1.tests.shared.dml.InsertTests.testInsertWithColumnExpression
  */
 fun <T : Any> wrapAsExpression(query: AbstractQuery<*>) = object : Expression<T?>() {
+    @OptIn(InternalApi::class)
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         append("(")
-        query.prepareSQL(this)
+        query.prepareAsSubquerySQL(this)
         append(")")
     }
 }
