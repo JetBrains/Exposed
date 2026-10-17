@@ -161,7 +161,7 @@ private fun EntityMetadata<*, *>.requireAssignable(owner: String?, name: String,
     require(source.jvmErasure.isSubclassOf(target.jvmErasure)) {
         "$owner.$name has type $target, but the entity property has type $source"
     }
-    // TODO: Discuss if we want to enfore strict nullability
+    // Discuss if we want to enfore strict nullability
 //    require(target.isMarkedNullable || !source.isMarkedNullable) {
 //        "$owner.$name is not nullable, but the entity property $name is ($source)"
 //    }
