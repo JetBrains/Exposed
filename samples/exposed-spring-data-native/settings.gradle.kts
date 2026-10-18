@@ -7,6 +7,11 @@ pluginManagement {
     }
 }
 
+plugins {
+    // provisions the JDK 17 toolchain and, if no GraalVM is configured, a native-image capable JDK (see build.gradle.kts)
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+}
+
 dependencyResolutionManagement {
     repositories {
         mavenCentral()
