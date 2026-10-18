@@ -1,7 +1,9 @@
 package org.jetbrains.exposed.v1.spring.data.repository
 
 import org.jetbrains.exposed.v1.spring.data.ExposedCrudRepository
+import org.jetbrains.exposed.v1.spring.data.aot.ExposedRepositoryRegistrationAotProcessor
 import org.jetbrains.exposed.v1.spring.data.mapping.ExposedMappingContext
+import org.springframework.beans.factory.aot.BeanRegistrationAotProcessor
 import org.springframework.beans.factory.support.BeanDefinitionRegistry
 import org.springframework.beans.factory.support.RootBeanDefinition
 import org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport
@@ -36,6 +38,10 @@ class ExposedRepositoryConfigExtension : RepositoryConfigurationExtensionSupport
     override fun getIdentifyingTypes(): Collection<Class<*>> {
         return listOf(ExposedCrudRepository::class.java)
     }
+
+    /** Registers the runtime hints for the table, entity and projections of every repository when processing ahead of time. */
+    override fun getRepositoryAotProcessor(): Class<out BeanRegistrationAotProcessor> =
+        ExposedRepositoryRegistrationAotProcessor::class.java
 
     /** Registers one mapping context for all Exposed repositories of the application context, unless there already is one. */
     override fun registerBeansForRoot(registry: BeanDefinitionRegistry, configurationSource: RepositoryConfigurationSource) {
