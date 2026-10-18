@@ -143,6 +143,21 @@ class EntityCache(private val transaction: R2dbcTransaction) {
         staged.acquire(entity, transaction).dirty[column] = value
     }
 
+    /**
+     * An entity other than [id]'s own whose unissued assignments still point at [id], and the column holding it.
+     * Compares by identity, because an [EntityID] whose value is not assigned yet cannot be compared by value.
+     *
+     * In theory it could be expensive operation because requires to make search in the cache. But for many
+     * cases amount of staged entities should not be large. Also, this method used only to check if non-inserted
+     * entity could be deleted. It doesn't affect entities which are already in the database.
+     */
+    internal fun findPendingReferrer(id: EntityID<*>): Pair<Entity<*>, Column<*>>? =
+        scopeChain.flatMap { it.staged.entries }
+            .filter { (entity, _) -> entity.id !== id }
+            .firstNotNullOfOrNull { (entity, values) ->
+                values.dirty.entries.firstOrNull { it.value === id }?.let { entity to it.key }
+            }
+
     internal fun isDirty(entity: Entity<*>, column: Column<Any?>): Boolean =
         staged[entity]?.dirty?.containsKey(column) == true
 
