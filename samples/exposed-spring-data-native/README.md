@@ -10,15 +10,20 @@ checkout through a composite build (`includeBuild("../..")` in `settings.gradle.
 
 ## Requirements
 
-- Nothing to install beyond a JDK 17+ to run Gradle: the JDK 17 compilation toolchain and a native-image capable JDK 25 are Gradle
+- Nothing to install beyond a JDK 17+ to run Gradle: the JDK 17 compilation toolchain and GraalVM Community for JDK 25 are Gradle
   toolchains, detected locally or downloaded through the foojay resolver (`settings.gradle.kts`). The first native build without a
-  local GraalVM downloads GraalVM (about 340 MB) into `~/.gradle/jdks`.
-- To use a specific GraalVM for JDK 25 (or newer) instead, set `GRAALVM_HOME`; it takes precedence over the toolchain.
+  local GraalVM Community 25 downloads it (about 340 MB) into `~/.gradle/jdks`. The toolchain vendor is fixed to GraalVM
+  (`JvmVendorSpec.GRAAL_VM`), because without it foojay would pick Mandrel first.
+- To use another native-image JDK 25 (or newer) instead, e.g. Oracle GraalVM, Mandrel or Liberica NIK, set `GRAALVM_HOME`; it takes
+  precedence over the toolchain.
 
 Gradle extracts provisioned toolchains without symbolic links ([gradle/gradle#28583](https://github.com/gradle/gradle/issues/28583)),
 which turns `bin/native-image` of a downloaded GraalVM into an empty file: `nativeCompile` then "succeeds" without writing an
 executable and `nativeRun` fails with `property 'image' specifies file '.../nativeCompile/exposed-spring-data-native' which doesn't
-exist`. The build restores that link before running `native-image` (`restoreNativeImageLauncher` in `build.gradle.kts`).
+exist`. Before every native image build, `RestoreNativeImageLinks` in `build.gradle.kts` restores the links of the GraalVM 25
+distribution (`bin/native-image`, `bin/native-image-configure`, `bin/native-image-utils`, `lib/svm/bin/native-image-configure`,
+`LICENSE_NATIVEIMAGE.txt`). It only changes JDKs below `~/.gradle/jdks`, and only links that are empty files with an existing target;
+locally installed JDKs and `GRAALVM_HOME` are never touched. The build is compatible with the configuration cache.
 
 ## Running
 
@@ -57,9 +62,9 @@ Removing that annotation makes the dynamic projection fail in the native image w
 
 ## Findings
 
-Verified with Oracle GraalVM 25.0.4 through `GRAALVM_HOME` and with GraalVM CE 25.0.4.1 provisioned as a Gradle toolchain (macOS,
-aarch64), Spring Boot 4.1.0, Native Build Tools 1.1.1: all 12 tests pass in the native image (`nativeTest`), and `nativeRun` starts the
-native application, which creates its schema.
+Verified with Oracle GraalVM 25.0.4 through `GRAALVM_HOME` and with GraalVM CE 25.4.4.1.1 (Java 25.0.4.1) downloaded as a Gradle
+toolchain (macOS, aarch64), Spring Boot 4.1.0, Native Build Tools 1.1.1: all 12 tests pass in the native image (`nativeTest`), and
+`nativeRun` starts the native application, which creates its schema.
 
 Gaps in `exposed-spring-data` found by this sample (fixed in the module's `ExposedSpringDataRuntimeHints`):
 
