@@ -98,13 +98,14 @@ open class DerivedQueryJoinTest : ExposedSpringDataTestBase() {
     @Test
     fun testOrderWithSeveralMatchingChildrenIsReturnedOnce() {
         seedOrders()
-        assertEquals(listOf(first), orders.findByItemsName("Pen"))
+        assertEquals(listOf(first.id), orders.findByItemsName("Pen").map { it.id })
     }
 
     @Test
     fun testNestedPathIsQueriedWithSubqueries() {
         seedOrders()
-        val sql = captureSelects { orders.findByItemsProductName("Ink") }.single().uppercase()
+        // the first select is the query, the others load the items and comments of the result
+        val sql = captureSelects { orders.findByItemsProductName("Ink") }.first().uppercase()
         assertFalse("JOIN" in sql) { sql }
         assertEquals(2, Regex("IN \\(SELECT").findAll(sql).count()) { sql }
     }
@@ -134,7 +135,7 @@ open class DerivedQueryJoinTest : ExposedSpringDataTestBase() {
         assertFalse(orders.existsByItemsName("Nothing"))
 
         assertEquals(0L, orders.deleteByItemsName("Nothing"))
-        // the items and comments of the deleted order are removed by ON DELETE CASCADE
+        // the items and comments of the deleted order are owned by it, so they are deleted with it
         assertEquals(1L, orders.deleteByItemsName("pencil"))
         assertEquals(listOf(first.id, third.id), orders.findAll().ids())
     }

@@ -2,6 +2,8 @@ package org.jetbrains.exposed.v1.spring.data.mapping
 
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.spring.data.ExposedColumn
+import org.jetbrains.exposed.v1.spring.data.ExposedReferencedBy
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.full.memberProperties
@@ -10,7 +12,8 @@ import kotlin.reflect.full.memberProperties
  * Connects an entity class, as described by the [ExposedMappingContext], to its table: which property is stored in which column.
  *
  * A property is mapped if it is a persistent property of [persistentEntity] and the table object has a [Column] property
- * with the same Kotlin name (see [TableColumns]).
+ * with the same Kotlin name (see [TableColumns]), or the one named by [ExposedColumn]. Properties annotated with
+ * [ExposedReferencedBy] have no column, they are mapped by [ProjectionResolver].
  * Everything about the class itself (id and version property, reading and writing values) comes from [persistentEntity].
  */
 internal class EntityMetadata<T : Any, ID : Any>(
@@ -21,7 +24,10 @@ internal class EntityMetadata<T : Any, ID : Any>(
 
     private val properties: Map<String, ExposedPersistentProperty> = persistentEntity.associateBy { it.name }
 
-    private val columnsByProperty: Map<String, Column<Any?>> = TableColumns.of(table).columns.filterKeys { it in properties }
+    private val columnsByProperty: Map<String, Column<Any?>> = properties.keys
+        .filter { domainType.java.propertyAnnotation<ExposedReferencedBy>(it) == null }
+        .mapNotNull { property -> columnFor(table, domainType.java, property)?.let { property to it } }
+        .toMap()
 
     private val propertiesByColumn: Map<Column<*>, String> = columnsByProperty.entries.associate { (property, column) -> column to property }
 

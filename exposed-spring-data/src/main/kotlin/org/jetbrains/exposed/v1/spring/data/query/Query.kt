@@ -76,7 +76,7 @@ internal fun <T : Any> ExposedCrudRepository<*, *>.queryRows(type: Class<T>, blo
         else -> result
     }
     // read the rows while the transaction of the repository method is still active
-    return rows.map(converter::convert)
+    return converter.convertAll(rows.toList())
 }
 
 @PublishedApi
