@@ -41,12 +41,13 @@ internal class ProjectionResolver<T : Any, ID : Any>(
     @Suppress("UNCHECKED_CAST")
     fun <R : Any> converterFor(type: Class<R>): RowConverter<R> = converters.getOrPut(type) { create(type) } as RowConverter<R>
 
+    // reference columns hold EntityIDs, the entity property the plain id value
     fun fillInsert(statement: UpdateBuilder<*>, entity: T) {
-        writtenProperties.forEach { (property, column) -> statement[column] = metadata.valueOf(entity, property) }
+        writtenProperties.forEach { (property, column) -> statement[column] = column.toDbValue(metadata.valueOf(entity, property)) }
     }
 
     fun fillUpdate(statement: UpdateBuilder<*>, entity: T) {
-        updatedProperties.forEach { (property, column) -> statement[column] = metadata.valueOf(entity, property) }
+        updatedProperties.forEach { (property, column) -> statement[column] = column.toDbValue(metadata.valueOf(entity, property)) }
     }
 
     private fun <R : Any> create(type: Class<R>): RowConverter<*> = when {

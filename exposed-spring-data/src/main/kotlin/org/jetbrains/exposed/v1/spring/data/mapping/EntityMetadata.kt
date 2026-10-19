@@ -4,16 +4,13 @@ import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
-import kotlin.reflect.full.isSubtypeOf
 import kotlin.reflect.full.memberProperties
-import kotlin.reflect.full.starProjectedType
-import kotlin.reflect.jvm.isAccessible
 
 /**
  * Connects an entity class, as described by the [ExposedMappingContext], to its table: which property is stored in which column.
  *
  * A property is mapped if it is a persistent property of [persistentEntity] and the table object has a [Column] property
- * with the same Kotlin name. [Column.name] can't be used for this, because it is the SQL name (e.g. `created_at`).
+ * with the same Kotlin name (see [TableColumns]).
  * Everything about the class itself (id and version property, reading and writing values) comes from [persistentEntity].
  */
 internal class EntityMetadata<T : Any, ID : Any>(
@@ -24,13 +21,7 @@ internal class EntityMetadata<T : Any, ID : Any>(
 
     private val properties: Map<String, ExposedPersistentProperty> = persistentEntity.associateBy { it.name }
 
-    @Suppress("UNCHECKED_CAST")
-    private val columnsByProperty: Map<String, Column<Any?>> = table::class.memberProperties
-        .filter { it.name in properties && it.returnType.isSubtypeOf(Column::class.starProjectedType) }
-        .associate {
-            it.isAccessible = true
-            it.name to it.getter.call(table) as Column<Any?>
-        }
+    private val columnsByProperty: Map<String, Column<Any?>> = TableColumns.of(table).columns.filterKeys { it in properties }
 
     private val propertiesByColumn: Map<Column<*>, String> = columnsByProperty.entries.associate { (property, column) -> column to property }
 

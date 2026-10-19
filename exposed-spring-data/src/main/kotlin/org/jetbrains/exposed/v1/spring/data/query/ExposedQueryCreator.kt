@@ -17,6 +17,7 @@ internal class ExposedQueryCreator(
     tree: PartTree,
     parameterAccessor: ParameterAccessor,
     private val metadata: EntityMetadata<*, *>,
+    private val paths: PropertyPathResolver,
     private val columns: List<Column<*>>,
     private val selectSortColumns: Boolean = false,
     private val sortCustomizer: (Sort) -> Sort = { it },
@@ -103,9 +104,14 @@ internal class ExposedQueryCreator(
         }
     }
 
-    @Suppress("UNCHECKED_CAST", "CyclomaticComplexMethod")
     private fun predicate(part: Part, values: Iterator<Any?>): Op<Boolean> {
-        val column = metadata.requireColumn(part.property.segment)
+        val path = paths.resolve(part.property)
+        // nested paths are matched in subqueries, see ResolvedPath.wrap
+        return path.wrap(leafPredicate(part, path.leaf, values))
+    }
+
+    @Suppress("UNCHECKED_CAST", "CyclomaticComplexMethod")
+    private fun leafPredicate(part: Part, column: Column<Any?>, values: Iterator<Any?>): Op<Boolean> {
         val ignoreCase = ignoreCase(part, column)
         val expr: ExpressionWithColumnType<Any?> =
             if (ignoreCase) (column as Column<String?>).lowerCase() as ExpressionWithColumnType<Any?> else column
