@@ -4,7 +4,6 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.Query
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.spring.data.mapping.EntityMetadata
-import org.jetbrains.exposed.v1.spring.data.mapping.orderBy
 import org.jetbrains.exposed.v1.spring.data.mapping.toDbValue
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.query.ParameterAccessor
@@ -71,44 +70,53 @@ internal class ExposedQueryCreator(
         }
     }
 
+    /** The (aliased) column of each sort property of the created query, see [SortedSource]. */
+    var sortColumns: Map<String, Column<Any?>> = emptyMap()
+        private set
+
     override fun create(
         part: Part,
         iterator: Iterator<Any>
-    ): Op<Boolean> = predicate(part, iterator)
+    ): Op<Boolean> = Conjunction(listOf(predicate(part, iterator)))
 
     override fun and(
         part: Part,
         base: Op<Boolean>,
         iterator: Iterator<Any>
-    ): Op<Boolean> = base and predicate(part, iterator)
+    ): Op<Boolean> = Conjunction((base as Conjunction).parts + predicate(part, iterator))
 
     override fun or(
         base: Op<Boolean>,
         criteria: Op<Boolean>
-    ): Op<Boolean> = base or criteria
+    ): Op<Boolean> = base.combined() or criteria.combined()
 
     override fun complete(
         criteria: Op<Boolean>?,
         sort: Sort
     ): Query {
-        val finalSort = sortCustomizer(sort)
-        val selected = if (selectSortColumns) {
-            (columns + finalSort.mapNotNull { metadata.columnFor(it.property) }).distinct()
-        } else {
-            columns
-        }
+        val source = SortedSource(metadata.table, paths, sortCustomizer(sort))
+        sortColumns = source.columns
+        val selected = if (selectSortColumns) (columns + source.columns.values).distinct() else columns
 
-        return metadata.table.select(selected).apply {
-            criteria?.let { where(it) }
-            orderBy(finalSort, metadata)
+        return source.select(selected).apply {
+            criteria?.let { where(it.combined()) }
         }
     }
 
-    private fun predicate(part: Part, values: Iterator<Any?>): Op<Boolean> {
+    private fun predicate(part: Part, values: Iterator<Any?>): Pair<List<Hop>, Op<Boolean>> {
         val path = paths.resolve(part.property)
-        // nested paths are matched in subqueries, see ResolvedPath.wrap
-        return path.wrap(leafPredicate(part, path.leaf, values))
+        return path.hops to leafPredicate(part, path.leaf, values)
     }
+
+    /**
+     * The parts of one `Or` branch. They are combined when the branch is complete, so parts on the same path share one subquery
+     * per hop: `findByItemsNameAndItemsQuantity` matches orders with one item that has both the name and the quantity.
+     */
+    private class Conjunction(val parts: List<Pair<List<Hop>, Op<Boolean>>>) : Op<Boolean>() {
+        override fun toQueryBuilder(queryBuilder: QueryBuilder) = combine(parts).toQueryBuilder(queryBuilder)
+    }
+
+    private fun Op<Boolean>.combined(): Op<Boolean> = if (this is Conjunction) combine(parts) else this
 
     @Suppress("UNCHECKED_CAST", "CyclomaticComplexMethod")
     private fun leafPredicate(part: Part, column: Column<Any?>, values: Iterator<Any?>): Op<Boolean> {
@@ -116,13 +124,13 @@ internal class ExposedQueryCreator(
         val expr: ExpressionWithColumnType<Any?> =
             if (ignoreCase) (column as Column<String?>).lowerCase() as ExpressionWithColumnType<Any?> else column
 
-        fun nextValue(): Any? = column.toDbValue(values.next()).let { if (ignoreCase && it is String) it.lowercase() else it }
+        fun nextValue(): Any? = column.toDbValue(paths.parameterValue(column, values.next())).let { if (ignoreCase && it is String) it.lowercase() else it }
         fun nextString(): String = nextValue() as String
         fun nextCollection(): List<Any?> = when (val value = values.next()) {
             is Iterable<*> -> value.toList()
             is Array<*> -> value.toList()
             else -> listOf(value)
-        }.map { column.toDbValue(it) }
+        }.map { column.toDbValue(paths.parameterValue(column, it)) }
 
         val stringExpr = expr as Expression<String?>
         return when (part.type) {
@@ -152,4 +160,20 @@ internal class ExposedQueryCreator(
 
     private fun containing(text: String): LikePattern =
         LikePattern("%", ESCAPE_CHAR) + LikePattern.ofLiteral(text, ESCAPE_CHAR) + "%"
+}
+
+/**
+ * Combines the predicates of [parts] with `AND`, each one built on the last table of its hops: parts with the same first hop
+ * are matched in one subquery `parentKey IN (SELECT childKey FROM childTable WHERE ...)`, recursively for the following hops.
+ *
+ * Subqueries instead of joins keep the query on the repository's table, so every root row is returned at most once,
+ * and count, exists, delete and paging work unchanged.
+ */
+private fun combine(parts: List<Pair<List<Hop>, Op<Boolean>>>): Op<Boolean> {
+    val groups = LinkedHashMap<Any, MutableList<Pair<List<Hop>, Op<Boolean>>>>()
+    parts.forEach { part -> groups.getOrPut(part.first.firstOrNull() ?: Any()) { mutableListOf() } += part }
+    return groups.values.map { group ->
+        val hop = group.first().first.firstOrNull() ?: return@map group.single().second
+        hop.parentKey inSubQuery hop.childTable.select(hop.childKey).where(combine(group.map { it.first.drop(1) to it.second }))
+    }.reduce { acc, op -> acc and op }
 }
