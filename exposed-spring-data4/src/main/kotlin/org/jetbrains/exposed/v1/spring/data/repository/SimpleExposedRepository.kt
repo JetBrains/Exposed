@@ -8,8 +8,10 @@ import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.statements.UpdateBuilder
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.spring.data.ExposedCrudRepository
+import org.jetbrains.exposed.v1.spring.data.mapping.AggregateWriter
+import org.jetbrains.exposed.v1.spring.data.mapping.IN_LIST_CHUNK_SIZE
 import org.jetbrains.exposed.v1.spring.data.mapping.ProjectionResolver
-import org.jetbrains.exposed.v1.spring.data.mapping.orderBy
+import org.jetbrains.exposed.v1.spring.data.query.SortedSource
 import org.springframework.dao.IncorrectUpdateSemanticsDataAccessException
 import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.data.domain.Page
@@ -30,6 +32,7 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
     private val table = metadata.table
     private val entityConverter = projectionResolver.entityConverter
     private val lifecycle = projectionResolver.lifecycle
+    private val writer by lazy { projectionResolver.writer }
     private val versionColumn: Column<Any?>? = metadata.versionColumn
 
     /**
@@ -39,6 +42,9 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
      *
      * The `BeforeConvert` and `BeforeSave` callbacks run for each entity before any statement, the `AfterSave` callbacks
      * for each saved row after all statements, both in the order of [entities].
+     *
+     * Referenced entities (e.g. `customer: Customer`) are saved first, through their own repository, and owned to-many rows
+     * after the row of their entity, see [AggregateWriter].
      */
     @Transactional
     override fun <S : T> saveAll(entities: Iterable<S>): List<S> {
@@ -53,6 +59,7 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
             insertRows(indices.map(toSave::get)).forEachIndexed { i, id -> ids[indices[i]] = id }
         }
         existingIndices.forEach { ids[it] = updateRow(toSave[it]) }
+        toSave.indices.forEach { saveOwnedRows(toSave[it], checkNotNull(ids[it])) }
 
         val rows = findRows(ids.map { checkNotNull(it) })
         return ids.map { id ->
@@ -65,25 +72,30 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
         val isNew = entityInformation.isNew(entity)
         val toSave = prepareSave(entity)
         val id = if (isNew) insertRow(toSave) else updateRow(toSave)
+        saveOwnedRows(toSave, id)
         return lifecycle.afterSave(checkNotNull(findRow(id)) { "Saved row with id $id not found in table ${table.tableName}" }) as S
     }
 
-    private fun prepareSave(entity: T): T = lifecycle.beforeSave(lifecycle.beforeConvert(entity))
+    private fun prepareSave(entity: T): T = writer.cascade(lifecycle.beforeSave(lifecycle.beforeConvert(entity)))
+
+    private fun saveOwnedRows(entity: T, id: ID) {
+        writer.syncCollections(entity) { column -> if (column == table.id) id else null }
+    }
 
     override fun findAll(): List<T> = table
         .selectAll()
         .toEntities()
 
-    override fun findAll(sort: Sort): List<T> = table
-        .selectAll()
-        .orderBy(sort, metadata)
-        .toEntities()
+    override fun findAll(sort: Sort): List<T> = sorted(sort).toEntities()
 
     override fun findAll(pageable: Pageable): Page<T> {
-        val query = table.selectAll().orderBy(pageable.sort, metadata)
+        val query = sorted(pageable.sort)
         if (pageable.isPaged) query.limit(pageable.pageSize).offset(pageable.offset)
         return PageableExecutionUtils.getPage(query.toEntities(), pageable) { count() }
     }
+
+    /** All rows ordered by [sort], which may go through referenced tables (see [SortedSource]). */
+    private fun sorted(sort: Sort): Query = SortedSource(table, projectionResolver.paths, sort).select(table.columns)
 
     override fun findAllById(ids: Iterable<ID>): List<T> =
         ids.distinct().chunked(IN_LIST_CHUNK_SIZE).flatMap { chunk ->
@@ -103,7 +115,13 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
 
     @Transactional
     override fun deleteById(id: ID) {
+        deleteOwnedRows { table.id eq id }
         table.deleteWhere { table.id eq id }
+    }
+
+    /** Deletes the owned to-many rows of the rows matching [where], before the rows themselves can be deleted. */
+    private fun deleteOwnedRows(where: () -> Op<Boolean>) {
+        if (writer.ownsRows) writer.deleteOwned { column -> table.select(column).where(where()) }
     }
 
     @Transactional
@@ -117,13 +135,17 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
         val id = entityInformation.getRequiredId(entity)
         if (versionColumn == null) return deleteById(id)
 
+        deleteOwnedRows { matchesIdAndVersion(id, entity, versionColumn) }
         val deleted = table.deleteWhere { matchesIdAndVersion(id, entity, versionColumn) }
         if (deleted == 0) throw OptimisticLockingFailureException(versionConflict(id, entity))
     }
 
     @Transactional
     override fun deleteAllById(ids: Iterable<ID>) {
-        ids.distinct().chunked(IN_LIST_CHUNK_SIZE).forEach { chunk -> table.deleteWhere { table.id inList chunk } }
+        ids.distinct().chunked(IN_LIST_CHUNK_SIZE).forEach { chunk ->
+            deleteOwnedRows { table.id inList chunk }
+            table.deleteWhere { table.id inList chunk }
+        }
     }
 
     @Transactional
@@ -135,6 +157,7 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
 
     @Transactional
     override fun deleteAll() {
+        if (writer.ownsRows) writer.deleteOwned { column -> table.select(column) }
         table.deleteAll()
     }
 
@@ -186,13 +209,9 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
 
     private fun findRows(ids: List<ID>): Map<ID, T> =
         ids.distinct().chunked(IN_LIST_CHUNK_SIZE).flatMap { chunk ->
-            table.selectAll().where { table.id inList chunk }.map { it[table.id].value to entityConverter.convert(it) }
+            val rows = table.selectAll().where { table.id inList chunk }.toList()
+            rows.map { it[table.id].value }.zip(entityConverter.convertAll(rows))
         }.toMap()
 
-    private fun Query.toEntities(): List<T> = map(entityConverter::convert)
-
-    private companion object {
-        // Oracle allows at most 1000 values in an IN list
-        const val IN_LIST_CHUNK_SIZE = 1000
-    }
+    private fun Query.toEntities(): List<T> = entityConverter.convertAll(toList())
 }

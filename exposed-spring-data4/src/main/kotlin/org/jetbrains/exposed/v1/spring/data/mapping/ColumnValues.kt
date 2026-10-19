@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.spring.data.mapping
 
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.EntityIDColumnType
+import org.jetbrains.exposed.v1.core.Expression
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
@@ -22,13 +23,9 @@ internal fun Column<*>.toDbValue(value: Any?): Any? {
     return EntityID(value, idColumnType.idColumn.table as IdTable<Any>)
 }
 
-internal fun Query.orderBy(sort: Sort, metadata: EntityMetadata<*, *>): Query = apply {
-    sort.forEach { order ->
-        val column = requireNotNull(metadata.columnFor(order.property)) {
-            "Unknown sort property '${order.property}' for table ${metadata.table.tableName}"
-        }
-        orderBy(column, order.toSortOrder())
-    }
+/** Orders by the [columns] of the properties of [sort]. */
+internal fun Query.orderBy(sort: Sort, columns: Map<String, Expression<*>>): Query = apply {
+    sort.forEach { order -> orderBy(columns.getValue(order.property), order.toSortOrder()) }
 }
 
 private fun Sort.Order.toSortOrder(): SortOrder = when (nullHandling) {
