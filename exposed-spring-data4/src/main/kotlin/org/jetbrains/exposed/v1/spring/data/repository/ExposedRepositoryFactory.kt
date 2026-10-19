@@ -3,9 +3,8 @@ package org.jetbrains.exposed.v1.spring.data.repository
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.spring.data.ExposedRepository
 import org.jetbrains.exposed.v1.spring.data.event.EntityLifecycle
-import org.jetbrains.exposed.v1.spring.data.mapping.EntityMetadata
 import org.jetbrains.exposed.v1.spring.data.mapping.ExposedMappingContext
-import org.jetbrains.exposed.v1.spring.data.mapping.ExposedPersistentEntity
+import org.jetbrains.exposed.v1.spring.data.mapping.ExposedMappings
 import org.jetbrains.exposed.v1.spring.data.mapping.ProjectionResolver
 import org.jetbrains.exposed.v1.spring.data.query.ExposedQueryLookupStrategy
 import org.jetbrains.exposed.v1.spring.data.query.QueryContextInterceptor
@@ -31,6 +30,16 @@ internal class ExposedRepositoryFactory(
     private val eventPublisher: ApplicationEventPublisher? = null,
     private val auditing: Boolean = false,
 ) : RepositoryFactorySupport() {
+    // created on first use, the projection factory of RepositoryFactorySupport is configured after construction
+    private val mappings by lazy {
+        ExposedMappings(
+            mappingContext = mappingContext,
+            projectionFactory = projectionFactory,
+            lifecycle = { table -> EntityLifecycle(table, entityCallbacks, eventPublisher) },
+            keepCreatedOnUpdate = auditing,
+        )
+    }
+
     private val projectionResolvers = ConcurrentHashMap<Class<*>, ProjectionResolver<Any, Any>>()
 
     init {
@@ -57,19 +66,7 @@ internal class ExposedRepositoryFactory(
 
     @Suppress("UNCHECKED_CAST")
     private fun projectionResolverFor(metadata: RepositoryMetadata): ProjectionResolver<Any, Any> =
-        projectionResolvers.getOrPut(metadata.repositoryInterface) {
-            val table = tableFor(metadata)
-            ProjectionResolver(
-                metadata = EntityMetadata(
-                    table = table,
-                    persistentEntity = mappingContext.getRequiredPersistentEntity(metadata.domainType) as ExposedPersistentEntity<Any>,
-                ),
-                factory = projectionFactory,
-                instantiators = mappingContext.instantiators,
-                lifecycle = EntityLifecycle(table, entityCallbacks, eventPublisher),
-                keepCreatedOnUpdate = auditing,
-            )
-        }
+        projectionResolvers.getOrPut(metadata.repositoryInterface) { mappings.resolver(tableFor(metadata), metadata.domainType) }
 
     @Suppress("UNCHECKED_CAST")
     private fun tableFor(metadata: RepositoryMetadata): IdTable<Any> {
