@@ -1,0 +1,105 @@
+public abstract interface annotation class org/jetbrains/exposed/v1/spring/data/EnableExposedRepositories : java/lang/annotation/Annotation {
+	public abstract fun basePackageClasses ()[Ljava/lang/Class;
+	public abstract fun basePackages ()[Ljava/lang/String;
+	public abstract fun bootstrapMode ()Lorg/springframework/data/repository/config/BootstrapMode;
+	public abstract fun considerNestedRepositories ()Z
+	public abstract fun excludeFilters ()[Lorg/springframework/context/annotation/ComponentScan$Filter;
+	public abstract fun includeFilters ()[Lorg/springframework/context/annotation/ComponentScan$Filter;
+	public abstract fun namedQueriesLocation ()Ljava/lang/String;
+	public abstract fun queryLookupStrategy ()Lorg/springframework/data/repository/query/QueryLookupStrategy$Key;
+	public abstract fun repositoryBaseClass ()Ljava/lang/Class;
+	public abstract fun repositoryFactoryBeanClass ()Ljava/lang/Class;
+	public abstract fun repositoryImplementationPostfix ()Ljava/lang/String;
+	public abstract fun transactionManagerRef ()Ljava/lang/String;
+	public abstract fun value ()[Ljava/lang/String;
+}
+
+public abstract interface class org/jetbrains/exposed/v1/spring/data/ExposedCrudRepository : org/springframework/data/repository/ListCrudRepository, org/springframework/data/repository/ListPagingAndSortingRepository {
+}
+
+public abstract interface annotation class org/jetbrains/exposed/v1/spring/data/ExposedRepository : java/lang/annotation/Annotation {
+	public abstract fun table ()Ljava/lang/Class;
+}
+
+public abstract interface annotation class org/jetbrains/exposed/v1/spring/data/auditing/EnableExposedAuditing : java/lang/annotation/Annotation {
+	public abstract fun auditorAwareRef ()Ljava/lang/String;
+	public abstract fun dateTimeProviderRef ()Ljava/lang/String;
+	public abstract fun modifyOnCreate ()Z
+	public abstract fun setDates ()Z
+}
+
+public abstract interface class org/jetbrains/exposed/v1/spring/data/event/AfterConvertCallback : org/springframework/data/mapping/callback/EntityCallback {
+	public abstract fun onAfterConvert (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/Table;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/spring/data/event/AfterConvertEvent : org/jetbrains/exposed/v1/spring/data/event/ExposedEntityEvent {
+	public fun <init> (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/Table;)V
+}
+
+public abstract interface class org/jetbrains/exposed/v1/spring/data/event/AfterDeleteCallback : org/springframework/data/mapping/callback/EntityCallback {
+	public abstract fun onAfterDelete (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/Table;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/spring/data/event/AfterDeleteEvent : org/jetbrains/exposed/v1/spring/data/event/ExposedEntityEvent {
+	public fun <init> (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/Table;)V
+}
+
+public abstract interface class org/jetbrains/exposed/v1/spring/data/event/AfterSaveCallback : org/springframework/data/mapping/callback/EntityCallback {
+	public abstract fun onAfterSave (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/Table;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/spring/data/event/AfterSaveEvent : org/jetbrains/exposed/v1/spring/data/event/ExposedEntityEvent {
+	public fun <init> (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/Table;)V
+}
+
+public abstract interface class org/jetbrains/exposed/v1/spring/data/event/BeforeConvertCallback : org/springframework/data/mapping/callback/EntityCallback {
+	public abstract fun onBeforeConvert (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/Table;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/spring/data/event/BeforeConvertEvent : org/jetbrains/exposed/v1/spring/data/event/ExposedEntityEvent {
+	public fun <init> (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/Table;)V
+}
+
+public abstract interface class org/jetbrains/exposed/v1/spring/data/event/BeforeDeleteCallback : org/springframework/data/mapping/callback/EntityCallback {
+	public abstract fun onBeforeDelete (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/Table;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/spring/data/event/BeforeDeleteEvent : org/jetbrains/exposed/v1/spring/data/event/ExposedEntityEvent {
+	public fun <init> (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/Table;)V
+}
+
+public abstract interface class org/jetbrains/exposed/v1/spring/data/event/BeforeSaveCallback : org/springframework/data/mapping/callback/EntityCallback {
+	public abstract fun onBeforeSave (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/Table;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/spring/data/event/BeforeSaveEvent : org/jetbrains/exposed/v1/spring/data/event/ExposedEntityEvent {
+	public fun <init> (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/Table;)V
+}
+
+public abstract class org/jetbrains/exposed/v1/spring/data/event/ExposedEntityEvent : org/springframework/context/ApplicationEvent {
+	public fun <init> (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/Table;)V
+	public final fun getEntity ()Ljava/lang/Object;
+	public final fun getTable ()Lorg/jetbrains/exposed/v1/core/Table;
+}
+
+public final class org/jetbrains/exposed/v1/spring/data/query/QueryKt {
+	public static final fun queryManyIterable (Lorg/jetbrains/exposed/v1/spring/data/ExposedCrudRepository;Lkotlin/jvm/functions/Function0;)Ljava/lang/Iterable;
+	public static final fun queryManyList (Lorg/jetbrains/exposed/v1/spring/data/ExposedCrudRepository;Lkotlin/jvm/functions/Function0;)Ljava/util/List;
+	public static final fun queryOneTyped (Lorg/jetbrains/exposed/v1/spring/data/ExposedCrudRepository;Lkotlin/jvm/functions/Function0;)Ljava/lang/Object;
+	public static final fun queryRow (Lorg/jetbrains/exposed/v1/spring/data/ExposedCrudRepository;Ljava/lang/Class;Lkotlin/jvm/functions/Function0;)Ljava/lang/Object;
+	public static final fun queryRows (Lorg/jetbrains/exposed/v1/spring/data/ExposedCrudRepository;Ljava/lang/Class;Lkotlin/jvm/functions/Function0;)Ljava/util/List;
+}
+
+public final class org/jetbrains/exposed/v1/spring/data/repository/ExposedRepositoryConfigExtension : org/springframework/data/repository/config/RepositoryConfigurationExtensionSupport {
+	public static final field Companion Lorg/jetbrains/exposed/v1/spring/data/repository/ExposedRepositoryConfigExtension$Companion;
+	public static final field MAPPING_CONTEXT_BEAN_NAME Ljava/lang/String;
+	public fun <init> ()V
+	public fun getModuleIdentifier ()Ljava/lang/String;
+	public fun getModuleName ()Ljava/lang/String;
+	public fun getRepositoryFactoryBeanClassName ()Ljava/lang/String;
+	public fun registerBeansForRoot (Lorg/springframework/beans/factory/support/BeanDefinitionRegistry;Lorg/springframework/data/repository/config/RepositoryConfigurationSource;)V
+}
+
+public final class org/jetbrains/exposed/v1/spring/data/repository/ExposedRepositoryConfigExtension$Companion {
+}
+
