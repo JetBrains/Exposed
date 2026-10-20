@@ -1,6 +1,6 @@
 # Exposed Spring Data in a GraalVM native image
 
-A small Spring Boot 4.1 application with `exposed-spring-data` repositories that is built and tested as a GraalVM native image. It
+A small Spring Boot 4.1 application using `exposed-spring-data-starter` that is built and tested as a GraalVM native image. It
 covers what the module registers for Spring AOT: repository beans, CRUD, derived and paged queries, DTO and interface projections, a
 dynamic projection, `query { }` default methods, a `Persistable` entity, auditing with named `AuditorAware` / `DateTimeProvider` beans
 and an entity callback.
@@ -76,10 +76,10 @@ Gaps in `exposed-spring-data` found by this sample (fixed in the module's `Expos
   `AfterConvertCallback does not define a callback method accepting Customer and 1 additional arguments`. The module now registers the
   methods of its callback interfaces.
 
-Exposed core: no gaps showed up for this setup (Exposed JDBC on H2 through `SpringTransactionManager`), so the sample needs no
-workaround hints. The `ServiceLoader` lookups of Exposed (`DatabaseConnectionAutoRegistration`, `TransactionsHolder`,
-`EntityIDFactory`) work because `native-image` includes `META-INF/services` providers. Not covered: other databases and dialects, the
-DAO API and the other extension modules (e.g. `exposed-json`).
+Exposed core: no gaps showed up for this setup (Exposed JDBC on H2 through the starter's auto-configured `SpringTransactionManager`),
+so the sample needs no workaround hints. The `ServiceLoader` lookups of Exposed (`DatabaseConnectionAutoRegistration`,
+`TransactionsHolder`, `EntityIDFactory`) work because `native-image` includes `META-INF/services` providers. Not covered: other
+databases and dialects, the DAO API and the other extension modules (e.g. `exposed-json`).
 
 Spring Data commons logs an INFO message that it couldn't read class metadata for the `CustomerView` interface projection in the native
 image and that input property calculation might fail. It falls back to reflection order; the interface projection test passes.
