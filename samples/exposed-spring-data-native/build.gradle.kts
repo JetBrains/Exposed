@@ -28,10 +28,9 @@ kotlin {
 
 dependencies {
     implementation(platform(SpringBootPlugin.BOM_COORDINATES))
-    implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
-    implementation("org.jetbrains.exposed:exposed-spring-data:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-spring-data-starter:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
     runtimeOnly("com.h2database:h2")
 
