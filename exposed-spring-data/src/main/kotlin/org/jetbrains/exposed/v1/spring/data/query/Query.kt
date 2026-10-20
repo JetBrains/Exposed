@@ -14,6 +14,10 @@ import kotlin.experimental.ExperimentalTypeInference
  * Runs [block] and converts the returned rows to [T], which can be the entity, a DTO, a closed interface projection or [ResultRow].
  *
  * If [block] returns an unmodified `selectAll()` query, only the columns the projection needs are selected.
+ *
+ * In a native image, DTO and interface projections need runtime hints. They are registered automatically when [T] appears
+ * in the return type of the repository method (e.g. `fun names(): List<CustomerName> = query { ... }`); otherwise, e.g. in a
+ * generic method or if the result is mapped further, register [T] with `@RegisterReflectionForBinding`.
  */
 @OverloadResolutionByLambdaReturnType
 inline fun <reified T : Any> ExposedCrudRepository<*, *>.query(noinline block: () -> Iterable<ResultRow>): Iterable<T> =
