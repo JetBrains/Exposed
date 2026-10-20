@@ -7,7 +7,13 @@ import org.springframework.beans.factory.support.RootBeanDefinition
 import org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport
 import org.springframework.data.repository.config.RepositoryConfigurationSource
 
-internal class ExposedRepositoryConfigExtension : RepositoryConfigurationExtensionSupport() {
+/**
+ * [org.springframework.data.repository.config.RepositoryConfigurationExtension] for Exposed repositories.
+ *
+ * Used by [org.jetbrains.exposed.v1.spring.data.EnableExposedRepositories] and by the Spring Boot auto-configuration
+ * of the `exposed-spring-data-starter` module.
+ */
+class ExposedRepositoryConfigExtension : RepositoryConfigurationExtensionSupport() {
     @Deprecated("Deprecated in Java")
     override fun getModulePrefix(): String {
         return "exposed"

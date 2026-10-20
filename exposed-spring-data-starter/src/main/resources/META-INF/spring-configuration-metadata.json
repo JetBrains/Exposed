@@ -1,0 +1,16 @@
+{
+    "properties": [
+        {
+            "name": "spring.data.exposed.repositories.enabled",
+            "type": "java.lang.Boolean",
+            "description": "Whether to enable Exposed Spring Data repositories.",
+            "defaultValue": true
+        },
+        {
+            "name": "spring.data.exposed.repositories.bootstrap-mode",
+            "type": "org.springframework.data.repository.config.BootstrapMode",
+            "description": "Bootstrap mode for Exposed Spring Data repositories.",
+            "defaultValue": "default"
+        }
+    ]
+}
