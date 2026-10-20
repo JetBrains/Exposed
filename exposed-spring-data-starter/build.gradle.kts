@@ -24,6 +24,7 @@ dependencies {
     compileOnly(libs.spring.boot4.configuration.processor)
 
     testImplementation(libs.spring.boot4.starter.test)
+    testImplementation(libs.spring7.core.test)
     testImplementation(libs.h2)
     testImplementation(project(":exposed-jdbc"))
     testRuntimeOnly(libs.junit.platform.launcher)

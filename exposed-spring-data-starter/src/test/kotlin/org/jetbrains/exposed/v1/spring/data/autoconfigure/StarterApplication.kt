@@ -16,4 +16,6 @@ object CustomersTable : LongIdTable("starter_customers") {
 data class Customer(val id: Long? = null, val name: String)
 
 @ExposedRepository(table = CustomersTable::class)
-interface CustomerRepository : ExposedCrudRepository<Customer, Long>
+interface CustomerRepository : ExposedCrudRepository<Customer, Long> {
+    fun findByName(name: String): Customer?
+}
