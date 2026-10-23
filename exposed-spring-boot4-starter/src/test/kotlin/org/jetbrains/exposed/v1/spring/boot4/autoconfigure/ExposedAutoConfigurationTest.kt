@@ -2,7 +2,9 @@ package org.jetbrains.exposed.v1.spring.boot4.autoconfigure
 
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.spring.boot4.Application
 import org.jetbrains.exposed.v1.spring.boot4.DatabaseInitializer
 import org.jetbrains.exposed.v1.spring.boot4.tables.TestTable
@@ -15,6 +17,7 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.getBean
 import org.springframework.boot.autoconfigure.AutoConfigurations
+import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
 import org.springframework.boot.jdbc.autoconfigure.DataSourceTransactionManagerAutoConfiguration
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
@@ -24,6 +27,7 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.interceptor.TransactionAttributeSource
+import org.springframework.transaction.support.TransactionTemplate
 import java.util.concurrent.CompletableFuture
 
 @SpringBootTest(
@@ -74,6 +78,19 @@ open class ExposedAutoConfigurationTest {
                 context.getBean<DataSourceTransactionManagerAutoConfiguration>()
             }
         }
+    }
+
+    @Test
+    fun `closing the context unregisters the database of SpringTransactionManager`() {
+        lateinit var db: Database
+        ApplicationContextRunner()
+            .withConfiguration(AutoConfigurations.of(DataSourceAutoConfiguration::class.java, ExposedAutoConfiguration::class.java))
+            .withPropertyValues("spring.datasource.url=jdbc:h2:mem:destroyTest", "spring.datasource.driver-class-name=org.h2.Driver")
+            .run { context ->
+                val transactionManager = context.getBean<SpringTransactionManager>()
+                db = TransactionTemplate(transactionManager).execute { TransactionManager.current().db }!!
+            }
+        assertThrows(IllegalStateException::class.java) { TransactionManager.managerFor(db) }
     }
 
     @Test
