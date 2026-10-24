@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.r2dbc.statements
 
 import io.r2dbc.spi.Connection
+import io.r2dbc.spi.Result
 import io.r2dbc.spi.Statement
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.awaitFirstOrNull
@@ -13,6 +14,7 @@ import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import org.jetbrains.exposed.v1.r2dbc.mappers.R2dbcTypeMapping
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcResult
+import org.reactivestreams.Publisher
 import java.io.InputStream
 import java.time.Duration
 
@@ -32,9 +34,14 @@ class R2dbcPreparedStatementImpl(
 ) : R2dbcPreparedStatementApi {
     private var resultRow: R2dbcResult? = null
 
+    /** Tracks whether this statement may still be executing, so that it can be cancelled along with its coroutine. */
+    internal var inFlightTracker: InFlightStatementTracker? = null
+
+    private fun execute(): Publisher<out Result> = statement.execute().let { inFlightTracker?.track(it) ?: it }
+
     override suspend fun getResultRow(): R2dbcResult? {
         if (resultRow == null && wasGeneratedKeysRequested) {
-            val resultPublisher = statement.execute()
+            val resultPublisher = execute()
             resultRow = R2dbcResult(resultPublisher, typeMapping)
         }
 
@@ -55,16 +62,16 @@ class R2dbcPreparedStatementImpl(
         statement.add()
     }
 
-    override suspend fun executeQuery(): R2dbcResult = R2dbcResult(statement.execute(), typeMapping)
+    override suspend fun executeQuery(): R2dbcResult = R2dbcResult(execute(), typeMapping)
 
     override suspend fun executeUpdate() {
-        val result = statement.execute()
+        val result = execute()
         val r2dbcResult = R2dbcResult(result, typeMapping)
         resultRow = r2dbcResult
     }
 
     override suspend fun executeMultiple(): List<StatementResult> {
-        val result = statement.execute()
+        val result = execute()
         val r2dbcResult = R2dbcResult(result, typeMapping)
         return listOf(StatementResult.Object(r2dbcResult))
         // full JDBC logic does not seem possible here
@@ -116,7 +123,7 @@ class R2dbcPreparedStatementImpl(
     }
 
     override suspend fun executeBatch(): List<Int> {
-        val result = statement.execute()
+        val result = execute()
         val r2dbcResult = R2dbcResult(result, typeMapping)
 
         return if (wasGeneratedKeysRequested) {
