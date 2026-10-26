@@ -6,8 +6,6 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greater
-import org.jetbrains.exposed.v1.core.innerJoin
-import org.jetbrains.exposed.v1.core.leftJoin
 import org.jetbrains.exposed.v1.core.sum
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
@@ -104,13 +102,16 @@ open class CustomQueryJoinPassThroughTest : ExposedSpringDataTestBase() {
         assertEquals(lines.toList(), lines.toList())
     }
 
-    private fun addOrder(customer: Customer, product: String, amount: Int): Long = checkNotNull(TransactionTemplate(tm).execute {
-        CustomerOrders.insertAndGetId {
-            it[CustomerOrders.customer] = EntityID(customer.id!!, Customers)
-            it[CustomerOrders.product] = product
-            it[CustomerOrders.amount] = amount
-        }.value
-    })
+    private fun addOrder(customer: Customer, product: String, amount: Int): Long {
+        val orderId = TransactionTemplate(tm).execute {
+            CustomerOrders.insertAndGetId {
+                it[CustomerOrders.customer] = EntityID(customer.id!!, Customers)
+                it[CustomerOrders.product] = product
+                it[CustomerOrders.amount] = amount
+            }.value
+        }
+        return checkNotNull(orderId)
+    }
 }
 
 @ExposedRepository(table = Customers::class)
