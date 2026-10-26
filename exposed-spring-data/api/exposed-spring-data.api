@@ -5,8 +5,6 @@ public abstract interface annotation class org/jetbrains/exposed/v1/spring/data/
 	public abstract fun considerNestedRepositories ()Z
 	public abstract fun excludeFilters ()[Lorg/springframework/context/annotation/ComponentScan$Filter;
 	public abstract fun includeFilters ()[Lorg/springframework/context/annotation/ComponentScan$Filter;
-	public abstract fun namedQueriesLocation ()Ljava/lang/String;
-	public abstract fun queryLookupStrategy ()Lorg/springframework/data/repository/query/QueryLookupStrategy$Key;
 	public abstract fun repositoryBaseClass ()Ljava/lang/Class;
 	public abstract fun repositoryFactoryBeanClass ()Ljava/lang/Class;
 	public abstract fun repositoryImplementationPostfix ()Ljava/lang/String;
@@ -15,6 +13,22 @@ public abstract interface annotation class org/jetbrains/exposed/v1/spring/data/
 }
 
 public abstract interface class org/jetbrains/exposed/v1/spring/data/ExposedCrudRepository : org/springframework/data/repository/ListCrudRepository, org/springframework/data/repository/ListPagingAndSortingRepository {
+}
+
+public abstract interface annotation class org/jetbrains/exposed/v1/spring/data/ExposedRepositoriesConfig : java/lang/annotation/Annotation {
+	public abstract fun basePackageClasses ()[Ljava/lang/Class;
+	public abstract fun basePackages ()[Ljava/lang/String;
+	public abstract fun bootstrapMode ()Lorg/springframework/data/repository/config/BootstrapMode;
+	public abstract fun considerNestedRepositories ()Z
+	public abstract fun excludeFilters ()[Lorg/springframework/context/annotation/ComponentScan$Filter;
+	public abstract fun includeFilters ()[Lorg/springframework/context/annotation/ComponentScan$Filter;
+	public abstract fun namedQueriesLocation ()Ljava/lang/String;
+	public abstract fun queryLookupStrategy ()Lorg/springframework/data/repository/query/QueryLookupStrategy$Key;
+	public abstract fun repositoryBaseClass ()Ljava/lang/Class;
+	public abstract fun repositoryFactoryBeanClass ()Ljava/lang/Class;
+	public abstract fun repositoryImplementationPostfix ()Ljava/lang/String;
+	public abstract fun transactionManagerRef ()Ljava/lang/String;
+	public abstract fun value ()[Ljava/lang/String;
 }
 
 public abstract interface annotation class org/jetbrains/exposed/v1/spring/data/ExposedRepository : java/lang/annotation/Annotation {
@@ -97,6 +111,7 @@ public final class org/jetbrains/exposed/v1/spring/data/repository/ExposedReposi
 	public fun getModuleIdentifier ()Ljava/lang/String;
 	public fun getModuleName ()Ljava/lang/String;
 	public fun getRepositoryFactoryBeanClassName ()Ljava/lang/String;
+	public fun postProcess (Lorg/springframework/beans/factory/support/BeanDefinitionBuilder;Lorg/springframework/data/repository/config/AnnotationRepositoryConfigurationSource;)V
 	public fun registerBeansForRoot (Lorg/springframework/beans/factory/support/BeanDefinitionRegistry;Lorg/springframework/data/repository/config/RepositoryConfigurationSource;)V
 }
 

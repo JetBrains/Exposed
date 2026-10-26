@@ -1,8 +1,9 @@
 package org.jetbrains.exposed.v1.spring.data.autoconfigure
 
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.spring.boot4.autoconfigure.ExposedAutoConfiguration
-import org.jetbrains.exposed.v1.spring.data.EnableExposedRepositories
 import org.jetbrains.exposed.v1.spring.data.ExposedCrudRepository
+import org.jetbrains.exposed.v1.spring.data.ExposedRepositoriesConfig
 import org.jetbrains.exposed.v1.spring.data.repository.ExposedRepositoryConfigExtension
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
@@ -40,10 +41,11 @@ private const val EXPOSED_REPOSITORY_FACTORY_BEAN_CLASS_NAME =
     "org.jetbrains.exposed.v1.spring.data.repository.ExposedRepositoryFactoryBean"
 
 /**
- * Placeholder configuration whose [EnableExposedRepositories] annotation provides the default attributes
+ * Placeholder configuration whose [ExposedRepositoriesConfig] annotation provides the default attributes
  * used by the auto-configured repository scanning.
  */
-@EnableExposedRepositories(transactionManagerRef = SPRING_TRANSACTION_MANAGER_BEAN_NAME)
+@OptIn(InternalApi::class)
+@ExposedRepositoriesConfig(transactionManagerRef = SPRING_TRANSACTION_MANAGER_BEAN_NAME)
 internal class EnableExposedRepositoriesConfiguration
 
 /** Name of the transaction manager bean registered by [ExposedAutoConfiguration.springTransactionManager]. */
