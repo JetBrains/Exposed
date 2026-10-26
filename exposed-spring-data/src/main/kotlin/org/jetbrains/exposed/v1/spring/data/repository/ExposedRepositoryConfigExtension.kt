@@ -2,8 +2,10 @@ package org.jetbrains.exposed.v1.spring.data.repository
 
 import org.jetbrains.exposed.v1.spring.data.ExposedCrudRepository
 import org.jetbrains.exposed.v1.spring.data.mapping.ExposedMappingContext
+import org.springframework.beans.factory.support.BeanDefinitionBuilder
 import org.springframework.beans.factory.support.BeanDefinitionRegistry
 import org.springframework.beans.factory.support.RootBeanDefinition
+import org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource
 import org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport
 import org.springframework.data.repository.config.RepositoryConfigurationSource
 
@@ -30,6 +32,12 @@ class ExposedRepositoryConfigExtension : RepositoryConfigurationExtensionSupport
     override fun getRepositoryFactoryBeanClassName(): String {
         return checkNotNull(ExposedRepositoryFactoryBean::class.qualifiedName) {
             "Unable to find qualified name for ExposedRepositoryFactoryBean"
+        }
+    }
+
+    override fun postProcess(builder: BeanDefinitionBuilder, config: AnnotationRepositoryConfigurationSource) {
+        config.getAttribute("transactionManagerRef", String::class.java).ifPresent { transactionManagerRef ->
+            builder.addPropertyValue("transactionManager", transactionManagerRef)
         }
     }
 
