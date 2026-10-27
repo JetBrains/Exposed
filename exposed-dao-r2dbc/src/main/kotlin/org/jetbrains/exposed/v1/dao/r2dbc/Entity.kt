@@ -313,6 +313,8 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
         val table = klass.table
         val entityId = this.id
 
+        // Another pending entity can still reference this one before its insert is flushed, and that entity's SQL fails without it.
+        // JDBC delete() has no such check, because assigning a reference there reads the id, and that flushes the insert first.
         if (isNewEntity()) {
             cache.findPendingReferrer(entityId)?.let { (referrer, column) ->
                 error(
@@ -323,8 +325,6 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
             }
         }
 
-        // This behaves differently from the JDBC module. In JDBC, the entity is inserted first and then
-        // removed from the database. Here we don't do that at the moment, and just remove it from cache if it was not inserted yet.
         if (!isNewEntity()) {
             val transaction = TransactionManager.current()
 
