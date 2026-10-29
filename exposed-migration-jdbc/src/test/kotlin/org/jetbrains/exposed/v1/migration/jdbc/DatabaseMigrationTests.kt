@@ -18,6 +18,7 @@ import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
+import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.batchInsert
@@ -34,8 +35,10 @@ import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
+import org.jetbrains.exposed.v1.tests.shared.expectException
 import org.junit.jupiter.api.Test
 import kotlin.properties.Delegates
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -693,6 +696,57 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             } finally {
                 SchemaUtils.drop(originalTable)
             }
+        }
+    }
+
+    @Test
+    fun testColumnTypeChangeWithoutImplicitCastIsExecutable() {
+        val originalTable = object : Table("tester") {
+            val amount = varchar("amount", 10).default("5")
+            val flag = bool("flag")
+        }
+        val updatedTable = object : Table("tester") {
+            val amount = integer("amount").default(5)
+            val flag = integer("flag")
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, originalTable) {
+            originalTable.insert {
+                it[amount] = "7"
+                it[flag] = true
+            }
+
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(updatedTable, withLogs = false)
+            assertEquals(2, statements.size)
+            assertTrue(statements.all { it.contains("USING") })
+            statements.forEach { exec(it) }
+
+            val row = updatedTable.selectAll().single()
+            assertEquals(7, row[updatedTable.amount])
+            assertEquals(1, row[updatedTable.flag])
+            assertTrue(MigrationUtils.statementsRequiredForDatabaseMigration(updatedTable, withLogs = false).isEmpty())
+        }
+    }
+
+    @Test
+    fun testCharacterColumnTypeChangeDoesNotTruncateValues() {
+        val originalTable = object : Table("tester") {
+            val name = text("name")
+        }
+        val updatedTable = object : Table("tester") {
+            val name = varchar("name", 3)
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, originalTable) {
+            originalTable.insert { it[name] = "abcdef" }
+            commit()
+
+            val statement = MigrationUtils.statementsRequiredForDatabaseMigration(updatedTable, withLogs = false).single()
+            assertFalse(statement.contains("USING"))
+            expectException<ExposedSQLException> { exec(statement) }
+            rollback()
+
+            assertEquals("abcdef", originalTable.selectAll().single()[originalTable.name])
         }
     }
 

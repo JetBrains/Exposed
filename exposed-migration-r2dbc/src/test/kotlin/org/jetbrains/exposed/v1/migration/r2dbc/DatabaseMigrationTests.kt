@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.migration.r2dbc
 
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.single
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import nl.altindag.log.LogCaptor
@@ -18,6 +19,7 @@ import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.json.json
 import org.jetbrains.exposed.v1.json.jsonb
+import org.jetbrains.exposed.v1.r2dbc.ExposedR2dbcException
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.batchInsert
 import org.jetbrains.exposed.v1.r2dbc.exists
@@ -31,8 +33,10 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.junit.jupiter.api.Test
 import kotlin.properties.Delegates
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -640,6 +644,57 @@ class DatabaseMigrationTests : R2dbcDatabaseTestsBase() {
             } finally {
                 SchemaUtils.drop(MixedCaseUIntTable)
             }
+        }
+    }
+
+    @Test
+    fun testColumnTypeChangeWithoutImplicitCastIsExecutable() {
+        val originalTable = object : Table("tester") {
+            val amount = varchar("amount", 10).default("5")
+            val flag = bool("flag")
+        }
+        val updatedTable = object : Table("tester") {
+            val amount = integer("amount").default(5)
+            val flag = integer("flag")
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, originalTable) {
+            originalTable.insert {
+                it[amount] = "7"
+                it[flag] = true
+            }
+
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(updatedTable, withLogs = false)
+            assertEquals(2, statements.size)
+            assertTrue(statements.all { it.contains("USING") })
+            statements.forEach { exec(it) }
+
+            val row = updatedTable.selectAll().single()
+            assertEquals(7, row[updatedTable.amount])
+            assertEquals(1, row[updatedTable.flag])
+            assertTrue(MigrationUtils.statementsRequiredForDatabaseMigration(updatedTable, withLogs = false).isEmpty())
+        }
+    }
+
+    @Test
+    fun testCharacterColumnTypeChangeDoesNotTruncateValues() {
+        val originalTable = object : Table("tester") {
+            val name = text("name")
+        }
+        val updatedTable = object : Table("tester") {
+            val name = varchar("name", 3)
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, originalTable) {
+            originalTable.insert { it[name] = "abcdef" }
+            commit()
+
+            val statement = MigrationUtils.statementsRequiredForDatabaseMigration(updatedTable, withLogs = false).single()
+            assertFalse(statement.contains("USING"))
+            expectException<ExposedR2dbcException> { exec(statement) }
+            rollback()
+
+            assertEquals("abcdef", originalTable.selectAll().single()[originalTable.name])
         }
     }
 }

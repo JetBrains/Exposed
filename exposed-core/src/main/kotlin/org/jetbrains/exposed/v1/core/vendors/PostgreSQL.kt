@@ -439,10 +439,11 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
+    @OptIn(InternalApi::class)
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> {
-        @OptIn(InternalApi::class)
         val transaction = currentTransaction()
         val colName = transaction.identity(column)
+        var isDefaultReplaced = false
         val alterColumnParts = buildList {
             if (columnDiff.autoInc && column.autoIncColumnType != null) {
                 val sequence = column.autoIncColumnType?.sequence
@@ -459,16 +460,14 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
                 add("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()}")
                 add("ALTER COLUMN $colName DROP DEFAULT")
             } else if (columnDiff.type || columnDiff.sizeAndScale) {
-                // SERIAL and BIGSERIAL are not real types, so the underlying integer type has to be used instead
-                val columnType = column.autoIncColumnType?.delegate ?: column.columnType
-                add("ALTER COLUMN $colName TYPE ${columnType.sqlType()}")
+                isDefaultReplaced = addColumnTypeChange(column, columnDiff, colName)
             }
 
             if (columnDiff.nullability) {
                 val nullability = if (column.columnType.nullable) "DROP" else "SET"
                 add("ALTER COLUMN $colName $nullability NOT NULL")
             }
-            if (columnDiff.defaults) {
+            if (columnDiff.defaults && !isDefaultReplaced) {
                 column.dbDefaultValue?.let {
                     add("ALTER COLUMN $colName SET DEFAULT ${PostgreSQLDataTypeProvider.processForDefaultValue(it)}")
                 } ?: run {
@@ -494,6 +493,32 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
             list.addAll(setColumnComment(column, column.columnComment))
         }
         return list
+    }
+
+    /**
+     * Adds the parts of an `ALTER TABLE` statement that change the type of [column] to this list,
+     * and returns whether the default value of the column was also replaced by these parts.
+     */
+    @OptIn(InternalApi::class)
+    private fun MutableList<String>.addColumnTypeChange(column: Column<*>, columnDiff: ColumnDiff, colName: String): Boolean {
+        // SERIAL and BIGSERIAL are not real types, so the underlying integer type has to be used instead
+        val sqlType = (column.autoIncColumnType?.delegate ?: column.columnType).sqlType()
+
+        // Character types are excluded from an explicit cast, because it silently truncates values that are too long
+        if (!columnDiff.type || column.autoIncColumnType != null || PostgreSQLColumnTypes.isCharacterType(sqlType)) {
+            add("ALTER COLUMN $colName TYPE $sqlType")
+            return false
+        }
+
+        // Types without an implicit conversion need an explicit cast, and an existing default would block the cast.
+        // The column can only have a default in the database if one is defined or if the defaults differ.
+        val hasDefault = column.dbDefaultValue != null || columnDiff.defaults
+        if (hasDefault) add("ALTER COLUMN $colName DROP DEFAULT")
+        add("ALTER COLUMN $colName TYPE $sqlType USING $colName::$sqlType")
+        column.dbDefaultValue?.let {
+            add("ALTER COLUMN $colName SET DEFAULT ${PostgreSQLDataTypeProvider.processForDefaultValue(it)}")
+        }
+        return hasDefault
     }
 
     override fun createDatabase(name: String): String {
@@ -627,6 +652,11 @@ object PostgreSQLColumnTypes {
         "SMALLINT", "INT", "BIGINT", "REAL", "DOUBLE PRECISION", "DECIMAL", "CHAR", "VARCHAR", "TEXT", "BOOLEAN", "DATE", "TIME",
         "TIME WITH TIME ZONE", "TIMESTAMP", "TIMESTAMP WITH TIME ZONE", "JSON", "JSONB", "BYTEA", "UUID"
     )
+
+    private val characterTypeRegex = Regex("^(CHAR|CHARACTER|VARCHAR|CHARACTER VARYING|TEXT)\\b.*")
+
+    /** Returns whether [columnType] is a character type (or an array of one). */
+    fun isCharacterType(columnType: String): Boolean = characterTypeRegex.matches(columnType.trim().uppercase())
 
     private fun normalize(type: String): String {
         val upperCaseType = type.trim().uppercase()
