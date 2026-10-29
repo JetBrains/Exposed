@@ -653,6 +653,16 @@ object PostgreSQLColumnTypes {
         "TIME WITH TIME ZONE", "TIMESTAMP", "TIMESTAMP WITH TIME ZONE", "JSON", "JSONB", "BYTEA", "UUID"
     )
 
+    /**
+     * Returns a query for the full types of the columns of [tableName] whose size is not available in the standard metadata,
+     * like the dimensions of pgvector types, as rows of the column name and its type.
+     */
+    fun extendedColumnTypesQuery(tableName: String): String =
+        "SELECT a.attname, format_type(a.atttypid, a.atttypmod) FROM pg_catalog.pg_attribute a " +
+            "JOIN pg_catalog.pg_type t ON t.oid = a.atttypid " +
+            "WHERE a.attrelid = to_regclass('${tableName.replace("'", "''")}') AND a.attnum > 0 AND NOT a.attisdropped " +
+            "AND t.typname IN ('vector', 'halfvec', 'sparsevec')"
+
     private val characterTypeRegex = Regex("^(CHAR|CHARACTER|VARCHAR|CHARACTER VARYING|TEXT)\\b.*")
 
     /** Returns whether [columnType] is a character type (or an array of one). */

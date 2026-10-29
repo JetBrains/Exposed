@@ -4515,6 +4515,7 @@ public final class org/jetbrains/exposed/v1/core/vendors/OracleDialect$Companion
 public final class org/jetbrains/exposed/v1/core/vendors/PostgreSQLColumnTypes {
 	public static final field INSTANCE Lorg/jetbrains/exposed/v1/core/vendors/PostgreSQLColumnTypes;
 	public final fun areEquivalent (Ljava/lang/String;Ljava/lang/String;)Z
+	public final fun extendedColumnTypesQuery (Ljava/lang/String;)Ljava/lang/String;
 	public final fun fromMetadata (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Integer;)Ljava/lang/String;
 	public final fun isCharacterType (Ljava/lang/String;)Z
 }

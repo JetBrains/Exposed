@@ -697,4 +697,30 @@ class DatabaseMigrationTests : R2dbcDatabaseTestsBase() {
             assertEquals("abcdef", originalTable.selectAll().single()[originalTable.name])
         }
     }
+
+    @Test
+    fun testVectorDimensionChangeTriggersMigration() {
+        val originalTable = object : Table("vector_items") {
+            val embedding = vector("embedding", dimensions = 3)
+        }
+        val updatedTable = object : Table("vector_items") {
+            val embedding = vector("embedding", dimensions = 5)
+        }
+
+        withDb(TestDB.ALL_POSTGRES) {
+            try {
+                exec("CREATE EXTENSION IF NOT EXISTS vector;")
+                SchemaUtils.create(originalTable)
+                assertTrue(MigrationUtils.statementsRequiredForDatabaseMigration(originalTable, withLogs = false).isEmpty())
+
+                val statement = MigrationUtils.statementsRequiredForDatabaseMigration(updatedTable, withLogs = false).single()
+                assertTrue(statement.contains("TYPE VECTOR(5)"))
+                exec(statement)
+                assertTrue(MigrationUtils.statementsRequiredForDatabaseMigration(updatedTable, withLogs = false).isEmpty())
+            } finally {
+                SchemaUtils.drop(originalTable)
+                exec("DROP EXTENSION IF EXISTS vector CASCADE;")
+            }
+        }
+    }
 }

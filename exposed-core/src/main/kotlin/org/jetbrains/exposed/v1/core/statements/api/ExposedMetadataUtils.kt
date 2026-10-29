@@ -45,7 +45,9 @@ object ExposedMetadataUtils {
     }
 
     private fun getColumnType(result: RowApi, prefetchedColumnTypes: Map<String, String>): String {
-        if (currentDialect is PostgreSQLDialect) return getPostgreSQLColumnType(result)
+        if (currentDialect is PostgreSQLDialect) {
+            return prefetchedColumnTypes[result.getStringOrThrow("COLUMN_NAME")] ?: getPostgreSQLColumnType(result)
+        }
         if (currentDialect !is H2Dialect) return ""
 
         val columnName = result.getStringOrThrow("COLUMN_NAME")
