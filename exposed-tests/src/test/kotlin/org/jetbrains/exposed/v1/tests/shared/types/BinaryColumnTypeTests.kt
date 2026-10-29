@@ -7,7 +7,9 @@ import org.jetbrains.exposed.v1.exceptions.UnexpectedValueTypeException
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -15,6 +17,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
+@Tag(MISSING_R2DBC_TEST)
 class BinaryColumnTypeTests : DatabaseTestsBase() {
 
     /** Stands in for a decrypted value whose `toString()` would expose plaintext (EXPOSED-1012). */

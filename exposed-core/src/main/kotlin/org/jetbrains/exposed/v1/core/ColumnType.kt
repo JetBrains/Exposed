@@ -1902,7 +1902,7 @@ fun <T : Any> resolveVectorColumnType(
     )
 }
 
-private fun unexpectedValue(expected: String, value: Any): Nothing =
+internal fun unexpectedValue(expected: String, value: Any): Nothing =
     throw UnexpectedValueTypeException(
         "expected type: $expected, actual type: ${value::class.qualifiedName}"
     )
