@@ -203,6 +203,7 @@ internal class PostgreSQLMetadata : MetadataProvider(PostgreSQLPropertyProvider,
             typeProvider.appendDataPrecisions("c.DATA_TYPE", "COLUMN_SIZE", this)
             append(", ")
             append("c.NUMERIC_SCALE AS DECIMAL_DIGITS, ")
+            append("c.UDT_NAME AS TYPE_NAME, ")
             append("CASE WHEN c.IS_NULLABLE = 'YES' THEN 'TRUE' ELSE 'FALSE' END AS NULLABLE, ")
             append("c.COLUMN_DEFAULT AS COLUMN_DEF, c.ORDINAL_POSITION, ")
             append("CASE WHEN c.IS_IDENTITY = 'YES' OR c.COLUMN_DEFAULT LIKE 'nextval(%' THEN 'YES' ELSE 'NO' END AS IS_AUTOINCREMENT, ")

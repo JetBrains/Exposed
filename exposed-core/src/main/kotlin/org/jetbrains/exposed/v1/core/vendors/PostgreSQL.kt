@@ -424,6 +424,14 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
     override val supportsColumnTypeChange: Boolean = true
 
     @Deprecated(
+        "This method was moved to ExposedDatabaseMetadata and should not be used anymore from here.",
+        ReplaceWith("currentDialectMetadata.areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataJdbcType, columnType)")
+    )
+    @OptIn(InternalApi::class)
+    override fun areEquivalentColumnTypes(columnMetadataSqlType: String, columnMetadataJdbcType: Int, columnType: String): Boolean =
+        PostgreSQLColumnTypes.areEquivalent(columnMetadataSqlType, columnType)
+
+    @Deprecated(
         "The parameter was moved to JdbcExposedDatabaseMetadata/R2dbcExposedDatabaseMetadata classes",
         ReplaceWith("TransactionManager.current().db.supportsSelectForUpdate")
     )
@@ -538,4 +546,102 @@ open class PostgreSQLNGDialect : PostgreSQLDialect(dialectName) {
     override val requiresAutoCommitOnCreateDrop: Boolean = true
 
     companion object : DialectNameProvider("PostgreSQLNG")
+}
+
+/**
+ * Utility for comparing column types defined in Exposed with column types read from PostgreSQL database metadata.
+ *
+ * PostgreSQL reports column types using internal type names (for example, `int4`, `bpchar`, or `_varchar` for arrays),
+ * so these need to be converted to the same form that [PostgreSQLDataTypeProvider] uses before they can be compared.
+ */
+/** @suppress */
+@InternalApi
+object PostgreSQLColumnTypes {
+    private const val MAX_NUMERIC_PRECISION = 1000
+    private const val MAX_VARCHAR_LENGTH = 10_485_760
+
+    private val arrayDimensionsRegex = Regex("\\[\\d*]")
+    private val commaRegex = Regex("\\s*,\\s*")
+
+    /**
+     * Builds a column type string from the [typeName] (the `pg_type.typname` value) and the [size] and [scale]
+     * of a column, as reported by the database metadata.
+     */
+    fun fromMetadata(typeName: String, size: Int?, scale: Int?): String {
+        val isArray = typeName.startsWith("_")
+        val baseTypeName = typeName.removePrefix("_").lowercase()
+        val baseType = when (baseTypeName) {
+            "numeric" -> if (size != null && size in 1..MAX_NUMERIC_PRECISION) "DECIMAL($size, ${scale ?: 0})" else "DECIMAL"
+            "bpchar" -> if (size != null && size > 0) "CHAR($size)" else "CHAR"
+            "varchar" -> if (size != null && size in 1..MAX_VARCHAR_LENGTH) "VARCHAR($size)" else "VARCHAR"
+            else -> typeNames[baseTypeName] ?: baseTypeName
+        }
+        return if (isArray) "$baseType[]" else baseType
+    }
+
+    private val typeNames = mapOf(
+        "int2" to "SMALLINT",
+        "int4" to "INT",
+        "int8" to "BIGINT",
+        "float4" to "REAL",
+        "float8" to "DOUBLE PRECISION",
+        "text" to "TEXT",
+        "bool" to "BOOLEAN",
+        "date" to "DATE",
+        "time" to "TIME",
+        "timetz" to "TIME WITH TIME ZONE",
+        "timestamp" to "TIMESTAMP",
+        "timestamptz" to "TIMESTAMP WITH TIME ZONE",
+        "json" to "JSON",
+        "jsonb" to "JSONB",
+        "smallserial" to "SMALLSERIAL",
+        "serial" to "SERIAL",
+        "bigserial" to "BIGSERIAL"
+    )
+
+    /** Returns whether the [columnMetadataSqlType] built by [fromMetadata] is equivalent to the Exposed [columnType]. */
+    fun areEquivalent(columnMetadataSqlType: String, columnType: String): Boolean {
+        // Type information could not be retrieved, so there is nothing that can be reliably compared
+        if (columnMetadataSqlType.isBlank()) return true
+
+        val metadataType = normalize(columnMetadataSqlType)
+        val definedType = normalize(columnType)
+        if (metadataType == definedType) return true
+
+        val isArray = metadataType.endsWith("[]")
+        if (isArray != definedType.endsWith("[]")) return false
+
+        val hasMetadataTypeArguments = columnMetadataSqlType.contains("(")
+        val metadataBaseType = metadataType.substringBefore("(").removeSuffix("[]")
+        val definedBaseType = definedType.substringBefore("(").removeSuffix("[]")
+        return when {
+            // Metadata does not always report the size of array elements
+            isArray && !hasMetadataTypeArguments -> metadataBaseType == definedBaseType
+            // Types that are not known by this utility are reported only by name, so the type arguments cannot be compared
+            !hasMetadataTypeArguments && metadataBaseType !in knownTypes -> metadataBaseType == definedBaseType
+            else -> false
+        }
+    }
+
+    private val knownTypes = setOf(
+        "SMALLINT", "INT", "BIGINT", "REAL", "DOUBLE PRECISION", "DECIMAL", "CHAR", "VARCHAR", "TEXT", "BOOLEAN", "DATE", "TIME",
+        "TIME WITH TIME ZONE", "TIMESTAMP", "TIMESTAMP WITH TIME ZONE", "JSON", "JSONB", "BYTEA", "UUID"
+    )
+
+    private fun normalize(type: String): String {
+        val upperCaseType = type.trim().uppercase()
+            .replace(arrayDimensionsRegex, "[]")
+            .replace(commaRegex, ", ")
+            .replace("NUMERIC", "DECIMAL")
+        val isArray = upperCaseType.endsWith("[]")
+        val baseType = when (val base = upperCaseType.removeSuffix("[]")) {
+            // Auto-increment difference is dealt with elsewhere
+            "SMALLSERIAL" -> "SMALLINT"
+            "SERIAL" -> "INT"
+            "BIGSERIAL" -> "BIGINT"
+            "CHAR" -> "CHAR(1)"
+            else -> base
+        }
+        return if (isArray) "$baseType[]" else baseType
+    }
 }

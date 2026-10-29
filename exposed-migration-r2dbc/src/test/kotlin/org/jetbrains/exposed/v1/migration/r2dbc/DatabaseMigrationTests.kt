@@ -42,7 +42,7 @@ import org.jetbrains.exposed.v1.datetime.date as kotlinDatetimeDate
 import org.jetbrains.exposed.v1.javatime.date as javatimeDate
 
 class DatabaseMigrationTests : R2dbcDatabaseTestsBase() {
-    private val columnTypeChangeUnsupportedDb = TestDB.ALL - TestDB.ALL_H2_V2
+    private val columnTypeChangeUnsupportedDb = TestDB.ALL - TestDB.ALL_H2_V2 - TestDB.ALL_POSTGRES
 
     @OptIn(InternalApi::class)
     @Test
@@ -266,7 +266,7 @@ class DatabaseMigrationTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testNoColumnTypeChangeStatementsGeneratedForArrayColumnType() {
-        withTables(TestDB.ALL - setOf(TestDB.H2_V2, TestDB.H2_V2_PSQL), MigrationTestsData.ArraysTester) {
+        withTables(TestDB.ALL - setOf(TestDB.H2_V2, TestDB.H2_V2_PSQL, TestDB.POSTGRESQL), MigrationTestsData.ArraysTester) {
             val columnMetadata = connection().metadata {
                 requireNotNull(columns(MigrationTestsData.ArraysTester)[MigrationTestsData.ArraysTester])
             }.toSet().sortedBy { it.name.uppercase() }
@@ -285,7 +285,7 @@ class DatabaseMigrationTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testCorrectColumnTypeChangeStatementsGeneratedForArrayColumnType() {
-        withDb(excludeSettings = TestDB.ALL - setOf(TestDB.H2_V2, TestDB.H2_V2_PSQL)) {
+        withDb(excludeSettings = TestDB.ALL - setOf(TestDB.H2_V2, TestDB.H2_V2_PSQL, TestDB.POSTGRESQL)) {
             val columns = MigrationTestsData.ArraysTester.columns.sortedBy { it.name.uppercase() }
 
             columns.forEach { oldColumn ->

@@ -7,6 +7,8 @@ import org.jetbrains.exposed.v1.core.vendors.H2Dialect.H2CompatibilityMode
 import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.OracleDialect
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLColumnTypes
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.core.vendors.h2Mode
@@ -43,6 +45,7 @@ object ExposedMetadataUtils {
     }
 
     private fun getColumnType(result: RowApi, prefetchedColumnTypes: Map<String, String>): String {
+        if (currentDialect is PostgreSQLDialect) return getPostgreSQLColumnType(result)
         if (currentDialect !is H2Dialect) return ""
 
         val columnName = result.getStringOrThrow("COLUMN_NAME")
@@ -55,6 +58,13 @@ object ExposedMetadataUtils {
         } else {
             normalizedColumnType(columnType)
         }
+    }
+
+    private fun getPostgreSQLColumnType(result: RowApi): String {
+        val typeName = result.getObject("TYPE_NAME", java.lang.String::class.java)?.toString() ?: return ""
+        val size = result.getObject("COLUMN_SIZE")?.toString()?.toIntOrNull()
+        val scale = result.getObject("DECIMAL_DIGITS")?.toString()?.toIntOrNull()
+        return PostgreSQLColumnTypes.fromMetadata(typeName, size, scale)
     }
 
     /** Returns the normalized column type. */
