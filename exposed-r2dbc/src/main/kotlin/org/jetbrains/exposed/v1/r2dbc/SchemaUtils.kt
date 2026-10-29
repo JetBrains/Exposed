@@ -399,7 +399,7 @@ object SchemaUtils : SchemaUtilityApi() {
      * All code provided in _body_ closure will be executed only if there is no another code which running under "withDataBaseLock" at same time.
      * That means that concurrent execution of long-running tasks under "database lock" might lead to that only first of them will be really executed.
      */
-    suspend fun <T> R2dbcTransaction.withDataBaseLock(body: () -> T) {
+    suspend fun <T> R2dbcTransaction.withDataBaseLock(body: suspend () -> T) {
         val buzyTable = object : Table("busy") {
             val busy = bool("busy").uniqueIndex()
         }
