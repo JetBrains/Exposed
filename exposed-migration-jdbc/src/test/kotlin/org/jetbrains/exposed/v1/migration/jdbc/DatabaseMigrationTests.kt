@@ -354,21 +354,27 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
     @Test
     fun testChangingIdTableType() {
-        val intIdTable = object : IntIdTable("tester") {}
-        val uintIdTable = object : UIntIdTable("tester") {}
-        val longIdTable = object : LongIdTable("tester") {}
-        val ulongIdTable = object : ULongIdTable("tester") {}
-
-        val tables = listOf<IdTable<*>>(intIdTable, uintIdTable, longIdTable, ulongIdTable)
+        val tableFactories = listOf<(String) -> IdTable<*>>(
+            { object : IntIdTable(it) {} },
+            { object : UIntIdTable(it) {} },
+            { object : LongIdTable(it) {} },
+            { object : ULongIdTable(it) {} }
+        )
 
         withDb(excludeSettings = columnTypeChangeUnsupportedDb) {
-            tables.forEach { oldTable ->
-                for (newTable in tables) {
+            tableFactories.forEachIndexed { oldIndex, oldTableFactory ->
+                tableFactories.forEachIndexed { newIndex, newTableFactory ->
+                    // Each pair uses its own table name, because some drivers (like pgjdbc-ng) cache the plan of the same
+                    // INSERT statement, which fails with "cached plan must not change result type" after the id type changes
+                    val tableName = "tester_${oldIndex}_$newIndex"
+                    val oldTable = oldTableFactory(tableName)
+                    val newTable = newTableFactory(tableName)
+
                     val oldIdColumn = (oldTable.id.columnType as EntityIDColumnType<*>).idColumn
                     val newIdColumn = (newTable.id.columnType as EntityIDColumnType<*>).idColumn
 
                     if (oldIdColumn.columnType == newIdColumn.columnType) {
-                        continue
+                        return@forEachIndexed
                     }
 
                     withTables(oldTable) {
