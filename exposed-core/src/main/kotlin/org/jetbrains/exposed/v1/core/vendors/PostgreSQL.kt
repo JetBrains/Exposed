@@ -451,7 +451,9 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
                 add("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()}")
                 add("ALTER COLUMN $colName DROP DEFAULT")
             } else if (columnDiff.type || columnDiff.sizeAndScale) {
-                add("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()}")
+                // SERIAL and BIGSERIAL are not real types, so the underlying integer type has to be used instead
+                val columnType = column.autoIncColumnType?.delegate ?: column.columnType
+                add("ALTER COLUMN $colName TYPE ${columnType.sqlType()}")
             }
 
             if (columnDiff.nullability) {
