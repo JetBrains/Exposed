@@ -41,10 +41,11 @@ open class DeleteStatement(
         }
     }
 
+    @OptIn(InternalApi::class)
     override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> = QueryBuilder(true).run {
         if (targetsSet is Join) {
             targetsSet.joinParts.forEach {
-                (it.joinPart as? QueryAlias)?.query?.prepareSQL(this)
+                (it.joinPart as? QueryAlias)?.query?.prepareAsSubquerySQL(this)
                 it.additionalConstraint?.invoke()?.toQueryBuilder(this)
             }
         }

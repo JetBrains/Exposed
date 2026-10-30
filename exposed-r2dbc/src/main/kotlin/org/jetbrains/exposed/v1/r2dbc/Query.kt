@@ -33,9 +33,24 @@ open class Query(
     protected val transaction: R2dbcTransaction
         get() = TransactionManager.current()
 
-    /** Creates a new [Query] instance using all stored properties of this `SELECT` query. */
+    /**
+     * Creates a new [Query] instance using all stored properties of this `SELECT` query.
+     *
+     * Subclasses used as common table expression definitions must override this function and return the same runtime
+     * subtype so their behavior is preserved when the query is snapshotted.
+     */
     override fun copy(): Query = Query(set, where).also { copy ->
         copyTo(copy)
+    }
+
+    @InternalApi
+    override fun snapshotForCte(): AbstractQuery<*> {
+        val snapshot = copy()
+        check(snapshot::class == this::class) {
+            "${this::class.simpleName ?: "Query subclass"}.copy() must preserve its subtype before it can be used as a " +
+                "CTE definition"
+        }
+        return snapshot
     }
 
     override fun forUpdate(option: ForUpdateOption): Query {
@@ -232,31 +247,35 @@ open class Query(
      *
      * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.InsertSelectTests.testInsertSelect02
      */
+    @OptIn(InternalApi::class)
     override suspend fun count(): Long {
         return if (distinct || distinctOn != null || groupedByColumns.isNotEmpty() || limit != null || offset > 0) {
-            @OptIn(InternalApi::class)
             fun Column<*>.makeAlias() =
                 alias(transaction.db.identifierManager.quoteIfNecessary("${table.tableNameWithoutSchemeSanitized}_$name"))
 
-            val originalSet = set
-            try {
-                var expInx = 0
-                adjustSelect {
-                    select(
-                        originalSet.fields.map {
-                            when (it) {
-                                is IExpressionAlias<*> -> it
-                                is Column<*> -> it.makeAlias()
-                                is ExpressionWithColumnType<*> -> it.alias("exp${expInx++}")
-                                else -> it.alias("exp${expInx++}")
+            withCommonTableExpressionsDetachedSuspending { originalCtes ->
+                val originalSet = set
+                try {
+                    var expInx = 0
+                    adjustSelect {
+                        select(
+                            originalSet.fields.map {
+                                when (it) {
+                                    is IExpressionAlias<*> -> it
+                                    is Column<*> -> it.makeAlias()
+                                    is ExpressionWithColumnType<*> -> it.alias("exp${expInx++}")
+                                    else -> it.alias("exp${expInx++}")
+                                }
                             }
-                        }
-                    )
-                }
+                        )
+                    }
 
-                alias("subquery").selectAll().count()
-            } finally {
-                set = originalSet
+                    alias("subquery").selectAll().also { countQuery ->
+                        originalCtes.forEach { countQuery.withCtes(it) }
+                    }.count()
+                } finally {
+                    set = originalSet
+                }
             }
         } else {
             try {

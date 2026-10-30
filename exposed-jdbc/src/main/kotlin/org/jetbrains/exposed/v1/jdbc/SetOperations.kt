@@ -29,6 +29,14 @@ sealed class SetOperation(
     BlockingExecutable<ResultApi, SetOperation>,
     SizedIterable<ResultRow> {
 
+    @OptIn(InternalApi::class)
+    private var generatedCteFieldIndexes: Set<Int> = _firstStatement.set.realFields.mapIndexedNotNull { index, expression ->
+        index.takeIf {
+            _firstStatement.isGeneratedCteField(index) ||
+                expression !is Column<*> && expression !is IExpressionAlias<*> && expression !is CastToJson<*>
+        }
+    }.toSet()
+
     override val statement: SetOperation = this
 
     protected val transaction: JdbcTransaction
@@ -70,6 +78,28 @@ sealed class SetOperation(
     /** The SQL keyword representing the set operation. */
     open val operationName = operationName
 
+    override fun copyTo(other: SetOperation) {
+        super.copyTo(other)
+        other.generatedCteFieldIndexes = generatedCteFieldIndexes.toSet()
+    }
+
+    @InternalApi
+    override fun snapshotForCte(): AbstractQuery<*> {
+        val firstSnapshot = firstStatement.snapshotForCte()
+        val secondSnapshot = secondStatement.snapshotForCte()
+        val snapshot = when (this) {
+            is Union -> Union(firstSnapshot, secondSnapshot)
+            is UnionAll -> UnionAll(firstSnapshot, secondSnapshot)
+            is Intersect -> Intersect(firstSnapshot, secondSnapshot)
+            is Except -> Except(firstSnapshot, secondSnapshot)
+        }
+        copyTo(snapshot)
+        return snapshot
+    }
+
+    @InternalApi
+    override fun isGeneratedCteField(index: Int): Boolean = index in generatedCteFieldIndexes
+
     /** Returns the number of results retrieved after query execution. */
     override fun count(): Long {
         try {
@@ -101,8 +131,10 @@ sealed class SetOperation(
         transaction: JdbcTransaction
     ): JdbcResult = executeQuery()
 
+    @OptIn(InternalApi::class)
     override fun prepareSQL(builder: QueryBuilder): String {
         builder {
+            if (hasCommonTableExpressions()) appendStatementPreamble(this)
             if (count) append("SELECT COUNT(*) FROM (")
 
             prepareStatementSQL(this)
@@ -124,6 +156,7 @@ sealed class SetOperation(
         return builder.toString()
     }
 
+    @OptIn(InternalApi::class)
     protected open fun prepareStatementSQL(builder: QueryBuilder) {
         builder {
             rawStatements.appendTo(separator = " $operationName ") {
@@ -131,10 +164,10 @@ sealed class SetOperation(
                     is Query -> {
                         val isSubQuery = it.orderByExpressions.isNotEmpty() || it.limit != null
                         if (isSubQuery) append("(")
-                        it.prepareSQL(this)
+                        it.prepareAsSubquerySQL(this)
                         if (isSubQuery) append(")")
                     }
-                    is SetOperation -> it.prepareSQL(this)
+                    is SetOperation -> it.prepareAsSubquerySQL(this)
                 }
             }
         }
@@ -223,7 +256,9 @@ class UnionAll(
 
     override fun withDistinct(value: Boolean): SetOperation {
         return if (value) {
-            Union(firstStatement, secondStatement)
+            Union(firstStatement, secondStatement).also {
+                copyTo(it)
+            }
         } else {
             this
         }
@@ -268,7 +303,7 @@ class Except(
             else -> "EXCEPT"
         }
 
-    override fun copy() = Intersect(firstStatement, secondStatement).also {
+    override fun copy() = Except(firstStatement, secondStatement).also {
         copyTo(it)
     }
 

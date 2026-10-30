@@ -31,8 +31,9 @@ class AllAnyFromSubQueryOp<T>(
     isAny: Boolean,
     subQuery: AbstractQuery<*>
 ) : AllAnyFromBaseOp<T, AbstractQuery<*>>(isAny, subQuery) {
+    @OptIn(InternalApi::class)
     override fun QueryBuilder.registerSubSearchArgument(subSearch: AbstractQuery<*>) {
-        subSearch.prepareSQL(this)
+        subSearch.prepareAsSubquerySQL(this)
     }
 }
 
