@@ -2,6 +2,7 @@ package org.example
 
 import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -34,7 +35,7 @@ fun main() {
 }
 
 fun openTransactionWithParams(db: Database) {
-    transaction(Connection.TRANSACTION_SERIALIZABLE, true, db = db) {
+    transaction(db = db, transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, readOnly = true) {
         // DSL/DAO operations go here
         addLogger(StdOutSqlLogger)
     }

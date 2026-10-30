@@ -5,6 +5,7 @@ package org.example
 import io.r2dbc.spi.IsolationLevel
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.StdOutSqlLogger
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
