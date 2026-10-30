@@ -14,6 +14,8 @@ import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.dml.DMLTestsData
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
+import java.sql.Connection
+import java.sql.DriverManager
 import java.sql.SQLException
 import kotlin.test.assertContains
 import kotlin.test.assertNotEquals
@@ -198,6 +200,54 @@ class NestedTransactionsTest : DatabaseTestsBase() {
 
         transaction(db) {
             SchemaUtils.drop(DMLTestsData.Cities)
+        }
+    }
+
+    @Test
+    fun testNestedTransactionSetsSavepointOnlyWhenConnectionIsUsed() {
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+
+        var connectionsOpened = 0
+        val countingDb = Database.connect(
+            getNewConnection = {
+                connectionsOpened++
+                DriverManager.getConnection("jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;", "root", "")
+            },
+            databaseConfig = DatabaseConfig {
+                useNestedTransactions = true
+                // avoids resolving the default isolation level through a metadata connection
+                defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
+            }
+        )
+
+        transaction(countingDb) {
+            transaction {
+                rollback()
+            }
+            assertEquals(0, connectionsOpened)
+
+            transaction {
+                connection
+            }
+            assertEquals(1, connectionsOpened)
+        }
+    }
+
+    @Test
+    fun testRollbackOfIdleNestedTransactionUndoesItsInnerTransaction() {
+        withTables(DMLTestsData.Cities, configure = { useNestedTransactions = true }) {
+            DMLTestsData.Cities.insert { it[name] = "city1" }
+
+            transaction {
+                // runs no statements itself, so its savepoint is set only when the inner transaction needs the connection
+                transaction {
+                    DMLTestsData.Cities.insert { it[name] = "city2" }
+                }
+                assertEqualLists(listOf("city1", "city2"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
+                rollback()
+            }
+
+            assertEqualLists(listOf("city1"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
         }
     }
 

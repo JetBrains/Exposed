@@ -209,7 +209,11 @@ class TransactionManager(
     ) : JdbcTransactionInterface {
 
         private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) {
-            outerTransaction?.connection ?: db.connector().apply {
+            outerTransaction?.connection?.also {
+                if (useSavePoints) {
+                    savepoint = it.setSavepoint(savepointName)
+                }
+            } ?: db.connector().apply {
                 @Suppress("TooGenericExceptionCaught")
                 try {
                     setupTxConnection?.invoke(this, this@ThreadLocalTransaction) ?: run {
@@ -247,7 +251,7 @@ class TransactionManager(
             get() = connectionLazy.value
 
         private val useSavePoints = outerTransaction != null && db.useNestedTransactions
-        private var savepoint: ExposedSavepoint? = if (useSavePoints) connection.setSavepoint(savepointName) else null
+        private var savepoint: ExposedSavepoint? = null
 
         override fun commit() {
             if (connectionLazy.isInitialized()) {
