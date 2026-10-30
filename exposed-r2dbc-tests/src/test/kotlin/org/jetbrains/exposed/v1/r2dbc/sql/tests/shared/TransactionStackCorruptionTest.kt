@@ -40,7 +40,7 @@ class TransactionStackCorruptionTest : R2dbcDatabaseTestsBase() {
             maxStackSize.updateAndGet { current -> maxOf(current, size) }
 
             // Check for duplicates: if the same suspendTransaction appears multiple times
-            val suspendTransactionIds = ts.getTransactionsAsIds()
+            val suspendTransactionIds = ts.snapshot().map { it.transactionId }
             if (suspendTransactionIds.size != suspendTransactionIds.distinct().size) {
                 hasDuplicates.incrementAndGet()
             }
