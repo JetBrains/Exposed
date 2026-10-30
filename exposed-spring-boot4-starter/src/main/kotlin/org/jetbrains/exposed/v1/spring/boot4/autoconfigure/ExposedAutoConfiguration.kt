@@ -6,15 +6,20 @@ import org.jetbrains.exposed.v1.spring7.transaction.ExposedSpringTransactionAttr
 import org.jetbrains.exposed.v1.spring7.transaction.SpringTransactionManager
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.beans.factory.config.BeanDefinition
+import org.springframework.boot.ApplicationArguments
+import org.springframework.boot.DefaultApplicationArguments
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
+import org.springframework.boot.sql.init.dependency.DatabaseInitializationDependencyConfigurer
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Primary
 import org.springframework.context.annotation.Role
 import org.springframework.transaction.annotation.EnableTransactionManagement
+import org.springframework.transaction.support.TransactionTemplate
 import javax.sql.DataSource
 
 /**
@@ -29,11 +34,16 @@ import javax.sql.DataSource
  * required values in a separate `@EnableTransactionManagement` on the main configuration class or in a configuration
  * file using `spring.aop.proxy-target-class`.
  *
+ * [DatabaseInitializationDependencyConfigurer] is imported explicitly so that [ExposedDatabaseInitializerDetector]
+ * is applied even when no other auto-configuration that imports it (JdbcTemplate, SQL script initialization,
+ * Flyway, Liquibase) is active.
+ *
  * @property applicationContext The Spring ApplicationContext container responsible for managing beans.
  */
 @AutoConfiguration(after = [DataSourceAutoConfiguration::class])
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 @EnableTransactionManagement
+@Import(DatabaseInitializationDependencyConfigurer::class)
 open class ExposedAutoConfiguration(private val applicationContext: ApplicationContext) {
 
     @Value($$"${spring.exposed.excluded-packages:}#{T(java.util.Collections).emptyList()}")
@@ -45,12 +55,21 @@ open class ExposedAutoConfiguration(private val applicationContext: ApplicationC
     /**
      * Returns a [SpringTransactionManager] instance using the specified [datasource] and [databaseConfig].
      *
+     * Before the instance is returned, every [DatabaseInitializer] bean in the context is executed inside a
+     * transaction, in `Ordered` order, so that the schema exists before any bean can obtain the transaction manager.
+     *
      * To enable logging of all transaction queries by the SpringTransactionManager instance, set the property
      * `spring.exposed.show-sql` to `true` in the application.properties file.
      */
     @Bean
     open fun springTransactionManager(datasource: DataSource, databaseConfig: DatabaseConfig): SpringTransactionManager {
-        return SpringTransactionManager(datasource, databaseConfig, showSql)
+        val transactionManager = SpringTransactionManager(datasource, databaseConfig, showSql)
+        val args = applicationContext.getBeanProvider(ApplicationArguments::class.java)
+            .getIfAvailable { DefaultApplicationArguments() }
+        applicationContext.getBeanProvider(DatabaseInitializer::class.java).orderedStream().forEach { initializer ->
+            TransactionTemplate(transactionManager).execute { initializer.run(args) }
+        }
+        return transactionManager
     }
 
     /**
@@ -68,6 +87,9 @@ open class ExposedAutoConfiguration(private val applicationContext: ApplicationC
      *
      * The property `spring.exposed.excluded-packages` can be used to ensure that tables in specified packages are
      * not auto-created.
+     *
+     * The initializer is executed while the [springTransactionManager] bean is created, so the schema is available
+     * to every bean that uses Exposed through Spring, including during their own initialization.
      */
     @Bean
     @ConditionalOnProperty("spring.exposed.generate-ddl", havingValue = "true", matchIfMissing = false)
