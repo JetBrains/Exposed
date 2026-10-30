@@ -58,13 +58,6 @@ class ResultRow private constructor(
                 }
                 EntityID(resultID, column.table) as T
             }
-            column?.isJsonBColumnForCasting() == true -> try {
-                val castExpression = CastToJson(column, column.columnType)
-                getInternal(castExpression, checkNullability = true) as T
-            } catch (_: IllegalStateException) {
-                // DAO may cache an entity after insert with only its column field values cached
-                getInternal(expression, checkNullability = true)
-            }
             else -> getInternal(expression, checkNullability = true)
         }
     }
