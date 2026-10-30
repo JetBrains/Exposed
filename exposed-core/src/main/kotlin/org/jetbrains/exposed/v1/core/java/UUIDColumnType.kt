@@ -3,6 +3,7 @@ package org.jetbrains.exposed.v1.core.java
 import org.jetbrains.exposed.v1.core.BasicUuidColumnType
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.unexpectedValue
 import org.jetbrains.exposed.v1.core.vendors.RedshiftDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialectIfAvailable
 import java.nio.ByteBuffer
@@ -23,7 +24,7 @@ class UUIDColumnType : BasicUuidColumnType<UUID>() {
                 ?: error("Amazon Redshift UUID columns require dashed or undashed hexadecimal text: $value")
         is String -> ByteBuffer.wrap(value.toByteArray()).let { b -> UUID(b.long, b.long) }
         is ByteBuffer -> value.let { b -> UUID(b.long, b.long) }
-        else -> error("Unexpected value of type UUID: $value of ${value::class.qualifiedName}")
+        else -> unexpectedValue("UUID", value)
     }
 
     override fun notNullValueToDB(value: UUID): Any {
