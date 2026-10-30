@@ -70,8 +70,8 @@ gradle init
 
 When prompted, select the following options:
 
-- `1: Application` project type.
-- `2: Kotlin` implementation language.
+* `1: Application` project type.
+* `2: Kotlin` implementation language.
 
 For the other questions, press enter to use the default values.
 The output will look like the following:
@@ -247,12 +247,12 @@ one from the class name, which might lead to unexpected results.
 
 Within the `Tasks` object, the following columns are defined:
 
-- `id` of type `Int` is defined with the `integer()` function.
+* `id` of type `Int` is defined with the `integer()` function.
   The `autoIncrement()` function indicates that this column is
   an auto-incrementing integer, typically used for primary keys.
-- `title` and `description` of type `String` are defined
+* `title` and `description` of type `String` are defined
   with the `varchar()` function.
-- `isCompleted` of type `Boolean` is defined with the
+* `isCompleted` of type `Boolean` is defined with the
   `bool()` function. Using the `default()` function, you configure the
   default value to `false`.
 
