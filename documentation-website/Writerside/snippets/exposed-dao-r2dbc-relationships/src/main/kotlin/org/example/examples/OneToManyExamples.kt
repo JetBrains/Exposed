@@ -22,8 +22,8 @@ class OneToManyExamples {
 
         val filmRating = UserRatingEntity.new {
             value = MOVIE_RATING
-            film = starWarsFilm
-            user = user1
+            film.set(starWarsFilm)
+            user.set(user1)
         }
 
         // returns a StarWarsFilmEntity object
