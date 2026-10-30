@@ -18,6 +18,7 @@
         <feedback-widget>true</feedback-widget>
         <primary-color>iris</primary-color>
     </variables>
+    <llms-txt>true</llms-txt>
     <build-profile instance="hi">
         <variables>
             <noindex-content>true</noindex-content>
