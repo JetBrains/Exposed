@@ -103,9 +103,9 @@ class EntityLifecycleInterceptor : GlobalSuspendStatementInterceptor {
     }
 
     override suspend fun beforeCommit(transaction: R2dbcTransaction) {
-        transaction.flushCache()
+        val _ = transaction.flushCache()
         transaction.alertSubscribers()
-        transaction.flushCache()
+        val _ = transaction.flushCache()
 
         // EXPOSED-1067: call `EntityCache.invalidateGlobalCaches(created + createdByHooks)`
         //  once `ImmutableCachedEntityClass` exists in R2DBC.

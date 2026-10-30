@@ -3,6 +3,7 @@ import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.exposed.gradle.configureDetekt
 import org.jetbrains.exposed.gradle.configureMavenCentralMetadata
 import org.jetbrains.exposed.gradle.testDb
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 plugins {
     kotlin("jvm") apply true
@@ -115,6 +116,22 @@ subprojects {
     tasks.withType<Detekt>().configureEach {
         // Detekt's bundled parser can't handle context parameter syntax (context(_: X)).
         exclude("**/MavenProjectGeneration.kt")
+    }
+
+    tasks.withType<KotlinCompilationTask<*>>().configureEach {
+        // Marks all declarations of published modules as must-use-return-value, so downstream projects
+        // that enable the unused return value checker (Kotlin 2.3+) also get it checked for Exposed's API.
+        // Test modules are excluded as they are not published.
+        if (
+            project.name != "exposed-tests" &&
+            project.name != "exposed-r2dbc-tests" &&
+            project.name != "exposed-jdbc-r2dbc-tests" &&
+            project.name != "exposed-dao-r2dbc-tests"
+        ) {
+            compilerOptions {
+                freeCompilerArgs.add("-Xreturn-value-checker=full")
+            }
+        }
     }
 }
 

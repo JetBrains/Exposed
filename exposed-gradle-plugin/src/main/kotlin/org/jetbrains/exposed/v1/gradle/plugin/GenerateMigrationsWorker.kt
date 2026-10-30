@@ -34,7 +34,7 @@ abstract class GenerateMigrationsWorker : WorkAction<GenerateMigrationsParameter
                 override val isDebugEnabled: Boolean = params.debug
             },
         )
-        migrationGenerator.generate()
+        val _ = migrationGenerator.generate()
     }
 
     private fun GenerateMigrationsParameters.toMigrationConfig(): MigrationConfig {

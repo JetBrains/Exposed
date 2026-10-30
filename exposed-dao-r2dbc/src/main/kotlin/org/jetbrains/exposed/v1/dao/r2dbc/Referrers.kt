@@ -54,7 +54,7 @@ class Referrers<ParentID : Any, in Parent : Entity<ParentID>, ChildID : Any, out
      * `Referrers.allReferences`.
      */
     val allReferences: Map<Column<*>, Column<*>> = references ?: run {
-        reference.referee ?: error("Column $reference is not a reference")
+        val _ = reference.referee ?: error("Column $reference is not a reference")
         if (factory.table != reference.table) {
             error("Column $reference and factory ${factory.table.tableName} point to different tables")
         }

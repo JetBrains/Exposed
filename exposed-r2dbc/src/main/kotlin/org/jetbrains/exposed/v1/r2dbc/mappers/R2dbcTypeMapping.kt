@@ -78,10 +78,10 @@ interface R2dbcRegistryTypeMapping : R2dbcTypeMapping {
 
             // If service loader found mappers, use them
             if (serviceLoaderMappers.isNotEmpty()) {
-                serviceLoaderMappers.forEach { registry.register(it) }
+                serviceLoaderMappers.forEach { val _ = registry.register(it) }
             } else {
                 // Fallback to hardcoded defaults
-                registry.register(ExposedColumnTypeMapper())
+                val _ = registry.register(ExposedColumnTypeMapper())
                     .register(PrimitiveTypeMapper())
                     .register(DateTimeTypeMapper())
                     .register(BinaryTypeMapper())

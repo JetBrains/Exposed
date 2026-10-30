@@ -95,7 +95,7 @@ open class R2dbcTransaction(
 
     init {
         defaultLogger = addLogger(db.config.sqlLogger)
-        globalInterceptors // init interceptors
+        val _ = globalInterceptors // init interceptors
     }
 
     override suspend fun commit() {
@@ -325,7 +325,7 @@ open class R2dbcTransaction(
 
     final override fun addLogger(vararg logger: SqlLogger): CompositeSqlLogger {
         return super.addLogger(*logger).apply {
-            registerInterceptor(this)
+            val _ = registerInterceptor(this)
         }
     }
 

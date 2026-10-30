@@ -333,7 +333,7 @@ class EntityCache(private val transaction: R2dbcTransaction) {
             }
         }
 
-        executeAsPartOfEntityLifecycle {
+        val _ = executeAsPartOfEntityLifecycle {
             batch.execute(transaction)
         }
 

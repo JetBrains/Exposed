@@ -76,7 +76,7 @@ class SpringTransactionManager(
             // unbind Spring JDBC connection reference
             connectionHolder = TransactionSynchronizationManager.unbindResource(dataSource) as ConnectionHolder,
         ).apply {
-            TransactionsHolderProvider.holder.removeTransaction()
+            val _ = TransactionsHolderProvider.holder.removeTransaction()
             trxObject.connectionHolder = null
         }
     }
@@ -123,7 +123,7 @@ class SpringTransactionManager(
             }
 
             if (showSql) {
-                addLogger(StdOutSqlLogger)
+                val _ = addLogger(StdOutSqlLogger)
             }
         }
 
@@ -170,7 +170,7 @@ class SpringTransactionManager(
             closeStatementsAndConnections(it)
         }
         @OptIn(InternalApi::class)
-        TransactionsHolderProvider.holder.removeTransaction()
+        val _ = TransactionsHolderProvider.holder.removeTransaction()
 
         // Clean up Spring JDBC
         if (trxObject.isNewConnectionHolder) {
