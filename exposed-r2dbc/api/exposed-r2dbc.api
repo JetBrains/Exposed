@@ -391,7 +391,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/SchemaUtils : org/jetbrains/ex
 	public final fun sortTablesByReferences (Ljava/lang/Iterable;)Ljava/util/List;
 	public final fun statementsRequiredToActualizeScheme ([Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun statementsRequiredToActualizeScheme$default (Lorg/jetbrains/exposed/v1/r2dbc/SchemaUtils;[Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public final fun withDataBaseLock (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/jvm/functions/Function0;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun withDataBaseLock (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public abstract class org/jetbrains/exposed/v1/r2dbc/SetOperation : org/jetbrains/exposed/v1/core/AbstractQuery, org/jetbrains/exposed/v1/r2dbc/SizedIterable, org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable {
