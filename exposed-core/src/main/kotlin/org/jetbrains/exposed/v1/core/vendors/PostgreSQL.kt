@@ -421,6 +421,16 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
 
     override val supportsWindowFrameGroupsMode: Boolean = true
 
+    override val supportsColumnTypeChange: Boolean = true
+
+    @Deprecated(
+        "This method was moved to ExposedDatabaseMetadata and should not be used anymore from here.",
+        ReplaceWith("currentDialectMetadata.areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataJdbcType, columnType)")
+    )
+    @OptIn(InternalApi::class)
+    override fun areEquivalentColumnTypes(columnMetadataSqlType: String, columnMetadataJdbcType: Int, columnType: String): Boolean =
+        PostgreSQLColumnTypes.areEquivalent(columnMetadataSqlType, columnType)
+
     @Deprecated(
         "The parameter was moved to JdbcExposedDatabaseMetadata/R2dbcExposedDatabaseMetadata classes",
         ReplaceWith("TransactionManager.current().db.supportsSelectForUpdate")
@@ -429,10 +439,11 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
+    @OptIn(InternalApi::class)
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> {
-        @OptIn(InternalApi::class)
         val transaction = currentTransaction()
         val colName = transaction.identity(column)
+        var isDefaultReplaced = false
         val alterColumnParts = buildList {
             if (columnDiff.autoInc && column.autoIncColumnType != null) {
                 val sequence = column.autoIncColumnType?.sequence
@@ -449,14 +460,14 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
                 add("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()}")
                 add("ALTER COLUMN $colName DROP DEFAULT")
             } else if (columnDiff.type || columnDiff.sizeAndScale) {
-                add("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()}")
+                isDefaultReplaced = addColumnTypeChange(column, columnDiff, colName)
             }
 
             if (columnDiff.nullability) {
                 val nullability = if (column.columnType.nullable) "DROP" else "SET"
                 add("ALTER COLUMN $colName $nullability NOT NULL")
             }
-            if (columnDiff.defaults) {
+            if (columnDiff.defaults && !isDefaultReplaced) {
                 column.dbDefaultValue?.let {
                     add("ALTER COLUMN $colName SET DEFAULT ${PostgreSQLDataTypeProvider.processForDefaultValue(it)}")
                 } ?: run {
@@ -482,6 +493,32 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
             list.addAll(setColumnComment(column, column.columnComment))
         }
         return list
+    }
+
+    /**
+     * Adds the parts of an `ALTER TABLE` statement that change the type of [column] to this list,
+     * and returns whether the default value of the column was also replaced by these parts.
+     */
+    @OptIn(InternalApi::class)
+    private fun MutableList<String>.addColumnTypeChange(column: Column<*>, columnDiff: ColumnDiff, colName: String): Boolean {
+        // SERIAL and BIGSERIAL are not real types, so the underlying integer type has to be used instead
+        val sqlType = (column.autoIncColumnType?.delegate ?: column.columnType).sqlType()
+
+        // Character types are excluded from an explicit cast, because it silently truncates values that are too long
+        if (!columnDiff.type || column.autoIncColumnType != null || PostgreSQLColumnTypes.isCharacterType(sqlType)) {
+            add("ALTER COLUMN $colName TYPE $sqlType")
+            return false
+        }
+
+        // Types without an implicit conversion need an explicit cast, and an existing default would block the cast.
+        // The column can only have a default in the database if one is defined or if the defaults differ.
+        val hasDefault = column.dbDefaultValue != null || columnDiff.defaults
+        if (hasDefault) add("ALTER COLUMN $colName DROP DEFAULT")
+        add("ALTER COLUMN $colName TYPE $sqlType USING $colName::$sqlType")
+        column.dbDefaultValue?.let {
+            add("ALTER COLUMN $colName SET DEFAULT ${PostgreSQLDataTypeProvider.processForDefaultValue(it)}")
+        }
+        return hasDefault
     }
 
     override fun createDatabase(name: String): String {
@@ -534,4 +571,117 @@ open class PostgreSQLNGDialect : PostgreSQLDialect(dialectName) {
     override val requiresAutoCommitOnCreateDrop: Boolean = true
 
     companion object : DialectNameProvider("PostgreSQLNG")
+}
+
+/**
+ * Utility for comparing column types defined in Exposed with column types read from PostgreSQL database metadata.
+ *
+ * PostgreSQL reports column types using internal type names (for example, `int4`, `bpchar`, or `_varchar` for arrays),
+ * so these need to be converted to the same form that [PostgreSQLDataTypeProvider] uses before they can be compared.
+ */
+/** @suppress */
+@InternalApi
+object PostgreSQLColumnTypes {
+    private const val MAX_NUMERIC_PRECISION = 1000
+    private const val MAX_VARCHAR_LENGTH = 10_485_760
+
+    private val arrayDimensionsRegex = Regex("\\[\\d*]")
+    private val commaRegex = Regex("\\s*,\\s*")
+
+    /**
+     * Builds a column type string from the [typeName] (the `pg_type.typname` value) and the [size] and [scale]
+     * of a column, as reported by the database metadata.
+     */
+    fun fromMetadata(typeName: String, size: Int?, scale: Int?): String {
+        val isArray = typeName.startsWith("_")
+        val baseTypeName = typeName.removePrefix("_").lowercase()
+        val baseType = when (baseTypeName) {
+            "numeric" -> if (size != null && size in 1..MAX_NUMERIC_PRECISION) "DECIMAL($size, ${scale ?: 0})" else "DECIMAL"
+            "bpchar" -> if (size != null && size > 0) "CHAR($size)" else "CHAR"
+            "varchar" -> if (size != null && size in 1..MAX_VARCHAR_LENGTH) "VARCHAR($size)" else "VARCHAR"
+            else -> typeNames[baseTypeName] ?: baseTypeName
+        }
+        return if (isArray) "$baseType[]" else baseType
+    }
+
+    private val typeNames = mapOf(
+        "int2" to "SMALLINT",
+        "int4" to "INT",
+        "int8" to "BIGINT",
+        "float4" to "REAL",
+        "float8" to "DOUBLE PRECISION",
+        "text" to "TEXT",
+        "bool" to "BOOLEAN",
+        "date" to "DATE",
+        "time" to "TIME",
+        "timetz" to "TIME WITH TIME ZONE",
+        "timestamp" to "TIMESTAMP",
+        "timestamptz" to "TIMESTAMP WITH TIME ZONE",
+        "json" to "JSON",
+        "jsonb" to "JSONB",
+        "smallserial" to "SMALLSERIAL",
+        "serial" to "SERIAL",
+        "bigserial" to "BIGSERIAL"
+    )
+
+    /** Returns whether the [columnMetadataSqlType] built by [fromMetadata] is equivalent to the Exposed [columnType]. */
+    fun areEquivalent(columnMetadataSqlType: String, columnType: String): Boolean {
+        // Type information could not be retrieved, so there is nothing that can be reliably compared
+        if (columnMetadataSqlType.isBlank()) return true
+
+        val metadataType = normalize(columnMetadataSqlType)
+        val definedType = normalize(columnType)
+        if (metadataType == definedType) return true
+
+        val isArray = metadataType.endsWith("[]")
+        if (isArray != definedType.endsWith("[]")) return false
+
+        val hasMetadataTypeArguments = columnMetadataSqlType.contains("(")
+        val metadataBaseType = metadataType.substringBefore("(").removeSuffix("[]")
+        val definedBaseType = definedType.substringBefore("(").removeSuffix("[]")
+        return when {
+            // Metadata does not always report the size of array elements
+            isArray && !hasMetadataTypeArguments -> metadataBaseType == definedBaseType
+            // Types that are not known by this utility are reported only by name, so the type arguments cannot be compared
+            !hasMetadataTypeArguments && metadataBaseType !in knownTypes -> metadataBaseType == definedBaseType
+            else -> false
+        }
+    }
+
+    private val knownTypes = setOf(
+        "SMALLINT", "INT", "BIGINT", "REAL", "DOUBLE PRECISION", "DECIMAL", "CHAR", "VARCHAR", "TEXT", "BOOLEAN", "DATE", "TIME",
+        "TIME WITH TIME ZONE", "TIMESTAMP", "TIMESTAMP WITH TIME ZONE", "JSON", "JSONB", "BYTEA", "UUID"
+    )
+
+    /**
+     * Returns a query for the full types of the columns of [tableName] whose size is not available in the standard metadata,
+     * like the dimensions of pgvector types, as rows of the column name and its type.
+     */
+    fun extendedColumnTypesQuery(tableName: String): String =
+        "SELECT a.attname, format_type(a.atttypid, a.atttypmod) FROM pg_catalog.pg_attribute a " +
+            "JOIN pg_catalog.pg_type t ON t.oid = a.atttypid " +
+            "WHERE a.attrelid = to_regclass('${tableName.replace("'", "''")}') AND a.attnum > 0 AND NOT a.attisdropped " +
+            "AND t.typname IN ('vector', 'halfvec', 'sparsevec')"
+
+    private val characterTypeRegex = Regex("^(CHAR|CHARACTER|VARCHAR|CHARACTER VARYING|TEXT)\\b.*")
+
+    /** Returns whether [columnType] is a character type (or an array of one). */
+    fun isCharacterType(columnType: String): Boolean = characterTypeRegex.matches(columnType.trim().uppercase())
+
+    private fun normalize(type: String): String {
+        val upperCaseType = type.trim().uppercase()
+            .replace(arrayDimensionsRegex, "[]")
+            .replace(commaRegex, ", ")
+            .replace("NUMERIC", "DECIMAL")
+        val isArray = upperCaseType.endsWith("[]")
+        val baseType = when (val base = upperCaseType.removeSuffix("[]")) {
+            // Auto-increment difference is dealt with elsewhere
+            "SMALLSERIAL" -> "SMALLINT"
+            "SERIAL" -> "INT"
+            "BIGSERIAL" -> "BIGINT"
+            "CHAR" -> "CHAR(1)"
+            else -> base
+        }
+        return if (isArray) "$baseType[]" else baseType
+    }
 }
