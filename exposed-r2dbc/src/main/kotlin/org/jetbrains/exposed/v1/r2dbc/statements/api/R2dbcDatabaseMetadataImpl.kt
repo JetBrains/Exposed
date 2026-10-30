@@ -83,7 +83,7 @@ class R2dbcDatabaseMetadataImpl(
         // To use an identical url string, we would need to save/parse it to/from ConnectionFactoryOptions & pass to this class.
         // This is what is done for R2dbcDatabase.url, for example.
         // So far this is the only use for us storing ConnectionFactoryOptions details in this class, but perhaps if other cases arise?
-        identityManagerCache.getOrPut(database) { R2dbcIdentifierManager(metadataProvider, connectionData) }
+        identityManagerCache.getOrPut(database) { R2dbcIdentifierManager(metadataProvider, isOracle = connectionData.databaseProductName == "Oracle") }
     }
 
     private var currentSchema: String? = null
