@@ -11,9 +11,12 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.JdbcTransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
+import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.DataSourceStub
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.sql.Connection
 import java.sql.DriverManager
@@ -21,10 +24,11 @@ import java.sql.SQLException
 import java.sql.SQLTransientException
 import kotlin.test.*
 
+@Tag(NOT_APPLICABLE_TO_R2DBC)
 class DataSourceConnectionTest {
     @Test
     fun testTransactionSettingsDoNotAcquireExtraConnections() {
-        withDataSource { db, dataSource ->
+        withDataSource(decorate = { it.apply { transactionIsolation = Connection.TRANSACTION_SERIALIZABLE } }) { db, dataSource ->
             val empty = transaction(db) {
                 assertEquals(Connection.TRANSACTION_READ_COMMITTED, transactionIsolation)
                 assertFalse(readOnly)
@@ -34,8 +38,18 @@ class DataSourceConnectionTest {
             assertFalse(empty.readOnly)
             assertTrue(dataSource.connections.isEmpty())
 
+            transaction(db, transactionIsolation = Connection.TRANSACTION_REPEATABLE_READ, readOnly = true) {
+                assertEquals(Connection.TRANSACTION_REPEATABLE_READ, transactionIsolation)
+                assertTrue(readOnly)
+            }
+            assertTrue(dataSource.connections.isEmpty())
+
             transaction(db) {
-                assertEquals(Connection.TRANSACTION_READ_COMMITTED, connection.transactionIsolation)
+                assertEquals(Connection.TRANSACTION_SERIALIZABLE, connection.transactionIsolation)
+                assertEquals(Connection.TRANSACTION_SERIALIZABLE, transactionIsolation)
+                assertFalse(readOnly)
+                db.transactionManager.defaultIsolationLevel = Connection.TRANSACTION_REPEATABLE_READ
+                assertEquals(Connection.TRANSACTION_SERIALIZABLE, transactionIsolation)
             }
             assertEquals(1, dataSource.connections.size)
             assertTrue(dataSource.connections.single().isClosed)
@@ -119,9 +133,45 @@ class DataSourceConnectionTest {
                 }
             }
         }) { db, dataSource ->
-            transaction(db) { connection }
+            transaction(db, transactionIsolation = -1) { connection }
             assertEquals(1, managerCalls)
             assertEquals(1, dataSource.connections.size)
+        }
+    }
+
+    @Test
+    fun testUnspecifiedIsolationIsResolvedBeforeCustomConnectionSetup() {
+        withDataSource(manager = { db ->
+            TransactionManager(db) { connection, transaction ->
+                assertEquals(Connection.TRANSACTION_READ_COMMITTED, transaction.transactionIsolation)
+                connection.transactionIsolation = transaction.transactionIsolation
+                connection.autoCommit = false
+            }
+        }) { db, dataSource ->
+            transaction(db, transactionIsolation = -1) {
+                assertEquals(Connection.TRANSACTION_READ_COMMITTED, connection.transactionIsolation)
+            }
+            assertEquals(1, dataSource.connections.size)
+        }
+    }
+
+    @Test
+    fun testUnspecifiedIsolationIsResolvedWithoutDataSource() {
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        val db = Database.connect(
+            TestDB.H2_V2.connection(),
+            driver = TestDB.H2_V2.driver,
+            user = TestDB.H2_V2.user,
+            password = TestDB.H2_V2.pass,
+            databaseConfig = DatabaseConfig { explicitDialect = H2Dialect() }
+        )
+        try {
+            transaction(db, transactionIsolation = -1) {
+                assertEquals(Connection.TRANSACTION_READ_COMMITTED, transactionIsolation)
+                assertEquals(Connection.TRANSACTION_READ_COMMITTED, connection.transactionIsolation)
+            }
+        } finally {
+            TransactionManager.closeAndUnregister(db)
         }
     }
 

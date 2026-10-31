@@ -8,8 +8,6 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.DatabaseConfig
-import org.jetbrains.exposed.v1.core.DatabaseConfigImpl
-import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
@@ -26,6 +24,8 @@ import java.sql.Connection
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 @Tag(NOT_APPLICABLE_TO_R2DBC)
@@ -186,6 +186,11 @@ class DataSourceTransactionSettingsTest : LogDbInTestName() {
                 assertEquals("serializable", setting("transaction_isolation"))
                 assertEquals(Connection.TRANSACTION_SERIALIZABLE, db.transactionManager.defaultIsolationLevel)
             }
+            db.transactionManager.defaultIsolationLevel = -1
+            transaction(db) {
+                assertEquals("repeatable read", setting("transaction_isolation"))
+                assertEquals(Connection.TRANSACTION_REPEATABLE_READ, db.transactionManager.defaultIsolationLevel)
+            }
         }
     }
 
@@ -201,15 +206,101 @@ class DataSourceTransactionSettingsTest : LogDbInTestName() {
         }
     }
 
-    @OptIn(InternalApi::class)
     @Test
-    fun testCustomConfigurationReadOnlyOverrideIsPreserved() {
-        val config = object : DatabaseConfigImpl(DatabaseConfig.Builder()) {
-            override val defaultReadOnly: Boolean = true
-        }
-        withHikariDatabase(config) { db ->
+    fun testFirstPropertyReadReturnsSettingsResolvedDuringDialectDiscovery() {
+        withHikariDatabase(readOnly = true) { db ->
             transaction(db) {
-                assertEquals("on", setting("transaction_read_only"))
+                assertEquals(Connection.TRANSACTION_REPEATABLE_READ, transactionIsolation)
+                assertEquals(Connection.TRANSACTION_REPEATABLE_READ, connection.transactionIsolation)
+                assertTrue(readOnly)
+            }
+        }
+    }
+
+    @Test
+    fun testCurrentOrNewInheritsHikariSettingsBeforeAndAfterCaching() {
+        withHikariDatabase(readOnly = true) { db ->
+            repeat(2) {
+                val transaction = TransactionManager.currentOrNew()
+                try {
+                    assertEquals(Connection.TRANSACTION_REPEATABLE_READ, transaction.connection.transactionIsolation)
+                    assertTrue(transaction.connection.readOnly)
+                    assertEquals(Connection.TRANSACTION_REPEATABLE_READ, transaction.transactionIsolation)
+                    assertTrue(transaction.readOnly)
+                } finally {
+                    transaction.close()
+                }
+            }
+            assertEquals(Connection.TRANSACTION_REPEATABLE_READ, db.transactionManager.defaultIsolationLevel)
+            assertTrue(db.transactionManager.defaultReadOnly)
+        }
+    }
+
+    @Test
+    fun testCurrentOrNewPreservesExplicitIsolationAndReusesCurrentTransaction() {
+        withHikariDatabase(readOnly = true) { db ->
+            val transaction = TransactionManager.currentOrNew(Connection.TRANSACTION_SERIALIZABLE)
+            try {
+                assertEquals(Connection.TRANSACTION_SERIALIZABLE, transaction.connection.transactionIsolation)
+                assertEquals(Connection.TRANSACTION_SERIALIZABLE, transaction.transactionIsolation)
+                assertTrue(transaction.connection.readOnly)
+                assertTrue(transaction.readOnly)
+            } finally {
+                transaction.close()
+            }
+            transaction(db) {
+                assertSame(this, TransactionManager.currentOrNew())
+                assertSame(this, TransactionManager.currentOrNew(Connection.TRANSACTION_READ_COMMITTED))
+            }
+        }
+    }
+
+    @Test
+    fun testDirectTransactionPreservesExplicitSettingsOnFirstConnection() {
+        withHikariDatabase(readOnly = true) { db ->
+            val transaction = db.transactionManager.newTransaction(Connection.TRANSACTION_SERIALIZABLE, readOnly = false)
+            try {
+                assertEquals(Connection.TRANSACTION_SERIALIZABLE, transaction.connection.transactionIsolation)
+                assertFalse(transaction.connection.readOnly)
+                assertEquals(Connection.TRANSACTION_SERIALIZABLE, transaction.transactionIsolation)
+                assertFalse(transaction.readOnly)
+            } finally {
+                transaction.close()
+            }
+        }
+    }
+
+    @Test
+    fun testDirectTransactionResolvesDefaultIsolationAndPreservesExplicitReadOnly() {
+        withHikariDatabase(readOnly = true) { db ->
+            val transaction = db.transactionManager.newTransaction(isolation = -1, readOnly = false)
+            try {
+                assertEquals(Connection.TRANSACTION_REPEATABLE_READ, transaction.connection.transactionIsolation)
+                assertEquals(Connection.TRANSACTION_REPEATABLE_READ, transaction.transactionIsolation)
+                assertFalse(transaction.connection.readOnly)
+                assertFalse(transaction.readOnly)
+            } finally {
+                transaction.close()
+            }
+        }
+    }
+
+    @Test
+    fun testDirectTransactionUsesResolvedManagerDefaults() {
+        withHikariDatabase(readOnly = true) { db ->
+            val first = db.transactionManager.newTransaction()
+            try {
+                assertEquals(Connection.TRANSACTION_READ_COMMITTED, first.connection.transactionIsolation)
+                assertFalse(first.connection.readOnly)
+            } finally {
+                first.close()
+            }
+            val next = db.transactionManager.newTransaction()
+            try {
+                assertEquals(Connection.TRANSACTION_REPEATABLE_READ, next.connection.transactionIsolation)
+                assertTrue(next.connection.readOnly)
+            } finally {
+                next.close()
             }
         }
     }
@@ -231,9 +322,12 @@ class DataSourceTransactionSettingsTest : LogDbInTestName() {
         }
         HikariDataSource(config).use { dataSource ->
             val db = Database.connect(dataSource, databaseConfig = databaseConfig)
+            val previousDefault = TransactionManager.defaultDatabase
+            TransactionManager.defaultDatabase = db
             try {
                 block(db)
             } finally {
+                TransactionManager.defaultDatabase = previousDefault
                 TransactionManager.closeAndUnregister(db)
             }
         }

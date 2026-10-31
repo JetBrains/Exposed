@@ -20,6 +20,12 @@ interface DatabaseConfig {
     val defaultMinRetryDelay: Long
     val defaultMaxRetryDelay: Long
     val defaultReadOnly: Boolean
+
+    /** @suppress */
+    @InternalApi
+    val explicitReadOnly: Boolean?
+        get() = defaultReadOnly
+
     val defaultQueryTimeout: Int
     val warnLongQueriesDuration: Long?
     val maxEntitiesToStoreInCachePerEntity: Int
@@ -206,19 +212,9 @@ interface DatabaseConfig {
             require(builder.defaultMaxAttempts > 0) { "defaultMaxAttempts must be set to perform at least 1 attempt." }
 
             @OptIn(InternalApi::class)
-            return BuiltDatabaseConfig(builder)
+            return DatabaseConfigImpl(builder)
         }
     }
-}
-
-@OptIn(InternalApi::class)
-private class BuiltDatabaseConfig(val builder: DatabaseConfig.Builder) : DatabaseConfigImpl(builder)
-
-/** Returns the explicitly configured read-only setting, or null if the standard builder left it unspecified. @suppress */
-@InternalApi
-fun DatabaseConfig.explicitReadOnly(): Boolean? = when (this) {
-    is BuiltDatabaseConfig -> builder.explicitReadOnly
-    else -> defaultReadOnly
 }
 
 /** @suppress */
@@ -240,6 +236,8 @@ open class DatabaseConfigImpl(private val builder: DatabaseConfig.Builder) : Dat
         get() = builder.defaultMaxRetryDelay
     override val defaultReadOnly: Boolean
         get() = builder.defaultReadOnly
+    override val explicitReadOnly: Boolean?
+        get() = builder.explicitReadOnly
     override val defaultQueryTimeout: Int
         get() = builder.defaultQueryTimeout
     override val warnLongQueriesDuration: Long?

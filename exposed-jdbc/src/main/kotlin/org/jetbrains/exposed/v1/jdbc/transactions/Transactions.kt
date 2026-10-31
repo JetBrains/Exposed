@@ -17,11 +17,15 @@ import java.sql.SQLException
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.time.Duration.Companion.milliseconds
 
-private fun JdbcTransactionManager.createTransaction(isolation: Int?, readOnly: Boolean?, outer: JdbcTransaction?): JdbcTransaction =
+internal fun JdbcTransactionManager.newTransactionWithDefaults(
+    isolation: Int? = null,
+    readOnly: Boolean? = null,
+    outerTransaction: JdbcTransaction? = null
+): JdbcTransaction =
     if (this is TransactionManager) {
-        newTransactionWithDefaults(isolation, readOnly, outer)
+        createTransaction(isolation, readOnly, outerTransaction)
     } else {
-        newTransaction(isolation ?: defaultIsolationLevel, readOnly ?: defaultReadOnly, outer)
+        newTransaction(isolation?.takeUnless { it == -1 } ?: defaultIsolationLevel, readOnly ?: defaultReadOnly, outerTransaction)
     }
 
 /**
@@ -146,7 +150,7 @@ fun <T> transaction(
     val outer = database.transactionManager.currentOrNull()
 
     return if (outer != null) {
-        val transaction = outer.transactionManager.createTransaction(
+        val transaction = outer.transactionManager.newTransactionWithDefaults(
             transactionIsolation,
             readOnly,
             outer
@@ -209,7 +213,7 @@ fun <T> inTopLevelTransaction(
     val database = resolveDatabaseOrThrow(db)
 
     while (true) {
-        val transaction = database.transactionManager.createTransaction(
+        val transaction = database.transactionManager.newTransactionWithDefaults(
             transactionIsolation,
             readOnly,
             outerTransaction
@@ -297,7 +301,7 @@ suspend fun <T> suspendTransaction(
     val outer = databaseToUse.transactionManager.getCurrentContextTransaction()
 
     return if (outer != null) {
-        val transaction = outer.transactionManager.createTransaction(
+        val transaction = outer.transactionManager.newTransactionWithDefaults(
             transactionIsolation,
             readOnly,
             outer
@@ -359,7 +363,7 @@ suspend fun <T> inTopLevelSuspendTransaction(
     val database = resolveDatabaseOrThrow(db)
 
     while (true) {
-        val transaction = database.transactionManager.createTransaction(
+        val transaction = database.transactionManager.newTransactionWithDefaults(
             transactionIsolation,
             readOnly,
             outerTransaction
