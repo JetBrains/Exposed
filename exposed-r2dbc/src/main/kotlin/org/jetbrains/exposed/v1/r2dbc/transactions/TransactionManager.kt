@@ -13,6 +13,7 @@ import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedConnection
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -74,7 +75,7 @@ class TransactionManager(
          * Each transaction manager gets a unique context key for transaction isolation.
          */
         private val contextKeys =
-            mutableMapOf<R2dbcTransactionManager, CoroutineContext.Key<TransactionContextHolder>>()
+            ConcurrentHashMap<R2dbcTransactionManager, CoroutineContext.Key<TransactionContextHolder>>()
 
         /**
          * Returns the context key for the given transaction manager.
