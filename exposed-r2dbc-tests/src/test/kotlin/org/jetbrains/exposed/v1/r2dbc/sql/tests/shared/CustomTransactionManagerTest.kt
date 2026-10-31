@@ -14,11 +14,17 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.R2dbcTransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.Assumptions
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 class CustomTransactionManagerTest : R2dbcDatabaseTestsBase() {
 
@@ -217,6 +223,49 @@ class CustomTransactionManagerTest : R2dbcDatabaseTestsBase() {
         @OptIn(InternalApi::class)
         assertFailsWith<IllegalStateException> {
             TransactionManager.getContextKey(customManager)
+        }
+    }
+
+    @OptIn(InternalApi::class)
+    @Test
+    fun testContextKeysRemainAvailableDuringConcurrentDatabaseRegistration() {
+        val databases = mutableListOf<R2dbcDatabase>()
+        val readers = Executors.newFixedThreadPool(4)
+        val ready = CountDownLatch(4)
+        val start = CountDownLatch(1)
+        val finished = AtomicBoolean(false)
+
+        try {
+            val registeredManagers = List(1024) {
+                val database = createMockDatabase().also(databases::add)
+                val manager = TransactionManager.managerFor(database)
+                manager to TransactionManager.getContextKey(manager)
+            }
+            val results = List(4) {
+                readers.submit {
+                    ready.countDown()
+                    start.await()
+                    while (!finished.get()) {
+                        registeredManagers.forEach { (manager, key) ->
+                            assertSame(key, TransactionManager.getContextKey(manager))
+                        }
+                    }
+                }
+            }
+
+            assertTrue(ready.await(30, TimeUnit.SECONDS))
+            start.countDown()
+            repeat(16384) {
+                databases.add(createMockDatabase())
+            }
+            finished.set(true)
+            results.forEach { it.get(30, TimeUnit.SECONDS) }
+        } finally {
+            finished.set(true)
+            start.countDown()
+            readers.shutdownNow()
+            assertTrue(readers.awaitTermination(30, TimeUnit.SECONDS))
+            databases.asReversed().forEach(TransactionManager::closeAndUnregister)
         }
     }
 }
