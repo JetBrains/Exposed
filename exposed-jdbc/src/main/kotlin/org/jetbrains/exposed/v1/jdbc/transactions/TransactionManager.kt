@@ -24,6 +24,13 @@ class TransactionManager(
     private val setupTxConnection: ((ExposedConnection<*>, JdbcTransactionInterface) -> Unit)? = null
 ) : JdbcTransactionManager {
     @Volatile
+    private var configuredIsolationLevel: Int? = db.config.defaultIsolationLevel.takeUnless { it == -1 }
+
+    @OptIn(InternalApi::class)
+    @Volatile
+    private var configuredReadOnly: Boolean? = db.config.explicitReadOnly
+
+    @Volatile
     override var defaultMaxAttempts: Int = db.config.defaultMaxAttempts
 
     @Volatile
@@ -33,34 +40,21 @@ class TransactionManager(
     override var defaultMaxRetryDelay: Long = db.config.defaultMaxRetryDelay
 
     /** The default transaction isolation level. Unless specified, the database-specific level will be used. */
-    @Volatile
-    override var defaultIsolationLevel: Int = db.config.defaultIsolationLevel
-        get() {
-            when {
-                field == -1 -> {
-                    if (db.connectsViaDataSource) loadDataSourceIsolationLevel = true
-                    field = Database.getDefaultIsolationLevel(db)
-                }
-                db.connectsViaDataSource && loadDataSourceIsolationLevel -> {
-                    if (db.dataSourceIsolationLevel != -1) {
-                        loadDataSourceIsolationLevel = false
-                        field = db.dataSourceIsolationLevel
-                    }
-                }
-            }
-            return field
+    override var defaultIsolationLevel: Int
+        get() = configuredIsolationLevel ?: db.dataSourceSettings?.isolationLevel ?: run {
+            val isolation = Database.getDefaultIsolationLevel(db)
+            // Discovering the dialect may initialize the current transaction's connection and cache its settings.
+            db.dataSourceSettings?.isolationLevel ?: isolation
+        }
+        set(value) {
+            configuredIsolationLevel = value.takeUnless { it == -1 }
         }
 
-    /**
-     * Whether the transaction isolation level of the underlying DataSource should be retrieved from the database.
-     *
-     * This should only be set to `true` if [Database.connectsViaDataSource] has also been set to `true` and if
-     * an initial connection to the database has not already been made.
-     */
-    private var loadDataSourceIsolationLevel = false
-
-    @Volatile
-    override var defaultReadOnly: Boolean = db.config.defaultReadOnly
+    override var defaultReadOnly: Boolean
+        get() = configuredReadOnly ?: db.dataSourceSettings?.readOnly ?: false
+        set(value) {
+            configuredReadOnly = value
+        }
 
     override fun toString(): String {
         return "JdbcTransactionManager[${hashCode()}](db=$db)"
@@ -76,20 +70,32 @@ class TransactionManager(
         isolation: Int,
         readOnly: Boolean,
         outerTransaction: JdbcTransaction?
-    ): JdbcTransaction {
-        val transaction = outerTransaction?.takeIf { !db.useNestedTransactions }
-            ?: JdbcTransaction(
-                ThreadLocalTransaction(
-                    db = db,
-                    readOnly = outerTransaction?.readOnly ?: readOnly,
-                    transactionIsolation = outerTransaction?.transactionIsolation ?: isolation,
-                    setupTxConnection = setupTxConnection,
-                    outerTransaction = outerTransaction,
-                    loadDataSourceIsolationLevel = loadDataSourceIsolationLevel,
-                ),
-            )
+    ): JdbcTransaction = createTransaction(isolation, readOnly, outerTransaction)
 
-        return transaction
+    internal fun createTransaction(isolation: Int?, readOnly: Boolean?, outerTransaction: JdbcTransaction?): JdbcTransaction {
+        if (outerTransaction != null && !db.useNestedTransactions) return outerTransaction
+
+        val explicitIsolation = isolation?.takeUnless { it == -1 }
+        val inheritsFromDataSource = db.connectsViaDataSource && setupTxConnection == null
+        return JdbcTransaction(
+            ThreadLocalTransaction(
+                db = db,
+                manager = this,
+                setupTxConnection = setupTxConnection,
+                requestedIsolation = if (inheritsFromDataSource) {
+                    explicitIsolation ?: configuredIsolationLevel
+                } else {
+                    explicitIsolation ?: defaultIsolationLevel
+                },
+                requestedReadOnly = if (inheritsFromDataSource) {
+                    readOnly ?: configuredReadOnly
+                } else {
+                    readOnly ?: defaultReadOnly
+                },
+                inheritsFromDataSource = inheritsFromDataSource,
+                outerTransaction = outerTransaction
+            )
+        )
     }
 
     companion object {
@@ -194,19 +200,31 @@ class TransactionManager(
                 ?: primaryDatabase?.transactionManager
                 ?: error("No transaction manager found")
 
-        /** Returns the current [JdbcTransaction], or creates a new transaction with the provided [isolation] level. */
-        fun currentOrNew(isolation: Int = manager.defaultIsolationLevel): JdbcTransaction = currentOrNull()
-            ?: manager.newTransaction(isolation)
+        /**
+         * Returns the current [JdbcTransaction], or creates a new transaction with the provided [isolation] level.
+         * An [isolation] of -1 uses the transaction manager or DataSource defaults.
+         */
+        fun currentOrNew(isolation: Int = -1): JdbcTransaction = currentOrNull()
+            ?: manager.newTransactionWithDefaults(isolation)
     }
 
     private class ThreadLocalTransaction(
         override val db: Database,
+        private val manager: TransactionManager,
         private val setupTxConnection: ((ExposedConnection<*>, JdbcTransactionInterface) -> Unit)?,
-        override val transactionIsolation: Int,
-        override val readOnly: Boolean,
-        override val outerTransaction: JdbcTransaction?,
-        private val loadDataSourceIsolationLevel: Boolean
+        private val requestedIsolation: Int?,
+        private val requestedReadOnly: Boolean?,
+        private val inheritsFromDataSource: Boolean,
+        override val outerTransaction: JdbcTransaction?
     ) : JdbcTransactionInterface {
+        private var appliedIsolation: Int? = null
+        private var appliedReadOnly: Boolean? = null
+
+        override val transactionIsolation: Int
+            get() = outerTransaction?.transactionIsolation ?: appliedIsolation ?: requestedIsolation ?: manager.defaultIsolationLevel
+
+        override val readOnly: Boolean
+            get() = outerTransaction?.readOnly ?: appliedReadOnly ?: requestedReadOnly ?: manager.defaultReadOnly
 
         private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) {
             outerTransaction?.connection ?: db.connector().apply {
@@ -217,20 +235,14 @@ class TransactionManager(
                         // Transaction isolation should go first as readOnly or autoCommit can start transaction with wrong isolation level
                         // Some drivers start a transaction right after `setAutoCommit(false)`,
                         // which makes `setReadOnly` throw an exception if it is called after `setAutoCommit`
-                        if (db.connectsViaDataSource && loadDataSourceIsolationLevel && db.dataSourceIsolationLevel == -1) {
-                            // retrieves the setting of the datasource connection & caches it
-                            db.dataSourceIsolationLevel = transactionIsolation
-                            db.dataSourceReadOnly = readOnly
-                        } else if (
-                            !db.connectsViaDataSource ||
-                            db.dataSourceIsolationLevel != this@ThreadLocalTransaction.transactionIsolation ||
-                            db.dataSourceReadOnly != this@ThreadLocalTransaction.readOnly
-                        ) {
-                            // only set the level if there is no cached datasource value or if the value differs
-                            transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
-                            readOnly = this@ThreadLocalTransaction.readOnly
-                        }
+                        val defaults = if (inheritsFromDataSource) db.dataSourceSettings(this) else null
+                        val isolation = requestedIsolation ?: defaults?.isolationLevel ?: manager.defaultIsolationLevel
+                        val readOnly = requestedReadOnly ?: defaults?.readOnly ?: manager.defaultReadOnly
+                        if (defaults == null || isolation != defaults.isolationLevel) this.transactionIsolation = isolation
+                        if (defaults == null || readOnly != defaults.readOnly) this.readOnly = readOnly
                         autoCommit = false
+                        appliedIsolation = isolation
+                        appliedReadOnly = readOnly
                     }
                 } catch (e: Exception) {
                     try {

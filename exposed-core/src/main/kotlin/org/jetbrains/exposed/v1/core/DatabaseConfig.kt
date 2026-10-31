@@ -20,6 +20,12 @@ interface DatabaseConfig {
     val defaultMinRetryDelay: Long
     val defaultMaxRetryDelay: Long
     val defaultReadOnly: Boolean
+
+    /** @suppress */
+    @InternalApi
+    val explicitReadOnly: Boolean?
+        get() = defaultReadOnly
+
     val defaultQueryTimeout: Int
     val warnLongQueriesDuration: Long?
     val maxEntitiesToStoreInCachePerEntity: Int
@@ -98,9 +104,16 @@ interface DatabaseConfig {
 
         /**
          * Should all connections/transactions be executed in read-only mode by default or not.
-         * Default state is false.
+         * Defaults to the DataSource setting for JDBC connections obtained from a DataSource, or false otherwise.
          */
-        var defaultReadOnly: Boolean = false
+        var defaultReadOnly: Boolean
+            get() = explicitReadOnly ?: false
+            set(value) {
+                explicitReadOnly = value
+            }
+
+        internal var explicitReadOnly: Boolean? = null
+            private set
 
         /**
          * How many seconds the driver should wait for a statement to execute in a transaction before timing out.
@@ -223,6 +236,8 @@ open class DatabaseConfigImpl(private val builder: DatabaseConfig.Builder) : Dat
         get() = builder.defaultMaxRetryDelay
     override val defaultReadOnly: Boolean
         get() = builder.defaultReadOnly
+    override val explicitReadOnly: Boolean?
+        get() = builder.explicitReadOnly
     override val defaultQueryTimeout: Int
         get() = builder.defaultQueryTimeout
     override val warnLongQueriesDuration: Long?
