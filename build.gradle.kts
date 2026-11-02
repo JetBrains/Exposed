@@ -3,6 +3,7 @@ import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.exposed.gradle.configureDetekt
 import org.jetbrains.exposed.gradle.configureMavenCentralMetadata
 import org.jetbrains.exposed.gradle.testDb
+import java.time.Year
 
 plugins {
     kotlin("jvm") apply true
@@ -18,6 +19,12 @@ plugins {
 dokka {
     dokkaPublications.html {
         outputDirectory.set(project.file("docs/api"))
+    }
+    pluginsConfiguration {
+        html {
+            customAssets.from("docs/dokka/logo-icon.svg")
+            footerMessage.set("© ${Year.now()} JetBrains s.r.o and contributors. Apache License 2.0")
+        }
     }
 }
 
