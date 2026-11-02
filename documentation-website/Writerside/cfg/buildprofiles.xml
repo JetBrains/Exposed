@@ -27,6 +27,7 @@
     <footer>
         <copyright>2000-2026 JetBrains s.r.o.</copyright>
         <social type="github" href="https://github.com/JetBrains/Exposed">Exposed on GitHub</social>
+        <social type="slack" href="https://kotlinlang.slack.com/messages/exposed/">Exposed Slack channel</social>
         <link href="https://www.jetbrains.com/help/exposed/contributing.html">Contribute to Exposed</link>
         <link href="https://jetbrains.github.io/Exposed/api/index.html">API Documentation</link>
     </footer>
