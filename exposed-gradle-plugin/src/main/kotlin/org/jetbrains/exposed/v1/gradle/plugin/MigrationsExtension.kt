@@ -4,6 +4,7 @@ import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.SourceSetContainer
 import org.jetbrains.exposed.v1.gradle.plugin.ExposedGradlePlugin.Companion.TASK_GROUP
@@ -23,6 +24,12 @@ open class MigrationsExtension @Inject internal constructor(objects: ObjectFacto
      * The plugin will scan this package for table definitions.
      */
     val tablesPackage: Property<String> = objects.property(String::class.java)
+
+    /**
+     * All package names where Exposed table definitions are located.
+     * The plugin will scan these packages for table definitions.
+     */
+    val tablesPackages: ListProperty<String> = objects.listProperty(String::class.java)
 
     /**
      * Classpath that is scanned for Exposed table definitions.
@@ -122,6 +129,7 @@ internal fun Project.configureMigrations() {
         it.outputs.upToDateWhen { false }
 
         it.tablesPackage.set(extension.tablesPackage)
+        it.tablesPackages.set(extension.tablesPackages)
         it.classpath.setFrom(extension.classpath)
 
         it.fileDirectory.set(extension.fileDirectory)

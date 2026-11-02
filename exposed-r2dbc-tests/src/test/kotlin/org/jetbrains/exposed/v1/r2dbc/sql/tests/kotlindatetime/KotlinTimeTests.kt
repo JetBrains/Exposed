@@ -15,7 +15,11 @@ import org.jetbrains.exposed.v1.datetime.*
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.json.extract
 import org.jetbrains.exposed.v1.json.jsonb
-import org.jetbrains.exposed.v1.r2dbc.*
+import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
+import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
+import org.jetbrains.exposed.v1.r2dbc.select
+import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
@@ -25,6 +29,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNull
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.OffsetDateTime
@@ -443,31 +448,57 @@ class KotlinTimeTests : R2dbcDatabaseTestsBase() {
     fun testDateTimeAsArray() {
         val defaultDates = listOf(now().date)
         val defaultDateTimes = listOf(now())
+        val defaultTimes = listOf(LocalTime(13, 0))
+        val defaultTimestamps = listOf(Clock.System.nowAsJdk8())
         val tester = object : Table("array_tester") {
             val dates = array("dates", KotlinLocalDateColumnType()).default(defaultDates)
+            val optDates = array("opt_dates", KotlinLocalDateColumnType()).nullable()
             val datetimes = array("datetimes", KotlinLocalDateTimeColumnType()).default(defaultDateTimes)
+            val optDatetimes = array("opt_datetimes", KotlinLocalDateTimeColumnType()).nullable()
+            val times = array("times", KotlinLocalTimeColumnType()).default(defaultTimes)
+            val optTimes = array("opt_times", KotlinLocalTimeColumnType()).nullable()
+            val timestamps = array("timestamps", KotlinInstantColumnType()).default(defaultTimestamps)
+            val optTimestamps = array("opt_timestamps", KotlinInstantColumnType()).nullable()
         }
 
         withTables(excludeSettings = TestDB.entries - TestDB.POSTGRESQL - TestDB.H2_V2, tester) {
             tester.insert { }
             val result1 = tester.selectAll().single()
             assertEqualLists(result1[tester.dates], defaultDates)
+            assertNull(result1[tester.optDates])
             assertEqualLists(result1[tester.datetimes], defaultDateTimes)
+            assertNull(result1[tester.optDatetimes])
+            assertEqualLists(result1[tester.times], defaultTimes)
+            assertNull(result1[tester.optTimes])
+            assertEqualLists(result1[tester.timestamps], defaultTimestamps)
+            assertNull(result1[tester.optTimestamps])
 
             val datesInput = List(3) { LocalDate(2020 + it, 5, 4) }
             val datetimeInput = List(3) { LocalDateTime(2020 + it, 5, 4, 9, 9, 9) }
+            val timesInput = List(3) { LocalTime(9, 9, 9) }
+            val timestampsInput = List(3) { Instant.parse("2020-05-04T09:09:09.000Z") }
             tester.insert {
                 it[dates] = datesInput
+                it[optDates] = null
                 it[datetimes] = datetimeInput
+                it[optDatetimes] = null
+                it[times] = timesInput
+                it[optTimes] = null
+                it[timestamps] = timestampsInput
+                it[optTimestamps] = null
             }
 
             val lastDate = tester.dates[3]
             val firstTwoDatetimes = tester.datetimes.slice(1, 2)
-            val result2 = tester.select(lastDate, firstTwoDatetimes).where {
+            val secondTime = tester.times[2]
+            val firstTwoTimestamps = tester.timestamps.slice(1, 2)
+            val result2 = tester.select(lastDate, firstTwoDatetimes, secondTime, firstTwoTimestamps).where {
                 tester.dates[1].year() eq 2020
             }.single()
             assertEqualDateTime(datesInput.last(), result2[lastDate])
             assertEqualLists(result2[firstTwoDatetimes], datetimeInput.take(2))
+            assertEqualDateTime(timesInput[1], result2[secondTime])
+            assertEqualLists(result2[firstTwoTimestamps], timestampsInput.take(2))
         }
     }
 
@@ -611,6 +642,20 @@ class KotlinTimeTests : R2dbcDatabaseTestsBase() {
             // Expected: 1969-12-31T23:59:59.990Z (-10 ms)
             // Actual on the bug: 1970-01-01T00:00:00.990Z (+990 ms)
             assertEquals(preEpoch, readBack)
+        }
+    }
+
+    @Test
+    fun testLocalDateTimeBeforeEpochRoundTrip() {
+        val tester = object : Table("datetime_pre_epoch") {
+            val datetime = datetime("datetime")
+        }
+
+        withTables(tester) {
+            val preEpoch = LocalDateTime(1965, 12, 7, 12, 0, 0, 8_000_000)
+            tester.insert { it[datetime] = preEpoch }
+
+            assertEquals(preEpoch, tester.selectAll().single()[tester.datetime])
         }
     }
 }

@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.v1.migration.jdbc
 
 import org.jetbrains.exposed.v1.core.Column
-import org.jetbrains.exposed.v1.core.Sequence
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
@@ -13,30 +12,13 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.exists
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
-import org.jetbrains.exposed.v1.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class SequenceAutoIncrementTests : DatabaseTestsBase() {
-    @BeforeEach
-    fun dropAllSequences() {
-        withDb {
-            if (currentDialectTest.supportsCreateSequence) {
-                val allSequences = currentDialectMetadataTest.sequences().map { name -> Sequence(name) }.toSet()
-                allSequences.forEach { sequence ->
-                    val dropStatements = sequence.dropStatement()
-                    dropStatements.forEach { statement ->
-                        exec(statement)
-                    }
-                }
-            }
-        }
-    }
-
     @Test
     fun testAddAutoIncrementToExistingColumn() {
         withTables(MigrationTestsData.TableWithoutAutoIncrement) { testDb ->

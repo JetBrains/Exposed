@@ -127,7 +127,7 @@ creates the blueprint for the `tasks` table.
 ## Define an entity
 
 When using the DAO approach, each table defined using `IntIdTable` must be associated with a corresponding
-[entity class](DAO-Entity-definition.topic).
+[entity class](dao-entity-definition.md).
 The entity class represents individual records in the table and is uniquely identified by a primary key.
 
 To define the entity, update your **Task.kt** file with the following code:
@@ -156,7 +156,7 @@ Open your **App.kt** file and add the following transaction function:
 
 ```kotlin
 ```
-{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="1-2,4-11,16-33,42-43"}
+{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="1-2,4-12,17-34,43-44"}
 
 First, you create the tasks table using the `SchemaUtils.create()` method. The `SchemaUtils` object holds utility 
 methods for creating, altering, and dropping database objects.
@@ -191,7 +191,7 @@ At the beginning of your `transaction` block, add the following to enable SQL qu
 
 ```kotlin
 ```
-{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="3,7-8,11-14,42-43"}
+{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="3,8-9,12-15,43-44"}
 
 ## Run the application
 
@@ -221,19 +221,19 @@ In the same `transaction()` function, add the following code to your implementat
 
 ```kotlin
 ```
-{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="11,13-15,34-42"}
+{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="12,14-16,35-43"}
 
 You update the value of a property just as you would with any property in a Kotlin class:
 
 ```kotlin
 ```
-{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="35-36"}
+{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="36-37"}
 
 Similarly, to delete a task, you use the `.delete()` method on the entity:
 
 ```kotlin
 ```
-{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="40"}
+{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="41"}
 
 </step>
 <step>
@@ -276,5 +276,5 @@ Great job! You've built a simple console application using Exposed's DAO API to 
 data in an in-memory database.
 
 Now that you've covered the fundamentals, you're ready to dive deeper into what the DAO API offers. Continue exploring
-[CRUD operations](DAO-CRUD-Operations.topic) or learn how to [define relationships between entities](DAO-Relationships.topic).
+[CRUD operations](dao-crud-operations.md) or learn how to [define relationships between entities](dao-relationships.md).
 These next chapters will help you build more complex, real-world data models using Exposed’s type-safe, object-oriented approach.

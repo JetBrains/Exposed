@@ -27,6 +27,7 @@ class MigrationsIntegrationTest {
     fun generatesZeroMigrationsForEmptyPackage() {
         val mojo = GenerateMigrationsMojo().apply {
             tablesPackage = "com.example.nonexistent"
+            tablesPackages = listOf("com.example.nonexistent")
             fileDirectory = migrationsDir
             databaseUrl = "jdbc:h2:mem:testDb;DB_CLOSE_DELAY=-1;"
             databaseUser = ""
@@ -45,7 +46,7 @@ class MigrationsIntegrationTest {
     }
 
     @Test
-    fun failsWhenTablesPackageMissing() {
+    fun failsWhenTablesPackagesMissing() {
         val mojo = GenerateMigrationsMojo().apply {
             fileDirectory = migrationsDir
             databaseUrl = "jdbc:h2:mem:testDb;DB_CLOSE_DELAY=-1;"
@@ -54,12 +55,16 @@ class MigrationsIntegrationTest {
         }
         injectProject(mojo, projectWithTestClasspath())
 
-        val ex = assertThrows<UninitializedPropertyAccessException> {
+        // Versions 1.3.* to 1.5.* would have failed due to `tablesPackage` property throwing uninitialized property message;
+        // Versions 1.6.+ fails if either `tablesPackage` or `tablesPackages` is not set, so descriptive message comes
+        // from value state check after consolidating values of both properties; and exception is same type as other
+        // invalid configuration exceptions
+        val ex = assertThrows<MojoFailureException> {
             mojo.execute()
         }
         assertTrue(
-            ex.message?.contains("tablesPackage") == true,
-            "Expected message to mention tablesPackage, was: ${ex.message}",
+            ex.message?.contains("Package name(s)") == true,
+            "Expected message to mention package names, was: ${ex.message}",
         )
     }
 

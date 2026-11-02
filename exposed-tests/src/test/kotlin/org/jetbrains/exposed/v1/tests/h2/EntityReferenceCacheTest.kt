@@ -14,7 +14,6 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.demo.dao.Cities
 import org.jetbrains.exposed.v1.tests.demo.dao.City
@@ -28,7 +27,6 @@ import org.jetbrains.exposed.v1.tests.shared.entities.VNumber
 import org.jetbrains.exposed.v1.tests.shared.entities.VString
 import org.jetbrains.exposed.v1.tests.shared.entities.ViaTestData
 import org.junit.jupiter.api.Assumptions
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import kotlin.properties.Delegates
 import kotlin.test.assertEquals
@@ -36,7 +34,6 @@ import kotlin.test.assertFails
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
-@Tag(MISSING_R2DBC_TEST)
 class EntityReferenceCacheTest : DatabaseTestsBase() {
 
     private val db by lazy {

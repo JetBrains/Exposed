@@ -271,6 +271,12 @@ fun <T> inTopLevelTransaction(
  * **Note** This function catches all throwables (including errors) to ensure proper transaction rollback
  * and resource cleanup, even in exceptional circumstances.
  *
+ * **Note** The JDBC driver calls inside [statement] are still blocking, and they run on the caller's dispatcher.
+ * If a transaction waits for a row lock (for example, with `forUpdate()`) that is held by a suspended transaction on
+ * the same single-threaded dispatcher (such as a plain `runBlocking {}`), the lock owner can never resume to release
+ * it and both transactions deadlock. Run such transactions on a dispatcher with enough threads, for example
+ * `withContext(Dispatchers.IO) { suspendTransaction { ... } }`.
+ *
  * @param db Database to use for the transaction. Defaults to `null`.
  * @param transactionIsolation Transaction isolation level. Defaults to `db.transactionManager.defaultIsolationLevel`.
  * @param readOnly Whether the transaction should be read-only. Defaults to `db.transactionManager.defaultReadOnly`.

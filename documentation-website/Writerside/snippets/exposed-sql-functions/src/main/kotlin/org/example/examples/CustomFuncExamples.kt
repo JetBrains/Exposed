@@ -5,6 +5,7 @@ import org.jetbrains.exposed.v1.core.CustomFunction
 import org.jetbrains.exposed.v1.core.CustomStringFunction
 import org.jetbrains.exposed.v1.core.TextColumnType
 import org.jetbrains.exposed.v1.core.function
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.intLiteral
 import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.datetime.CurrentDate

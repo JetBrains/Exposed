@@ -81,7 +81,7 @@ abstract class LocalDateTimeColumnType<T> : ColumnType<T>(), IDateColumnType {
     private fun localDateTimeValueFromDB(value: Any): LocalDateTime? = when (value) {
         is LocalDateTime -> value
         is java.sql.Date -> longToLocalDateTime(value.time)
-        is java.sql.Timestamp -> longToLocalDateTime(value.time / 1000, value.nanos.toLong())
+        is java.sql.Timestamp -> longToLocalDateTime(Math.floorDiv(value.time, 1000L), value.nanos.toLong())
         is Int -> longToLocalDateTime(value.toLong())
         is Long -> longToLocalDateTime(value)
         is String -> parseLocalDateTime(value)

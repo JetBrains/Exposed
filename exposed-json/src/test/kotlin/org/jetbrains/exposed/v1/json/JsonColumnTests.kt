@@ -15,7 +15,6 @@ import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
@@ -23,7 +22,6 @@ import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertNotNull
@@ -78,6 +76,30 @@ class JsonColumnTests : DatabaseTestsBase() {
         }
     }
 
+    /* EXPOSED-1093 */
+    @Test
+    fun testGroupByExtract() {
+        withJsonTable(exclude = TestDB.ALL_H2_V2) { tester, user1, data1, _ ->
+            repeat(2) {
+                tester.insert { it[jsonColumn] = data1.copy(user = User("Pro", null)) }
+            }
+
+            // a bound argument becomes a separate parameter in every clause that renders the expression, which the
+            // database does not match to the select list, so the expression is computed once in a subquery
+            val path = if (currentDialectTest is PostgreSQLDialect) arrayOf("user", "name") else arrayOf(".user.name")
+            val username = tester.jsonColumn.extract<String>(*path).alias("username")
+            val extracted = tester.select(username, tester.id).alias("extracted")
+            val count = extracted[tester.id].count()
+
+            val result = extracted.select(extracted[username], count)
+                .groupBy(extracted[username])
+                .orderBy(extracted[username])
+                .toList()
+
+            assertEqualLists(result.map { it[extracted[username]] to it[count] }, listOf(user1.name to 1L, "Pro" to 2L))
+        }
+    }
+
     @Test
     fun testSelectWhereWithExtract() {
         withJsonTable(exclude = TestDB.ALL_H2_V2) { tester, _, data1, _ ->
@@ -113,7 +135,6 @@ class JsonColumnTests : DatabaseTestsBase() {
         }
     }
 
-    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testDAOFunctionsWithJsonColumn() {
         val dataTable = JsonTestsData.JsonTable

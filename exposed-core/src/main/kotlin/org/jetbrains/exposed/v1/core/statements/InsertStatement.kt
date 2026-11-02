@@ -115,9 +115,7 @@ open class InsertStatement<Key : Any>(
     override fun arguments(): List<Iterable<Pair<IColumnType<*>, Any?>>> {
         return arguments?.map { args ->
             val builder = QueryBuilder(true)
-            args.filter { (_, value) ->
-                value != DefaultValueMarker
-            }.forEach { (column, value) ->
+            args.forEach { (column, value) ->
                 builder.registerArgument(column, value)
             }
             builder.args

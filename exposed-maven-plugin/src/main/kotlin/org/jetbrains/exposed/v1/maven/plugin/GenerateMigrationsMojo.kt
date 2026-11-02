@@ -41,9 +41,21 @@ class GenerateMigrationsMojo : AbstractMojo() {
 
     /**
      * Package name where Exposed table definitions are located.
+     * If multiple package names are required, pass all possible strings to the [tablesPackages] property instead.
+     * If the [tablesPackage] and [tablesPackages] properties have inconsistent elements, the final list of
+     * package names used will be a distinct combination of both properties' values.
      */
-    @field:Parameter(property = "exposed.migrations.tablesPackage", required = true)
-    lateinit var tablesPackage: String
+    @field:Parameter(property = "exposed.migrations.tablesPackage")
+    var tablesPackage: String = ""
+
+    /**
+     * All package names where Exposed table definitions are located.
+     * If this property is not manually set, then it will be set to a list containing the single
+     * element package string configured for the property [tablesPackage]. If the [tablesPackage] property is not
+     * manually set, then this property defaults to an empty list and the task fails.
+     */
+    @field:Parameter(property = "exposed.migrations.tablesPackages")
+    var tablesPackages: List<String> = emptyList()
 
     /**
      * Directory where generated migration scripts will be stored.
@@ -168,6 +180,7 @@ class GenerateMigrationsMojo : AbstractMojo() {
     private val migrationConfig: MigrationConfig
         get() = MigrationConfig(
             tablesPackage = tablesPackage,
+            tablesPackages = tablesPackages,
             classpathUrls = classpathUrls,
             fileDirectory = fileDirectory,
             filePrefix = filePrefix,

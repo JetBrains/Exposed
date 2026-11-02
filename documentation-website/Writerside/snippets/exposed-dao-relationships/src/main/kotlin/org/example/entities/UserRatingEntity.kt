@@ -7,7 +7,7 @@ import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 
 /*
-    Important: This file is referenced by line number in `DAO-Relationships.topic`.
+    Important: This file is referenced by line number in `dao-relationships.md`.
     If you add, remove, or modify any lines, ensure you update the corresponding
     line numbers in the `code-block` element of the referenced file.
 */
@@ -16,7 +16,7 @@ class UserRatingEntity(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<UserRatingEntity>(UserRatingsTable)
 
     var value by UserRatingsTable.value
-    var film by StarWarsFilmEntity referencedOn UserRatingsTable.film // use referencedOn for normal references
+    var film by StarWarsFilmEntity referencedOn UserRatingsTable.film
     var user by UserEntity referencedOn UserRatingsTable.user
 }
 
@@ -24,6 +24,6 @@ class UserRatingWithOptionalUserEntity(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<UserRatingWithOptionalUserEntity>(UserRatingsWithOptionalUserTable)
 
     var value by UserRatingsWithOptionalUserTable.value
-    var film by StarWarsFilmEntity referencedOn UserRatingsWithOptionalUserTable.film // use referencedOn for normal references
+    var film by StarWarsFilmEntity referencedOn UserRatingsWithOptionalUserTable.film
     var user by UserEntity optionalReferencedOn UserRatingsWithOptionalUserTable.user
 }

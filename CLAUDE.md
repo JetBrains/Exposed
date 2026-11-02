@@ -7,14 +7,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Exposed is a lightweight ORM framework for Kotlin that provides two APIs:
 - **DSL API**: Type-safe SQL-wrapping Domain Specific Language (in `exposed-core`)
   - Works with both JDBC (`exposed-jdbc`) and R2DBC (`exposed-r2dbc`)
-- **DAO API**: Lightweight Data Access Object API (in `exposed-dao`)
-  - **Only works with JDBC** - does not support R2DBC
+- **DAO API**: Lightweight Data Access Object API
+  - JDBC: `exposed-dao`
+  - R2DBC: `exposed-dao-r2dbc` (experimental preview, suspending API)
 
 ## Module Architecture
 
 ### Core Modules
 - **exposed-core**: Foundation layer with DSL API, database abstractions, column types, and vendor dialects
 - **exposed-dao**: DAO API with entity classes and relationships (JDBC only, does not work with R2DBC)
+- **exposed-dao-r2dbc**: DAO API for R2DBC, with suspending entity operations (experimental preview: the API is annotated `@ExperimentalR2dbcDaoApi` and may change between releases)
 - **exposed-jdbc**: JDBC implementation with blocking transactions
 - **exposed-r2dbc**: R2DBC implementation with suspending transactions
 
@@ -32,6 +34,7 @@ Exposed is a lightweight ORM framework for Kotlin that provides two APIs:
 ### Test Modules
 - **exposed-tests**: Main JDBC-based test suite
 - **exposed-r2dbc-tests**: R2DBC-specific test suite
+- **exposed-dao-r2dbc-tests**: R2DBC DAO test suite (mostly ports of the `exposed-tests` DAO tests)
 - **exposed-jdbc-r2dbc-tests**: Cross-compatibility tests
 
 ## Build & Development
@@ -52,6 +55,7 @@ Tests are organized by database and dialect. Each module has database-specific t
 ./gradlew test_h2_v2                              # All modules with H2
 ./gradlew :exposed-tests:test_h2_v2               # JDBC Tests with H2
 ./gradlew :exposed-r2dbc-tests:test_h2_v2         # R2DBC Tests with H2
+./gradlew :exposed-dao-r2dbc-tests:test_h2_v2     # R2DBC DAO Tests with H2
 ```
 
 #### Test with Postgres
@@ -59,6 +63,7 @@ Tests are organized by database and dialect. Each module has database-specific t
 ./gradlew test_postgres                           # All modules with Postgres
 ./gradlew :exposed-tests:test_postgres            # JDBC Tests with Postgres
 ./gradlew :exposed-r2dbc-tests:test_postgres      # R2DBC Tests with Postgres
+./gradlew :exposed-dao-r2dbc-tests:test_postgres  # R2DBC DAO Tests with Postgres
 ```
 
 #### Test with specific database (requires Docker)
@@ -109,6 +114,10 @@ Tests inherit from different base classes depending on the driver:
 - Similar parameterized testing pattern as JDBC
 - Uses suspending functions and coroutine context
 - Test methods use `= runTest { }` for coroutine support, or utils methods like `withDb`, `withTables`,
+
+**R2DBC DAO Tests** - live in `exposed-dao-r2dbc-tests` and reuse `R2dbcDatabaseTestsBase` from `exposed-r2dbc-tests`:
+- The `@ExperimentalR2dbcDaoApi` opt-in is applied module-wide in `exposed-dao-r2dbc-tests/build.gradle.kts`
+- `new { }` only schedules the `INSERT`; use `newSuspend { }` when the row, or its generated id, has to exist before the call returns
 
 ### TestDB Enums
 

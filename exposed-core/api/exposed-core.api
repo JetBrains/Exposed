@@ -1587,6 +1587,7 @@ public final class org/jetbrains/exposed/v1/core/LiteralOpKt {
 	public static final fun doubleLiteral (D)Lorg/jetbrains/exposed/v1/core/LiteralOp;
 	public static final fun floatLiteral (F)Lorg/jetbrains/exposed/v1/core/LiteralOp;
 	public static final fun intLiteral (I)Lorg/jetbrains/exposed/v1/core/LiteralOp;
+	public static final fun literal (Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/LiteralOp;
 	public static final fun longLiteral (J)Lorg/jetbrains/exposed/v1/core/LiteralOp;
 	public static final fun shortLiteral (S)Lorg/jetbrains/exposed/v1/core/LiteralOp;
 	public static final fun stringLiteral (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/LiteralOp;
@@ -1678,6 +1679,15 @@ public final class org/jetbrains/exposed/v1/core/NoOpConversion : org/jetbrains/
 	public fun getColumnType ()Lorg/jetbrains/exposed/v1/core/IColumnType;
 	public final fun getExpr ()Lorg/jetbrains/exposed/v1/core/Expression;
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
+}
+
+public class org/jetbrains/exposed/v1/core/NonNullableColumnWithTransform : org/jetbrains/exposed/v1/core/ColumnWithTransform {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/IColumnType;Lorg/jetbrains/exposed/v1/core/ColumnTransformer;)V
+	public fun unwrapRecursive (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public final fun valueFromDBOrNull (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueToString (Ljava/lang/Object;)Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/v1/core/NotEqSubQueryOp : org/jetbrains/exposed/v1/core/SubQueryOp {
@@ -2457,6 +2467,8 @@ public class org/jetbrains/exposed/v1/core/Table : org/jetbrains/exposed/v1/core
 	public fun modifyStatement ()Ljava/util/List;
 	public final fun nameInDatabaseCase ()Ljava/lang/String;
 	public final fun nameInDatabaseCaseUnquoted ()Ljava/lang/String;
+	public final fun nonNullTransform (Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/core/Column;
+	public final fun nonNullTransform (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnTransformer;)Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun nullTransform (Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun nullTransform (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ColumnTransformer;)Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun nullable (Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/core/Column;
@@ -4454,6 +4466,7 @@ public class org/jetbrains/exposed/v1/core/vendors/MysqlDialect : org/jetbrains/
 	protected final fun getNotAcceptableDefaults ()Ljava/util/List;
 	public fun getSupportsAlterCheckConstraint ()Z
 	public fun getSupportsCreateSequence ()Z
+	public fun getSupportsDualTableConcept ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z
 	public fun getSupportsSelectForUpdate ()Z
 	public fun getSupportsSetDefaultReferenceOption ()Z

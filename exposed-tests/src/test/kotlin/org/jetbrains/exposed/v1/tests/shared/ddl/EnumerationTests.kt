@@ -14,11 +14,9 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.INCOMPLETE_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNull
 import org.postgresql.util.PGobject
@@ -53,7 +51,6 @@ class EnumerationTests : DatabaseTestsBase() {
         }
     }
 
-    @Tag(INCOMPLETE_R2DBC_TEST)
     @Test
     fun testCustomEnumeration01() {
         withDb(supportsCustomEnumerationDB) {
@@ -96,6 +93,7 @@ class EnumerationTests : DatabaseTestsBase() {
                 entity.id.value // flush entity
                 assertEquals(Foo.Baz, entity.enum)
                 assertEquals(Foo.Baz, enumClass.reload(entity)!!.enum)
+                // I don't know for now why it works, but I'd expect that `entity` should not be used after `reload()`...
                 entity.enum = Foo.Bar
                 assertEquals(Foo.Bar, enumClass.reload(entity, true)!!.enum)
             } finally {

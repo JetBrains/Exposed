@@ -2,6 +2,8 @@ package org.example.examples
 
 import org.example.tables.StarWarsFilmsTable
 import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.statements.buildStatement
 import org.jetbrains.exposed.v1.jdbc.*
 

@@ -24,6 +24,10 @@ module:exposed-dao
 org.jetbrains.exposed.v1.dao
 org.jetbrains.exposed.v1.dao.exceptions
 org.jetbrains.exposed.v1.dao.java
+module:exposed-dao-r2dbc
+org.jetbrains.exposed.v1.dao.r2dbc
+org.jetbrains.exposed.v1.dao.r2dbc.exceptions
+org.jetbrains.exposed.v1.dao.r2dbc.java
 module:exposed-gradle-plugin
 org.jetbrains.exposed.v1.gradle.plugin
 module:exposed-java-time

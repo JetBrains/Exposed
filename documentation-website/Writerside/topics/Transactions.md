@@ -45,6 +45,22 @@ To pass additional context to either `suspendTransaction()`, wrap it in a corout
 [`withContext()`](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-context.html)
 or [`async()`](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/async.html).
 
+> The JDBC `suspendTransaction()` function performs blocking JDBC calls on the caller's
+> dispatcher. If a transaction waits for a row lock (for example, one taken with `forUpdate()`), while the
+> transaction holding that lock is suspended on the same single-threaded dispatcher (such as a plain
+> `runBlocking {}`), the lock holder cannot resume to release the lock, causing both transactions to deadlock. To avoid this, run
+> transactions that can wait on each other on a dispatcher with enough threads:
+>
+> ```kotlin
+> withContext(Dispatchers.IO) {
+>     suspendTransaction {
+>         // DSL/DAO operations go here
+>     }
+> }
+> ```
+>
+{style="note"}
+
 
 ## Accessing returned values
 

@@ -33,6 +33,7 @@ class MigrationsExtensionTest {
     @Test
     fun testCustomValues() {
         extension.tablesPackage.set("com.example.tables")
+        extension.tablesPackages.set(listOf("com.example.tables"))
         extension.fileDirectory.set(project.layout.projectDirectory.dir("custom/migrations"))
 
         extension.filePrefix.set("R")
@@ -46,6 +47,7 @@ class MigrationsExtensionTest {
         extension.databasePassword.set("")
 
         Assertions.assertEquals("com.example.tables", extension.tablesPackage.get())
+        Assertions.assertEquals(listOf("com.example.tables"), extension.tablesPackages.get())
         Assertions.assertEquals(
             File(project.projectDir, "custom/migrations").absolutePath,
             extension.fileDirectory.get().asFile.absolutePath

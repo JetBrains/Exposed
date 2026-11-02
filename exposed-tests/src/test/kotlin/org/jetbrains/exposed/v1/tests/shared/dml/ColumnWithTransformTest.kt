@@ -16,10 +16,8 @@ import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.dao.entityCache
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -43,6 +41,17 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
     class DataHolderNullTransformer : ColumnTransformer<Int, TransformDataHolder?> {
         override fun unwrap(value: TransformDataHolder?): Int = value?.value ?: 0
         override fun wrap(value: Int): TransformDataHolder? = if (value == 0) null else TransformDataHolder(value)
+    }
+
+    class DataHolderNullColumnTransformer : ColumnTransformer<Int?, TransformDataHolder> {
+        override fun unwrap(value: TransformDataHolder): Int? = if (value.value == -1) null else value.value
+        override fun wrap(value: Int?): TransformDataHolder {
+            return if (value == null) {
+                TransformDataHolder(-1)
+            } else {
+                TransformDataHolder(value)
+            }
+        }
     }
 
     @Test
@@ -203,7 +212,6 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
         companion object : IntEntityClass<TransformEntity>(TransformTable)
     }
 
-    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testTransformedValuesWithDAO() {
         withTables(TransformTable) {
@@ -221,7 +229,6 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
         }
     }
 
-    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testEntityWithDefaultValue() {
         withTables(TransformTable) {
@@ -388,7 +395,6 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
         }
     }
 
-    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testWrapRowWithAliases() {
         withTables(TransformTable) {
@@ -443,6 +449,115 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
 
             val result = tester.selectAll().single()[tester.dateTime]
             assertEquals("###$testValue", result.value)
+        }
+    }
+
+    @Test
+    fun testNullColumnTransformBasic() {
+        val tester = object : IntIdTable("tester") {
+            val value = integer("value")
+                .nullable()
+                .nonNullTransform(DataHolderNullColumnTransformer())
+        }
+
+        val rawTester = object : IntIdTable("tester") {
+            val value = integer("value").nullable()
+        }
+
+        withTables(tester) {
+            val id1 = tester.insertAndGetId {
+                it[tester.value] = TransformDataHolder(-1)
+            }
+
+            assertEquals(TransformDataHolder(-1), tester.selectAll().where { tester.id eq id1 }.single()[tester.value])
+            assertNull(rawTester.selectAll().where { rawTester.id eq id1 }.single()[rawTester.value])
+
+            val id2 = tester.insertAndGetId {
+                it[tester.value] = TransformDataHolder(42)
+            }
+            assertEquals(TransformDataHolder(42), tester.selectAll().where { tester.id eq id2 }.single()[tester.value])
+            assertEquals(42, rawTester.selectAll().where { rawTester.id eq id2 }.single()[rawTester.value])
+        }
+    }
+
+    @Test
+    fun testNullColumnTransformWithLambda() {
+        val tester = object : IntIdTable("tester") {
+            val value = integer("value")
+                .nullable()
+                .nonNullTransform(
+                    wrap = { if (it == null) TransformDataHolder(-1) else TransformDataHolder(it) },
+                    unwrap = { if (it.value == -1) null else it.value }
+                )
+        }
+
+        val rawTester = object : IntIdTable("tester") {
+            val value = integer("value").nullable()
+        }
+
+        withTables(tester) {
+            val id1 = tester.insertAndGetId {
+                it[tester.value] = TransformDataHolder(100)
+            }
+            assertEquals(100, tester.selectAll().where { tester.id eq id1 }.single()[tester.value].value)
+            assertEquals(100, rawTester.selectAll().where { rawTester.id eq id1 }.single()[rawTester.value])
+
+            val id2 = tester.insertAndGetId {
+                it[tester.value] = TransformDataHolder(-1)
+            }
+            assertEquals(TransformDataHolder(-1), tester.selectAll().where { tester.id eq id2 }.single()[tester.value])
+            assertNull(rawTester.selectAll().where { rawTester.id eq id2 }.single()[rawTester.value])
+        }
+    }
+
+    @Test
+    fun testNullColumnTransformTextColumn() {
+        val tester = object : IntIdTable("tester") {
+            val description = text("description")
+                .nullable()
+                .nonNullTransform(
+                    wrap = { it?.trim() ?: "" },
+                    unwrap = { it.ifEmpty { null } }
+                )
+        }
+
+        val rawTester = object : IntIdTable("tester") {
+            val description = text("description").nullable()
+        }
+
+        withTables(tester) {
+            val id1 = tester.insertAndGetId {
+                it[tester.description] = "  hello  "
+            }
+            assertEquals("hello", tester.selectAll().where { tester.id eq id1 }.single()[tester.description])
+            assertEquals("  hello  ", rawTester.selectAll().where { rawTester.id eq id1 }.single()[rawTester.description])
+
+            val id2 = tester.insertAndGetId {
+                it[tester.description] = ""
+            }
+            assertEquals("", tester.selectAll().where { tester.id eq id2 }.single()[tester.description])
+            assertNull(rawTester.selectAll().where { rawTester.id eq id2 }.single()[rawTester.description])
+        }
+    }
+
+    @Test
+    fun testNullColumnTransformWithUpdate() {
+        val tester = object : IntIdTable("tester") {
+            val value = integer("value")
+                .nullable()
+                .nonNullTransform(DataHolderNullColumnTransformer())
+        }
+
+        withTables(tester) {
+            val id = tester.insertAndGetId {
+                it[tester.value] = TransformDataHolder(1)
+            }
+
+            tester.update(where = { tester.id eq id }) {
+                it[tester.value] = TransformDataHolder(-1)
+            }
+
+            assertEquals(TransformDataHolder(-1), tester.selectAll().first()[tester.value])
         }
     }
 }

@@ -7,10 +7,6 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
 import java.sql.SQLException
 
-internal object DefaultValueMarker {
-    override fun toString(): String = "DEFAULT"
-}
-
 /**
  * Executable provides a customizable execution mechanism for SQL statements within a transaction.
  *

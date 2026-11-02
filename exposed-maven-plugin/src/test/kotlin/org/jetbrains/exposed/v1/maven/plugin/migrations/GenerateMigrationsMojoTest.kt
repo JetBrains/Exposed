@@ -39,6 +39,7 @@ class GenerateMigrationsMojoTest {
     @Test
     fun testCustomValues() {
         mojo.tablesPackage = "com.example.tables"
+        mojo.tablesPackages = listOf("com.example.tables")
         mojo.fileDirectory = File("/tmp/migrations")
         mojo.filePrefix = "R"
         mojo.fileVersionFormat = VersionFormat.MAJOR_MINOR
@@ -53,6 +54,7 @@ class GenerateMigrationsMojoTest {
         mojo.debug = true
 
         assertEquals("com.example.tables", mojo.tablesPackage)
+        assertEquals(listOf("com.example.tables"), mojo.tablesPackages)
         assertEquals(File("/tmp/migrations"), mojo.fileDirectory)
         assertEquals("R", mojo.filePrefix)
         assertEquals(VersionFormat.MAJOR_MINOR, mojo.fileVersionFormat)

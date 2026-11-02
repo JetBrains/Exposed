@@ -24,7 +24,6 @@ import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.statements.toExecutable
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
@@ -204,6 +203,28 @@ class InsertTests : DatabaseTestsBase() {
                 userNamesWithCityIds.size.toLong(),
                 users.selectAll().where { users.name inList userNamesWithCityIds.map { it.first } }.count()
             )
+        }
+    }
+
+    @Test
+    fun testBatchInsertKeepsGeneratedKeysPairedWithInputRows() {
+        val tester = object : Table("generated_key_order") {
+            val id = long("id").autoIncrement()
+            val label = varchar("label", 50)
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withTables(tester) {
+            for (size in listOf(0, 1, 2, 17, 128)) {
+                tester.deleteAll()
+                val labels = List(size) { "row-$size-$it" }
+                val inserted = tester.batchInsert(labels) { label ->
+                    this[tester.label] = label
+                }
+                val storedIds = tester.selectAll().associate { it[tester.label] to it[tester.id] }
+                assertEqualLists(inserted.map { it[tester.label] }, labels)
+                assertEqualLists(inserted.map { it[tester.id] }, labels.map(storedIds::getValue))
+            }
         }
     }
 
@@ -576,7 +597,6 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     // https://github.com/JetBrains/Exposed/issues/192
-    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testInsertWithColumnNamedWithKeyword() {
         withTables(OrderedDataTable) {
@@ -764,7 +784,6 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testOptReferenceAllowsNullValues() {
         withTables(EntityTests.Posts) {
@@ -1004,6 +1023,91 @@ class InsertTests : DatabaseTestsBase() {
                 assertEquals(null, it[testerWithFakeDefaults.nullableDefaultNull])
                 assertEquals("nullableDefaultNotNull", it[testerWithFakeDefaults.nullableDefaultNotNull])
                 assertEquals(1, it[testerWithFakeDefaults.databaseGenerated])
+            }
+        }
+    }
+
+    /* EXPOSED-1088 */
+    @Test
+    fun testBatchInsertAppliesColumnDefaultsToRowsThatLeaveThemUnset() {
+        val tester = object : Table("test_batch_insert_mixed_defaults") {
+            val name = varchar("name", 32)
+            val score = integer("score").default(7)
+            val note = varchar("note", 32).nullable().default(null)
+        }
+
+        withTables(tester) {
+            tester.batchInsert(listOf("a", "b", "c")) { rowName ->
+                this[tester.name] = rowName
+                when (rowName) {
+                    "a" -> this[tester.score] = 5
+                    "c" -> this[tester.note] = "x"
+                }
+            }
+
+            val stored = tester.selectAll().orderBy(tester.name).map {
+                Triple(it[tester.name], it[tester.score], it[tester.note])
+            }
+            assertEqualLists(
+                stored,
+                listOf(
+                    Triple("a", 5, null),
+                    Triple("b", 7, null),
+                    Triple("c", 7, "x")
+                )
+            )
+        }
+    }
+
+    /* EXPOSED-1088 */
+    @Test
+    fun testBatchInsertUsingMultiRowValuesAppliesDatabaseDefaultToRowsThatLeaveItUnset() {
+        val tester = object : Table("test_batch_insert_database_default") {
+            val name = varchar("name", 32)
+            val note = varchar("note", 32).defaultExpression(stringLiteral("fromDb")).nullable()
+        }
+
+        withTables(tester) {
+            val inserted = tester.batchInsert(listOf("a", "b"), useMultiRowValues = true) { rowName ->
+                this[tester.name] = rowName
+                if (rowName == "a") this[tester.note] = "setByRow"
+            }
+
+            val stored = tester.selectAll().orderBy(tester.name).map { it[tester.name] to it[tester.note] }
+            assertEqualLists(stored, listOf("a" to "setByRow", "b" to "fromDb"))
+
+            val returnedNotes = assertDoesNotThrow { inserted.map { it[tester.note] } }
+            assertEquals("setByRow", returnedNotes.first())
+            // It's not null for Postgres and null for other
+            assertContains(listOf(null, "fromDb"), returnedNotes.last())
+        }
+    }
+
+    /* EXPOSED-1088 */
+    @Test
+    fun testBatchInsertFailsWhenOnlySomeRowsSetAColumnWithADatabaseEvaluatedDefault() {
+        val defaultExpressionTester = object : Table("test_batch_insert_database_default") {
+            val name = varchar("name", 32)
+            val note = varchar("note", 32).defaultExpression(stringLiteral("fromDb")).nullable()
+        }
+        val databaseGeneratedTester = object : Table("test_batch_insert_database_generated") {
+            val name = varchar("name", 32)
+            val generated = integer("generated").withDefinition("DEFAULT 1").databaseGenerated()
+        }
+
+        withTables(defaultExpressionTester, databaseGeneratedTester) {
+            expectException<BatchDataInconsistentException> {
+                defaultExpressionTester.batchInsert(listOf("a", "b")) { rowName ->
+                    this[defaultExpressionTester.name] = rowName
+                    if (rowName == "a") this[defaultExpressionTester.note] = "setByRow"
+                }
+            }
+
+            expectException<BatchDataInconsistentException> {
+                databaseGeneratedTester.batchInsert(listOf("a", "b"), useMultiRowValues = true) { rowName ->
+                    this[databaseGeneratedTester.name] = rowName
+                    if (rowName == "a") this[databaseGeneratedTester.generated] = 5
+                }
             }
         }
     }

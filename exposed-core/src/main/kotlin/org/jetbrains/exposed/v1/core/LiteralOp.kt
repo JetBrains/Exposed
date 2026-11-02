@@ -1,6 +1,10 @@
 package org.jetbrains.exposed.v1.core
 
+import org.jetbrains.exposed.v1.core.java.UUIDColumnType
 import java.math.BigDecimal
+import java.util.UUID
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Represents the specified [value] as an SQL literal, using the specified [columnType] to convert the value.
@@ -95,8 +99,54 @@ fun vectorLiteral(value: IntArray): LiteralOp<IntArray> = LiteralOp(
 /** Returns the specified [value] as a literal of type [T]. */
 @Suppress("UNCHECKED_CAST", "ComplexMethod")
 fun <T, S : T?> ExpressionWithColumnType<S>.asLiteral(value: T): LiteralOp<T> = when {
-    value is ByteArray && columnType is BasicBinaryColumnType -> stringLiteral(value.toString(Charsets.UTF_8))
+    value is ByteArray && columnType is BasicBinaryColumnType -> literal(value)
     columnType is ColumnWithTransform<*, *> -> (columnType as ColumnWithTransform<Any, Any>)
         .let { LiteralOp(it.originalColumnType, it.unwrapRecursive(value)) }
     else -> LiteralOp(columnType as IColumnType<T & Any>, value)
 } as LiteralOp<T>
+
+/**
+ * Returns the specified non-null scalar [value] as an SQL literal.
+ *
+ * Supported values are booleans, signed and unsigned integer and floating-point numbers, [BigDecimal], strings,
+ * characters, byte arrays, [Uuid], and [UUID]. Values from optional modules, such as date and time types, should use
+ * their module's typed literal function instead.
+ *
+ * This is a convenience function to replace direct usage of `*type*Literal` methods.
+ *
+ * For example:
+ * ```kotlin
+ * val status = literal("ready")
+ * ```
+ *
+ * @throws IllegalArgumentException If [value] has no automatically resolved literal type.
+ */
+@OptIn(ExperimentalUuidApi::class)
+fun <T : Any> literal(value: T): LiteralOp<T> {
+    val result: LiteralOp<out Any> = when (value) {
+        is Boolean -> booleanLiteral(value)
+        is Byte -> byteLiteral(value)
+        is UByte -> ubyteLiteral(value)
+        is Short -> shortLiteral(value)
+        is UShort -> ushortLiteral(value)
+        is Int -> intLiteral(value)
+        is UInt -> uintLiteral(value)
+        is Long -> longLiteral(value)
+        is ULong -> ulongLiteral(value)
+        is Float -> floatLiteral(value)
+        is Double -> doubleLiteral(value)
+        is BigDecimal -> decimalLiteral(value)
+        is String -> stringLiteral(value)
+        is Char -> LiteralOp(CharacterColumnType(), value)
+        is ByteArray -> LiteralOp(BinaryLiteralColumnType(), value)
+        is Uuid -> LiteralOp(UuidColumnType(), value)
+        is UUID -> LiteralOp(UUIDColumnType(), value)
+        else -> throw IllegalArgumentException(
+            "Cannot create an SQL literal for ${value::class.qualifiedName}. " +
+                "Use an explicit Expression or LiteralOp with an IColumnType."
+        )
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    return result as LiteralOp<T>
+}

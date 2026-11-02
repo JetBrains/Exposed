@@ -49,26 +49,31 @@ internal open class MysqlDataTypeProvider : DataTypeProvider() {
 
     override fun jsonBType(): String = "JSON"
 
-    override fun processForDefaultValue(e: Expression<*>): String = when (e) {
-        is LiteralOp<*> if e.columnType is JsonColumnMarker -> when {
-            ((currentDialect as? MysqlDialect)?.fullVersion ?: "0") >= "8.0.13" -> "(${super.processForDefaultValue(e)})"
-            else -> throw UnsupportedByDialectException(
-                "MySQL versions prior to 8.0.13 do not accept default values on JSON columns",
-                currentDialect
-            )
+    override fun processForDefaultValue(e: Expression<*>): String {
+        @Suppress("MagicNumber")
+        @OptIn(InternalApi::class)
+        val coversMySql8Patch13 = ((currentDialect as? MysqlDialect)?.fullVersion ?: Version(0, 0, 0)).covers(8, 0, 13)
+        return when (e) {
+            is LiteralOp<*> if e.columnType is JsonColumnMarker -> when {
+                coversMySql8Patch13 -> "(${super.processForDefaultValue(e)})"
+                else -> throw UnsupportedByDialectException(
+                    "MySQL versions prior to 8.0.13 do not accept default values on JSON columns",
+                    currentDialect
+                )
+            }
+            // The default value specified in a DEFAULT clause can be a literal constant or an expression. With one
+            // exception, enclose expression default values within parentheses to distinguish them from literal constant
+            // default values. The exception is that, for TIMESTAMP and DATETIME columns, you can specify the
+            // CURRENT_TIMESTAMP function as the default, without enclosing parentheses.
+            // https://dev.mysql.com/doc/refman/8.0/en/data-type-defaults.html#data-type-defaults-explicit
+            is ExpressionWithColumnType<*> if (
+                e.columnType is IDateColumnType && e.toString().startsWith("CURRENT_TIMESTAMP")
+                ) ->
+                super.processForDefaultValue(e)
+            !is LiteralOp<*> if coversMySql8Patch13 ->
+                "(${super.processForDefaultValue(e)})"
+            else -> super.processForDefaultValue(e)
         }
-        // The default value specified in a DEFAULT clause can be a literal constant or an expression. With one
-        // exception, enclose expression default values within parentheses to distinguish them from literal constant
-        // default values. The exception is that, for TIMESTAMP and DATETIME columns, you can specify the
-        // CURRENT_TIMESTAMP function as the default, without enclosing parentheses.
-        // https://dev.mysql.com/doc/refman/8.0/en/data-type-defaults.html#data-type-defaults-explicit
-        is ExpressionWithColumnType<*> if (
-            e.columnType is IDateColumnType && e.toString().startsWith("CURRENT_TIMESTAMP")
-            ) ->
-            super.processForDefaultValue(e)
-        !is LiteralOp<*> if ((currentDialect as? MysqlDialect)?.fullVersion ?: "0") >= "8.0.13" ->
-            "(${super.processForDefaultValue(e)})"
-        else -> super.processForDefaultValue(e)
     }
 
     override fun precessOrderByClause(queryBuilder: QueryBuilder, expression: Expression<*>, sortOrder: SortOrder) {
@@ -97,7 +102,9 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
 
     private class MATCH(val expr: Expression<*>, val pattern: String, val mode: MatchMode) : Op<Boolean>() {
         override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-            append("MATCH(", expr, ") AGAINST ('", pattern, "' ", mode.mode(), ")")
+            append("MATCH(", expr, ") AGAINST (")
+            appendStringArgument(pattern)
+            append(" ", mode.mode(), ")")
         }
     }
 
@@ -116,7 +123,9 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         expr: Expression<T>,
         substring: String
     ) = queryBuilder {
-        append("LOCATE(\'", substring, "\',", expr, ")")
+        append("LOCATE(")
+        appendStringArgument(substring)
+        append(",", expr, ")")
     }
 
     override fun <T : String?> regexp(
@@ -156,7 +165,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
     ) = queryBuilder {
         if (toScalar) append("JSON_UNQUOTE(")
         append("JSON_EXTRACT(", expression, ", ")
-        path.ifEmpty { arrayOf("") }.appendTo { +"\"$$it\"" }
+        path.ifEmpty { arrayOf("") }.appendTo { appendStringArgument("$$it") }
         append(")${if (toScalar) ")" else ""}")
     }
 
@@ -169,7 +178,8 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
     ) = queryBuilder {
         append("JSON_CONTAINS(", target, ", ", candidate)
         path?.let {
-            append(", '$$it'")
+            append(", ")
+            appendStringArgument("$$it")
         }
         append(")")
     }
@@ -189,7 +199,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         queryBuilder {
             append("JSON_CONTAINS_PATH(", expression, ", ")
             append("'$oneOrAll', ")
-            path.ifEmpty { arrayOf("") }.appendTo { +"'$$it'" }
+            path.ifEmpty { arrayOf("") }.appendTo { appendStringArgument("$$it") }
             append(")")
         }
     }
@@ -328,7 +338,10 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
     }
 
     open fun isUpsertAliasSupported(dialect: DatabaseDialect): Boolean = when (dialect) {
-        is MysqlDialect -> dialect.fullVersion >= "8.0.19"
+        is MysqlDialect -> {
+            @Suppress("MagicNumber")
+            dialect.fullVersion.covers(8, 0, 19)
+        }
         else -> false // H2_MySQL mode also uses this function provider & requires older unsupported version
     }
 
@@ -361,8 +374,8 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider.INSTA
     }
 
     @OptIn(InternalApi::class)
-    internal val fullVersion: String by lazy {
-        currentTransaction().db.fullVersion
+    internal val fullVersion: Version by lazy {
+        Version.from(currentTransaction().db.fullVersion)
     }
 
     override val supportsCreateSequence: Boolean = false
@@ -374,6 +387,8 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider.INSTA
     override val supportsOrderByNullsFirstLast: Boolean = false
 
     override val supportsSetDefaultReferenceOption: Boolean = false
+
+    override val supportsDualTableConcept: Boolean = true
 
     @Deprecated(
         "The parameter was moved to JdbcExposedDatabaseMetadata/R2dbcExposedDatabaseMetadata classes",
@@ -398,7 +413,8 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider.INSTA
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
         if (super.isAllowedAsColumnDefault(e)) return true
-        if (fullVersion >= "8.0.13") {
+        @Suppress("MagicNumber")
+        if (fullVersion.covers(8, 0, 13)) {
             return true
         }
 

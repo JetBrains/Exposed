@@ -3,6 +3,7 @@ package org.jetbrains.exposed.v1.gradle.plugin
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -23,9 +24,22 @@ abstract class GenerateMigrationsTask : DefaultTask() {
 
     /**
      * Package name where Exposed tables definitions are located.
+     * If multiple package names are required, pass all possible strings to the [tablesPackages] property instead.
+     * If the [tablesPackage] and [tablesPackages] properties have inconsistent elements, the final list of
+     * package names used will be a distinct combination of both properties' values.
      */
     @get:Input
+    @get:Optional
     abstract val tablesPackage: Property<String>
+
+    /**
+     * All package names where Exposed tables definitions are located.
+     * If this property is not manually set, then it will be set to a list containing the single
+     * element package string configured for the property [tablesPackage]. If the [tablesPackage] property is not
+     * manually set, then this property defaults to an empty list and the task fails.
+     */
+    @get:Input
+    abstract val tablesPackages: ListProperty<String>
 
     /**
      * Optional classpath that is scanned for Exposed table definitions.
@@ -134,7 +148,8 @@ abstract class GenerateMigrationsTask : DefaultTask() {
         workerExecutor
             .classLoaderIsolation()
             .submit(GenerateMigrationsWorker::class.java) { parameters ->
-                parameters.tablesPackage = tablesPackage.get()
+                parameters.tablesPackage = tablesPackage.getOrElse("")
+                parameters.tablesPackages = tablesPackages.get()
                 parameters.classpathUrls = classpath.files.map { it.toURI().toURL() }
 
                 parameters.fileDirectory.set(fileDirectory)

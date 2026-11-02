@@ -14,7 +14,6 @@ import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
 import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
@@ -23,7 +22,6 @@ import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.tests.shared.expectException
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -32,6 +30,17 @@ import kotlin.test.assertNull
 
 class JsonBColumnTests : DatabaseTestsBase() {
     private val binaryJsonNotSupportedDB = listOf(TestDB.SQLSERVER, TestDB.ORACLE)
+
+    /* EXPOSED-1093 */
+    @Test
+    fun testJsonExtractPathIsData() {
+        withJsonBTable(exclude = TestDB.entries - TestDB.ALL_POSTGRES) { tester, _, _, _ ->
+            // a quote in the path is data: it names a key that does not exist, rather than ending the literal
+            val extracted = tester.jsonBColumn.extract<String>("user's")
+
+            assertNull(tester.select(extracted).single()[extracted])
+        }
+    }
 
     @Test
     fun testInsertAndSelect() {
@@ -133,7 +142,6 @@ class JsonBColumnTests : DatabaseTestsBase() {
         }
     }
 
-    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun testDAOFunctionsWithJsonBColumn() {
         val dataTable = JsonTestsData.JsonBTable
@@ -533,7 +541,6 @@ class JsonBColumnTests : DatabaseTestsBase() {
     }
 
     @Test
-    @Tag(MISSING_R2DBC_TEST)
     fun testFieldsOutsideTransaction() {
         lateinit var entity: MyEntity
         withTables(excludeSettings = binaryJsonNotSupportedDB, MyTable) {

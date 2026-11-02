@@ -124,7 +124,8 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
             .mapIndexed { index, columnValues ->
                 val resultSetValues = allResultSetsValues?.getOrNull(index) ?: hashMapOf()
                 val argumentValues = columnValues.toMap()
-                    .filterValues { it != DefaultValueMarker }
+                    // a value that is an expression is rendered into the statement, it is not a value of the row
+                    .filterValues { it !is Expression<*> }
                     .let { unwrapColumnValues(it) }
 
                 argumentValues + resultSetValues
@@ -223,11 +224,13 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
                 // H2/SQLite only returns one last generated key...
                 (resultSetsValues[0][firstAutoIncColumn] as? Number)?.toLong()?.let {
                     var id = it
+                    val generatedValues = arrayListOf<MutableMap<Column<*>, Any?>>()
 
-                    while (resultSetsValues.size < processedInserted) {
+                    while (resultSetsValues.size + generatedValues.size < processedInserted) {
                         id -= 1
-                        resultSetsValues.add(0, mutableMapOf(firstAutoIncColumn to id))
+                        generatedValues.add(mutableMapOf(firstAutoIncColumn to id))
                     }
+                    resultSetsValues.addAll(0, generatedValues.asReversed())
                 }
             }
 

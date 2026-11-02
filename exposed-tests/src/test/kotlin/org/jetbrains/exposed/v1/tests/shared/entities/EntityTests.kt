@@ -12,11 +12,13 @@ import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
-import org.jetbrains.exposed.v1.tests.shared.*
-import org.junit.jupiter.api.Tag
+import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
+import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
+import org.jetbrains.exposed.v1.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.tests.shared.assertFalse
+import org.jetbrains.exposed.v1.tests.shared.expectException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import java.sql.Connection
@@ -97,7 +99,6 @@ object EntityTestsData {
     }
 }
 
-@Tag(MISSING_R2DBC_TEST)
 @Suppress("LargeClass")
 class EntityTests : DatabaseTestsBase() {
     @Test
@@ -531,6 +532,29 @@ class EntityTests : DatabaseTestsBase() {
             ref1.parent = ref1.id
             val refRow = SelfReferenceTable.selectAll().where { SelfReferenceTable.id eq ref1.id }.single()
             assertEquals(ref1.id._value, refRow[SelfReferenceTable.parentId]!!.value)
+        }
+    }
+
+    @Test
+    @Timeout(value = 30, unit = TimeUnit.SECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    fun testSelfReferenceToEntityWithPendingInsert() {
+        // SQL Server is excluded: assigning `child.parent = parent.id` eagerly flushes the pending inserts (the
+        // reference setter resolves the not-yet-generated parent id), and at that point both entities still have empty
+        // `writeValues`, so they are inserted as a single multi-row `INSERT ... DEFAULT VALUES` batch. SQL Server
+        // returns only one generated key for such a batch, which trips the "Number of autoincs doesn't match number of
+        // batch entries" check. Other databases return all generated keys and behave correctly.
+        withTables(excludeSettings = listOf(TestDB.SQLSERVER), SelfReferenceTable) {
+            // the referring entity is scheduled first, so the insert order has to come from the reference
+            val child = SelfReferencedEntity.new { }
+            val parent = SelfReferencedEntity.new { }
+            child.parent = parent.id
+            flushCache()
+
+            val parentIds = SelfReferenceTable.selectAll()
+                .associate { it[SelfReferenceTable.id] to it[SelfReferenceTable.parentId] }
+            assertEquals(2, parentIds.size)
+            assertEquals(parent.id, parentIds[child.id])
+            assertNull(parentIds[parent.id])
         }
     }
 
@@ -1780,6 +1804,18 @@ class EntityTests : DatabaseTestsBase() {
             entityB.value = 4
 
             flushCache()
+        }
+    }
+
+    @Test
+    fun testForIds() {
+        withTables(Humans) {
+            val h1 = Human.new { h = "h1" }.id.value
+            val h2 = Human.new { h = "h2" }.id.value
+            Human.new { h = "h3" }
+
+            val byIds = Human.forIds(listOf(h1, h2)).toList()
+            assertEquals(setOf("h1", "h2"), byIds.map { it.h }.toSet())
         }
     }
 }

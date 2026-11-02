@@ -4,6 +4,7 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.dao.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.v1.jdbc.*
@@ -16,15 +17,29 @@ import kotlin.reflect.full.primaryConstructor
 import kotlin.sequences.Sequence
 
 /**
- * Base class responsible for the management of [Entity] instances and the maintenance of their relation
- * to the provided [table].
+ * The entry point for the entities of one [table]: creating, finding, and deleting them.
  *
- * @param [table] The [IdTable] object that stores rows mapped to entities managed by this class.
- * @param [entityType] The expected [Entity] class type. This can be left `null` if it is the class of type
- * argument [T] provided to this [EntityClass] instance.
- * @param [entityCtor] The function invoked to instantiate an [Entity] using a provided [EntityID] value. If a
- * reference to a specific entity constructor or a custom function is not passed as an argument, reflection will
- * be used to determine the primary constructor of the associated entity class on first access (which can be slower).
+ * Declare it as the companion object of the entity, normally through the variant matching the id type
+ * ([IntEntityClass], [LongEntityClass], [UuidEntityClass], [CompositeEntityClass], ...):
+ *
+ * ```kotlin
+ * class Film(id: EntityID<Int>) : IntEntity(id) {
+ *     var title by Films.title
+ *
+ *     companion object : IntEntityClass<Film>(Films)
+ * }
+ *
+ * transaction {
+ *     val film = Film.new { title = "A New Hope" }
+ *     val titles = Film.all().map { it.title }
+ *     Film.findById(film.id.value)?.delete()
+ * }
+ * ```
+ *
+ * @param [table] The table whose rows are mapped to entities managed by this class.
+ * @param [entityType] The [Entity] class to map. Defaults to the class that encloses this companion object.
+ * @param [entityCtor] Called to instantiate an entity for a row. Defaults to the entity's primary constructor,
+ * looked up by reflection on first access; pass a reference such as `::Film` to skip that lookup.
  */
 @Suppress("UNCHECKED_CAST", "UnnecessaryAbstractClass", "TooManyFunctions")
 abstract class EntityClass<ID : Any, out T : Entity<ID>>(
@@ -116,9 +131,18 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
     }
 
     internal open fun invalidateEntityInCache(o: Entity<ID>) {
+        if (TransactionManager.current().db != o.db) {
+            return
+        }
+
         val entityAlreadyFlushed = o.id._value != null
-        val sameDatabase = TransactionManager.current().db == o.db
-        if (!entityAlreadyFlushed || !sameDatabase) return
+        if (!entityAlreadyFlushed) {
+            // If id is empty the entity cannot be looked up in the database.
+            // But writing to it is still legitimate while it is initializing or its insert is scheduled
+            val cache = warmCache()
+            if (cache.isEntityInInitializationState(o) || o.isNewEntity(cache)) return
+            throw EntityNotFoundException(o.id, this)
+        }
 
         val currentEntityInCache = testCache(o.id)
         if (currentEntityInCache == null) {
@@ -153,14 +177,18 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      */
     fun removeFromCache(entity: Entity<ID>) {
         val cache = warmCache()
+        cache.inserts[table]?.remove(entity)
         cache.remove(table, entity)
+
+        val entityId = entity.id.takeIf { it._value != null }
         cache.referrers.forEach { (col, referrers) ->
             // Remove references from entity to other entities
-            referrers.remove(entity.id)
+            entityId?.let { referrers.remove(it) }
 
             // Remove references from other entities to this entity
             if (col.table == table) {
-                with(entity) { col.lookup() }?.let { referrers.remove(it as EntityID<*>) }
+                val referencedId = with(entity) { col.lookup() } as EntityID<*>?
+                referencedId?.takeIf { it._value != null }?.let { referrers.remove(it) }
             }
         }
     }
@@ -915,22 +943,50 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
             val findQuery = wrapRows(finalQuery)
             val entities = getEntities(forUpdate, findQuery).distinct()
 
-            entities.groupByReference(refColumn = refColumn).forEach { (id, values) ->
-                val castReferee = refColumn.referee
-                    .takeUnless { it?.columnType is EntityIDColumnType<*> && id !is EntityID<*> }
-                    ?: (refColumn.referee?.columnType as EntityIDColumnType<*>).idColumn
-                val parentEntityId: EntityID<*> = parentTable.selectAll().where { castReferee as Column<SID> eq id }
-                    .single()[parentTable.id]
+            val groupedEntities = entities.groupByReference(refColumn = refColumn)
+            val parentEntityIds = resolveParentEntityIds(groupedEntities.keys, refColumn, parentTable)
+
+            groupedEntities.forEach { (id, values) ->
+                val parentEntityId: EntityID<*> = parentEntityIds[id] ?: return@forEach
 
                 cache.getOrPutReferrers(parentEntityId, refColumn) { SizedCollection(values) }.also {
                     if (keepLoadedReferenceOutOfTransaction) {
-                        val childEntity = find { refColumn eq id }.firstOrNull()
-                        childEntity?.storeReferenceInCache(refColumn, it)
+                        values.firstOrNull()?.storeReferenceInCache(refColumn, it)
                     }
                 }
             }
             return entities
         }
+    }
+
+    /**
+     * Maps each value stored in a non-[EntityIDColumnType] [refColumn] to the [EntityID] of the parent row it points to.
+     */
+    private fun <SID> resolveParentEntityIds(
+        refereeValues: Set<SID>,
+        refColumn: Column<SID>,
+        parentTable: IdTable<*>
+    ): Map<SID, EntityID<*>> {
+        if (refereeValues.isEmpty()) return emptyMap()
+
+        val referee = refColumn.referee
+        val idColumn = (parentTable.id.columnType as EntityIDColumnType<*>).idColumn
+
+        if (referee == parentTable.id || referee == idColumn) {
+            return refereeValues.associateWith { value ->
+                val idValue = (value as? EntityID<*>)?.value ?: value
+                EntityIDFunctionProvider.createEntityID(idValue!!, parentTable as IdTable<Any>)
+            }
+        }
+
+        val castReferee = referee
+            .takeUnless { it?.columnType is EntityIDColumnType<*> && refereeValues.none { value -> value is EntityID<*> } }
+            ?: (referee?.columnType as EntityIDColumnType<*>).idColumn
+
+        return parentTable
+            .select(parentTable.id, castReferee as Column<SID>)
+            .where { castReferee inList refereeValues.toList() }
+            .associate { it[castReferee] to it[parentTable.id] }
     }
 
     internal fun warmUpCompositeIdReferences(

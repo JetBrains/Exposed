@@ -109,7 +109,7 @@ There are multiple options to define custom functions:
 [`.function()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/function.html) simply wraps the column expression 
 in parentheses with the string argument as the function name:
 
-<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="29-34"/>
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="30-35"/>
 
 ### Functions with additional parameters
 
@@ -117,7 +117,7 @@ The [`CustomFunction`](https://jetbrains.github.io/Exposed/api/exposed-core/org.
 a function name as the first argument and the column type that should be used to handle its results as the second.
 After that, you can provide any amount of additional parameters separated by a comma:
 
-<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="37-43"/>
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="38-44"/>
 
 There are also shortcuts for `String`, `Long`, and `DateTime` functions:
 * [`CustomStringFunction`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-custom-string-function.html)
@@ -126,14 +126,14 @@ There are also shortcuts for `String`, `Long`, and `DateTime` functions:
 
 Using one of these shortcuts, the example above could be simplified to:
 
-<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="46-48"/>
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="47-49"/>
 
 In the following example, [`CustomDateFunction`](https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.datetime/-custom-date-function.html) 
 is used in an H2 database to mimic its `DATEADD()` function in order to calculate a date three months before the current one.
 In is then chained with Exposed's built-in [`.month()`](https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.datetime/month.html) 
 function to return the month of the date found, so it can be used in a query:
 
-<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="55-65"/>
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="56-66"/>
 
 ### Functions that require more complex query building
 
@@ -155,7 +155,7 @@ from <code>kotlin-stdlib</code> may be resolved instead and cause compilation er
 
 This custom function can then be used to achieve the exact trim that is needed:
 
-<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="72-81,83-85"/>
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="73-82,84-86"/>
 
 ## Window functions
 

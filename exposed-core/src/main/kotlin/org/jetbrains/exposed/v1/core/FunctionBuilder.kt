@@ -44,13 +44,22 @@ fun <T : String?> Expression<T>.upperCase(): UpperCase<T> = UpperCase(this)
 /** Concatenates the text representations of all the [expr]. */
 fun concat(vararg expr: Expression<*>): Concat = Concat("", *expr)
 
-/** Concatenates the text representations of all the [expr] using the specified [separator]. */
+/**
+ * Concatenates the text representations of all the [expr] using the specified [separator].
+ *
+ * [separator] is bound as a query parameter, except on Redshift, where it is written into the statement as a string
+ * literal with its single quotes escaped. Either way it is treated as data, so it must be passed as is, without being
+ * escaped on the client side.
+ */
 fun concat(separator: String = "", expr: List<Expression<*>>): Concat = Concat(separator, expr = expr.toTypedArray())
 
 /**
  * Concatenates all non-null input values of each group from [this] string expression, separated by [separator].
  *
  * @param separator The separator to use between concatenated values. If left `null`, the database default will be used.
+ * It is bound as a query parameter, except on SQL Server and Redshift, where it is written into the statement as a string
+ * literal with its single quotes escaped. Either way it is treated as data, so it must be passed as is, without being
+ * escaped on the client side.
  * @param distinct If set to `true`, duplicate values will be eliminated.
  * @param orderBy If specified, values will be sorted in the concatenated string.
  * @sample org.jetbrains.exposed.v1.tests.shared.dml.GroupByTests.testGroupConcat
@@ -65,6 +74,9 @@ fun <T : String?> Expression<T>.groupConcat(
  * Concatenates all non-null input values of each group from [this] string expression, separated by [separator].
  *
  * @param separator The separator to use between concatenated values. If left `null`, the database default will be used.
+ * It is bound as a query parameter, except on SQL Server and Redshift, where it is written into the statement as a string
+ * literal with its single quotes escaped. Either way it is treated as data, so it must be passed as is, without being
+ * escaped on the client side.
  * @param distinct If set to `true`, duplicate values will be eliminated.
  * @param orderBy If specified, values will be sorted in the concatenated string.
  * @sample org.jetbrains.exposed.v1.tests.shared.dml.GroupByTests.testGroupConcat
@@ -81,7 +93,13 @@ fun <T : String?> Expression<T>.substring(start: Int, length: Int): Substring<T>
 /** Removes the longest string containing only spaces from both ends of string expression. */
 fun <T : String?> Expression<T>.trim(): Trim<T> = Trim(this)
 
-/** Returns the index of the first occurrence of [substring] in this string expression or 0 if it doesn't contain [substring] */
+/**
+ * Returns the index of the first occurrence of [substring] in this string expression or 0 if it doesn't contain [substring].
+ *
+ * [substring] is bound as a query parameter, except on Redshift, where it is written into the statement as a string
+ * literal with its single quotes escaped. Either way it is treated as data, so it must be passed as is, without being
+ * escaped on the client side.
+ */
 fun <T : String?> Expression<T>.locate(substring: String): Locate<T> = Locate(this, substring)
 
 // General-Purpose Aggregate Functions

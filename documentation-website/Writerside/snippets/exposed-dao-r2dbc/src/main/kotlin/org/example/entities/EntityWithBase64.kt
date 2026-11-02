@@ -1,0 +1,22 @@
+package org.example.entities
+
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.dao.r2dbc.IntEntity
+import org.jetbrains.exposed.v1.dao.r2dbc.IntEntityClass
+import java.util.Base64
+
+object TableWithText : IntIdTable() {
+    val text = varchar("text", length = 2048)
+}
+
+class EntityWithBase64(id: EntityID<Int>) : IntEntity(id) {
+    var base64: String by TableWithText.text
+        .memoizedTransform(
+            wrap = { Base64.getEncoder().encodeToString(it.toByteArray()) },
+            unwrap = { Base64.getDecoder().decode(it).toString() }
+        )
+
+    companion object :
+        IntEntityClass<EntityWithBase64>(TableWithText)
+}

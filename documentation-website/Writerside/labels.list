@@ -9,5 +9,7 @@
     <primary-label id="r2dbc" short-name="" name="R2DBC" color="purple">
         R2DBC-only
     </primary-label>
-
+    <primary-label id="experimental" name="Experimental" short-name="Experimental" color="tangerine">
+        This feature is experimental. It may be dropped or changed at any time. Opt-in is required (see details below).
+    </primary-label>
 </labels>

@@ -12,7 +12,8 @@ Exposed is organized into multiple modules:
 
 ### Core Modules
 - **exposed-core**: Base module containing both DSL API and mapping functionality
-- **exposed-dao**: DAO API implementation
+- **exposed-dao**: DAO API implementation for JDBC
+- **exposed-dao-r2dbc**: DAO API implementation for R2DBC (experimental preview, suspending API)
 - **exposed-jdbc**: Transport level implementation based on Java JDBC API
 - **exposed-r2dbc**: Reactive implementation based on R2DBC
 
@@ -31,6 +32,7 @@ Exposed is organized into multiple modules:
 ### Testing Modules
 - **exposed-tests**: Tests for JDBC implementation
 - **exposed-r2dbc-tests**: Tests for R2DBC implementation
+- **exposed-dao-r2dbc-tests**: Tests for the R2DBC DAO implementation
 - **exposed-jdbc-r2dbc-tests**: Tests for JDBC and R2DBC mixed in one module
 
 ## Supported Databases

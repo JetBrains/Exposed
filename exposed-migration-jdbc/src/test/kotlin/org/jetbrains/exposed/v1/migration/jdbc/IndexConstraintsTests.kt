@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.migration.jdbc
 
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.like
+import org.jetbrains.exposed.v1.core.lowerCase
 import org.jetbrains.exposed.v1.jdbc.exists
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
@@ -193,6 +194,101 @@ class IndexConstraintsTests : DatabaseTestsBase() {
             assertEquals(2, statements.size)
             assertEquals(1, statements.map { it.lowercase() }.filter { it.contains(" indexOnlyInDbIdx".lowercase()) }.size)
             assertEquals(1, statements.map { it.lowercase() }.filter { it.contains(" columnWithIndexOnlyInDbIdx".lowercase()) }.size)
+        }
+    }
+
+    @Test
+    fun testFunctionalIndicesOnDifferentExpressionsAreNotExcessive() {
+        val tester = object : Table("test_table") {
+            val id = integer("id")
+            val name = varchar("name", length = 42)
+            val email = varchar("email", length = 42)
+
+            override val primaryKey = PrimaryKey(id)
+
+            init {
+                index("test_table_lower_name", false, functions = listOf(name.lowerCase()))
+                index("test_table_lower_email", false, functions = listOf(email.lowerCase()))
+            }
+        }
+
+        val functionsNotSupported = TestDB.ALL_H2_V2 + TestDB.MARIADB + TestDB.SQLSERVER + TestDB.MYSQL_V5
+        withTables(excludeSettings = functionsNotSupported, tester) {
+            assertTrue(tester.exists())
+
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tester, withLogs = false)
+            // Only the drop matters here. Oracle case-folds the index names and Index.onlyNameDiffer() ignores
+            // functions, which already produces a spurious CREATE for one of them independently of this change.
+            assertEquals(0, statements.count { it.contains("DROP INDEX", ignoreCase = true) })
+        }
+    }
+
+    @Test
+    fun testPartialAndFullIndexOnSameColumnAreNotExcessive() {
+        val tester = object : Table("test_table") {
+            val id = integer("id")
+            val name = varchar("name", length = 42)
+
+            override val primaryKey = PrimaryKey(id)
+
+            init {
+                index("test_table_by_name", false, name)
+                index("test_table_by_name_partial", false, name) { name like "A%" }
+            }
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, tester) {
+            assertTrue(tester.exists())
+
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tester, withLogs = false)
+            assertEquals(0, statements.size)
+        }
+    }
+
+    @Test
+    fun testIndicesOfUnmappedColumnsAreNotDroppedTwice() {
+        val dbTable = object : Table("test_table") {
+            val id = integer("id")
+            val first = bool("first").nullable().index("test_table_first")
+            val second = bool("second").nullable().index("test_table_second")
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        val tester = object : Table("test_table") {
+            val id = integer("id")
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withTables(excludeSettings = listOf(TestDB.ORACLE), dbTable) {
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tester, withLogs = false)
+
+            assertEquals(statements.distinct().size, statements.size)
+            assertEquals(1, statements.count { it.contains("test_table_first", ignoreCase = true) })
+            assertEquals(1, statements.count { it.contains("test_table_second", ignoreCase = true) })
+        }
+    }
+
+    @Test
+    fun testPartialIndicesWithDifferentConditionsOnSameColumnAreNotExcessive() {
+        val tester = object : Table("test_table") {
+            val id = integer("id")
+            val name = varchar("name", length = 42)
+
+            override val primaryKey = PrimaryKey(id)
+
+            init {
+                index("test_table_by_name_a", false, name) { name like "A%" }
+                index("test_table_by_name_b", false, name) { name like "B%" }
+            }
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, tester) {
+            assertTrue(tester.exists())
+
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tester, withLogs = false)
+            assertEquals(0, statements.size)
         }
     }
 }

@@ -20,8 +20,8 @@ import org.jetbrains.exposed.v1.jdbc.transactions.experimental.withSuspendTransa
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
+import org.jetbrains.exposed.v1.tests.NO_R2DBC_SUPPORT
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Tag
@@ -195,39 +195,38 @@ class CoroutineTests : DatabaseTestsBase() {
     @RepeatedTest(10)
     @CoroutinesTimeout(60000)
     fun nestedSuspendTxTest() {
-        suspend fun insertTesting(db: Database) = newSuspendedTransaction(db = db) {
-            Testing.insert {}
+        suspend fun insertTesting(db: Database): Int = newSuspendedTransaction(db = db) {
+            maxAttempts = 1
+            Testing.insertAndGetId {}.value
         }
         withTables(listOf(TestDB.SQLITE), Testing) {
             val mainJob = GlobalScope.async {
-                val job = launch(Dispatchers.IO) {
+                val insertedId = async(Dispatchers.IO) {
                     newSuspendedTransaction(db = db) {
+                        maxAttempts = 1
                         connection.transactionIsolation = Connection.TRANSACTION_READ_COMMITTED
-                        assertEquals(
-                            null,
-                            Testing.selectAll().where { Testing.id.eq(1) }.singleOrNull()?.getOrNull(Testing.id)
-                        )
+                        assertEqualLists(Testing.selectAll().map { it[Testing.id].value }, emptyList())
 
-                        insertTesting(db)
+                        val id = insertTesting(db)
+                        assertEqualLists(Testing.selectAll().map { it[Testing.id].value }, listOf(id))
 
-                        assertEquals(
-                            1,
-                            Testing.selectAll().where { Testing.id.eq(1) }.singleOrNull()?.getOrNull(Testing.id)?.value
-                        )
+                        id
                     }
+                }.await()
+
+                newSuspendedTransaction(Dispatchers.Default, db = db) {
+                    maxAttempts = 1
+                    val id = Testing.selectAll().where { Testing.id eq insertedId }.single()[Testing.id].value
+                    assertEquals(insertedId, id)
                 }
 
-                job.join()
-                val result = newSuspendedTransaction(Dispatchers.Default, db = db) {
-                    Testing.selectAll().where { Testing.id.eq(1) }.single()[Testing.id].value
-                }
-
-                kotlin.test.assertEquals(1, result)
+                insertedId
             }
 
             while (!mainJob.isCompleted) Thread.sleep(100)
             mainJob.getCompletionExceptionOrNull()?.let { throw it }
-            assertEquals(1, Testing.selectAll().where { Testing.id.eq(1) }.single()[Testing.id].value)
+            val insertedId = mainJob.getCompleted()
+            assertEquals(insertedId, Testing.selectAll().where { Testing.id eq insertedId }.single()[Testing.id].value)
         }
     }
 
@@ -327,7 +326,9 @@ class CoroutineTests : DatabaseTestsBase() {
         companion object : IntEntityClass<TestingEntity>(Testing)
     }
 
-    @Tag(MISSING_R2DBC_TEST)
+    // Skipped for r2dbc dao because it tests deprecated method that has no r2bdc alternative.
+    //  If it's wrong, we could add it later
+    @Tag(NO_R2DBC_SUPPORT)
     @Test
     @CoroutinesTimeout(60000)
     fun testCoroutinesWithExceptionWithin() {

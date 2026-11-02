@@ -4,7 +4,7 @@ dokka = "2.2.0"
 detekt = "1.23.8" # When upgrading, also upgrade in detekt.yml and add corresponding detekt-formatting jar file.
 binary-compatibility-validator = "0.18.2"
 docker-compose = "0.17.5"
-kover = "0.9.9"
+kover = "0.9.11"
 kotlinCoroutines = "1.11.0"
 kotlinxSerialization = "1.11.0"
 
@@ -28,7 +28,7 @@ h2-r2dbc = "1.1.0.RELEASE"
 mariadb-r2dbc = "1.4.0"
 mysql-r2dbc = "1.4.3"
 oracle-r2dbc = "1.3.0"
-postgresql-r2dbc = "1.1.2.RELEASE"
+postgresql-r2dbc = "1.1.3.RELEASE"
 sqlserver-r2dbc = "1.0.5.RELEASE"
 
 springFramework6 = "6.2.19"
@@ -38,8 +38,8 @@ springBoot4 = "4.1.0"
 
 spring-security-crypto = "7.0.0"
 commons-logging = "1.4.0"
-bouncycastle = "1.85.2"
-joda-time = "2.14.3"
+bouncycastle = "1.86"
+joda-time = "2.14.4"
 junit5 = "5.14.1"
 junit6 = "6.0.1"
 kotlinx-datetime = "0.7.1-0.6.x-compat"
@@ -49,14 +49,14 @@ mustache = "0.9.14"
 hikariCP = "7.0.2"
 logcaptor = "2.12.6"
 maven-publish = "0.35.0"
-gradle-plugin-publish = "2.1.1"
+gradle-plugin-publish = "2.2.1"
 maven-plugin-development = "1.0.3"
-maven-api = "3.9.16"
+maven-api = "3.10.0"
 maven-annotations = "3.16.0"
 
 testcontainers = "2.0.5"
 
-flyway = "13.5.0"
+flyway = "13.6.0"
 
 [libraries]
 jvm = { group = "org.jetbrains.kotlin.jvm", name = "org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }

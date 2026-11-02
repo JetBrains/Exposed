@@ -67,7 +67,7 @@ or queries. For more information, see the [alias](DSL-Querying-data.topic#alias)
 
 Yes, it is. To define such tables, you can use the [`reference()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/reference.html)
 or [`optReference()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/opt-reference.html)
-functions to establish foreign key relationships between tables. For more information, see the [](DAO-Relationships.topic) topic.
+functions to establish foreign key relationships between tables. For more information, see the [](dao-relationships.md) topic.
 
 ### How can I use a savepoint?
 

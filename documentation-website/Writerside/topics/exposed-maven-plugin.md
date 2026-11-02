@@ -78,8 +78,41 @@ Configure the plugin using the `<configuration>` block inside the plugin entry i
 
 At minimum, configure the following parameters:
 
-* `tablesPackage` as the package name where Exposed table definitions are located.
+* `tablesPackage` (as the package name where Exposed table definitions are located) or
+  `tablesPackages` (as a collection of package names where Exposed table definitions are located).
 * A database configuration or a `Testcontainers` configuration.
+
+### Configure table package names
+
+To configure where Exposed table definitions are located, set either the `tablesPackage` or `tablesPackages` parameters,
+depending on whether all your tables are packaged together or across multiple specific paths:
+
+```xml
+<plugin>
+    <groupId>org.jetbrains.exposed.plugin</groupId>
+    <artifactId>exposed-maven-plugin</artifactId>
+    <version>%exposed_version%</version>
+    <configuration>
+        <tablesPackage>com.example.db.tables</tablesPackage>
+        <!-- or -->
+        <tablesPackages>
+            <package>com.example.db.auth</package>
+            <package>com.example.db.billing</package>
+        </tablesPackages>
+        <!-- other minimum parameters -->
+    </configuration>
+</plugin>
+```
+
+> The multiple-value `tablesPackages` parameter is available from plugin version 1.6.0 and
+> should be preferentially configured whenever multiple packages are required.
+>
+{style="note"}
+
+> If the `tablesPackages` parameter is configured in addition to the single-value `tablesPackage` parameter,
+> then a list containing the distinct combined elements from both property values will be used.
+>
+{style="note"}
 
 ### Configure a database connection
 
@@ -120,7 +153,8 @@ To configure a `Testcontainers` connection, set the `testContainersImageName` pa
 {style="tip"}
 
 > When `testContainersImageName` is configured, the plugin uses `Testcontainers` instead of a direct database
-> connection for schema generation.
+> connection for schema generation. If this parameter is configured in addition to the [database connection properties](#configure-a-database-connection),
+> its value will always take priority and `Testcontainers` will be used instead of a direct connection.
 >
 {style="note"}
 

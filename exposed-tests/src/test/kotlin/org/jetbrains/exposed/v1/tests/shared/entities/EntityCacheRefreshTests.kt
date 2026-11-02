@@ -13,10 +13,8 @@ import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.junit.jupiter.api.Assumptions
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.sql.Connection
 import kotlin.test.assertEquals
@@ -30,7 +28,6 @@ import kotlin.test.assertEquals
  *
  * @see <a href="https://github.com/JetBrains/Exposed/issues/1527">GitHub Issue #1527</a>
  */
-@Tag(MISSING_R2DBC_TEST)
 class EntityCacheRefreshTests : DatabaseTestsBase() {
     // Skip databases that don't support SELECT FOR UPDATE
     val excludedDbs = listOf(TestDB.SQLITE, TestDB.SQLSERVER)
@@ -72,7 +69,15 @@ class EntityCacheRefreshTests : DatabaseTestsBase() {
         }
 
         withTables(TestTable) {
-            val db = dialect.connect()
+            // MariaDB 11.6.2+ defaults innodb_snapshot_isolation to ON, so a locking read of a row
+            // that changed since the transaction's snapshot fails with ER_CHECKREAD (1020) instead of
+            // blocking, and the documented response is to restart the transaction. With 20 of them on
+            // one row that is routine, and the defaults (3 attempts, no delay) retry them in lockstep.
+            val db = dialect.connect {
+                defaultMaxAttempts = 20
+                defaultMinRetryDelay = 20
+                defaultMaxRetryDelay = 200
+            }
 
             // Create a single entity with initial value 0
             val entityIdValue = transaction(db = db) {

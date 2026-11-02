@@ -5,6 +5,8 @@ import org.example.tables.RolesTable
 import org.example.tables.StarWarsFilmsIntIdTable
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.count
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.unionAll
 

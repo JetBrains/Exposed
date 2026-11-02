@@ -15,7 +15,7 @@ dependencyResolutionManagement {
     }
     versionCatalogs {
         create("exposedLibs") {
-            from("org.jetbrains.exposed:exposed-version-catalog:1.5.0")
+            from("org.jetbrains.exposed:exposed-version-catalog:1.6.0")
         }
     }
 }
@@ -39,6 +39,7 @@ into nested accessors, for example:
 | `exposed-core`            | `exposedLibs.core`                |
 | `exposed-jdbc`            | `exposedLibs.jdbc`                |
 | `exposed-r2dbc`           | `exposedLibs.r2dbc`               |
+| `exposed-dao-r2dbc`       | `exposedLibs.dao.r2dbc`           |
 | `exposed-kotlin-datetime` | `exposedLibs.kotlin.datetime`     |
 | `spring7-transaction`     | `exposedLibs.spring7.transaction` |
 
@@ -47,8 +48,8 @@ All libraries share the `exposed` version, so you can override the whole Exposed
 ```kotlin
 versionCatalogs {
     create("exposedLibs") {
-        from("org.jetbrains.exposed:exposed-version-catalog:1.5.0")
-        version("exposed", "1.5.0")
+        from("org.jetbrains.exposed:exposed-version-catalog:1.6.0")
+        version("exposed", "1.6.0")
     }
 }
 ```

@@ -19,6 +19,8 @@ open class SQLServerBatchInsertStatement(
     ignore: Boolean = false,
     shouldReturnGeneratedValues: Boolean = true
 ) : BatchInsertStatement(table, ignore, shouldReturnGeneratedValues) {
+    override val rendersEveryRowInSQL: Boolean get() = true
+
     @OptIn(InternalApi::class)
     override fun validateLastBatch() {
         super.validateLastBatch()

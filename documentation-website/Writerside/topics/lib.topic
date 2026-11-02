@@ -14,6 +14,13 @@
         </p>
     </snippet>
 
+    <snippet id="required_dependency">
+        <p>
+            <b>Required dependency</b>:
+            <code>org.jetbrains.exposed:%artifact_name%</code>
+        </p>
+    </snippet>
+
     <snippet id="intellij_idea_restart_application">
         <p>
             In IntelliJ IDEA, click the rerun button (<img src="intellij_idea_rerun_icon.svg"
@@ -69,16 +76,36 @@
         </p>
     </snippet>
 
+    <snippet id="r2dbc-dao-experimental">
+        <warning>
+            <p>
+                The R2DBC DAO (<code>exposed-dao-r2dbc</code>) is an experimental preview: its API may change in
+                incompatible ways between releases. Every declaration requires opting in to
+                <code>@ExperimentalR2dbcDaoApi</code>, most easily module-wide:
+            </p>
+            <code-block lang="kotlin">
+                kotlin {
+                    compilerOptions {
+                        optIn.add(&quot;org.jetbrains.exposed.v1.dao.r2dbc.ExperimentalR2dbcDaoApi&quot;)
+                    }
+                }
+            </code-block>
+            <p>
+                For the complete list of differences, see <a href="migrating-from-jdbc-to-r2dbc-dao.md"/>.
+            </p>
+        </warning>
+    </snippet>
+
     <snippet id="add-dependency">
-        <tabs>
-            <tab title="Kotlin Gradle">
+        <tabs group="build-system">
+            <tab title="Kotlin Gradle" group-key="kotlin-gradle">
                 <code-block lang="kotlin">
                 dependencies {
                     implementation("org.jetbrains.exposed:%artifact_name%:%exposed_version%")
                 }
                 </code-block>
             </tab>
-            <tab title="Maven">
+            <tab title="Maven" group-key="maven">
                 <code-block lang="xml"><![CDATA[
                 <dependencies>
                     <dependency>
@@ -89,11 +116,43 @@
                 </dependencies>
                 ]]></code-block>
             </tab>
-            <tab title="Groovy Gradle">
+            <tab title="Groovy Gradle" group-key="groovy-gradle">
 
                 <code-block lang="kotlin">
                 dependencies {
                     implementation "org.jetbrains.exposed:%artifact_name%:%exposed_version%"
+                }
+                </code-block>
+            </tab>
+        </tabs>
+    </snippet>
+
+    <snippet id="add-external-runtime-dependency">
+        <tabs group="build-system">
+            <tab title="Kotlin Gradle" group-key="kotlin-gradle">
+                <code-block lang="kotlin">
+                dependencies {
+                    runtimeOnly("%external_artifact_groupId%:%external_artifact_name%:%external_artifact_version%")
+                }
+                </code-block>
+            </tab>
+            <tab title="Maven" group-key="maven">
+                <code-block lang="xml"><![CDATA[
+                <dependencies>
+                    <dependency>
+                        <groupId>%external_artifact_groupId%</groupId>
+                        <artifactId>%external_artifact_name%</artifactId>
+                        <version>%external_artifact_version%</version>
+                        <scope>runtime</scope>
+                    </dependency>
+                </dependencies>
+                ]]></code-block>
+            </tab>
+            <tab title="Groovy Gradle" group-key="groovy-gradle">
+
+                <code-block lang="kotlin">
+                dependencies {
+                    runtimeOnly "%external_artifact_groupId%:%external_artifact_name%:%external_artifact_version%"
                 }
                 </code-block>
             </tab>
@@ -151,5 +210,11 @@
                 Returns the second of the minute (<code>0</code>–<code>59</code>).
             </def>
         </deflist>
+    </snippet>
+    <snippet id="r2dbc-dao-experimental-note">
+        <note>
+            The R2DBC DAO support is experimental. Its API may be dropped or changed at any time. For more information,
+            see <a href="migrating-from-jdbc-to-r2dbc-dao.md" />.
+        </note>
     </snippet>
 </topic>

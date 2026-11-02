@@ -103,7 +103,10 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
             else -> queryBuilder {
                 append("STRING_AGG(")
                 append(expr.expr)
-                append(", '${expr.separator}')")
+                append(", ")
+                // STRING_AGG requires its arguments to share a type, and the driver binds a string as NVARCHAR
+                appendStringLiteral(expr.separator)
+                append(")")
                 expr.orderBy.singleOrNull()?.let { (col, order) ->
                     append(" WITHIN GROUP (ORDER BY ", col, " ", order.name, ")")
                 }
@@ -116,7 +119,9 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         expr: Expression<T>,
         substring: String
     ) = queryBuilder {
-        append("CHARINDEX(\'", substring, "\',", expr, ")")
+        append("CHARINDEX(")
+        appendStringArgument(substring)
+        append(",", expr, ")")
     }
 
     override fun <T : String?> regexp(
@@ -207,7 +212,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         queryBuilder {
             append(if (toScalar) "JSON_VALUE" else "JSON_QUERY")
             append("(", expression, ", ")
-            path.ifEmpty { arrayOf("") }.appendTo { +"'$$it'" }
+            path.ifEmpty { arrayOf("") }.appendTo { appendStringArgument("$$it") }
             append(")")
         }
     }
