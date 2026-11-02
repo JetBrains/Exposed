@@ -254,7 +254,7 @@ The SQL query would result in something like the following:
 
 ```sql
 ```
-{src="exposed-dao/src/main/kotlin/org/example/examples/ReadExamples.kt" include-lines="74-77"}
+{src="exposed-dao/src/main/kotlin/org/example/examples/ReadExamples.kt" include-lines="77-80"}
 
 > For a list of available predicates, see [DSL Where expression](DSL-Querying-data.topic#where-expression).
 >

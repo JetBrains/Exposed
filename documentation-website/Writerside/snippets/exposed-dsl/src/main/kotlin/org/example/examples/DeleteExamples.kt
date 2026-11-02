@@ -5,6 +5,7 @@ import org.example.tables.StarWarsFilmsIntIdTable
 import org.example.tables.StarWarsFilmsTable
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.jdbc.*
 
 private const val MOVIE_SEQUEL_ID = 7

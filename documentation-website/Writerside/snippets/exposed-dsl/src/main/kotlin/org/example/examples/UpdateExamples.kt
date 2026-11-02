@@ -1,6 +1,9 @@
 package org.example.examples
 
 import org.example.tables.StarWarsFilmsTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.like
+import org.jetbrains.exposed.v1.core.plus
 import org.jetbrains.exposed.v1.jdbc.update
 
 private const val MOVIE_SEQUEL_ID = 7
