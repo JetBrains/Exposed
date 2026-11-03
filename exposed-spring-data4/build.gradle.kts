@@ -27,6 +27,7 @@ dependencies {
 
     testImplementation(libs.spring.boot4.starter.test)
     testImplementation(libs.spring.boot4.starter.webflux)
+    testImplementation(libs.spring7.core.test)
     testImplementation(libs.h2)
     testImplementation(project(":exposed-jdbc"))
     testImplementation(project(":exposed-java-time"))
