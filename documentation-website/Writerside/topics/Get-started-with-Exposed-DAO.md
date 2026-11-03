@@ -22,9 +22,9 @@ By the end of this tutorial, you’ll be able to do the following:
 - Define database tables and corresponding DAO entities.
 - Perform basic CRUD (Create, Read, Update, and Delete) operations using object-oriented style.
 
-<include from="Get-Started-with-Exposed.topic" element-id="prerequisites"/>
+<include from="tutorial-get-started-with-exposed.md" element-id="prerequisites"/>
 <var name="project_name" value="exposed-dao-kotlin-app"/>
-<include from="Get-Started-with-Exposed.topic" element-id="create-new-project"/>
+<include from="tutorial-get-started-with-exposed.md" element-id="create-new-project"/>
 
 ## Add dependencies
 
@@ -81,7 +81,7 @@ dependencies {
 Whenever you access a database using Exposed, you start by obtaining a connection and creating a transaction.
 To configure the database connection, use the `Database.connect()` function.
 
-<include from="Get-Started-with-Exposed.topic" element-id="config-db-connection-procedure"/>
+<include from="tutorial-get-started-with-exposed.md" element-id="config-db-connection-procedure"/>
 
 With this, you've added Exposed to your Kotlin project and configured a database connection.
 You're now ready to define your data model and engage with the database using Exposed's DAO API.
@@ -150,7 +150,7 @@ With Exposed’s DAO API, you can interact with your database using a type-safe,
 working with regular Kotlin classes. When executing any database operations, you must run them inside a
 <emphasis>transaction</emphasis>.
 
-<include from="Get-Started-with-Exposed.topic" element-id="transaction-definition"/>
+<include from="tutorial-get-started-with-exposed.md" element-id="transaction-definition"/>
 
 Open your **App.kt** file and add the following transaction function:
 
@@ -268,7 +268,7 @@ Remaining tasks: [Task(id=1, title=Try Exposed DAO, completed=true)]
 
 </step>
 </procedure>
-<include from="Get-Started-with-Exposed.topic" element-id="second-transaction-behaviour-tip"/>
+<include from="tutorial-get-started-with-exposed.md" element-id="second-transaction-behaviour-tip"/>
 
 ## Next steps
 
