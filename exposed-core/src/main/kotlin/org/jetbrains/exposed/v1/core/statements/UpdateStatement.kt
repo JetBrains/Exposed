@@ -79,9 +79,10 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
         values.forEach { registerArgument(it.key, it.value) }
     }
 
+    @OptIn(InternalApi::class)
     private fun QueryBuilder.registerAdditionalArgs(join: Join) {
         join.joinParts.forEach {
-            (it.joinPart as? QueryAlias)?.query?.prepareSQL(this)
+            (it.joinPart as? QueryAlias)?.query?.prepareAsSubquerySQL(this)
             it.additionalConstraint?.invoke()?.toQueryBuilder(this)
         }
     }

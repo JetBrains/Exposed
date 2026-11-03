@@ -96,10 +96,10 @@ abstract class Transaction : UserDataHolder(), TransactionInterface {
 
     @OptIn(InternalApi::class)
     internal fun fullIdentity(column: Column<*>, queryBuilder: QueryBuilder) = queryBuilder {
-        if (column.table is Alias<*>) {
-            append(db.identifierManager.quoteIfNecessary(column.table.alias))
-        } else {
-            append(db.identifierManager.quoteIfNecessary(column.table.tableName.inProperCase()))
+        when (val table = column.table) {
+            is CommonTableExpressionReference -> append(db.identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(table.tableName))
+            is Alias<*> -> append(db.identifierManager.quoteIfNecessary(table.alias))
+            else -> append(db.identifierManager.quoteIfNecessary(table.tableName.inProperCase()))
         }
         append('.')
         append(identity(column))
