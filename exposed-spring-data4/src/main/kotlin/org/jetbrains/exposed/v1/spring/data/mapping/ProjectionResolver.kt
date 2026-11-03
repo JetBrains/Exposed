@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentHashMap
  *   so the stored created values are kept, also if the passed entity doesn't carry them.
  * - [converterFor] reads rows as any supported type: the entity, a DTO, a closed interface projection or [ResultRow].
  *   Referenced rows and to-many rows are only loaded if the type has a property for them, see [readerFor].
+ *   The to-many relations are annotated or inferred, see [ExposedMappings.relationFor].
  * - [writer] saves referenced entities and owned to-many rows, [paths] resolves property paths of queries and sorts.
  * - [metadata] gives the property to column mapping, for building queries.
  */

@@ -4,12 +4,15 @@ import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.spring.data.ExposedReferencedBy
 import org.jetbrains.exposed.v1.spring.data.event.EntityLifecycle
 import org.jetbrains.exposed.v1.spring.data.repository.SimpleExposedRepository
 import org.springframework.data.projection.ProjectionFactory
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory
 import org.springframework.data.repository.core.support.PersistentEntityInformation
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.reflect.full.memberProperties
 
 /**
  * The mappings of all types to tables of one repository factory, shared by its repositories, so nested types can be read and written:
@@ -18,9 +21,13 @@ import java.util.concurrent.ConcurrentHashMap
  *   (with the same callbacks, events and auditing). Referenced entities are saved through [repository].
  * - [converter]: reads rows of any table as a nested type (an entity, a DTO or an interface projection)
  * - [writer]: writes the to-one references and the owned to-many rows of a type, see [AggregateWriter]
+ * - [relationFor]: the to-many relation of a property, declared with [ExposedReferencedBy] or inferred from the foreign keys of [tables]
+ *
+ * [tables] are all known tables, the candidates for the to-many relations of a type.
  */
 internal class ExposedMappings(
     val mappingContext: ExposedMappingContext = ExposedMappingContext(),
+    val tables: ExposedTableRegistry = ExposedTableRegistry.EMPTY,
     val projectionFactory: ProjectionFactory = SpelAwareProxyProjectionFactory(),
     private val lifecycle: (IdTable<Any>) -> EntityLifecycle<Any> = { EntityLifecycle(it) },
     private val keepCreatedOnUpdate: Boolean = false,
@@ -36,6 +43,13 @@ internal class ExposedMappings(
     private val repositories = ConcurrentHashMap<Key, SimpleExposedRepository<Any, Any>>()
     private val converters = ConcurrentHashMap<Key, RowConverter<*>>()
     private val writers = ConcurrentHashMap<Key, AggregateWriter>()
+    private val relations = ConcurrentHashMap<RelationKey, Optional<ToManyRelation>>()
+
+    private class RelationKey(val table: Table, val type: Class<*>, val property: String) {
+        override fun equals(other: Any?): Boolean = other is RelationKey && other.table === table && other.type == type && other.property == property
+
+        override fun hashCode(): Int = (System.identityHashCode(table) * 31 + type.hashCode()) * 31 + property.hashCode()
+    }
 
     /** The converters being created on this thread, to break cycles of types referencing each other (e.g. `Employee.manager: Employee`). */
     private val creating = ThreadLocal.withInitial { mutableSetOf<Key>() }
@@ -47,7 +61,7 @@ internal class ExposedMappings(
     fun resolver(table: IdTable<*>, type: Class<*>): ProjectionResolver<Any, Any> = resolvers.getOrPut(Key(table, type)) {
         val idTable = table as IdTable<Any>
         ProjectionResolver(
-            metadata = EntityMetadata(idTable, persistentEntity(type)),
+            metadata = EntityMetadata(idTable, persistentEntity(type), this),
             factory = projectionFactory,
             instantiators = mappingContext.instantiators,
             lifecycle = lifecycle(idTable),
@@ -90,6 +104,23 @@ internal class ExposedMappings(
     }
 
     fun writer(table: Table, type: Class<*>): AggregateWriter = writers.getOrPut(Key(table, type)) { AggregateWriter(table, type, this) }
+
+    /**
+     * The to-many relation of [property] of [type], stored in [owner]: the one declared with [ExposedReferencedBy], otherwise
+     * the one inferred from [tables] (see [inferRelation]) if the property is a collection of a non-simple type without a column of its own.
+     * `null` if the property is no relation. Invalid, ambiguous and unresolvable relations fail with an [IllegalArgumentException].
+     */
+    fun relationFor(owner: Table, type: Class<*>, property: String): ToManyRelation? =
+        relations.getOrPut(RelationKey(owner, type, property)) { Optional.ofNullable(resolveRelation(owner, type, property)) }.orElse(null)
+
+    private fun resolveRelation(owner: Table, type: Class<*>, property: String): ToManyRelation? {
+        val where = "${type.simpleName}.$property"
+        type.propertyAnnotation<ExposedReferencedBy>(property)?.let { return toManyRelation(owner, it, property, where) }
+        val propertyType = runCatching { type.kotlin.memberProperties.firstOrNull { it.name == property }?.returnType }.getOrNull() ?: return null
+        val element = toManyElement(propertyType) ?: return null
+        if (columnFor(owner, type, property) != null) return null
+        return inferRelation(owner, property, element, tables, where)
+    }
 }
 
 /** Stands in for a converter that is still being created (a cycle of nested types), and delegates to it once it's needed. */

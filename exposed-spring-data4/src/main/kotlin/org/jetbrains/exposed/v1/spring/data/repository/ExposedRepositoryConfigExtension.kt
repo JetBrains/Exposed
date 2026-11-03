@@ -51,15 +51,37 @@ class ExposedRepositoryConfigExtension : RepositoryConfigurationExtensionSupport
     override fun getRepositoryAotProcessor(): Class<out BeanRegistrationAotProcessor> =
         ExposedRepositoryRegistrationAotProcessor::class.java
 
-    /** Registers one mapping context for all Exposed repositories of the application context, unless there already is one. */
+    /**
+     * Registers one mapping context and one table registry for all Exposed repositories of the application context, unless there already are.
+     *
+     * This runs once per configuration source (each `@EnableExposedRepositories`). The table registry holds the table objects
+     * found in the base packages of all sources: a later source adds its packages to the registry registered by an earlier one.
+     * A table registry bean defined by the application is kept as it is.
+     */
     override fun registerBeansForRoot(registry: BeanDefinitionRegistry, configurationSource: RepositoryConfigurationSource) {
         super.registerBeansForRoot(registry, configurationSource)
         if (!registry.containsBeanDefinition(MAPPING_CONTEXT_BEAN_NAME)) {
             registry.registerBeanDefinition(MAPPING_CONTEXT_BEAN_NAME, RootBeanDefinition(ExposedMappingContext::class.java))
         }
+        registerTableRegistry(registry, configurationSource.basePackages.toList())
+    }
+
+    private fun registerTableRegistry(registry: BeanDefinitionRegistry, basePackages: List<String>) {
+        if (!registry.containsBeanDefinition(TABLE_REGISTRY_BEAN_NAME)) {
+            val definition = RootBeanDefinition(ExposedTableRegistryFactoryBean::class.java)
+            definition.constructorArgumentValues.addIndexedArgumentValue(0, basePackages.distinct())
+            registry.registerBeanDefinition(TABLE_REGISTRY_BEAN_NAME, definition)
+            return
+        }
+        val existing = registry.getBeanDefinition(TABLE_REGISTRY_BEAN_NAME)
+        if (existing.beanClassName != ExposedTableRegistryFactoryBean::class.java.name) return
+        val arguments = existing.constructorArgumentValues
+        val registered = arguments.getIndexedArgumentValue(0, List::class.java)?.value as? List<*> ?: emptyList<Any>()
+        arguments.addIndexedArgumentValue(0, (registered.filterIsInstance<String>() + basePackages).distinct())
     }
 
     companion object {
         const val MAPPING_CONTEXT_BEAN_NAME = "exposedMappingContext"
+        const val TABLE_REGISTRY_BEAN_NAME = "exposedTableRegistry"
     }
 }

@@ -5,6 +5,7 @@ import org.jetbrains.exposed.v1.spring.data.ExposedRepository
 import org.jetbrains.exposed.v1.spring.data.event.EntityLifecycle
 import org.jetbrains.exposed.v1.spring.data.mapping.ExposedMappingContext
 import org.jetbrains.exposed.v1.spring.data.mapping.ExposedMappings
+import org.jetbrains.exposed.v1.spring.data.mapping.ExposedTableRegistry
 import org.jetbrains.exposed.v1.spring.data.mapping.ProjectionResolver
 import org.jetbrains.exposed.v1.spring.data.query.ExposedQueryLookupStrategy
 import org.jetbrains.exposed.v1.spring.data.query.QueryContextInterceptor
@@ -23,9 +24,11 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Creates Exposed repositories. Their entity callbacks come from [entityCallbacks], their lifecycle events are published
  * through [eventPublisher]; with [auditing], updates keep the stored `@CreatedDate` / `@CreatedBy` values.
+ * The to-many relations of their entities are looked up among the [tables].
  */
 internal class ExposedRepositoryFactory(
     private val mappingContext: ExposedMappingContext = ExposedMappingContext(),
+    val tables: ExposedTableRegistry = ExposedTableRegistry.EMPTY,
     private val entityCallbacks: EntityCallbacks? = null,
     private val eventPublisher: ApplicationEventPublisher? = null,
     private val auditing: Boolean = false,
@@ -34,6 +37,7 @@ internal class ExposedRepositoryFactory(
     private val mappings by lazy {
         ExposedMappings(
             mappingContext = mappingContext,
+            tables = tables,
             projectionFactory = projectionFactory,
             lifecycle = { table -> EntityLifecycle(table, entityCallbacks, eventPublisher) },
             keepCreatedOnUpdate = auditing,

@@ -5,7 +5,6 @@ import org.jetbrains.exposed.v1.core.ops.SingleValueInListOp
 import org.jetbrains.exposed.v1.jdbc.Query
 import org.jetbrains.exposed.v1.jdbc.andWhere
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
-import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.spring.data.mapping.ProjectionResolver
 import org.jetbrains.exposed.v1.spring.data.mapping.RowConverter
 import org.jetbrains.exposed.v1.spring.data.mapping.nullsSortHigh
@@ -32,12 +31,20 @@ internal class PartTreeExposedQuery<T : Any, ID : Any>(
 
     init {
         tree.parts.forEach { part ->
+            require(part.type in ExposedQueryCreator.SUPPORTED) { "${part.type} is not supported yet ($method)" }
+            if (part.type in ExposedQueryCreator.EMPTINESS_TYPES) {
+                try {
+                    paths.resolveToMany(part.property)
+                } catch (e: IllegalArgumentException) {
+                    throw IllegalArgumentException("${part.type} is only supported on to-many properties: ${e.message} ($method)", e)
+                }
+                return@forEach
+            }
             val column = try {
                 paths.resolve(part.property).leaf
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("${e.message} ($method)", e)
             }
-            require(part.type in ExposedQueryCreator.SUPPORTED) { "${part.type} is not supported yet ($method)" }
             require(part.shouldIgnoreCase() != Part.IgnoreCaseType.ALWAYS || column.isStringColumn()) {
                 "IgnoreCase is only supported for string properties, but ${part.property.toDotPath()} is not ($method)"
             }
@@ -98,26 +105,18 @@ internal class PartTreeExposedQuery<T : Any, ID : Any>(
     override fun getQueryMethod(): QueryMethod = method
 
     /**
-     * Deletes the matching rows (and their owned to-many rows) and returns them if the method returns a collection,
-     * otherwise their number.
+     * Deletes the matching rows and returns them if the method returns a collection, otherwise their number.
+     * Only rows of the table are deleted, the rows referencing them follow the `ON DELETE` rule of their foreign key.
      */
     private fun delete(query: Query, converter: RowConverter<*>): Any {
         val where = query.where ?: Op.TRUE
-        val writer = projectionResolver.writer
-        if (!method.isCollectionQuery && !writer.ownsRows) {
-            return table.deleteWhere { where }.toLong()
-        }
-        // the ids are selected first: the condition may depend on the owned rows, which are deleted before
-        val rows = if (method.isCollectionQuery) query.toList() else table.select(table.id).where(where).toList()
-        // converted before deleting, the owned rows are loaded with them
-        val deleted = if (method.isCollectionQuery) converter.convertAll(rows) else emptyList()
+        if (!method.isCollectionQuery) return table.deleteWhere { where }.toLong()
+        // converted before deleting, so their to-many rows are still loaded
+        val rows = query.toList()
+        val deleted = converter.convertAll(rows)
         val ids = rows.map { it[table.id] }
-        if (ids.isNotEmpty()) {
-            val matching = SingleValueInListOp(table.id, ids, isInList = true)
-            if (writer.ownsRows) writer.deleteOwned { column -> table.select(column).where(matching) }
-            table.deleteWhere { matching }
-        }
-        return if (method.isCollectionQuery) deleted else ids.size.toLong()
+        if (ids.isNotEmpty()) table.deleteWhere { SingleValueInListOp(table.id, ids, isInList = true) }
+        return deleted
     }
 
     private fun Query.limited(accessor: ParametersParameterAccessor) = apply {

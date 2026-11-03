@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.v1.spring.data.mapping
 
-import org.jetbrains.exposed.v1.core.AbstractQuery
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.ResultRow
@@ -8,17 +7,14 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.core.inSubQuery
 import org.jetbrains.exposed.v1.core.isAutoInc
 import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.statements.InsertStatement
 import org.jetbrains.exposed.v1.core.statements.UpdateBuilder
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
-import org.jetbrains.exposed.v1.spring.data.ExposedReferencedBy
 import kotlin.reflect.KType
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.jvmErasure
@@ -28,8 +24,12 @@ import kotlin.reflect.jvm.jvmErasure
  *
  * - **to-one references** (a [reference type][isReferenceType] in a foreign key column, e.g. `customer: Customer`): [cascade] saves
  *   referenced entities through their repository (inserted if they are new, otherwise updated), [dbValue] stores their key.
- * - **owned to-many rows** ([ExposedReferencedBy] without a target): [syncCollections] makes the rows of the relation match the collection,
- *   [deleteOwned] deletes them with their parent. Many-to-many relations are only read, so they are ignored here.
+ * - **owned to-many rows** ([OwnedRelation], inferred or annotated, see [ExposedMappings.relationFor]): [syncCollections] makes the rows
+ *   of the relation match the collection. Many-to-many relations are only read, so they are ignored here.
+ *
+ * There is no delete cascade in the application. An owned row that is removed from its collection is deleted alone, and so is a
+ * parent deleted by the repository. The rows that reference the deleted row follow the `onDelete` rule of their foreign key
+ * (`CASCADE` deletes them, `RESTRICT` makes the delete fail).
  *
  * Rows are matched by the primary key of their table, if the type maps all of its columns: missing rows are inserted, existing ones updated
  * and rows that are no longer in the collection deleted, so rows keep their identity. Without such a key, rows are matched by all their
@@ -57,8 +57,13 @@ internal class AggregateWriter(private val table: Table, private val type: Class
 
     private class OwnedCollection(val property: ExposedPersistentProperty, val relation: OwnedRelation, val element: Class<*>)
 
+    /** The to-many relations of the type, annotated or inferred (see [ExposedMappings.relationFor]). */
+    private val relations: Map<ExposedPersistentProperty, ToManyRelation> = entity
+        .mapNotNull { property -> mappings.relationFor(table, type, property.name)?.let { property to it } }
+        .toMap()
+
     private val columns: Map<ExposedPersistentProperty, Column<Any?>> = entity
-        .filter { type.propertyAnnotation<ExposedReferencedBy>(it.name) == null }
+        .filter { it !in relations }
         .mapNotNull { property -> columnFor(table, type, property.name)?.let { property to it } }
         .toMap()
 
@@ -70,16 +75,13 @@ internal class AggregateWriter(private val table: Table, private val type: Class
         property.name to Reference(property, referee as Column<Any?>, target)
     }.toMap()
 
-    private val collections: List<OwnedCollection> = entity.mapNotNull { property ->
-        val annotation = type.propertyAnnotation<ExposedReferencedBy>(property.name) ?: return@mapNotNull null
+    // many-to-many relations are only read, so only owned ones are written
+    private val collections: List<OwnedCollection> = relations.mapNotNull { (property, relation) ->
+        if (relation !is OwnedRelation) return@mapNotNull null
         val where = "${type.simpleName}.${property.name}"
-        val relation = toManyRelation(table, annotation, property.name, where) as? OwnedRelation ?: return@mapNotNull null
         val elementType = requireNotNull(propertyTypes[property.name]) { "$where has no Kotlin type" }
         OwnedCollection(property, relation, collectionElement(elementType, where).first)
     }
-
-    /** Whether the type has owned to-many rows, which have to be written and deleted with it. */
-    val ownsRows: Boolean get() = collections.isNotEmpty()
 
     /** Saves the referenced entities of [obj] and returns [obj] with the saved ones (a copy, for immutable types). */
     @Suppress("UNCHECKED_CAST")
@@ -121,16 +123,6 @@ internal class AggregateWriter(private val table: Table, private val type: Class
         }
     }
 
-    /** Deletes the owned to-many rows (and theirs) of the parent rows, whose values of a column [parentRows] selects. */
-    fun deleteOwned(parentRows: (Column<*>) -> AbstractQuery<*>) {
-        collections.forEach { collection ->
-            val relation = collection.relation
-            val ofParents = { relation.foreignKey inSubQuery parentRows(relation.parentKey) }
-            mappings.writer(relation.table, collection.element).deleteOwned { column -> relation.table.select(column).where(ofParents()) }
-            relation.table.deleteWhere { ofParents() }
-        }
-    }
-
     /** Makes the rows of [relation] (stored in [table]) of the parent with the key [parentKey] match [elements]. */
     private fun sync(relation: OwnedRelation, parentKey: Any, elements: List<Any>) {
         val foreignKey = relation.foreignKey
@@ -165,10 +157,9 @@ internal class AggregateWriter(private val table: Table, private val type: Class
                 values[column] ?: row?.getOrNull(column) ?: inserted?.let { runCatching { it[column] }.getOrNull() }
             }
         }
+        // orphan removal: only the rows themselves are deleted, the rows they own follow their foreign key's ON DELETE
         existing.filter { keyOf { column -> it[column] } !in kept }.forEach { row ->
-            val where = matches(identity, keyOf { row[it] })
-            deleteOwned { column -> table.select(column).where(where) }
-            table.deleteWhere { where }
+            table.deleteWhere { matches(identity, keyOf { row[it] }) }
         }
     }
 

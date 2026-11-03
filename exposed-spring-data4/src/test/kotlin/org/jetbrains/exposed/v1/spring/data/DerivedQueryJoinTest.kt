@@ -161,6 +161,18 @@ open class DerivedQueryJoinTest : ExposedSpringDataTestBase() {
         assertEquals(listOf(first.id), orders.findByCommentsText("fast").ids())
     }
 
+    @Test
+    fun testDeleteSetsNullableForeignKeyToNull() {
+        seedOrders()
+        val deletes = captureDeletes { orders.deleteById(first.id!!) }
+        // the application deletes the order only: its items and its comment "fast" follow ON DELETE CASCADE,
+        // the comment "slow" of the second order replies to it and keeps its row with reply_to_id = NULL (ON DELETE SET_NULL)
+        assertEquals(listOf("DELETE FROM ORDERS WHERE ORDERS.ID = ?"), deletes)
+        assertEquals(listOf("slow"), OrderComments.selectAll().map { it[OrderComments.text] })
+        assertEquals(listOf(second.id to null), OrderComments.selectAll().map { it[OrderComments.order].value to it[OrderComments.replyTo]?.value })
+        assertEquals(listOf("pencil"), OrderItems.selectAll().map { it[OrderItems.name] })
+    }
+
     // ---- multi-hop, to-one ----
 
     @Test

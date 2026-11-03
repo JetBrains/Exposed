@@ -113,15 +113,10 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
         .selectAll()
         .count()
 
+    // deletes only rows of the table: the rows referencing them follow the ON DELETE rule of their foreign key
     @Transactional
     override fun deleteById(id: ID) {
-        deleteOwnedRows { table.id eq id }
         table.deleteWhere { table.id eq id }
-    }
-
-    /** Deletes the owned to-many rows of the rows matching [where], before the rows themselves can be deleted. */
-    private fun deleteOwnedRows(where: () -> Op<Boolean>) {
-        if (writer.ownsRows) writer.deleteOwned { column -> table.select(column).where(where()) }
     }
 
     @Transactional
@@ -135,7 +130,6 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
         val id = entityInformation.getRequiredId(entity)
         if (versionColumn == null) return deleteById(id)
 
-        deleteOwnedRows { matchesIdAndVersion(id, entity, versionColumn) }
         val deleted = table.deleteWhere { matchesIdAndVersion(id, entity, versionColumn) }
         if (deleted == 0) throw OptimisticLockingFailureException(versionConflict(id, entity))
     }
@@ -143,7 +137,6 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
     @Transactional
     override fun deleteAllById(ids: Iterable<ID>) {
         ids.distinct().chunked(IN_LIST_CHUNK_SIZE).forEach { chunk ->
-            deleteOwnedRows { table.id inList chunk }
             table.deleteWhere { table.id inList chunk }
         }
     }
@@ -157,7 +150,6 @@ internal open class SimpleExposedRepository<T : Any, ID : Any>(
 
     @Transactional
     override fun deleteAll() {
-        if (writer.ownsRows) writer.deleteOwned { column -> table.select(column) }
         table.deleteAll()
     }
 
