@@ -10,7 +10,7 @@
         <algolia-index>prod_exposed</algolia-index>
         <algolia-api-key>119a138f76e4c043bcbb9f0c16119094</algolia-api-key>
         <custom-favicons>
-            exposed-icon.svg
+            exposed-icon.png
         </custom-favicons>
         <analytics-head-script-file>google-search.html</analytics-head-script-file>
         <feedback-url>https://forms-service.jetbrains.com/feedback</feedback-url>
@@ -25,5 +25,11 @@
             <product-web-url>https://www.jetbrains.com/exposed/</product-web-url>
         </variables>
     </build-profile>
-
+    <footer>
+        <copyright>2000-2026 JetBrains s.r.o.</copyright>
+        <social type="github" href="https://github.com/JetBrains/Exposed">Exposed on GitHub</social>
+        <social type="slack" href="https://kotlinlang.slack.com/messages/exposed/">Exposed Slack channel</social>
+        <link href="https://www.jetbrains.com/help/exposed/contributing.html">Contribute to Exposed</link>
+        <link href="https://jetbrains.github.io/Exposed/api/index.html">API Documentation</link>
+    </footer>
 </buildprofiles>
