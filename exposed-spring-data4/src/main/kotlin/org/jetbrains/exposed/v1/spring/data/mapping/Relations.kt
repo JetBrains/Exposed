@@ -7,15 +7,20 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.spring.data.ExposedColumn
 import org.jetbrains.exposed.v1.spring.data.ExposedReferencedBy
 import org.springframework.core.annotation.AnnotatedElementUtils
+import org.springframework.data.annotation.Transient
 import org.springframework.data.mapping.model.SimpleTypeHolder
 import org.springframework.util.ReflectionUtils
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KType
 import kotlin.reflect.full.memberProperties
+import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.javaGetter
 import kotlin.reflect.jvm.jvmErasure
 
-/** A to-many relation declared with [ExposedReferencedBy]: the rows of [table] whose [foreignKey] references [parentKey] of the owning table. */
+/**
+ * A to-many relation, declared with [ExposedReferencedBy] or inferred by [inferRelation]:
+ * the rows of [table] whose [foreignKey] references [parentKey] of the owning table.
+ */
 internal sealed class ToManyRelation {
     abstract val parentKey: Column<Any?>
     abstract val table: Table
@@ -74,6 +79,104 @@ internal fun toManyRelation(owner: Table, annotation: ExposedReferencedBy, prope
     }
     require(targetKey != childKey) { "The target of $name on '$property' is the foreign key to the owning table ($where)" }
     return JoinRelation(parentKey as Column<Any?>, child, childKey as Column<Any?>, targetKey, referee as Column<Any?>)
+}
+
+/**
+ * Infers the to-many relation of [property] (a collection of [element]) of a type mapped to [owner] from the foreign keys in [registry].
+ * [where] describes the property for error messages.
+ *
+ * An owned candidate is a table with a single-column foreign key to [owner] and columns for the stored properties of [element].
+ * A join candidate is such a table with another single-column foreign key to a table with matching columns.
+ *
+ * For a class, only properties with backing fields count as stored. All interface properties count.
+ * The matcher skips to-many collections, `Map` and `@Transient` properties. It uses [ExposedColumn] names when present.
+ *
+ * Returns `null` if [element] is a simple type, so the property isn't a relation. Fails with an [IllegalArgumentException]
+ * if there is no candidate or more than one, the message lists them and names the attribute of [ExposedReferencedBy] to set.
+ */
+internal fun inferRelation(owner: Table, property: String, element: Class<*>, registry: ExposedTableRegistry, where: String): ToManyRelation? {
+    if (!isReferenceType(element)) return null
+    val candidates = registry.incoming(owner).flatMap { foreignKey ->
+        val child = foreignKey.childColumn.table
+        val owned = if (fits(element, child)) listOf(Candidate(foreignKey, null)) else emptyList()
+        val joins = child.foreignKeys
+            .filter { it.references.size == 1 && it.childColumn !== foreignKey.childColumn && fits(element, it.parentColumn.table) }
+            .map { Candidate(foreignKey, it) }
+        owned + joins
+    }
+    val annotation = "@${ExposedReferencedBy::class.simpleName}"
+    require(candidates.isNotEmpty()) {
+        "$where is not mapped: no known table has a foreign key to ${owner.tableName} whose rows, or the rows they reference, " +
+            "have a column for every property of ${element.simpleName}. Annotate '$property' with $annotation(<Table>::class), " +
+            "or make sure the table is in a scanned package"
+    }
+    require(candidates.size == 1) { ambiguity(where, owner, annotation, candidates) }
+    return candidates.single().toRelation()
+}
+
+/** A relation found by [inferRelation]: the rows of the table of [foreignKey], or for a join table the rows referenced by its [target]. */
+private class Candidate(val foreignKey: ForeignKeyConstraint, val target: ForeignKeyConstraint?) {
+    val table: Table get() = foreignKey.childColumn.table
+
+    override fun toString(): String = if (target == null) {
+        "${kotlinName(foreignKey.childColumn)} (one-to-many)"
+    } else {
+        "${kotlinName(foreignKey.childColumn)} with target ${kotlinName(target.childColumn)} (many-to-many to ${target.parentColumn.table.tableName})"
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun toRelation(): ToManyRelation {
+        val parentKey = foreignKey.parentColumn as Column<Any?>
+        val childKey = foreignKey.childColumn as Column<Any?>
+        if (target == null) return OwnedRelation(parentKey, table, childKey)
+        return JoinRelation(parentKey, table, childKey, target.childColumn as Column<Any?>, target.parentColumn as Column<Any?>)
+    }
+}
+
+private fun ambiguity(where: String, owner: Table, annotation: String, candidates: List<Candidate>): String {
+    val byTable = candidates.map { it.table }.distinctBy { System.identityHashCode(it) }.map { table -> table to candidates.filter { it.table === table } }
+    val needsColumn = byTable.any { (_, inTable) -> inTable.map { it.foreignKey.childColumn }.distinct().size > 1 }
+    val needsTarget = byTable.any { (_, inTable) -> inTable.groupBy { it.foreignKey.childColumn }.values.any { it.size > 1 } }
+    val arguments = listOfNotNull(
+        byTable.joinToString(" or ") { (table, _) -> "${table::class.simpleName}::class" },
+        "column = \"...\"".takeIf { needsColumn },
+        "target = \"...\"".takeIf { needsTarget },
+    )
+    val missing = listOfNotNull("table".takeIf { byTable.size > 1 }, "column".takeIf { needsColumn }, "target".takeIf { needsTarget })
+    return "$where is ambiguous, these relations to ${owner.tableName} fit: ${candidates.joinToString()}. " +
+        "Annotate it with $annotation(${arguments.joinToString()}) to choose one (set the ${missing.joinToString(" and ")})"
+}
+
+private val ForeignKeyConstraint.childColumn: Column<*> get() = references.keys.single()
+
+private val ForeignKeyConstraint.parentColumn: Column<*> get() = references.values.single()
+
+/** `Table.property`, the Kotlin names of the table object and the column, as used in [ExposedReferencedBy]. */
+private fun kotlinName(column: Column<*>): String {
+    val property = TableColumns.of(column.table).columns.entries.firstOrNull { it.value === column }?.key ?: column.name
+    return "${column.table::class.simpleName}.$property"
+}
+
+/** Whether every property of [element] (except to-many and transient ones) has a column in [table]. */
+private fun fits(element: Class<*>, table: Table): Boolean =
+    elementProperties(element).all { runCatching { columnFor(table, element, it) }.getOrNull() != null }
+
+private val elementProperties = ConcurrentHashMap<Class<*>, List<String>>()
+
+/** The stored properties of [type]: all properties of an interface, those with a backing field of a class. */
+private fun elementProperties(type: Class<*>): List<String> = elementProperties.getOrPut(type) {
+    runCatching { type.kotlin.memberProperties.toList() }.getOrDefault(emptyList())
+        .filter { type.isInterface || it.javaField != null }
+        .filter { toManyElement(it.returnType) == null && !Map::class.java.isAssignableFrom(it.returnType.jvmErasure.java) }
+        .filter { findPropertyAnnotation(type, it.name, Transient::class.java) == null }
+        .map { it.name }
+}
+
+/** The element class of [type] if it is a `List`, `Set`, `Collection` or `Iterable`, otherwise `null`. */
+internal fun toManyElement(type: KType): Class<*>? {
+    val raw = type.jvmErasure
+    if (raw != List::class && raw != Set::class && raw != Collection::class && raw != Iterable::class) return null
+    return type.arguments.singleOrNull()?.type?.jvmErasure?.java
 }
 
 /**

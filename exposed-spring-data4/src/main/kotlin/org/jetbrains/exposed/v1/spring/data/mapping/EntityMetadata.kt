@@ -12,20 +12,26 @@ import kotlin.reflect.full.memberProperties
  * Connects an entity class, as described by the [ExposedMappingContext], to its table: which property is stored in which column.
  *
  * A property is mapped if it is a persistent property of [persistentEntity] and the table object has a [Column] property
- * with the same Kotlin name (see [TableColumns]), or the one named by [ExposedColumn]. Properties annotated with
- * [ExposedReferencedBy] have no column, they are mapped by [ProjectionResolver].
+ * with the same Kotlin name (see [TableColumns]), or the one named by [ExposedColumn]. The to-many properties in [relations]
+ * (annotated with [ExposedReferencedBy] or inferred, see [ExposedMappings.relationFor]) have no column, they are read by [ProjectionResolver].
  * Everything about the class itself (id and version property, reading and writing values) comes from [persistentEntity].
  */
 internal class EntityMetadata<T : Any, ID : Any>(
     val table: IdTable<ID>,
     val persistentEntity: ExposedPersistentEntity<T>,
+    mappings: ExposedMappings = ExposedMappings(),
 ) {
     val domainType: KClass<T> = persistentEntity.type.kotlin
 
     private val properties: Map<String, ExposedPersistentProperty> = persistentEntity.associateBy { it.name }
 
+    /** The to-many relations by property name. */
+    val relations: Map<String, ToManyRelation> = properties.keys
+        .mapNotNull { property -> mappings.relationFor(table, domainType.java, property)?.let { property to it } }
+        .toMap()
+
     private val columnsByProperty: Map<String, Column<Any?>> = properties.keys
-        .filter { domainType.java.propertyAnnotation<ExposedReferencedBy>(it) == null }
+        .filter { it !in relations }
         .mapNotNull { property -> columnFor(table, domainType.java, property)?.let { property to it } }
         .toMap()
 

@@ -45,7 +45,12 @@ internal class ExposedQueryCreator(
             REGEX,
             TRUE,
             FALSE,
+            IS_EMPTY,
+            IS_NOT_EMPTY,
         )
+
+        /** Part types on a path that ends on a to-many property, see [PropertyPathResolver.resolveToMany]. */
+        val EMPTINESS_TYPES = setOf(IS_EMPTY, IS_NOT_EMPTY)
 
         /** Part types whose argument is matched as a string and can therefore be compared case-insensitively. */
         private val STRING_TYPES = setOf(
@@ -104,6 +109,10 @@ internal class ExposedQueryCreator(
     }
 
     private fun predicate(part: Part, values: Iterator<Any?>): Pair<List<Hop>, Op<Boolean>> {
+        if (part.type in EMPTINESS_TYPES) {
+            val hops = paths.resolveToMany(part.property)
+            return hops.dropLast(1) to emptiness(hops.last(), empty = part.type == IS_EMPTY)
+        }
         val path = paths.resolve(part.property)
         return path.hops to leafPredicate(part, path.leaf, values)
     }
@@ -158,6 +167,15 @@ internal class ExposedQueryCreator(
         }
     }
 
+    /**
+     * Whether the current table's rows have rows of the to-many [hop]: `parentKey [NOT] IN (SELECT childKey FROM childTable)`.
+     * `NULL` keys are left out of the subquery, a single one would make `NOT IN` match no row.
+     */
+    private fun emptiness(hop: Hop, empty: Boolean): Op<Boolean> {
+        val children = hop.childTable.select(hop.childKey)
+        return if (empty) hop.parentKey notInSubQuery children.where { hop.childKey.isNotNull() } else hop.parentKey inSubQuery children
+    }
+
     private fun containing(text: String): LikePattern =
         LikePattern("%", ESCAPE_CHAR) + LikePattern.ofLiteral(text, ESCAPE_CHAR) + "%"
 }
@@ -165,6 +183,8 @@ internal class ExposedQueryCreator(
 /**
  * Combines the predicates of [parts] with `AND`, each one built on the last table of its hops: parts with the same first hop
  * are matched in one subquery `parentKey IN (SELECT childKey FROM childTable WHERE ...)`, recursively for the following hops.
+ * An `IsEmpty` or `IsNotEmpty` part has the hops before its last one, so it shares the subqueries of its prefix:
+ * `findByOrdersNumberAndOrdersItemsIsEmpty` matches shops with one order that has the number and no items.
  *
  * Subqueries instead of joins keep the query on the repository's table, so every root row is returned at most once,
  * and count, exists, delete and paging work unchanged.

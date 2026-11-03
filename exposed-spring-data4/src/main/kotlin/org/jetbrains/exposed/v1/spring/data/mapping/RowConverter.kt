@@ -177,14 +177,14 @@ internal class InterfaceConverter<R : Any>(
 
 /**
  * How the properties of a projection are found in [table]. Properties of every projection can name their column with
- * `@ExposedColumn` and declare to-many relations with `@ExposedReferencedBy` themselves, see [readerFor].
+ * `@ExposedColumn` and declare to-many relations with `@ExposedReferencedBy` themselves, or have them inferred, see [readerFor].
  */
 internal abstract class ColumnSource(val table: Table, val mappings: ExposedMappings) {
     /** The column of [property], if the projection doesn't name one. */
     abstract fun columnFor(property: String): Column<Any?>?
 
     /** The to-many relation of [property], if the projection doesn't declare one. */
-    open fun referencedBy(property: String): ExposedReferencedBy? = null
+    open fun relationOf(property: String): ToManyRelation? = null
 
     /** Checks that a plain column value of [property] fits [type]. */
     open fun checkType(owner: Class<*>, property: String, type: KType) = Unit
@@ -194,7 +194,7 @@ internal abstract class ColumnSource(val table: Table, val mappings: ExposedMapp
 internal class EntitySource(private val metadata: EntityMetadata<*, *>, mappings: ExposedMappings) : ColumnSource(metadata.table, mappings) {
     override fun columnFor(property: String): Column<Any?>? = metadata.columnFor(property)
 
-    override fun referencedBy(property: String): ExposedReferencedBy? = metadata.domainType.java.propertyAnnotation<ExposedReferencedBy>(property)
+    override fun relationOf(property: String): ToManyRelation? = metadata.relations[property]
 
     override fun checkType(owner: Class<*>, property: String, type: KType) {
         if (owner == metadata.domainType.java) return
@@ -213,16 +213,22 @@ internal class TableSource(table: Table, mappings: ExposedMappings) : ColumnSour
 /**
  * The reader of [property] of the projection [owner] with the type [type], or `null` if it has no column:
  *
- * - annotated with `@ExposedReferencedBy` (on [owner] or, through [ColumnSource.referencedBy], on the entity):
- *   the rows of the relation, as a collection of the element type
+ * - a to-many relation: annotated with `@ExposedReferencedBy` on [owner], the relation of the entity property ([ColumnSource.relationOf]),
+ *   or inferred from the foreign keys (see [ExposedMappings.relationFor]): the rows of the relation, as a collection of the element type.
+ *   Nothing is inferred if [owner] names a column with `@ExposedColumn` or the source maps the property to a column
  * - a foreign key column and a [reference type][isReferenceType] (e.g. `customer: Customer`): the referenced row, converted to [type]
  * - otherwise the column value (e.g. `customer: Long` for the same foreign key column)
  */
 internal fun ColumnSource.readerFor(owner: Class<*>, property: String, type: KType?): ValueReader? {
     val where = "${owner.simpleName}.$property"
-    val referencedBy = owner.propertyAnnotation<ExposedReferencedBy>(property) ?: referencedBy(property)
-    if (referencedBy != null) {
-        val relation = toManyRelation(table, referencedBy, property, where)
+    val explicit = owner.propertyAnnotation<ExposedColumn>(property) != null
+    val relation = when {
+        owner.propertyAnnotation<ExposedReferencedBy>(property) != null -> mappings.relationFor(table, owner, property)
+        // the property of the source (e.g. the entity) is mapped to a column: no inference for the projection
+        explicit || columnFor(property) != null -> null
+        else -> relationOf(property) ?: mappings.relationFor(table, owner, property)
+    }
+    if (relation != null) {
         val (element, isSet) = collectionElement(requireNotNull(type) { "$where has no type" }, where)
         return when (relation) {
             is OwnedRelation -> {
@@ -236,7 +242,6 @@ internal fun ColumnSource.readerFor(owner: Class<*>, property: String, type: KTy
             }
         }
     }
-    val explicit = owner.propertyAnnotation<ExposedColumn>(property) != null
     val column = (if (explicit) columnFor(table, owner, property) else columnFor(property)) ?: return null
     val referee = column.referee
     val target = type?.jvmErasure?.java

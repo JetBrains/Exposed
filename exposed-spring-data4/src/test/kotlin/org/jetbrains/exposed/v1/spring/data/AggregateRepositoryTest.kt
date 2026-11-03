@@ -1,11 +1,13 @@
 package org.jetbrains.exposed.v1.spring.data
 
+import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.spring.data.mapping.ExposedTableRegistry
 import org.jetbrains.exposed.v1.spring.data.query.query
 import org.jetbrains.exposed.v1.spring.data.repository.ExposedRepositoryFactory
 import org.junit.jupiter.api.AfterEach
@@ -197,20 +199,38 @@ open class AggregateRepositoryTest : ExposedSpringDataTestBase() {
         val first = purchases.save(purchase("first", Buyer(name = "Ann"), PurchaseLine(article = "Pen", quantity = 1)).copy(notes = listOf(PurchaseNote("x"))))
         val second = purchases.save(purchase("second", first.buyer, PurchaseLine(article = "Pad", quantity = 1)))
         val third = purchases.save(purchase("third", first.buyer, PurchaseLine(article = "Ink", quantity = 1)))
+        label(first, "urgent")
 
-        purchases.delete(first)
-        assertEquals(listOf("Pad", "Ink"), PurchaseLines.selectAll().map { it[PurchaseLines.article] })
-        assertEquals(0, PurchaseNotes.selectAll().count())
+        // only the purchases are deleted by the repository, their owned rows follow through ON DELETE CASCADE
+        val deletes = captureDeletes {
+            purchases.delete(first)
+            assertEquals(listOf("Pad", "Ink"), PurchaseLines.selectAll().map { it[PurchaseLines.article] })
+            assertEquals(0, PurchaseNotes.selectAll().count())
+            assertEquals(0, PurchaseLabels.selectAll().count())
 
-        purchases.deleteById(second.id!!)
-        assertEquals(1L, purchases.deleteByNote(third.note))
-        assertEquals(0, PurchaseLines.selectAll().count())
-        // referenced entities are not owned
+            purchases.deleteById(second.id!!)
+            assertEquals(1L, purchases.deleteByNote(third.note))
+            assertEquals(0, PurchaseLines.selectAll().count())
+            // referenced entities are not owned
+            assertEquals(1L, buyers.count())
+
+            purchases.save(purchase("fourth", first.buyer, PurchaseLine(article = "Pen", quantity = 1)))
+            purchases.deleteAll()
+            assertEquals(0, PurchaseLines.selectAll().count())
+        }
+        assertEquals(4, deletes.size) { deletes.toString() }
+        assertTrue(deletes.all { "purchases" in it.lowercase() && "purchase_" !in it.lowercase() }) { deletes.toString() }
+    }
+
+    @Test
+    fun testDeleteOfReferencedRowWithoutOnDeleteRuleFails() {
+        // Purchases.buyer declares no onDelete, so the database default (H2: RESTRICT) rejects deleting a referenced buyer
+        val saved = purchases.save(purchase("first", Buyer(name = "Ann")))
+        val exception = assertThrows<Exception> { buyers.deleteById(saved.buyer.id!!) }
+        val messages = generateSequence<Throwable>(exception) { it.cause }.mapNotNull { it.message }.toList()
+        assertTrue(messages.any { "Referential integrity constraint violation" in it }) { messages.toString() }
+        assertEquals(saved, purchases.findById(saved.id!!).get())
         assertEquals(1L, buyers.count())
-
-        purchases.save(purchase("fourth", first.buyer, PurchaseLine(article = "Pen", quantity = 1)))
-        purchases.deleteAll()
-        assertEquals(0, PurchaseLines.selectAll().count())
     }
 
     // ---- many-to-many rows are only read ----
@@ -308,7 +328,8 @@ open class AggregateRepositoryTest : ExposedSpringDataTestBase() {
 
     @Test
     fun testOrderByToManyPathFailsAtCreation() {
-        val exception = assertThrows<Exception> { ExposedRepositoryFactory().getRepository(OrderByToManyRepository::class.java) }
+        val factory = ExposedRepositoryFactory(tables = ExposedTableRegistry(listOf(PurchaseLines, PurchaseNotes, PurchaseLabels)))
+        val exception = assertThrows<Exception> { factory.getRepository(OrderByToManyRepository::class.java) }
         val messages = generateSequence<Throwable>(exception) { it.cause }.mapNotNull { it.message }.toList()
         assertTrue(messages.any { "to-many" in it }) { messages.toString() }
     }
@@ -378,20 +399,20 @@ object Purchases : LongIdTable("purchases") {
 
 /** Owned rows with a primary key, matched by it. */
 object PurchaseLines : LongIdTable("purchase_lines") {
-    val purchase = reference("purchase_id", Purchases)
+    val purchase = reference("purchase_id", Purchases, onDelete = ReferenceOption.CASCADE)
     val article = varchar("article", 255)
     val quantity = integer("quantity")
 }
 
 /** Owned rows without a primary key, matched by their values. */
 object PurchaseNotes : Table("purchase_notes") {
-    val purchase = reference("purchase_id", Purchases)
+    val purchase = reference("purchase_id", Purchases, onDelete = ReferenceOption.CASCADE)
     val text = varchar("text", 255)
 }
 
 /** A join table, [Purchase.labels] is many-to-many. */
 object PurchaseLabels : Table("purchase_labels") {
-    val purchase = reference("purchase_id", Purchases)
+    val purchase = reference("purchase_id", Purchases, onDelete = ReferenceOption.CASCADE)
     val label = reference("label_id", Labels)
     override val primaryKey = PrimaryKey(purchase, label)
 }
@@ -411,9 +432,9 @@ data class Purchase(
     val buyer: Buyer,
     @ExposedColumn("giftFor") val recipient: Buyer? = null,
     val note: String,
-    @ExposedReferencedBy(PurchaseLines::class) val lines: List<PurchaseLine> = emptyList(),
-    @ExposedReferencedBy(PurchaseNotes::class) val notes: List<PurchaseNote> = emptyList(),
-    @ExposedReferencedBy(PurchaseLabels::class, target = "label") val labels: Set<Label> = emptySet(),
+    val lines: List<PurchaseLine> = emptyList(),
+    val notes: List<PurchaseNote> = emptyList(),
+    val labels: Set<Label> = emptySet(),
 )
 
 /** Has the key of the buyer, so the buyer isn't loaded. */
