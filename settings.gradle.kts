@@ -28,8 +28,8 @@ include("exposed-maven-plugin")
 include("exposed-version-catalog")
 include("exposed-dao-r2dbc")
 include("exposed-dao-r2dbc-tests")
-include("exposed-spring-data")
-include("exposed-spring-data-starter")
+include("exposed-spring-data4")
+include("exposed-spring-boot4-data-starter")
 
 pluginManagement {
     repositories {
