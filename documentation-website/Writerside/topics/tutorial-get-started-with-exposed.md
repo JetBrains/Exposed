@@ -177,7 +177,8 @@ dependencies {
 ## Configure a database connection {id="configure-db-connection"}
 
 Whenever you access a database using Exposed, you start by obtaining a connection and creating a transaction.
-To configure the database connection, use the `Database.connect()` function.
+To configure the database connection, use the [`Database.connect()`](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/-database/-companion/connect.html)
+function.
 
 <procedure id="config-db-connection-procedure">
 <step>
@@ -224,7 +225,8 @@ You're now ready to define your data model and engage with the database using Ex
 
 ## Define a table object {id="define-table-object"}
 
-In Exposed, a database table is represented by an object inherited from the `Table` class.
+In Exposed, a database table is represented by an object inherited from the [`Table`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/index.html)
+class.
 To define the table object, follow the steps below.
 
 <procedure id="define-table-object-procedure">
@@ -242,8 +244,8 @@ Open <path>Task.kt</path> and add the following table definition:
 {src="get-started-with-exposed/src/main/kotlin/org/example/Task.kt"}
 
 In the `Table` constructor, passing the name `tasks` configures a custom
-name for the table. Keep in mind that if no custom name is specified, Exposed will generate
-one from the class name, which might lead to unexpected results.
+name for the table. Keep in mind that if no [custom name](Working-with-Tables.topic#name-from-object) is specified,
+Exposed will generate one from the class name, which might lead to unexpected results.
 
 Within the `Tasks` object, the following columns are defined:
 
@@ -270,9 +272,9 @@ With Exposed’s DSL API, you can interact with a database using a type-safe syn
 Before you start executing database operations, you must open a
 <emphasis>transaction</emphasis>.
 
-A [transaction](Transactions.md) is represented by an instance of the `Transaction` class, within which you
-can define and manipulate data using its lambda function. Exposed will automatically manage the opening
-and closing of the transaction in the background, ensuring seamless operation.
+A [transaction](Transactions.md) is represented by an instance of the [`Transaction`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-transaction/index.html)
+class, within which you can define and manipulate data using its lambda function. Exposed will automatically manage the
+opening and closing of the transaction in the background, ensuring seamless operation.
 {id="transaction-definition"}
 
 <procedure id="create-and-query-table-procedure">
@@ -285,18 +287,18 @@ Navigate back to the <path>App.kt</path> file and add the following transaction 
 {src="get-started-with-exposed/src/main/kotlin/org/example/App.kt" include-lines="4-20,26-44,57-59"}
 
 First, you create the tasks table using the `SchemaUtils.create()` function.
-The `SchemaUtils` object holds utility methods for creating, altering, and
-dropping database objects.
+The [`SchemaUtils`](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/-schema-utils/index.html)
+object holds utility methods for creating, altering, and dropping database objects.
 
 Once the table has been created, you use the `Table` extension function `insert()`
-to add new `Task` records:
+to add new task records:
 
 ```kotlin
 ```
 {src="get-started-with-exposed/src/main/kotlin/org/example/App.kt" include-lines="28-37"}
 
 Within the `insert {}` block, you set the values for
-each column by using the `it` parameter. Exposed translates the functions
+each column by using the `it` parameter, referring the underlying statement instance. Exposed translates the functions
 into the following SQL queries:
 
 ```sql
@@ -307,9 +309,9 @@ INSERT INTO TASKS ("name", DESCRIPTION, COMPLETED)
 ```
 {noinject="true"}
 
-Because the `insert()` function returns an `InsertStatement`, by using
-the `get()` method after the `insert` operation you retrieve the
-autoincremented `id` value of the newly added row.
+Because the `insert()` function returns an [`InsertStatement`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core.statements/-insert-statement/index.html),
+by using the `get()` method after the `insert` operation you retrieve the
+auto-incremented `id` value of the newly added row.
 
 With the `select()` extension function you then create a query to count the number
 of rows and to retrieve the `isCompleted` value for each row in the table:
