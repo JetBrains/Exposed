@@ -227,7 +227,8 @@ abstract class SchemaUtilityApi {
         withLogs: Boolean,
         vararg tables: Table
     ): Pair<List<Index>, List<Index>> {
-        fun List<Index>.filterForeignKeys() = if (currentDialect is MysqlDialect) {
+        // MySQL and H2 create an index for every foreign key, which is not one of the table's mapped indices
+        fun List<Index>.filterForeignKeys() = if (currentDialect is MysqlDialect || currentDialect is H2Dialect) {
             filterNot { it.table to LinkedHashSet(it.columns) in existingFKConstraints }
         } else {
             this
