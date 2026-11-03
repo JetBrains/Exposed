@@ -27,14 +27,18 @@ internal class PartTreeExposedQuery<T : Any, ID : Any>(
     private val metadata = projectionResolver.metadata
     private val table = metadata.table
     private val tree = PartTree(method.name, method.entityInformation.javaType)
+    private val paths = PropertyPathResolver(metadata)
 
     init {
         tree.parts.forEach { part ->
-            require(!part.property.hasNext()) { "Nested paths are not supported: ${part.property.toDotPath()} in $method" }
-            val column = metadata.requireColumn(part.property.segment)
+            val column = try {
+                paths.resolve(part.property).leaf
+            } catch (e: IllegalArgumentException) {
+                throw IllegalArgumentException("${e.message} ($method)", e)
+            }
             require(part.type in ExposedQueryCreator.SUPPORTED) { "${part.type} is not supported yet ($method)" }
             require(part.shouldIgnoreCase() != Part.IgnoreCaseType.ALWAYS || column.isStringColumn()) {
-                "IgnoreCase is only supported for string properties, but ${part.property.segment} is not ($method)"
+                "IgnoreCase is only supported for string properties, but ${part.property.toDotPath()} is not ($method)"
             }
         }
     }
@@ -49,7 +53,7 @@ internal class PartTreeExposedQuery<T : Any, ID : Any>(
         val accessor = ParametersParameterAccessor(method.parameters, parameters)
         val converter = converter(accessor)
         if (method.isScrollQuery) return scroll(accessor, converter)
-        val query = ExposedQueryCreator(tree, accessor, metadata, converter.columns).createQuery()
+        val query = ExposedQueryCreator(tree, accessor, metadata, paths, converter.columns).createQuery()
         if (tree.isDistinct) query.withDistinct()
 
         return when {
@@ -117,7 +121,7 @@ internal class PartTreeExposedQuery<T : Any, ID : Any>(
 
     private fun offsetScroll(accessor: ParametersParameterAccessor, converter: RowConverter<*>, position: OffsetScrollPosition, limit: Int?): Window<Any> {
         val start = if (position.isInitial) 0L else position.offset + 1
-        val query = ExposedQueryCreator(tree, accessor, metadata, converter.columns).createQuery()
+        val query = ExposedQueryCreator(tree, accessor, metadata, paths, converter.columns).createQuery()
         if (tree.isDistinct) query.withDistinct()
         if (start > 0) query.offset(start)
         limit?.let { query.limit(it + 1) }
@@ -132,7 +136,7 @@ internal class PartTreeExposedQuery<T : Any, ID : Any>(
         val nullsHigh = nullsSortHigh()
         var sort = Sort.unsorted()
         var effectiveSort = Sort.unsorted()
-        val query = ExposedQueryCreator(tree, accessor, metadata, converter.columns, selectSortColumns = true) { declared ->
+        val query = ExposedQueryCreator(tree, accessor, metadata, paths, converter.columns, selectSortColumns = true) { declared ->
             val withId = if (declared.getOrderFor(idProperty) == null) declared.and(Sort.by(idProperty)) else declared
             // NULL positions are made explicit, so the keyset predicate knows on which side of the other values they are
             sort = Sort.by(withId.map { it.withExplicitNullHandling(nullsHigh) }.toList())
