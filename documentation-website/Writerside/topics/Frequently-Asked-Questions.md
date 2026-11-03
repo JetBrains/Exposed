@@ -38,7 +38,7 @@ necessary even if the query is never executed.
 
 You can use the [`Statement.prepareSQL()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core.statements/-statement/prepare-s-q-l.html)
 function, and potentially the [`buildStatement()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core.statements/build-statement.html)
-function. For more details, see [](DSL-Statement-Builder.md).
+function. For more details, see [](dsl-statement-builder.md).
 
 ### Is it possible to update a field relative to the current field value?
 
