@@ -1,15 +1,16 @@
 package org.jetbrains.exposed.v1.r2dbc.statements.api
 
-import io.r2dbc.spi.ConnectionMetadata
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.MetadataProvider
 
 /**
  * Class responsible for the parsing and processing of identifier tokens in SQL command syntax.
+ *
+ * All values are resolved from the hard-coded [metadata] of the vendor dialect, so no connection is required.
  */
 internal class R2dbcIdentifierManager(
     metadata: MetadataProvider,
-    connectionData: ConnectionMetadata
+    isOracle: Boolean
 ) : IdentifierManagerApi() {
     override val quoteString = metadata.propertyProvider.identifierQuoteString.trim()
 
@@ -31,11 +32,7 @@ internal class R2dbcIdentifierManager(
 
     override val extraNameCharacters = metadata.propertyProvider.extraNameCharacters
 
-    @Suppress("MagicNumber")
-    override val oracleVersion = when {
-        connectionData.databaseProductName != "Oracle" -> OracleVersion.NonOracle
-        else -> OracleVersion.Oracle12plus
-    }
+    override val oracleVersion = if (isOracle) OracleVersion.Oracle12plus else OracleVersion.NonOracle
 
     override val maxColumnNameLength: Int = metadata.propertyProvider.maxColumnNameLength
 }

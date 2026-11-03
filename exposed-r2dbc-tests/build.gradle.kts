@@ -53,7 +53,7 @@ dependencies {
     testImplementation(project(":exposed-jodatime"))
     // --- end ----
 
-    testRuntimeOnly(libs.r2dbc.pool)
+    testImplementation(libs.r2dbc.pool)
     testImplementation(libs.r2dbc.h2) {
         exclude(group = "com.h2database", module = "h2")
     }
