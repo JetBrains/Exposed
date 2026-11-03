@@ -19,7 +19,7 @@ kotlin {
 
 dependencies {
     api(project(":exposed-spring-boot4-starter"))
-    api(project(":exposed-spring-data"))
+    api(project(":exposed-spring-data4"))
     api(libs.spring.boot4.autoconfigure)
     compileOnly(libs.spring.boot4.configuration.processor)
 
