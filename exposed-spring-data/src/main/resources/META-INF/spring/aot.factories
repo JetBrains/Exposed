@@ -1,2 +1,0 @@
-org.springframework.aot.hint.RuntimeHintsRegistrar=\
-org.jetbrains.exposed.v1.spring.data.aot.ExposedSpringDataRuntimeHints
