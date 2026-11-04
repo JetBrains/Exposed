@@ -461,7 +461,11 @@ abstract class SchemaUtilityApi {
                 val columnDefaultValue = column.dbDefaultValue?.let {
                     dialect.dbDefaultToString(column, it)
                 }
-                existingColumn.defaultDbValue != columnDefaultValue
+                val matches = when (val columnType = column.columnType) {
+                    is ColumnType<*> -> columnType.defaultValueMatchesMetadata(columnDefaultValue, existingColumn.defaultDbValue)
+                    else -> columnDefaultValue == existingColumn.defaultDbValue
+                }
+                !matches
             }
         }
     }
@@ -477,9 +481,16 @@ abstract class SchemaUtilityApi {
                         else -> dataTypeProvider.booleanToStatementString(value)
                     }
                     is String -> when {
-                        this is PostgreSQLDialect -> when (column.columnType) {
+                        this is PostgreSQLDialect -> when (val columnType = column.columnType) {
                             is VarCharColumnType -> "'$value'::character varying"
                             is TextColumnType -> "'$value'::text"
+                            // a transformed column renders its default through the wrapped column type, and
+                            // PostgreSQL reports that default with the wrapped column's type cast (EXPOSED-1141)
+                            is ColumnWithTransform<*, *> -> when (columnType.originalColumnType) {
+                                is VarCharColumnType -> "${dataTypeProvider.processForDefaultValue(exp)}::character varying"
+                                is TextColumnType -> "${dataTypeProvider.processForDefaultValue(exp)}::text"
+                                else -> dataTypeProvider.processForDefaultValue(exp)
+                            }
                             else -> dataTypeProvider.processForDefaultValue(exp)
                         }
                         this is OracleDialect || h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> when (column.columnType) {
