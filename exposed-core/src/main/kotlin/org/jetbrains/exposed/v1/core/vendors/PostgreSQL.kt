@@ -193,7 +193,9 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         append("${jsonType.sqlType()}_EXTRACT_PATH")
         if (toScalar) append("_TEXT")
         append("(", expression, ", ")
-        path.ifEmpty { arrayOf("$") }.appendTo { appendStringArgument(it) }
+        // a literal, not a bound parameter: PostgreSQL matches a GROUP BY expression to the select list by its text,
+        // so a separate parameter in each clause is never recognized as the same expression (EXPOSED-1117)
+        path.ifEmpty { arrayOf("$") }.appendTo { appendStringLiteral(it) }
         append(")")
     }
 

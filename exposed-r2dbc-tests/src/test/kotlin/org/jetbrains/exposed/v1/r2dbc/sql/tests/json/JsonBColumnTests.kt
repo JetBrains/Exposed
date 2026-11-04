@@ -48,6 +48,25 @@ class JsonBColumnTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    /* EXPOSED-1117 */
+    @Test
+    fun testGroupByJsonExtract() {
+        withJsonBTable(exclude = TestDB.entries - TestDB.ALL_POSTGRES) { tester, user1, data1, _ ->
+            tester.insert { it[jsonBColumn] = data1.copy(user = user1) }
+            tester.insert { it[jsonBColumn] = data1.copy(user = User("Pro", "Beta")) }
+
+            // the same expression is rendered in both the select list and the GROUP BY clause, so PostgreSQL must
+            // recognize both renderings as the same expression to run the query at all
+            val userName = tester.jsonBColumn.extract<String>("user", "name")
+            val countExpr = Count(intLiteral(1))
+
+            val counts = tester.select(userName, countExpr).groupBy(userName)
+                .map { it[userName] to it[countExpr].toInt() }.toList().toMap()
+
+            assertEquals(mapOf(user1.name to 2, "Pro" to 1), counts)
+        }
+    }
+
     @Test
     fun testInsertAndSelect() {
         withJsonBTable(exclude = binaryJsonNotSupportedDB) { tester, _, _, _ ->
