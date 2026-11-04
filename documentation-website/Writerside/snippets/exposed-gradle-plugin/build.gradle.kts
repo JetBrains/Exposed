@@ -3,7 +3,7 @@ import org.jetbrains.exposed.v1.plugin.core.migration.VersionFormat
 plugins {
     alias(libs.plugins.jvm)
 
-    id("org.jetbrains.exposed.plugin") version "1.6.0"
+    id("org.jetbrains.exposed.plugin") version "1.6.1"
 
     application
 }

@@ -1,3 +1,34 @@
+# 1.6.1
+
+Bug fixes:
+* fix: EXPOSED-1075 Keep JSONB column identity out of the SELECT list rewrite by @bbasinsk in https://github.com/JetBrains/Exposed/pull/2913
+* fix: EXPOSED-1097 Make JDBC & R2DBC transaction context registry thread-safe by @mikehancock in https://github.com/JetBrains/Exposed/pull/2950
+* fix: LocalDateTimeColumnType misreads datetime values before Unix epoch by @kwy404 in https://github.com/JetBrains/Exposed/pull/2969
+* fix: EXPOSED-1094 Add failing test for deleting an unflushed entity that is still referenced by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2970
+* fix: Resolve R2dbcDatabase.identifierManager without a connection by @mdedetrich in https://github.com/JetBrains/Exposed/pull/2972
+* fix: Keep H2's foreign key indices out of migration statements by @ybai08 in https://github.com/JetBrains/Exposed/pull/2976
+* fix: EXPOSED-1117 Render jsonb extract path as a literal on PostgreSQL by @Inf1mum in https://github.com/JetBrains/Exposed/pull/2977
+
+Documentation:
+* docs: Note the single-thread dispatcher deadlock for JDBC suspendTransaction by @chiliec in https://github.com/JetBrains/Exposed/pull/2968
+* docs: feat: Enable llms.txt and update the Writerside version by @vnikolova in https://github.com/JetBrains/Exposed/pull/2983
+* docs: fix: snippets build issues by @vnikolova in https://github.com/JetBrains/Exposed/pull/2987
+* docs: EXPOSED-1101 Update the Get started with Exposed tutorial by @vnikolova in https://github.com/JetBrains/Exposed/pull/2988
+* docs: Update logo icons and footers in API docs and docs website by @vnikolova in https://github.com/JetBrains/Exposed/pull/2992
+* docs: fix broken code block and formatting in DSL-Statement-Builder.md by @vnikolova in https://github.com/JetBrains/Exposed/pull/2999
+
+Infrastructure:
+* ojdbc11 23.26.4.0.0
+* flyway 13.12.0
+* sqlite-jdbc 3.54.1.0
+* joda-time 2.15.1
+* postgresql 42.7.14
+* redshift-jdbc42 2.3.0
+* logcaptor 2.13.0
+* kover 0.9.11
+* maven-api 3.10.0
+* maven-plugin-annotations 3.16.0
+
 # 1.6.0
 
 Features:
