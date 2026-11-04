@@ -38,7 +38,7 @@
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
-        <div class="library-version" id="library-version">1.6.0
+        <div class="library-version" id="library-version">1.6.1
         </div>
         <div class="navigation-controls">
         <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
@@ -94,7 +94,7 @@
   <div class="cover ">
     <h1 class="cover"><span><span>delete</span></span></h1>
   </div>
-  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="delete.html"><span class="token function">delete</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><p class="paragraph">Deletes this <a href="index.html">Entity</a> instance, both from the cache and from the database.</p><p class="paragraph">For entities that have not yet been flushed (i.e. still scheduled for insert), no DELETE statement is issued — the entity is simply removed from the scheduled inserts. This differs from JDBC, which issues an INSERT followed by a DELETE.</p></div></div>
+  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-dao-r2dbc/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="delete.html"><span class="token function">delete</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><p class="paragraph">Deletes this <a href="index.html">Entity</a> instance, both from the cache and from the database.</p><p class="paragraph">For entities that have not yet been flushed (i.e. still scheduled for insert), no DELETE statement is issued — the entity is simply removed from the scheduled inserts. This differs from JDBC, which issues an INSERT followed by a DELETE.</p><h4 class="tableheader">Throws</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":exposed-dao-r2dbc/main" data-filterable-set=":exposed-dao-r2dbc/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-illegal-state-exception/index.html"><span>Illegal</span><wbr><span>State</span><wbr><span><span>Exception</span></span></a></div></span></div><div><div class="title"><p class="paragraph">If this entity has not been flushed yet and another pending insert or update still references it, because that statement could then never be sent.</p></div></div></div></div></div></div></div>
 </div>
     <div class="footer">
         <div class="footer--container">
