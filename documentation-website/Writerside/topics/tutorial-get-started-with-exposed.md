@@ -76,7 +76,7 @@ When prompted, select the following options:
 For the other questions, press enter to use the default values.
 The output will look like the following:
 
-```console
+```text
 Select type of build to generate:
     1: Application
     2: Library
@@ -354,7 +354,7 @@ At the beginning of your transaction block, add the following code to enable SQL
 The application will start in the **Run** tool window at the
 bottom of the IDE. There, you will be able to see the SQL logs along with the printed results:
 
-```shell
+```text
 SQL: CREATE TABLE IF NOT EXISTS TASKS (ID INT AUTO_INCREMENT NOT NULL, "name" VARCHAR(128) NOT NULL, DESCRIPTION VARCHAR(128) NOT NULL, COMPLETED BOOLEAN DEFAULT FALSE NOT NULL)
 SQL: INSERT INTO TASKS ("name", DESCRIPTION) VALUES ('Learn Exposed', 'Go through the Get started with Exposed tutorial')
 SQL: INSERT INTO TASKS ("name", DESCRIPTION, COMPLETED) VALUES ('Read The Hobbit', 'Read the first two chapters of The Hobbit', TRUE)
@@ -364,7 +364,6 @@ false: 1
 true: 1 
 SQL: SELECT TASKS.ID, TASKS."name", TASKS.DESCRIPTION, TASKS.COMPLETED FROM TASKS
 Remaining tasks: [org.example.Tasks.id=1, org.example.Tasks.name=Learn Exposed, org.example.Tasks.description=Go through the Get started with Exposed tutorial, org.example.Tasks.completed=false, org.example.Tasks.id=2, org.example.Tasks.name=Read The Hobbit, org.example.Tasks.description=Read the first two chapters of The Hobbit, org.example.Tasks.completed=true]
-
 ```
 
 ## Update and delete a task {id="update-and-delete-task"}
@@ -416,7 +415,7 @@ Similarly to `update()`, it returns the number of rows that have been deleted.
 
 You should now see the following result:
 
-```console
+```text
 SQL: CREATE TABLE IF NOT EXISTS TASKS (ID INT AUTO_INCREMENT NOT NULL, "name" VARCHAR(128) NOT NULL, DESCRIPTION VARCHAR(128) NOT NULL, COMPLETED BOOLEAN DEFAULT FALSE NOT NULL)
 SQL: INSERT INTO TASKS ("name", DESCRIPTION) VALUES ('Learn Exposed', 'Go through the Get started with Exposed tutorial')
 SQL: INSERT INTO TASKS ("name", DESCRIPTION, COMPLETED) VALUES ('Read The Hobbit', 'Read the first two chapters of The Hobbit', TRUE)
@@ -432,7 +431,6 @@ Updated task details: org.example.Tasks.completed=true
 SQL: DELETE FROM TASKS WHERE TASKS.ID = 2
 SQL: SELECT TASKS.ID, TASKS."name", TASKS.DESCRIPTION, TASKS.COMPLETED FROM TASKS
 Remaining tasks: [org.example.Tasks.id=1, org.example.Tasks.name=Learn Exposed, org.example.Tasks.description=Go through the Get started with Exposed tutorial, org.example.Tasks.completed=true]
-
 ```
 
 </step>

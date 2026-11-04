@@ -35,14 +35,14 @@ Before you start using Exposed, you need to add dependencies to your project.
 
 Navigate to the **gradle/libs.versions.toml** file and define the Exposed and H2 versions and artifacts:
 
-```kotlin
+```toml
 [versions]
-//...
+#...
 exposed = "%exposed_version%"
 h2 = "%h2_db_version%"
 
 [libraries]
-//...
+#...
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
 exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }

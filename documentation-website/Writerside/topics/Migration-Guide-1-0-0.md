@@ -609,7 +609,7 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.transactions.TransactionManagerApi
 
 val manager: TransactionManagerApi =
-    Database.connect(...).transactionManager
+    Database.connect(/* ... */).transactionManager
 val tx = manager.currentOrNull()
 ```
 
@@ -619,7 +619,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.JdbcTransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.currentOrNull
 
 val manager: JdbcTransactionManager =
-    Database.connect(...).transactionManager
+    Database.connect(/* ... */).transactionManager
 val tx = manager.currentOrNull()
 ```
 
@@ -632,7 +632,7 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.transactions.TransactionManagerApi
 
 val manager: TransactionManagerApi =
-    Database.connect(...).transactionManager
+    Database.connect(/* ... */).transactionManager
 val tx = manager.currentOrNull()
 ```
 
@@ -640,7 +640,7 @@ val tx = manager.currentOrNull()
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 
-Database.connect(...)
+Database.connect(/* ... */)
 
 val tx = TransactionManager.currentOrNull()
 ```
