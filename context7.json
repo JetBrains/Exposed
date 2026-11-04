@@ -24,6 +24,9 @@
     ],
     "previousVersions": [
         {
+            "tag": "1.6.1"
+        },
+        {
             "tag": "1.6.0"
         },
         {
