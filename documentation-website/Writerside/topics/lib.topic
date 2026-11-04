@@ -118,7 +118,7 @@
             </tab>
             <tab title="Groovy Gradle" group-key="groovy-gradle">
 
-                <code-block lang="kotlin">
+                <code-block lang="groovy">
                 dependencies {
                     implementation "org.jetbrains.exposed:%artifact_name%:%exposed_version%"
                 }
@@ -150,7 +150,7 @@
             </tab>
             <tab title="Groovy Gradle" group-key="groovy-gradle">
 
-                <code-block lang="kotlin">
+                <code-block lang="groovy">
                 dependencies {
                     runtimeOnly "%external_artifact_groupId%:%external_artifact_name%:%external_artifact_version%"
                 }
@@ -161,7 +161,7 @@
 
     <snippet id="date-time-components">
         <deflist type="medium">
-            <def id="%date_time_api_module%-year">
+            <def>
                 <title>
                     <a href="https://jetbrains.github.io/Exposed/api/%date_time_api_module%/%date_time_api_package%/year.html">
                         <code>.year()</code>
@@ -169,7 +169,7 @@
                 </title>
                 Returns the year as an <code>Int</code>.
             </def>
-            <def id="%date_time_api_module%-month">
+            <def>
                 <title>
                     <a href="https://jetbrains.github.io/Exposed/api/%date_time_api_module%/%date_time_api_package%/month.html">
                         <code>.month()</code>
@@ -177,7 +177,7 @@
                 </title>
                 Returns the month of the year (<code>1</code>–<code>12</code>).
             </def>
-            <def id="%date_time_api_module%-day">
+            <def>
                 <title>
                     <a href="https://jetbrains.github.io/Exposed/api/%date_time_api_module%/%date_time_api_package%/day.html">
                         <code>.day()</code>
@@ -185,7 +185,7 @@
                 </title>
                 Returns the day of the month (<code>1</code>–<code>31</code>).
             </def>
-            <def id="%date_time_api_module%-hour">
+            <def>
                 <title>
                     <a href="https://jetbrains.github.io/Exposed/api/%date_time_api_module%/%date_time_api_package%/hour.html">
                         <code>.hour()</code>
@@ -193,7 +193,7 @@
                 </title>
                 Returns the hour of the day (<code>0</code>–<code>23</code>).
             </def>
-            <def id="%date_time_api_module%-minute">
+            <def>
                 <title>
                     <a href="https://jetbrains.github.io/Exposed/api/%date_time_api_module%/%date_time_api_package%/minute.html">
                         <code>.minute()</code>
@@ -201,7 +201,7 @@
                 </title>
                 Returns the minute of the hour (<code>0</code>–<code>59</code>).
             </def>
-            <def id="%date_time_api_module%-second">
+            <def>
                 <title>
                     <a href="https://jetbrains.github.io/Exposed/api/%date_time_api_module%/%date_time_api_package%/second.html">
                         <code>.second()</code>

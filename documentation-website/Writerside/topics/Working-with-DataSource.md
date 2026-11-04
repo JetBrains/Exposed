@@ -11,7 +11,7 @@ connection pooling, and lets you set configuration options like maximum number o
 val db = Database.connect(dataSource)
 ```
 
-### Example with HikariCP
+## Example with HikariCP
 
 To use a JDBC connection pool like [HikariCP](https://github.com/brettwooldridge/HikariCP), first set up a `HikariConfig` class.
 This example uses the MySQL JDBC driver (see the official reference for [MySQL configuration](https://github.com/brettwooldridge/HikariCP/wiki/MySQL-Configuration) details):
@@ -28,8 +28,8 @@ val config = HikariConfig().apply {
 }
 
 // Gradle
-implementation "mysql:mysql-connector-j:8.0.33"
-implementation "com.zaxxer:HikariCP:4.0.3"
+implementation("mysql:mysql-connector-j:8.0.33")
+implementation("com.zaxxer:HikariCP:4.0.3")
 ```
 Then instantiate a `HikariDataSource` with this configuration class and provide it to `Database.connect()`:
 ```kotlin

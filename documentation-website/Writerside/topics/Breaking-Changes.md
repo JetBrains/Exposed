@@ -507,7 +507,7 @@ TestTable.upsert(
     ```kotlin
     val tester = object : Table() {
             val value = integer("value")
-                .transform(wrap = { ... }, unwrap = { ... })
+                .transform(wrap = { /* ... */ }, unwrap = { /* ... */ })
         }
     ```
     
