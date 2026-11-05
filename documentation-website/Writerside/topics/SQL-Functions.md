@@ -53,6 +53,9 @@ function returns a substring value from the specified start and with the specifi
 The [`concat()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-i-sql-expression-builder/concat.html)
 function returns a string value that concatenates the text representations of all non-null input values, separated by an optional separator.
 
+The separator is bound as a query parameter, so it is treated as data and must be passed as is, without being escaped
+on the client side.
+
 <code-block lang="kotlin"
             src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt"
             include-lines="53-57"/>
@@ -60,6 +63,9 @@ function returns a string value that concatenates the text representations of al
 ### Locate
 The [`.locate()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/locate.html)
 function returns the index of the first occurrence of a specified substring, or 0 if the substring is not found.
+
+The substring is bound as a query parameter, so it is treated as data and must be passed as is, without being
+escaped on the client side.
 
 <code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt" include-lines="60-61"/>
 

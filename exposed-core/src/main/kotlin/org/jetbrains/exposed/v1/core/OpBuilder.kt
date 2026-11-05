@@ -405,7 +405,7 @@ infix operator fun <T, S : T> ExpressionWithColumnType<T>.plus(other: Expression
  * @param value The string value to be concatenated.
  * @return The concatenated expression.
  */
-infix operator fun Expression<String>.plus(value: String): Concat = concat(this, stringLiteral(value))
+infix operator fun Expression<String>.plus(value: String): Concat = concat(this, stringParam(value))
 
 /**
  * Concatenate the value to the input expression.
@@ -421,7 +421,7 @@ infix operator fun Expression<String>.plus(value: Expression<String>): Concat = 
  * @param value The string value to be concatenated.
  * @return The concatenated expression.
  */
-infix operator fun String.plus(value: Expression<String>): Concat = concat(stringLiteral(this), value)
+infix operator fun String.plus(value: Expression<String>): Concat = concat(stringParam(this), value)
 
 // MINUS
 
