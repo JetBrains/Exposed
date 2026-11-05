@@ -45,6 +45,23 @@ interface R2dbcDatabaseConfig : DatabaseConfig {
     val defaultR2dbcIsolationLevel: IsolationLevel?
 
     /**
+     * Whether a statement that is still executing should be aborted on the database when the coroutine running its
+     * transaction is cancelled.
+     *
+     * R2DBC drivers drain the results of a statement when its subscription is cancelled rather than aborting it,
+     * so without this, the transaction's rollback and connection release (and so the cancelled coroutine's completion)
+     * wait until the statement has run to completion. When enabled, a driver-specific cancel request is sent before
+     * the transaction is rolled back. This requires an extra connection to the database per cancelled statement.
+     *
+     * Only drivers that support cancelling a running statement are affected (currently PostgreSQL);
+     * for other drivers this setting has no effect.
+     *
+     * Defaults to `true`.
+     */
+    val cancelRunningStatementOnCancellation: Boolean
+        get() = true
+
+    /**
      * Builder API responsible for constructing a custom [R2dbcDatabase] configuration parameter state.
      */
     class Builder : DatabaseConfig.Builder() {
@@ -74,6 +91,22 @@ interface R2dbcDatabaseConfig : DatabaseConfig {
          * Check `R2dbcDatabase.getDefaultIsolationLevel()` for the database defaults.
          */
         var defaultR2dbcIsolationLevel: IsolationLevel? = null
+
+        /**
+         * Whether a statement that is still executing should be aborted on the database when the coroutine running its
+         * transaction is cancelled.
+         *
+         * R2DBC drivers drain the results of a statement when its subscription is cancelled rather than aborting it,
+         * so without this, the transaction's rollback and connection release (and so the cancelled coroutine's completion)
+         * wait until the statement has run to completion. When enabled, a driver-specific cancel request is sent before
+         * the transaction is rolled back. This requires an extra connection to the database per cancelled statement.
+         *
+         * Only drivers that support cancelling a running statement are affected (currently PostgreSQL);
+         * for other drivers this setting has no effect.
+         *
+         * Defaults to `true`.
+         */
+        var cancelRunningStatementOnCancellation: Boolean = true
 
         override var defaultIsolationLevel: Int
             get() = defaultR2dbcIsolationLevel?.asInt() ?: -1
@@ -124,4 +157,6 @@ class R2dbcDatabaseConfigImpl(
         get() = builder.typeMapping
     override val defaultR2dbcIsolationLevel: IsolationLevel?
         get() = builder.defaultR2dbcIsolationLevel
+    override val cancelRunningStatementOnCancellation: Boolean
+        get() = builder.cancelRunningStatementOnCancellation
 }

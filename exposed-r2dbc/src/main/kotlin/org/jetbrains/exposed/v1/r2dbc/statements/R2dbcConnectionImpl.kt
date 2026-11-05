@@ -130,7 +130,9 @@ class R2dbcConnectionImpl(
         } else {
             createStatement(preparedSql)
         }
-        R2dbcPreparedStatementImpl(r2dbcStatement, this, returnKeys, currentDialect, typeMapping)
+        R2dbcPreparedStatementImpl(r2dbcStatement, this, returnKeys, currentDialect, typeMapping).also {
+            it.inFlightTracker = inFlightTracker
+        }
     }
 
     override suspend fun prepareStatement(
@@ -139,7 +141,9 @@ class R2dbcConnectionImpl(
     ): R2dbcPreparedStatementImpl = withConnection {
         val preparedSql = r2dbcPreparedSql(sql)
         val r2dbcStatement = createStatement(preparedSql).returnGeneratedValues(*columns)
-        R2dbcPreparedStatementImpl(r2dbcStatement, this, true, currentDialect, typeMapping)
+        R2dbcPreparedStatementImpl(r2dbcStatement, this, true, currentDialect, typeMapping).also {
+            it.inFlightTracker = inFlightTracker
+        }
     }
 
     private fun r2dbcPreparedSql(sql: String): String {
@@ -198,7 +202,7 @@ class R2dbcConnectionImpl(
         withConnection {
             val batch = createBatch()
             sqls.forEach { sql -> batch.add(sql) }
-            batch.execute().collect { }
+            inFlightTracker.track(batch.execute()).collect { }
         }
     }
 
@@ -230,6 +234,36 @@ class R2dbcConnectionImpl(
 
     private val localConnectionLock = Mutex()
     private var localConnection: Connection? = null
+
+    private val inFlightTracker = InFlightStatementTracker()
+
+    /**
+     * Asks the database to abort the statement that may still be executing on this connection, if any.
+     *
+     * R2DBC drivers drain a statement's results when its subscription is cancelled instead of aborting it,
+     * so without this, any further use of the connection (like a rollback or releasing it back to a pool) would
+     * have to wait for the statement to run to completion.
+     *
+     * The cancel request is only sent while a statement is tracked as in flight and is awaited before returning,
+     * so that it has been delivered before the connection is used for anything else. If the statement completes
+     * before the request arrives, the database is idle and ignores it.
+     * If the underlying driver does not support cancelling statements, this is a no-op.
+     *
+     * This does not acquire a connection if none has been acquired yet.
+     */
+    @Suppress("TooGenericExceptionCaught")
+    internal suspend fun cancelRunningStatement() {
+        if (!inFlightTracker.isStatementInFlight) return
+        withContext(NonCancellable) {
+            try {
+                localConnectionLock.withLock { localConnection }?.let { cancelRunningStatement(it) }
+            } catch (cause: Exception) {
+                exposedLogger.warn("Failed to cancel running statement: ${cause.message}", cause)
+            } finally {
+                inFlightTracker.reset()
+            }
+        }
+    }
 
     @Suppress("TooGenericExceptionCaught")
     private suspend fun <T> withConnection(body: suspend Connection.() -> T): T {
