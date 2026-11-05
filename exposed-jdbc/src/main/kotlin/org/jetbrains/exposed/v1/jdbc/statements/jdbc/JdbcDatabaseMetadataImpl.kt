@@ -193,7 +193,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         if (currentDialect !is H2Dialect) return emptyMap()
 
         val map = mutableMapOf<String, String>()
-        metadata.connection.executeSQL("SHOW COLUMNS FROM $tableName") { rs ->
+        val _ = metadata.connection.executeSQL("SHOW COLUMNS FROM $tableName") { rs ->
             while (rs.next()) {
                 val field = rs.getString("FIELD")
                 val type = rs.getString("TYPE").uppercase()
@@ -267,7 +267,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 tableNames
             }
 
-            jdbcConnection.executeSQL(sql, params) { rs ->
+            val _ = jdbcConnection.executeSQL(sql, params) { rs ->
                 while (rs.next()) {
                     val tableName = rs.getString(1)?.uppercase()
                     val columnName = rs.getString(2)?.uppercase()
@@ -317,7 +317,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         for (table in tables) {
             val (catalog, tableSchema) = tableCatalogAndSchema(table)
 
-            existingIndicesCache.getOrPut(table) {
+            val _ = existingIndicesCache.getOrPut(table) {
                 if (currentDialect is RedshiftDialect) {
                     return@getOrPut redshiftExistingIndices(table, tableSchema)
                 }
@@ -391,7 +391,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             }.orEmpty()
         }
         val constraints = linkedMapOf<String, MutableList<String>>()
-        metadata.connection.executeSQL(
+        val _ = metadata.connection.executeSQL(
             """
             SELECT tc.constraint_name, kcu.column_name
             FROM information_schema.table_constraints tc
@@ -428,7 +428,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         tables.forEach { table ->
             val transaction = TransactionManager.current()
             val checkConstraints = mutableListOf<CheckConstraint>()
-            metadata.connection.executeSQL(
+            val _ = metadata.connection.executeSQL(
                 getCheckConstraintsQuery(table)
             ) { rs ->
                 while (rs.next()) {
@@ -603,7 +603,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             val inTableList = allTables.keys.joinToString("','", prefix = " ku.TABLE_NAME IN ('", postfix = "')")
             val tableSchema = "'${tables.mapNotNull { it.schemaName }.toSet().singleOrNull() ?: currentSchema}'"
             val constraintsToLoad = HashMap<String, MutableMap<String, ForeignKeyConstraint>>()
-            metadata.connection.executeSQL(
+            val _ = metadata.connection.executeSQL(
                 """
                     SELECT
                       rc.CONSTRAINT_NAME AS FK_NAME,
