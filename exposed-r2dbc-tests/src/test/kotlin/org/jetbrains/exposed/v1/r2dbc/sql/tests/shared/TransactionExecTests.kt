@@ -9,6 +9,7 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.autoIncColumnType
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.less
+import org.jetbrains.exposed.v1.core.statements.StatementContext
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.statements.buildStatement
 import org.jetbrains.exposed.v1.core.upperCase
@@ -19,6 +20,8 @@ import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.select
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.withCitiesAndUsers
+import org.jetbrains.exposed.v1.r2dbc.statements.SuspendStatementInterceptor
+import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcResult
 import org.jetbrains.exposed.v1.r2dbc.statements.api.origin
 import org.jetbrains.exposed.v1.r2dbc.statements.toExecutable
@@ -29,8 +32,10 @@ import org.jetbrains.exposed.v1.r2dbc.tests.getString
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.junit.jupiter.api.Test
+import java.lang.ref.WeakReference
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class TransactionExecTests : R2dbcDatabaseTestsBase() {
     object ExecTable : Table("exec_table") {
@@ -232,6 +237,44 @@ class TransactionExecTests : R2dbcDatabaseTestsBase() {
                     .sumOf { num -> num ?: 0 }
             }
             assertEquals(expectedSum, result2)
+        }
+    }
+
+    @Test
+    fun testExecutedStatementsAreNotRetainedByTransaction() {
+        withTables(ExecTable) {
+            val executed = mutableListOf<WeakReference<R2dbcPreparedStatementApi>>()
+            val interceptor = object : SuspendStatementInterceptor {
+                override suspend fun afterExecution(
+                    transaction: R2dbcTransaction,
+                    contexts: List<StatementContext>,
+                    executedStatement: R2dbcPreparedStatementApi
+                ) {
+                    executed.add(WeakReference(executedStatement))
+                }
+            }
+            registerInterceptor(interceptor)
+
+            repeat(5) { i ->
+                ExecTable.batchInsert((1..10).toList(), shouldReturnGeneratedValues = false) { amount ->
+                    this[ExecTable.id] = i * 10 + amount
+                    this[ExecTable.amount] = amount
+                }
+            }
+            assertEquals(5, executed.size)
+            unregisterInterceptor(interceptor)
+            // some drivers (e.g. r2dbc-postgresql) keep a reference to their latest exchange until the next one starts
+            exec("SELECT 1")
+
+            // the transaction is still open, so any statement it kept would still be strongly reachable
+            repeat(10) {
+                if (executed.all { it.get() == null }) return@repeat
+                System.gc()
+                Thread.sleep(50)
+            }
+            assertTrue(executed.all { it.get() == null }, "Executed statements were retained by the open transaction")
+
+            assertEquals(50L, ExecTable.selectAll().count())
         }
     }
 }
