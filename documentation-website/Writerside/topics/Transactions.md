@@ -202,8 +202,12 @@ transaction {
 With this, any rollback or exception inside a nested transaction affects only that block, without rolling back the
 outer transaction.
 
-Exposed achieves this by using SQL `SAVEPOINT` to mark transaction states at the beginning of each transaction
-block, releasing them on exit.
+Exposed achieves this by using SQL `SAVEPOINT` to mark the transaction state when a nested transaction first uses its
+connection, and releases the savepoint on exit. A nested transaction that runs no statements sets no savepoint.
+
+The rollback of a nested transaction undoes only the SQL that runs after its savepoint is set. SQL that runs before
+that, for example on the outer transaction's connection or directly on a driver connection, is not undone. To set the
+savepoint earlier, access the nested transaction's `connection` at the start of the nested block.
 
 > Using `SAVEPOINT` may affect performance. For more details, refer to your database documentation.
 
