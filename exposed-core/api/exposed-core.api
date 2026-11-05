@@ -636,6 +636,7 @@ public abstract interface class org/jetbrains/exposed/v1/core/DatabaseConfig {
 	public abstract fun getDefaultSchema ()Lorg/jetbrains/exposed/v1/core/Schema;
 	public abstract fun getDispatcher ()Lkotlinx/coroutines/CoroutineDispatcher;
 	public abstract fun getExplicitDialect ()Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;
+	public fun getExplicitReadOnly ()Ljava/lang/Boolean;
 	public abstract fun getKeepLoadedReferencesOutOfTransaction ()Z
 	public abstract fun getLogTooMuchResultSetsThreshold ()I
 	public abstract fun getMaxEntitiesToStoreInCachePerEntity ()I
@@ -691,6 +692,10 @@ public final class org/jetbrains/exposed/v1/core/DatabaseConfig$Companion {
 	public static synthetic fun invoke$default (Lorg/jetbrains/exposed/v1/core/DatabaseConfig$Companion;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/DatabaseConfig;
 }
 
+public final class org/jetbrains/exposed/v1/core/DatabaseConfig$DefaultImpls {
+	public static fun getExplicitReadOnly (Lorg/jetbrains/exposed/v1/core/DatabaseConfig;)Ljava/lang/Boolean;
+}
+
 public class org/jetbrains/exposed/v1/core/DatabaseConfigImpl : org/jetbrains/exposed/v1/core/DatabaseConfig {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/DatabaseConfig$Builder;)V
 	public fun getDefaultFetchSize ()Ljava/lang/Integer;
@@ -703,6 +708,7 @@ public class org/jetbrains/exposed/v1/core/DatabaseConfigImpl : org/jetbrains/ex
 	public fun getDefaultSchema ()Lorg/jetbrains/exposed/v1/core/Schema;
 	public fun getDispatcher ()Lkotlinx/coroutines/CoroutineDispatcher;
 	public fun getExplicitDialect ()Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;
+	public fun getExplicitReadOnly ()Ljava/lang/Boolean;
 	public fun getKeepLoadedReferencesOutOfTransaction ()Z
 	public fun getLogTooMuchResultSetsThreshold ()I
 	public fun getMaxEntitiesToStoreInCachePerEntity ()I

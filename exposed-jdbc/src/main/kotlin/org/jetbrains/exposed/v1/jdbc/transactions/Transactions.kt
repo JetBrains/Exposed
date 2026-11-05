@@ -17,6 +17,17 @@ import java.sql.SQLException
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.time.Duration.Companion.milliseconds
 
+internal fun JdbcTransactionManager.newTransactionWithDefaults(
+    isolation: Int? = null,
+    readOnly: Boolean? = null,
+    outerTransaction: JdbcTransaction? = null
+): JdbcTransaction =
+    if (this is TransactionManager) {
+        createTransaction(isolation, readOnly, outerTransaction)
+    } else {
+        newTransaction(isolation?.takeUnless { it == -1 } ?: defaultIsolationLevel, readOnly ?: defaultReadOnly, outerTransaction)
+    }
+
 /**
  * Executes the provided [block] within the context of the [transaction], handling commit and rollback operations.
  *
@@ -120,8 +131,8 @@ private fun resolveDatabaseOrThrow(db: Database?): Database {
  * and resource cleanup, even in exceptional circumstances.
  *
  * @param db Database to use for the transaction. Defaults to `null`.
- * @param transactionIsolation Transaction isolation level. Defaults to `db.transactionManager.defaultIsolationLevel`.
- * @param readOnly Whether the transaction should be read-only. Defaults to `db.transactionManager.defaultReadOnly`.
+ * @param transactionIsolation Transaction isolation level. If omitted, uses manager defaults or inherits DataSource settings with the built-in manager.
+ * @param readOnly Whether the transaction should be read-only. If omitted, uses manager defaults or inherits DataSource settings with the built-in manager.
  * @return The final result of the [statement] block.
  * @throws IllegalStateException If no database is available
  * @throws SQLException If a database error occurs and retry attempts are exhausted
@@ -130,8 +141,8 @@ private fun resolveDatabaseOrThrow(db: Database?): Database {
  */
 fun <T> transaction(
     db: Database? = null,
-    transactionIsolation: Int? = db?.transactionManager?.defaultIsolationLevel,
-    readOnly: Boolean? = db?.transactionManager?.defaultReadOnly,
+    transactionIsolation: Int? = null,
+    readOnly: Boolean? = null,
     statement: JdbcTransaction.() -> T
 ): T {
     val database = resolveDatabaseOrThrow(db)
@@ -139,9 +150,9 @@ fun <T> transaction(
     val outer = database.transactionManager.currentOrNull()
 
     return if (outer != null) {
-        val transaction = outer.transactionManager.newTransaction(
-            transactionIsolation ?: outer.transactionManager.defaultIsolationLevel,
-            readOnly ?: outer.transactionManager.defaultReadOnly,
+        val transaction = outer.transactionManager.newTransactionWithDefaults(
+            transactionIsolation,
+            readOnly,
             outer
         )
 
@@ -179,8 +190,8 @@ fun <T> transaction(
  * and resource cleanup, even in exceptional circumstances.
  *
  * @param db Database to use for the transaction. Defaults to `null`.
- * @param transactionIsolation Transaction isolation level. Defaults to `db.transactionManager.defaultIsolationLevel`.
- * @param readOnly Whether the transaction should be read-only. Defaults to `db.transactionManager.defaultReadOnly`.
+ * @param transactionIsolation Transaction isolation level. If omitted, uses manager defaults or inherits DataSource settings with the built-in manager.
+ * @param readOnly Whether the transaction should be read-only. If omitted, uses manager defaults or inherits DataSource settings with the built-in manager.
  * @param outerTransaction Outer transaction if this is a nested transaction. Defaults to `null`.
  * @return The final result of the [statement] block.
  * @throws IllegalStateException If no database is available
@@ -190,8 +201,8 @@ fun <T> transaction(
  */
 fun <T> inTopLevelTransaction(
     db: Database? = null,
-    transactionIsolation: Int? = db?.transactionManager?.defaultIsolationLevel,
-    readOnly: Boolean? = db?.transactionManager?.defaultReadOnly,
+    transactionIsolation: Int? = null,
+    readOnly: Boolean? = null,
     outerTransaction: JdbcTransaction? = null,
     statement: JdbcTransaction.() -> T
 ): T {
@@ -202,9 +213,9 @@ fun <T> inTopLevelTransaction(
     val database = resolveDatabaseOrThrow(db)
 
     while (true) {
-        val transaction = database.transactionManager.newTransaction(
-            transactionIsolation ?: database.transactionManager.defaultIsolationLevel,
-            readOnly ?: database.transactionManager.defaultReadOnly,
+        val transaction = database.transactionManager.newTransactionWithDefaults(
+            transactionIsolation,
+            readOnly,
             outerTransaction
         )
 
@@ -278,8 +289,8 @@ fun <T> inTopLevelTransaction(
  * `withContext(Dispatchers.IO) { suspendTransaction { ... } }`.
  *
  * @param db Database to use for the transaction. Defaults to `null`.
- * @param transactionIsolation Transaction isolation level. Defaults to `db.transactionManager.defaultIsolationLevel`.
- * @param readOnly Whether the transaction should be read-only. Defaults to `db.transactionManager.defaultReadOnly`.
+ * @param transactionIsolation Transaction isolation level. If omitted, uses manager defaults or inherits DataSource settings with the built-in manager.
+ * @param readOnly Whether the transaction should be read-only. If omitted, uses manager defaults or inherits DataSource settings with the built-in manager.
  * @return The final result of the [statement] block.
  * @throws IllegalStateException If no database is available
  * @throws SQLException If a database error occurs and retry attempts are exhausted
@@ -287,8 +298,8 @@ fun <T> inTopLevelTransaction(
  */
 suspend fun <T> suspendTransaction(
     db: Database? = null,
-    transactionIsolation: Int? = db?.transactionManager?.defaultIsolationLevel,
-    readOnly: Boolean? = db?.transactionManager?.defaultReadOnly,
+    transactionIsolation: Int? = null,
+    readOnly: Boolean? = null,
     statement: suspend JdbcTransaction.() -> T
 ): T {
     val databaseToUse = resolveDatabaseOrThrow(db)
@@ -296,9 +307,9 @@ suspend fun <T> suspendTransaction(
     val outer = databaseToUse.transactionManager.getCurrentContextTransaction()
 
     return if (outer != null) {
-        val transaction = outer.transactionManager.newTransaction(
-            transactionIsolation ?: outer.transactionManager.defaultIsolationLevel,
-            readOnly ?: outer.transactionManager.defaultReadOnly,
+        val transaction = outer.transactionManager.newTransactionWithDefaults(
+            transactionIsolation,
+            readOnly,
             outer
         )
 
@@ -336,8 +347,8 @@ suspend fun <T> suspendTransaction(
  * and resource cleanup, even in exceptional circumstances.
  *
  * @param db Database to use for the transaction. Defaults to `null`.
- * @param transactionIsolation Transaction isolation level. Defaults to `db.transactionManager.defaultIsolationLevel`.
- * @param readOnly Whether the transaction should be read-only. Defaults to `db.transactionManager.defaultReadOnly`.
+ * @param transactionIsolation Transaction isolation level. If omitted, uses manager defaults or inherits DataSource settings with the built-in manager.
+ * @param readOnly Whether the transaction should be read-only. If omitted, uses manager defaults or inherits DataSource settings with the built-in manager.
  * @param outerTransaction Outer transaction if this is a nested transaction. Defaults to `null`.
  * @return The final result of the [statement] block.
  * @throws IllegalStateException If no database is available
@@ -346,8 +357,8 @@ suspend fun <T> suspendTransaction(
  */
 suspend fun <T> inTopLevelSuspendTransaction(
     db: Database? = null,
-    transactionIsolation: Int? = db?.transactionManager?.defaultIsolationLevel,
-    readOnly: Boolean? = db?.transactionManager?.defaultReadOnly,
+    transactionIsolation: Int? = null,
+    readOnly: Boolean? = null,
     outerTransaction: JdbcTransaction? = null,
     statement: suspend JdbcTransaction.() -> T
 ): T {
@@ -358,9 +369,9 @@ suspend fun <T> inTopLevelSuspendTransaction(
     val database = resolveDatabaseOrThrow(db)
 
     while (true) {
-        val transaction = database.transactionManager.newTransaction(
-            transactionIsolation ?: database.transactionManager.defaultIsolationLevel,
-            readOnly ?: database.transactionManager.defaultReadOnly,
+        val transaction = database.transactionManager.newTransactionWithDefaults(
+            transactionIsolation,
+            readOnly,
             outerTransaction
         )
 
