@@ -3,8 +3,8 @@ import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.exposed.gradle.configureDetekt
 import org.jetbrains.exposed.gradle.configureMavenCentralMetadata
 import org.jetbrains.exposed.gradle.testDb
-import java.time.Year
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
+import java.time.Year
 
 plugins {
     kotlin("jvm") apply true
