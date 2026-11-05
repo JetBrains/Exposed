@@ -116,6 +116,16 @@ fun <T : Any, S : Statement<T>> S.toExecutable(): SuspendExecutable<T, S> {
 internal suspend fun <T, S : Statement<T>> SuspendExecutable<T, S>.executeIn(
     transaction: R2dbcTransaction
 ): Pair<T?, List<StatementContext>> {
+    if (!transaction.db.isVersionResolved) {
+        try {
+            // rendering the statement may read the database version, which can't be resolved from there without blocking.
+            // only the outermost connection is requested, as a nested transaction sets its savepoint with its own
+            transaction.db.resolveVersion(generateSequence(transaction) { it.outerTransaction }.last().connection())
+        } catch (cause: R2dbcException) {
+            throw ExposedR2dbcException(cause, emptyList(), transaction)
+        }
+    }
+
     val arguments = statement.arguments()
     val contexts = if (arguments.any()) {
         arguments.map { args ->
