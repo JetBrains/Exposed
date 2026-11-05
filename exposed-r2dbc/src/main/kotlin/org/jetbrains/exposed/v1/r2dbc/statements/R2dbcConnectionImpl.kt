@@ -37,7 +37,9 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.R2dbcTransactionDefinition
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.MetadataProvider
 import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.OracleMetadata
+import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.PostgreSQLMetadata
 import org.reactivestreams.Publisher
+import java.time.Duration
 import java.util.*
 
 /**
@@ -105,6 +107,8 @@ class R2dbcConnectionImpl(
 
     override suspend fun rollback() {
         withConnection { rollbackTransaction().awaitFirstOrNull() }
+        // PostgreSQL reverts session settings changed in a rolled back transaction
+        appliedStatementTimeout = null
     }
 
     override suspend fun isClosed(): Boolean = localConnectionLock.withLock { localConnection }?.run {
@@ -117,7 +121,51 @@ class R2dbcConnectionImpl(
                 localConnection = null
                 transactionDefinition = null
             }
-        }?.let { releaseConnection(it) }
+        }?.let {
+            if (statementTimeoutChanged) resetStatementTimeout(it)
+            appliedStatementTimeout = null
+            statementTimeoutChanged = false
+            releaseConnection(it)
+        }
+    }
+
+    private var appliedStatementTimeout: Duration? = null
+    private var statementTimeoutChanged: Boolean = false
+
+    /**
+     * R2DBC statement timeouts are connection-level (a session `SET` for some drivers), so [timeout] is only sent
+     * when it changes, and reset on [close] so it doesn't leak through a pool. `null` leaves the connection untouched.
+     */
+    internal suspend fun applyStatementTimeout(timeout: Int?) {
+        val duration = timeout?.let { Duration.ofSeconds(it.toLong()) }
+        withConnection {
+            when {
+                duration == null -> if (statementTimeoutChanged) resetStatementTimeout(this)
+                duration != appliedStatementTimeout -> {
+                    statementTimeoutChanged = true
+                    setStatementTimeout(duration).awaitFirstOrNull()
+                    appliedStatementTimeout = duration
+                }
+            }
+        }
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    private suspend fun resetStatementTimeout(connection: Connection) {
+        withContext(NonCancellable) {
+            try {
+                if (metadataProvider is PostgreSQLMetadata) {
+                    // restores the role/database default, unlike setting 0
+                    connection.executeSQL("RESET statement_timeout")
+                } else {
+                    connection.setStatementTimeout(Duration.ZERO).awaitFirstOrNull()
+                }
+                appliedStatementTimeout = null
+                statementTimeoutChanged = false
+            } catch (cause: Exception) {
+                exposedLogger.warn("Failed to reset statement timeout: ${cause.message}", cause)
+            }
+        }
     }
 
     override suspend fun prepareStatement(
@@ -217,6 +265,7 @@ class R2dbcConnectionImpl(
         withConnection {
             rollbackTransactionToSavepoint(savepoint.name).awaitFirstOrNull()
         }
+        appliedStatementTimeout = null
     }
 
     private var metadataImpl: R2dbcDatabaseMetadataImpl? = null
