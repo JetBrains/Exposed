@@ -1,3 +1,17 @@
+# Unreleased
+
+Bug fixes:
+* fix: EXPOSED-1120 Escape backslashes in MySQL/MariaDB string literals
+  * The string arguments of the `plus` operators — `Expression<String>.plus(String)`,
+    `String.plus(Expression<String>)` and their deprecated `SqlExpressionBuilder` versions — are now bound as query
+    parameters, so they are always treated as data.
+  * Inlined string literals — `stringLiteral()`, `literal()`, `asLiteral()`, the enumeration column types and column
+    comments — now also escape backslashes when the dialect is MySQL or MariaDB, where a backslash is also an escape
+    character in a string literal. On servers running with `NO_BACKSLASH_ESCAPES` this doubles the backslashes in
+    the stored values.
+  * These arguments must be passed as is. A value that was escaped on the client side, for example with its single
+    quotes doubled, now reaches the database with the escaping intact.
+
 # 1.6.1
 
 Bug fixes:
