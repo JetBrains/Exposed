@@ -14,9 +14,12 @@ import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.java.UUIDColumnType
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.statements.StatementType
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
+import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.exists
@@ -32,8 +35,10 @@ import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
+import org.jetbrains.exposed.v1.tests.shared.expectException
 import org.junit.jupiter.api.Test
 import kotlin.properties.Delegates
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -43,7 +48,7 @@ import org.jetbrains.exposed.v1.datetime.date as kotlinDatetimeDate
 import org.jetbrains.exposed.v1.javatime.date as javatimeDate
 
 class DatabaseMigrationTests : DatabaseTestsBase() {
-    private val columnTypeChangeUnsupportedDb = TestDB.ALL - TestDB.ALL_H2_V2
+    private val columnTypeChangeUnsupportedDb = TestDB.ALL - TestDB.ALL_H2_V2 - TestDB.ALL_POSTGRES
 
     @OptIn(InternalApi::class)
     @Test
@@ -197,6 +202,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
     fun testNoColumnTypeChangeStatementsGenerated() {
         withDb(excludeSettings = columnTypeChangeUnsupportedDb) {
             try {
+                createCustomEnumTypeIfNeeded()
                 SchemaUtils.create(MigrationTestsData.ColumnTypesTester)
 
                 val columns = MigrationTestsData.ColumnTypesTester.columns.sortedBy { it.name.uppercase() }
@@ -215,6 +221,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                 assertTrue(statements.isEmpty())
             } finally {
                 SchemaUtils.drop(MigrationTestsData.ColumnTypesTester)
+                dropCustomEnumTypeIfNeeded()
             }
         }
     }
@@ -223,6 +230,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
     @Test
     fun testCorrectColumnTypeChangeStatementsGenerated() {
         withDb(excludeSettings = columnTypeChangeUnsupportedDb) {
+            createCustomEnumTypeIfNeeded()
             val columns = MigrationTestsData.ColumnTypesTester.columns.sortedBy { it.name.uppercase() }
 
             columns.forEach { oldColumn ->
@@ -268,13 +276,14 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                     }
                 }
             }
+            dropCustomEnumTypeIfNeeded()
         }
     }
 
     @OptIn(InternalApi::class)
     @Test
     fun testNoColumnTypeChangeStatementsGeneratedForArrayColumnType() {
-        withTables(TestDB.ALL - setOf(TestDB.H2_V2, TestDB.H2_V2_PSQL), MigrationTestsData.ArraysTester) {
+        withTables(TestDB.ALL - setOf(TestDB.H2_V2, TestDB.H2_V2_PSQL, TestDB.POSTGRESQL), MigrationTestsData.ArraysTester) {
             val columnMetadata = connection.metadata {
                 requireNotNull(columns(MigrationTestsData.ArraysTester)[MigrationTestsData.ArraysTester])
             }.toSet().sortedBy { it.name.uppercase() }
@@ -294,7 +303,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
     @OptIn(InternalApi::class)
     @Test
     fun testCorrectColumnTypeChangeStatementsGeneratedForArrayColumnType() {
-        withDb(excludeSettings = TestDB.ALL - setOf(TestDB.H2_V2, TestDB.H2_V2_PSQL)) {
+        withDb(excludeSettings = TestDB.ALL - setOf(TestDB.H2_V2, TestDB.H2_V2_PSQL, TestDB.POSTGRESQL)) {
             val columns = MigrationTestsData.ArraysTester.columns.sortedBy { it.name.uppercase() }
 
             columns.forEach { oldColumn ->
@@ -345,21 +354,27 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
     @Test
     fun testChangingIdTableType() {
-        val intIdTable = object : IntIdTable("tester") {}
-        val uintIdTable = object : UIntIdTable("tester") {}
-        val longIdTable = object : LongIdTable("tester") {}
-        val ulongIdTable = object : ULongIdTable("tester") {}
-
-        val tables = listOf<IdTable<*>>(intIdTable, uintIdTable, longIdTable, ulongIdTable)
+        val tableFactories = listOf<(String) -> IdTable<*>>(
+            { object : IntIdTable(it) {} },
+            { object : UIntIdTable(it) {} },
+            { object : LongIdTable(it) {} },
+            { object : ULongIdTable(it) {} }
+        )
 
         withDb(excludeSettings = columnTypeChangeUnsupportedDb) {
-            tables.forEach { oldTable ->
-                for (newTable in tables) {
+            tableFactories.forEachIndexed { oldIndex, oldTableFactory ->
+                tableFactories.forEachIndexed { newIndex, newTableFactory ->
+                    // Each pair uses its own table name, because some drivers (like pgjdbc-ng) cache the plan of the same
+                    // INSERT statement, which fails with "cached plan must not change result type" after the id type changes
+                    val tableName = "tester_${oldIndex}_$newIndex"
+                    val oldTable = oldTableFactory(tableName)
+                    val newTable = newTableFactory(tableName)
+
                     val oldIdColumn = (oldTable.id.columnType as EntityIDColumnType<*>).idColumn
                     val newIdColumn = (newTable.id.columnType as EntityIDColumnType<*>).idColumn
 
                     if (oldIdColumn.columnType == newIdColumn.columnType) {
-                        continue
+                        return@forEachIndexed
                     }
 
                     withTables(oldTable) {
@@ -664,6 +679,119 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             } finally {
                 SchemaUtils.drop(MixedCaseUIntTable)
             }
+        }
+    }
+
+    @Test
+    fun testColumnTypeChangeOnlyGeneratesMigrationStatement() {
+        val originalTable = object : Table("tester") {
+            val data = varchar("data", 50)
+        }
+
+        val modifiedTable = object : Table("tester") {
+            val data = text("data")
+        }
+
+        withDb(excludeSettings = columnTypeChangeUnsupportedDb) {
+            try {
+                SchemaUtils.create(originalTable)
+
+                val statements = MigrationUtils.statementsRequiredForDatabaseMigration(modifiedTable, withLogs = false)
+                assertEquals(1, statements.size)
+                assertTrue(statements.first().contains("ALTER", ignoreCase = true))
+            } finally {
+                SchemaUtils.drop(originalTable)
+            }
+        }
+    }
+
+    @Test
+    fun testColumnTypeChangeWithoutImplicitCastIsExecutable() {
+        val originalTable = object : Table("tester") {
+            val amount = varchar("amount", 10).default("5")
+            val flag = bool("flag")
+        }
+        val updatedTable = object : Table("tester") {
+            val amount = integer("amount").default(5)
+            val flag = integer("flag")
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, originalTable) {
+            originalTable.insert {
+                it[amount] = "7"
+                it[flag] = true
+            }
+
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(updatedTable, withLogs = false)
+            assertEquals(2, statements.size)
+            assertTrue(statements.all { it.contains("USING") })
+            statements.forEach { exec(it) }
+
+            val row = updatedTable.selectAll().single()
+            assertEquals(7, row[updatedTable.amount])
+            assertEquals(1, row[updatedTable.flag])
+            assertTrue(MigrationUtils.statementsRequiredForDatabaseMigration(updatedTable, withLogs = false).isEmpty())
+        }
+    }
+
+    @Test
+    fun testCharacterColumnTypeChangeDoesNotTruncateValues() {
+        val originalTable = object : Table("tester") {
+            val name = text("name")
+        }
+        val updatedTable = object : Table("tester") {
+            val name = varchar("name", 3)
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, originalTable) {
+            originalTable.insert { it[name] = "abcdef" }
+            commit()
+
+            val statement = MigrationUtils.statementsRequiredForDatabaseMigration(updatedTable, withLogs = false).single()
+            assertFalse(statement.contains("USING"))
+            expectException<ExposedSQLException> { exec(statement) }
+            rollback()
+
+            assertEquals("abcdef", originalTable.selectAll().single()[originalTable.name])
+        }
+    }
+
+    @Test
+    fun testVectorDimensionChangeTriggersMigration() {
+        val originalTable = object : Table("vector_items") {
+            val embedding = vector("embedding", dimensions = 3)
+        }
+        val updatedTable = object : Table("vector_items") {
+            val embedding = vector("embedding", dimensions = 5)
+        }
+
+        withDb(TestDB.ALL_POSTGRES) {
+            try {
+                exec("CREATE EXTENSION IF NOT EXISTS vector;")
+                SchemaUtils.create(originalTable)
+                assertTrue(MigrationUtils.statementsRequiredForDatabaseMigration(originalTable, withLogs = false).isEmpty())
+
+                val statement = MigrationUtils.statementsRequiredForDatabaseMigration(updatedTable, withLogs = false).single()
+                assertTrue(statement.contains("TYPE VECTOR(5)"))
+                exec(statement)
+                assertTrue(MigrationUtils.statementsRequiredForDatabaseMigration(updatedTable, withLogs = false).isEmpty())
+            } finally {
+                SchemaUtils.drop(originalTable)
+                exec("DROP EXTENSION IF EXISTS vector CASCADE;")
+            }
+        }
+    }
+
+    private fun JdbcTransaction.createCustomEnumTypeIfNeeded() {
+        if (currentDialectTest is PostgreSQLDialect) {
+            exec("DROP TYPE IF EXISTS RefEnum CASCADE")
+            exec("CREATE TYPE RefEnum AS ENUM ('Bar', 'Baz')")
+        }
+    }
+
+    private fun JdbcTransaction.dropCustomEnumTypeIfNeeded() {
+        if (currentDialectTest is PostgreSQLDialect) {
+            exec("DROP TYPE IF EXISTS RefEnum CASCADE")
         }
     }
 }
