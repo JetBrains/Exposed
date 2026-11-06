@@ -2,35 +2,38 @@ package org.jetbrains.exposed.v1.spring.data.mapping
 
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.spring.data.ExposedColumn
+import org.jetbrains.exposed.v1.spring.data.ExposedReferencedBy
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
-import kotlin.reflect.full.isSubtypeOf
 import kotlin.reflect.full.memberProperties
-import kotlin.reflect.full.starProjectedType
-import kotlin.reflect.jvm.isAccessible
 
 /**
  * Connects an entity class, as described by the [ExposedMappingContext], to its table: which property is stored in which column.
  *
  * A property is mapped if it is a persistent property of [persistentEntity] and the table object has a [Column] property
- * with the same Kotlin name. [Column.name] can't be used for this, because it is the SQL name (e.g. `created_at`).
+ * with the same Kotlin name (see [TableColumns]), or the one named by [ExposedColumn]. The to-many properties in [relations]
+ * (annotated with [ExposedReferencedBy] or inferred, see [ExposedMappings.relationFor]) have no column, they are read by [ProjectionResolver].
  * Everything about the class itself (id and version property, reading and writing values) comes from [persistentEntity].
  */
 internal class EntityMetadata<T : Any, ID : Any>(
     val table: IdTable<ID>,
     val persistentEntity: ExposedPersistentEntity<T>,
+    mappings: ExposedMappings = ExposedMappings(),
 ) {
     val domainType: KClass<T> = persistentEntity.type.kotlin
 
     private val properties: Map<String, ExposedPersistentProperty> = persistentEntity.associateBy { it.name }
 
-    @Suppress("UNCHECKED_CAST")
-    private val columnsByProperty: Map<String, Column<Any?>> = table::class.memberProperties
-        .filter { it.name in properties && it.returnType.isSubtypeOf(Column::class.starProjectedType) }
-        .associate {
-            it.isAccessible = true
-            it.name to it.getter.call(table) as Column<Any?>
-        }
+    /** The to-many relations by property name. */
+    val relations: Map<String, ToManyRelation> = properties.keys
+        .mapNotNull { property -> mappings.relationFor(table, domainType.java, property)?.let { property to it } }
+        .toMap()
+
+    private val columnsByProperty: Map<String, Column<Any?>> = properties.keys
+        .filter { it !in relations }
+        .mapNotNull { property -> columnFor(table, domainType.java, property)?.let { property to it } }
+        .toMap()
 
     private val propertiesByColumn: Map<Column<*>, String> = columnsByProperty.entries.associate { (property, column) -> column to property }
 
