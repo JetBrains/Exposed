@@ -1910,7 +1910,25 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         }
     }
 
-    private fun <T> IColumnType<T>.cloneAsBaseType(): IColumnType<T> = ((this as? AutoIncColumnType)?.delegate ?: this).clone()
+    @Suppress("UNCHECKED_CAST")
+    private fun <T> IColumnType<T>.cloneAsBaseType(): IColumnType<T> = when (val base = (this as? AutoIncColumnType)?.delegate ?: this) {
+        // A wrapped column type must be cloned together with its delegate: reusing the original delegate would leave
+        // the clone and the referenced column writing properties like nullability to the same instance (EXPOSED-896).
+        // Any auto-increment wrapper nested inside the transformation must also stay unique to the auto-increment
+        // column itself and is therefore stripped here as well (EXPOSED-807).
+        is ColumnWithTransform<*, *> -> base.cloneWithClonedDelegate() as IColumnType<T>
+        else -> base.clone()
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun ColumnWithTransform<*, *>.cloneWithClonedDelegate(): ColumnWithTransform<Any, Any> {
+        val clonedDelegate = delegate.cloneAsBaseType() as IColumnType<Any>
+        val clonedTransformer = transformer as ColumnTransformer<Any, Any>
+        return when (this) {
+            is NullableColumnWithTransform<*, *> -> NullableColumnWithTransform(clonedDelegate, clonedTransformer)
+            else -> ColumnWithTransform(clonedDelegate, clonedTransformer)
+        }
+    }
 
     private fun <T> Column<T>.cloneWithAutoInc(idSeqName: String?): Column<T> = when (columnType) {
         is AutoIncColumnType -> this
