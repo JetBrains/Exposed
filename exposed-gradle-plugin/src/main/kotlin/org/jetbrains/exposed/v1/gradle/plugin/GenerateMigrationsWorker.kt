@@ -6,7 +6,6 @@ import org.gradle.workers.WorkAction
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.plugin.core.migration.MigrationConfig
 import org.jetbrains.exposed.v1.plugin.core.migration.MigrationGenerator
-import org.jetbrains.exposed.v1.plugin.core.migration.MigrationLogger
 
 /**
  * Represents the implementation of a unit of work to be used when submitting work to the migrations extension work executor.
@@ -21,18 +20,7 @@ abstract class GenerateMigrationsWorker : WorkAction<GenerateMigrationsParameter
 
         val migrationGenerator = MigrationGenerator(
             config = params.toMigrationConfig(),
-            logger = object : MigrationLogger {
-                override fun lifecycle(message: String) {
-                    logger.lifecycle(message)
-                }
-
-                override fun debug(message: String) {
-                    if (!isDebugEnabled) return
-                    logger.debug(message)
-                }
-
-                override val isDebugEnabled: Boolean = params.debug
-            },
+            logger = GradleMigrationLogger(logger, isDebugEnabled = params.debug),
         )
         migrationGenerator.generate()
     }
