@@ -31,7 +31,6 @@ internal class H2SchemaSupport(private val identifierManager: IdentifierManagerA
                 }
             }
         }
-
     }
 
     override fun generatedColumns(connection: Connection, schema: String, tableName: String): Map<String, String> {
@@ -68,7 +67,6 @@ internal class H2SchemaSupport(private val identifierManager: IdentifierManagerA
                 }
             }
         }
-
     }
 
     override fun sequenceParameters(
@@ -95,7 +93,6 @@ internal class H2SchemaSupport(private val identifierManager: IdentifierManagerA
                 ).takeUnless { it.isDefault }
             }
         }
-
     }
 
     // Identity columns never own a separate sequence object
