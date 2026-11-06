@@ -1,3 +1,14 @@
+public final class org/jetbrains/exposed/v1/gradle/plugin/ColumnMappingSpec {
+	public final fun getCode ()Ljava/lang/String;
+	public final fun getImports ()Ljava/util/List;
+	public final fun setCode (Ljava/lang/String;)V
+	public final fun setImports (Ljava/util/List;)V
+}
+
+public final class org/jetbrains/exposed/v1/gradle/plugin/ColumnMappingsSpec {
+	public final fun column (Ljava/lang/String;Lorg/gradle/api/Action;)V
+}
+
 public class org/jetbrains/exposed/v1/gradle/plugin/ExposedExtension {
 	public static final field Companion Lorg/jetbrains/exposed/v1/gradle/plugin/ExposedExtension$Companion;
 	public static final field NAME Ljava/lang/String;
@@ -76,6 +87,61 @@ public abstract class org/jetbrains/exposed/v1/gradle/plugin/GenerateMigrationsW
 	public fun execute ()V
 }
 
+public abstract interface class org/jetbrains/exposed/v1/gradle/plugin/GenerateTablesParameters : org/gradle/workers/WorkParameters {
+	public abstract fun getClasspathUrls ()Ljava/util/List;
+	public abstract fun getColumnMappings ()Ljava/util/List;
+	public abstract fun getDatabasePassword ()Ljava/lang/String;
+	public abstract fun getDatabaseUrl ()Ljava/lang/String;
+	public abstract fun getDatabaseUser ()Ljava/lang/String;
+	public abstract fun getDateTimeColumnType ()Lorg/jetbrains/exposed/v1/plugin/core/tables/DateTimeColumnType;
+	public abstract fun getDebug ()Z
+	public abstract fun getFileDirectory ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getFullFileName ()Ljava/lang/String;
+	public abstract fun getGenerateIdTables ()Z
+	public abstract fun getObjectNameSuffix ()Ljava/lang/String;
+	public abstract fun getSchemas ()Ljava/util/List;
+	public abstract fun getTablesPackage ()Ljava/lang/String;
+	public abstract fun getUuidColumnType ()Lorg/jetbrains/exposed/v1/plugin/core/tables/UuidColumnType;
+	public abstract fun setClasspathUrls (Ljava/util/List;)V
+	public abstract fun setColumnMappings (Ljava/util/List;)V
+	public abstract fun setDatabasePassword (Ljava/lang/String;)V
+	public abstract fun setDatabaseUrl (Ljava/lang/String;)V
+	public abstract fun setDatabaseUser (Ljava/lang/String;)V
+	public abstract fun setDateTimeColumnType (Lorg/jetbrains/exposed/v1/plugin/core/tables/DateTimeColumnType;)V
+	public abstract fun setDebug (Z)V
+	public abstract fun setFullFileName (Ljava/lang/String;)V
+	public abstract fun setGenerateIdTables (Z)V
+	public abstract fun setObjectNameSuffix (Ljava/lang/String;)V
+	public abstract fun setSchemas (Ljava/util/List;)V
+	public abstract fun setTablesPackage (Ljava/lang/String;)V
+	public abstract fun setUuidColumnType (Lorg/jetbrains/exposed/v1/plugin/core/tables/UuidColumnType;)V
+}
+
+public abstract class org/jetbrains/exposed/v1/gradle/plugin/GenerateTablesTask : org/gradle/api/DefaultTask {
+	public fun <init> ()V
+	public final fun generateTables ()V
+	public abstract fun getClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public abstract fun getColumnMappings ()Lorg/gradle/api/provider/ListProperty;
+	public abstract fun getDatabasePassword ()Lorg/gradle/api/provider/Property;
+	public abstract fun getDatabaseUrl ()Lorg/gradle/api/provider/Property;
+	public abstract fun getDatabaseUser ()Lorg/gradle/api/provider/Property;
+	public abstract fun getDateTimeColumnType ()Lorg/gradle/api/provider/Property;
+	public abstract fun getFileDirectory ()Lorg/gradle/api/file/DirectoryProperty;
+	public final fun getFullFileName ()Ljava/lang/String;
+	public abstract fun getGenerateIdTables ()Lorg/gradle/api/provider/Property;
+	public abstract fun getObjectNameSuffix ()Lorg/gradle/api/provider/Property;
+	public abstract fun getSchemas ()Lorg/gradle/api/provider/ListProperty;
+	public abstract fun getTablesPackage ()Lorg/gradle/api/provider/Property;
+	public abstract fun getUuidColumnType ()Lorg/gradle/api/provider/Property;
+	public abstract fun getWorkerExecutor ()Lorg/gradle/workers/WorkerExecutor;
+	public final fun setFullFileName (Ljava/lang/String;)V
+}
+
+public abstract class org/jetbrains/exposed/v1/gradle/plugin/GenerateTablesWorker : org/gradle/workers/WorkAction {
+	public fun <init> ()V
+	public fun execute ()V
+}
+
 public class org/jetbrains/exposed/v1/gradle/plugin/MigrationsExtension {
 	public static final field Companion Lorg/jetbrains/exposed/v1/gradle/plugin/MigrationsExtension$Companion;
 	public static final field NAME Ljava/lang/String;
@@ -95,5 +161,26 @@ public class org/jetbrains/exposed/v1/gradle/plugin/MigrationsExtension {
 }
 
 public final class org/jetbrains/exposed/v1/gradle/plugin/MigrationsExtension$Companion {
+}
+
+public class org/jetbrains/exposed/v1/gradle/plugin/TablesExtension {
+	public static final field Companion Lorg/jetbrains/exposed/v1/gradle/plugin/TablesExtension$Companion;
+	public static final field NAME Ljava/lang/String;
+	public final fun columnMappings (Lorg/gradle/api/Action;)V
+	public final fun getClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public final fun getColumnMappings ()Lorg/gradle/api/provider/ListProperty;
+	public final fun getDatabasePassword ()Lorg/gradle/api/provider/Property;
+	public final fun getDatabaseUrl ()Lorg/gradle/api/provider/Property;
+	public final fun getDatabaseUser ()Lorg/gradle/api/provider/Property;
+	public final fun getDateTimeColumnType ()Lorg/gradle/api/provider/Property;
+	public final fun getFileDirectory ()Lorg/gradle/api/file/DirectoryProperty;
+	public final fun getGenerateIdTables ()Lorg/gradle/api/provider/Property;
+	public final fun getObjectNameSuffix ()Lorg/gradle/api/provider/Property;
+	public final fun getSchemas ()Lorg/gradle/api/provider/ListProperty;
+	public final fun getTablesPackage ()Lorg/gradle/api/provider/Property;
+	public final fun getUuidColumnType ()Lorg/gradle/api/provider/Property;
+}
+
+public final class org/jetbrains/exposed/v1/gradle/plugin/TablesExtension$Companion {
 }
 

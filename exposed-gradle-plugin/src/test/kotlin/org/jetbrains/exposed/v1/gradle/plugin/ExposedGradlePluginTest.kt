@@ -3,6 +3,8 @@ package org.jetbrains.exposed.v1.gradle.plugin
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.jetbrains.exposed.v1.plugin.core.migration.VersionFormat
+import org.jetbrains.exposed.v1.plugin.core.tables.DateTimeColumnType
+import org.jetbrains.exposed.v1.plugin.core.tables.UuidColumnType
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -41,6 +43,10 @@ class ExposedGradlePluginTest {
         val nestedExtension = project.exposedExtensions.getByName(MigrationsExtension.NAME)
         assertNotNull(nestedExtension)
         assertTrue(nestedExtension is MigrationsExtension)
+
+        val tablesExtension = project.exposedExtensions.getByName(TablesExtension.NAME)
+        assertNotNull(tablesExtension)
+        assertTrue(tablesExtension is TablesExtension)
     }
 
     @Test
@@ -50,6 +56,12 @@ class ExposedGradlePluginTest {
         assertNotNull(task)
         assertTrue(task is GenerateMigrationsTask)
         assertEquals(ExposedGradlePlugin.TASK_GROUP, task?.group)
+
+        // Verify that the generateTables task is registered
+        val tablesTask = project.tasks.findByName(GENERATE_TABLES_TASK_NAME)
+        assertNotNull(tablesTask)
+        assertTrue(tablesTask is GenerateTablesTask)
+        assertEquals(ExposedGradlePlugin.TASK_GROUP, tablesTask?.group)
     }
 
     @Test
@@ -139,5 +151,67 @@ class ExposedGradlePluginTest {
         assertTrue(task.tablesPackages.isPresent)
         assertEquals(allPackages, task.tablesPackages.get())
         assertFalse(task.tablesPackage.isPresent)
+    }
+
+    @Test
+    fun testTablesTaskConfigurationWithDatabaseProperties() {
+        val extension = project.exposedExtensions.getByType(TablesExtension::class.java)
+
+        // Set custom values in the extension
+        extension.tablesPackage.set("com.example.tables")
+        extension.fileDirectory.set(project.layout.projectDirectory.dir("custom/generated"))
+        extension.schemas.set(listOf("PUBLIC", "SALES*"))
+        extension.objectNameSuffix.set("Table")
+        extension.uuidColumnType.set(UuidColumnType.JAVA)
+        extension.dateTimeColumnType.set(DateTimeColumnType.JAVA_TIME)
+        extension.classpath.setFrom(project.layout.projectDirectory.dir("libs"))
+        extension.generateIdTables.set(true)
+
+        // Set database connection properties
+        extension.databaseUrl.set("jdbc:h2:mem:test")
+        extension.databaseUser.set("sa")
+        extension.databasePassword.set("")
+
+        // Get the task & force task configuration
+        val task = project.tasks.getByName(GENERATE_TABLES_TASK_NAME) as GenerateTablesTask
+        project.tasks.configureEach {}
+
+        // Verify that the task is configured with the extension values
+        assertTrue(task.tablesPackage.isPresent)
+        assertEquals("com.example.tables", task.tablesPackage.get())
+        assertEquals(DateTimeColumnType.JAVA_TIME, task.dateTimeColumnType.get())
+        assertEquals(listOf(project.layout.projectDirectory.dir("libs").asFile), task.classpath.files.toList())
+        assertTrue(task.fileDirectory.isPresent)
+        assertEquals(
+            project.layout.projectDirectory.dir("custom/generated").asFile.absolutePath,
+            task.fileDirectory.get().asFile.absolutePath
+        )
+        assertEquals(listOf("PUBLIC", "SALES*"), task.schemas.get())
+        assertEquals("Table", task.objectNameSuffix.get())
+        assertEquals(UuidColumnType.JAVA, task.uuidColumnType.get())
+        assertTrue(task.generateIdTables.get())
+        assertNull(task.fullFileName)
+
+        // Verify that the database connection properties are correctly passed to the task
+        assertEquals("jdbc:h2:mem:test", task.databaseUrl.get())
+        assertEquals("sa", task.databaseUser.get())
+        assertEquals("", task.databasePassword.get())
+    }
+
+    @Test
+    fun testTablesTaskDefaultValues() {
+        val task = project.tasks.getByName(GENERATE_TABLES_TASK_NAME) as GenerateTablesTask
+        project.tasks.configureEach {}
+
+        assertEquals(
+            project.layout.projectDirectory.dir("src/main/kotlin").asFile.absolutePath,
+            task.fileDirectory.get().asFile.absolutePath
+        )
+        assertEquals(emptyList<String>(), task.schemas.get())
+        assertEquals("", task.objectNameSuffix.get())
+        assertEquals(UuidColumnType.KOTLIN, task.uuidColumnType.get())
+        // detection happens at execution time, so the task carries no module by default
+        assertFalse(task.dateTimeColumnType.isPresent)
+        assertFalse(task.generateIdTables.get())
     }
 }

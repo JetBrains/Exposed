@@ -6,7 +6,6 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.SourceSetContainer
 import org.jetbrains.exposed.v1.gradle.plugin.ExposedGradlePlugin.Companion.TASK_GROUP
 import org.jetbrains.exposed.v1.plugin.core.migration.VersionFormat
 import javax.inject.Inject
@@ -112,12 +111,7 @@ internal fun Project.configureMigrations() {
     )
 
     // Set default classpath for Exposed tables
-    val classpath = extensions
-        .findByType(SourceSetContainer::class.java)
-        ?.findByName("main")
-        ?.runtimeClasspath
-
-    if (classpath != null) extension.classpath.setFrom(classpath)
+    mainRuntimeClasspath?.let { extension.classpath.setFrom(it) }
 
     tasks.register(GENERATE_MIGRATIONS_TASK_NAME, GenerateMigrationsTask::class.java) {
         it.description = GENERATE_MIGRATIONS_TASK_DESCRIPTION
