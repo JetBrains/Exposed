@@ -1,7 +1,7 @@
 # Exposed Gradle Plugin
 
 A Gradle application that shows how to generate a migration script using the Exposed Gradle plugin extension for migrations.
-The files are referenced in the [Exposed Gradle plugin](../../topics/Exposed-gradle-plugin.md) topic.
+The files are referenced in the [Exposed Gradle plugin](../../topics/generate-table-definitions.md) topic.
 
 ## Build
 
