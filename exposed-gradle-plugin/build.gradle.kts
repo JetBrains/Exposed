@@ -36,6 +36,8 @@ dependencies {
 
     implementation(libs.kotlin.stdlib)
 
+    implementation(libs.kotlinpoet)
+
     implementation(libs.flyway.postgresql)
     implementation(libs.flyway.mysql)
     implementation(libs.flyway.sqlserver)
@@ -69,8 +71,9 @@ gradlePlugin {
             id = "org.jetbrains.exposed.plugin"
             displayName = "Exposed Gradle Plugin"
             implementationClass = "org.jetbrains.exposed.v1.gradle.plugin.ExposedGradlePlugin"
-            description = "Exposed Gradle Plugin configures the generation of migration scripts for applications that use Exposed"
-            tags = setOf("exposed", "kotlin", "sql", "database", "orm")
+            description = "Generates SQL migration scripts from Exposed table definitions," +
+                "and Exposed table definitions from an existing database schema"
+            tags = setOf("exposed", "kotlin", "sql", "database", "orm", "migrations", "code-generation")
             compatibility {
                 features {
                     configurationCache = true

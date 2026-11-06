@@ -19,6 +19,10 @@ repositories {
 
 kotlin {
     jvmToolchain(17)
+
+    compilerOptions {
+        optIn.add("kotlin.time.ExperimentalTime")
+    }
 }
 
 dependencies {
@@ -26,6 +30,8 @@ dependencies {
     implementation(project(":exposed-migration-jdbc"))
 
     implementation(libs.kotlin.stdlib)
+
+    implementation(libs.kotlinpoet)
 
     implementation(libs.flyway.postgresql)
     implementation(libs.flyway.mysql)
@@ -41,6 +47,10 @@ dependencies {
     testImplementation(libs.junit5)
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(kotlin("test-junit5"))
+    testImplementation(libs.h2)
+    testImplementation(project(":exposed-kotlin-datetime"))
+    testImplementation(project(":exposed-java-time"))
+    testImplementation(project(":exposed-json"))
 }
 
 tasks.withType<KotlinCompile>().configureEach {
