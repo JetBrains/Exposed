@@ -1,6 +1,6 @@
 <show-structure for="chapter,procedure" depth="2"/>
 
-# Exposed Gradle plugin
+# Generate migration scripts
 
 <tldr>
     <p>
@@ -13,8 +13,9 @@
 
 The Exposed Gradle plugin provides build-time tooling for working with Exposed-based database schemas.
 
-Its primary feature is [generating SQL migration scripts](#generate-migration-scripts) by comparing Exposed
-table definitions with an existing database schema.
+This topic describes how to generate SQL migration scripts by comparing Exposed table definitions with an
+existing database schema. To generate Exposed table definitions from an existing database schema instead, see
+[](generate-table-definitions.md).
 
 ## Requirements
 
@@ -130,7 +131,7 @@ exposed {
 }
 ```
 > For more details and supported database container images, see [](#use-testcontainers).
-> 
+>
 {style="tip"}
 
 > When `testContainersImageName` is configured, the plugin uses `Testcontainers` instead of a direct database
@@ -297,7 +298,7 @@ You can override the generated filename by passing the `--filename` argument to 
 
 > When `--filename` is specified, the plugin generates a single migration script containing all migration statements,
 > even if the schema diff affects multiple tables.
-> 
+>
 {style="note"}
 
 ## Using `Testcontainers` {id="use-testcontainers"}

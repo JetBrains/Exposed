@@ -160,7 +160,7 @@ versionCatalogs {
 </code-block>
 
 > The catalog is imported under the name `exposedLibs` rather than `exposed` to avoid a clash with the
-> [](Exposed-gradle-plugin.md), which registers a project extension named `exposed`. If you don't apply that
+> [](generate-table-definitions.md), which registers a project extension named `exposed`. If you don't apply that
 > plugin, you can name the catalog `exposed` and use accessors such as `exposed.core`.
 
 ## Modules
