@@ -186,7 +186,7 @@ internal class GenerationContext(
      */
     val referenceCycles: List<List<TableMetadata>> by lazy {
         val tables = tablesByName.values.toList()
-        val edges = tables.associate { table ->table.reference to table.referencedTables() }
+        val edges = tables.associate { table -> table.reference to table.referencedTables() }
         CycleFinder(tables, edges).components().filter { it.size > 1 }
     }
 
