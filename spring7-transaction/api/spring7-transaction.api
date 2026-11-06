@@ -5,8 +5,9 @@ public final class org/jetbrains/exposed/v1/spring7/transaction/ExposedSpringTra
 	public fun getTransactionAttribute (Ljava/lang/reflect/Method;Ljava/lang/Class;)Lorg/springframework/transaction/interceptor/TransactionAttribute;
 }
 
-public final class org/jetbrains/exposed/v1/spring7/transaction/SpringTransactionManager : org/springframework/transaction/support/AbstractPlatformTransactionManager {
+public final class org/jetbrains/exposed/v1/spring7/transaction/SpringTransactionManager : org/springframework/transaction/support/AbstractPlatformTransactionManager, org/springframework/beans/factory/DisposableBean {
 	public fun <init> (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/v1/core/DatabaseConfig;Z)V
 	public synthetic fun <init> (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/v1/core/DatabaseConfig;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun destroy ()V
 }
 

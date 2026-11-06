@@ -12,6 +12,7 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.currentOrNull
 import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
+import org.springframework.beans.factory.DisposableBean
 import org.springframework.jdbc.datasource.ConnectionHandle
 import org.springframework.jdbc.datasource.ConnectionHolder
 import org.springframework.transaction.CannotCreateTransactionException
@@ -36,7 +37,7 @@ class SpringTransactionManager(
     private val dataSource: DataSource,
     databaseConfig: DatabaseConfig = DatabaseConfig {},
     private val showSql: Boolean = false,
-) : AbstractPlatformTransactionManager() {
+) : AbstractPlatformTransactionManager(), DisposableBean {
 
     private val database: Database = Database.connect(
         datasource = dataSource, databaseConfig = databaseConfig
@@ -44,6 +45,14 @@ class SpringTransactionManager(
 
     init {
         isNestedTransactionAllowed = databaseConfig.useNestedTransactions
+    }
+
+    /**
+     * Unregisters the [Database] created by this transaction manager from [TransactionManager],
+     * so that it is not kept reachable after the Spring application context is closed.
+     */
+    override fun destroy() {
+        TransactionManager.closeAndUnregister(database)
     }
 
     /**
