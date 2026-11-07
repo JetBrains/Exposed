@@ -42,7 +42,9 @@ class ColumnTransformDdlTests : DatabaseTestsBase() {
             val userColumnDdl = userTable.userId.descriptionDdl(false)
             val inviterColumnDdl = userTable.inviterId.descriptionDdl(false)
 
-            assertFalse(userColumnDdl.contains("NULL"))
+            // SQLite renders an explicit "NOT NULL" marker for non-autoinc PK columns, so only a standalone
+            // "NULL" marker (after stripping "NOT NULL") proves the column was declared nullable.
+            assertFalse(userColumnDdl.replace(" NOT NULL", "").contains("NULL"))
             assertTrue(inviterColumnDdl.contains("NULL"))
 
             assertFalse(userTable.userId.columnType.nullable)
