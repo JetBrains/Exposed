@@ -247,7 +247,9 @@ class MigrationGenerator(
         val requestedFile = File(baseDir, this)
 
         val canonicalPath = requestedFile.canonicalPath
-        if (!canonicalPath.startsWith(baseDir.path)) {
+        // component-wise comparison: a string prefix check alone accepts sibling directories that merely
+        // share a prefix with the base directory, e.g. `migrations-backup` next to `migrations`
+        if (!File(canonicalPath).toPath().startsWith(baseDir.toPath())) {
             throw IOException("Provided fileName is on a different path than provided migrations directory: $parentPath")
         }
 
