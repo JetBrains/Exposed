@@ -1464,4 +1464,26 @@ class DDLTests : DatabaseTestsBase() {
             assertContentEquals(expected, actual)
         }
     }
+
+    @Test
+    fun testWithDataBaseLockRunsQueriesInBody() {
+        val tester = object : IntIdTable("lock_tester") {
+            val name = varchar("name", 32)
+        }
+        val busyTable = object : Table("busy") {}
+
+        withTables(tester) {
+            var countInsideLock = 0L
+            with(SchemaUtils) {
+                withDataBaseLock {
+                    tester.insert { it[name] = "locked" }
+                    countInsideLock = tester.selectAll().count()
+                }
+            }
+            assertEquals(1L, countInsideLock)
+            assertEquals(1L, tester.selectAll().count())
+
+            SchemaUtils.drop(busyTable)
+        }
+    }
 }
