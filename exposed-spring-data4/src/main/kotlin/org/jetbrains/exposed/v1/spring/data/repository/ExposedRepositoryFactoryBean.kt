@@ -3,6 +3,7 @@ package org.jetbrains.exposed.v1.spring.data.repository
 import org.jetbrains.exposed.v1.spring.data.ExposedCrudRepository
 import org.jetbrains.exposed.v1.spring.data.auditing.ExposedAuditingRegistrar
 import org.jetbrains.exposed.v1.spring.data.mapping.ExposedMappingContext
+import org.jetbrains.exposed.v1.spring.data.mapping.ExposedTableRegistry
 import org.springframework.beans.factory.BeanFactory
 import org.springframework.beans.factory.getBeanProvider
 import org.springframework.context.ApplicationEventPublisher
@@ -14,6 +15,11 @@ internal class ExposedRepositoryFactoryBean<T : ExposedCrudRepository<S, ID>, S 
     repositoryInterface: Class<T>
 ) : TransactionalRepositoryFactoryBeanSupport<T, S, ID>(repositoryInterface) {
     private var mappingContext: ExposedMappingContext? = null
+
+    /** The table registry of the application context, empty if there is none. */
+    var tables: ExposedTableRegistry = ExposedTableRegistry.EMPTY
+        private set
+
     private var entityCallbacks: EntityCallbacks? = null
     private var eventPublisher: ApplicationEventPublisher? = null
     private var auditing: Boolean = false
@@ -21,6 +27,7 @@ internal class ExposedRepositoryFactoryBean<T : ExposedCrudRepository<S, ID>, S 
     override fun setBeanFactory(beanFactory: BeanFactory) {
         super.setBeanFactory(beanFactory)
         mappingContext = beanFactory.getBeanProvider<ExposedMappingContext>().ifAvailable
+        tables = beanFactory.getBeanProvider<ExposedTableRegistry>().ifAvailable ?: ExposedTableRegistry.EMPTY
         entityCallbacks = EntityCallbacks.create(beanFactory)
         auditing = beanFactory.containsBean(ExposedAuditingRegistrar.AUDITING_HANDLER_BEAN_NAME)
     }
@@ -32,6 +39,7 @@ internal class ExposedRepositoryFactoryBean<T : ExposedCrudRepository<S, ID>, S 
 
     override fun doCreateRepositoryFactory(): RepositoryFactorySupport = ExposedRepositoryFactory(
         mappingContext = mappingContext ?: ExposedMappingContext(),
+        tables = tables,
         entityCallbacks = entityCallbacks,
         eventPublisher = eventPublisher,
         auditing = auditing,
