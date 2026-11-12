@@ -1,0 +1,4 @@
+public class org/jetbrains/exposed/v1/spring/data/autoconfigure/ExposedRepositoriesAutoConfiguration {
+	public fun <init> ()V
+}
+
