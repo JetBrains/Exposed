@@ -26,6 +26,10 @@ abstract class DurationColumnType<T> : ColumnType<T>() {
         return "'${toDuration(value).inWholeNanoseconds}'"
     }
 
+    override fun nonNullValueAsDefaultString(value: T & Any): String {
+        return toDuration(value).inWholeNanoseconds.toString()
+    }
+
     private fun durationValueFromDB(value: Any): Duration = when (value) {
         Duration.INFINITE.inWholeNanoseconds -> Duration.INFINITE
         is Long -> value.nanoseconds

@@ -3022,6 +3022,7 @@ public class org/jetbrains/exposed/v1/core/dao/id/java/UUIDTable : org/jetbrains
 public abstract class org/jetbrains/exposed/v1/core/datetime/DurationColumnType : org/jetbrains/exposed/v1/core/ColumnType {
 	public fun <init> ()V
 	public abstract fun fromDuration-LRDsOJo (J)Ljava/lang/Object;
+	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
