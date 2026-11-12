@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.json
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.serializer
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.ColumnType
@@ -64,6 +65,33 @@ open class JsonColumnType<T : Any>(
             else -> "'${notNullValueToDB(value)}'"
         }
     }
+
+    /**
+     * Compares the rendered default and the metadata-reported default as JSON documents instead of as strings:
+     * databases normalize JSON defaults before reporting them (PostgreSQL reorders object keys and inserts
+     * spaces after structural separators), so a plain string comparison always reports a difference
+     * for defaults whose keys do not sort in serialization order.
+     */
+    override fun defaultValueMatchesMetadata(expected: String?, actual: String?): Boolean {
+        if (expected == actual) return true
+        if (expected == null || actual == null) return false
+
+        val expectedElement = expected.parseJsonPayloadOrNull() ?: return false
+        val actualElement = actual.parseJsonPayloadOrNull() ?: return false
+        return expectedElement == actualElement
+    }
+
+    /**
+     * Extracts the JSON document embedded in a rendered default or metadata value (ignoring any surrounding
+     * literal quoting or type cast) and parses it, or returns `null` if no valid JSON document is present, in
+     * which case the caller falls back to reporting a difference.
+     */
+    private fun String.parseJsonPayloadOrNull(): JsonElement? = runCatching {
+        val start = indexOfFirst { it == '{' || it == '[' }
+        val end = indexOfLast { it == '}' || it == ']' }
+        require(start in 0 until end)
+        Json.parseToJsonElement(substring(start, end + 1))
+    }.getOrNull()
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         val parameterValue = when (currentDialect) {
