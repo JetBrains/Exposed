@@ -20,6 +20,12 @@ interface DatabaseConfig {
     val defaultMinRetryDelay: Long
     val defaultMaxRetryDelay: Long
     val defaultReadOnly: Boolean
+
+    /** @suppress */
+    @InternalApi
+    val explicitReadOnly: Boolean?
+        get() = defaultReadOnly
+
     val defaultQueryTimeout: Int
     val warnLongQueriesDuration: Long?
     val maxEntitiesToStoreInCachePerEntity: Int
@@ -58,11 +64,10 @@ interface DatabaseConfig {
         var defaultFetchSize: Int? = null
 
         /**
-         * Default transaction isolation level. If not specified, the database-specific level will be used.
-         * This can be overridden on a per-transaction level by specifying the `transactionIsolation` parameter of
-         * the `transaction` function.
-         *
-         * Check `Database.getDefaultIsolationLevel()` for the database defaults.
+         * Default transaction isolation level. A value of `-1` leaves the level unspecified.
+         * When no level is configured, the built-in JDBC manager can inherit the DataSource's isolation level
+         * during default connection setup. Without a DataSource, it uses the database-specific default.
+         * To override the default for one transaction, pass `transactionIsolation` to `transaction`.
          *
          * If using Exposed with an R2DBC driver, `defaultR2dbcIsolationLevel` should be used directly instead.
          */
@@ -98,9 +103,16 @@ interface DatabaseConfig {
 
         /**
          * Should all connections/transactions be executed in read-only mode by default or not.
-         * Default state is false.
+         * Defaults to the DataSource setting for JDBC connections obtained from a DataSource, or false otherwise.
          */
-        var defaultReadOnly: Boolean = false
+        var defaultReadOnly: Boolean
+            get() = explicitReadOnly ?: false
+            set(value) {
+                explicitReadOnly = value
+            }
+
+        internal var explicitReadOnly: Boolean? = null
+            private set
 
         /**
          * How many seconds the driver should wait for a statement to execute in a transaction before timing out.
@@ -223,6 +235,8 @@ open class DatabaseConfigImpl(private val builder: DatabaseConfig.Builder) : Dat
         get() = builder.defaultMaxRetryDelay
     override val defaultReadOnly: Boolean
         get() = builder.defaultReadOnly
+    override val explicitReadOnly: Boolean?
+        get() = builder.explicitReadOnly
     override val defaultQueryTimeout: Int
         get() = builder.defaultQueryTimeout
     override val warnLongQueriesDuration: Long?

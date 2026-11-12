@@ -7,7 +7,14 @@ import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.statements.api.ExposedConnection
 
-/** Represents a unit block of work that is performed on a database using a JDBC driver. */
+/**
+ * Represents a unit block of work that is performed on a database using a JDBC driver.
+ *
+ * Settings inherited from a DataSource are resolved when [connection] is first initialized.
+ * Until then, [transactionIsolation] and [readOnly] expose explicit options or the transaction manager's defaults for unspecified options.
+ * Reading [transactionIsolation] may require a connection to discover the database dialect unless it is already known
+ * or explicitly configured.
+ */
 interface JdbcTransactionInterface : TransactionInterface {
     override val db: Database
 
