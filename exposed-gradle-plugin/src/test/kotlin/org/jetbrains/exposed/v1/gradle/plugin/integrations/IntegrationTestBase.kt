@@ -4,6 +4,7 @@ import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.jetbrains.exposed.v1.gradle.plugin.ExposedGradlePlugin
 import org.jetbrains.exposed.v1.gradle.plugin.GENERATE_MIGRATIONS_TASK_NAME
+import org.jetbrains.exposed.v1.gradle.plugin.GENERATE_TABLES_TASK_NAME
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
@@ -12,7 +13,7 @@ import kotlin.test.assertContains
 abstract class IntegrationTestBase {
 
     @field:TempDir
-    private lateinit var projectDir: File
+    protected lateinit var projectDir: File
 
     private val settingsFile by lazy { projectDir.resolve("settings.gradle.kts") }
     protected val buildFile by lazy { projectDir.resolve("build.gradle.kts") }
@@ -86,7 +87,7 @@ abstract class IntegrationTestBase {
             }
         """
 
-        val allTasks = setOf(GENERATE_MIGRATIONS_TASK_NAME)
+        val allTasks = setOf(GENERATE_MIGRATIONS_TASK_NAME, GENERATE_TABLES_TASK_NAME)
 
         fun BuildResult.assertExposedTasksAdded(tasks: Set<String>) {
             assertContains(output.lines(), "Exposed tasks: " + tasks.sorted())

@@ -12,6 +12,7 @@ class ExposedGradlePlugin : Plugin<Project> {
             .create(ExposedExtension.NAME, ExposedExtension::class.java, objects)
 
         configureMigrations()
+        configureTables()
 
         var kotlinPluginApplied = false
         whenKotlinPluginApplied {
