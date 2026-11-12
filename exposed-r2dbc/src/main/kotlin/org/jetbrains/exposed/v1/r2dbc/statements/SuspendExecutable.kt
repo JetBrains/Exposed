@@ -158,7 +158,6 @@ internal suspend fun <T, S : Statement<T>> SuspendExecutable<T, S>.executeIn(
         throw ExposedR2dbcException(cause, contexts, transaction)
     }
     transaction.currentStatement = null
-    transaction.executedStatements.add(statement)
 
     R2dbcTransaction.globalInterceptors.forEach { it.afterExecution(transaction, contexts, statement) }
     transaction.interceptors.forEach { it.afterExecution(transaction, contexts, statement) }
