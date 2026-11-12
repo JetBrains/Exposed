@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.r2dbc.transactions
 
 import io.r2dbc.spi.IsolationLevel
 import io.r2dbc.spi.R2dbcException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -51,17 +52,27 @@ private suspend inline fun <T> executeR2dbcTransactionWithErrorHandling(
             )
         }
         throw cause
-    } catch (cause: Throwable) {
-        if (shouldCommit) {
-            val currentStatement = transaction.currentStatement
-            transaction.rollbackLoggingException {
-                exposedLogger.warn(
-                    "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
-                    it
-                )
-            }
-        }
+    } catch (cause: CancellationException) {
+        // The driver keeps draining a statement whose subscription was cancelled, so the rollback and connection
+        // release would otherwise wait for it to run to completion.
+        transaction.cancelRunningStatement()
+        rollbackOnFailure(transaction, shouldCommit)
         throw cause
+    } catch (cause: Throwable) {
+        rollbackOnFailure(transaction, shouldCommit)
+        throw cause
+    }
+}
+
+private suspend fun rollbackOnFailure(transaction: R2dbcTransaction, shouldCommit: Boolean) {
+    if (shouldCommit) {
+        val currentStatement = transaction.currentStatement
+        transaction.rollbackLoggingException {
+            exposedLogger.warn(
+                "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
+                it
+            )
+        }
     }
 }
 
