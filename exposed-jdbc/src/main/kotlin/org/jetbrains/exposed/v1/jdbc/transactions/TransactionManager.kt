@@ -39,7 +39,11 @@ class TransactionManager(
     @Volatile
     override var defaultMaxRetryDelay: Long = db.config.defaultMaxRetryDelay
 
-    /** The default transaction isolation level. Unless specified, the database-specific level will be used. */
+    /**
+     * The configured transaction isolation level, or the cached DataSource isolation level if none is configured.
+     * If neither is available, the manager uses the database-specific default.
+     * Set this property to `-1` to clear the configured level.
+     */
     override var defaultIsolationLevel: Int
         get() = configuredIsolationLevel ?: db.dataSourceSettings?.isolationLevel ?: run {
             val isolation = Database.getDefaultIsolationLevel(db)

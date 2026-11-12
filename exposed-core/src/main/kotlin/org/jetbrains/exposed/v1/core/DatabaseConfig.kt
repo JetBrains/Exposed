@@ -64,11 +64,10 @@ interface DatabaseConfig {
         var defaultFetchSize: Int? = null
 
         /**
-         * Default transaction isolation level. If not specified, the database-specific level will be used.
-         * This can be overridden on a per-transaction level by specifying the `transactionIsolation` parameter of
-         * the `transaction` function.
-         *
-         * Check `Database.getDefaultIsolationLevel()` for the database defaults.
+         * Default transaction isolation level. A value of `-1` leaves the level unspecified.
+         * When no level is configured, the built-in JDBC manager can inherit the DataSource's isolation level
+         * during default connection setup. Without a DataSource, it uses the database-specific default.
+         * To override the default for one transaction, pass `transactionIsolation` to `transaction`.
          *
          * If using Exposed with an R2DBC driver, `defaultR2dbcIsolationLevel` should be used directly instead.
          */
