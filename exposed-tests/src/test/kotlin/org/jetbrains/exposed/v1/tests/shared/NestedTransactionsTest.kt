@@ -10,11 +10,17 @@ import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.dml.DMLTestsData
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import java.sql.Connection
+import java.sql.DriverManager
 import java.sql.SQLException
+import java.sql.Savepoint
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertContains
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
@@ -198,6 +204,77 @@ class NestedTransactionsTest : DatabaseTestsBase() {
 
         transaction(db) {
             SchemaUtils.drop(DMLTestsData.Cities)
+        }
+    }
+
+    @Test
+    fun testNestedTransactionSetsSavepointOnlyWhenConnectionIsUsed() {
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+
+        var connectionsOpened = 0
+        val savepointsSet = AtomicInteger(0)
+        val countingDb = Database.connect(
+            getNewConnection = {
+                connectionsOpened++
+                SavepointCountingConnection(
+                    DriverManager.getConnection("jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;", "root", ""),
+                    savepointsSet
+                )
+            },
+            databaseConfig = DatabaseConfig {
+                useNestedTransactions = true
+                // avoids resolving the default isolation level through a metadata connection
+                defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
+            }
+        )
+
+        transaction(countingDb) {
+            transaction {
+                rollback()
+            }
+            assertEquals(0, connectionsOpened)
+            assertEquals(0, savepointsSet.get())
+
+            transaction {
+                exec("SELECT 1")
+            }
+            assertEquals(1, connectionsOpened)
+            assertEquals(1, savepointsSet.get())
+        }
+    }
+
+    // In R2DBC the test testNestedTransactions() already covers the same case
+    @Tag(NOT_APPLICABLE_TO_R2DBC)
+    @Test
+    fun testRollbackOfIdleNestedTransactionUndoesItsInnerTransaction() {
+        withTables(DMLTestsData.Cities, configure = { useNestedTransactions = true }) {
+            DMLTestsData.Cities.insert { it[name] = "city1" }
+
+            transaction {
+                // runs no statements itself, so its savepoint is set only when the inner transaction needs the connection
+                transaction {
+                    DMLTestsData.Cities.insert { it[name] = "city2" }
+                }
+                assertEqualLists(listOf("city1", "city2"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
+                rollback()
+            }
+
+            assertEqualLists(listOf("city1"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
+        }
+    }
+
+    private class SavepointCountingConnection(
+        private val connection: Connection,
+        private val savepointsSet: AtomicInteger
+    ) : Connection by connection {
+        override fun setSavepoint(): Savepoint {
+            savepointsSet.incrementAndGet()
+            return connection.setSavepoint()
+        }
+
+        override fun setSavepoint(name: String): Savepoint {
+            savepointsSet.incrementAndGet()
+            return connection.setSavepoint(name)
         }
     }
 
