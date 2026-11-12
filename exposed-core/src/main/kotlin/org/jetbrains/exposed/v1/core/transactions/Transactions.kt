@@ -52,6 +52,6 @@ fun <T> withThreadLocalTransaction(transaction: Transaction?, block: () -> T): T
     return try {
         block()
     } finally {
-        TransactionsHolderProvider.holder.removeTransaction()
+        val _ = TransactionsHolderProvider.holder.removeTransaction()
     }
 }
