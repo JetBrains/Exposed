@@ -21,6 +21,8 @@
 
 ## Welcome to **Exposed**, an ORM framework for [Kotlin](https://github.com/JetBrains/kotlin).
 
+THIS IS THE TEST COMMIT TO CHECK CI
+
 [Exposed](https://www.jetbrains.com/exposed/) is a lightweight SQL library on top of a database connectivity driver for the Kotlin programming language,
 with support for both JDBC and R2DBC (since version 1.0.0-*) drivers. 
 It offers two approaches for database access: a typesafe SQL-wrapping Domain-Specific Language (DSL) and a lightweight Data Access Object (DAO) API.
