@@ -6,10 +6,12 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-  # Triggers the workflow on pull request events targeting the main branch
+  # Triggers the workflow on pull request events targeting the main, develop/*, and release/* branches
   pull_request:
     branches:
       - main
+      - develop/*
+      - release/*
     types:
       - opened
       - synchronize
@@ -26,12 +28,15 @@ jobs:
           fetch-depth: 0
 
       - name: Validate commit messages
+        env:
+          # Base branch of the pull request; falls back to main for workflow_dispatch runs
+          BASE_REF: ${{ github.event.pull_request.base.ref || 'main' }}
         run: |
           # Regex for Conventional Commits specification
           COMMIT_REGEX="^(build|chore|ci|deprecate|docs|feat|fix|perf|refactor|revert|style|test)(!)?(\([^\)]*\))?:\s?(EXPOSED-[0-9]+\s?)?.+$"
           
           # Get all commits in the pull request (from base to head)
-          COMMITS=$(git log --format=%s --no-merges origin/main..${{ github.sha }})
+          COMMITS=$(git log --format=%s --no-merges origin/"$BASE_REF"..${{ github.sha }})
 
           # Initialize counters and store invalid commits
           INVALID_COMMITS=()
