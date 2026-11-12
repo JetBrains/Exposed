@@ -106,9 +106,27 @@ class R2dbcDatabase private constructor(
         }
     }
 
-    override val version: Version by lazy { connectionMetadata { getVersion() } }
+    // PUBLICATION, so the lazy lock is never held while fullVersion waits for a connection
+    override val version: Version by lazy(LazyThreadSafetyMode.PUBLICATION) { Version.from(fullVersion) }
 
-    override val fullVersion: String by lazy { connectionMetadata { getDatabaseProductVersion() } }
+    override val fullVersion: String
+        get() = resolvedFullVersion ?: connectionMetadata { getDatabaseProductVersion() }.also { resolvedFullVersion = it }
+
+    @Volatile
+    private var resolvedFullVersion: String? = null
+
+    internal val isVersionResolved: Boolean
+        get() = resolvedFullVersion != null
+
+    /**
+     * Stores the database version, using the [connection] of the current transaction.
+     *
+     * [version] and [fullVersion] are read from code that cannot suspend, so they are resolved here before a statement
+     * is executed. Those reads then never have to block their thread while waiting for a connection.
+     */
+    internal suspend fun resolveVersion(connection: R2dbcExposedConnection<*>) {
+        resolvedFullVersion = connection.metadata { getDatabaseProductVersion() }
+    }
 
     override val supportsAlterTableWithAddColumn: Boolean by lazy { localMetadata { supportsAlterTableWithAddColumn } }
 
