@@ -7,6 +7,7 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.statements.buildStatement
+import org.jetbrains.exposed.v1.core.statements.inferStatementType
 import org.jetbrains.exposed.v1.core.upperCase
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.jdbc.*
@@ -21,6 +22,7 @@ import org.jetbrains.exposed.v1.tests.shared.dml.withCitiesAndUsers
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -54,6 +56,52 @@ class TransactionExecTests : DatabaseTestsBase() {
             assertNotNull(results)
             assertEqualLists(amounts, results)
         }
+    }
+
+    @OptIn(InternalApi::class)
+    @Test
+    fun testExecWithCommonTableExpressionQuery() {
+        withTables(excludeSettings = listOf(TestDB.MYSQL_V5), ExecTable) {
+            val amounts = (90..99).toList()
+            ExecTable.batchInsert(amounts, shouldReturnGeneratedValues = false) { amount ->
+                this[ExecTable.id] = (amount % 10 + 1)
+                this[ExecTable.amount] = amount
+            }
+
+            val tableName = ExecTable.tableName.inProperCase()
+            val results = exec(
+                """
+                WITH large_amounts AS (
+                    SELECT amount FROM $tableName WHERE amount > 95
+                )
+                SELECT amount FROM large_amounts ORDER BY amount
+                """.trimIndent()
+            ) { resultSet ->
+                val allAmounts = mutableListOf<Int>()
+                while (resultSet.next()) {
+                    allAmounts.add(resultSet.getInt(1))
+                }
+                allAmounts
+            }
+            assertNotNull(results)
+            assertEqualLists(amounts.filter { it > 95 }, results)
+        }
+    }
+
+    @OptIn(InternalApi::class)
+    @Test
+    fun testInferStatementType() {
+        assertEquals(StatementType.SELECT, inferStatementType("  select * from t"))
+        assertEquals(StatementType.SELECT, inferStatementType("WITH cte AS (SELECT 1) SELECT * FROM cte"))
+        assertEquals(StatementType.SELECT, inferStatementType("with recursive cte(n) as (select 1 union all select n + 1 from cte) select n from cte"))
+        assertEquals(
+            StatementType.SELECT,
+            inferStatementType("WITH a AS (SELECT ')' AS x), delete_log AS (SELECT * FROM a) SELECT * FROM delete_log")
+        )
+        assertEquals(StatementType.INSERT, inferStatementType("WITH cte AS (SELECT 1 AS n) INSERT INTO t SELECT n FROM cte"))
+        assertEquals(StatementType.DELETE, inferStatementType("WITH cte AS (SELECT id FROM t) DELETE FROM t WHERE id IN (SELECT id FROM cte)"))
+        assertEquals(StatementType.UPDATE, inferStatementType("WITH cte AS (SELECT 1) UPDATE t SET n = 1"))
+        assertNull(inferStatementType("WITHOUT_TABLE"))
     }
 
     @Test

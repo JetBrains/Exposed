@@ -3652,6 +3652,7 @@ public final class org/jetbrains/exposed/v1/core/statements/StatementInterceptor
 
 public final class org/jetbrains/exposed/v1/core/statements/StatementKt {
 	public static final fun expandArgs (Lorg/jetbrains/exposed/v1/core/statements/StatementContext;Lorg/jetbrains/exposed/v1/core/Transaction;)Ljava/lang/String;
+	public static final fun inferStatementType (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/statements/StatementType;
 }
 
 public abstract class org/jetbrains/exposed/v1/core/statements/StatementResult {
