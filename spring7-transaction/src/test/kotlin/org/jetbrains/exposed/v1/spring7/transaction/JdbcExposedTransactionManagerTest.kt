@@ -4,10 +4,12 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.tests.NO_R2DBC_SUPPORT
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.RepeatedTest
+import org.junit.jupiter.api.Tag
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.test.annotation.Commit
@@ -277,6 +279,7 @@ open class JdbcExposedTransactionManagerTest : SpringTransactionTestBase() {
     /**
      * Test for Isolation Level
      */
+    @Tag(NO_R2DBC_SUPPORT) // H2_R2DBC used in tests with restricted level support
     @RepeatedTest(5)
     @Transactional(isolation = Isolation.READ_COMMITTED)
     open fun testIsolationLevelReadUncommitted() {
