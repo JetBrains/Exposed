@@ -1,6 +1,6 @@
 # This workflow performs a static analysis of your Kotlin source code using detekt.
 #
-# Scans are triggered on every pull request targeting the main branch.
+# Scans are triggered on every pull request targeting the main, develop/*, and release/* branches.
 
 name: detekt
 
@@ -8,10 +8,12 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-  # Triggers the workflow on pull request events targeting the main branch
+  # Triggers the workflow on pull request events targeting the main, develop/*, and release/* branches
   pull_request:
     branches:
       - main
+      - develop/*
+      - release/*
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -25,9 +27,12 @@ jobs:
         uses: actions/checkout@v2
       # Determines changed files
       - name: "changed-files"
+        env:
+          # Base branch of the pull request; falls back to main for workflow_dispatch runs
+          BASE_REF: ${{ github.event.pull_request.base.ref || 'main' }}
         run: |
-          git fetch origin main:refs/remotes/origin/main
-          CHANGED_FILES=$(git --no-pager diff --name-only --diff-filter=dr origin/main HEAD | grep '\(.*.kt\|.*.kts\)$' | grep -v '/MavenProjectGeneration.kt$' | grep -v '/src/test/resources/template/sourceFiles/' | tr '\n' , | rev | cut -c 2- | rev)
+          git fetch origin "$BASE_REF":refs/remotes/origin/"$BASE_REF"
+          CHANGED_FILES=$(git --no-pager diff --name-only --diff-filter=dr origin/"$BASE_REF" HEAD | grep '\(.*.kt\|.*.kts\)$' | grep -v '/MavenProjectGeneration.kt$' | grep -v '/src/test/resources/template/sourceFiles/' | tr '\n' , | rev | cut -c 2- | rev)
           echo "Changed files: $CHANGED_FILES"
           echo "CHANGED_FILES=$CHANGED_FILES" >> "$GITHUB_ENV"
       # Resolves and installs a specific version of detekt on to a GitHub Actions Runner if not already present in the tool cache
