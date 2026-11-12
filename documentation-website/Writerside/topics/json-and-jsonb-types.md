@@ -207,6 +207,12 @@ use [`.castToJson()`](#cast-to-json).
 
 ## JSON functions {id="json-functions"}
 
+The JSON path passed to `.extract()`, `.exists()` and `.contains()`, and a String value passed to `.contains()`,
+are bound as query parameters, so they are treated as data and must be passed as is, without being escaped on the
+client side. The only exception is Oracle, which does not accept a parameter in the position of the JSON path of
+`.extract()` and `.exists()`; there the path is written into the statement as a string literal with its single
+quotes escaped.
+
 ### Extract data
 
 Use the [`.extract()`](https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.json/extract.html)
