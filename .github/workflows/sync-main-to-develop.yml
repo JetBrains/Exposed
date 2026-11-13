@@ -16,6 +16,14 @@ on:
   push:
     branches:
       - main
+  # Backstop: a commit that lands on main while a sync PR is still open halts
+  # that sweep, and the PR's auto-merge pushes to develop/*, which is not a
+  # trigger - so the queued commit would wait for the next push to main. The
+  # hourly sweep drains it instead; it is a no-op whenever the line is current.
+  # 17 past the hour, not 0: the top of the hour is the busiest minute for
+  # scheduled runs, and GitHub may delay or drop them there.
+  schedule:
+    - cron: "17 * * * *"
   workflow_dispatch:
     inputs:
       target:
