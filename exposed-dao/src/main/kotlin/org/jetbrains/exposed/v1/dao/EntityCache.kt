@@ -170,7 +170,7 @@ class EntityCache(private val transaction: Transaction) {
         }
 
         updatedEntities.forEach {
-            transaction.registerChange(it.klass, it.id, EntityChangeType.Updated)
+            transaction.registerChange(it.klass, it.id, EntityChangeType.Updated, it)
         }
     }
 
@@ -266,7 +266,7 @@ class EntityCache(private val transaction: Transaction) {
 
                 entry.storeWrittenValues()
                 store(entry)
-                transaction.registerChange(entry.klass, entry.id, EntityChangeType.Created)
+                transaction.registerChange(entry.klass, entry.id, EntityChangeType.Created, entry)
                 pendingInitializationLambdas[entry]?.forEach { it(entry) }
             }
         }

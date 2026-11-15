@@ -402,7 +402,7 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
         val entityId = this.id
 
         if (!isNewEntity()) {
-            TransactionManager.current().registerChange(klass, entityId, EntityChangeType.Removed)
+            TransactionManager.current().registerChange(klass, entityId, EntityChangeType.Removed, this)
             executeAsPartOfEntityLifecycle {
                 table.deleteWhere { table.id eq entityId }
             }
@@ -432,7 +432,7 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
                 val _writeValues = writeValues.toMap()
                 storeWrittenValues()
                 // In case of batch all changes will be registered after all entities flushed
-                TransactionManager.current().registerChange(klass, id, EntityChangeType.Updated)
+                TransactionManager.current().registerChange(klass, id, EntityChangeType.Updated, this)
                 executeAsPartOfEntityLifecycle {
                     table.update({ table.id eq id }) {
                         for ((c, v) in _writeValues) {
