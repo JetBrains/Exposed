@@ -31,6 +31,10 @@ class TransactionExecTests : DatabaseTestsBase() {
         override val primaryKey = PrimaryKey(id)
     }
 
+    object ExecLogTable : Table("exec_log_table") {
+        val note = varchar("note", 64)
+    }
+
     @OptIn(InternalApi::class)
     @Test
     fun testExecWithSingleStatementQuery() {
@@ -229,6 +233,34 @@ class TransactionExecTests : DatabaseTestsBase() {
             val rowsDeleted = exec(deleteAllUserData.toExecutable())
             assertEquals(initialUserDataCount, rowsDeleted?.toLong())
             assertEquals(0, userData.selectAll().count())
+        }
+    }
+
+    @Test
+    fun testResultSetFromExecQueryStaysUsableWhileOtherStatementsExecute() {
+        withTables(ExecTable, ExecLogTable) {
+            val amounts = (1..5).toList()
+            amounts.forEach { amount ->
+                ExecTable.insert {
+                    it[ExecTable.amount] = amount
+                }
+            }
+
+            // Emulates the lazy-sequence pattern: the ResultSet is handed back to caller code, kept open
+            // past the exec call, and consumed while further statements are executed in the same transaction.
+            val resultSet = execQuery(ExecTable.selectAll()) { it }!!
+
+            val amountsRead = mutableListOf<Int>()
+            while (resultSet.next()) {
+                amountsRead.add(resultSet.getInt("amount"))
+                ExecLogTable.insert {
+                    it[note] = "read amount ${amountsRead.last()}"
+                }
+            }
+            resultSet.close()
+
+            kotlin.test.assertEquals(amounts.sorted(), amountsRead.sorted())
+            assertEquals(amounts.size.toLong(), ExecLogTable.selectAll().count())
         }
     }
 

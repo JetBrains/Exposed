@@ -144,7 +144,7 @@ internal fun <T, S : Statement<T>> BlockingExecutable<T, S>.executeIn(
         if (contexts.size > 1 || isAlwaysBatch) statement.addBatch()
     }
     if (!transaction.db.supportsMultipleResultSets) {
-        transaction.closeExecutedStatements()
+        transaction.closeConsumedExecutedStatements()
     }
 
     transaction.currentStatement = statement

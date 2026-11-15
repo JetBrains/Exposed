@@ -12,6 +12,7 @@ import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
 import java.io.InputStream
 import java.sql.JDBCType
 import java.sql.PreparedStatement
+import java.sql.SQLException
 import java.sql.Statement
 import java.sql.Types
 
@@ -32,6 +33,13 @@ class JdbcPreparedStatementImpl(
                 statement.connection.prepareStatement("select last_insert_rowid();").executeQuery()?.let { JdbcResult(it) }
             }
             else -> statement.generatedKeys?.let { JdbcResult(it) }
+        }
+
+    override val hasOpenResultSet: Boolean
+        get() = try {
+            !statement.isClosed && statement.resultSet?.isClosed == false
+        } catch (_: SQLException) {
+            false
         }
 
     override var fetchSize: Int?
