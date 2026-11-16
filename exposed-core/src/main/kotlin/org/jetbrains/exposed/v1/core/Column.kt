@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.core
 
 import org.jetbrains.exposed.v1.core.transactions.currentTransaction
+import org.jetbrains.exposed.v1.core.transactions.currentTransactionOrNull
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.exceptions.throwUnsupportedException
 
@@ -48,7 +49,23 @@ class Column<T>(
     /** Appends the SQL representation of this column to the specified [queryBuilder]. */
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         @OptIn(InternalApi::class)
-        currentTransaction().fullIdentity(this@Column, queryBuilder)
+        val tr = currentTransactionOrNull()
+        if (tr != null) {
+            tr.fullIdentity(this@Column, queryBuilder)
+        } else {
+            // No transaction in context: render the column identity without depending on
+            // database-specific settings, quoting identifiers only when standard SQL rules
+            // require it. This mirrors Transaction.fullIdentity for the transaction-free case.
+            queryBuilder {
+                if (table is Alias<*>) {
+                    append(GenericIdentifierManager.quoteIfNecessary(table.alias))
+                } else {
+                    append(GenericIdentifierManager.quoteIfNecessary(table.tableName))
+                }
+                append('.')
+                append(GenericIdentifierManager.quoteIdentifierWhenWrongCaseOrNecessary(name))
+            }
+        }
     }
 
     /** Returns the column name in proper case. */
