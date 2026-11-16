@@ -46,7 +46,7 @@ class UserCreatedTransactionsTests : DatabaseTestsBase() {
                 TestTable.insert { it[param] = 100 }
             }
 
-            tx.exec("select param from txtest") {
+            tx.exec("select \"param\" from txtest") {
                 it.next()
                 assertEquals(100, it.getInt(1))
             }
@@ -82,7 +82,7 @@ class UserCreatedTransactionsTests : DatabaseTestsBase() {
 
             val tx2 = TransactionManager.manager.newTransaction()
 
-            tx2.exec("select param from txtest") {
+            tx2.exec("select \"param\" from txtest") {
                 it.next()
                 assertEquals(100, it.getInt(1))
             }
@@ -106,7 +106,7 @@ class UserCreatedTransactionsTests : DatabaseTestsBase() {
 
             tx.rollback()
 
-            tx.exec("select param from txtest") {
+            tx.exec("select \"param\" from txtest") {
                 assertFalse(it.next())
             }
 
@@ -126,7 +126,7 @@ class UserCreatedTransactionsTests : DatabaseTestsBase() {
                 TestTable.insert { it[param] = 100 }
             }
 
-            tx.exec("select param from txtest") {
+            tx.exec("select \"param\" from txtest") {
                 it.next()
                 assertEquals(100, it.getInt(1))
             }
@@ -150,8 +150,8 @@ class UserCreatedTransactionsTests : DatabaseTestsBase() {
 
             tx.execInBatch(
                 listOf(
-                    "insert into txtest (param) values (1)",
-                    "insert into txtest (param) values (2)",
+                    "insert into txtest (\"param\") values (1)",
+                    "insert into txtest (\"param\") values (2)",
                 )
             )
 

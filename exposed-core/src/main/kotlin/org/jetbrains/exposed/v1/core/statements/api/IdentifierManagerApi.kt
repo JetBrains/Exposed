@@ -159,10 +159,13 @@ abstract class IdentifierManagerApi {
     /** Returns an [identity] wrapped in quotations, if validated as necessary. */
     fun quoteIdentifierWhenWrongCaseOrNecessary(identity: String): String {
         val inProperCase = inProperCase(identity)
-        return if (shouldQuoteIdentifier(identity) && inProperCase != identity) {
-            quote(identity)
-        } else {
-            quoteIfNecessary(inProperCase)
+        return when {
+            // An identifier that differs from the dialect's default folding is quoted with its case
+            // preserved, instead of silently emitting a differently-cased unquoted identifier.
+            // Keyword identifiers keep the dedicated keyword handling (case preservation is
+            // governed by the preserveKeywordCasing config), so they are excluded here.
+            !identity.isAlreadyQuoted() && !identity.isAKeyword() && inProperCase != identity -> quote(identity)
+            else -> quoteIfNecessary(inProperCase)
         }
     }
 

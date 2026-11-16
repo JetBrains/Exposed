@@ -158,11 +158,11 @@ class TransactionExecTests : DatabaseTestsBase() {
                 it[title] = "Exposed"
             }
 
-            val (table, id, title) = listOf(tester.tableName, tester.id.name, tester.title.name).map { it.inProperCase() }
+            val (table, id, title) = listOf(identity(tester), identity(tester.id), identity(tester.title))
 
             val stringResult = exec("""SELECT $title FROM $table WHERE $id = 1""") { rs ->
                 rs.next()
-                rs.getString(title)
+                rs.getString(tester.title.name)
             }
             assertNotNull(stringResult)
             assertEquals("Exposed", stringResult)
@@ -178,7 +178,7 @@ class TransactionExecTests : DatabaseTestsBase() {
             // no record exists for id = 999, so result set is empty and rs.next() is false
             val nullTransformResult = exec("""SELECT $title FROM $table WHERE $id = 999""") { rs ->
                 if (rs.next()) {
-                    rs.getString(title)
+                    rs.getString(tester.title.name)
                 } else {
                     null
                 }

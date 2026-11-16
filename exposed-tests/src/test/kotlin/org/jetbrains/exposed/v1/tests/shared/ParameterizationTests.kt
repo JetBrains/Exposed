@@ -33,7 +33,7 @@ class ParameterizationTests : DatabaseTestsBase() {
     fun testInsertWithQuotesAndGetItBack() {
         withTables(TempTable) {
             exec(
-                "INSERT INTO ${TempTable.tableName} (foo) VALUES (?)",
+                "INSERT INTO ${identity(TempTable)} (${identity(TempTable.name)}) VALUES (?)",
                 listOf(VarCharColumnType() to "John \"Johny\" Johnson")
             )
 
@@ -155,7 +155,7 @@ class ParameterizationTests : DatabaseTestsBase() {
             addLogger(StdOutSqlLogger)
 
             exec(
-                stmt = "INSERT INTO ${TempTable.tableName} (${TempTable.name.name}) VALUES (?)",
+                stmt = "INSERT INTO ${identity(TempTable)} (${identity(TempTable.name)}) VALUES (?)",
                 args = listOf(VarCharColumnType() to null)
             )
 

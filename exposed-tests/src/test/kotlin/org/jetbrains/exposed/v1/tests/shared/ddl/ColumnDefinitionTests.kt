@@ -117,8 +117,8 @@ class ColumnDefinitionTests : DatabaseTestsBase() {
 
             exec(
                 """
-                    INSERT INTO ${tester.nameInDatabaseCase()}
-                    (${tester.amount.nameInDatabaseCase()}, ${tester.item.nameInDatabaseCase()})
+                    INSERT INTO ${identity(tester)}
+                    (${identity(tester.amount)}, ${identity(tester.item)})
                     VALUES (222, null)
                 """.trimIndent()
             )
@@ -135,9 +135,9 @@ class ColumnDefinitionTests : DatabaseTestsBase() {
 
                 exec(
                     """
-                        UPDATE ${tester.nameInDatabaseCase()}
-                        SET ${tester.amount.nameInDatabaseCase()} = 999,
-                        ${tester.item.nameInDatabaseCase()} = null
+                        UPDATE ${identity(tester)}
+                        SET ${identity(tester.amount)} = 999,
+                        ${identity(tester.item)} = null
                     """.trimIndent()
                 )
 

@@ -104,11 +104,11 @@ class H2Tests : DatabaseTestsBase() {
             try {
                 SchemaUtils.createMissingTablesAndColumns(initialTable)
                 assertEquals(
-                    "ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()}",
+                    "ALTER TABLE ${tableName.inProperCase()} ADD ${identity(t.id)} ${t.id.columnType.sqlType()}",
                     t.id.ddl.first()
                 )
                 assertEquals(
-                    "ALTER TABLE ${tableName.inProperCase()} ADD CONSTRAINT pk_$tableName PRIMARY KEY (${"id".inProperCase()})",
+                    "ALTER TABLE ${tableName.inProperCase()} ADD CONSTRAINT pk_$tableName PRIMARY KEY (${identity(t.id)})",
                     t.id.ddl[1]
                 )
                 assertEquals(1, currentDialectMetadataTest.tableColumns(t)[t]!!.size)
@@ -126,8 +126,8 @@ class H2Tests : DatabaseTestsBase() {
         val testJavaTable = object : UUIDTable("test_java_table") {}
 
         withDb(TestDB.ALL_H2_V2) {
-            exec("CREATE TABLE test_table (id BINARY(16) NOT NULL, CONSTRAINT PK_TEST_TABLE PRIMARY KEY (id))")
-            exec("CREATE TABLE test_java_table (id BINARY(16) NOT NULL, CONSTRAINT PK_TEST_JAVA_TABLE PRIMARY KEY (id))")
+            exec("CREATE TABLE test_table (\"id\" BINARY(16) NOT NULL, CONSTRAINT PK_TEST_TABLE PRIMARY KEY (\"id\"))")
+            exec("CREATE TABLE test_java_table (\"id\" BINARY(16) NOT NULL, CONSTRAINT PK_TEST_JAVA_TABLE PRIMARY KEY (\"id\"))")
 
             val uuid = Uuid.random()
             val javaUUID = JavaUUID.randomUUID()
