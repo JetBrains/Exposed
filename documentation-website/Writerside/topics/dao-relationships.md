@@ -279,7 +279,7 @@ the `orderBy()` function is chained after `referrersOn()`:
 
 **JDBC**: [`via()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity/via.html)
 
-**R2DBC**: [`via()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao/-entity/via.html)
+**R2DBC**: [`via()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity/via.html)
 
 </tldr>
 
