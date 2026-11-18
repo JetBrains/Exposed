@@ -395,6 +395,29 @@ class FunctionsTests : DatabaseTestsBase() {
         }
     }
 
+    /* EXPOSED-1120 */
+    @Test
+    fun testConcatTreatsBackslashQuoteAsData() {
+        withCitiesAndUsers { cities, _, _ ->
+            // on MySQL/MariaDB a backslash also escapes a quote in a string literal, so an unescaped \' would
+            // close the literal and run the rest of the value as SQL (here: a subquery reading another table)
+            val payload = "\\', (SELECT CONCAT(id, name) FROM Users LIMIT 1)) -- "
+
+            val concatField = stringLiteral("a") + payload
+            val result = cities.select(concatField).first()[concatField]
+            assertEquals("a" + payload, result)
+
+            val concatField2 = payload plus stringLiteral("b")
+            val result2 = cities.select(concatField2).first()[concatField2]
+            assertEquals(payload + "b", result2)
+
+            // both strings inlined, so neither binding nor escaping may let the payload break out
+            val concatField3 = concat(stringLiteral("a"), stringLiteral(payload))
+            val result3 = cities.select(concatField3).first()[concatField3]
+            assertEquals("a" + payload, result3)
+        }
+    }
+
     @Test
     fun testRandomFunction01() {
         val t = DMLTestsData.Cities

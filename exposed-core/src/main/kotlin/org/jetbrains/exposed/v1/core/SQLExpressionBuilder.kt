@@ -463,7 +463,7 @@ interface ISqlExpressionBuilder {
         replaceWith = ReplaceWith("this + value", "org.jetbrains.exposed.v1.core.plus"),
         level = DeprecationLevel.ERROR
     )
-    infix operator fun Expression<String>.plus(value: String): Concat = Concat("", this, stringLiteral(value))
+    infix operator fun Expression<String>.plus(value: String): Concat = Concat("", this, concatParam(value))
 
     @Deprecated(
         message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",
@@ -477,7 +477,7 @@ interface ISqlExpressionBuilder {
         replaceWith = ReplaceWith("this + value", "org.jetbrains.exposed.v1.core.plus"),
         level = DeprecationLevel.ERROR
     )
-    infix operator fun String.plus(value: Expression<String>): Concat = Concat("", stringLiteral(this), value)
+    infix operator fun String.plus(value: Expression<String>): Concat = Concat("", concatParam(this), value)
 
     @Deprecated(
         message = "This interface method will be removed following release 1.0.0 and should be replaced with the equivalent top-level function.",

@@ -9,6 +9,7 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.ops.*
 import org.jetbrains.exposed.v1.core.vendors.FunctionProvider
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import java.math.BigDecimal
 import kotlin.internal.LowPriorityInOverloadResolution
@@ -405,7 +406,7 @@ infix operator fun <T, S : T> ExpressionWithColumnType<T>.plus(other: Expression
  * @param value The string value to be concatenated.
  * @return The concatenated expression.
  */
-infix operator fun Expression<String>.plus(value: String): Concat = concat(this, stringLiteral(value))
+infix operator fun Expression<String>.plus(value: String): Concat = concat(this, concatParam(value))
 
 /**
  * Concatenate the value to the input expression.
@@ -421,7 +422,16 @@ infix operator fun Expression<String>.plus(value: Expression<String>): Concat = 
  * @param value The string value to be concatenated.
  * @return The concatenated expression.
  */
-infix operator fun String.plus(value: Expression<String>): Concat = concat(stringLiteral(this), value)
+infix operator fun String.plus(value: Expression<String>): Concat = concat(concatParam(this), value)
+
+internal object ConcatParamColumnType : TextColumnType() {
+    override fun parameterMarker(value: String?): String = when (currentDialect) {
+        is PostgreSQLDialect -> "?::text"
+        else -> super.parameterMarker(value)
+    }
+}
+
+internal fun concatParam(value: String): Expression<String> = QueryParameter(value, ConcatParamColumnType)
 
 // MINUS
 
