@@ -446,6 +446,7 @@ public abstract class org/jetbrains/exposed/v1/core/ColumnType : org/jetbrains/e
 	public fun <init> ()V
 	public fun <init> (Z)V
 	public synthetic fun <init> (ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun defaultValueMatchesMetadata (Ljava/lang/String;Ljava/lang/String;)Z
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getNullable ()Z
 	public fun hashCode ()I
