@@ -1,9 +1,14 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared
 
+import io.r2dbc.spi.Connection
+import io.r2dbc.spi.ConnectionFactories
+import io.r2dbc.spi.ConnectionFactory
+import io.r2dbc.spi.ConnectionFactoryMetadata
 import io.r2dbc.spi.R2dbcException
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.test.runTest
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
@@ -21,6 +26,9 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.inTopLevelSuspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
+import org.reactivestreams.Publisher
+import reactor.core.publisher.Mono
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertContains
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
@@ -213,6 +221,52 @@ class NestedTransactionsTest : R2dbcDatabaseTestsBase() {
 
         suspendTransaction(db) {
             SchemaUtils.drop(DMLTestsData.Cities)
+        }
+    }
+
+    @Test
+    fun testNestedTransactionSetsSavepointOnlyWhenConnectionIsUsed() = runTest {
+        Assumptions.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+
+        val connectionsOpened = AtomicInteger(0)
+        val savepointsSet = AtomicInteger(0)
+        val countingFactory = object : ConnectionFactory {
+            private val factory = ConnectionFactories.get("r2dbc:h2:mem:///db1;DB_CLOSE_DELAY=-1;USER=root")
+
+            override fun create() = Mono.defer {
+                connectionsOpened.incrementAndGet()
+                Mono.from(factory.create()).map { connection ->
+                    object : Connection by connection {
+                        override fun createSavepoint(name: String): Publisher<Void> {
+                            savepointsSet.incrementAndGet()
+                            return connection.createSavepoint(name)
+                        }
+                    }
+                }
+            }
+
+            override fun getMetadata(): ConnectionFactoryMetadata = factory.metadata
+        }
+        val countingDb = R2dbcDatabase.connect(
+            connectionFactory = countingFactory,
+            databaseConfig = R2dbcDatabaseConfig {
+                useNestedTransactions = true
+                explicitDialect = H2Dialect()
+            }
+        )
+
+        suspendTransaction(countingDb) {
+            suspendTransaction {
+                rollback()
+            }
+            assertEquals(0, connectionsOpened.get())
+            assertEquals(0, savepointsSet.get())
+
+            suspendTransaction {
+                exec("SELECT 1")
+            }
+            assertEquals(1, connectionsOpened.get())
+            assertEquals(1, savepointsSet.get())
         }
     }
 

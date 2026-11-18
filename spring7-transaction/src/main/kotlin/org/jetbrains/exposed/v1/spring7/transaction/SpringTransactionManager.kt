@@ -137,6 +137,9 @@ class SpringTransactionManager(
 
             trxObject.connectionHolder?.isSynchronizedWithTransaction = true
 
+            // Spring JDBC reaches a nested transaction through the outer connection holder, so set its savepoint now
+            if (outerTransactionToUse != null) newTransaction.connection
+
             // Bind the connection holder to the thread.
             if (trxObject.isNewConnectionHolder) {
                 TransactionSynchronizationManager.bindResource(dataSource, trxObject.connectionHolder!!)
