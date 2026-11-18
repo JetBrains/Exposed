@@ -37,7 +37,7 @@ class SpringTransactionManager(
     private val dataSource: DataSource,
     databaseConfig: DatabaseConfig = DatabaseConfig {},
     private val showSql: Boolean = false,
-) : AbstractPlatformTransactionManager() {
+) : AbstractPlatformTransactionManager(), AutoCloseable {
 
     private val database: Database = Database.connect(
         datasource = dataSource, databaseConfig = databaseConfig
@@ -45,6 +45,14 @@ class SpringTransactionManager(
 
     init {
         isNestedTransactionAllowed = databaseConfig.useNestedTransactions
+    }
+
+    /**
+     * Unregisters the [Database] created by this transaction manager from [TransactionManager],
+     * so that it is not kept reachable after the Spring application context is closed.
+     */
+    override fun close() {
+        TransactionManager.closeAndUnregister(database)
     }
 
     /**
