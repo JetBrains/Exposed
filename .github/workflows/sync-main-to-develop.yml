@@ -1,0 +1,54 @@
+# Per-commit cherry-pick sync from main to the current develop/* line.
+#
+# Every push to main triggers a sweep: each outstanding non-merge commit is
+# cherry-picked onto the highest develop/* branch and lands via an auto-merged
+# PR (rebase method, so every fix keeps its own commit). Merge commits and
+# "chore: Bump Exposed version ..." commits (release machinery) are skipped;
+# the version bump and CHANGELOG reconcile at the next minor's release bump.
+# A conflicting pick halts the line with a labeled PR assigned to the
+# conflicting fix's author; sweeps resume once it is closed.
+#
+# Requires repository settings: "Allow auto-merge" and "Allow rebase merging".
+
+name: Sync main into develop
+
+on:
+  push:
+    branches:
+      - main
+  # Backstop: a commit that lands on main while a sync PR is still open halts
+  # that sweep, and the PR's auto-merge pushes to develop/*, which is not a
+  # trigger - so the queued commit would wait for the next push to main. The
+  # hourly sweep drains it instead; it is a no-op whenever the line is current.
+  # 17 past the hour, not 0: the top of the hour is the busiest minute for
+  # scheduled runs, and GitHub may delay or drop them there.
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "develop/* branch to sync into (default: latest develop line)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-main-to-develop
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history: the sweep computes patch-ids since the merge-base
+      - name: Sweep main into the develop line
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_TARGET: ${{ inputs.target }}
+        run: bash .github/scripts/sync-main-to-develop.sh
