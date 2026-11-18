@@ -32,6 +32,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 import kotlin.time.Instant
 import kotlin.time.toDuration
@@ -577,6 +580,22 @@ class DefaultsTest : DatabaseTestsBase() {
         // MariaDB does not support TIMESTAMP WITH TIME ZONE column type
         val unsupportedDatabases = setOf(TestDB.MARIADB, TestDB.MYSQL_V5)
         withTables(excludeSettings = unsupportedDatabases, tester) {
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
+            assertEquals(0, statements.size)
+        }
+    }
+
+    @Test
+    fun testDurationDefaultDoesNotTriggerAlterStatement() {
+        val tester = object : Table("tester") {
+            val durationWithLargeDefault = duration("durationWithLargeDefault").default(30.days)
+            val durationWithSmallDefault = duration("durationWithSmallDefault").default(1.seconds)
+            val durationWithZeroDefault = duration("durationWithZeroDefault").default(Duration.ZERO)
+            val durationWithNegativeDefault = duration("durationWithNegativeDefault").default((-5).seconds)
+            val durationWithDefaultExpression = duration("durationWithDefaultExpression").defaultExpression(durationLiteral(30.days))
+        }
+
+        withTables(tester) {
             val statements = SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
