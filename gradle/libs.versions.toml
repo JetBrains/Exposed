@@ -58,6 +58,8 @@ testcontainers = "2.0.5"
 
 flyway = "13.12.0"
 
+kotlinpoet = "2.4.0"
+
 [libraries]
 jvm = { group = "org.jetbrains.kotlin.jvm", name = "org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }
 kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
@@ -142,6 +144,8 @@ flyway-sqlserver = { group = "org.flywaydb", name = "flyway-sqlserver", version.
 flyway-oracle = { group = "org.flywaydb", name = "flyway-database-oracle", version.ref = "flyway" }
 
 logcaptor = { group = "io.github.hakky54", name = "logcaptor", version.ref = "logcaptor" }
+
+kotlinpoet = { group = "com.squareup", name = "kotlinpoet", version.ref = "kotlinpoet" }
 
 maven-api = { group = "org.apache.maven", name = "maven-plugin-api", version.ref = "maven-api" }
 maven-core = { group = "org.apache.maven", name = "maven-core", version.ref = "maven-api" }

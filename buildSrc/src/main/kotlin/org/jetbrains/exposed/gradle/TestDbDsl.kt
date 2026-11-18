@@ -123,7 +123,7 @@ private fun Project.createDbTestTaskByDialect(db: TestDb, taskName: String, dial
         if (db.ignoresPluginTests(dialect)) {
             filter {
                 // exclude all test classes in Plugin modules:
-                // exposed-gradle-plugin
+                // exposed-gradle-plugin, exposed-maven-plugin, exposed-plugin-core
                 exclude(
                     "org/jetbrains/exposed/v1/plugin/core/*",
                     "org/jetbrains/exposed/v1/gradle/plugin/*",
