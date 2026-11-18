@@ -517,6 +517,29 @@ class SequenceAutoIncrementTests : DatabaseTestsBase() {
         }
     }
 
+    // https://youtrack.jetbrains.com/issue/EXPOSED-985
+    @Test
+    fun testSchemaQualifiedSequenceNameIsNotReportedMissing() {
+        withDb(db = listOf(TestDB.H2_V2, TestDB.POSTGRESQL)) {
+            if (!currentDialectTest.supportsCreateSequence) return@withDb
+
+            val schemaName = "exposed_test_schema"
+            exec("CREATE SCHEMA $schemaName")
+
+            val testTable = object : IntIdTable("$schemaName.test_table", "id", "$schemaName.test_table_id_seq") {}
+
+            try {
+                SchemaUtils.create(testTable)
+                assertNoStatementsRequiredForMigration(testTable)
+
+                val dropStatements = MigrationUtils.dropUnmappedSequences(testTable, withLogs = false)
+                assertTrue(dropStatements.none { it.contains("test_table_id_seq", ignoreCase = true) })
+            } finally {
+                exec("DROP SCHEMA $schemaName CASCADE")
+            }
+        }
+    }
+
     private fun expectedCreateSequenceStatement(sequenceName: String) =
         "CREATE SEQUENCE${" IF NOT EXISTS".takeIf { currentDialectTest.supportsIfNotExists } ?: ""} " +
             "$sequenceName START WITH 1 MINVALUE 1 MAXVALUE ${currentDialectTest.sequenceMaxValue}"
