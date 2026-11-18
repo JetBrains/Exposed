@@ -60,6 +60,32 @@ class TransactionExecTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
+    @Test
+    fun testExecWithCommonTableExpressionQuery() {
+        withTables(excludeSettings = listOf(TestDB.MYSQL_V5), ExecTable) {
+            val amounts = (90..99).toList()
+            ExecTable.batchInsert(amounts, shouldReturnGeneratedValues = false) { amount ->
+                this[ExecTable.id] = (amount % 10 + 1)
+                this[ExecTable.amount] = amount
+            }
+
+            val tableName = ExecTable.tableName.inProperCase()
+            val results = exec(
+                """
+                WITH large_amounts AS (
+                    SELECT amount FROM $tableName WHERE amount > 95
+                )
+                SELECT amount FROM large_amounts ORDER BY amount
+                """.trimIndent()
+            ) { row ->
+                row.getInt(1)
+            }?.toList()
+            assertNotNull(results)
+            assertEqualLists(amounts.filter { it > 95 }, results)
+        }
+    }
+
     @Test
     fun testExecWithMultiStatementQuery() {
         // MySQL only allows this with allowMultiQueries option, which is not supported: https://github.com/asyncer-io/r2dbc-mysql/issues/291
