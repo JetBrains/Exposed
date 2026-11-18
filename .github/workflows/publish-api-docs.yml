@@ -1,0 +1,103 @@
+# Publishes the generated Dokka API reference to JetBrains/exposed-api-docs
+# (served on GitHub Pages) whenever a release is published. The site root
+# there always holds the newest release; the superseded release is archived
+# under versions/<tag>/ and old lines are pruned automatically (see
+# exposed-api-docs/.github/scripts/update.sh).
+#
+# A hotfix on an older line (e.g. 1.6.2 published after 1.7.0) is published
+# under versions/1.6.2/ by update.sh; the root keeps the newest release.
+#
+# Requires the API_DOCS_TOKEN repository secret: a fine-grained personal
+# access token with Contents: read and write on JetBrains/exposed-api-docs.
+
+name: Publish API docs
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Exposed release tag to publish (default: newest release)"
+        required: false
+        type: string
+      force:
+        description: "Rebuild and republish even if VERSION already matches the tag"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-api-docs
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout API docs repository
+        uses: actions/checkout@v4
+        with:
+          repository: JetBrains/exposed-api-docs
+          path: api-docs
+          token: ${{ secrets.API_DOCS_TOKEN }}
+
+      - name: Resolve release to publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_TAG: ${{ inputs.tag }}
+          FORCE: ${{ inputs.force }}
+        run: |
+          set -euo pipefail
+          TAG="$INPUT_TAG"
+          if [ -z "$TAG" ]; then TAG="${{ github.event.release.tag_name }}"; fi
+          if [ -z "$TAG" ]; then
+            # Semver-max of published releases; legacy pre-release tags like
+            # 1.0.0-rc-4 are filtered out before the numeric comparison.
+            TAG=$(gh api 'repos/JetBrains/Exposed/releases?per_page=100' \
+              --jq '[.[] | select(.prerelease == false) | .tag_name | select(test("^[0-9]+[.][0-9]+[.][0-9]+$"))] | max_by(split(".") | map(tonumber))')
+          fi
+          CURRENT=$(cat api-docs/VERSION)
+          echo "release: $TAG; docs generated from: $CURRENT"
+          if ! printf '%s' "$TAG" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "$TAG is not a plain release tag; nothing to do"
+          elif [ "$TAG" = "$CURRENT" ] && [ "$FORCE" != "true" ]; then
+            echo "docs already reflect $TAG; nothing to do"
+          else
+            echo "PUBLISH_TAG=$TAG" >> "$GITHUB_ENV"
+          fi
+
+      - name: Checkout Exposed at the release tag
+        if: env.PUBLISH_TAG != ''
+        uses: actions/checkout@v4
+        with:
+          repository: JetBrains/Exposed
+          ref: ${{ env.PUBLISH_TAG }}
+          path: exposed-src
+          fetch-depth: 1
+
+      - name: Set up JDK
+        if: env.PUBLISH_TAG != ''
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Regenerate and publish API docs
+        if: env.PUBLISH_TAG != ''
+        run: |
+          set -euo pipefail
+          (
+            cd exposed-src
+            ./gradlew dokkaGenerate --no-daemon --console=plain
+          )
+          cd api-docs
+          git config user.name "exposed-api-docs-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          bash .github/scripts/update.sh ../exposed-src/docs/api "$PUBLISH_TAG"
+          git push
