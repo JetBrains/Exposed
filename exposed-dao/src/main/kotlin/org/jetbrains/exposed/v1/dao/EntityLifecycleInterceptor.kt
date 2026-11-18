@@ -45,7 +45,7 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
             }
 
             is DeleteStatement -> {
-                transaction.flushCache()
+                val _ = transaction.flushCache()
                 transaction.entityCache.removeTablesReferrers(statement.targetsSet.targetTables(), false)
                 if (!isExecutedWithinEntityLifecycle) {
                     statement.targets.filterIsInstance<IdTable<*>>().forEach {
@@ -55,7 +55,7 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
             }
 
             is UpsertStatement<*>, is BatchUpsertStatement -> {
-                transaction.flushCache()
+                val _ = transaction.flushCache()
                 transaction.entityCache.removeTablesReferrers(statement.targets, true)
                 if (!isExecutedWithinEntityLifecycle) {
                     statement.targets.filterIsInstance<IdTable<*>>().forEach {
@@ -65,7 +65,7 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
             }
 
             is InsertStatement<*> -> {
-                transaction.flushCache()
+                val _ = transaction.flushCache()
                 transaction.entityCache.removeTablesReferrers(listOf(statement.table), true)
             }
 
@@ -73,7 +73,7 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
             }
 
             is UpdateStatement -> {
-                transaction.flushCache()
+                val _ = transaction.flushCache()
                 transaction.entityCache.removeTablesReferrers(statement.targetsSet.targetTables(), false)
                 if (!isExecutedWithinEntityLifecycle) {
                     statement.targets.filterIsInstance<IdTable<*>>().forEach {
@@ -83,7 +83,9 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
             }
 
             else -> {
-                if (statement.type.group == StatementGroup.DDL) transaction.flushCache()
+                if (statement.type.group == StatementGroup.DDL) {
+                    val _ = transaction.flushCache()
+                }
             }
         }
     }

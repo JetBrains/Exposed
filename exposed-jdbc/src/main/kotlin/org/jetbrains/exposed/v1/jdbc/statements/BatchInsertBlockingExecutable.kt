@@ -43,7 +43,7 @@ open class SQLServerBatchInsertBlockingExecutable(
         val rs = if (statement.columnToReturnValue != null) {
             executeQuery()
         } else {
-            executeUpdate()
+            val _ = executeUpdate()
             null
         }
         return statement.arguments!!.size to rs?.result
