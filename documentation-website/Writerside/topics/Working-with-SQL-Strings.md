@@ -48,7 +48,7 @@ SQL strings can be parameterized by substituting values with a `?` placeholder i
 
 By default, `.exec()` uses the first keyword of an SQL string to determine how the string should be executed and whether 
 results are expected to be returned by the database. The function attempts to find a match between this keyword and 
-one of the [`StatementType`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql.statements/-statement-type/index.html) 
+one of the [`StatementType`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core.statements/-statement-type/index.html) 
 enum constants.
 
 An argument can always be passed to the parameter `explicitStatementType` to avoid searching for a match and risking unexpected behavior:

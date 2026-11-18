@@ -33,7 +33,7 @@ associated with the table. For more information, see [Entity definition](dao-ent
 
 **JDBC**: [`.new()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/new.html)
 
-**R2DBC**: [`.new()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/new.html)
+**R2DBC**: [`.new()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/new.html)
 
 </tldr>
 
@@ -58,7 +58,7 @@ explicitly call the `flushCache()` function, when another statement is executed 
 
 <primary-label ref="r2dbc" />
 
-With R2DBC, you can use the [`.newSuspend()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/newSuspend.html)
+With R2DBC, you can use the [`.newSuspend()`](https://jetbrains.github.io/Exposed/api/exposed-dao-r2dbc/org.jetbrains.exposed.v1.dao.r2dbc/-entity-class/new-suspend.html)
 function when you need the insert to be flushed before the function returns:
 
 ```kotlin
