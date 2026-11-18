@@ -43,14 +43,65 @@ class JdbcTransactionCloseOrderTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    @Tag(NOT_APPLICABLE_TO_R2DBC)
+    fun testStatementWithConsumedResultSetIsClosedWhenNextStatementExecutes() {
+        withConnection { database, _ ->
+            Assumptions.assumeFalse(
+                database.supportsMultipleResultSets,
+                "Eager statement cleanup only applies to databases without multiple result set support"
+            )
+
+            val closeOrder = mutableListOf<Int>()
+
+            transaction(db = database) {
+                exec(RecordingExecutable(1, closeOrder))
+                kotlin.test.assertEquals(emptyList<Int>(), closeOrder)
+
+                exec(RecordingExecutable(2, closeOrder))
+                kotlin.test.assertEquals(listOf(1), closeOrder)
+
+                closeExecutedStatements()
+                kotlin.test.assertEquals(listOf(1, 2), closeOrder)
+            }
+        }
+    }
+
+    @Test
+    @Tag(NOT_APPLICABLE_TO_R2DBC)
+    fun testStatementWithOpenResultSetIsKeptOpenWhenNextStatementExecutes() {
+        withConnection { database, _ ->
+            Assumptions.assumeFalse(
+                database.supportsMultipleResultSets,
+                "Eager statement cleanup only applies to databases without multiple result set support"
+            )
+
+            val closeOrder = mutableListOf<Int>()
+
+            transaction(db = database) {
+                exec(RecordingExecutable(1, closeOrder, keepsResultSetOpen = true))
+                exec(RecordingExecutable(2, closeOrder, keepsResultSetOpen = true))
+
+                // statements whose result sets are still held open by the caller must not be closed
+                kotlin.test.assertEquals(emptyList<Int>(), closeOrder)
+
+                closeExecutedStatements()
+
+                // an explicit close still closes everything
+                kotlin.test.assertEquals(listOf(2, 1), closeOrder)
+            }
+        }
+    }
+
     private class RecordingExecutable(
         id: Int,
-        closeOrder: MutableList<Int>
+        closeOrder: MutableList<Int>,
+        keepsResultSetOpen: Boolean = false
     ) : Statement<Unit>(StatementType.SELECT, emptyList()), BlockingExecutable<Unit, Statement<Unit>> {
         override val statement: Statement<Unit>
             get() = this
 
-        private val preparedStatement = RecordingPreparedStatement(id, closeOrder)
+        private val preparedStatement = RecordingPreparedStatement(id, closeOrder, keepsResultSetOpen)
 
         override fun prepareSQL(transaction: Transaction, prepared: Boolean): String = "SELECT 1"
 
@@ -63,11 +114,13 @@ class JdbcTransactionCloseOrderTests : DatabaseTestsBase() {
 
     private class RecordingPreparedStatement(
         private val id: Int,
-        private val closeOrder: MutableList<Int>
+        private val closeOrder: MutableList<Int>,
+        keepsResultSetOpen: Boolean = false
     ) : JdbcPreparedStatementApi {
         override var fetchSize: Int? = null
         override var timeout: Int? = null
         override val resultSet: JdbcResult? = null
+        override val hasOpenResultSet: Boolean = keepsResultSetOpen
 
         override fun closeIfPossible() {
             closeOrder += id
