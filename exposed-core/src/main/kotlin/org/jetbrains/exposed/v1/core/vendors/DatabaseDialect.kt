@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.v1.core.vendors
 
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.core.transactions.currentTransactionOrNull
 
 /**
@@ -190,11 +189,17 @@ internal fun <T> withDialect(dialect: DatabaseDialect, body: () -> T): T {
     }
 }
 
-/** Returns the dialect used in the current transaction, may throw an exception if there is no current transaction. */
+/**
+ * Returns the dialect used in the current transaction, or a generic dialect with standard SQL
+ * defaults if there is no current transaction and no explicit dialect has been set.
+ *
+ * **Note:** Rendering expressions with the fallback dialect produces generic SQL, which is suitable
+ * for display, logging, and testing purposes, but may not use syntax specific to any database.
+ */
 val currentDialect: DatabaseDialect
     get() {
         @OptIn(InternalApi::class)
-        return explicitDialect.get() ?: currentTransaction().db.dialect
+        return explicitDialect.get() ?: currentTransactionOrNull()?.db?.dialect ?: GenericSqlDialect
     }
 
 @OptIn(InternalApi::class)
