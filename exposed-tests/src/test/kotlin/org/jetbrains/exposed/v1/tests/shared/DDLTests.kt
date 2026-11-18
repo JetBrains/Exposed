@@ -171,7 +171,7 @@ class DDLTests : DatabaseTestsBase() {
     }
 
     // Placed outside test function to shorten generated name
-    val unnamedTable = object : Table() {
+    private val unnamedTable = object : Table() {
         val id = integer("id")
         val name = varchar("name", length = 42)
 
@@ -195,9 +195,9 @@ class DDLTests : DatabaseTestsBase() {
             val varCharType = currentDialectTest.dataTypeProvider.varcharType(42)
             assertEquals(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "$tableName " +
-                    "(${"id".inProperCase()} $integerType PRIMARY KEY, $q${"name".inProperCase()}$q $varCharType NOT NULL" +
+                    "(${identity(unnamedTable.id)} $integerType PRIMARY KEY, $q${"name".inProperCase()}$q $varCharType NOT NULL" +
                     when (testDb) {
-                        TestDB.ORACLE -> ", CONSTRAINT ${"chk_unnamedTable$1_signed_integer_id".inProperCase()} CHECK (ID BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                        TestDB.ORACLE -> ", CONSTRAINT ${"chk_unnamedTable$1_signed_integer_id".inProperCase()} CHECK (${identity(unnamedTable.id)} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
                         else -> ""
                     } +
                     ")",
@@ -252,9 +252,9 @@ class DDLTests : DatabaseTestsBase() {
             val varCharType = currentDialectTest.dataTypeProvider.varcharType(42)
             assertEquals(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${"different_column_types".inProperCase()} " +
-                    "(${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} NOT NULL, " +
-                    "\"${"name".inProperCase()}\" $varCharType PRIMARY KEY, " +
-                    "${"age".inProperCase()} ${currentDialectTest.dataTypeProvider.integerType()} NULL)",
+                    "(${identity(testTable.id)} ${currentDialectTest.dataTypeProvider.integerAutoincType()} NOT NULL, " +
+                    "${identity(testTable.name)} $varCharType PRIMARY KEY, " +
+                    "${identity(testTable.age)} ${currentDialectTest.dataTypeProvider.integerType()} NULL)",
                 testTable.ddl
             )
         }
@@ -276,14 +276,14 @@ class DDLTests : DatabaseTestsBase() {
             val q = db.identifierManager.quoteString
             val varCharType = currentDialectTest.dataTypeProvider.varcharType(42)
             val tableDescription = "CREATE TABLE " + addIfNotExistsIfSupported() + "with_different_column_types".inProperCase()
-            val idDescription = "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerType()}"
+            val idDescription = "${identity(testTable.id)} ${currentDialectTest.dataTypeProvider.integerType()}"
             val nameDescription = "$q${"name".inProperCase()}$q $varCharType"
-            val ageDescription = "${"age".inProperCase()} ${db.dialect.dataTypeProvider.integerType()} NULL"
-            val primaryKeyConstraint = "CONSTRAINT pk_with_different_column_types PRIMARY KEY (${"id".inProperCase()}, $q${"name".inProperCase()}$q)"
+            val ageDescription = "${identity(testTable.age)} ${db.dialect.dataTypeProvider.integerType()} NULL"
+            val primaryKeyConstraint = "CONSTRAINT pk_with_different_column_types PRIMARY KEY (${identity(testTable.id)}, ${identity(testTable.name)})"
             val checkConstraint = when (testDb) {
                 TestDB.ORACLE ->
-                    ", CONSTRAINT ${"chk_with_different_column_types_signed_integer_id".inProperCase()} CHECK (ID BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
-                        ", CONSTRAINT ${"chk_with_different_column_types_signed_integer_age".inProperCase()} CHECK (AGE BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                    ", CONSTRAINT ${"chk_with_different_column_types_signed_integer_id".inProperCase()} CHECK (${identity(testTable.id)} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
+                        ", CONSTRAINT ${"chk_with_different_column_types_signed_integer_age".inProperCase()} CHECK (${identity(testTable.age)} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
                 else -> ""
             }
 
@@ -435,13 +435,12 @@ class DDLTests : DatabaseTestsBase() {
 
         withTables(t) {
             val a1 = SchemaUtils.createIndex(t.indices[0])
-            val q = db.identifierManager.quoteString
-            assertEquals("CREATE INDEX ${"t2_name".inProperCase()} ON ${"t2".inProperCase()} ($q${"name".inProperCase()}$q)", a1)
+            assertEquals("CREATE INDEX ${"t2_name".inProperCase()} ON ${"t2".inProperCase()} (${identity(t.name)})", a1)
 
             val a2 = SchemaUtils.createIndex(t.indices[1])
             assertEquals(
                 "CREATE INDEX ${"t2_lvalue_rvalue".inProperCase()} ON ${"t2".inProperCase()} " +
-                    "(${"lvalue".inProperCase()}, ${"rvalue".inProperCase()})",
+                    "(${identity(t.lvalue)}, ${identity(t.rvalue)})",
                 a2
             )
         }
@@ -475,7 +474,7 @@ class DDLTests : DatabaseTestsBase() {
 
             if (!isOracleMode) {
                 assertEquals(
-                    "CREATE INDEX $indexProperName ON $tableProperName ($columnProperName)",
+                    "CREATE INDEX $indexProperName ON $tableProperName (${identity(testTable.column1)})",
                     indexStatement
                 )
             } else {
@@ -969,7 +968,7 @@ class DDLTests : DatabaseTestsBase() {
 
         withTables(tester) { testDb ->
             val constraintName = "check_tester_positive"
-            val constraintOp = "${"amount".inProperCase()} > 0"
+            val constraintOp = "${identity(tester.amount)} > 0"
             val (createConstraint, dropConstraint) = CheckConstraint("tester", constraintName, constraintOp).run {
                 createStatement() to dropStatement()
             }

@@ -291,13 +291,13 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             if (currentDialectTest is SQLiteDialect) {
                 assertTrue(statements.isEmpty())
             } else {
-                val expected = "ALTER TABLE ${tableName.inProperCase()} ADD PRIMARY KEY (${noPKTable.bar.nameInDatabaseCase()})"
+                val expected = "ALTER TABLE ${tableName.inProperCase()} ADD PRIMARY KEY (${identity(noPKTable.bar)})"
                 assertEquals(expected, statements.single())
 
                 SchemaUtils.createMissingTablesAndColumns(singlePKTable)
                 primaryKey = currentDialectMetadataTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
                 assertNotNull(primaryKey)
-                assertEquals("bar".inProperCase(), primaryKey.columnNames.single())
+                assertEquals(noPKTable.bar.name, primaryKey.columnNames.single())
             }
 
             SchemaUtils.drop(noPKTable)
@@ -440,8 +440,8 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
                         else -> "ALTER COLUMN"
                     }
                     val expected = setOf(
-                        "ALTER TABLE ${t2.nameInDatabaseCase()} $alterColumnWord ${t2.col.nameInDatabaseCase()} ${t2.col.columnType.sqlType()} DEFAULT 1 NOT NULL",
-                        "ALTER TABLE ${t2.nameInDatabaseCase()} $alterColumnWord ${t2.strcol.nameInDatabaseCase()} ${t2.strcol.columnType.sqlType()} DEFAULT 'def' NOT NULL",
+                        "ALTER TABLE ${identity(t2)} $alterColumnWord ${identity(t2.col)} ${t2.col.columnType.sqlType()} DEFAULT 1 NOT NULL",
+                        "ALTER TABLE ${identity(t2)} $alterColumnWord ${identity(t2.strcol)} ${t2.strcol.columnType.sqlType()} DEFAULT 'def' NOT NULL",
                     )
                     assertEquals(expected, missingStatements.toSet())
                 } else {
@@ -469,8 +469,8 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
                         else -> "ALTER COLUMN"
                     }
                     val expected = setOf(
-                        "ALTER TABLE ${t2.nameInDatabaseCase()} $alterColumnWord ${t1.col.nameInDatabaseCase()} ${t1.col.columnType.sqlType()} NULL",
-                        "ALTER TABLE ${t2.nameInDatabaseCase()} $alterColumnWord ${t1.strcol.nameInDatabaseCase()} ${t1.strcol.columnType.sqlType()} NULL",
+                        "ALTER TABLE ${identity(t2)} $alterColumnWord ${identity(t1.col)} ${t1.col.columnType.sqlType()} NULL",
+                        "ALTER TABLE ${identity(t2)} $alterColumnWord ${identity(t1.strcol)} ${t1.strcol.columnType.sqlType()} NULL",
                     )
                     assertEquals(expected, missingStatements.toSet())
                 } else {

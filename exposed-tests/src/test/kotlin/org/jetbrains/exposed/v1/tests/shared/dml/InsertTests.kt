@@ -872,7 +872,7 @@ class InsertTests : DatabaseTestsBase() {
                 val amount = integer("amount").nullable()
                 val computedAmount = integer("computed_amount").nullable().databaseGenerated().apply {
                     if (testDb == TestDB.ORACLE || testDb in TestDB.ALL_H2_V2) {
-                        withDefinition("GENERATED ALWAYS AS (AMOUNT + 1)")
+                        withDefinition("GENERATED ALWAYS AS (\"amount\" + 1)")
                     } else {
                         withDefinition("GENERATED ALWAYS AS (AMOUNT + 1) STORED")
                     }

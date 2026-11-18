@@ -60,9 +60,9 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
     fun testUByteWithCheckConstraint() {
         withTables(UByteTable) {
             val ddlEnding = when (currentDialectTest) {
-                is MysqlDialect -> "(ubyte TINYINT UNSIGNED NOT NULL)"
-                is SQLServerDialect -> "(ubyte TINYINT NOT NULL)"
-                else -> "CHECK (ubyte BETWEEN 0 and ${UByte.MAX_VALUE}))"
+                is MysqlDialect -> "(${identity(UByteTable.unsignedByte)} TINYINT UNSIGNED NOT NULL)"
+                is SQLServerDialect -> "(${identity(UByteTable.unsignedByte)} TINYINT NOT NULL)"
+                else -> "CHECK (${identity(UByteTable.unsignedByte)} BETWEEN 0 and ${UByte.MAX_VALUE}))"
             }
             assertTrue(UByteTable.ddl.single().endsWith(ddlEnding, ignoreCase = true))
 
@@ -77,7 +77,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
             // test that column itself blocks same out-of-range value that compiler blocks
             assertFailAndRollback("Check constraint violation (or out-of-range error in MySQL/MariaDB/SQL Server)") {
                 val tableName = UByteTable.nameInDatabaseCase()
-                val columnName = UByteTable.unsignedByte.nameInDatabaseCase()
+                val columnName = identity(UByteTable.unsignedByte)
                 val outOfRangeValue = UByte.MAX_VALUE + 1u
                 exec("""INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)""")
             }
@@ -90,7 +90,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
         withDb(TestDB.ALL_H2_V2 - TestDB.H2_V2_PSQL + TestDB.SQLITE) { testDb ->
             try {
                 val tableName = UByteTable.nameInDatabaseCase()
-                val columnName = UByteTable.unsignedByte.nameInDatabaseCase()
+                val columnName = identity(UByteTable.unsignedByte)
                 // create table using previous column type TINYINT
                 exec("""CREATE TABLE ${addIfNotExistsIfSupported()}$tableName ($columnName TINYINT NOT NULL)""")
 
@@ -138,9 +138,9 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
     fun testUShortWithCheckConstraint() {
         withTables(UShortTable) {
             val ddlEnding = if (currentDialectTest is MysqlDialect) {
-                "(ushort SMALLINT UNSIGNED NOT NULL)"
+                "(${identity(UShortTable.unsignedShort)} SMALLINT UNSIGNED NOT NULL)"
             } else {
-                "CHECK (ushort BETWEEN 0 and ${UShort.MAX_VALUE}))"
+                "CHECK (${identity(UShortTable.unsignedShort)} BETWEEN 0 and ${UShort.MAX_VALUE}))"
             }
             assertTrue(UShortTable.ddl.single().endsWith(ddlEnding, ignoreCase = true))
 
@@ -155,7 +155,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
             // test that column itself blocks same out-of-range value that compiler blocks
             assertFailAndRollback("Check constraint violation (or out-of-range error in MySQL/MariaDB)") {
                 val tableName = UShortTable.nameInDatabaseCase()
-                val columnName = UShortTable.unsignedShort.nameInDatabaseCase()
+                val columnName = identity(UShortTable.unsignedShort)
                 val outOfRangeValue = UShort.MAX_VALUE + 1u
                 exec("""INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)""")
             }
@@ -167,7 +167,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
         withDb { testDb ->
             try {
                 val tableName = UShortTable.nameInDatabaseCase()
-                val columnName = UShortTable.unsignedShort.nameInDatabaseCase()
+                val columnName = identity(UShortTable.unsignedShort)
                 // create table using previous column type SMALLINT
                 exec("""CREATE TABLE ${addIfNotExistsIfSupported()}$tableName ($columnName SMALLINT NOT NULL)""")
 
@@ -215,9 +215,9 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
     fun testUIntWithCheckConstraint() {
         withTables(UIntTable) {
             val ddlEnding = if (currentDialectTest is MysqlDialect) {
-                "(uint INT UNSIGNED NOT NULL)"
+                "(${identity(UIntTable.unsignedInt)} INT UNSIGNED NOT NULL)"
             } else {
-                "CHECK (uint BETWEEN 0 and ${UInt.MAX_VALUE}))"
+                "CHECK (${identity(UIntTable.unsignedInt)} BETWEEN 0 and ${UInt.MAX_VALUE}))"
             }
             assertTrue(UIntTable.ddl.single().endsWith(ddlEnding, ignoreCase = true))
 
@@ -232,7 +232,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
             // test that column itself blocks same out-of-range value that compiler blocks
             assertFailAndRollback("Check constraint violation (or out-of-range error in MySQL/MariaDB)") {
                 val tableName = UIntTable.nameInDatabaseCase()
-                val columnName = UIntTable.unsignedInt.nameInDatabaseCase()
+                val columnName = identity(UIntTable.unsignedInt)
                 val outOfRangeValue = UInt.MAX_VALUE.toLong() + 1L
                 exec("""INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)""")
             }
@@ -259,7 +259,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
         withDb(excludeSettings = listOf(TestDB.ORACLE)) { testDb ->
             try {
                 val tableName = UIntTable.nameInDatabaseCase()
-                val columnName = UIntTable.unsignedInt.nameInDatabaseCase()
+                val columnName = identity(UIntTable.unsignedInt)
                 // create table using previous column type INT
                 exec("""CREATE TABLE ${addIfNotExistsIfSupported()}$tableName ($columnName INT NOT NULL)""")
 

@@ -24,7 +24,7 @@ class NumericColumnTypesTests : DatabaseTestsBase() {
         }
 
         withTables(tester) { testDb ->
-            val columnName = tester.short.nameInDatabaseCase()
+            val columnName = identity(tester.short)
             val ddlEnding = when (testDb) {
                 TestDB.SQLITE, TestDB.ORACLE -> "CHECK ($columnName BETWEEN ${Short.MIN_VALUE} and ${Short.MAX_VALUE}))"
                 else -> "($columnName ${tester.short.columnType} NOT NULL)"
@@ -54,7 +54,7 @@ class NumericColumnTypesTests : DatabaseTestsBase() {
         }
 
         withTables(tester) { testDb ->
-            val columnName = tester.byte.nameInDatabaseCase()
+            val columnName = identity(tester.byte)
             val ddlEnding = when (testDb) {
                 in TestDB.ALL_POSTGRES_LIKE, TestDB.ORACLE, TestDB.SQLITE, TestDB.SQLSERVER ->
                     "CHECK ($columnName BETWEEN ${Byte.MIN_VALUE} and ${Byte.MAX_VALUE}))"
@@ -89,7 +89,7 @@ class NumericColumnTypesTests : DatabaseTestsBase() {
         }
 
         withTables(tester) { testDb ->
-            val columnName = tester.integer.nameInDatabaseCase()
+            val columnName = identity(tester.integer)
             val ddlEnding = when (testDb) {
                 TestDB.SQLITE, TestDB.ORACLE -> "CHECK ($columnName BETWEEN ${Int.MIN_VALUE} and ${Int.MAX_VALUE}))"
                 else -> "($columnName ${tester.integer.columnType} NOT NULL)"
@@ -119,7 +119,7 @@ class NumericColumnTypesTests : DatabaseTestsBase() {
         }
 
         withTables(tester) { testDb ->
-            val columnName = tester.long.nameInDatabaseCase()
+            val columnName = identity(tester.long)
             val ddlEnding = when (testDb) {
                 TestDB.ORACLE -> "CHECK ($columnName BETWEEN ${Long.MIN_VALUE} and ${Long.MAX_VALUE}))"
                 else -> "($columnName ${tester.long.columnType} NOT NULL)"
@@ -153,7 +153,7 @@ class NumericColumnTypesTests : DatabaseTestsBase() {
         }
 
         withTables(tester) { testDb ->
-            val columnName = tester.ubyte.nameInDatabaseCase()
+            val columnName = identity(tester.ubyte)
             val ddlEnding = when (testDb) {
                 in TestDB.ALL_MYSQL_MARIADB, TestDB.SQLSERVER ->
                     "($columnName ${tester.ubyte.columnType} NOT NULL)"
@@ -188,7 +188,7 @@ class NumericColumnTypesTests : DatabaseTestsBase() {
         }
 
         withTables(tester) { testDb ->
-            val columnName = tester.ushort.nameInDatabaseCase()
+            val columnName = identity(tester.ushort)
             val ddlEnding = when (testDb) {
                 in TestDB.ALL_MYSQL_MARIADB -> "($columnName ${tester.ushort.columnType} NOT NULL)"
                 else -> "CHECK ($columnName BETWEEN ${UShort.MIN_VALUE} and ${UShort.MAX_VALUE}))"
@@ -218,7 +218,7 @@ class NumericColumnTypesTests : DatabaseTestsBase() {
         }
 
         withTables(tester) { testDb ->
-            val columnName = tester.uinteger.nameInDatabaseCase()
+            val columnName = identity(tester.uinteger)
             val ddlEnding = when (testDb) {
                 in TestDB.ALL_MYSQL_MARIADB -> "($columnName ${tester.uinteger.columnType} NOT NULL)"
                 else -> "CHECK ($columnName BETWEEN ${UInt.MIN_VALUE} and ${UInt.MAX_VALUE}))"
@@ -312,20 +312,20 @@ class NumericColumnTypesTests : DatabaseTestsBase() {
         withTables(tester) {
             assertEquals(
                 "CREATE TABLE ${addIfNotExistsIfSupported()}${tester.nameInDatabaseCase()} (" +
-                    "${tester.byte.nameInDatabaseCase()} ${tester.byte.columnType} NOT NULL, " +
-                    "${tester.ubyte.nameInDatabaseCase()} ${tester.ubyte.columnType} NOT NULL, " +
-                    "${tester.short.nameInDatabaseCase()} ${tester.short.columnType} NOT NULL, " +
-                    "${tester.ushort.nameInDatabaseCase()} ${tester.ushort.columnType} NOT NULL, " +
-                    "${tester.integer.nameInDatabaseCase()} ${tester.integer.columnType} NOT NULL, " +
-                    "${tester.uinteger.nameInDatabaseCase()} ${tester.uinteger.columnType} NOT NULL, " +
-                    "${tester.long.nameInDatabaseCase()} ${tester.long.columnType} NOT NULL, " +
-                    "CONSTRAINT ${"custom_byte_check".inProperCase()} CHECK (${tester.byte.nameInDatabaseCase()} BETWEEN ${Byte.MIN_VALUE} AND ${Byte.MAX_VALUE}), " +
-                    "CONSTRAINT ${"custom_ubyte_check".inProperCase()} CHECK (${tester.ubyte.nameInDatabaseCase()} BETWEEN 0 AND ${UByte.MAX_VALUE}), " +
-                    "CONSTRAINT ${"custom_short_check".inProperCase()} CHECK (${tester.short.nameInDatabaseCase()} BETWEEN ${Short.MIN_VALUE} AND ${Short.MAX_VALUE}), " +
-                    "CONSTRAINT ${"custom_ushort_check".inProperCase()} CHECK (${tester.ushort.nameInDatabaseCase()} BETWEEN 0 AND ${UShort.MAX_VALUE}), " +
-                    "CONSTRAINT ${"custom_integer_check".inProperCase()} CHECK (${tester.integer.nameInDatabaseCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE}), " +
-                    "CONSTRAINT ${"custom_uinteger_check".inProperCase()} CHECK (${tester.uinteger.nameInDatabaseCase()} BETWEEN 0 AND ${UInt.MAX_VALUE}), " +
-                    "CONSTRAINT ${"custom_long_check".inProperCase()} CHECK (${tester.long.nameInDatabaseCase()} BETWEEN ${Long.MIN_VALUE} AND ${Long.MAX_VALUE}))",
+                    "${identity(tester.byte)} ${tester.byte.columnType} NOT NULL, " +
+                    "${identity(tester.ubyte)} ${tester.ubyte.columnType} NOT NULL, " +
+                    "${identity(tester.short)} ${tester.short.columnType} NOT NULL, " +
+                    "${identity(tester.ushort)} ${tester.ushort.columnType} NOT NULL, " +
+                    "${identity(tester.integer)} ${tester.integer.columnType} NOT NULL, " +
+                    "${identity(tester.uinteger)} ${tester.uinteger.columnType} NOT NULL, " +
+                    "${identity(tester.long)} ${tester.long.columnType} NOT NULL, " +
+                    "CONSTRAINT ${"custom_byte_check".inProperCase()} CHECK (${identity(tester.byte)} BETWEEN ${Byte.MIN_VALUE} AND ${Byte.MAX_VALUE}), " +
+                    "CONSTRAINT ${"custom_ubyte_check".inProperCase()} CHECK (${identity(tester.ubyte)} BETWEEN 0 AND ${UByte.MAX_VALUE}), " +
+                    "CONSTRAINT ${"custom_short_check".inProperCase()} CHECK (${identity(tester.short)} BETWEEN ${Short.MIN_VALUE} AND ${Short.MAX_VALUE}), " +
+                    "CONSTRAINT ${"custom_ushort_check".inProperCase()} CHECK (${identity(tester.ushort)} BETWEEN 0 AND ${UShort.MAX_VALUE}), " +
+                    "CONSTRAINT ${"custom_integer_check".inProperCase()} CHECK (${identity(tester.integer)} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE}), " +
+                    "CONSTRAINT ${"custom_uinteger_check".inProperCase()} CHECK (${identity(tester.uinteger)} BETWEEN 0 AND ${UInt.MAX_VALUE}), " +
+                    "CONSTRAINT ${"custom_long_check".inProperCase()} CHECK (${identity(tester.long)} BETWEEN ${Long.MIN_VALUE} AND ${Long.MAX_VALUE}))",
                 tester.ddl
             )
         }

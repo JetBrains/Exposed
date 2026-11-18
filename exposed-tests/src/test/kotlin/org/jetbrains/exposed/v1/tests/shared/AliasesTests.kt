@@ -331,11 +331,11 @@ class AliasesTests : DatabaseTestsBase() {
             }
 
             val expectedQuery = "SELECT COALESCE(input.input_sum, 0) inventory FROM " +
-                """(SELECT ${subInvoices.nameInDatabaseCase()}.${subInvoices.productId.nameInDatabaseCase()}, """ +
-                """COALESCE(SUM(${subInvoices.nameInDatabaseCase()}.${subInvoices.mainAmount.nameInDatabaseCase()}), 0) input_sum """ +
+                """(SELECT ${subInvoices.nameInDatabaseCase()}.${identity(subInvoices.productId)}, """ +
+                """COALESCE(SUM(${subInvoices.nameInDatabaseCase()}.${identity(subInvoices.mainAmount)}), 0) input_sum """ +
                 """FROM ${subInvoices.nameInDatabaseCase()} """ +
-                """WHERE ${subInvoices.nameInDatabaseCase()}.${subInvoices.isDraft.nameInDatabaseCase()} = $booleanValue """ +
-                """GROUP BY ${subInvoices.nameInDatabaseCase()}.${subInvoices.productId.nameInDatabaseCase()}) input"""
+                """WHERE ${subInvoices.nameInDatabaseCase()}.${identity(subInvoices.isDraft)} = $booleanValue """ +
+                """GROUP BY ${subInvoices.nameInDatabaseCase()}.${identity(subInvoices.productId)}) input"""
 
             assertEquals(
                 expectedQuery,
@@ -399,9 +399,9 @@ class AliasesTests : DatabaseTestsBase() {
             .toString().lowercase()
 
         withTables(tester) {
-            assertEquals("all_weight.weight", query[column].toExpressionString())
-            assertEquals("all_weight.weight", query[column as ExpressionWithColumnType<Int>].toExpressionString())
-            assertEquals("all_weight.weight", query[column as Expression<Int>].toExpressionString())
+            assertEquals("all_weight.${identity(column).lowercase()}", query[column].toExpressionString())
+            assertEquals("all_weight.${identity(column).lowercase()}", query[column as ExpressionWithColumnType<Int>].toExpressionString())
+            assertEquals("all_weight.${identity(column).lowercase()}", query[column as Expression<Int>].toExpressionString())
         }
     }
 }

@@ -47,10 +47,10 @@ class ConnectionTests : DatabaseTestsBase() {
             val ageType = if (h2Dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) "INTEGER" else "INT"
 
             val expected = setOf(
-                ColumnMetadata(People.id.nameInDatabaseCase(), Types.BIGINT, idType, false, 64, null, h2Dialect.h2Mode != H2Dialect.H2CompatibilityMode.Oracle, null),
-                ColumnMetadata(People.firstName.nameInDatabaseCase(), Types.VARCHAR, firstNameType, true, 80, null, false, null),
-                ColumnMetadata(People.lastName.nameInDatabaseCase(), Types.VARCHAR, lastNameType, false, 42, null, false, "Doe"),
-                ColumnMetadata(People.age.nameInDatabaseCase(), Types.INTEGER, ageType, false, 32, null, false, "18"),
+                ColumnMetadata(People.id.name, Types.BIGINT, idType, false, 64, null, h2Dialect.h2Mode != H2Dialect.H2CompatibilityMode.Oracle, null),
+                ColumnMetadata(People.firstName.name, Types.VARCHAR, firstNameType, true, 80, null, false, null),
+                ColumnMetadata(People.lastName.name, Types.VARCHAR, lastNameType, false, 42, null, false, "Doe"),
+                ColumnMetadata(People.age.name, Types.INTEGER, ageType, false, 32, null, false, "18"),
             )
 
             assertEquals(expected, columnMetadata)
