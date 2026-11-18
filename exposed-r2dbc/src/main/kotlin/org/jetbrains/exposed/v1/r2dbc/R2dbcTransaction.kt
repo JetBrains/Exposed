@@ -35,6 +35,7 @@ import org.jetbrains.exposed.v1.r2dbc.statements.api.origin
 import org.jetbrains.exposed.v1.r2dbc.statements.executeIn
 import org.jetbrains.exposed.v1.r2dbc.transactions.R2dbcTransactionInterface
 import org.jetbrains.exposed.v1.r2dbc.transactions.R2dbcTransactionManager
+import org.jetbrains.exposed.v1.r2dbc.transactions.RunningStatementCanceller
 import org.jetbrains.exposed.v1.r2dbc.transactions.createTransactionContext
 import org.jetbrains.exposed.v1.r2dbc.transactions.transactionManager
 import java.util.*
@@ -128,6 +129,15 @@ open class R2dbcTransaction(
             interceptors.forEach { it.afterRollback(this@R2dbcTransaction) }
             userdata.clear()
         }
+    }
+
+    /**
+     * Asks the database to abort the statement that may still be executing on this transaction's connection,
+     * if the underlying R2DBC driver supports it and [R2dbcDatabaseConfig.cancelRunningStatementOnCancellation] is enabled.
+     */
+    internal suspend fun cancelRunningStatement() {
+        if ((db.config as? R2dbcDatabaseConfig)?.cancelRunningStatementOnCancellation == false) return
+        (transactionImpl as? RunningStatementCanceller)?.cancelRunningStatement()
     }
 
     /** Adds the specified [StatementInterceptor] to act on this transaction. */
