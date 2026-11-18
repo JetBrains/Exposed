@@ -85,7 +85,7 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
         try {
             value.lowercase().toBooleanStrict()
         } catch (_: IllegalArgumentException) {
-            error("Unexpected value of type Boolean: $value")
+            unexpectedValue("Boolean", value)
         }
     }
 

@@ -3,6 +3,7 @@ package org.jetbrains.exposed.v1.core.datetime
 import org.jetbrains.exposed.v1.core.ColumnType
 import org.jetbrains.exposed.v1.core.IDateColumnType
 import org.jetbrains.exposed.v1.core.statements.api.RowApi
+import org.jetbrains.exposed.v1.core.unexpectedValue
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.OracleDialect
@@ -112,7 +113,7 @@ abstract class OffsetDateTimeColumnType<T> : ColumnType<T>(), IDateColumnType {
                 OffsetDateTime.parse(value)
             }
         }
-        else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+        else -> unexpectedValue("OffsetDateTime", value)
     }
 
     override fun valueFromDB(value: Any): T? = fromOffsetDateTime(offsetDatetimeValueFromDB(value))
