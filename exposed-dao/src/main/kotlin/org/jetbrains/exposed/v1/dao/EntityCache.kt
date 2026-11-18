@@ -181,6 +181,7 @@ class EntityCache(private val transaction: Transaction) {
      */
     fun flush(tables: Iterable<IdTable<*>>) {
         if (flushingEntities) return
+        if (inserts.isEmpty() && updates.isEmpty()) return
         try {
             flushingEntities = true
             val insertedTables = inserts.keys
