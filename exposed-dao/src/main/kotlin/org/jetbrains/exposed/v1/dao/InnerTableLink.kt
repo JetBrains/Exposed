@@ -131,7 +131,7 @@ class InnerTableLink<SID : Any, Source : Entity<SID>, ID : Any, Target : Entity<
         }
 
         // current entity updated
-        tx.registerChange(o.klass, o.id, EntityChangeType.Updated)
+        tx.registerChange(o.klass, o.id, EntityChangeType.Updated, o)
 
         // linked entities updated
         val targetClass = (value.firstOrNull() ?: oldValue.firstOrNull())?.klass
