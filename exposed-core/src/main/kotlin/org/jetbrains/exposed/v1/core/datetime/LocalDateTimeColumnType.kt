@@ -128,7 +128,10 @@ abstract class LocalDateTimeColumnType<T> : ColumnType<T>(), IDateColumnType {
             currentDialect is SQLiteDialect -> {
                 SQLITE_ORACLE_DATETIME_FORMAT.format(localDateTime)
             }
-            else -> localDateTime.toSqlTimestamp()
+            else -> {
+                validateJdbcTimestampRange(localDateTime)
+                localDateTime.toSqlTimestamp()
+            }
         }
     }
 
@@ -177,4 +180,20 @@ internal fun LocalDateTime.toSqlTimestamp(
 ) = toInstant(timeZone).let {
     java.sql.Timestamp(it.toEpochMilliseconds())
         .apply { this.nanos = it.nanosecondsOfSecond }
+}
+
+/**
+ * Throws an [IllegalArgumentException] if [localDateTime] cannot be bound as a JDBC timestamp parameter without
+ * being silently replaced by a different value, which would make the surrounding condition match rows it should
+ * not (or none at all).
+ */
+internal fun validateJdbcTimestampRange(localDateTime: LocalDateTime) {
+    val instant = localDateTime.toInstant(TimeZone.currentSystemDefault())
+
+    require(instant.isRepresentableAsEpochMillis()) {
+        "Value $localDateTime is out of range for a DATETIME column: it is beyond what a JDBC timestamp parameter " +
+            "can represent (roughly years -292275055 to 292278994). Binding it would silently send a different " +
+            "value to the database, making the condition match unrelated rows or none at all. " +
+            "Use a value within the supported range."
+    }
 }
