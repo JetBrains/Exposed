@@ -1,8 +1,11 @@
 package org.jetbrains.exposed.v1.core.statements.api
 
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect.H2CompatibilityMode
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLColumnTypes
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.core.vendors.h2Mode
 import java.sql.Types
@@ -28,6 +31,7 @@ abstract class ExposedDatabaseMetadata(val database: String) {
     abstract val identifierManager: IdentifierManagerApi
 
     /** Returns whether a defined column is of the same type as the column to which it is mapped in the database. */
+    @OptIn(InternalApi::class)
     fun areEquivalentColumnTypes(
         columnMetadataSqlType: String,
         columnMetadataType: Int,
@@ -36,6 +40,7 @@ abstract class ExposedDatabaseMetadata(val database: String) {
         return when {
             columnMetadataSqlType.equals(columnType, ignoreCase = true) -> true
             currentDialect is H2Dialect -> areEquivalentColumnTypesH2(columnMetadataSqlType, columnMetadataType, columnType)
+            currentDialect is PostgreSQLDialect -> PostgreSQLColumnTypes.areEquivalent(columnMetadataSqlType, columnType)
             else -> false
         }
     }
