@@ -14,6 +14,7 @@ import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.expectException
 import org.junit.jupiter.api.Test
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class UnionTests : DatabaseTestsBase() {
@@ -84,20 +85,52 @@ class UnionTests : DatabaseTestsBase() {
         withCitiesAndUsers(TestDB.ALL_MYSQL) { _, users, _ ->
             val usersQuery = users.selectAll()
             val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
+
+            // Default withParentheses=true: (UNION ALL) INTERSECT ensures consistent results
+            usersQuery.unionAll(usersQuery).intersect(sergeyQuery).map { it[users.id] }.apply {
+                assertEquals(1, size)
+                assertEquals("sergey", single())
+            }
+        }
+    }
+
+    @Test
+    fun testIntersectWithoutParentheses() {
+        withCitiesAndUsers(TestDB.ALL_MYSQL) { _, users, _ ->
+            val usersQuery = users.selectAll()
+            val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
             val expectedUsers = usersQuery.map { it[users.id] } + "sergey"
             val intersectAppliedFirst = when (currentDialect) {
                 is PostgreSQLDialect, is SQLServerDialect, is MariaDBDialect, is H2Dialect -> true
                 else -> false
             }
-            usersQuery.unionAll(usersQuery).intersect(sergeyQuery).map { it[users.id] }.apply {
+            // withParentheses=false preserves legacy behavior (no wrapping)
+            usersQuery.unionAll(usersQuery).intersect(sergeyQuery, withParentheses = false).map { it[users.id] }.apply {
                 if (intersectAppliedFirst) {
                     assertEquals(6, size)
                     assertEqualCollections(this, expectedUsers)
                 } else {
                     assertEquals(1, size)
-                    assertEquals("sergey", this.single())
+                    assertEquals("sergey", single())
                 }
             }
+        }
+    }
+
+    @Test
+    fun testSetOperationGeneratesParentheses() {
+        withCitiesAndUsers { _, users, _ ->
+            val q1 = users.selectAll().where { users.id eq "andrey" }
+            val q2 = users.selectAll().where { users.id eq "sergey" }
+            val q3 = users.selectAll().where { users.id eq "eugene" }
+
+            val withParens = q1.union(q2).intersect(q3)
+            val sqlWithParens = withParens.prepareSQL(QueryBuilder(false))
+            assertTrue(sqlWithParens.startsWith("("))
+
+            val withoutParens = q1.union(q2).intersect(q3, withParentheses = false)
+            val sqlWithoutParens = withoutParens.prepareSQL(QueryBuilder(false))
+            assertFalse(sqlWithoutParens.startsWith("("))
         }
     }
 
