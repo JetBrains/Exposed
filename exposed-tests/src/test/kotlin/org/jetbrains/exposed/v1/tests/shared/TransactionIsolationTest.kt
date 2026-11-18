@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.sql.Connection
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class TransactionIsolationTest : DatabaseTestsBase() {
@@ -46,10 +47,10 @@ class TransactionIsolationTest : DatabaseTestsBase() {
 
         val manager = TransactionManager.managerFor(db)
 
-        transaction(db) {
-            // transaction manager should use database default since no level is provided other than hikari
-            assertEquals(Database.getDefaultIsolationLevel(db), manager.defaultIsolationLevel)
+        // Before a transaction caches the DataSource settings, the manager uses the database default.
+        assertEquals(Database.getDefaultIsolationLevel(db), manager.defaultIsolationLevel)
 
+        transaction(db) {
             // database level should be set by hikari dataSource
             assertTransactionIsolationLevel(dialect, Connection.TRANSACTION_REPEATABLE_READ)
             // after first connection, transaction manager should use hikari level by default
