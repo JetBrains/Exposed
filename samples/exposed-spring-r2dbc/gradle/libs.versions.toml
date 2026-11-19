@@ -1,0 +1,25 @@
+[versions]
+kotlin = "2.3.21"
+springBootVersion = "4.1.2"
+springDependencyManagement = "1.1.7"
+exposed = "1.6.1"
+kotlinxCoroutines = "1.11.0"
+
+[libraries]
+kotlinReflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
+kotlinxCoroutinesReactor = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-reactor", version.ref = "kotlinxCoroutines" }
+springBootStarterWebFlux = { module = "org.springframework.boot:spring-boot-starter-webflux" }
+exposedSpringbootR2dbcStarter = { group = "org.jetbrains.exposed", name = "exposed-spring-boot4-starter-r2dbc", version.ref = "exposed" }
+r2dbcPostgresql = { group = "org.postgresql", name = "r2dbc-postgresql" }
+
+springBootStarterWebFluxTest = { module = "org.springframework.boot:spring-boot-starter-webflux-test" }
+springBootTestcontainers = { module = "org.springframework.boot:spring-boot-testcontainers" }
+testcontainersPostgresql = { module = "org.testcontainers:testcontainers-postgresql" }
+testcontainersR2dbc = { module = "org.testcontainers:testcontainers-r2dbc" }
+junitPlatformLauncher = { module = "org.junit.platform:junit-platform-launcher" }
+
+[plugins]
+kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlinPluginSpring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
+orgSpringframeworkBoot = { id = "org.springframework.boot", version.ref = "springBootVersion" }
+ioSpringDependencyManagement = { id = "io.spring.dependency-management", version.ref = "springDependencyManagement" }

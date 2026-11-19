@@ -1,3 +1,0 @@
-/gradlew text eol=lf
-*.bat text eol=crlf
-*.jar binary
