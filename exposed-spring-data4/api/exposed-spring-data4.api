@@ -12,7 +12,17 @@ public abstract interface annotation class org/jetbrains/exposed/v1/spring/data/
 	public abstract fun value ()[Ljava/lang/String;
 }
 
+public abstract interface annotation class org/jetbrains/exposed/v1/spring/data/ExposedColumn : java/lang/annotation/Annotation {
+	public abstract fun name ()Ljava/lang/String;
+}
+
 public abstract interface class org/jetbrains/exposed/v1/spring/data/ExposedCrudRepository : org/springframework/data/repository/ListCrudRepository, org/springframework/data/repository/ListPagingAndSortingRepository {
+}
+
+public abstract interface annotation class org/jetbrains/exposed/v1/spring/data/ExposedReferencedBy : java/lang/annotation/Annotation {
+	public abstract fun column ()Ljava/lang/String;
+	public abstract fun table ()Ljava/lang/Class;
+	public abstract fun target ()Ljava/lang/String;
 }
 
 public abstract interface annotation class org/jetbrains/exposed/v1/spring/data/ExposedRepositoriesConfig : java/lang/annotation/Annotation {
@@ -107,9 +117,11 @@ public final class org/jetbrains/exposed/v1/spring/data/query/QueryKt {
 public final class org/jetbrains/exposed/v1/spring/data/repository/ExposedRepositoryConfigExtension : org/springframework/data/repository/config/RepositoryConfigurationExtensionSupport {
 	public static final field Companion Lorg/jetbrains/exposed/v1/spring/data/repository/ExposedRepositoryConfigExtension$Companion;
 	public static final field MAPPING_CONTEXT_BEAN_NAME Ljava/lang/String;
+	public static final field TABLE_REGISTRY_BEAN_NAME Ljava/lang/String;
 	public fun <init> ()V
 	public fun getModuleIdentifier ()Ljava/lang/String;
 	public fun getModuleName ()Ljava/lang/String;
+	public fun getRepositoryAotProcessor ()Ljava/lang/Class;
 	public fun getRepositoryFactoryBeanClassName ()Ljava/lang/String;
 	public fun postProcess (Lorg/springframework/beans/factory/support/BeanDefinitionBuilder;Lorg/springframework/data/repository/config/AnnotationRepositoryConfigurationSource;)V
 	public fun registerBeansForRoot (Lorg/springframework/beans/factory/support/BeanDefinitionRegistry;Lorg/springframework/data/repository/config/RepositoryConfigurationSource;)V

@@ -1,6 +1,6 @@
 # Exposed Spring Data in a GraalVM native image
 
-A small Spring Boot 4.1 application using `exposed-spring-data-starter` that is built and tested as a GraalVM native image. It
+A small Spring Boot 4.1 application using `exposed-spring-boot4-data-starter` that is built and tested as a GraalVM native image. It
 covers what the module registers for Spring AOT: repository beans, CRUD, derived and paged queries, DTO and interface projections, a
 dynamic projection, `query { }` default methods, a `Persistable` entity, auditing with named `AuditorAware` / `DateTimeProvider` beans
 and an entity callback.
@@ -53,7 +53,7 @@ The first `nativeTest` also builds Exposed and takes a few minutes; most of it i
 
 ## What the application needs to declare itself
 
-Everything the repositories need is registered by `exposed-spring-data` during AOT processing. The only exception is a projection type
+Everything the repositories need is registered by `exposed-spring-data4` during AOT processing. The only exception is a projection type
 that is only known when a method is called (a `Class<T>` argument or a `query<T> { }` type that doesn't appear in the method's return
 type): `CustomerAge` is used like that and is registered with `@RegisterReflectionForBinding` on `NativeSampleApplication`.
 
@@ -66,7 +66,7 @@ Verified with Oracle GraalVM 25.0.4 through `GRAALVM_HOME` and with GraalVM CE 2
 toolchain (macOS, aarch64), Spring Boot 4.1.0, Native Build Tools 1.1.1: all 12 tests pass in the native image (`nativeTest`), and
 `nativeRun` starts the native application, which creates its schema.
 
-Gaps in `exposed-spring-data` found by this sample (fixed in the module's `ExposedSpringDataRuntimeHints`):
+Gaps in `exposed-spring-data4` found by this sample (fixed in the module's `ExposedSpringDataRuntimeHints`):
 
 - Spring Data reads the bean properties of Kotlin classes with kotlin-reflect (`KotlinBeanInfoFactory`). For the Kotlin factory bean of
   the repositories this resolves every type of its hierarchy by name, and failed with
