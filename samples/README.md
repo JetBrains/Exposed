@@ -10,3 +10,4 @@ This section contains samples for different cases of using Exposed.
 - [exposed-spring](exposed-spring): Spring Boot 3 based project with CRUD (Create, Read, Update, Delete) operations.
 - [exposed-migration](exposed-migration): Application illustrating how to generate migration scripts with Exposed.
 - [exposed-gradle-plugin-sample](exposed-gradle-plugin-sample): Project demonstrating the Exposed Gradle plugin and its `generateMigrations` task.
+- [exposed-spring-data-native](exposed-spring-data-native): Opt-in Spring Boot 4 application with `exposed-spring-data` repositories, built and tested as a GraalVM native image (`./gradlew nativeTest`); uses the Exposed sources of this checkout through a composite build.
