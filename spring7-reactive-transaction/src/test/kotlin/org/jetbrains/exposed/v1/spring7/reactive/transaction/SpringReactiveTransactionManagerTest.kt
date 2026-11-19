@@ -2,9 +2,11 @@ package org.jetbrains.exposed.v1.spring7.reactive.transaction
 
 import io.r2dbc.spi.ConnectionFactory
 import io.r2dbc.spi.R2dbcRollbackException
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
-import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -30,16 +32,7 @@ class SpringReactiveTransactionManagerTest {
         val cf2 = ConnectionFactorySpy(::ConnectionSpy)
         lateinit var con2: ConnectionSpy
 
-        /**
-         * This test has a teardown that unregisters databases. The intention
-         * is to only tear down databases registered by this test - but
-         * an earlier implementation accidentally unregistered the main
-         * database registered by the [SpringReactiveTransactionTestBase].
-         *
-         * To avoid doing such, we try to only unregister until we hit the
-         * one that was there before the start of this test.
-         */
-        private var databaseBeforeTestStart: R2dbcDatabase? = null
+        var managers = mutableListOf<SpringReactiveTransactionManager>()
 
         @BeforeAll
         @JvmStatic
@@ -51,37 +44,35 @@ class SpringReactiveTransactionManagerTest {
 
     @BeforeEach
     fun beforeTest() {
-        databaseBeforeTestStart = TransactionManager.primaryDatabase
         con1.clearMock()
         con2.clearMock()
     }
 
     @BeforeEach
     fun afterTest() {
-        while (TransactionManager.primaryDatabase != databaseBeforeTestStart) {
-            TransactionManager.primaryDatabase?.let { TransactionManager.closeAndUnregister(it) }
-        }
+        managers.forEach { it.close() }
+        managers.clear()
     }
 
     @Test
-    fun `set manager when transaction start`() = runTest {
-        val tm = getDefaultManager(cf1)
+    suspend fun `set manager when transaction start`() {
+        val tm = newTransactionManager(cf1)
         tm.executeAssert(false)
     }
 
     @Test
-    fun `set right transaction manager when two transaction manager exist`() = runTest {
-        val tm = getDefaultManager(cf1)
+    suspend fun `set right transaction manager when two transaction manager exist`() {
+        val tm = newTransactionManager(cf1)
         tm.executeAssert(false)
 
-        val tm2 = getDefaultManager(cf2)
+        val tm2 = newTransactionManager(cf2)
         tm2.executeAssert(false)
     }
 
     @Test
-    fun `set right transaction manager when two transaction manager with nested transaction template`() = runTest {
-        val tm = getDefaultManager(cf1)
-        val tm2 = getDefaultManager(cf2)
+    suspend fun `set right transaction manager when two transaction manager with nested transaction template`() {
+        val tm = newTransactionManager(cf1)
+        val tm2 = newTransactionManager(cf2)
 
         tm2.executeAssert(false) {
             tm.executeAssert(false)
@@ -94,8 +85,8 @@ class SpringReactiveTransactionManagerTest {
     }
 
     @Test
-    fun `connection commit and close when transaction success`() = runTest {
-        val tm = getDefaultManager(cf1)
+    suspend fun `connection commit and close when transaction success`() {
+        val tm = newTransactionManager(cf1)
         tm.executeAssert()
 
         assertTrue(con1.verifyCallOrder("setAutoCommit", "commit", "close"))
@@ -104,14 +95,17 @@ class SpringReactiveTransactionManagerTest {
     }
 
     @Test
-    fun `connection rollback and close when transaction fail`() = runTest {
-        val tm = getDefaultManager(cf1)
+    suspend fun `connection rollback and close when transaction fail`() {
+        val tm = newTransactionManager(cf1)
         val ex = RuntimeException("Application exception")
         try {
             tm.executeAssert {
                 throw ex
             }
         } catch (e: Exception) {
+            if (e is CancellationException) {
+                currentCoroutineContext().ensureActive()
+            }
             assertEquals(e::class.java, ex::class.java)
             assertEquals(e.message, ex.message)
         }
@@ -120,8 +114,8 @@ class SpringReactiveTransactionManagerTest {
     }
 
     @Test
-    fun `connection commit and closed when nested transaction success`() = runTest {
-        val tm = getDefaultManager(cf1)
+    suspend fun `connection commit and closed when nested transaction success`() {
+        val tm = newTransactionManager(cf1)
         tm.executeAssert {
             tm.executeAssert()
         }
@@ -131,9 +125,9 @@ class SpringReactiveTransactionManagerTest {
     }
 
     @Test
-    fun `connection commit and closed when two different transaction manager with nested transaction success`() = runTest {
-        val tm1 = getDefaultManager(cf1)
-        val tm2 = getDefaultManager(cf2)
+    suspend fun `connection commit and closed when two different transaction manager with nested transaction success`() {
+        val tm1 = newTransactionManager(cf1)
+        val tm2 = newTransactionManager(cf2)
 
         tm1.executeAssert {
             tm2.executeAssert()
@@ -150,9 +144,9 @@ class SpringReactiveTransactionManagerTest {
     }
 
     @Test
-    fun `connection rollback and closed when two different transaction manager with nested transaction failed`() = runTest {
-        val tm1 = getDefaultManager(cf1)
-        val tm2 = getDefaultManager(cf2)
+    suspend fun `connection rollback and closed when two different transaction manager with nested transaction failed`() {
+        val tm1 = newTransactionManager(cf1)
+        val tm2 = newTransactionManager(cf2)
         val ex = RuntimeException("Application exception")
         try {
             tm1.executeAssert {
@@ -165,6 +159,9 @@ class SpringReactiveTransactionManagerTest {
                 )
             }
         } catch (e: Exception) {
+            if (e is CancellationException) {
+                currentCoroutineContext().ensureActive()
+            }
             assertEquals(e::class.java, ex::class.java)
             assertEquals(e.message, ex.message)
         }
@@ -178,9 +175,9 @@ class SpringReactiveTransactionManagerTest {
     }
 
     @Test
-    fun `transaction commit with transaction aware connection factory proxy`() = runTest {
+    suspend fun `transaction commit with transaction aware connection factory proxy`() {
         val transactionAwareCf = TransactionAwareConnectionFactoryProxy(cf1)
-        val tm = getDefaultManager(transactionAwareCf)
+        val tm = newTransactionManager(transactionAwareCf)
         tm.executeAssert()
 
         assertTrue(con1.verifyCallOrder("setAutoCommit", "commit"))
@@ -189,15 +186,18 @@ class SpringReactiveTransactionManagerTest {
     }
 
     @Test
-    fun `transaction rollback with transaction aware connection factory proxy`() = runTest {
+    suspend fun `transaction rollback with transaction aware connection factory proxy`() {
         val transactionAwareCf = TransactionAwareConnectionFactoryProxy(cf1)
-        val tm = getDefaultManager(transactionAwareCf)
+        val tm = newTransactionManager(transactionAwareCf)
         val ex = RuntimeException("Application exception")
         try {
             tm.executeAssert {
                 throw ex
             }
         } catch (e: Exception) {
+            if (e is CancellationException) {
+                currentCoroutineContext().ensureActive()
+            }
             assertEquals(e::class.java, ex::class.java)
             assertEquals(e.message, ex.message)
         }
@@ -208,10 +208,10 @@ class SpringReactiveTransactionManagerTest {
     }
 
     @Test
-    fun `transaction with exception on rollback`() = runTest {
+    suspend fun `transaction with exception on rollback`() {
         con1.mockRollback = { throw R2dbcRollbackException("Rollback failure") }
 
-        val tm = getDefaultManager(cf1)
+        val tm = newTransactionManager(cf1)
         assertFailsWith<UncategorizedR2dbcException> {
             tm.executeAssert {
                 assertEquals(false, it.isRollbackOnly)
@@ -226,8 +226,8 @@ class SpringReactiveTransactionManagerTest {
     }
 
     @Test
-    fun `nested transaction with commit`() = runTest {
-        val tm = getDefaultManager(cf1, R2dbcDatabaseConfig { useNestedTransactions = true })
+    suspend fun `nested transaction with commit`() {
+        val tm = newTransactionManager(cf1, R2dbcDatabaseConfig { useNestedTransactions = true })
 
         tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_NESTED) {
             assertTrue(it.isNewTransaction)
@@ -240,8 +240,8 @@ class SpringReactiveTransactionManagerTest {
     }
 
     @Test
-    fun `nested transaction with rollback`() = runTest {
-        val tm = getDefaultManager(cf1, R2dbcDatabaseConfig { useNestedTransactions = true })
+    suspend fun `nested transaction with rollback`() {
+        val tm = newTransactionManager(cf1, R2dbcDatabaseConfig { useNestedTransactions = true })
         tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_NESTED) {
             assertTrue(it.isNewTransaction)
             tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_NESTED) { status ->
@@ -257,8 +257,8 @@ class SpringReactiveTransactionManagerTest {
     }
 
     @Test
-    fun `requires new with commit`() = runTest {
-        val tm = getDefaultManager(cf1)
+    suspend fun `requires new with commit`() {
+        val tm = newTransactionManager(cf1)
         tm.executeAssert {
             assertTrue(it.isNewTransaction)
             tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_REQUIRES_NEW) { status ->
@@ -272,8 +272,8 @@ class SpringReactiveTransactionManagerTest {
     }
 
     @Test
-    fun `requires new with inner rollback`() = runTest {
-        val tm = getDefaultManager(cf1)
+    suspend fun `requires new with inner rollback`() {
+        val tm = newTransactionManager(cf1)
         tm.executeAssert {
             assertTrue(it.isNewTransaction)
             tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_REQUIRES_NEW) { status ->
@@ -289,8 +289,8 @@ class SpringReactiveTransactionManagerTest {
     }
 
     @Test
-    fun `not support with required transaction`() = runTest {
-        val tm = getDefaultManager(cf1)
+    suspend fun `not support with required transaction`() {
+        val tm = newTransactionManager(cf1)
         tm.executeAssert {
             assertTrue(it.isNewTransaction)
             tm.executeAssert(
@@ -310,8 +310,8 @@ class SpringReactiveTransactionManagerTest {
     }
 
     @Test
-    fun `mandatory with transaction`() = runTest {
-        val tm = getDefaultManager(cf1)
+    suspend fun `mandatory with transaction`() {
+        val tm = newTransactionManager(cf1)
         tm.executeAssert {
             assertTrue(it.isNewTransaction)
             tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_MANDATORY)
@@ -324,16 +324,16 @@ class SpringReactiveTransactionManagerTest {
     }
 
     @Test
-    fun `mandatory without transaction`() = runTest {
-        val tm = getDefaultManager(cf1)
+    suspend fun `mandatory without transaction`() {
+        val tm = newTransactionManager(cf1)
         assertFailsWith<IllegalTransactionStateException> {
             tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_MANDATORY)
         }
     }
 
     @Test
-    fun `support with transaction`() = runTest {
-        val tm = getDefaultManager(cf1)
+    suspend fun `support with transaction`() {
+        val tm = newTransactionManager(cf1)
         tm.executeAssert {
             assertTrue(it.isNewTransaction)
             tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_SUPPORTS)
@@ -346,8 +346,8 @@ class SpringReactiveTransactionManagerTest {
     }
 
     @Test
-    fun `support without transaction`() = runTest {
-        val tm = getDefaultManager(cf1)
+    suspend fun `support without transaction`() {
+        val tm = newTransactionManager(cf1)
         assertFailsWith<IllegalStateException> {
             tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_SUPPORTS)
         }
@@ -358,16 +358,16 @@ class SpringReactiveTransactionManagerTest {
     }
 
     @Test
-    fun `transaction timeout`() = runTest {
-        val tm = getDefaultManager(cf1)
+    suspend fun `transaction timeout`() {
+        val tm = newTransactionManager(cf1)
         tm.executeAssert(initializeConnection = true, timeout = 1) {
             assertEquals(1, TransactionManager.current().queryTimeout)
         }
     }
 
     @Test
-    fun `transaction timeout propagation`() = runTest {
-        val tm = getDefaultManager(cf1)
+    suspend fun `transaction timeout propagation`() {
+        val tm = newTransactionManager(cf1)
         tm.executeAssert(initializeConnection = true, timeout = 1) {
             tm.executeAssert(initializeConnection = true, timeout = 2) {
                 assertEquals(1, TransactionManager.current().queryTimeout)
@@ -376,13 +376,13 @@ class SpringReactiveTransactionManagerTest {
         }
     }
 
-    private fun getDefaultManager(
+    private fun newTransactionManager(
         connectionFactory: ConnectionFactory,
         databaseConfig: R2dbcDatabaseConfig.Builder = R2dbcDatabaseConfig.Builder()
     ): SpringReactiveTransactionManager = SpringReactiveTransactionManager(
         connectionFactory = connectionFactory,
         databaseConfig = databaseConfig.apply { explicitDialect = H2Dialect() }
-    )
+    ).also { managers += it }
 
     private suspend fun SpringReactiveTransactionManager.executeAssert(
         initializeConnection: Boolean = true,

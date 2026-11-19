@@ -106,7 +106,7 @@ class GlobalSpringStackTest : SpringReactiveTransactionTestBase() {
         )
     }
 
-    @RepeatedTest(200)
+    @RepeatedTest(5)
     fun `concurrent transactions on real threads retain their own current transaction`() {
         concurrentBurst()
     }

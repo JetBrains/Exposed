@@ -4,7 +4,6 @@ import io.r2dbc.spi.ConnectionFactory
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitFirstOrNull
-import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
@@ -34,14 +33,14 @@ class SpringTransactionSingleConnectionTest {
     val connectionFactory: ConnectionFactory = singleConnectionH2TestContainer.getBean(ConnectionFactory::class.java)
 
     @BeforeEach
-    fun beforeTest() = runTest {
+    suspend fun beforeTest() {
         transactionManager.execute {
             SchemaUtils.create(T1)
         }
     }
 
     @AfterEach
-    fun afterTest() = runTest {
+    suspend fun afterTest() {
         transactionManager.execute {
             SchemaUtils.drop(T1)
         }
@@ -49,7 +48,7 @@ class SpringTransactionSingleConnectionTest {
     }
 
     @Test
-    fun `start transaction with non default isolation level`() = runTest {
+    suspend fun `start transaction with non default isolation level`() {
         transactionManager.execute(
             isolationLevel = TransactionDefinition.ISOLATION_SERIALIZABLE,
         ) {
@@ -58,7 +57,7 @@ class SpringTransactionSingleConnectionTest {
     }
 
     @Test
-    fun `nested transaction with non default isolation level`() = runTest {
+    suspend fun `nested transaction with non default isolation level`() {
         transactionManager.execute(
             isolationLevel = TransactionDefinition.ISOLATION_SERIALIZABLE,
         ) {

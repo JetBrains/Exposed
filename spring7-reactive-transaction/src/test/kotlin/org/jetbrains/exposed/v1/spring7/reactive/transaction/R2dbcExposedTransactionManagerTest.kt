@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.v1.spring7.reactive.transaction
 
 import io.r2dbc.spi.ConnectionFactory
-import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
@@ -63,14 +62,14 @@ open class R2dbcExposedTransactionManagerTest : SpringReactiveTransactionTestBas
         .awaitSingle()
 
     @BeforeEach
-    fun beforeTest() = runTest {
+    suspend fun beforeTest() {
         transactionManager.execute {
             SchemaUtils.create(T1)
         }
     }
 
     @AfterEach
-    fun afterTest() = runTest {
+    suspend fun afterTest() {
         transactionManager.execute {
             SchemaUtils.drop(T1)
         }
@@ -95,7 +94,7 @@ open class R2dbcExposedTransactionManagerTest : SpringReactiveTransactionTestBas
 
     @RepeatedTest(5)
     @Commit
-    open fun testConnectionCombineWithExposedTransaction() = runTest {
+    open suspend fun testConnectionCombineWithExposedTransaction() {
         suspendTransaction {
             val rnd = Random().nextInt().toString()
             insert(rnd)
@@ -160,7 +159,7 @@ open class R2dbcExposedTransactionManagerTest : SpringReactiveTransactionTestBas
      * The nested transaction will be roll-back entire transaction when the transaction marks as rollback.
      */
     @RepeatedTest(5)
-    fun testConnectionWithNestedTransactionOuterRollback() = runTest {
+    suspend fun testConnectionWithNestedTransactionOuterRollback() {
         transactionManager.execute {
             insertRandom()
             assertEquals(1, getCount())
@@ -201,7 +200,7 @@ open class R2dbcExposedTransactionManagerTest : SpringReactiveTransactionTestBas
      * And since isolation level is READ_COMMITTED, the inner transaction can't see the changes of outer transaction.
      */
     @RepeatedTest(5)
-    fun testConnectionWithRequiresNewWithInnerTransactionRollback() = runTest {
+    suspend fun testConnectionWithRequiresNewWithInnerTransactionRollback() {
         transactionManager.execute {
             insertRandom()
             assertEquals(1, getCount())
@@ -251,7 +250,7 @@ open class R2dbcExposedTransactionManagerTest : SpringReactiveTransactionTestBas
      * Throw an exception cause no transaction exists.
      */
     @RepeatedTest(5)
-    open fun testPropagationMandatoryWithoutTransaction() = runTest {
+    open suspend fun testPropagationMandatoryWithoutTransaction() {
         assertFailsWith<IllegalTransactionStateException> {
             transactionManager.execute(TransactionDefinition.PROPAGATION_MANDATORY) {
                 insertRandom()
@@ -277,7 +276,7 @@ open class R2dbcExposedTransactionManagerTest : SpringReactiveTransactionTestBas
      * Execute non-transactionally if none exists.
      */
     @RepeatedTest(5)
-    open fun testPropagationSupportWithoutTransaction() = runTest {
+    open suspend fun testPropagationSupportWithoutTransaction() {
         transactionManager.execute(TransactionDefinition.PROPAGATION_SUPPORTS) {
             insertRandom()
         }

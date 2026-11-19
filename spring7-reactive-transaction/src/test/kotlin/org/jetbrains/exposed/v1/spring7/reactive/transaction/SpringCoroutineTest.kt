@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.v1.spring7.reactive.transaction
 
 import kotlinx.coroutines.*
-import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.insert
@@ -54,7 +53,7 @@ open class SpringCoroutineTest : SpringReactiveTransactionTestBase() {
     }
 
     @Test
-    fun `concurrent reactive transactions retain their own current transaction`() = runTest {
+    suspend fun `concurrent reactive transactions retain their own current transaction`() {
         val firstTransactionStarted = CompletableDeferred<String>()
         val secondTransactionStarted = CompletableDeferred<Unit>()
         val firstTransactionChecked = CompletableDeferred<Unit>()

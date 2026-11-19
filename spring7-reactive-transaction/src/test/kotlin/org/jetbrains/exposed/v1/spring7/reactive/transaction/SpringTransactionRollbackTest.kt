@@ -4,7 +4,6 @@ import io.r2dbc.spi.ConnectionFactories
 import io.r2dbc.spi.ConnectionFactory
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
@@ -36,18 +35,18 @@ class SpringTransactionRollbackTest {
     val container = AnnotationConfigApplicationContext(TransactionManagerAttributeSourceTestConfig::class.java)
 
     @BeforeEach
-    fun beforeTest() = runTest {
+    suspend fun beforeTest() {
         val testRollback = container.getBean(TestRollback::class.java)
         testRollback.init()
     }
 
     @AfterEach
-    fun afterTest() {
+    suspend fun afterTest() {
         container.close()
     }
 
     @Test
-    fun `test ExposedR2dbcException rollback`() = runTest {
+    suspend fun `test ExposedR2dbcException rollback`() {
         val testRollback = container.getBean(TestRollback::class.java)
         assertFailsWith<IllegalArgumentException> {
             testRollback.suspendTransaction {
@@ -60,7 +59,7 @@ class SpringTransactionRollbackTest {
     }
 
     @Test
-    fun `test RuntimeException rollback`() = runTest {
+    suspend fun `test RuntimeException rollback`() {
         val testRollback = container.getBean(TestRollback::class.java)
         assertFailsWith<RuntimeException> {
             testRollback.suspendTransaction {
@@ -74,7 +73,7 @@ class SpringTransactionRollbackTest {
     }
 
     @Test
-    fun `test check exception commit`() = runTest {
+    suspend fun `test check exception commit`() {
         val testRollback = container.getBean(TestRollback::class.java)
         assertFailsWith<Exception> {
             testRollback.suspendTransaction {
@@ -88,7 +87,7 @@ class SpringTransactionRollbackTest {
     }
 
     @Test
-    fun `exception in inner Tx causes rollback of outer Tx`() = runTest {
+    suspend fun `exception in inner Tx causes rollback of outer Tx`() {
         val testRollback = container.getBean(TestRollback::class.java)
 
         assertFailsWith<UnexpectedRollbackException> {
@@ -113,7 +112,7 @@ class SpringTransactionRollbackTest {
     }
 
     @Test
-    fun `isRollback is managed separately for different transactions`() = runTest {
+    suspend fun `isRollback is managed separately for different transactions`() {
         val testRollback = container.getBean(TestRollback::class.java)
 
         assertFailsWith<UnexpectedRollbackException> {
@@ -159,7 +158,7 @@ class SpringTransactionRollbackTest {
     }
 
     @Test
-    fun `requiresNew should rollback innerTx without affecting outerTx`() = runTest {
+    suspend fun `requiresNew should rollback innerTx without affecting outerTx`() {
         val testRollback = container.getBean(TestRollback::class.java)
 
         testRollback.suspendTransaction { // outer logicTx start
@@ -183,7 +182,7 @@ class SpringTransactionRollbackTest {
     }
 
     @Test
-    fun `supports should participate in existing transaction but not rollback when none exists`() = runTest {
+    suspend fun `supports should participate in existing transaction but not rollback when none exists`() {
         val testRollback = container.getBean(TestRollback::class.java)
 
         assertFailsWith<RuntimeException> {
@@ -218,7 +217,7 @@ class SpringTransactionRollbackTest {
     }
 
     @Test
-    fun `notSupported should suspend outer transaction and execute without transaction`() = runTest {
+    suspend fun `notSupported should suspend outer transaction and execute without transaction`() {
         val testRollback = container.getBean(TestRollback::class.java)
 
         testRollback.suspendTransaction {
@@ -240,7 +239,7 @@ class SpringTransactionRollbackTest {
     }
 
     @Test
-    fun `mandatory should fail if no existing transaction but participate if one exists`() = runTest {
+    suspend fun `mandatory should fail if no existing transaction but participate if one exists`() {
         val testRollback = container.getBean(TestRollback::class.java)
 
         assertFailsWith<IllegalTransactionStateException> {

@@ -2,7 +2,6 @@ package org.jetbrains.exposed.v1.spring7.reactive.transaction
 
 import io.r2dbc.spi.ConnectionFactories
 import io.r2dbc.spi.ConnectionFactory
-import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
@@ -43,7 +42,7 @@ open class NamedTransactionManagerTest {
     lateinit var recordingTransactionManager: RecordingTransactionManager
 
     @BeforeEach
-    open fun beforeTest() = runTest {
+    open suspend fun beforeTest() {
         suspendTransaction {
             SchemaUtils.create(Players)
 
@@ -52,7 +51,7 @@ open class NamedTransactionManagerTest {
     }
 
     @Test
-    fun `should not use differently named transaction manager`() = runTest {
+    suspend fun `should not use differently named transaction manager`() {
         assertEquals(
             1,
             playerService.countPlayers()

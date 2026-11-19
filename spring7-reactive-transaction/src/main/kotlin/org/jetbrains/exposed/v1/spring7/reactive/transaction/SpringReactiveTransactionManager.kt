@@ -12,6 +12,7 @@ import org.jetbrains.exposed.v1.core.transactions.transactionScope
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
+import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.currentOrNull
 import org.jetbrains.exposed.v1.r2dbc.transactions.transactionManager
 import org.reactivestreams.Publisher
@@ -37,12 +38,20 @@ class SpringReactiveTransactionManager(
     private val connectionFactory: ConnectionFactory,
     databaseConfig: R2dbcDatabaseConfig.Builder,
     private val showSql: Boolean = false,
-) : AbstractReactiveTransactionManager() {
+) : AbstractReactiveTransactionManager(), AutoCloseable {
 
     private val database: R2dbcDatabase = R2dbcDatabase.connect(
         connectionFactory = connectionFactory,
         databaseConfig = databaseConfig,
     )
+
+    /**
+     * Unregisters the [R2dbcDatabase] created by this transaction manager from [TransactionManager],
+     * so that it is not kept reachable after the Spring application context is closed.
+     */
+    override fun close() {
+        TransactionManager.closeAndUnregister(database)
+    }
 
     override fun doGetTransaction(
         synchronizationManager: TransactionSynchronizationManager

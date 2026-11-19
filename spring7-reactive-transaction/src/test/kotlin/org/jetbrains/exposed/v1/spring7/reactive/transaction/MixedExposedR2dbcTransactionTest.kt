@@ -6,7 +6,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
@@ -32,21 +31,21 @@ class MixedExposedR2dbcTransactionTest : SpringReactiveTransactionTestBase() {
     private lateinit var mixedTransactionService: MixedTransactionService
 
     @BeforeEach
-    fun setUp() = runTest {
+    suspend fun setUp() {
         suspendTransaction {
             SchemaUtils.create(CustomerTable)
         }
     }
 
     @AfterEach
-    fun tearDown() = runTest {
+    suspend fun tearDown() {
         suspendTransaction {
             SchemaUtils.drop(CustomerTable)
         }
     }
 
     @Test
-    fun testSuccessfulMixedTransaction() = runTest {
+    suspend fun testSuccessfulMixedTransaction() {
         mixedTransactionService.saveTwoThingsSpringTransactional(fail = false)
 
         val customers = suspendTransaction { CustomerTable.selectAll().toList() }
@@ -55,7 +54,7 @@ class MixedExposedR2dbcTransactionTest : SpringReactiveTransactionTestBase() {
     }
 
     @Test
-    fun testFailedMixedTransaction() = runTest {
+    suspend fun testFailedMixedTransaction() {
         assertFailsWith<RuntimeException> {
             mixedTransactionService.saveTwoThingsSpringTransactional(fail = true)
         }
@@ -66,7 +65,7 @@ class MixedExposedR2dbcTransactionTest : SpringReactiveTransactionTestBase() {
     }
 
     @Test
-    fun testSuccessfulRequiresNewTransactions() = runTest {
+    suspend fun testSuccessfulRequiresNewTransactions() {
         mixedTransactionService.withNewTransaction {
             mixedTransactionService.saveTwoThingsSpringTransactional(fail = false)
             mixedTransactionService.withNewTransaction {
@@ -80,7 +79,7 @@ class MixedExposedR2dbcTransactionTest : SpringReactiveTransactionTestBase() {
     }
 
     @Test
-    fun testFailedRequiresNewTransactions() = runTest {
+    suspend fun testFailedRequiresNewTransactions() {
         mixedTransactionService.withNewTransaction {
             mixedTransactionService.saveTwoThingsSpringTransactional(fail = false)
             assertFailsWith<RuntimeException> {
@@ -96,7 +95,7 @@ class MixedExposedR2dbcTransactionTest : SpringReactiveTransactionTestBase() {
     }
 
     @Test
-    fun testSuccessfulNestedTransactions() = runTest {
+    suspend fun testSuccessfulNestedTransactions() {
         mixedTransactionService.withNewTransaction {
             mixedTransactionService.saveTwoThingsSpringTransactional(fail = false)
             mixedTransactionService.withNestedTransaction {
@@ -110,7 +109,7 @@ class MixedExposedR2dbcTransactionTest : SpringReactiveTransactionTestBase() {
     }
 
     @Test
-    fun testFailedNestedTransactions() = runTest {
+    suspend fun testFailedNestedTransactions() {
         mixedTransactionService.withNewTransaction {
             mixedTransactionService.saveTwoThingsSpringTransactional(fail = false)
             assertFailsWith<RuntimeException> {
@@ -128,7 +127,7 @@ class MixedExposedR2dbcTransactionTest : SpringReactiveTransactionTestBase() {
     // This test mirrors SpringCoroutineTest.`concurrent reactive transactions retain their own current transaction`
     // but through the annotation-driven @Transactional path instead of TransactionalOperator.
     @Test
-    fun testInterleavingTransactionalSuspendMethodsRetainOwnTransaction() = runTest {
+    suspend fun testInterleavingTransactionalSuspendMethodsRetainOwnTransaction() {
         val firstTransactionStarted = CompletableDeferred<String>()
         val secondTransactionStarted = CompletableDeferred<Unit>()
         val firstTransactionChecked = CompletableDeferred<Unit>()

@@ -3,7 +3,6 @@
 package org.jetbrains.exposed.v1.spring7.reactive.transaction
 
 import kotlinx.coroutines.flow.singleOrNull
-import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
@@ -86,18 +85,18 @@ open class SpringTransactionEntityTest : SpringReactiveTransactionTestBase() {
     lateinit var service: Service
 
     @BeforeEach
-    open fun beforeTest() = runTest {
+    open suspend fun beforeTest() {
         service.init()
     }
 
     @AfterEach
-    fun afterTest() = runTest {
+    suspend fun afterTest() {
         service.cleanUp()
     }
 
     @Test
     @Commit
-    open fun test01() = runTest {
+    open suspend fun test01() {
         val customer = service.createCustomer("Alice1")
         service.createOrder(customer, "Product1")
         val order = service.findOrderByProduct("Product1")
@@ -109,7 +108,7 @@ open class SpringTransactionEntityTest : SpringReactiveTransactionTestBase() {
 
     @Test
     @Commit
-    fun test02() = runTest {
+    suspend fun test02() {
         service.doBoth("Bob", "Product2")
         val order = service.findOrderByProduct("Product2")
         assertNotNull(order)

@@ -3,7 +3,6 @@ package org.jetbrains.exposed.v1.spring7.reactive.transaction
 import io.r2dbc.spi.ConnectionFactories
 import io.r2dbc.spi.ConnectionFactory
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
@@ -31,19 +30,19 @@ open class SpringMultiContainerTransactionTest {
     val payments: Payments = paymentContainer.getBean(Payments::class.java)
 
     @BeforeEach
-    open fun beforeTest() = runTest {
+    open suspend fun beforeTest() {
         orders.init()
         payments.init()
     }
 
     @Test
-    open fun test1() = runTest {
+    open suspend fun test1() {
         Assertions.assertEquals(0, orders.findAll().size)
         Assertions.assertEquals(0, payments.findAll().size)
     }
 
     @Test
-    open fun test2() = runTest {
+    open suspend fun test2() {
         orders.create()
         Assertions.assertEquals(1, orders.findAll().size)
         payments.create()
@@ -51,7 +50,7 @@ open class SpringMultiContainerTransactionTest {
     }
 
     @Test
-    open fun test3() = runTest {
+    open suspend fun test3() {
         orders.suspendTransaction {
             payments.create()
             orders.create()
@@ -62,7 +61,7 @@ open class SpringMultiContainerTransactionTest {
     }
 
     @Test
-    open fun test4() = runTest {
+    open suspend fun test4() {
         kotlin.runCatching {
             orders.suspendTransaction {
                 orders.create()
@@ -75,7 +74,7 @@ open class SpringMultiContainerTransactionTest {
     }
 
     @Test
-    open fun test5() = runTest {
+    open suspend fun test5() {
         kotlin.runCatching {
             orders.suspendTransaction {
                 orders.create()
@@ -90,13 +89,13 @@ open class SpringMultiContainerTransactionTest {
     }
 
     @Test
-    open fun test6() = runTest {
+    open suspend fun test6() {
         Assertions.assertEquals(0, orders.findAllWithExposedTrxBlock().size)
         Assertions.assertEquals(0, payments.findAllWithExposedTrxBlock().size)
     }
 
     @Test
-    open fun test7() = runTest {
+    open suspend fun test7() {
         orders.createWithExposedTrxBlock()
         Assertions.assertEquals(1, orders.findAllWithExposedTrxBlock().size)
         payments.createWithExposedTrxBlock()
@@ -104,7 +103,7 @@ open class SpringMultiContainerTransactionTest {
     }
 
     @Test
-    open fun test8() = runTest {
+    open suspend fun test8() {
         orders.suspendTransaction {
             payments.createWithExposedTrxBlock()
             orders.createWithExposedTrxBlock()
@@ -115,7 +114,7 @@ open class SpringMultiContainerTransactionTest {
     }
 
     @Test
-    open fun test9() = runTest {
+    open suspend fun test9() {
         kotlin.runCatching {
             orders.suspendTransaction {
                 orders.createWithExposedTrxBlock()
@@ -128,7 +127,7 @@ open class SpringMultiContainerTransactionTest {
     }
 
     @Test
-    open fun test10() = runTest {
+    open suspend fun test10() {
         kotlin.runCatching {
             orders.suspendTransaction {
                 orders.createWithExposedTrxBlock()
