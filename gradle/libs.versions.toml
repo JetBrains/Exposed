@@ -35,6 +35,7 @@ springFramework6 = "6.2.19"
 springFramework7 = "7.0.8"
 springBoot3 = "3.5.8"
 springBoot4 = "4.1.0"
+springData4 = "4.1.1"
 
 spring-security-crypto = "7.0.0"
 commons-logging = "1.4.0"
@@ -102,6 +103,7 @@ spring6-test = { group = "org.springframework", name = "spring-test", version.re
 spring7-jdbc = { group = "org.springframework", name = "spring-jdbc", version.ref = "springFramework7" }
 spring7-context = { group = "org.springframework", name = "spring-context", version.ref = "springFramework7" }
 spring7-test = { group = "org.springframework", name = "spring-test", version.ref = "springFramework7" }
+spring-data4-commons = { group = "org.springframework.data", name = "spring-data-commons", version.ref = "springData4" }
 
 h2 = { group = "com.h2database", name = "h2", version.ref = "h2_v2" }
 
