@@ -124,11 +124,6 @@ whatever queued behind the conflict once it is closed."
   fi
 
   git push --force origin "HEAD:refs/heads/$SYNC_BRANCH"
-  assign_args=()
-  if [ -n "$assignee" ]; then
-    assign_args=(--assignee "$assignee")
-    log "conflict assigned to @$assignee (author of the conflicting fix)"
-  fi
   pr_url=$(gh pr create --base "$TARGET" --head "$SYNC_BRANCH" \
     --title "chore: Sync main into $TARGET (conflict)" \
     --body "$(cat <<EOF
@@ -147,7 +142,15 @@ How to resolve:
 The sweep skips further syncs while this PR is open, and resumes with
 everything that queued up behind the conflict once it is closed.
 EOF
-)" "${assign_args[@]}")
+)")
+  # Assignees and labels go through the issues API, which the sync app's
+  # permissions (contents + pull requests only) do not cover: they are
+  # best-effort and must never abort the escalation.
+  if [ -n "$assignee" ]; then
+    gh pr edit "$pr_url" --add-assignee "$assignee" 2>/dev/null \
+      && log "conflict assigned to @$assignee (author of the conflicting fix)" \
+      || log "note: could not assign @$assignee (app lacks issues access); assign manually"
+  fi
   gh pr edit "$pr_url" --add-label sync-conflict 2>/dev/null \
     || log "note: add a 'sync-conflict' label once for filtering"
   log "conflict escalated: $pr_url"
