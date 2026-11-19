@@ -9,6 +9,8 @@
 #
 # Requires the API_DOCS_TOKEN repository secret: a fine-grained personal
 # access token with Contents: read and write on JetBrains/exposed-api-docs.
+# The token is never written to disk: the checkout does not persist
+# credentials, and the push passes it in the URL of that one git call.
 
 name: Publish API docs
 
@@ -45,6 +47,7 @@ jobs:
           repository: JetBrains/exposed-api-docs
           path: api-docs
           token: ${{ secrets.API_DOCS_TOKEN }}
+          persist-credentials: false
 
       - name: Resolve release to publish
         env:
@@ -90,6 +93,8 @@ jobs:
 
       - name: Regenerate and publish API docs
         if: env.PUBLISH_TAG != ''
+        env:
+          API_DOCS_TOKEN: ${{ secrets.API_DOCS_TOKEN }}
         run: |
           set -euo pipefail
           (
@@ -100,4 +105,4 @@ jobs:
           git config user.name "exposed-api-docs-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           bash .github/scripts/update.sh ../exposed-src/docs/api "$PUBLISH_TAG"
-          git push
+          git push "https://x-access-token:${API_DOCS_TOKEN}@github.com/JetBrains/exposed-api-docs.git" HEAD:main
