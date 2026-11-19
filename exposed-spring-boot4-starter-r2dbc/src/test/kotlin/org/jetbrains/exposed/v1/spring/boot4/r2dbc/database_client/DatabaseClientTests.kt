@@ -2,7 +2,6 @@
 
 package org.jetbrains.exposed.v1.`database-client`
 
-import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.MethodOrderer
@@ -29,7 +28,7 @@ open class DatabaseClientApplication
 class DatabaseClientTests {
 
     @BeforeTestClass
-    fun beforeTests() = runTest {
+    suspend fun beforeTests() {
         suspendTransaction {
             SchemaUtils.create(AuthorTable, BookTable)
         }
@@ -40,25 +39,25 @@ class DatabaseClientTests {
 
     @Order(1)
     @RepeatedTest(15, name = "Without spring transaction: {currentRepetition}/{totalRepetitions}")
-    fun testWithoutSpringTransaction() {
+    suspend fun testWithoutSpringTransaction() {
         bookService.testWithoutSpringTransaction()
     }
 
     @Order(2)
     @RepeatedTest(15, name = "With spring transaction: {currentRepetition}/{totalRepetitions}")
-    fun testWithSpringTransaction() {
+    suspend fun testWithSpringTransaction() {
         bookService.testWithSpringTransaction()
     }
 
     @Order(3)
     @RepeatedTest(15, name = "With exposed transaction: {currentRepetition}/{totalRepetitions}")
-    fun testWithExposedTransaction() {
+    suspend fun testWithExposedTransaction() {
         bookService.testWithExposedTransaction()
     }
 
     @Order(4)
     @RepeatedTest(15, name = "With spring and exposed transactions: {currentRepetition}/{totalRepetitions}")
-    fun testWithSpringAndExposedTransactions() {
+    suspend fun testWithSpringAndExposedTransactions() {
         bookService.testWithSpringAndExposedTransactions()
     }
 }

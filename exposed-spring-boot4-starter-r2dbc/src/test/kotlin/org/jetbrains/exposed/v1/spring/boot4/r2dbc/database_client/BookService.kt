@@ -3,7 +3,6 @@
 package org.jetbrains.exposed.v1.`database-client`
 
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.r2dbc.core.DatabaseClient
@@ -12,7 +11,7 @@ import org.springframework.r2dbc.core.awaitOne
 import org.springframework.stereotype.Component
 import org.springframework.transaction.reactive.TransactionalOperator
 import org.springframework.transaction.reactive.executeAndAwait
-import java.util.UUID
+import java.util.*
 import kotlin.test.assertEquals
 
 @Component
@@ -24,7 +23,7 @@ open class BookService(
     private val databaseClient: DatabaseClient
 ) {
 
-    fun testWithSpringAndExposedTransactions() = runTest {
+    suspend fun testWithSpringAndExposedTransactions() {
         suspendTransaction {
             Book.new { description = "123" }
         }
@@ -37,7 +36,7 @@ open class BookService(
         assertEquals(2, reset())
     }
 
-    fun testWithSpringTransaction() = runTest {
+    suspend fun testWithSpringTransaction() {
         operator1.executeAndAwait {
             val id = UUID.randomUUID().toString()
             val query = "insert into authors(id, description) values ('$id', '234234')"
@@ -47,7 +46,7 @@ open class BookService(
         assertEquals(1, reset())
     }
 
-    fun testWithExposedTransaction() = runTest {
+    suspend fun testWithExposedTransaction() {
         suspendTransaction {
             Book.new { description = "1234" }
         }
@@ -55,7 +54,7 @@ open class BookService(
         assertEquals(1, reset())
     }
 
-    fun testWithoutSpringTransaction() = runTest {
+    suspend fun testWithoutSpringTransaction() {
         suspendTransaction {
             Book.new { description = "1234" }
         }

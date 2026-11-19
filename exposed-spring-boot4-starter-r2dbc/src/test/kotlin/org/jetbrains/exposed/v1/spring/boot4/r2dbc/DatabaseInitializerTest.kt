@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.v1.spring.boot4.r2dbc
 
 import io.r2dbc.spi.ConnectionFactories
-import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.r2dbc.ExposedR2dbcException
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
@@ -30,7 +29,7 @@ open class DatabaseInitializerTest {
     private lateinit var applicationContext: ApplicationContext
 
     @Test
-    fun `should create schema for TestTable and not for IgnoreTable`() = runTest {
+    suspend fun `should create schema for TestTable and not for IgnoreTable`() {
         assertFailsWith<ExposedR2dbcException> {
             val cxFactory = ConnectionFactories.get("r2dbc:h2:mem:///test-spring;DB_CLOSE_DELAY=-1;")
             val config = R2dbcDatabaseConfig { explicitDialect = H2Dialect() }
