@@ -24,6 +24,7 @@ dependencies {
     api(project(":spring7-reactive-transaction"))
     api(libs.spring.boot4.starter.r2dbc)
     api(libs.spring.boot4.autoconfigure)
+    implementation(libs.kotlinx.coroutines.reactor)
     compileOnly(libs.spring.boot4.configuration.processor)
 
     testImplementation(kotlin("test"))

@@ -1,12 +1,7 @@
-public class org/jetbrains/exposed/v1/spring/boot4/r2dbc/DatabaseInitializer : org/springframework/boot/ApplicationRunner, org/springframework/core/Ordered {
-	public static final field Companion Lorg/jetbrains/exposed/v1/spring/boot4/r2dbc/DatabaseInitializer$Companion;
-	public static final field DATABASE_INITIALIZER_ORDER I
+public class org/jetbrains/exposed/v1/spring/boot4/r2dbc/DatabaseInitializer : org/springframework/beans/factory/SmartInitializingSingleton {
 	public fun <init> (Lorg/springframework/context/ApplicationContext;Ljava/util/List;Lorg/springframework/transaction/reactive/TransactionalOperator;)V
-	public fun getOrder ()I
-	public fun run (Lorg/springframework/boot/ApplicationArguments;)V
-}
-
-public final class org/jetbrains/exposed/v1/spring/boot4/r2dbc/DatabaseInitializer$Companion {
+	public final fun afterSingletonsInstantiated ()V
+	public fun initializeSchema (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/v1/spring/boot4/r2dbc/DatabaseInitializerKt {
