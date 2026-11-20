@@ -1,0 +1,22 @@
+public class org/jetbrains/exposed/v1/spring/boot4/r2dbc/DatabaseInitializer : org/springframework/beans/factory/SmartInitializingSingleton {
+	public fun <init> (Lorg/springframework/context/ApplicationContext;Ljava/util/List;Lorg/springframework/transaction/reactive/TransactionalOperator;)V
+	public final fun afterSingletonsInstantiated ()V
+	public fun initializeSchema (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/spring/boot4/r2dbc/DatabaseInitializerKt {
+	public static final fun discoverExposedTables (Lorg/springframework/context/ApplicationContext;Ljava/util/List;)Ljava/util/List;
+}
+
+public final class org/jetbrains/exposed/v1/spring/boot4/r2dbc/ExposedAotContribution : org/springframework/beans/factory/aot/BeanFactoryInitializationAotProcessor {
+	public fun <init> ()V
+	public fun processAheadOfTime (Lorg/springframework/beans/factory/config/ConfigurableListableBeanFactory;)Lorg/springframework/beans/factory/aot/BeanFactoryInitializationAotContribution;
+}
+
+public class org/jetbrains/exposed/v1/spring/boot4/r2dbc/autoconfigure/ExposedReactiveAutoConfiguration {
+	public fun <init> (Lorg/springframework/context/ApplicationContext;Lorg/springframework/boot/r2dbc/autoconfigure/R2dbcConnectionDetails;)V
+	public fun databaseConfig ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Builder;
+	public fun databaseInitializer (Lorg/jetbrains/exposed/v1/spring7/reactive/transaction/SpringReactiveTransactionManager;)Lorg/jetbrains/exposed/v1/spring/boot4/r2dbc/DatabaseInitializer;
+	public fun springTransactionManager (Lio/r2dbc/spi/ConnectionFactory;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Builder;)Lorg/jetbrains/exposed/v1/spring7/reactive/transaction/SpringReactiveTransactionManager;
+}
+
