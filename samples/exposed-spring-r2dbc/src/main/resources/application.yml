@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: exposed-spring-r2dbc
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/sample_db
+    username: postgres
+    password: postgres
+  exposed:
+    # Let the starter create the schema for all detected Exposed tables on startup
+    generate-ddl: true
