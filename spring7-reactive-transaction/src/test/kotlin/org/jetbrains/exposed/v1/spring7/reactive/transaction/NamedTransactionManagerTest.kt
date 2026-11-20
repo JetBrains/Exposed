@@ -77,10 +77,6 @@ class ExposedAutoConfigurationCopy {
         connectionFactory,
         R2dbcDatabaseConfig { explicitDialect = H2Dialect() }
     )
-
-    @Bean
-    @Primary
-    fun exposedSpringTransactionAttributeSource(): ExposedSpringTransactionAttributeSource = ExposedSpringTransactionAttributeSource()
 }
 
 @Configuration(proxyBeanMethods = false)

@@ -6,13 +6,6 @@ public class org/jetbrains/exposed/v1/spring7/reactive/transaction/ExposedReacti
 	public fun exposedReactiveTransactionContextAdvisor ()Lorg/springframework/aop/Advisor;
 }
 
-public final class org/jetbrains/exposed/v1/spring7/reactive/transaction/ExposedSpringTransactionAttributeSource : org/springframework/transaction/interceptor/TransactionAttributeSource {
-	public fun <init> ()V
-	public fun <init> (Lorg/springframework/transaction/interceptor/TransactionAttributeSource;Ljava/util/List;)V
-	public synthetic fun <init> (Lorg/springframework/transaction/interceptor/TransactionAttributeSource;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun getTransactionAttribute (Ljava/lang/reflect/Method;Ljava/lang/Class;)Lorg/springframework/transaction/interceptor/TransactionAttribute;
-}
-
 public final class org/jetbrains/exposed/v1/spring7/reactive/transaction/SpringReactiveTransactionContextElementKt {
 	public static final fun withExposedReactiveContext (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }

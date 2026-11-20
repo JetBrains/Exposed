@@ -2,11 +2,13 @@ package org.jetbrains.exposed.v1.spring7.reactive.transaction
 
 import io.r2dbc.spi.ConnectionFactories
 import io.r2dbc.spi.ConnectionFactory
+import io.r2dbc.spi.R2dbcException
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.r2dbc.ExposedR2dbcException
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.deleteAll
@@ -28,11 +30,25 @@ import org.springframework.transaction.annotation.Transactional
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
+/**
+ * Unlike `spring7-transaction`, this reactive module does not provide (or register) a custom `ExposedSpringTransactionAttributeSource`.
+ *
+ * By default, Spring only rolls back a transaction when a `RuntimeException` or an `Error` is thrown. A checked
+ * exception causes the transaction to be committed. In the JDBC modules, a failed statement throws
+ * `ExposedSQLException`, which extends the checked `java.sql.SQLException`, so a custom attribute source is needed
+ * to add `SQLException` to the rollback rules.
+ *
+ * In this module, a failed statement throws [ExposedR2dbcException], which extends [R2dbcException], which in turn
+ * extends `RuntimeException`. Spring's default rules therefore already roll back the transaction,
+ * and an additional rollback rule would be redundant. This test class was still ported over to prove that
+ * Spring's rollback behavior is still successful.
+ */
 class SpringTransactionRollbackTest {
 
-    val container = AnnotationConfigApplicationContext(TransactionManagerAttributeSourceTestConfig::class.java)
+    val container = AnnotationConfigApplicationContext(TransactionManagerRollbackTestConfig::class.java)
 
     @BeforeEach
     suspend fun beforeTest() {
@@ -48,12 +64,15 @@ class SpringTransactionRollbackTest {
     @Test
     suspend fun `test ExposedR2dbcException rollback`() {
         val testRollback = container.getBean(TestRollback::class.java)
-        assertFailsWith<IllegalArgumentException> {
+        // The value fits the column length that is declared by WrongDefinedRollbackTable, so it is not rejected by Exposed.
+        // It exceeds the length of the actual column created by RollbackTable though, so it is rejected by the database.
+        val exception = assertFailsWith<ExposedR2dbcException> {
             testRollback.suspendTransaction {
                 insertOriginTable("1")
                 insertWrongTable("12345678901234567890")
             }
         }
+        assertIs<R2dbcException>(exception)
 
         assertEquals(0, testRollback.entireTableSize())
     }
@@ -280,10 +299,12 @@ class SpringTransactionRollbackTest {
     }
 }
 
+// This aligns with `TransactionManagerAttributeSourceTestConfig` in the spring7-transaction test,
+// except that it does not register an ExposedSpringTransactionAttributeSource bean (which does not exist for reactive Spring).
 @Configuration
 @EnableTransactionManagement(proxyTargetClass = true)
 @EnableExposedReactiveTransactionManagement
-open class TransactionManagerAttributeSourceTestConfig {
+open class TransactionManagerRollbackTestConfig {
 
     @Bean
     open fun cxFactory(): ConnectionFactory = ConnectionFactories.get("r2dbc:h2:mem:///embeddedTest1;DB_CLOSE_DELAY=-1;")
@@ -293,9 +314,6 @@ open class TransactionManagerAttributeSourceTestConfig {
         connectionFactory,
         R2dbcDatabaseConfig { explicitDialect = H2Dialect() }
     )
-
-    @Bean
-    open fun transactionAttributeSource() = ExposedSpringTransactionAttributeSource()
 
     @Bean
     open fun testRollback() = TestRollback()
@@ -360,11 +378,11 @@ open class TestRollback {
 }
 
 object RollbackTable : LongIdTable("test_rollback") {
-    val name = varchar("name", 5)
+    val name = varchar("name", 15)
 }
 
 object WrongDefinedRollbackTable : LongIdTable("test_rollback") {
-    val name = varchar("name", 10)
+    val name = varchar("name", 20)
 }
 
 data class RollbackEntity(val id: EntityID<Long>, val name: String)

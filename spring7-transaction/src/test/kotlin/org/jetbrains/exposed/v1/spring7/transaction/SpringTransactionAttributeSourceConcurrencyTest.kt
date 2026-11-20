@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.v1.spring7.transaction
 
+import org.jetbrains.exposed.v1.tests.NOT_APPLICABLE_TO_R2DBC
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource
 import org.springframework.transaction.annotation.Transactional
@@ -23,6 +25,7 @@ import kotlin.test.assertTrue
  * `ArrayList.toArray` (unsafe publication of the new list through the non-volatile
  * `rollbackRules` field). See YouTrack EXPOSED-1028.
  */
+@Tag(NOT_APPLICABLE_TO_R2DBC) // spring7-reactive-transaction does not require a custom class
 class SpringTransactionAttributeSourceConcurrencyTest {
 
     @Test
