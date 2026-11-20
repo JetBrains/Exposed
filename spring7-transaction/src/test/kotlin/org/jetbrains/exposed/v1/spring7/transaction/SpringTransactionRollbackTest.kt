@@ -8,8 +8,10 @@ import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.tests.MISSING_R2DBC_TEST
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
@@ -23,10 +25,12 @@ import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
+import java.sql.SQLException
 import javax.sql.DataSource
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class SpringTransactionRollbackTest {
@@ -42,12 +46,15 @@ class SpringTransactionRollbackTest {
     @Test
     fun `test ExposedSQLException rollback`() {
         val testRollback = container.getBean(TestRollback::class.java)
-        assertFailsWith<ExposedSQLException> {
+        // The value fits the column length that is declared by WrongDefinedRollbackTable, so it is not rejected by Exposed.
+        // It exceeds the length of the actual column created by RollbackTable though, so it is rejected by the database.
+        val exception = assertFailsWith<ExposedSQLException> {
             testRollback.transaction {
                 insertOriginTable("1")
                 insertWrongTable("12345678901234567890")
             }
         }
+        assertIs<SQLException>(exception)
 
         assertEquals(0, testRollback.entireTableSize())
     }
@@ -273,6 +280,11 @@ class SpringTransactionRollbackTest {
         assertTrue { entities.none { it.name.startsWith("No ") || it.name.startsWith("New ") } }
     }
 
+    // Left out because rollback involving Spring (partial) NESTED is not actually fully supported by Exposed;
+    // this test would fail with "Transaction manager does not allow nested transactions by default" if catch block removed,
+    // not the artificial RuntimeException as expected
+    // https://youtrack.jetbrains.com/issue/EXPOSED-996/Reassess-support-for-Spring-PROPAGATIONNESTED
+    @Tag(MISSING_R2DBC_TEST)
     @Test
     fun `nested should rollback innerTx without affecting outerTx`() {
         val testRollback = container.getBean(TestRollback::class.java)

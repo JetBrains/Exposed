@@ -11,6 +11,9 @@ interface R2dbcExposedConnection<OriginalConnection : Any> {
     /** The underlying database connection object contained by this wrapper. */
     val connection: OriginalConnection
 
+    /** Retrieves the current underlying database connection object in use. */
+    suspend fun activeConnection(): OriginalConnection = connection
+
     /** Retrieves the name of the connection's catalog. */
     suspend fun getCatalog(): String
 
