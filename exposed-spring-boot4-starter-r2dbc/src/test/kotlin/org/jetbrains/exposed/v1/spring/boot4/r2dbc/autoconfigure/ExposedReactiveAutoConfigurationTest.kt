@@ -13,7 +13,6 @@ import org.jetbrains.exposed.v1.spring.boot4.r2dbc.Application
 import org.jetbrains.exposed.v1.spring.boot4.r2dbc.DatabaseInitializer
 import org.jetbrains.exposed.v1.spring.boot4.r2dbc.runTestWithMockTransactional
 import org.jetbrains.exposed.v1.spring.boot4.r2dbc.tables.TestTable
-import org.jetbrains.exposed.v1.spring7.reactive.transaction.ExposedSpringTransactionAttributeSource
 import org.jetbrains.exposed.v1.spring7.reactive.transaction.SpringReactiveTransactionManager
 import org.jetbrains.exposed.v1.spring7.reactive.transaction.withExposedReactiveContext
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -21,7 +20,6 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertThrows
-import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
@@ -37,7 +35,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.transaction.interceptor.TransactionAttributeSource
 import org.springframework.transaction.reactive.TransactionalOperator
 import org.springframework.transaction.reactive.executeAndAwait
 import java.util.concurrent.CompletableFuture
@@ -56,9 +53,6 @@ class ExposedReactiveAutoConfigurationTest {
 
     @Autowired
     private var databaseConfig: R2dbcDatabaseConfig.Builder? = null
-
-    @Autowired
-    private var transactionAttributeSource: TransactionAttributeSource? = null
 
     @Test
     fun `should initialize the database connection`() {
@@ -114,13 +108,6 @@ class ExposedReactiveAutoConfigurationTest {
                 }
             }
         assertThrows(IllegalStateException::class.java) { TransactionManager.managerFor(db) }
-    }
-
-    @Test
-    fun `load ExposedSpringTransactionAttributeSource`() {
-        transactionAttributeSource?.let {
-            assertEquals(ExposedSpringTransactionAttributeSource::class.java, it.javaClass)
-        } ?: fail("TransactionAttributeSource bean not found")
     }
 
     @TestConfiguration

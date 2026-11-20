@@ -4,7 +4,6 @@ import io.r2dbc.spi.ConnectionFactory
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.spring.boot4.r2dbc.DatabaseInitializer
 import org.jetbrains.exposed.v1.spring7.reactive.transaction.EnableExposedReactiveTransactionManagement
-import org.jetbrains.exposed.v1.spring7.reactive.transaction.ExposedSpringTransactionAttributeSource
 import org.jetbrains.exposed.v1.spring7.reactive.transaction.SpringReactiveTransactionManager
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.beans.factory.config.BeanDefinition
@@ -15,7 +14,6 @@ import org.springframework.boot.r2dbc.autoconfigure.R2dbcAutoConfiguration
 import org.springframework.boot.r2dbc.autoconfigure.R2dbcConnectionDetails
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Primary
 import org.springframework.context.annotation.Role
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import org.springframework.transaction.reactive.TransactionalOperator
@@ -76,7 +74,7 @@ open class ExposedReactiveAutoConfiguration(
      * @Bean
      * open fun customDatabaseConfig(): R2dbcDatabaseConfig.Builder {
      *     return R2dbcDatabaseConfig {
-     *         defaultMaxAttempts = 1
+     *         useNestedTransactions = true
      *         setUrl("r2dbc:h2:mem:///h2db;DB_CLOSE_DELAY=-1;MODE=PostgreSQL")
      *         explicitDialect = H2Dialect()
      *     }
@@ -110,18 +108,8 @@ open class ExposedReactiveAutoConfiguration(
         return DatabaseInitializer(applicationContext, excludedPackages, TransactionalOperator.create(springTransactionManager))
     }
 
-    /**
-     * Returns an [ExposedSpringTransactionAttributeSource] instance.
-     *
-     * To enable rollback when ExposedSQLException is Thrown
-     *
-     * '@Primary' annotation is used to avoid conflict with default TransactionAttributeSource bean
-     * than enable when use '@EnableTransactionManagement'
-     */
-    @Bean
-    @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-    @Primary
-    open fun exposedSpringTransactionAttributeSource(): ExposedSpringTransactionAttributeSource {
-        return ExposedSpringTransactionAttributeSource()
-    }
+    // Unlike the JDBC starters, this starter does not register a primary ExposedSpringTransactionAttributeSource bean
+    // because spring7-reactive-transaction does not provide such a custom class.
+    // By default, Spring already rolls back a transaction when a `RuntimeException` is thrown,
+    // which `ExposedR2dbcException` extends, so an additional rollback rule for it would be redundant.
 }

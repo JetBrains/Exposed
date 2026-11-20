@@ -80,6 +80,7 @@ open class ExposedAutoConfigurationTest {
         }
     }
 
+    // @Tag(NOT_APPLICABLE_TO_R2DBC)
     @Test
     fun `closing the context unregisters the database of SpringTransactionManager`() {
         lateinit var db: Database
