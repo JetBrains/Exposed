@@ -4,6 +4,7 @@ springBootVersion = "4.1.2"
 springDependencyManagement = "1.1.7"
 exposed = "1.6.1"
 kotlinxCoroutines = "1.11.0"
+graalvmNative = "1.1.14"
 
 [libraries]
 kotlinReflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
@@ -23,3 +24,4 @@ kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinPluginSpring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
 orgSpringframeworkBoot = { id = "org.springframework.boot", version.ref = "springBootVersion" }
 ioSpringDependencyManagement = { id = "io.spring.dependency-management", version.ref = "springDependencyManagement" }
+orgGraalvmBuildtoolsNative = { id = "org.graalvm.buildtools.native", version.ref = "graalvmNative" }

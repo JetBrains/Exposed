@@ -10,8 +10,7 @@ internal data class Issue(
     val assignee: User,
 )
 
-@JvmInline
-internal value class IssueId(val value: Long)
+internal data class IssueId(val value: Long)
 
 internal fun ResultRow.toIssue() = Issue(
     id = IssueId(this[IssuesTable.id].value),

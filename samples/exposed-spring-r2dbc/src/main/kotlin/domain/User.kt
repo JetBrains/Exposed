@@ -10,8 +10,7 @@ internal data class User(
     val age: Int,
 )
 
-@JvmInline
-internal value class UserId(val value: Long)
+internal data class UserId(val value: Long)
 
 internal fun ResultRow.toUser() = User(
     id = UserId(this[UsersTable.id].value),

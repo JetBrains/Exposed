@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlinPluginSpring)
     alias(libs.plugins.orgSpringframeworkBoot)
     alias(libs.plugins.ioSpringDependencyManagement)
+    alias(libs.plugins.orgGraalvmBuildtoolsNative)
 }
 
 group = "org.jetbrains.exposed"
@@ -21,7 +22,6 @@ kotlin {
 extra["kotlin-coroutines.version"] = libs.versions.kotlinxCoroutines.get()
 
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 
@@ -42,4 +42,9 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+// Spring Boot 4 requires GraalVM 25 or later to build a native image, regardless of the JVM toolchain used above
+tasks.named<org.springframework.boot.gradle.tasks.bundling.BootBuildImage>("bootBuildImage") {
+    environment.put("BP_JVM_VERSION", "25")
 }

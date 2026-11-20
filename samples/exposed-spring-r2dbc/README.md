@@ -46,3 +46,50 @@ Docker must be running to execute the tests:
 ```bash
 ./gradlew test
 ```
+
+## Building a native image
+
+The sample can be built as a GraalVM native image. The Exposed starter registers the runtime hints that Exposed needs,
+so the sample does not have to define any hints itself.
+
+### Change how the schema is created
+
+Before building a native image, `spring.exposed.generate-ddl` must be removed from the sample. This property finds the tables
+to create by scanning the classpath when the application starts, which is not possible in a native image. If the property
+remains, no table(s) will be found and no schema will be generated.
+
+1. Remove the `spring.exposed.generate-ddl` property from [application.yml](src/main/resources/application.yml).
+2. Add a class that extends the starter's `DatabaseInitializer` and creates the schema by referring to the tables directly:
+
+```kotlin
+@Component
+internal class SchemaInitializer(
+    applicationContext: ApplicationContext,
+    transactionManager: SpringReactiveTransactionManager,
+) : DatabaseInitializer(applicationContext, emptyList(), TransactionalOperator.create(transactionManager)) {
+
+    override suspend fun initializeSchema() {
+        SchemaUtils.create(UsersTable, IssuesTable)
+    }
+}
+```
+
+`initializeSchema()` is invoked in a transaction when the application starts, before it accepts any requests.
+
+### Build and run the image
+
+Docker must be running to build the image, but GraalVM does not need to be installed:
+
+```bash
+./gradlew bootBuildImage
+```
+
+This creates an image named `exposed-spring-r2dbc:1.0.0`. The application in the container cannot reach a database on
+`localhost`, so the following commands start the database and the application on the same Docker network instead, and
+override the connection url of the application:
+
+```bash
+docker network create exposed-sample-net
+docker run --name exposed-sample-db --network exposed-sample-net -e POSTGRES_DB=sample_db -e POSTGRES_PASSWORD=postgres -d postgres:18
+docker run --network exposed-sample-net -p 8080:8080 -e SPRING_R2DBC_URL=r2dbc:postgresql://exposed-sample-db:5432/sample_db exposed-spring-r2dbc:1.0.0
+```
