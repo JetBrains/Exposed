@@ -69,9 +69,15 @@ class ExposedAotContribution : BeanFactoryInitializationAotProcessor {
             "META-INF/services/org.jetbrains.exposed.v1.core.statements.GlobalStatementInterceptor",
             "META-INF/services/org.jetbrains.exposed.v1.r2dbc.statements.GlobalSuspendStatementInterceptor",
             "META-INF/services/org.jetbrains.exposed.v1.r2dbc.mappers.TypeMapper",
-        ).forEach { resource ->
-            resources().registerResource(ClassPathResource(resource))
-        }
+            "META-INF/services/org.jetbrains.exposed.v1.core.transactions.TransactionsHolder",
+        )
+            .map { ClassPathResource(it) }
+            // Registering a resource that is not on the classpath fails, which would fail the ahead-of-time processing.
+            // This is important in the event no GlobalStatementInterceptor are registered, as no module provides this.
+            .filter { it.exists() }
+            .forEach { resource ->
+                resources().registerResource(resource)
+            }
     }
 
     @OptIn(ExperimentalR2dbcDaoApi::class)
