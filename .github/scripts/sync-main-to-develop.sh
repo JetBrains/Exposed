@@ -22,6 +22,14 @@ set -euo pipefail
 
 log() { echo "[sync] $*"; }
 
+# persist-credentials is off in the workflow, so pushes carry the masked per-run
+# app token in an explicit URL instead of .git/config.
+if [ -n "${GH_TOKEN:-}" ]; then
+  PUSH_URL="https://x-access-token:${GH_TOKEN}@github.com/JetBrains/Exposed.git"
+else
+  PUSH_URL=origin # local manual runs: whatever credentials the clone already has
+fi
+
 # ----------------------------------------------------------- target develop line
 TARGET="${INPUT_TARGET:-}"
 if [ -z "$TARGET" ]; then
@@ -123,7 +131,7 @@ whatever queued behind the conflict once it is closed."
     assignee=$(gh pr view "$pr_ref" --json author --jq '.author.login' 2>/dev/null || true)
   fi
 
-  git push --force origin "HEAD:refs/heads/$SYNC_BRANCH"
+  git push --force "$PUSH_URL" "HEAD:refs/heads/$SYNC_BRANCH"
   pr_url=$(gh pr create --base "$TARGET" --head "$SYNC_BRANCH" \
     --title "chore: Sync main into $TARGET (conflict)" \
     --body "$(cat <<EOF
@@ -163,7 +171,7 @@ if [ "$applied" -eq 0 ]; then
 fi
 
 # -------------------------------------------------------------------- open the PR
-git push --force origin "HEAD:refs/heads/$SYNC_BRANCH"
+git push --force "$PUSH_URL" "HEAD:refs/heads/$SYNC_BRANCH"
 pr_url=$(gh pr create --base "$TARGET" --head "$SYNC_BRANCH" \
   --title "chore: Sync main into $TARGET" \
   --body "$(cat <<EOF

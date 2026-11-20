@@ -50,16 +50,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create sync app token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
         id: app-token
         with:
           app-id: ${{ vars.SYNC_APP_ID }}
           private-key: ${{ secrets.SYNC_APP_PRIVATE_KEY }}
           repositories: Exposed
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           token: ${{ steps.app-token.outputs.token }}
+          persist-credentials: false # the script pushes with an explicit token URL instead
           fetch-depth: 0 # full history: the sweep computes patch-ids since the merge-base
       - name: Sweep main into the develop line
         env:
