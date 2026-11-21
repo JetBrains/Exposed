@@ -281,15 +281,29 @@ class EntityCache(private val transaction: Transaction) {
      * are also put into the second partition
      */
     private fun partitionEntitiesForInsert(entities: Collection<Entity<*>>, table: IdTable<*>): Pair<List<Entity<*>>, List<Entity<*>>> {
-        val firstEntityColumns = entities.first().writeValues.keys
+        val pendingIds = if (table.columns.any { it.referee == table.id }) {
+            entities.mapNotNullTo(HashSet()) { it.id._value }
+        } else {
+            null
+        }
+        fun isAwaitingRowOfSameTable(entity: Entity<*>) = entity.writeValues.any { (column, value) ->
+            column.referee == table.id && value is EntityID<*> &&
+                (value._value == null || (value._value != entity.id._value && value._value in pendingIds.orEmpty()))
+        }
+
+        val anchor = entities.firstOrNull { !isAwaitingRowOfSameTable(it) } ?: run {
+            // With known IDs a cycle can still be inserted under a deferred foreign key.
+            pendingIds?.clear()
+            entities.firstOrNull { !isAwaitingRowOfSameTable(it) }
+        }
+        checkNotNull(anchor) {
+            "Cannot flush the inserts scheduled for ${table.tableName}: every entity references a row that has not been inserted yet."
+        }
+        val anchorColumns = anchor.writeValues.keys
         return entities.partition { entity ->
-            val refereeFromSameTableAlreadyCreated = entity.writeValues.none { (key, value) ->
-                key.referee == table.id && value is EntityID<*> && value._value == null
-            }
-
-            val columnSetAlignedWithFirstEntity = entity.writeValues.keys == firstEntityColumns
-
-            refereeFromSameTableAlreadyCreated && columnSetAlignedWithFirstEntity
+            val ready = !isAwaitingRowOfSameTable(entity) && entity.writeValues.keys == anchorColumns
+            if (ready) pendingIds?.remove(entity.id._value)
+            ready
         }
     }
 
