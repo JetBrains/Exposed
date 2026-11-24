@@ -67,7 +67,10 @@ abstract class MigrationUtilityApi : SchemaUtilityApi() {
     protected fun Set<String>.filterMissingSequences(vararg tables: Table): List<Sequence> {
         val missingSequences = mutableSetOf<Sequence>()
         val mappedSequences = tables.flatMap { table -> table.sequences }.toSet()
-        missingSequences.addAll(mappedSequences.filterNot { it.identifier.inProperCase() in this })
+        val existingSequenceNames = map { it.unqualifiedSequenceName().inProperCase() }.toSet()
+        missingSequences.addAll(
+            mappedSequences.filterNot { it.identifier.unqualifiedSequenceName().inProperCase() in existingSequenceNames }
+        )
         return missingSequences.toList()
     }
 
@@ -78,17 +81,23 @@ abstract class MigrationUtilityApi : SchemaUtilityApi() {
      */
     @InternalApi
     protected fun Set<String>.filterUnmappedSequences(vararg tables: Table): List<Sequence> {
-        val unmappedSequences = mutableSetOf<Sequence>()
         val mappedSequencesNames = tables.flatMap { table ->
             table.sequences.map {
-                it.identifier.inProperCase()
+                it.identifier.unqualifiedSequenceName().inProperCase()
             }
         }.toSet()
 
-        unmappedSequences.addAll(
-            filter { !mappedSequencesNames.contains(it.inProperCase()) }
-                .map { Sequence(it) }
-        )
-        return unmappedSequences.toList()
+        return filter { !mappedSequencesNames.contains(it.unqualifiedSequenceName().inProperCase()) }
+            .map { Sequence(it) }
+    }
+
+    /**
+     * Returns this sequence name without any schema qualification, so that sequence names reported by the database,
+     * which may omit the schema prefix (EXPOSED-985), can be compared against sequence identifiers mapped in code,
+     * which may carry one. Quoted names are stripped of their wrapping quote characters before splitting.
+     */
+    private fun String.unqualifiedSequenceName(): String {
+        val unquoted = if (startsWith("\"") && endsWith("\"")) removeSurrounding("\"") else this
+        return unquoted.substringAfterLast('.', unquoted)
     }
 }
