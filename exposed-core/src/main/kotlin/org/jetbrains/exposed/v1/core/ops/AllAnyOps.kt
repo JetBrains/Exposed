@@ -32,7 +32,7 @@ class AllAnyFromSubQueryOp<T>(
     subQuery: AbstractQuery<*>
 ) : AllAnyFromBaseOp<T, AbstractQuery<*>>(isAny, subQuery) {
     override fun QueryBuilder.registerSubSearchArgument(subSearch: AbstractQuery<*>) {
-        subSearch.prepareSQL(this)
+        val _ = subSearch.prepareSQL(this)
     }
 }
 

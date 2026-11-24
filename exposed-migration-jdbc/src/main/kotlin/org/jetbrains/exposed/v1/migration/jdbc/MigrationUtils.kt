@@ -122,7 +122,7 @@ object MigrationUtils : MigrationUtilityApi() {
         }
 
         for (table in tables) {
-            table.mapMissingColumnStatementsTo(
+            val _ = table.mapMissingColumnStatementsTo(
                 statements,
                 existingTablesColumns[table].orEmpty(),
                 existingPrimaryKeys[table],
@@ -137,13 +137,13 @@ object MigrationUtils : MigrationUtilityApi() {
             val existingColumnConstraints = logTimeSpent(CONSTRAINTS_LOG_MESSAGE, withLogs) {
                 currentDialectMetadata.columnConstraints(*tables)
             }
-            mapMissingConstraintsTo(statements, existingColumnConstraints, tables = tables)
+            val _ = mapMissingConstraintsTo(statements, existingColumnConstraints, tables = tables)
         }
 
         val dbSupportsAlterTableWithDropColumn = tr.db.supportsAlterTableWithDropColumn
         if (dbSupportsAlterTableWithDropColumn) {
             for (table in tables) {
-                table.mapUnmappedColumnStatementsTo(statements, existingTablesColumns[table].orEmpty())
+                val _ = table.mapUnmappedColumnStatementsTo(statements, existingTablesColumns[table].orEmpty())
             }
         }
         return statements
@@ -174,7 +174,7 @@ object MigrationUtils : MigrationUtilityApi() {
             }
 
             tables.forEach { table ->
-                table.mapUnmappedColumnStatementsTo(statements, existingTablesColumns[table].orEmpty())
+                val _ = table.mapUnmappedColumnStatementsTo(statements, existingTablesColumns[table].orEmpty())
             }
         }
 

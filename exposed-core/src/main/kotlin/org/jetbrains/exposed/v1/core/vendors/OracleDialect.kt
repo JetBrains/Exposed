@@ -309,7 +309,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         where: Op<Boolean>?,
         transaction: Transaction
     ): String = with(QueryBuilder(true)) {
-        columnsAndValues.map { it.first.table }.distinct().singleOrNull()
+        val _ = columnsAndValues.map { it.first.table }.distinct().singleOrNull()
             ?: transaction.throwUnsupportedException("Oracle supports a join updates with a single table columns to update.")
         targets.checkJoinTypes(StatementType.UPDATE)
         +"UPDATE ("
