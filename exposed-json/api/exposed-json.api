@@ -42,6 +42,7 @@ public final class org/jetbrains/exposed/v1/json/JsonBColumnTypeKt {
 
 public class org/jetbrains/exposed/v1/json/JsonColumnType : org/jetbrains/exposed/v1/core/ColumnType, org/jetbrains/exposed/v1/core/JsonColumnMarker {
 	public fun <init> (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
+	public fun defaultValueMatchesMetadata (Ljava/lang/String;Ljava/lang/String;)Z
 	public final fun getDeserialize ()Lkotlin/jvm/functions/Function1;
 	public fun getNeedsBinaryFormatCast ()Z
 	public final fun getSerialize ()Lkotlin/jvm/functions/Function1;

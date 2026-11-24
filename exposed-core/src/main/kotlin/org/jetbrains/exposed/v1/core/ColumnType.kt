@@ -133,6 +133,16 @@ abstract class ColumnType<T>(override var nullable: Boolean = false) : IColumnTy
     }
 
     override fun hashCode(): Int = 31 * javaClass.hashCode() + nullable.hashCode()
+
+    /**
+     * Returns whether the default value [expected], rendered by [Column.dbDefaultValue]'s SQL representation,
+     * matches the default value [actual] reported by the database metadata for this column type.
+     *
+     * Defaults to a plain string comparison. Column types whose database representation may differ cosmetically
+     * from the rendered value (for example JSON columns, which databases normalize) may override it to compare
+     * the values semantically instead.
+     */
+    open fun defaultValueMatchesMetadata(expected: String?, actual: String?): Boolean = expected == actual
 }
 
 /**
