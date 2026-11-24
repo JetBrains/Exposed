@@ -105,7 +105,8 @@ interface DatabaseConfig {
         /**
          * How many seconds the driver should wait for a statement to execute in a transaction before timing out.
          * Note that not all drivers implement this limit. For more information, refer to the relevant driver documentation.
-         * Default timeout is 0.
+         * Default timeout is 0 (not configured). With R2DBC, an unconfigured timeout leaves the connection's
+         * statement timeout untouched, so any timeout set on the database side still applies.
          */
         var defaultQueryTimeout: Int = 0
 

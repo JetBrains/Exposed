@@ -133,7 +133,13 @@ internal suspend fun <T, S : Statement<T>> SuspendExecutable<T, S>.executeIn(
 
     val statement = try {
         prepared(transaction, statement.prepareSQL(transaction)).apply {
-            setTimeout(transaction.queryTimeout)
+            // a config default of 0 means not configured, so nothing is sent
+            val queryTimeout = transaction.explicitQueryTimeout
+                ?: transaction.db.config.defaultQueryTimeout.takeIf { it > 0 }
+            when (val connection = transaction.connection()) {
+                is R2dbcConnectionImpl -> connection.applyStatementTimeout(queryTimeout)
+                else -> setTimeout(queryTimeout)
+            }
         }
     } catch (cause: R2dbcException) {
         throw ExposedR2dbcException(cause, contexts, transaction)

@@ -53,9 +53,24 @@ abstract class Transaction : UserDataHolder(), TransactionInterface {
     /**
      * The number of seconds the driver should wait for a statement to execute in a transaction before timing out.
      * Note that not all drivers implement this limit. For more information, refer to the relevant driver documentation.
+     * With R2DBC, an explicit 0 also disables any timeout set on the database side for this transaction.
      */
-    var queryTimeout: Int? = null
-        get() = field ?: db.config.defaultQueryTimeout
+    var queryTimeout: Int?
+        @OptIn(InternalApi::class)
+        get() = explicitQueryTimeout ?: db.config.defaultQueryTimeout
+
+        @OptIn(InternalApi::class)
+        set(value) {
+            explicitQueryTimeout = value
+        }
+
+    /**
+     * The [queryTimeout] set on this transaction, without the config fallback.
+     * @suppress
+     */
+    @InternalApi
+    var explicitQueryTimeout: Int? = null
+        private set
 
     /** The unique ID for this transaction. */
     val transactionId by lazy { UUID.randomUUID().toString() }
