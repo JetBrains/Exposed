@@ -6,6 +6,12 @@ This guide provides instructions on how to migrate from Exposed version 0.61.0 t
 Version 1.0.0 introduces R2DBC support on top of the existing JDBC support. Most of the changes in this release were made
 to accommodate reactive database access while preserving existing functionality.
 
+If your project uses a release older than 0.61.0, you can upgrade directly to 1.0.0 in a single step.
+Also review the breaking changes introduced between your version and 0.61.0:
+[0.57.0](https://www.jetbrains.com/help/exposed/breaking-changes.html#0-57-0),
+[0.59.0](https://www.jetbrains.com/help/exposed/breaking-changes.html#0-59-0), and
+[0.60.0](https://www.jetbrains.com/help/exposed/breaking-changes.html#0-60-0).
+
 ## Migrating with Claude Code
 
 If your project uses [Claude Code](https://claude.com/claude-code), you can apply the
@@ -64,6 +70,13 @@ are now located under `org.jetbrains.exposed.v1.core.*`. The table below shows e
 | `org.jetbrains.exposed.dao.IntEntity`         | `org.jetbrains.exposed.v1.dao.IntEntity`        |
 | `org.jetbrains.exposed.sql.javatime.datetime` | `org.jetbrains.exposed.v1.javatime.datetime`    |
 | `org.jetbrains.exposed.sql.json.json`         | `org.jetbrains.exposed.v1.json.json`            |
+| `org.jetbrains.exposed.exceptions.ExposedSQLException` | `org.jetbrains.exposed.v1.exceptions.ExposedSQLException` |
+
+<note>
+Unlike all other packages, the exceptions package gets only the <code>v1</code> prefix and no module prefix.
+All exceptions, like <code>ExposedSQLException</code> and <code>UnsupportedByDialectException</code>,
+are located under <code>org.jetbrains.exposed.v1.exceptions</code>.
+</note>
 
 Check [Breaking Changes - 1.0.0-beta-1](https://www.jetbrains.com/help/exposed/breaking-changes.html#1-0-0-beta-1) for more details about the changes in imports.  
 
@@ -93,6 +106,20 @@ This also applies to certain class methods that perform metadata query checks, n
 | `org.jetbrains.exposed.sql.insert`    | `org.jetbrains.exposed.v1.jdbc.insert`    |
 | `org.jetbrains.exposed.sql.update`    | `org.jetbrains.exposed.v1.jdbc.update`    |
 
+The complete list of query, statement, and metadata functions that moved to `org.jetbrains.exposed.v1.jdbc`:
+
+| Group             | Functions                                                                                                                              |
+|-------------------|----------------------------------------------------------------------------------------------------------------------------------------|
+| Querying          | `selectAll()`, `select()`, `andWhere()`, `orWhere()`, `andHaving()`, `orHaving()`, `union()`, `unionAll()`, `intersect()`, `except()` |
+| Inserting         | `insert()`, `insertIgnore()`, `insertAndGetId()`, `insertIgnoreAndGetId()`, `insertReturning()`, `batchInsert()`, `replace()`, `batchReplace()` |
+| Updating          | `update()`, `updateReturning()`, `upsert()`, `upsertReturning()`, `batchUpsert()`, `mergeFrom()`                                      |
+| Deleting          | `deleteWhere()`, `deleteIgnoreWhere()`, `deleteAll()`, `deleteReturning()`                                                              |
+| Metadata checks   | `exists()` on `Table`, `Schema`, and `Sequence`                                                                                          |
+| Join and transaction | `update()` and `delete()` on `Join`, `explain()` on `JdbcTransaction`                                                                 |
+
+All these functions were previously available from `org.jetbrains.exposed.sql`, with three exceptions:
+`Schema.exists()` and `Sequence.exists()` were member methods of their classes, and `explain()` was an extension on `Transaction`.
+
 <note>
 This means that a project with a dependency on <code>exposed-spring-boot-starter</code>, for example, will now most likely require an
 additional dependency on <code>exposed-jdbc</code>.
@@ -100,10 +127,16 @@ additional dependency on <code>exposed-jdbc</code>.
 
 ### `SqlExpressionBuilder` method imports {id = sql-expression-builder-imports}
 
-The interface `ISqlExpressionBuilder` (and all its methods) has been deprecated, along with its implementation objects, 
-`SqlExpressionBuilder` and `UpsertSqlExpressionBuilder`. All methods previously restricted to this interface should now
+The interface `ISqlExpressionBuilder` (and all its methods) has been deprecated, along with its implementation object
+`SqlExpressionBuilder`. All methods previously restricted to this interface should now
 be replaced with their new equivalent top-level functions. This will require the addition of new import statements if
 `org.jetbrains.exposed.v1.core.*` is not already present:
+
+<warning>
+In 1.0.0, the object <code>SqlExpressionBuilder</code> and all the interface methods are deprecated with
+<code>DeprecationLevel.ERROR</code>. Any use of them fails the compilation, even if the project doesn't treat
+warnings as errors. Only the interface <code>ISqlExpressionBuilder</code> itself is deprecated at the WARNING level.
+</warning>
 
 <compare first-title="0.61.0" second-title="1.0.0">
 
@@ -668,6 +701,12 @@ this functionality has been split for simplicity:
 * `TransactionManager.primaryDatabase`: To get the database that will be used when opening the next transaction.
   This value will either be retrieved from `defaultDatabase` or the last `Database` instance registered, if any.
 
+<warning>
+This change triggers no compile error and no deprecation warning. Code that reads <code>defaultDatabase</code>
+as "the database in use" now silently gets <code>null</code>. Replace such reads with <code>primaryDatabase</code>.
+Transactions opened without an explicit database argument aren't affected.
+</warning>
+
 Prior to version 1.0.0, the property `TransactionManager.manager` resolved its value from thread local and returned an
 uninitialized stand-in manager if none was found. With 1.0.0, the manager instance retrieved is resolved based on the
 current active transaction, if any; otherwise it gets the manager of the default set database or the last registered
@@ -683,7 +722,32 @@ These new functions should be used if you want to continue using a blocking JDBC
 alongside your database transaction operations. The behavior of these functions aligns fully with the behavior of the standard
 `transaction()` functions, for example where it pertains to nesting logic and exception handling. Unlike the original suspend
 transaction functions, `suspendTransaction()` does not accept a `CoroutineContext` argument. Instead, a coroutine builder
-function, like `withContext()` or `async()` should be used to wrap the `suspendTransaction()` block.
+function, like `withContext()` or `async()` should be used to wrap the `suspendTransaction()` block:
+
+<compare first-title="0.61.0" second-title="1.0.0">
+
+```kotlin
+import kotlinx.coroutines.Dispatchers
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+
+suspend fun dbQuery() = newSuspendedTransaction(Dispatchers.IO, database) { /* ... */ }
+```
+
+```kotlin
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
+
+suspend fun dbQuery() = withContext(Dispatchers.IO) { suspendTransaction(database) { /* ... */ } }
+```
+
+</compare>
+
+<warning>
+The driver calls inside the <code>suspendTransaction()</code> block remain blocking and run on the caller's dispatcher.
+If a transaction waits on a row lock held by a suspended transaction that runs on the same single-threaded dispatcher,
+both transactions deadlock. Wrap the block in a dispatcher with enough threads, for example <code>Dispatchers.IO</code>.
+</warning>
 
 > To properly run asynchronous transactions using reactive drivers,
 > `suspendTransaction()` overloads are now available from the `exposed-r2dbc` dependency.
