@@ -20,7 +20,10 @@ interface JdbcTransactionManager : TransactionManagerApi {
     /** The database instance associated with this transaction manager. */
     val db: Database
 
-    /** The default transaction isolation level. Unless specified, the database-specific level will be used. */
+    /**
+     * The default transaction isolation level for this manager.
+     * See [TransactionManager.defaultIsolationLevel] for the built-in manager's behavior.
+     */
     var defaultIsolationLevel: Int
 
     /**
