@@ -87,8 +87,6 @@ open class R2dbcTransaction(
     /** Whether this [R2dbcTransaction] should prevent any statement execution from proceeding. */
     internal var blockStatementExecution: Boolean = false
 
-    internal val executedStatements: MutableList<R2dbcPreparedStatementApi> = arrayListOf()
-
     internal var openResultRowsCount: Int = 0
 
     internal val interceptors = arrayListOf<SuspendStatementInterceptor>()
@@ -316,11 +314,14 @@ open class R2dbcTransaction(
     internal suspend fun execQuery(query: SuspendExecutable<ResultApi, *>): R2dbcResult = execQuery(query) { it }
         ?: error("A R2dbcResult was expected, but a result was not retrieved from the database")
 
-    /** Clears all previously executed statements and resets or releases any used database and/or driver resources. */
+    /**
+     * Resets the count of opened result sets tracked by this transaction.
+     *
+     * Unlike JDBC, executed statements are not retained by an R2DBC transaction, as R2DBC statements
+     * have no resources that need to be released with `close()`.
+     */
     fun clearExecutedStatements() {
-        // no Statement.close() in R2DBC
         openResultRowsCount = 0
-        executedStatements.clear()
     }
 
     final override fun addLogger(vararg logger: SqlLogger): CompositeSqlLogger {
