@@ -11,6 +11,14 @@ import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelSuspendTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import kotlin.coroutines.CoroutineContext
 
+/**
+ * Executes the provided [statement] within a new suspendable transaction.
+ *
+ * **Note** If this function is invoked while a transaction is already active on the same database within the
+ * current coroutine context, that outer transaction is joined directly, or nested over with a savepoint if
+ * `DatabaseConfig.useNestedTransactions` is enabled — the same behavior as `suspendTransaction` and as the
+ * blocking `transaction`.
+ */
 @Deprecated(
     message = """"
         This function will be removed in future releases.
@@ -28,7 +36,7 @@ suspend fun <T> newSuspendedTransaction(
     statement: suspend JdbcTransaction.() -> T
 ): T {
     return withContext(context ?: currentCoroutineContext()) {
-        inTopLevelSuspendTransaction(db, transactionIsolation, readOnly, null, statement)
+        suspendTransaction(db, transactionIsolation, readOnly, statement)
     }
 }
 

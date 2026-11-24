@@ -5,6 +5,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -16,6 +17,9 @@ import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.junit.jupiter.api.Test
 import java.sql.Connection.TRANSACTION_SERIALIZABLE
+import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
+import kotlin.test.fail
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.uuid.Uuid
 
@@ -24,6 +28,10 @@ class SuspendTransactionTests : DatabaseTestsBase() {
 
     object TestConflictTable : UuidTable("test_conflict") {
         val value = integer("value")
+    }
+
+    object ExampleTable : Table("suspend_nesting_example") {
+        val value = text("value")
     }
 
     // equivalent to exposed-r2dbc-tests/PostgresqlTests.kt/testClosedSuspendTransaction()
@@ -70,6 +78,113 @@ class SuspendTransactionTests : DatabaseTestsBase() {
 
             TestConflictTable.update({ TestConflictTable.id eq uuid }) {
                 it[value] = current + 1
+            }
+        }
+    }
+
+    // https://github.com/JetBrains/Exposed/issues/1586
+    @Test
+    fun testNestedSuspendedTransactionNotCommittedWhenOuterRollsBackWithSavepoints() {
+        withTables(ExampleTable, configure = { useNestedTransactions = true }) {
+            runBlocking {
+                try {
+                    newSuspendedTransaction(db = db) {
+                        val outerId = transactionId
+                        ExampleTable.insert { it[value] = "outer" }
+
+                        newSuspendedTransaction(db = db) {
+                            val innerId = transactionId
+                            assertNotEquals(outerId, innerId)
+                            ExampleTable.insert { it[value] = "inner" }
+                        }
+
+                        error("outer transaction throws")
+                    }
+                    fail("Should have thrown an exception")
+                } catch (_: IllegalStateException) {
+                    // expected: the outer transaction threw
+                }
+
+                val rows: List<String> = newSuspendedTransaction(db = db) {
+                    ExampleTable.selectAll().map { it[ExampleTable.value] }
+                }
+                assertEquals(0, rows.size)
+            }
+        }
+    }
+
+    // https://github.com/JetBrains/Exposed/issues/1586
+    @Test
+    fun testNestedSuspendedTransactionNotCommittedWhenOuterRollsBackWithoutSavepoints() {
+        withTables(ExampleTable, configure = { useNestedTransactions = false }) {
+            runBlocking {
+                try {
+                    newSuspendedTransaction(db = db) {
+                        val outerId = transactionId
+                        ExampleTable.insert { it[value] = "outer" }
+
+                        newSuspendedTransaction(db = db) {
+                            val innerId = transactionId
+                            assertEquals(outerId, innerId)
+                            ExampleTable.insert { it[value] = "inner" }
+                        }
+
+                        error("outer transaction throws")
+                    }
+                    fail("Should have thrown an exception")
+                } catch (_: IllegalStateException) {
+                    // expected: the outer transaction threw
+                }
+
+                val rows: List<String> = newSuspendedTransaction(db = db) {
+                    ExampleTable.selectAll().map { it[ExampleTable.value] }
+                }
+                assertEquals(0, rows.size)
+            }
+        }
+    }
+
+    @Test
+    fun testNestedSuspendedTransactionRolledBackToSavepointWhenInnerFails() {
+        withTables(ExampleTable, configure = { useNestedTransactions = true }) {
+            runBlocking {
+                newSuspendedTransaction(db = db) {
+                    ExampleTable.insert { it[value] = "outer" }
+
+                    try {
+                        newSuspendedTransaction(db = db) {
+                            ExampleTable.insert { it[value] = "inner" }
+                            error("inner transaction throws")
+                        }
+                    } catch (_: IllegalStateException) {
+                        // expected: only the nested transaction is rolled back, the outer one continues
+                    }
+                }
+
+                val rows: List<String> = newSuspendedTransaction(db = db) {
+                    ExampleTable.selectAll().map { it[ExampleTable.value] }
+                }
+                assertEqualLists(rows, listOf("outer"))
+            }
+        }
+    }
+
+    @Test
+    fun testNestedSuspendedTransactionsCommitWhenBothSucceed() {
+        withTables(ExampleTable, configure = { useNestedTransactions = true }) {
+            runBlocking {
+                newSuspendedTransaction(db = db) {
+                    ExampleTable.insert { it[value] = "outer" }
+
+                    newSuspendedTransaction(db = db) {
+                        ExampleTable.insert { it[value] = "inner" }
+                    }
+                }
+
+                val rows: List<String> = newSuspendedTransaction(db = db) {
+                    ExampleTable.selectAll().map { it[ExampleTable.value] }
+                }
+                assertEqualLists(rows, listOf("outer", "inner"))
             }
         }
     }
