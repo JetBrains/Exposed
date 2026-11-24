@@ -7,8 +7,14 @@
 # A hotfix on an older line (e.g. 1.6.2 published after 1.7.0) is published
 # under versions/1.6.2/ by update.sh; the root keeps the newest release.
 #
-# Requires the API_DOCS_TOKEN repository secret: a fine-grained personal
-# access token with Contents: read and write on JetBrains/exposed-api-docs.
+# Two jobs keep the API_DOCS_TOKEN secret away from the Gradle build:
+#   - build checks out the release tag and runs ./gradlew dokkaGenerate with
+#     no secrets in its environment, then uploads the generated tree as a
+#     short-lived workflow artifact.
+#   - publish downloads that artifact and pushes it to JetBrains/exposed-api-docs.
+#     It is the only job that can see the token (it runs in the api-docs-publish
+#     environment, restricted to the main branch), it has no GITHUB_TOKEN
+#     permissions, and it never runs Gradle.
 # The token is never written to disk: the checkout does not persist
 # credentials, and the push passes it in the URL of that one git call.
 
@@ -37,23 +43,17 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    outputs:
+      publish-tag: ${{ steps.resolve.outputs.publish-tag }}
     steps:
-      - name: Checkout API docs repository
-        uses: actions/checkout@v4
-        with:
-          repository: JetBrains/exposed-api-docs
-          path: api-docs
-          token: ${{ secrets.API_DOCS_TOKEN }}
-          persist-credentials: false
-
       - name: Resolve release to publish
+        id: resolve
         env:
           GH_TOKEN: ${{ github.token }}
           INPUT_TAG: ${{ inputs.tag }}
-          FORCE: ${{ inputs.force }}
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           set -euo pipefail
@@ -65,45 +65,86 @@ jobs:
             TAG=$(gh api 'repos/JetBrains/Exposed/releases?per_page=100' \
               --jq '[.[] | select(.prerelease == false) | .tag_name | select(test("^[0-9]+[.][0-9]+[.][0-9]+$"))] | max_by(split(".") | map(tonumber))')
           fi
-          CURRENT=$(cat api-docs/VERSION)
-          echo "release: $TAG; docs generated from: $CURRENT"
-          if ! printf '%s' "$TAG" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-            echo "$TAG is not a plain release tag; nothing to do"
-          elif [ "$TAG" = "$CURRENT" ] && [ "$FORCE" != "true" ]; then
-            echo "docs already reflect $TAG; nothing to do"
+          echo "release to publish: $TAG"
+          if printf '%s' "$TAG" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "publish-tag=$TAG" >> "$GITHUB_OUTPUT"
           else
-            echo "PUBLISH_TAG=$TAG" >> "$GITHUB_ENV"
+            echo "not a plain release tag; nothing to do"
           fi
 
       - name: Checkout Exposed at the release tag
-        if: env.PUBLISH_TAG != ''
-        uses: actions/checkout@v4
+        if: steps.resolve.outputs.publish-tag != ''
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           repository: JetBrains/Exposed
-          ref: ${{ env.PUBLISH_TAG }}
+          ref: ${{ steps.resolve.outputs.publish-tag }}
           path: exposed-src
           fetch-depth: 1
 
       - name: Set up JDK
-        if: env.PUBLISH_TAG != ''
-        uses: actions/setup-java@v4
+        if: steps.resolve.outputs.publish-tag != ''
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
         with:
           distribution: temurin
           java-version: 17
           cache: gradle
 
-      - name: Regenerate and publish API docs
-        if: env.PUBLISH_TAG != ''
+      - name: Generate API docs
+        if: steps.resolve.outputs.publish-tag != ''
+        working-directory: exposed-src
+        run: |
+          set -euo pipefail
+          ./gradlew dokkaGenerate --no-daemon --console=plain
+
+      - name: Upload generated docs
+        # Keep the path in sync with dokka's outputDirectory when the
+        # docs/api removal PR repoints it.
+        if: steps.resolve.outputs.publish-tag != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: api-docs-tree
+          path: exposed-src/docs/api
+          retention-days: 1
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    if: needs.build.outputs.publish-tag != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: api-docs-publish
+    permissions: {}
+    env:
+      PUBLISH_TAG: ${{ needs.build.outputs.publish-tag }}
+      FORCE: ${{ inputs.force }}
+    steps:
+      - name: Checkout API docs repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: JetBrains/exposed-api-docs
+          path: api-docs
+          token: ${{ secrets.API_DOCS_TOKEN }}
+          persist-credentials: false
+
+      - name: Download generated docs
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: api-docs-tree
+          path: docs-new
+
+      - name: Update and push
         env:
           API_DOCS_TOKEN: ${{ secrets.API_DOCS_TOKEN }}
         run: |
           set -euo pipefail
-          (
-            cd exposed-src
-            ./gradlew dokkaGenerate --no-daemon --console=plain
-          )
+          CURRENT=$(cat api-docs/VERSION)
+          echo "release: $PUBLISH_TAG; docs generated from: $CURRENT"
+          if [ "$PUBLISH_TAG" = "$CURRENT" ] && [ "$FORCE" != "true" ]; then
+            echo "docs already reflect $PUBLISH_TAG; nothing to do"
+            exit 0
+          fi
           cd api-docs
           git config user.name "exposed-api-docs-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          bash .github/scripts/update.sh ../exposed-src/docs/api "$PUBLISH_TAG"
+          bash .github/scripts/update.sh ../docs-new "$PUBLISH_TAG"
           git push "https://x-access-token:${API_DOCS_TOKEN}@github.com/JetBrains/exposed-api-docs.git" HEAD:main
