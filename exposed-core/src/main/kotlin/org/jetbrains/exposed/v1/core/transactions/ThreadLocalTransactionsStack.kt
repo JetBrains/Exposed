@@ -3,14 +3,6 @@ package org.jetbrains.exposed.v1.core.transactions
 import org.jetbrains.exposed.v1.core.DatabaseApi
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Transaction
-import java.util.Stack
-import kotlin.collections.List
-import kotlin.collections.emptyList
-import kotlin.collections.filterIsInstance
-import kotlin.collections.findLast
-import kotlin.collections.isNotEmpty
-import kotlin.collections.lastOrNull
-import kotlin.collections.map
 import kotlin.concurrent.getOrSet
 
 /**
@@ -29,7 +21,8 @@ import kotlin.concurrent.getOrSet
  */
 @OptIn(InternalApi::class)
 internal object ThreadLocalTransactionsStack : TransactionsHolder {
-    private val transactions = ThreadLocal<Stack<Transaction>>()
+    // ArrayList rather than ArrayDeque: the lookups below scan by index without allocating an iterator.
+    private val transactions = ThreadLocal<ArrayList<Transaction>>()
 
     override val size: Int
         get() = transactions.get()?.size ?: 0
@@ -39,7 +32,7 @@ internal object ThreadLocalTransactionsStack : TransactionsHolder {
      * If the stack does not exist yet for this thread, it is created.
      */
     override fun storeTransaction(transaction: Transaction) {
-        transactions.getOrSet { Stack() }.push(transaction)
+        transactions.getOrSet { ArrayList() }.add(transaction)
     }
 
     /**
@@ -54,7 +47,7 @@ internal object ThreadLocalTransactionsStack : TransactionsHolder {
     override fun removeTransaction(): Transaction {
         val stack = transactions.get()
         require(stack != null && stack.isNotEmpty()) { "No transaction to pop" }
-        val result = stack.pop()
+        val result = stack.removeAt(stack.lastIndex)
 
         if (stack.isEmpty()) {
             // Remove the ThreadLocal entirely when stack is empty.
@@ -70,7 +63,7 @@ internal object ThreadLocalTransactionsStack : TransactionsHolder {
      */
     override fun getTransactionOrNull(): Transaction? {
         val stack = transactions.get() ?: return null
-        return if (stack.isEmpty()) null else stack.peek()
+        return if (stack.isEmpty()) null else stack[stack.lastIndex]
     }
 
     /**
@@ -80,7 +73,7 @@ internal object ThreadLocalTransactionsStack : TransactionsHolder {
      * This method performs a linear search through the transaction stack to find
      * the most recent transaction associated with the given database. Does not modify the stack.
      *
-     * **Performance Note**: The current implementation uses [List.findLast] which has O(n) time complexity.
+     * **Performance Note**: The current implementation scans the stack from the top, which has O(n) time complexity.
      * For scenarios with many concurrent database connections, this may become a bottleneck.
      * Consider using a more efficient data structure (e.g., a Map of database to transaction stack)
      * if performance profiling indicates this is a problem.
@@ -91,11 +84,21 @@ internal object ThreadLocalTransactionsStack : TransactionsHolder {
     // TODO make search in list is not optimal, another structure should be used
     //  Related issue: https://youtrack.jetbrains.com/issue/EXPOSED-915/ThreadLocalTransactionsStack-makes-inefficient-operations
     override fun getTransactionOrNull(db: DatabaseApi): Transaction? {
-        return transactions.get()?.findLast { it.db == db }
+        val stack = transactions.get() ?: return null
+        for (i in stack.lastIndex downTo 0) {
+            val transaction = stack[i]
+            if (transaction.db == db) return transaction
+        }
+        return null
     }
 
     override fun <T : Transaction> getTransactionIsInstance(klass: Class<T>): T? {
-        return transactions.get()?.filterIsInstance(klass)?.lastOrNull()
+        val stack = transactions.get() ?: return null
+        for (i in stack.lastIndex downTo 0) {
+            val transaction = stack[i]
+            if (klass.isInstance(transaction)) return klass.cast(transaction)
+        }
+        return null
     }
 
     /**
