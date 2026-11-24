@@ -52,10 +52,17 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             val bar = char("bar")
         }
 
-        withDb {
+        withDb { testDb ->
             val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tester, withLogs = false)
             assertEquals(1, statements.size)
-            assertEquals(
+            if (testDb == TestDB.H2_V2) {
+                // H2 folds unquoted identifiers to upper case, so a lower-case column is quoted to keep its case (#683)
+                assertEquals(
+                    "CREATE TABLE ${addIfNotExistsIfSupported()}${tester.nameInDatabaseCase()} (\"bar\" CHAR NOT NULL)",
+                    statements.first()
+                )
+            }
+            assertSqlEquals(
                 "CREATE TABLE ${addIfNotExistsIfSupported()}${tester.nameInDatabaseCase()} " +
                     "(${"bar".inProperCase()} CHAR NOT NULL)",
                 statements.first()
@@ -124,8 +131,10 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             if (currentDialectTest is SQLiteDialect) {
                 assertTrue(statements.isEmpty())
             } else {
-                val expected = "ALTER TABLE ${tableName.inProperCase()} ADD PRIMARY KEY (${noPKTable.bar.nameInDatabaseCase()})"
-                assertEquals(expected, statements.single())
+                assertSqlEquals(
+                    "ALTER TABLE ${tableName.inProperCase()} ADD PRIMARY KEY (${noPKTable.bar.nameInDatabaseCase()})",
+                    statements.single()
+                )
             }
         }
     }
@@ -559,9 +568,9 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                 alterStatements = MigrationUtils.statementsRequiredForDatabaseMigration(testerNew, withLogs = false)
                 // column should be dropped without attempting to drop db-generated constraint
                 assertEquals(2, alterStatements.size)
-                assertTrue(
+                assertSqlStartsWith(
+                    "ALTER TABLE ${testerNew.nameInDatabaseCase()} ADD ${testerNew.letters.nameInDatabaseCase()}",
                     alterStatements.first()
-                        .startsWith("ALTER TABLE ${testerNew.nameInDatabaseCase()} ADD ${testerNew.letters.nameInDatabaseCase()}")
                 )
                 assertEquals(
                     alterStatements.last(),

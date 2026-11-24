@@ -28,8 +28,8 @@ class ColumnCommentMigrationTests : DatabaseTestsBase() {
                 // Verify no comments initially
                 val metadataBefore = connection.metadata { columns(testTableV1) }
                 val columnsBefore = metadataBefore[testTableV1]!!
-                assertNull(columnsBefore.find { it.name == testTableV1.id.nameInDatabaseCase() }?.comment, "id column should have no comment initially")
-                assertNull(columnsBefore.find { it.name == testTableV1.email.nameInDatabaseCase() }?.comment, "email column should have no comment initially")
+                assertNull(columnsBefore.metadataFor(testTableV1.id)?.comment, "id column should have no comment initially")
+                assertNull(columnsBefore.metadataFor(testTableV1.email)?.comment, "email column should have no comment initially")
 
                 // V2: Define table with comments added
                 val testTableV2 = object : Table("comment_migration_users") {
@@ -46,12 +46,12 @@ class ColumnCommentMigrationTests : DatabaseTestsBase() {
                 val columnsAfter = metadataAfter[testTableV2]!!
                 assertEquals(
                     "User identifier",
-                    columnsAfter.find { it.name == testTableV2.id.nameInDatabaseCase() }?.comment,
+                    columnsAfter.metadataFor(testTableV2.id)?.comment,
                     "id column should have comment"
                 )
                 assertEquals(
                     "User email address",
-                    columnsAfter.find { it.name == testTableV2.email.nameInDatabaseCase() }?.comment,
+                    columnsAfter.metadataFor(testTableV2.email)?.comment,
                     "email column should have comment"
                 )
             } finally {
@@ -76,8 +76,8 @@ class ColumnCommentMigrationTests : DatabaseTestsBase() {
                 // Verify initial comments
                 val metadataBefore = connection.metadata { columns(testTableV1) }
                 val columnsBefore = metadataBefore[testTableV1]!!
-                assertEquals("Product ID", columnsBefore.find { it.name == testTableV1.id.nameInDatabaseCase() }?.comment)
-                assertEquals("Product name", columnsBefore.find { it.name == testTableV1.name.nameInDatabaseCase() }?.comment)
+                assertEquals("Product ID", columnsBefore.metadataFor(testTableV1.id)?.comment)
+                assertEquals("Product name", columnsBefore.metadataFor(testTableV1.name)?.comment)
 
                 // V2: Define table with updated comments
                 val testTableV2 = object : Table("comment_migration_products") {
@@ -92,8 +92,8 @@ class ColumnCommentMigrationTests : DatabaseTestsBase() {
                 // Verify comments were updated
                 val metadataAfter = connection.metadata { columns(testTableV2) }
                 val columnsAfter = metadataAfter[testTableV2]!!
-                assertEquals("Unique product identifier", columnsAfter.find { it.name == testTableV2.id.nameInDatabaseCase() }?.comment)
-                assertEquals("Full product name", columnsAfter.find { it.name == testTableV2.name.nameInDatabaseCase() }?.comment)
+                assertEquals("Unique product identifier", columnsAfter.metadataFor(testTableV2.id)?.comment)
+                assertEquals("Full product name", columnsAfter.metadataFor(testTableV2.name)?.comment)
             } finally {
                 SchemaUtils.drop(testTableV1)
             }
@@ -116,8 +116,8 @@ class ColumnCommentMigrationTests : DatabaseTestsBase() {
                 // Verify initial comments exist
                 val metadataBefore = connection.metadata { columns(testTableV1) }
                 val columnsBefore = metadataBefore[testTableV1]!!
-                assertEquals("Order identifier", columnsBefore.find { it.name == testTableV1.id.nameInDatabaseCase() }?.comment)
-                assertEquals("Order total amount", columnsBefore.find { it.name == testTableV1.total.nameInDatabaseCase() }?.comment)
+                assertEquals("Order identifier", columnsBefore.metadataFor(testTableV1.id)?.comment)
+                assertEquals("Order total amount", columnsBefore.metadataFor(testTableV1.total)?.comment)
 
                 // V2: Define table without comments
                 val testTableV2 = object : Table("comment_migration_orders") {
@@ -132,8 +132,8 @@ class ColumnCommentMigrationTests : DatabaseTestsBase() {
                 // Verify comments were removed
                 val metadataAfter = connection.metadata { columns(testTableV2) }
                 val columnsAfter = metadataAfter[testTableV2]!!
-                assertNull(columnsAfter.find { it.name == testTableV2.id.nameInDatabaseCase() }?.comment, "id column comment should be removed")
-                assertNull(columnsAfter.find { it.name == testTableV2.total.nameInDatabaseCase() }?.comment, "total column comment should be removed")
+                assertNull(columnsAfter.metadataFor(testTableV2.id)?.comment, "id column comment should be removed")
+                assertNull(columnsAfter.metadataFor(testTableV2.total)?.comment, "total column comment should be removed")
             } finally {
                 SchemaUtils.drop(testTableV1)
             }
@@ -155,8 +155,8 @@ class ColumnCommentMigrationTests : DatabaseTestsBase() {
                 // Verify comments exist
                 val metadataBefore = connection.metadata { columns(testTable) }
                 val columnsBefore = metadataBefore[testTable]!!
-                assertEquals("Item ID", columnsBefore.find { it.name == testTable.id.nameInDatabaseCase() }?.comment)
-                assertEquals("Available quantity", columnsBefore.find { it.name == testTable.quantity.nameInDatabaseCase() }?.comment)
+                assertEquals("Item ID", columnsBefore.metadataFor(testTable.id)?.comment)
+                assertEquals("Available quantity", columnsBefore.metadataFor(testTable.quantity)?.comment)
 
                 // Same table definition - should generate no migration statements
                 val statements = MigrationUtils.statementsRequiredForDatabaseMigration(testTable)
@@ -184,9 +184,9 @@ class ColumnCommentMigrationTests : DatabaseTestsBase() {
                 // Verify initial state
                 val metadataBefore = connection.metadata { columns(testTableV1) }
                 val columnsBefore = metadataBefore[testTableV1]!!
-                assertEquals("Primary key", columnsBefore.find { it.name == testTableV1.id.nameInDatabaseCase() }?.comment)
-                assertNull(columnsBefore.find { it.name == testTableV1.name.nameInDatabaseCase() }?.comment)
-                assertEquals("Status code", columnsBefore.find { it.name == testTableV1.status.nameInDatabaseCase() }?.comment)
+                assertEquals("Primary key", columnsBefore.metadataFor(testTableV1.id)?.comment)
+                assertNull(columnsBefore.metadataFor(testTableV1.name)?.comment)
+                assertEquals("Status code", columnsBefore.metadataFor(testTableV1.status)?.comment)
 
                 // V2: Update one comment, add one, keep one unchanged
                 val testTableV2 = object : Table("comment_migration_partial") {
@@ -202,9 +202,9 @@ class ColumnCommentMigrationTests : DatabaseTestsBase() {
                 // Verify final state
                 val metadataAfter = connection.metadata { columns(testTableV2) }
                 val columnsAfter = metadataAfter[testTableV2]!!
-                assertEquals("Record identifier", columnsAfter.find { it.name == testTableV2.id.nameInDatabaseCase() }?.comment)
-                assertEquals("Full name", columnsAfter.find { it.name == testTableV2.name.nameInDatabaseCase() }?.comment)
-                assertEquals("Status code", columnsAfter.find { it.name == testTableV2.status.nameInDatabaseCase() }?.comment)
+                assertEquals("Record identifier", columnsAfter.metadataFor(testTableV2.id)?.comment)
+                assertEquals("Full name", columnsAfter.metadataFor(testTableV2.name)?.comment)
+                assertEquals("Status code", columnsAfter.metadataFor(testTableV2.status)?.comment)
             } finally {
                 SchemaUtils.drop(testTableV1)
             }
