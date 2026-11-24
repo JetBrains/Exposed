@@ -46,7 +46,7 @@ class SequenceAutoIncrementTests : DatabaseTestsBase() {
                 else -> {
                     assertEquals(1, statements.size)
                     val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
-                    assertTrue(statements[0].startsWith("ALTER TABLE test_table $alterColumnWord COLUMN id ", ignoreCase = true))
+                    assertSqlStartsWith("ALTER TABLE test_table $alterColumnWord COLUMN id ", statements[0])
                 }
             }
         }
@@ -69,7 +69,7 @@ class SequenceAutoIncrementTests : DatabaseTestsBase() {
                     assertEquals(expectedCreateSequenceStatement(MigrationTestsData.SEQUENCE_NAME), statements[0])
                 } else {
                     val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
-                    assertTrue(statements[0].equals("ALTER TABLE TEST_TABLE $alterColumnWord COLUMN ID BIGINT AUTO_INCREMENT NOT NULL", ignoreCase = true))
+                    assertSqlEquals("ALTER TABLE TEST_TABLE $alterColumnWord COLUMN ID BIGINT AUTO_INCREMENT NOT NULL", statements[0])
                 }
             }
         }
@@ -122,7 +122,7 @@ class SequenceAutoIncrementTests : DatabaseTestsBase() {
                 else -> {
                     assertEquals(1, statements.size)
                     val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
-                    assertTrue(statements[0].equals("ALTER TABLE test_table $alterColumnWord COLUMN id BIGINT", ignoreCase = true))
+                    assertSqlEquals("ALTER TABLE test_table $alterColumnWord COLUMN id BIGINT", statements[0])
                 }
             }
         }
@@ -159,7 +159,7 @@ class SequenceAutoIncrementTests : DatabaseTestsBase() {
                     }
                     else -> {
                         val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
-                        assertTrue(statements[1].startsWith("ALTER TABLE test_table $alterColumnWord COLUMN id BIGINT", ignoreCase = true))
+                        assertSqlStartsWith("ALTER TABLE test_table $alterColumnWord COLUMN id BIGINT", statements[1])
                     }
                 }
             }
@@ -202,7 +202,7 @@ class SequenceAutoIncrementTests : DatabaseTestsBase() {
                         else -> {
                             assertEquals(2, statements.size)
                             val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
-                            assertTrue(statements[1].startsWith("ALTER TABLE test_table $alterColumnWord COLUMN id BIGINT", ignoreCase = true))
+                            assertSqlStartsWith("ALTER TABLE test_table $alterColumnWord COLUMN id BIGINT", statements[1])
                         }
                     }
                 } finally {
@@ -282,7 +282,7 @@ class SequenceAutoIncrementTests : DatabaseTestsBase() {
                         }
                         else -> {
                             assertEquals(2, statements.size)
-                            assertTrue(statements[0].startsWith("ALTER TABLE TEST_TABLE ALTER COLUMN ID", ignoreCase = true))
+                            assertSqlStartsWith("ALTER TABLE TEST_TABLE ALTER COLUMN ID", statements[0])
                             assertTrue(statements[1].equals(expectedDropSequenceStatement(MigrationTestsData.SEQUENCE_NAME), ignoreCase = true))
                         }
                     }
@@ -398,7 +398,7 @@ class SequenceAutoIncrementTests : DatabaseTestsBase() {
                         }
                         else -> {
                             assertEquals(2, statements.size)
-                            assertTrue(statements[0].startsWith("ALTER TABLE TEST_TABLE ALTER COLUMN ID", ignoreCase = true))
+                            assertSqlStartsWith("ALTER TABLE TEST_TABLE ALTER COLUMN ID", statements[0])
                             assertTrue(
                                 statements[1].equals(expectedDropSequenceStatement(MigrationTestsData.customSequence.name), ignoreCase = true)
                             )

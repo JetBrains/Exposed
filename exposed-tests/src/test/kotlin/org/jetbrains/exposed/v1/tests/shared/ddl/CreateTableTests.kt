@@ -112,7 +112,7 @@ class CreateTableTests : DatabaseTestsBase() {
             assertEquals(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + testTable.tableName.inProperCase() + " (" +
                     "${singleColumn.descriptionDdl(false)}, " +
-                    "CONSTRAINT $pkConstraintName PRIMARY KEY (${singleColumn.name.inProperCase()})" +
+                    "CONSTRAINT $pkConstraintName PRIMARY KEY (${identity(singleColumn)})" +
                     ")",
                 testTable.ddl
             )
@@ -194,8 +194,8 @@ class CreateTableTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id1, id2)
         }
         withDb { testDb ->
-            val id1ProperName = account.id1.name.inProperCase()
-            val id2ProperName = account.id2.name.inProperCase()
+            val id1ProperName = identity(account.id1)
+            val id2ProperName = identity(account.id2)
             val tableName = account.tableName
 
             assertEquals(
@@ -204,8 +204,8 @@ class CreateTableTests : DatabaseTestsBase() {
                     "CONSTRAINT pk_$tableName PRIMARY KEY ($id1ProperName, $id2ProperName)" +
                     when (testDb) {
                         TestDB.SQLITE, TestDB.ORACLE ->
-                            ", CONSTRAINT ${"chk_Account_signed_integer_id1".inProperCase()} CHECK (${"id1".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
-                                ", CONSTRAINT ${"chk_Account_signed_integer_id2".inProperCase()} CHECK (${"id2".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                            ", CONSTRAINT ${"chk_Account_signed_integer_id1".inProperCase()} CHECK (${identity(account.id1)} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
+                                ", CONSTRAINT ${"chk_Account_signed_integer_id2".inProperCase()} CHECK (${identity(account.id2)} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
                         else -> ""
                     } +
                     ")",
@@ -222,8 +222,8 @@ class CreateTableTests : DatabaseTestsBase() {
 
         // Table with composite primary key
         withDb { testDb ->
-            val id1ProperName = Person.id1.name.inProperCase()
-            val id2ProperName = Person.id2.name.inProperCase()
+            val id1ProperName = identity(Person.id1)
+            val id2ProperName = identity(Person.id2)
             val tableName = Person.tableName
 
             assertEquals(
@@ -232,8 +232,8 @@ class CreateTableTests : DatabaseTestsBase() {
                     "CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName, $id2ProperName)" +
                     when (testDb) {
                         TestDB.SQLITE, TestDB.ORACLE ->
-                            ", CONSTRAINT ${"chk_Person_signed_integer_id1".inProperCase()} CHECK (${"id1".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
-                                ", CONSTRAINT ${"chk_Person_signed_integer_id2".inProperCase()} CHECK (${"id2".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                            ", CONSTRAINT ${"chk_Person_signed_integer_id1".inProperCase()} CHECK (${identity(Person.id1)} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
+                                ", CONSTRAINT ${"chk_Person_signed_integer_id2".inProperCase()} CHECK (${identity(Person.id2)} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
                         else -> ""
                     } +
                     ")",
@@ -248,7 +248,7 @@ class CreateTableTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(user_name, name = pkConstraintName)
         }
         withDb {
-            val userNameProperName = user.user_name.name.inProperCase()
+            val userNameProperName = identity(user.user_name)
             val tableName = TransactionManager.current().identity(user)
 
             // Must generate primary key constraint, because the constraint name was defined.
@@ -268,9 +268,9 @@ class CreateTableTests : DatabaseTestsBase() {
         withDb { testDb ->
             val tableName = Person.tableName
             val tableProperName = tableName.inProperCase()
-            val id1ProperName = Person.id1.name.inProperCase()
+            val id1ProperName = identity(Person.id1)
             val ddlId1 = Person.id1.ddl
-            val id2ProperName = Person.id2.name.inProperCase()
+            val id2ProperName = identity(Person.id2)
             val ddlId2 = Person.id2.ddl
             val pkConstraintName = Person.primaryKey.name
 
@@ -301,7 +301,7 @@ class CreateTableTests : DatabaseTestsBase() {
         withTables(Book) { testDb ->
             val tableProperName = Book.tableName.inProperCase()
             val pkConstraintName = Book.primaryKey.name
-            val id1ProperName = Book.id.name.inProperCase()
+            val id1ProperName = identity(Book.id)
             val ddlId1 = Book.id.ddl
 
             when (testDb) {

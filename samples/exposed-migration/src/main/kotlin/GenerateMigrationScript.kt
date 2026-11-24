@@ -33,10 +33,10 @@ fun simulateExistingDatabase() {
         Users.dropStatement().forEach(::exec)
 
         // simulate an existing table with no primary key
-        exec("CREATE TABLE IF NOT EXISTS USERS (ID UUID NOT NULL, EMAIL VARCHAR(320) NOT NULL)")
+        exec("CREATE TABLE IF NOT EXISTS USERS (\"id\" UUID NOT NULL, \"email\" VARCHAR(320) NOT NULL)")
 
         // simulate an existing record in the table
-        // INSERT INTO USERS (ID, EMAIL) VALUES ('05fb3246-9387-4d04-a27f-fa0107c33883', 'root1@root.com')
+        // INSERT INTO USERS ("id", "email") VALUES ('05fb3246-9387-4d04-a27f-fa0107c33883', 'root1@root.com')
         buildStatement {
             Users.insert {
                 it[id] = Uuid.parseHexDash("05fb3246-9387-4d04-a27f-fa0107c33883")
