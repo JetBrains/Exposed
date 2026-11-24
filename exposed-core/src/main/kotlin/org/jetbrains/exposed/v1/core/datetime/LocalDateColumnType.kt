@@ -84,7 +84,15 @@ abstract class LocalDateColumnType<T> : ColumnType<T>(), IDateColumnType {
 
         return when {
             currentDialect is SQLiteDialect -> formatDate(instant, TimeZone.currentSystemDefault())
-            else -> Date(instant.toEpochMilliseconds())
+            else -> {
+                require(instant.isRepresentableAsEpochMillis()) {
+                    "Value $localDate is out of range for a DATE column: it is beyond what a JDBC date parameter can " +
+                        "represent (roughly years -292275055 to 292278994). Binding it would silently send a different " +
+                        "date to the database, making the condition match unrelated rows or none at all. " +
+                        "Use a date within the supported range."
+                }
+                Date(instant.toEpochMilliseconds())
+            }
         }
     }
 
@@ -108,3 +116,15 @@ abstract class LocalDateColumnType<T> : ColumnType<T>(), IDateColumnType {
 private fun LocalDate.atStartOfDayIn(timeZone: TimeZone): Instant {
     return this.atTime(LocalTime(0, 0, 0)).toInstant(timeZone)
 }
+
+private val MIN_MILLIS_INSTANT = Instant.fromEpochMilliseconds(Long.MIN_VALUE)
+private val MAX_MILLIS_INSTANT = Instant.fromEpochMilliseconds(Long.MAX_VALUE)
+
+/**
+ * Returns whether this instant survives conversion to epoch milliseconds and back unchanged.
+ *
+ * JDBC date and timestamp parameters carry values as milliseconds since the epoch, so instants outside this range are
+ * silently replaced with the closest representable value when bound. The database then receives a different value than
+ * the one supplied, which makes the surrounding condition match rows it should not (or none at all).
+ */
+internal fun Instant.isRepresentableAsEpochMillis(): Boolean = this >= MIN_MILLIS_INSTANT && this <= MAX_MILLIS_INSTANT
