@@ -54,10 +54,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           INPUT_TAG: ${{ inputs.tag }}
           FORCE: ${{ inputs.force }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           set -euo pipefail
           TAG="$INPUT_TAG"
-          if [ -z "$TAG" ]; then TAG="${{ github.event.release.tag_name }}"; fi
+          if [ -z "$TAG" ]; then TAG="$RELEASE_TAG"; fi
           if [ -z "$TAG" ]; then
             # Semver-max of published releases; legacy pre-release tags like
             # 1.0.0-rc-4 are filtered out before the numeric comparison.
