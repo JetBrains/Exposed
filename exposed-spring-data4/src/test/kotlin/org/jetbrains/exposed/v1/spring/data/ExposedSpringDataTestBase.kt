@@ -63,16 +63,26 @@ abstract class ExposedSpringDataTestBase {
     protected fun Iterable<Customer>.orderedNames() = map { it.name }
 
     /** Runs [block] and returns the SQL of every SELECT it executed in the current (test) transaction. */
-    protected fun captureSelects(block: () -> Unit): List<String> {
+    protected fun captureSelects(block: () -> Unit): List<String> = captureStatements(StatementType.SELECT, block)
+
+    /** Runs [block] and returns the SQL of every DELETE it executed in the current (test) transaction. */
+    protected fun captureDeletes(block: () -> Unit): List<String> = captureStatements(StatementType.DELETE, block)
+
+    private fun captureStatements(type: StatementType, block: () -> Unit): List<String> {
         val statements = mutableListOf<String>()
+        var capturing = true
         TransactionManager.current().addLogger(
             object : SqlLogger {
                 override fun log(context: StatementContext, transaction: Transaction) {
-                    if (context.statement.type == StatementType.SELECT) statements += context.sql(transaction)
+                    if (capturing && context.statement.type == type) statements += context.sql(transaction)
                 }
             }
         )
-        block()
+        try {
+            block()
+        } finally {
+            capturing = false
+        }
         return statements
     }
 

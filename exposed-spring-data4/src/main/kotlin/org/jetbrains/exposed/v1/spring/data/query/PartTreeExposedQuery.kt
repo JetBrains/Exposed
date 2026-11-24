@@ -27,14 +27,33 @@ internal class PartTreeExposedQuery<T : Any, ID : Any>(
     private val metadata = projectionResolver.metadata
     private val table = metadata.table
     private val tree = PartTree(method.name, method.entityInformation.javaType)
+    private val paths = projectionResolver.paths
 
     init {
         tree.parts.forEach { part ->
-            require(!part.property.hasNext()) { "Nested paths are not supported: ${part.property.toDotPath()} in $method" }
-            val column = metadata.requireColumn(part.property.segment)
             require(part.type in ExposedQueryCreator.SUPPORTED) { "${part.type} is not supported yet ($method)" }
+            if (part.type in ExposedQueryCreator.EMPTINESS_TYPES) {
+                try {
+                    paths.resolveToMany(part.property)
+                } catch (e: IllegalArgumentException) {
+                    throw IllegalArgumentException("${part.type} is only supported on to-many properties: ${e.message} ($method)", e)
+                }
+                return@forEach
+            }
+            val column = try {
+                paths.resolve(part.property).leaf
+            } catch (e: IllegalArgumentException) {
+                throw IllegalArgumentException("${e.message} ($method)", e)
+            }
             require(part.shouldIgnoreCase() != Part.IgnoreCaseType.ALWAYS || column.isStringColumn()) {
-                "IgnoreCase is only supported for string properties, but ${part.property.segment} is not ($method)"
+                "IgnoreCase is only supported for string properties, but ${part.property.toDotPath()} is not ($method)"
+            }
+        }
+        tree.sort.forEach { order ->
+            try {
+                paths.resolveSort(order.property)
+            } catch (e: IllegalArgumentException) {
+                throw IllegalArgumentException("${e.message} ($method)", e)
             }
         }
     }
@@ -49,7 +68,7 @@ internal class PartTreeExposedQuery<T : Any, ID : Any>(
         val accessor = ParametersParameterAccessor(method.parameters, parameters)
         val converter = converter(accessor)
         if (method.isScrollQuery) return scroll(accessor, converter)
-        val query = ExposedQueryCreator(tree, accessor, metadata, converter.columns).createQuery()
+        val query = ExposedQueryCreator(tree, accessor, metadata, paths, converter.columns).createQuery()
         if (tree.isDistinct) query.withDistinct()
 
         return when {
@@ -59,20 +78,20 @@ internal class PartTreeExposedQuery<T : Any, ID : Any>(
             method.isPageQuery -> {
                 val pageable = accessor.pageable
                 val countQuery = query.copy()
-                val content = query.paged(pageable).map(converter::convert)
+                val content = converter.convertAll(query.paged(pageable).toList())
                 PageableExecutionUtils.getPage(content, pageable, countQuery::count)
             }
             method.isSliceQuery -> {
                 val pageable = accessor.pageable
                 if (pageable.isUnpaged) {
-                    SliceImpl(query.map(converter::convert), pageable, false)
+                    SliceImpl(converter.convertAll(query.toList()), pageable, false)
                 } else {
-                    val rows = query.limit(pageable.pageSize + 1).offset(pageable.offset).map(converter::convert)
-                    SliceImpl(rows.take(pageable.pageSize), pageable, rows.size > pageable.pageSize)
+                    val rows = query.limit(pageable.pageSize + 1).offset(pageable.offset).toList()
+                    SliceImpl(converter.convertAll(rows.take(pageable.pageSize)), pageable, rows.size > pageable.pageSize)
                 }
             }
             method.isCollectionQuery || method.isStreamQuery -> {
-                val result = query.paged(accessor.pageable).limited(accessor).map(converter::convert)
+                val result = converter.convertAll(query.paged(accessor.pageable).limited(accessor).toList())
                 if (method.isStreamQuery) result.stream() else result
             }
             else -> {
@@ -85,16 +104,19 @@ internal class PartTreeExposedQuery<T : Any, ID : Any>(
 
     override fun getQueryMethod(): QueryMethod = method
 
-    /** Deletes the matching rows and returns them if the method returns a collection, otherwise their number. */
+    /**
+     * Deletes the matching rows and returns them if the method returns a collection, otherwise their number.
+     * Only rows of the table are deleted, the rows referencing them follow the `ON DELETE` rule of their foreign key.
+     */
     private fun delete(query: Query, converter: RowConverter<*>): Any {
         val where = query.where ?: Op.TRUE
-        if (!method.isCollectionQuery) {
-            return table.deleteWhere { where }.toLong()
-        }
+        if (!method.isCollectionQuery) return table.deleteWhere { where }.toLong()
+        // converted before deleting, so their to-many rows are still loaded
         val rows = query.toList()
+        val deleted = converter.convertAll(rows)
         val ids = rows.map { it[table.id] }
         if (ids.isNotEmpty()) table.deleteWhere { SingleValueInListOp(table.id, ids, isInList = true) }
-        return rows.map(converter::convert)
+        return deleted
     }
 
     private fun Query.limited(accessor: ParametersParameterAccessor) = apply {
@@ -117,12 +139,12 @@ internal class PartTreeExposedQuery<T : Any, ID : Any>(
 
     private fun offsetScroll(accessor: ParametersParameterAccessor, converter: RowConverter<*>, position: OffsetScrollPosition, limit: Int?): Window<Any> {
         val start = if (position.isInitial) 0L else position.offset + 1
-        val query = ExposedQueryCreator(tree, accessor, metadata, converter.columns).createQuery()
+        val query = ExposedQueryCreator(tree, accessor, metadata, paths, converter.columns).createQuery()
         if (tree.isDistinct) query.withDistinct()
         if (start > 0) query.offset(start)
         limit?.let { query.limit(it + 1) }
-        val rows = query.map(converter::convert)
-        val content = if (limit != null) rows.take(limit) else rows
+        val rows = query.toList()
+        val content = converter.convertAll(if (limit != null) rows.take(limit) else rows)
         return Window.from(content, { index -> ScrollPosition.offset(start + index) }, limit != null && rows.size > limit)
     }
 
@@ -132,22 +154,24 @@ internal class PartTreeExposedQuery<T : Any, ID : Any>(
         val nullsHigh = nullsSortHigh()
         var sort = Sort.unsorted()
         var effectiveSort = Sort.unsorted()
-        val query = ExposedQueryCreator(tree, accessor, metadata, converter.columns, selectSortColumns = true) { declared ->
+        val creator = ExposedQueryCreator(tree, accessor, metadata, paths, converter.columns, selectSortColumns = true) { declared ->
             val withId = if (declared.getOrderFor(idProperty) == null) declared.and(Sort.by(idProperty)) else declared
             // NULL positions are made explicit, so the keyset predicate knows on which side of the other values they are
             sort = Sort.by(withId.map { it.withExplicitNullHandling(nullsHigh) }.toList())
             effectiveSort = if (backward) Sort.by(sort.map { it.reversedWithNulls() }.toList()) else sort
             effectiveSort
-        }.createQuery()
+        }
+        val query = creator.createQuery()
+        val columns = creator.sortColumns
         if (tree.isDistinct) query.withDistinct()
-        if (!position.isInitial) query.andWhere { keysetPredicate(effectiveSort, position) }
+        if (!position.isInitial) query.andWhere { keysetPredicate(effectiveSort, position, columns) }
         limit?.let { query.limit(it + 1) }
 
         val fetched = query.toList()
         val rows = (if (limit != null) fetched.take(limit) else fetched).let { if (backward) it.reversed() else it }
-        val keys = rows.map { row -> keysOf(row, sort) }
+        val keys = rows.map { row -> keysOf(row, sort, columns) }
         return Window.from(
-            rows.map(converter::convert),
+            converter.convertAll(rows),
             { index -> ScrollPosition.of(keys[index], position.direction) },
             limit != null && fetched.size > limit,
         )
@@ -156,7 +180,7 @@ internal class PartTreeExposedQuery<T : Any, ID : Any>(
     /** Pins the position of `NULL`s for nullable columns to what the database does natively, unless the order already sets it. */
     private fun Sort.Order.withExplicitNullHandling(nullsHigh: Boolean): Sort.Order {
         // unknown properties are left as they are, the ORDER BY reports them
-        if (nullHandling != Sort.NullHandling.NATIVE || metadata.columnFor(property)?.columnType?.nullable != true) return this
+        if (nullHandling != Sort.NullHandling.NATIVE || runCatching { paths.resolveSort(property).nullable }.getOrDefault(false) != true) return this
         return if (isAscending != nullsHigh) nullsFirst() else nullsLast()
     }
 
@@ -173,12 +197,12 @@ internal class PartTreeExposedQuery<T : Any, ID : Any>(
      * Matches the rows that come strictly after the position's keys in [sort], the order the query actually uses
      * (already reversed when scrolling backward): `(a > ?) OR (a = ? AND b > ?) OR ...`, with explicit handling of `NULL`.
      */
-    private fun keysetPredicate(sort: Sort, position: KeysetScrollPosition): Op<Boolean> {
+    private fun keysetPredicate(sort: Sort, position: KeysetScrollPosition, columns: Map<String, Column<Any?>>): Op<Boolean> {
         val orders = sort.toList()
         val keys = position.keys
         fun columnAndValue(order: Sort.Order): Pair<Column<Any?>, Any?> {
             require(keys.containsKey(order.property)) { "Keyset position $position has no key for sort property '${order.property}'" }
-            val column = metadata.requireColumn(order.property)
+            val column = columns.getValue(order.property)
             return column to column.toDbValue(keys[order.property])
         }
         return orders.indices.map { i ->
@@ -200,8 +224,8 @@ internal class PartTreeExposedQuery<T : Any, ID : Any>(
         return if (order.nullHandling == Sort.NullHandling.NULLS_LAST) comparison or column.isNull() else comparison
     }
 
-    private fun keysOf(row: ResultRow, sort: Sort): Map<String, Any?> = sort.associate { order ->
-        order.property to row[metadata.requireColumn(order.property)].unwrapEntityId()
+    private fun keysOf(row: ResultRow, sort: Sort, columns: Map<String, Column<Any?>>): Map<String, Any?> = sort.associate { order ->
+        order.property to row[columns.getValue(order.property)].unwrapEntityId()
     }
 
     private fun Query.paged(p: Pageable) = apply { if (p.isPaged) limit(p.pageSize).offset(p.offset) }
