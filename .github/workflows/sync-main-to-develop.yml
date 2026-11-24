@@ -48,6 +48,8 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    # The environment holds SYNC_APP_PRIVATE_KEY (deployment branches: main only, no required reviewers)
+    environment: sync
     steps:
       - name: Create sync app token
         uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
