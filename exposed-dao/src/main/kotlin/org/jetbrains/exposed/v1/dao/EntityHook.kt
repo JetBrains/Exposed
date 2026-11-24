@@ -6,6 +6,7 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.transactions.currentTransactionOrNull
 import org.jetbrains.exposed.v1.core.transactions.transactionScope
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import java.util.Deque
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -37,9 +38,19 @@ data class EntityChange(
 /**
  * Returns the actual [Entity] instance associated with [this][EntityChange] event,
  * or `null` if the entity is not found.
+ *
+ * If the entity is no longer stored in the current transaction's cache, the instance on which the
+ * change was performed is returned instead, so that subscribers mutate the same instance that was
+ * flushed rather than a newly loaded replacement.
  */
-fun <ID : Any, T : Entity<ID>> EntityChange.toEntity(): T? =
-    (entityClass as EntityClass<ID, T>).findById(entityId as EntityID<ID>)
+@Suppress("UNCHECKED_CAST")
+fun <ID : Any, T : Entity<ID>> EntityChange.toEntity(): T? {
+    val entityClass = entityClass as EntityClass<ID, T>
+    val id = entityId as EntityID<ID>
+    return entityClass.testCache(id)
+        ?: TransactionManager.currentOrNull()?.changedEntities[this] as? T
+        ?: entityClass.findById(id)
+}
 
 /**
  * Returns the actual [Entity] instance associated with [this][EntityChange] event,
@@ -53,6 +64,9 @@ fun <ID : Any, T : Entity<ID>> EntityChange.toEntity(klass: EntityClass<ID, T>):
 
 private val Transaction.unprocessedEvents: Deque<EntityChange> by transactionScope { ConcurrentLinkedDeque() }
 private val Transaction.entityEvents: Deque<EntityChange> by transactionScope { ConcurrentLinkedDeque() }
+
+/** The entities on which registered [EntityChange] events were performed, kept per transaction. */
+private val Transaction.changedEntities: MutableMap<EntityChange, Entity<*>> by transactionScope { HashMap() }
 private val entitySubscribers = ConcurrentLinkedQueue<(EntityChange) -> Unit>()
 
 /**
@@ -82,10 +96,26 @@ fun Transaction.registerChange(
     entityId: EntityID<*>,
     changeType: EntityChangeType
 ) {
+    registerChange(entityClass, entityId, changeType, null)
+}
+
+/**
+ * Creates a new [EntityChange] with [this][Transaction] id and registers it as an entity event,
+ * keeping a reference to the [changedEntity] instance on which the change was performed.
+ */
+internal fun Transaction.registerChange(
+    entityClass: EntityClass<*, Entity<*>>,
+    entityId: EntityID<*>,
+    changeType: EntityChangeType,
+    changedEntity: Entity<*>?
+) {
     EntityChange(entityClass, entityId, changeType, transactionId).let {
         if (unprocessedEvents.peekLast() != it) {
             unprocessedEvents.addLast(it)
             entityEvents.addLast(it)
+        }
+        if (changedEntity != null) {
+            changedEntities[it] = changedEntity
         }
     }
 }
