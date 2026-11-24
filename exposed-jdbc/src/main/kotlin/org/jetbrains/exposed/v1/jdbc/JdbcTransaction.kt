@@ -304,6 +304,24 @@ open class JdbcTransaction(
         executedStatements.clear()
     }
 
+    /**
+     * Closes previously executed statements whose result sets are no longer open, while leaving any statement
+     * with a still-open [ResultSet] untouched, as that result set may still be iterated by caller code.
+     *
+     * Statements left open remain tracked and are closed either by a subsequent call to this function, once their
+     * result sets have been consumed, or by [closeExecutedStatements] when the transaction finishes.
+     */
+    internal fun closeConsumedExecutedStatements() {
+        val iterator = executedStatements.listIterator(executedStatements.size)
+        while (iterator.hasPrevious()) {
+            val statement = iterator.previous()
+            if (!statement.hasOpenResultSet) {
+                statement.closeIfPossible()
+                iterator.remove()
+            }
+        }
+    }
+
     final override fun addLogger(vararg logger: SqlLogger): CompositeSqlLogger {
         @OptIn(InternalApi::class)
         return withThreadLocalTransaction(this) {
