@@ -32,9 +32,16 @@ jobs:
           BASE_REF: ${{ github.event.pull_request.base.ref || 'main' }}
         run: |
           git fetch origin "$BASE_REF":refs/remotes/origin/"$BASE_REF"
-          CHANGED_FILES=$(git --no-pager diff --name-only --diff-filter=dr origin/"$BASE_REF" HEAD | grep '\(.*.kt\|.*.kts\)$' | grep -v '/MavenProjectGeneration.kt$' | grep -v '/src/test/resources/template/sourceFiles/' | tr '\n' , | rev | cut -c 2- | rev)
-          echo "Changed files: $CHANGED_FILES"
-          echo "CHANGED_FILES=$CHANGED_FILES" >> "$GITHUB_ENV"
+          # NUL-delimited list: a filename with spaces must survive as one item
+          CHANGED_FILES_LIST="$RUNNER_TEMP/changed-files.txt"
+          git --no-pager diff --name-only --diff-filter=dr -z origin/"$BASE_REF" HEAD \
+            | grep -z '\(.*.kt\|.*.kts\)$' \
+            | grep -zv '/MavenProjectGeneration.kt$' \
+            | grep -zv '/src/test/resources/template/sourceFiles/' \
+            > "$CHANGED_FILES_LIST" || true
+          echo "Changed files:"
+          tr '\0' '\n' < "$CHANGED_FILES_LIST"
+          echo "CHANGED_FILES_LIST=$CHANGED_FILES_LIST" >> "$GITHUB_ENV"
       # Resolves and installs a specific version of detekt on to a GitHub Actions Runner if not already present in the tool cache
       - name: "set-up-detekt"
         uses: peter-murray/setup-detekt@v2
@@ -43,14 +50,20 @@ jobs:
       # Runs detekt on changed files
       - name: "run-detekt"
         run: |
-          if [ -z "$CHANGED_FILES" ]
+          mapfile -d '' -t CHANGED_FILES < "$CHANGED_FILES_LIST"
+          if [ "${#CHANGED_FILES[@]}" -eq 0 ]
           then
             echo "No changed Kotlin files found."
             exit 0
           fi
-          
+
           echo "Running detekt check..."
-          DETEKT_ISSUES=$(detekt-cli --build-upon-default-config --config detekt/detekt-config.yml --plugins detekt/detekt-formatting-1.23.8.jar --input $CHANGED_FILES)
+          CHANGED_FILES_INPUT=""
+          for file in "${CHANGED_FILES[@]}"
+          do
+            CHANGED_FILES_INPUT+="${CHANGED_FILES_INPUT:+,}$file"
+          done
+          DETEKT_ISSUES=$(detekt-cli --build-upon-default-config --config detekt/detekt-config.yml --plugins detekt/detekt-formatting-1.23.8.jar --input "$CHANGED_FILES_INPUT")
           if [ -n "$DETEKT_ISSUES" ]; then
             echo "***********************************************"
             echo "$DETEKT_ISSUES"
