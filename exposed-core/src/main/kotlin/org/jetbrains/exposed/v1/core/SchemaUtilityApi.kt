@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.v1.core
 
+import org.jetbrains.exposed.v1.core.datetime.DurationColumnType
 import org.jetbrains.exposed.v1.core.vendors.*
 import java.math.BigDecimal
 
@@ -469,6 +470,11 @@ abstract class SchemaUtilityApi {
     @Suppress("NestedBlockDepth", "ComplexMethod", "LongMethod")
     private fun DatabaseDialect.dbDefaultToString(column: Column<*>, exp: Expression<*>): String {
         return when (exp) {
+            is LiteralOp<*> if exp.columnType is DurationColumnType<*> && exp.value != null -> {
+                @Suppress("UNCHECKED_CAST")
+                val nanoseconds = (exp.columnType as DurationColumnType<Any>).toDuration(exp.value as Any).inWholeNanoseconds
+                dbDefaultToString(column, LiteralOp(LongColumnType(), nanoseconds))
+            }
             is LiteralOp<*> -> {
                 when (val value = exp.value) {
                     is Boolean -> when (this) {
