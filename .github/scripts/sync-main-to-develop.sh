@@ -22,6 +22,14 @@ set -euo pipefail
 
 log() { echo "[sync] $*"; }
 
+# persist-credentials is off in the workflow, so pushes carry the masked per-run
+# app token in an explicit URL instead of .git/config.
+if [ -n "${GH_TOKEN:-}" ]; then
+  PUSH_URL="https://x-access-token:${GH_TOKEN}@github.com/JetBrains/Exposed.git"
+else
+  PUSH_URL=origin # local manual runs: whatever credentials the clone already has
+fi
+
 # ----------------------------------------------------------- target develop line
 TARGET="${INPUT_TARGET:-}"
 if [ -z "$TARGET" ]; then
@@ -123,12 +131,7 @@ whatever queued behind the conflict once it is closed."
     assignee=$(gh pr view "$pr_ref" --json author --jq '.author.login' 2>/dev/null || true)
   fi
 
-  git push --force origin "HEAD:refs/heads/$SYNC_BRANCH"
-  assign_args=()
-  if [ -n "$assignee" ]; then
-    assign_args=(--assignee "$assignee")
-    log "conflict assigned to @$assignee (author of the conflicting fix)"
-  fi
+  git push --force "$PUSH_URL" "HEAD:refs/heads/$SYNC_BRANCH"
   pr_url=$(gh pr create --base "$TARGET" --head "$SYNC_BRANCH" \
     --title "chore: Sync main into $TARGET (conflict)" \
     --body "$(cat <<EOF
@@ -147,7 +150,15 @@ How to resolve:
 The sweep skips further syncs while this PR is open, and resumes with
 everything that queued up behind the conflict once it is closed.
 EOF
-)" "${assign_args[@]}")
+)")
+  # Assignees and labels go through the issues API, which the sync app's
+  # permissions (contents + pull requests only) do not cover: they are
+  # best-effort and must never abort the escalation.
+  if [ -n "$assignee" ]; then
+    gh pr edit "$pr_url" --add-assignee "$assignee" 2>/dev/null \
+      && log "conflict assigned to @$assignee (author of the conflicting fix)" \
+      || log "note: could not assign @$assignee (app lacks issues access); assign manually"
+  fi
   gh pr edit "$pr_url" --add-label sync-conflict 2>/dev/null \
     || log "note: add a 'sync-conflict' label once for filtering"
   log "conflict escalated: $pr_url"
@@ -160,7 +171,7 @@ if [ "$applied" -eq 0 ]; then
 fi
 
 # -------------------------------------------------------------------- open the PR
-git push --force origin "HEAD:refs/heads/$SYNC_BRANCH"
+git push --force "$PUSH_URL" "HEAD:refs/heads/$SYNC_BRANCH"
 pr_url=$(gh pr create --base "$TARGET" --head "$SYNC_BRANCH" \
   --title "chore: Sync main into $TARGET" \
   --body "$(cat <<EOF

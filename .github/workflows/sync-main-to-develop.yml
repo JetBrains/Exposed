@@ -9,6 +9,13 @@
 # conflicting fix's author; sweeps resume once it is closed.
 #
 # Requires repository settings: "Allow auto-merge" and "Allow rebase merging".
+#
+# Requires the exposed-sync-bot GitHub App (see ITKB-A-251): the org-wide
+# "Allow GitHub Actions to create and approve pull requests" setting is off
+# by policy, so GITHUB_TOKEN cannot open the sync PRs. The sweep mints the
+# app's token via actions/create-github-app-token (vars.SYNC_APP_ID +
+# secrets.SYNC_APP_PRIVATE_KEY) and acts as the app throughout. As a bonus,
+# PRs opened by an app do trigger CI, unlike ones opened with GITHUB_TOKEN.
 
 name: Sync main into develop
 
@@ -32,8 +39,7 @@ on:
         default: ""
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 concurrency:
   group: sync-main-to-develop
@@ -42,13 +48,24 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    # The environment holds SYNC_APP_PRIVATE_KEY (deployment branches: main only, no required reviewers)
+    environment: sync
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Create sync app token
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        id: app-token
         with:
+          app-id: ${{ vars.SYNC_APP_ID }}
+          private-key: ${{ secrets.SYNC_APP_PRIVATE_KEY }}
+          repositories: Exposed
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          persist-credentials: false # the script pushes with an explicit token URL instead
           fetch-depth: 0 # full history: the sweep computes patch-ids since the merge-base
       - name: Sweep main into the develop line
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           INPUT_TARGET: ${{ inputs.target }}
         run: bash .github/scripts/sync-main-to-develop.sh
