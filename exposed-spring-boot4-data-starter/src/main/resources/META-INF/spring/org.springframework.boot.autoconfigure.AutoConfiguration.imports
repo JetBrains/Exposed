@@ -1,0 +1,2 @@
+org.jetbrains.exposed.v1.spring.data.autoconfigure.ExposedTransactionManagerAutoConfiguration
+org.jetbrains.exposed.v1.spring.data.autoconfigure.ExposedRepositoriesAutoConfiguration

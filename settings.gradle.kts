@@ -28,6 +28,8 @@ include("exposed-maven-plugin")
 include("exposed-version-catalog")
 include("exposed-dao-r2dbc")
 include("exposed-dao-r2dbc-tests")
+include("exposed-spring-data4")
+include("exposed-spring-boot4-data-starter")
 
 pluginManagement {
     repositories {
@@ -35,6 +37,9 @@ pluginManagement {
         maven("https://maven-central-eu.storage-download.googleapis.com/maven2/")
         mavenCentral()
         gradlePluginPortal()
+    }
+    plugins {
+        kotlin("plugin.spring") version "2.3.20"
     }
 }
 
