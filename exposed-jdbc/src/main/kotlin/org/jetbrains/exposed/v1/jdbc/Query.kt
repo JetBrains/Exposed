@@ -9,7 +9,6 @@ import org.jetbrains.exposed.v1.jdbc.statements.StatementIterator
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
 import org.jetbrains.exposed.v1.jdbc.statements.jdbc.JdbcResult
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
-import java.sql.ResultSet
 
 /** Class representing an SQL `SELECT` statement on which query clauses can be built. */
 open class Query(
@@ -252,12 +251,13 @@ open class Query(
         } else {
             try {
                 count = true
-                transaction.execQuery(this) { rs ->
+                val rs = transaction.execQuery(this)
+                try {
                     rs.next()
-                    rs.getLong(1).also {
-                        rs.close()
-                    }
-                }!!
+                    rs.result.getLong(1)
+                } finally {
+                    transaction.releaseResult(rs)
+                }
             } finally {
                 count = false
             }
@@ -273,8 +273,12 @@ open class Query(
         val oldLimit = limit
         try {
             if (!isForUpdate()) limit = 1
-            val resultSet = transaction.execQuery(this)
-            return !resultSet.next().also { resultSet.close() }
+            val rs = transaction.execQuery(this)
+            return try {
+                !rs.next()
+            } finally {
+                transaction.releaseResult(rs)
+            }
         } finally {
             limit = oldLimit
         }
@@ -308,7 +312,7 @@ open class Query(
         }
     }
 
-    private inner class ResultIterator(rs: ResultSet) : StatementIterator<Expression<*>, ResultRow>(rs) {
+    private inner class ResultIterator(rs: JdbcResult) : StatementIterator<Expression<*>, ResultRow>(rs) {
         override val fieldIndex = set.realFields.toSet()
             .mapIndexed { index, expression -> expression to index }
             .toMap()
@@ -319,25 +323,13 @@ open class Query(
 
         init {
             hasNext = result.next()
-            if (hasNext) trackResultSet(transaction)
         }
 
         @OptIn(InternalApi::class)
-        override fun createResultRow(): ResultRow = ResultRow.create(JdbcResult(result), fieldIndex, columnTypes)
+        override fun createResultRow(): ResultRow = ResultRow.create(jdbcResult, fieldIndex, columnTypes)
     }
 
-    companion object {
-        private fun trackResultSet(transaction: JdbcTransaction) {
-            val threshold = transaction.db.config.logTooMuchResultSetsThreshold
-            if (threshold > 0 && threshold < transaction.openResultSetsCount) {
-                val message =
-                    "Current opened result sets size ${transaction.openResultSetsCount} exceeds $threshold threshold for transaction ${transaction.transactionId} "
-                val stackTrace = Exception(message).stackTraceToString()
-                exposedLogger.error(stackTrace)
-            }
-            transaction.openResultSetsCount++
-        }
-    }
+    companion object
 }
 
 /**
