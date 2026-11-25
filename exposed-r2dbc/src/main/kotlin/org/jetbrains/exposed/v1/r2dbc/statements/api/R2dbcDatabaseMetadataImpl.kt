@@ -194,7 +194,15 @@ class R2dbcDatabaseMetadataImpl(
      *
      * Currently, only H2Dialect will actually return a result.
      */
+    @OptIn(InternalApi::class)
     private suspend fun fetchAllColumnTypes(tableName: String): Map<String, String> {
+        if (currentDialect is PostgreSQLDialect) {
+            return connection.executeSQL(PostgreSQLColumnTypes.extendedColumnTypesQuery(tableName)) { row, _ ->
+                val field = row.get(0, String::class.java)
+                val type = row.get(1, String::class.java)?.uppercase()
+                if (field != null && type != null) field to type else null
+            }?.filterNotNull()?.toList().orEmpty().toMap()
+        }
         if (currentDialect !is H2Dialect) return emptyMap()
 
         return connection.executeSQL("SHOW COLUMNS FROM $tableName") { row, _ ->

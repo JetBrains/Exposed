@@ -361,7 +361,15 @@ will have its default values excluded from the check to ensure that potential da
 
 #### Type {id="type"}
 
-Full support for column type changes is currently only available when using H2.
+Full support for column type changes is currently only available when using H2 and PostgreSQL.
+
+When running on PostgreSQL, a type change that has no implicit conversion from the existing type, like `VARCHAR` to `INT`,
+generates an `ALTER COLUMN ... TYPE ... USING` statement that casts the existing values. If the column has a default value,
+it is dropped and set again in the same statement. A change to a character type, like `TEXT` to `VARCHAR(3)`, does not cast
+the existing values, so the statement fails instead of silently truncating values that are too long.
+
+Changes to the size of an array column, like `INT[2]` to `INT[20]`, are not detected on PostgreSQL, because the database
+does not store array sizes.
 
 #### Size and scale {id="size-and-scale"}
 

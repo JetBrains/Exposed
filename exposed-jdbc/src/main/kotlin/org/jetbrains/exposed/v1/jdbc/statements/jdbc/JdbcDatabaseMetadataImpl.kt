@@ -189,7 +189,17 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
      *
      * Currently, only H2Dialect will actually return a result.
      */
+    @OptIn(InternalApi::class)
     private fun fetchAllColumnTypes(tableName: String): Map<String, String> {
+        if (currentDialect is PostgreSQLDialect) {
+            val map = mutableMapOf<String, String>()
+            metadata.connection.executeSQL(PostgreSQLColumnTypes.extendedColumnTypesQuery(tableName)) { rs ->
+                while (rs.next()) {
+                    map[rs.getString(1)] = rs.getString(2).uppercase()
+                }
+            }
+            return map
+        }
         if (currentDialect !is H2Dialect) return emptyMap()
 
         val map = mutableMapOf<String, String>()
