@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.core.statements
 
 import org.jetbrains.exposed.v1.core.Expression
 import org.jetbrains.exposed.v1.core.IColumnType
+import org.jetbrains.exposed.v1.core.QueryBuilder
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
@@ -18,7 +19,15 @@ open class ReturningStatement(
     val returningExpressions: List<Expression<*>>,
     val mainStatement: Statement<*>
 ) : Statement<ResultApi>(mainStatement.type, listOf(table)) {
-    override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> = mainStatement.arguments()
+    override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> {
+        // The RETURNING clause is appended after the main statement's SQL, so any arguments registered by
+        // the returned expressions must also come after the main statement's arguments.
+        val returningArgs = QueryBuilder(true).apply {
+            returningExpressions.forEach { it.toQueryBuilder(this) }
+        }.args
+        if (returningArgs.isEmpty()) return mainStatement.arguments()
+        return mainStatement.arguments().map { it + returningArgs }
+    }
 
     override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
         val mainSql = mainStatement.prepareSQL(transaction, prepared)
