@@ -374,6 +374,54 @@ class EntityTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    private object TreeNodes : IdTable<Int>("tree_nodes") {
+        override val id = integer("id").entityId()
+        override val primaryKey = PrimaryKey(id)
+        val parentId = optReference("parent_id", this, fkName = "fk_tree_parent")
+        val label = varchar("label", 20).nullable()
+    }
+
+    class TreeNode(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<TreeNode>(TreeNodes)
+        var parentId by TreeNodes.parentId
+        var label by TreeNodes.label
+    }
+
+    @Test
+    fun testSelfReferenceInsertOrderWithDifferentColumnSets() {
+        withTables(TreeNodes) {
+            val ancestor = TreeNode.new(100) {}
+            flushCache()
+            TreeNode.new(101) {
+                parentId = ancestor.id
+                label = "first"
+            }
+            val parent = TreeNode.new(102) { parentId = ancestor.id }
+            val child = TreeNode.new(103) {
+                parentId = parent.id
+                label = "child"
+            }
+            flushCache()
+
+            assertEquals(4L, TreeNode.all().count())
+            assertEquals(parent.id, TreeNodes.selectAll().where { TreeNodes.id eq child.id }.single()[TreeNodes.parentId])
+        }
+    }
+
+    @Test
+    fun testMutualReferencesWithDeferredConstraint() {
+        withTables(TestDB.entries - TestDB.POSTGRESQL, TreeNodes) {
+            exec("ALTER TABLE tree_nodes ALTER CONSTRAINT fk_tree_parent DEFERRABLE INITIALLY DEFERRED")
+            commit()
+            inTopLevelSuspendTransaction(db) {
+                TreeNode.new(1) { parentId = EntityID(2, TreeNodes) }
+                TreeNode.new(2) { parentId = EntityID(1, TreeNodes) }
+            }
+
+            assertEquals(2L, TreeNode.all().count())
+        }
+    }
+
     @Test
     fun testNonEntityIdReference() {
         withTables(Posts, Boards, Categories) {

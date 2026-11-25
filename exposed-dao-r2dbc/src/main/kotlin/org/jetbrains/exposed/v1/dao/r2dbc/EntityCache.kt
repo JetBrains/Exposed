@@ -493,11 +493,21 @@ class EntityCache(private val transaction: R2dbcTransaction) {
         entities: List<Entity<*>>,
         table: IdTable<*>
     ): Pair<List<Entity<*>>, List<Entity<*>>> {
+        val pendingIds = if (table.columns.any { it.referee == table.id }) {
+            entities.mapNotNullTo(HashSet()) { it.id._value }
+        } else {
+            null
+        }
         fun isAwaitingRowOfSameTable(entity: Entity<*>) = dirtyValues(entity).any { (column, value) ->
-            column.referee == table.id && value is EntityID<*> && value._value == null
+            column.referee == table.id && value is EntityID<*> &&
+                (value._value == null || (value._value != entity.id._value && value._value in pendingIds.orEmpty()))
         }
 
-        val anchor = entities.firstOrNull { !isAwaitingRowOfSameTable(it) }
+        val anchor = entities.firstOrNull { !isAwaitingRowOfSameTable(it) } ?: run {
+            // With known IDs a cycle can still be inserted under a deferred foreign key.
+            pendingIds?.clear()
+            entities.firstOrNull { !isAwaitingRowOfSameTable(it) }
+        }
         checkNotNull(anchor) {
             "Cannot flush the inserts scheduled for ${table.tableName}: every one of them has a foreign key " +
                 "to a row of that table that has not been inserted yet, so there is none to send first. " +
@@ -506,7 +516,9 @@ class EntityCache(private val transaction: R2dbcTransaction) {
         val anchorColumns = dirtyValues(anchor).keys
 
         return entities.partition { entity ->
-            !isAwaitingRowOfSameTable(entity) && dirtyValues(entity).keys == anchorColumns
+            val ready = !isAwaitingRowOfSameTable(entity) && dirtyValues(entity).keys == anchorColumns
+            if (ready) pendingIds?.remove(entity.id._value)
+            ready
         }
     }
 
