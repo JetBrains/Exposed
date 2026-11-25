@@ -59,6 +59,40 @@ class ReturningTests : R2dbcDatabaseTestsBase() {
     }
 
     @Test
+    fun testInsertReturningWithParameterizedExpression() {
+        withTables(TestDB.ALL - returningSupportedDb, Items) {
+            val priceWithTax = Items.price times 1.1
+            val result = Items.insertReturning(returning = listOf(Items.name, priceWithTax)) {
+                it[name] = "A"
+                it[price] = 100.0
+            }.single()
+
+            assertEquals("A", result[Items.name])
+            assertEquals(110.0, result[priceWithTax], 0.0001)
+        }
+    }
+
+    @Test
+    fun testUpsertReturningWithParameterizedExpression() {
+        withTables(TestDB.ALL - returningSupportedDb, Items) {
+            Items.insert {
+                it[name] = "A"
+                it[price] = 99.0
+            }
+
+            val priceWithTax = Items.price times 1.1
+            val result = Items.upsertReturning(returning = listOf(Items.name, priceWithTax)) {
+                it[id] = 1
+                it[name] = "B"
+                it[price] = 200.0
+            }.single()
+
+            assertEquals("B", result[Items.name])
+            assertEquals(220.0, result[priceWithTax], 0.0001)
+        }
+    }
+
+    @Test
     fun testInsertIgnoreReturning() {
         val tester = object : Table("tester") {
             val item = varchar("item", 32).uniqueIndex()
