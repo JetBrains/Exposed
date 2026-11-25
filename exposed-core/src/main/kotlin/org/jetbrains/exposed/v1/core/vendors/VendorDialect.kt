@@ -124,8 +124,13 @@ abstract class VendorDialect(
 /**
  * Returns this string with its single quotes doubled, so that it can be placed inside a SQL string literal
  * without ending it.
+ *
+ * On MySQL and MariaDB a backslash also escapes a character in a string literal, so there it must be doubled too.
  */
-internal fun String.escapeSingleQuotes(): String = replace("'", "''")
+internal fun String.escapeSingleQuotes(): String = when (currentDialect) {
+    is MysqlDialect -> replace("'", "''").replace("\\", "\\\\")
+    else -> replace("'", "''")
+}
 
 /**
  * Appends [value] as the string argument of a SQL function, bound as a query parameter, so that the database can

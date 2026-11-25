@@ -857,7 +857,10 @@ abstract class StringColumnType(
     val collate: String? = null
 ) : ColumnType<String>() {
     /** Returns the specified [value] with special characters escaped. */
-    protected fun escape(value: String): String = value.map { charactersToEscape[it] ?: it }.joinToString("")
+    protected fun escape(value: String): String {
+        val escapeMap = if (currentDialect is MysqlDialect) mysqlCharactersToEscape else charactersToEscape
+        return value.map { escapeMap[it] ?: it }.joinToString("")
+    }
 
     /** Returns the specified [value] with special characters escaped and wrapped in quotations, if necessary. */
     protected fun escapeAndQuote(value: String): String = when (currentDialect) {
@@ -899,6 +902,9 @@ abstract class StringColumnType(
             '\r' to "\\r",
             '\n' to "\\n"
         )
+
+        // on MySQL and MariaDB a backslash is also an escape character in a string literal, so it must be doubled too
+        private val mysqlCharactersToEscape = charactersToEscape + ('\\' to "\\\\")
     }
 }
 
@@ -1310,7 +1316,10 @@ class EnumerationNameColumnType<T : Enum<T>>(
         return result
     }
 
-    private fun escape(value: String): String = value.map { charactersToEscape[it] ?: it }.joinToString("")
+    private fun escape(value: String): String {
+        val escapeMap = if (currentDialect is MysqlDialect) mysqlCharactersToEscape else charactersToEscape
+        return value.map { escapeMap[it] ?: it }.joinToString("")
+    }
 
     companion object {
         private val charactersToEscape = mapOf(
@@ -1318,6 +1327,9 @@ class EnumerationNameColumnType<T : Enum<T>>(
             '\r' to "\\r",
             '\n' to "\\n"
         )
+
+        // on MySQL and MariaDB a backslash is also an escape character in a string literal, so it must be doubled too
+        private val mysqlCharactersToEscape = charactersToEscape + ('\\' to "\\\\")
     }
 }
 
@@ -1347,7 +1359,10 @@ class CustomEnumerationColumnType<T : Enum<T>>(
         append('\'')
     }
 
-    private fun escape(value: String): String = value.map { charactersToEscape[it] ?: it }.joinToString("")
+    private fun escape(value: String): String {
+        val escapeMap = if (currentDialect is MysqlDialect) mysqlCharactersToEscape else charactersToEscape
+        return value.map { escapeMap[it] ?: it }.joinToString("")
+    }
 
     companion object {
         private val charactersToEscape = mapOf(
@@ -1355,6 +1370,9 @@ class CustomEnumerationColumnType<T : Enum<T>>(
             '\r' to "\\r",
             '\n' to "\\n"
         )
+
+        // on MySQL and MariaDB a backslash is also an escape character in a string literal, so it must be doubled too
+        private val mysqlCharactersToEscape = charactersToEscape + ('\\' to "\\\\")
     }
 }
 
