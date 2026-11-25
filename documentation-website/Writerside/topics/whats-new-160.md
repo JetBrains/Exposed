@@ -130,7 +130,7 @@ derived-table aliases, and insert-from-select operations.
 
 ## Configure multiple table packages in migration plugins
 
-You can configure the [Exposed Gradle](Exposed-gradle-plugin.md) and [Maven](exposed-maven-plugin.md) plugins to use multiple table packages when generating
+You can configure the [Exposed Gradle](generate-table-definitions.md) and [Maven](exposed-maven-plugin.md) plugins to use multiple table packages when generating
 migrations. This is useful when your table definitions are organized into separate packages.
 
 For example, in the Gradle configuration, use the `tablesPackage` property to specify a single package or the
@@ -150,7 +150,7 @@ exposed {
 }
 ```
 
-> For more information, see the [Exposed Gradle plugin](Exposed-gradle-plugin.md#configuration) and [Exposed Maven plugin](exposed-maven-plugin.md#configuration)
+> For more information, see the [Exposed Gradle plugin](generate-table-definitions.md#configuration) and [Exposed Maven plugin](exposed-maven-plugin.md#configuration)
 > documentation.
 >
 {style="tip"}
