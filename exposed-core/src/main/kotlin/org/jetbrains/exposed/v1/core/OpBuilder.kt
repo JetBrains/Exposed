@@ -95,7 +95,7 @@ inline fun Op<Boolean>.orIfNotNull(op: () -> Op<Boolean>?): Op<Boolean> = orIfNo
 /** Checks if this expression is equal to some [t] value. */
 @LowPriorityInOverloadResolution
 infix fun <T> ExpressionWithColumnType<T>.eq(t: T): Op<Boolean> = when {
-    t == null -> isNull()
+    isStoredAsNull(t) -> isNull()
     (this as? Column<*>)?.isEntityIdentifier() == true -> table.mapIdComparison(t, ::EqOp)
     else -> EqOp(this, wrap(t))
 }
@@ -148,7 +148,7 @@ infix fun <T : Any, V : T?, E : EntityID<T>?> Expression<V>.eq(
 /** Checks if this expression is not equal to some [other] value. */
 @LowPriorityInOverloadResolution
 infix fun <T> ExpressionWithColumnType<T>.neq(other: T): Op<Boolean> = when {
-    other == null -> isNotNull()
+    isStoredAsNull(other) -> isNotNull()
     (this as? Column<*>)?.isEntityIdentifier() == true -> table.mapIdComparison(other, ::NeqOp)
     else -> NeqOp(this, wrap(other))
 }
@@ -915,3 +915,17 @@ infix fun <T> ExpressionWithColumnType<T>.inTable(table: Table): InTableOp = InT
  * **Note** This function is only supported by MySQL, PostgreSQL, and H2 dialects.
  */
 infix fun <T> ExpressionWithColumnType<T>.notInTable(table: Table): InTableOp = InTableOp(this, table, false)
+
+/**
+ * Returns whether [value] is sent to the database as `NULL` by this expression's column type.
+ *
+ * This is not the same as `value == null` for columns created with `nullTransform()` or `nonNullTransform()`,
+ * as their transformers can map `null` to a non-null database value and vice versa.
+ */
+@Suppress("UNCHECKED_CAST")
+private fun ExpressionWithColumnType<*>.isStoredAsNull(value: Any?): Boolean {
+    val transformType = columnType as? ColumnWithTransform<*, *> ?: return value == null
+    val mapsNullValues = transformType is NullableColumnWithTransform<*, *> || transformType is NonNullableColumnWithTransform<*, *>
+    if (value == null && !mapsNullValues) return true
+    return (transformType as ColumnWithTransform<Any?, Any?>).unwrapRecursive(value) == null
+}

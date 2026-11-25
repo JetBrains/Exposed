@@ -12,6 +12,7 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.neq
 import org.jetbrains.exposed.v1.core.statements.api.RowApi
 import org.jetbrains.exposed.v1.r2dbc.batchInsert
 import org.jetbrains.exposed.v1.r2dbc.insert
@@ -505,6 +506,44 @@ class ColumnWithTransformTest : R2dbcDatabaseTestsBase() {
             }
 
             assertEquals(TransformDataHolder(-1), tester.selectAll().first()[tester.value])
+        }
+    }
+
+    @Test
+    fun testNullTransformComparedWithNull() {
+        val tester = object : IntIdTable("tester") {
+            val value = integer("value")
+                .nullTransform(DataHolderNullTransformer())
+        }
+
+        withTables(tester) {
+            val nullId = tester.insertAndGetId { it[value] = null }
+            val valueId = tester.insertAndGetId { it[value] = TransformDataHolder(1) }
+
+            // null is stored as 0, so the comparison must not be turned into IS NULL
+            assertEquals(nullId, tester.selectAll().where { tester.value eq null }.single()[tester.id])
+            assertEquals(valueId, tester.selectAll().where { tester.value neq null }.single()[tester.id])
+        }
+    }
+
+    @Test
+    fun testNonNullTransformComparedWithValueStoredAsNull() {
+        val tester = object : IntIdTable("tester") {
+            val description = text("description")
+                .nullable()
+                .nonNullTransform(
+                    wrap = { it ?: "" },
+                    unwrap = { it.ifEmpty { null } }
+                )
+        }
+
+        withTables(tester) {
+            val emptyId = tester.insertAndGetId { it[description] = "" }
+            val textId = tester.insertAndGetId { it[description] = "text" }
+
+            // "" is stored as NULL, so the comparison must become IS NULL instead of = NULL
+            assertEquals(emptyId, tester.selectAll().where { tester.description eq "" }.single()[tester.id])
+            assertEquals(textId, tester.selectAll().where { tester.description neq "" }.single()[tester.id])
         }
     }
 }
