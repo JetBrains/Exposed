@@ -1,0 +1,2 @@
+org.springframework.boot.sql.init.dependency.DatabaseInitializerDetector=\
+org.jetbrains.exposed.v1.spring.boot.autoconfigure.ExposedDatabaseInitializerDetector
