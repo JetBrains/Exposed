@@ -45,13 +45,13 @@ private inline fun <T> executeBaseTransactionWithErrorHandling(
             }
         }
     } catch (cause: SQLException) {
-        val currentStatement = transaction.currentStatement
-        errorBlock(currentStatement)
+        if (!transaction.isAfterCommitFailure(cause)) {
+            errorBlock(transaction.currentStatement)
+        }
         throw cause
     } catch (cause: Throwable) {
-        if (shouldCommit) {
-            val currentStatement = transaction.currentStatement
-            errorBlock(currentStatement)
+        if (shouldCommit && !transaction.isAfterCommitFailure(cause)) {
+            errorBlock(transaction.currentStatement)
         }
         throw cause
     }
@@ -217,6 +217,7 @@ fun <T> inTopLevelTransaction(
                         transaction.statement()
                     }
                 } catch (cause: SQLException) {
+                    if (transaction.isAfterCommitFailure(cause)) throw cause
                     logSQLException(cause, transaction, attempts)
                     transaction.rollbackLoggingException {
                         exposedLogger.debug("Transaction rollback failed: ${it.message}. See previous log line for statement", it)
@@ -225,6 +226,7 @@ fun <T> inTopLevelTransaction(
                 }
             }
         } catch (cause: SQLException) {
+            if (transaction.isAfterCommitFailure(cause)) throw cause
             attempts++
 
             if (retryInterval == null) {
@@ -373,6 +375,7 @@ suspend fun <T> inTopLevelSuspendTransaction(
                         transaction.statement()
                     }
                 } catch (cause: SQLException) {
+                    if (transaction.isAfterCommitFailure(cause)) throw cause
                     logSQLException(cause, transaction, attempts)
                     transaction.rollbackSuspendLoggingException {
                         exposedLogger.debug("Transaction rollback failed: ${it.message}. See previous log line for statement", it)
@@ -381,6 +384,7 @@ suspend fun <T> inTopLevelSuspendTransaction(
                 }
             }
         } catch (cause: SQLException) {
+            if (transaction.isAfterCommitFailure(cause)) throw cause
             attempts++
 
             if (retryInterval == null) {

@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.v1.tests.shared
 
+import kotlinx.coroutines.runBlocking
 import nl.altindag.log.LogCaptor
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.StatementContext
@@ -10,7 +11,11 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelSuspendTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
@@ -18,6 +23,9 @@ import org.jetbrains.exposed.v1.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.v1.tests.shared.dml.withCitiesAndUsers
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
+import java.sql.SQLException
+import kotlin.test.assertFailsWith
+import kotlin.test.assertSame
 
 private class DeleteWarningInterceptor : StatementInterceptor {
     override fun beforeExecution(transaction: Transaction, context: StatementContext) {
@@ -66,6 +74,21 @@ private class CommitDataInterceptor : StatementInterceptor {
     }
 
     data class DebugStats(val count: Int)
+}
+
+private class RecordingTransactionInterceptor(private val onCommit: (Transaction) -> Unit = {}) : StatementInterceptor {
+    val commits = mutableListOf<Transaction>()
+    var rollbacks = 0
+        private set
+
+    override fun afterCommit(transaction: Transaction) {
+        commits.add(transaction)
+        onCommit(transaction)
+    }
+
+    override fun afterRollback(transaction: Transaction) {
+        rollbacks++
+    }
 }
 
 class StatementInterceptorTests : DatabaseTestsBase() {
@@ -293,6 +316,143 @@ class StatementInterceptorTests : DatabaseTestsBase() {
 
         logCaptor.clearLogs()
         logCaptor.close()
+    }
+
+    @Test
+    fun testNestedAfterCommitWaitsForOuterCommit() {
+        val cities = DMLTestsData.Cities
+        withTables(cities, configure = { useNestedTransactions = true }) {
+            val database = db
+            val interceptor = RecordingTransactionInterceptor { transaction ->
+                assertSame(transaction, TransactionManager.current())
+                assertEquals(1L, inTopLevelTransaction(database) { cities.selectAll().count() })
+            }
+            val nested = transaction {
+                registerInterceptor(interceptor)
+                cities.insert { it[name] = "Munich" }
+                commit()
+                this
+            }
+
+            assertTrue(interceptor.commits.isEmpty())
+            commit()
+            assertSame(nested, interceptor.commits.single())
+
+            commit()
+            assertSame(nested, interceptor.commits.single())
+        }
+    }
+
+    @Test
+    fun testOuterRollbackDiscardsNestedAfterCommit() {
+        val cities = DMLTestsData.Cities
+        withTables(cities, configure = { useNestedTransactions = true }) {
+            commit() // Persist the table before rolling back its inserts.
+            val interceptor = RecordingTransactionInterceptor()
+            transaction {
+                registerInterceptor(interceptor)
+                cities.insert { it[name] = "Munich" }
+            }
+
+            rollback()
+            assertTrue(cities.selectAll().empty())
+            assertTrue(interceptor.commits.isEmpty())
+
+            cities.insert { it[name] = "Belgrade" }
+            commit()
+            assertTrue(interceptor.commits.isEmpty())
+        }
+    }
+
+    @Test
+    fun testSavepointRollbackDiscardsAfterCommitFromDeeperTransaction() {
+        val cities = DMLTestsData.Cities
+        withTables(cities, configure = { useNestedTransactions = true }) {
+            val interceptor = RecordingTransactionInterceptor()
+            transaction {
+                transaction {
+                    registerInterceptor(interceptor)
+                    cities.insert { it[name] = "Munich" }
+                }
+                commit()
+                rollback()
+            }
+
+            val nested = transaction {
+                transaction {
+                    registerInterceptor(interceptor)
+                    cities.insert { it[name] = "Belgrade" }
+                    this
+                }
+            }
+
+            commit()
+            assertSame(nested, interceptor.commits.single())
+            assertEqualLists(cities.selectAll().map { it[cities.name] }, listOf("Belgrade"))
+        }
+    }
+
+    @Test
+    fun testNestedAfterCommitFailureDoesNotRetryCommittedWork() {
+        val cities = DMLTestsData.Cities
+        withTables(cities, configure = { useNestedTransactions = true }) {
+            commit() // Make the table visible to the independent transaction.
+            val failure = SQLException("afterCommit failed")
+            val siblingFailure = SQLException("sibling afterCommit failed")
+            val sibling = RecordingTransactionInterceptor { throw siblingFailure }
+            val outer = RecordingTransactionInterceptor()
+            var attempts = 0
+            val thrown = assertFailsWith<SQLException> {
+                inTopLevelTransaction(db) {
+                    maxAttempts = 2
+                    attempts++
+                    registerInterceptor(outer)
+                    transaction {
+                        cities.insert { it[name] = "Munich" }
+                        registerInterceptor(RecordingTransactionInterceptor { throw failure })
+                    }
+                    transaction {
+                        registerInterceptor(sibling)
+                    }
+                }
+            }
+
+            assertSame(failure, thrown)
+            assertSame(siblingFailure, thrown.suppressed.single())
+            assertEquals(1, sibling.commits.size)
+            assertEquals(1, outer.commits.size)
+            assertEquals(1, attempts)
+            assertEquals(0, outer.rollbacks)
+            assertEquals(1L, cities.selectAll().count())
+        }
+    }
+
+    @Test
+    fun testOuterAfterCommitFailureDoesNotRepeatNestedNotificationInSuspendTransaction() {
+        val cities = DMLTestsData.Cities
+        withTables(cities, configure = { useNestedTransactions = true }) {
+            commit()
+            val failure = SQLException("outer afterCommit failed")
+            val outer = RecordingTransactionInterceptor { throw failure }
+            val interceptor = RecordingTransactionInterceptor()
+            val thrown = assertFailsWith<SQLException> {
+                runBlocking {
+                    inTopLevelSuspendTransaction(db) {
+                        maxAttempts = 2
+                        registerInterceptor(outer)
+                        suspendTransaction(db) {
+                            registerInterceptor(interceptor)
+                            cities.insert { it[name] = "Munich" }
+                        }
+                    }
+                }
+            }
+
+            assertSame(failure, thrown)
+            assertEquals(1, interceptor.commits.size)
+            assertEquals(0, outer.rollbacks)
+            assertEquals(1L, cities.selectAll().count())
+        }
     }
 
     @Test

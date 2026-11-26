@@ -20,6 +20,7 @@ import org.jetbrains.exposed.v1.jdbc.statements.executeIn
 import org.jetbrains.exposed.v1.jdbc.statements.jdbc.JdbcResult
 import org.jetbrains.exposed.v1.jdbc.transactions.JdbcTransactionInterface
 import org.jetbrains.exposed.v1.jdbc.transactions.JdbcTransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.createTransactionContext
 import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import java.sql.ResultSet
@@ -79,6 +80,11 @@ open class JdbcTransaction(
 
     internal val interceptors = arrayListOf<StatementInterceptor>()
 
+    private val savepointParent = TransactionManager.savepointParent(transactionImpl)
+    private var deferredAfterCommitInterceptors: MutableMap<JdbcTransaction, List<StatementInterceptor>>? = null
+
+    private var afterCommitFailure: Throwable? = null
+
     init {
         defaultLogger = addLogger(db.config.sqlLogger)
         globalInterceptors // init interceptors
@@ -99,8 +105,11 @@ open class JdbcTransaction(
             transactionImpl.commit()
             userdata.clear()
             userdata.putAll(dataToStore)
-            globalInterceptors.forEach { it.afterCommit(this) }
-            interceptors.forEach { it.afterCommit(this) }
+            if (savepointParent != null) {
+                savepointParent.deferNestedAfterCommit(this)
+            } else {
+                notifyAfterCommit()
+            }
         }
     }
 
@@ -109,7 +118,10 @@ open class JdbcTransaction(
         withThreadLocalTransaction(this) {
             globalInterceptors.forEach { it.beforeRollback(this) }
             interceptors.forEach { it.beforeRollback(this) }
-            transactionImpl.rollback()
+            TransactionManager.rollback(transactionImpl) {
+                savepointParent?.deferredAfterCommitInterceptors?.remove(this)
+                deferredAfterCommitInterceptors = null
+            }
             globalInterceptors.forEach { it.afterRollback(this) }
             interceptors.forEach { it.afterRollback(this) }
             userdata.clear()
@@ -121,6 +133,87 @@ open class JdbcTransaction(
 
     /** Removes the specified [StatementInterceptor] from acting on this transaction. */
     fun unregisterInterceptor(interceptor: StatementInterceptor): Boolean = interceptors.remove(interceptor)
+
+    internal fun isAfterCommitFailure(cause: Throwable): Boolean = cause === afterCommitFailure
+
+    /**
+     * Commits this transaction and returns a failure from delivery of deferred after-commit callbacks, if any.
+     * The transaction manager can report that failure after recording the successful commit.
+     * @suppress
+     */
+    @InternalApi
+    @Suppress("TooGenericExceptionCaught")
+    fun commitReturningAfterCommitFailure(): Throwable? {
+        try {
+            commit()
+        } catch (cause: Throwable) {
+            if (isAfterCommitFailure(cause)) return cause
+            throw cause
+        }
+        return null
+    }
+
+    private fun deferNestedAfterCommit(transaction: JdbcTransaction) {
+        val pending = deferredAfterCommitInterceptors ?: linkedMapOf<JdbcTransaction, List<StatementInterceptor>>().also {
+            deferredAfterCommitInterceptors = it
+        }
+        pending[transaction] = globalInterceptors + transaction.interceptors
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    private fun notifyAfterCommit() {
+        afterCommitFailure = null
+        if (deferredAfterCommitInterceptors.isNullOrEmpty()) {
+            notifyOwnAfterCommit()
+            return
+        }
+
+        var firstFailure: Throwable? = null
+        fun recordFailure(cause: Throwable) {
+            val previous = firstFailure
+            if (previous == null) {
+                firstFailure = cause
+            } else if (previous !== cause) {
+                previous.addSuppressed(cause)
+            }
+        }
+
+        notifyNestedAfterCommit(::recordFailure)
+        try {
+            notifyOwnAfterCommit()
+        } catch (cause: Throwable) {
+            recordFailure(cause)
+        }
+        firstFailure?.let {
+            // JDBC has committed the work, so neither rollback nor retry can recover from this failure.
+            afterCommitFailure = it
+            throw it
+        }
+    }
+
+    private fun notifyOwnAfterCommit() {
+        globalInterceptors.forEach { it.afterCommit(this) }
+        interceptors.forEach { it.afterCommit(this) }
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    private fun notifyNestedAfterCommit(onFailure: (Throwable) -> Unit) {
+        val pending = deferredAfterCommitInterceptors ?: return
+        deferredAfterCommitInterceptors = null
+        pending.forEach { (transaction, nestedInterceptors) ->
+            @OptIn(InternalApi::class)
+            withThreadLocalTransaction(transaction) {
+                transaction.notifyNestedAfterCommit(onFailure)
+                nestedInterceptors.forEach { interceptor ->
+                    try {
+                        interceptor.afterCommit(transaction)
+                    } catch (cause: Throwable) {
+                        onFailure(cause)
+                    }
+                }
+            }
+        }
+    }
 
     @Suppress("MagicNumber")
     private fun describeStatement(delta: Long, stmt: String): String = "[${delta}ms] ${stmt.take(1024)}\n\n"

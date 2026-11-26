@@ -198,6 +198,18 @@ class TransactionManager(
         /** Returns the current [JdbcTransaction], or creates a new transaction with the provided [isolation] level. */
         fun currentOrNew(isolation: Int = manager.defaultIsolationLevel): JdbcTransaction = currentOrNull()
             ?: manager.newTransaction(isolation)
+
+        internal fun savepointParent(transaction: JdbcTransactionInterface): JdbcTransaction? =
+            (transaction as? ThreadLocalTransaction)?.savepointParent
+
+        internal fun rollback(transaction: JdbcTransactionInterface, onRollback: () -> Unit) {
+            if (transaction is ThreadLocalTransaction) {
+                transaction.rollback(onRollback)
+            } else {
+                transaction.rollback()
+                onRollback()
+            }
+        }
     }
 
     private class ThreadLocalTransaction(
@@ -247,28 +259,31 @@ class TransactionManager(
         override val connection: ExposedConnection<*>
             get() = connectionLazy.value
 
-        private val useSavePoints = outerTransaction != null && db.useNestedTransactions
+        val savepointParent: JdbcTransaction? = outerTransaction?.takeIf { db.useNestedTransactions }
+        private val useSavePoints = savepointParent != null
         private var savepoint: ExposedSavepoint? = if (useSavePoints) connection.setSavepoint(savepointName) else null
 
         override fun commit() {
-            if (connectionLazy.isInitialized()) {
-                if (!useSavePoints) {
-                    connection.commit()
-                } else {
-                    // do nothing in nested. close() will commit everything and release savepoint.
-                }
+            if (connectionLazy.isInitialized() && !useSavePoints) {
+                connection.commit()
             }
         }
 
-        override fun rollback() {
+        override fun rollback() = rollback {}
+
+        fun rollback(onRollback: () -> Unit) {
             if (connectionLazy.isInitialized() && !connection.isClosed) {
-                if (useSavePoints && savepoint != null) {
-                    connection.rollback(savepoint!!)
+                val currentSavepoint = savepoint
+                if (useSavePoints && currentSavepoint != null) {
+                    connection.rollback(currentSavepoint)
+                    // The rollback has succeeded even if recreating the savepoint fails.
+                    onRollback()
                     savepoint = connection.setSavepoint(savepointName)
-                } else {
-                    connection.rollback()
+                    return
                 }
+                connection.rollback()
             }
+            onRollback()
         }
 
         override fun close() {
