@@ -13,6 +13,8 @@ internal class H2SchemaSupport(private val identifierManager: IdentifierManagerA
     // Every foreign key is backed with an index named `CONSTRAINT_INDEX_<n>` or `<constraint>_INDEX_<n>`
     override val createsIndexForForeignKeys: Boolean = true
 
+    override val supportsSchemas: Boolean = true
+
     override fun isSystemSchema(name: String): Boolean = name.equals("INFORMATION_SCHEMA", ignoreCase = true)
 
     // Reads the declared types through `SHOW COLUMNS`, mirroring the prefetch that is done by `exposed-jdbc`.
@@ -100,6 +102,14 @@ internal class H2SchemaSupport(private val identifierManager: IdentifierManagerA
 
     // Enumeration values are directly in the column type, see [H2Syntax.enumerationValues]
     override fun enumerationTypes(connection: Connection, schema: String): Map<String, List<String>> = emptyMap()
+
+    override fun foreignKeys(connection: Connection, schema: String, tableName: String): List<ReportedForeignKeyColumn>? = null
+
+    override fun columnOverrides(
+        connection: Connection,
+        schema: String,
+        tableName: String
+    ): Map<String, ColumnOverride> = emptyMap()
 
     private companion object {
         const val IMPLIED_SEQUENCE_START: Long = 1

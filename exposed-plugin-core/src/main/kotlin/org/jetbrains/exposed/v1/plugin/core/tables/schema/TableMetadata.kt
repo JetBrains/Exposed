@@ -198,4 +198,10 @@ internal data class IndexMetadata(
      * exactly that provided default, or because the database generated it for an unnamed `UNIQUE` constraint.
      */
     val isDefaultName: Boolean = false,
+
+    /**
+     * Whether the index is one that the database keeps for its own use and that Exposed's migration utilities ignore,
+     * such as the index that backs a `UNIQUE` constraint on SQLite. When reported, this is usually not generated.
+     */
+    val isInternal: Boolean = false,
 )

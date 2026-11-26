@@ -10,8 +10,10 @@ import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.vendors.currentDialectMetadata
 import org.jetbrains.exposed.v1.plugin.core.migration.MigrationLogger
 import org.jetbrains.exposed.v1.plugin.core.tables.ColumnMapping
+import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.ColumnOverride
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.DialectSchemaSupport
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.DialectSyntax
+import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.ReportedForeignKeyColumn
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.SequenceReference
 import org.jetbrains.exposed.v1.plugin.core.tables.warn
 import java.sql.Connection
@@ -36,9 +38,9 @@ internal class SchemaReader(
 ) {
     private val metadata: DatabaseMetaData = connection.metaData
     private val catalog: String? = connection.catalog
-    private val currentSchema: String? = connection.schema
     private val identifierManager: IdentifierManagerApi = TransactionManager.current().db.identifierManager
     private val dialectSupport: DialectSchemaSupport = DialectSchemaSupport.forDialect(currentDialect, identifierManager)
+    private val currentSchema: String? = if (dialectSupport.supportsSchemas) connection.schema else NO_SCHEMA
     private val mappings: ColumnMappingMatcher = ColumnMappingMatcher(columnMappings, identifierManager)
     private val sequencesInUse = hashSetOf<String>()
     private val enumerationTypesBySchema = hashMapOf<String, Map<String, List<String>>>()
@@ -52,7 +54,7 @@ internal class SchemaReader(
     fun listTables(): List<TableReference> {
         val tables = resolveSchemas().flatMap { schema ->
             val schemaName = schema.takeIf { it != currentSchema }?.let(identifierManager::toExposedIdentifier)
-            val tableNames = metadata.getTables(catalog, schema, "%", arrayOf("TABLE")).use { rs ->
+            val tableNames = metadata.getTables(catalog, schema.orAnySchema(), "%", arrayOf("TABLE")).use { rs ->
                 rs.collect { getString("TABLE_NAME") }
             }
             tableNames.sortedWith(String.CASE_INSENSITIVE_ORDER).map { tableName ->
@@ -86,6 +88,15 @@ internal class SchemaReader(
      * the database's default identifier case, so that (on H2 for example) `sales*` matches `SALES` and `SALES_ARCHIVE`.
      */
     private fun resolveSchemas(): List<String> {
+        if (!dialectSupport.supportsSchemas) {
+            check(schemaPatterns.isEmpty()) {
+                "Generation aborted (no files written) because ${currentDialect.name} has no schemas. The configured schemas " +
+                    "(${schemaPatterns.joinToString { "'$it'" }}) cannot be searched. Remove the schemas configuration to generate " +
+                    "the tables of the connected database"
+            }
+            return listOf(NO_SCHEMA)
+        }
+
         // a driver that reports no current schema gets the JDBC "any schema" pattern instead of an empty name
         if (schemaPatterns.isEmpty()) return listOf(currentSchema ?: "%")
 
@@ -189,24 +200,12 @@ internal class SchemaReader(
     }
 
     private fun readForeignKeys(schema: String, tableName: String): List<ForeignKeyInfo> {
-        val rows = metadata.getImportedKeys(catalog, schema, tableName).use { rs ->
-            rs.collect {
-                ForeignKeyRow(
-                    name = getString("FK_NAME").orEmpty(),
-                    position = getShort("KEY_SEQ").toInt(),
-                    columnName = getString("FKCOLUMN_NAME"),
-                    targetSchema = getString("PKTABLE_SCHEM").orEmpty(),
-                    targetTable = getString("PKTABLE_NAME"),
-                    targetColumnName = getString("PKCOLUMN_NAME"),
-                    deleteRule = getShort("DELETE_RULE").toInt(),
-                    updateRule = getShort("UPDATE_RULE").toInt(),
-                )
-            }
-        }
+        val rows = dialectSupport.foreignKeys(connection, schema, tableName) ?: readImportedKeys(schema, tableName)
         val defaultRule = currentDialect.defaultReferenceOption
         return rows
-            .groupBy { it.name }
-            .map { (name, keyRows) ->
+            .groupBy { it.groupKey }
+            .map { (_, keyRows) ->
+                val name = keyRows.first().name
                 val ordered = keyRows.sortedBy { it.position }
                 val columnNames = ordered.map { it.columnName }
                 val targetColumnNames = ordered.map { it.targetColumnName }
@@ -226,18 +225,48 @@ internal class SchemaReader(
             .sortedBy { it.customName ?: it.columnNames.joinToString() }
     }
 
+    private fun readImportedKeys(schema: String, tableName: String): List<ReportedForeignKeyColumn> =
+        metadata.getImportedKeys(catalog, schema.orAnySchema(), tableName).use { rs ->
+            rs.collect {
+                val name = getString("FK_NAME").orEmpty()
+                ReportedForeignKeyColumn(
+                    groupKey = name,
+                    name = name,
+                    position = getShort("KEY_SEQ").toInt(),
+                    columnName = getString("FKCOLUMN_NAME"),
+                    targetSchema = getString("PKTABLE_SCHEM").orEmpty(),
+                    targetTable = getString("PKTABLE_NAME"),
+                    targetColumnName = getString("PKCOLUMN_NAME"),
+                    deleteRule = getShort("DELETE_RULE").toInt(),
+                    updateRule = getShort("UPDATE_RULE").toInt(),
+                )
+            }
+        }
+
     /** A column with its raw name, plus the default, exactly as the driver reports it in `COLUMN_DEF`. */
     private data class ReadColumn(val metadata: ColumnMetadata, val reportedDefault: String?)
 
     private fun readColumns(schema: String, tableName: String): List<ReadColumn> {
         val declaredColumnTypes = dialectSupport.declaredColumnTypes(connection, schema, tableName)
-        return metadata.getColumns(catalog, schema, tableName, "%").use { rs ->
+        val overrides = dialectSupport.columnOverrides(connection, schema, tableName)
+        return metadata.getColumns(catalog, schema.orAnySchema(), tableName, "%").use { rs ->
             val row = JdbcResult(rs)
             rs.collect {
                 val column = with(ExposedMetadataUtils) { row.asColumnMetadata(declaredColumnTypes) }
-                ReadColumn(column.withDeclaredType(declaredColumnTypes), getString("COLUMN_DEF"))
+                    .withDeclaredType(declaredColumnTypes)
+                ReadColumn(column.withOverride(overrides[column.name]), getString("COLUMN_DEF"))
             }
         }
+    }
+
+    private fun ColumnMetadata.withOverride(override: ColumnOverride?): ColumnMetadata {
+        if (override == null) return this
+
+        val autoIncrement = override.autoIncrement ?: this.autoIncrement
+        val nullable = override.nullable ?: this.nullable
+        if (autoIncrement != this.autoIncrement) override.autoIncrementNote?.let(logger::lifecycle)
+        if (nullable != this.nullable) override.nullableWarning?.let { logger.warn(it) }
+        return copy(autoIncrement = autoIncrement, nullable = nullable)
     }
 
     private fun ColumnMetadata.withDeclaredType(declaredColumnTypes: Map<String, String>): ColumnMetadata {
@@ -256,7 +285,7 @@ internal class SchemaReader(
     }
 
     private fun readPrimaryKey(schema: String, tableName: String): PrimaryKeyInfo? {
-        val keyColumns = metadata.getPrimaryKeys(catalog, schema, tableName).use { rs ->
+        val keyColumns = metadata.getPrimaryKeys(catalog, schema.orAnySchema(), tableName).use { rs ->
             rs.collect { Triple(getString("PK_NAME").orEmpty(), getShort("KEY_SEQ").toInt(), getString("COLUMN_NAME")) }
         }
         if (keyColumns.isEmpty()) return null
@@ -275,7 +304,7 @@ internal class SchemaReader(
         primaryKey: PrimaryKeyInfo?,
         foreignKeyColumnSets: List<Set<String>>,
     ): List<IndexMetadata> {
-        val rows = metadata.getIndexInfo(catalog, schema, tableName, false, false).use { rs ->
+        val rows = metadata.getIndexInfo(catalog, schema.orAnySchema(), tableName, false, false).use { rs ->
             rs.collect {
                 val name = getString("INDEX_NAME")
                 val columnName = getString("COLUMN_NAME")
@@ -312,6 +341,7 @@ internal class SchemaReader(
                                 columnNames
                             )
                             ),
+                    isInternal = dialectSupport.syntax.isInternalIndexName(indexName),
                 )
             }
             .filterNot { it.unique && it.columnNames.toSet() == primaryKeyColumns }
@@ -342,24 +372,17 @@ internal class SchemaReader(
         if (!identifierManager.isInDefaultCase(tableName) || columnNames.any { !identifierManager.isInDefaultCase(it) }) {
             return false
         }
-        val suffix = if (unique) "_unique" else ""
-        return isExposedDefaultName("${tableName}_${columnNames.joinToString("_")}$suffix")
+        val defaultName = "${tableName}_${columnNames.joinToString("_")}"
+        if (!unique) return isExposedDefaultName(defaultName)
+        return isExposedDefaultName("${defaultName}_unique") ||
+            (dialectSupport.syntax.omitsUniqueSuffixInIndexNames && isExposedDefaultName(defaultName))
     }
+
+    /** The schema argument for [DatabaseMetaData], which is `null` (no schema filter) for a database without schemas. */
+    private fun String.orAnySchema(): String? = ifEmpty { null }
 
     /** Index metadata directly from a ResultSet. */
     private data class IndexRow(val name: String, val unique: Boolean, val position: Int, val columnName: String)
-
-    /** Foreign key metadata directly from a ResultSet. */
-    private data class ForeignKeyRow(
-        val name: String,
-        val position: Int,
-        val columnName: String,
-        val targetSchema: String,
-        val targetTable: String,
-        val targetColumnName: String,
-        val deleteRule: Int,
-        val updateRule: Int,
-    )
 
     private fun <T : Any> ResultSet.collect(body: ResultSet.() -> T?): List<T> {
         val result = arrayListOf<T>()
@@ -367,6 +390,11 @@ internal class SchemaReader(
             body()?.let(result::add)
         }
         return result
+    }
+
+    private companion object {
+        /** The empty name of the single namespace of a database without schemas. */
+        const val NO_SCHEMA: String = ""
     }
 }
 

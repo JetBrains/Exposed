@@ -25,10 +25,10 @@ private val STRING_LITERAL: Regex = Regex("""^'((?:[^']|'')*)'$""", RegexOption.
 private val INTEGER_LITERAL: Regex = Regex("""^-?\d+$""")
 private val DECIMAL_LITERAL: Regex = Regex("""^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$""")
 private val UUID_LITERAL: Regex = Regex("""^'([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})'$""")
-private val DATE_LITERAL: Regex = Regex("""^DATE '(\d{4})-(\d{2})-(\d{2})'$""", RegexOption.IGNORE_CASE)
-private val TIME_LITERAL: Regex = Regex("""^TIME '(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,9}))?'$""", RegexOption.IGNORE_CASE)
+private val DATE_LITERAL: Regex = Regex("""^(?:DATE )?'(\d{4})-(\d{2})-(\d{2})'$""", RegexOption.IGNORE_CASE)
+private val TIME_LITERAL: Regex = Regex("""^(?:TIME )?'(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,9}))?'$""", RegexOption.IGNORE_CASE)
 private val TIMESTAMP_LITERAL: Regex = Regex(
-    """^TIMESTAMP '(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,9}))?'$""",
+    """^(?:TIMESTAMP )?'(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,9}))?'$""",
     RegexOption.IGNORE_CASE
 )
 
@@ -38,7 +38,8 @@ private val TIMESTAMP_LITERAL: Regex = Regex(
  *
  * Supported defaults include:
  * - integer, floating point, decimal, boolean, string and single-character literals, Uuid & UUID literals
- * - `DATE`, `TIME` and `TIMESTAMP` literals for the `kotlinx.datetime` and `java.time` modules
+ * - `DATE`, `TIME` and `TIMESTAMP` literals for the `kotlinx.datetime` and `java.time` modules, either tagged with
+ *   their type or as a bare string of the exact shape on a column of that type
  * - a value from a generated enumeration
  * - `CURRENT_TIMESTAMP` and `CURRENT_DATE` functions
  */
@@ -88,8 +89,8 @@ private fun ColumnDefinition.literalDefault(
 private fun String.asDoubleLiteral(): String = if ('.' in this || 'e' in this || 'E' in this) this else "$this.0"
 
 private fun booleanLiteral(value: String): CodeBlock? = when (value.uppercase()) {
-    "TRUE" -> CodeBlock.of("true")
-    "FALSE" -> CodeBlock.of("false")
+    "TRUE", "1" -> CodeBlock.of("true")
+    "FALSE", "0" -> CodeBlock.of("false")
     else -> null
 }
 

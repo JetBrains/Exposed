@@ -16,6 +16,27 @@ internal interface DialectSyntax {
     val unboundedLength: Int
         get() = DEFAULT_UNBOUNDED_LENGTH
 
+    /**
+     * Whether a column whose declared type is unknown to the mapper may be mapped from its JDBC type instead.
+     * This must be `false` for a database whose driver reports only a broad type class rather than the column's own
+     * type (like SQLite's type affinity), so that such a column is reported as unsupported instead of being guessed.
+     */
+    val usesJdbcTypeFallback: Boolean
+        get() = true
+
+    /**
+     * Whether Exposed creates a unique index under its default name without the `_unique` suffix on this database,
+     * so that `<table>_<columns>` is a default name for a unique index as well as `<table>_<columns>_unique`.
+     */
+    val omitsUniqueSuffixInIndexNames: Boolean
+        get() = false
+
+    /**
+     * Whether the index [name] is one that the database keeps for its own use, such as the index that backs a `UNIQUE`
+     * constraint, and that Exposed's migration utilities ignore on this database.
+     */
+    fun isInternalIndexName(name: String): Boolean = false
+
     /** Maps a JDBC `importedKey*` rule code from a foreign key to a [ReferenceOption]. */
     fun referenceOption(jdbcRule: Int): ReferenceOption = when (jdbcRule) {
         DatabaseMetaData.importedKeyCascade -> ReferenceOption.CASCADE

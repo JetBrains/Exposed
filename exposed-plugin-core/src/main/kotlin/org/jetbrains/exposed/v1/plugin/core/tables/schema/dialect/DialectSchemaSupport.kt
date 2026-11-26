@@ -4,6 +4,7 @@ import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import java.sql.Connection
 
 /**
@@ -19,6 +20,12 @@ internal interface DialectSchemaSupport {
      * which must not be generated.
      */
     val createsIndexForForeignKeys: Boolean
+
+    /**
+     * Whether the database groups its tables into schemas. When `false`, the tables of the connection form a single
+     * unnamed namespace and no schema can be configured for a specific search scope.
+     */
+    val supportsSchemas: Boolean
 
     /** Whether the schema [name], as reported by the database, holds unneeded system objects rather than user tables. */
     fun isSystemSchema(name: String): Boolean
@@ -74,6 +81,22 @@ internal interface DialectSchemaSupport {
      */
     fun enumerationTypes(connection: Connection, schema: String): Map<String, List<String>>
 
+    /**
+     * Returns one row per column of every foreign key of a table, for a database whose driver does not report its
+     * foreign keys reliably through `DatabaseMetaData.getImportedKeys`.
+     *
+     * Should return `null` when the standard JDBC metadata is to be read instead.
+     */
+    fun foreignKeys(connection: Connection, schema: String, tableName: String): List<ReportedForeignKeyColumn>?
+
+    /**
+     * Returns corrections to what the driver reports for columns of a table, keyed by raw column name, for a database
+     * whose driver metadata does not tell the whole truth about a column.
+     *
+     * Should return an empty map when the driver's column metadata can be used as reported.
+     */
+    fun columnOverrides(connection: Connection, schema: String, tableName: String): Map<String, ColumnOverride>
+
     companion object {
         fun forDialect(
             dialect: DatabaseDialect,
@@ -81,10 +104,49 @@ internal interface DialectSchemaSupport {
         ): DialectSchemaSupport = when (dialect) {
             is H2Dialect -> H2SchemaSupport(identifierManager)
             is PostgreSQLDialect -> PostgreSqlSchemaSupport
+            is SQLiteDialect -> SQLiteSchemaSupport
             else -> JdbcSchemaSupport
         }
     }
 }
+
+/**
+ * One column of a foreign key, with every name as reported by the database.
+ */
+internal data class ReportedForeignKeyColumn(
+    /** What identifies the key among the keys of its table, so that the rows of a composite key can be grouped. */
+    val groupKey: String,
+
+    /** The name of the constraint, or an empty string when the database reports none. */
+    val name: String,
+
+    /** The 1-based position of the column within the key. */
+    val position: Int,
+    val columnName: String,
+    val targetSchema: String,
+    val targetTable: String,
+    val targetColumnName: String,
+
+    /** The JDBC `importedKey*` code of the delete rule. */
+    val deleteRule: Int,
+
+    /** The JDBC `importedKey*` code of the update rule. */
+    val updateRule: Int,
+)
+
+/**
+ * A correction to the driver's metadata of a single column. A `null` value leaves what the driver reported.
+ */
+internal data class ColumnOverride(
+    val autoIncrement: Boolean? = null,
+    val nullable: Boolean? = null,
+
+    /** Logged when [autoIncrement] changes what the driver reported, to say why. */
+    val autoIncrementNote: String? = null,
+
+    /** Logged as a warning when [nullable] changes what the driver reported, to say why. */
+    val nullableWarning: String? = null,
+)
 
 /**
  * The parameters of a sequence that differ from what `autoIncrement(sequenceName)` creates. Each will be `null`
@@ -108,6 +170,8 @@ internal object JdbcSchemaSupport : DialectSchemaSupport {
     override val syntax: DialectSyntax = JdbcSyntax
 
     override val createsIndexForForeignKeys: Boolean = false
+
+    override val supportsSchemas: Boolean = true
 
     override fun isSystemSchema(name: String): Boolean = false
 
@@ -143,4 +207,12 @@ internal object JdbcSchemaSupport : DialectSchemaSupport {
     ): Map<String, String> = emptyMap()
 
     override fun enumerationTypes(connection: Connection, schema: String): Map<String, List<String>> = emptyMap()
+
+    override fun foreignKeys(connection: Connection, schema: String, tableName: String): List<ReportedForeignKeyColumn>? = null
+
+    override fun columnOverrides(
+        connection: Connection,
+        schema: String,
+        tableName: String
+    ): Map<String, ColumnOverride> = emptyMap()
 }

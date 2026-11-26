@@ -28,7 +28,7 @@ class DefaultValuesTest {
         assertLiteral("true", "BOOLEAN", "TRUE")
         assertLiteral("false", "BOOLEAN", "FALSE")
         assertUnsupported("INT", "'42'")
-        assertUnsupported("BOOLEAN", "1")
+        assertUnsupported("BOOLEAN", "'true'")
     }
 
     @Test
@@ -112,6 +112,33 @@ class DefaultValuesTest {
         assertUnsupported("VARBINARY(4)", "X'0102'")
         assertUnsupported("INT ARRAY", "ARRAY [1, 2]")
         assertUnsupported("JSON", "JSON '{}'")
+    }
+
+    @Test
+    fun testBareDateTimeStringsAreReadAsLiteralsOfTheColumnType() {
+        // a database without typed literals (like SQLite) reports the bare string
+        assertLiteral("LocalDate(2024, 1, 31)", "DATE", "'2024-01-31'")
+        assertLiteral("LocalTime(10, 30, 0)", "TIME", "'10:30:00'")
+        assertLiteral("LocalTime(10, 30, 0, 500000000)", "TIME", "'10:30:00.5'")
+        assertLiteral("LocalDateTime(2024, 1, 31, 10, 0, 0)", "TIMESTAMP", "'2024-01-31 10:00:00'")
+        assertLiteral("LocalDate.of(2024, 1, 31)", "DATE", "'2024-01-31'", dateTimeColumnType = DateTimeColumnType.JAVA_TIME)
+
+        // only the exact shape of the column's own type is read; anything else is left to the database
+        assertUnsupported("DATE", "'tomorrow'")
+        assertUnsupported("DATE", "'2024-01-31 10:00:00'")
+        assertUnsupported("TIMESTAMP", "'2024-01-31T10:00:00'")
+        assertUnsupported("TIMESTAMP", "'2024-01-31'")
+
+        // a tag of another type than the column's never matches
+        assertUnsupported("DATE", "TIMESTAMP '2024-01-31 10:00:00'")
+        assertUnsupported("DATE", "'2024-01-31'", dateTimeColumnType = DateTimeColumnType.JODA_TIME)
+    }
+
+    @Test
+    fun testBooleanDefaultsReportedAsNumbers() {
+        assertLiteral("true", "BOOLEAN", "1")
+        assertLiteral("false", "BOOLEAN", "0")
+        assertUnsupported("BOOLEAN", "2")
     }
 
     private fun assertLiteral(

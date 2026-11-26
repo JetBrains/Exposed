@@ -59,10 +59,12 @@ internal fun ColumnMetadata.toColumnDefinition(
     }
     val declaredType = reportedType.uppercase()
     syntax.arrayElement(declaredType)?.let { element ->
-        return toArrayDefinition(element, uuidColumnType, dateTimeColumnType)
+        return toArrayDefinition(element, uuidColumnType, dateTimeColumnType, syntax.unboundedLength)
     }
-    val type = declaredType.toSqlType() ?: jdbcSqlType(syntax.unboundedLength) ?: return null
-    return toColumnDefinition(type, uuidColumnType, dateTimeColumnType)
+    val type = declaredType.toSqlType()
+        ?: jdbcSqlType(syntax.unboundedLength).takeIf { syntax.usesJdbcTypeFallback }
+        ?: return null
+    return toColumnDefinition(type, uuidColumnType, dateTimeColumnType, syntax.unboundedLength)
 }
 
 /**
@@ -208,6 +210,7 @@ private fun ColumnMetadata.toColumnDefinition(
     type: SqlType,
     uuidColumnType: UuidColumnType,
     dateTimeColumnType: DateTimeColumnType,
+    unboundedLength: Int,
 ): ColumnDefinition? = when (type.baseType) {
     "UUID" -> uuidColumnType.toColumnDefinition()
     "DATE" -> dateTimeColumnType.toColumnDefinition(TemporalFunction.DATE)
@@ -218,8 +221,9 @@ private fun ColumnMetadata.toColumnDefinition(
     "SMALLINT" -> SHORT
     "INT", "INTEGER" -> INTEGER
     "BIGINT" -> LONG
-    // a declared type without arguments falls back to the precision and scale that JDBC reports
-    "NUMERIC", "DECIMAL" -> (type.length ?: size)?.let { precision -> decimal(precision, type.scale ?: scale ?: 0) }
+    "NUMERIC", "DECIMAL" ->
+        (type.length ?: size?.takeIf { it < unboundedLength })
+            ?.let { precision -> decimal(precision, type.scale ?: scale ?: 0) }
     "FLOAT", "REAL" -> FLOAT
     "DOUBLE PRECISION", "DOUBLE" -> DOUBLE
     "BOOLEAN", "BIT" -> BOOL
@@ -241,9 +245,10 @@ private fun ColumnMetadata.toArrayDefinition(
     arrayElement: ArrayElement,
     uuidColumnType: UuidColumnType,
     dateTimeColumnType: DateTimeColumnType,
+    unboundedLength: Int,
 ): ColumnDefinition? {
     val elementType = arrayElement.sqlType.toSqlType() ?: return null
-    val element = toColumnDefinition(elementType, uuidColumnType, dateTimeColumnType) ?: return null
+    val element = toColumnDefinition(elementType, uuidColumnType, dateTimeColumnType, unboundedLength) ?: return null
     val elementColumnType = element.columnTypeExpression ?: return null
 
     val elementTypeName = requireNotNull(element.typeName) { "A generated element definition always has a type" }

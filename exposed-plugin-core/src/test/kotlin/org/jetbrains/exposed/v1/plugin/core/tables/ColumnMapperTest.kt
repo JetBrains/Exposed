@@ -13,6 +13,7 @@ import org.jetbrains.exposed.v1.plugin.core.tables.mapping.JAVA_UUID_TYPE_NAME
 import org.jetbrains.exposed.v1.plugin.core.tables.mapping.UUID_TYPE_NAME
 import org.jetbrains.exposed.v1.plugin.core.tables.mapping.toColumnDefinition
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.H2Syntax
+import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.SQLiteSyntax
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.sql.Types
@@ -255,6 +256,35 @@ class ColumnMapperTest {
         assertNull(column(Types.OTHER, "GEOMETRY").toColumnDefinition())
         assertNull(column(Types.JAVA_OBJECT, "OBJECT").toColumnDefinition())
         assertNull(column(Types.OTHER, "").toColumnDefinition())
+    }
+
+    @Test
+    fun testDeclaredTypeIsNeverGuessedWithoutJdbcTypeFallback() {
+        // SQLite's driver reports only a type affinity, so a declared type that the mapper does not know stays unmapped
+        assertNull(column(Types.VARCHAR, "", size = 2_000_000_000).toColumnDefinition(SQLiteSyntax))
+        assertNull(column(Types.VARCHAR, "STRING", size = 2_000_000_000).toColumnDefinition(SQLiteSyntax))
+        assertNull(column(Types.INTEGER, "UNSIGNED BIG INT", size = 2_000_000_000).toColumnDefinition(SQLiteSyntax))
+
+        // the same columns are mapped from their JDBC type wherever the driver reports a real one
+        assertNotNull(column(Types.VARCHAR, "", size = 2_000_000_000).toColumnDefinition(H2Syntax))
+
+        val bigint = assertNotNull(
+            column(Types.INTEGER, "BIGINT", size = 2_000_000_000).toColumnDefinition(SQLiteSyntax)
+        )
+        assertEquals("long", bigint.function)
+    }
+
+    @Test
+    fun testDecimalWithoutDeclaredPrecisionIgnoresTheUndeclaredColumnSize() {
+        // SQLite's driver reports 2000000000 as the size of every column that declares none
+        assertNull(column(Types.FLOAT, "NUMERIC", size = 2_000_000_000, scale = 10).toColumnDefinition(SQLiteSyntax))
+
+        // SQLite reports precision + scale as the size of a declared NUMERIC, so only the declared arguments are used
+        val declared = assertNotNull(
+            column(Types.FLOAT, "NUMERIC(10, 2)", size = 12, scale = 2).toColumnDefinition(SQLiteSyntax)
+        )
+        assertEquals("decimal", declared.function)
+        assertEquals(", 10, 2", declared.arguments.toString())
     }
 
     private fun assertArray(
