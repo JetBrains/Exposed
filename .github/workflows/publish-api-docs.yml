@@ -1,0 +1,212 @@
+# Publishes the generated Dokka API reference to JetBrains/exposed-api-docs
+# (served on GitHub Pages). The site root there always holds the newest
+# release; the superseded release is archived under versions/<tag>/ and old
+# lines are pruned automatically (see
+# exposed-api-docs/.github/scripts/update.sh).
+#
+# A hotfix on an older line (e.g. 1.6.2 published after 1.7.0) is published
+# under versions/1.6.2/ by update.sh; the root keeps the newest release.
+#
+# Scheduled runs resolve the newest release themselves: an environment
+# restricted to `main` cannot gate a `release`-triggered run (the event ref
+# is the tag, not main), and a tag-pattern environment would hand the
+# credential to anyone who can push a matching tag. The workflow therefore
+# runs on `main` only (daily schedule + manual dispatch), and the release
+# list supplies the tag - the same resolution the fallback workflow uses.
+#
+# The published content lives on the `site` branch of exposed-api-docs; the
+# `main` branch there holds the scripts and documents and requires a pull
+# request for every change. Both publishing pipelines push fast-forward
+# commits to `site`.
+#
+# Two jobs keep the App key away from the Gradle build:
+#   - build resolves the tag, checks out the release, and runs
+#     ./gradlew dokkaGenerate with no secrets in its environment, then
+#     uploads the generated tree as a short-lived workflow artifact.
+#   - publish is the only job that can see the key (it runs in the
+#     api-docs-publish environment, restricted to the `main` branch): it
+#     mints a short-lived installation token of the exposed-api-docs-publisher
+#     App, uses it for the checkout and the single push, has no GITHUB_TOKEN
+#     permissions, and never runs Gradle. The key is never written to disk:
+#     neither checkout persists credentials, and the push passes the token
+#     in the URL of that one git call.
+
+name: Publish API docs
+
+on:
+  schedule:
+    - cron: "37 4 * * *"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Exposed release tag to publish (default: newest release)"
+        required: false
+        type: string
+      force:
+        description: "Rebuild and republish even if VERSION already matches the tag"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-api-docs
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    outputs:
+      publish-tag: ${{ steps.resolve.outputs.publish-tag }}
+    steps:
+      - name: Resolve release to publish
+        id: resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_TAG: ${{ inputs.tag }}
+          FORCE: ${{ inputs.force }}
+        run: |
+          set -euo pipefail
+          TAG="$INPUT_TAG"
+          if [ -n "$TAG" ]; then
+            # A manually supplied tag must be a plain release tag that exists
+            # as a published release, validated before anything reaches
+            # GITHUB_OUTPUT (SEC-A-387: validate every value written there;
+            # a per-line grep would let a multi-line input through if any
+            # single line matched).
+            if [[ ! "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "not a plain release tag: $TAG" >&2
+              exit 1
+            fi
+            gh api "repos/JetBrains/Exposed/releases/tags/$TAG" >/dev/null \
+              || { echo "no published release for tag: $TAG" >&2; exit 1; }
+          else
+            # Semver-max of published releases, like the fallback: GitHub's
+            # "latest" is the most recently published release, so a hotfix on
+            # an older line (1.6.2 published after 1.7.0) would otherwise
+            # win. Legacy pre-release tags like 1.0.0-rc-4 are filtered out
+            # before the numeric comparison.
+            TAG=$(gh api 'repos/JetBrains/Exposed/releases?per_page=100' \
+              --jq '[.[] | select(.prerelease == false) | .tag_name | select(test("^[0-9]+[.][0-9]+[.][0-9]+$"))] | max_by(split(".") | map(tonumber))')
+            if [[ ! "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "no plain release found" >&2
+              exit 1
+            fi
+          fi
+          echo "release to publish: $TAG"
+          if [ "$FORCE" != "true" ]; then
+            # Short-circuit no-op runs: the live site's VERSION records what
+            # the published root was generated from. Only a well-formed
+            # version line is trusted; the publish job re-checks the
+            # repository's own VERSION before pushing, so a stale or garbage
+            # read can only waste a build, never publish wrongly.
+            CURRENT=$(curl -fsSL --max-time 30 "https://jetbrains.github.io/exposed-api-docs/VERSION" 2>/dev/null | head -1 || true)
+            if [[ "$CURRENT" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && [ "$CURRENT" = "$TAG" ]; then
+              echo "docs already reflect $TAG; nothing to do"
+              exit 0
+            fi
+          fi
+          echo "publish-tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout Exposed at the release tag
+        if: steps.resolve.outputs.publish-tag != ''
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: JetBrains/Exposed
+          ref: ${{ steps.resolve.outputs.publish-tag }}
+          path: exposed-src
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up JDK
+        if: steps.resolve.outputs.publish-tag != ''
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+        with:
+          distribution: temurin
+          java-version: 17
+          # No Gradle cache: SEC-A-387 advises against caches in critical
+          # workflows; the build output becomes the published site.
+
+      - name: Generate API docs
+        if: steps.resolve.outputs.publish-tag != ''
+        working-directory: exposed-src
+        run: |
+          set -euo pipefail
+          ./gradlew dokkaGenerate --no-daemon --console=plain
+
+      - name: Upload generated docs
+        # Keep the path in sync with dokka's outputDirectory when the
+        # docs/api removal PR repoints it.
+        if: steps.resolve.outputs.publish-tag != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: api-docs-tree
+          path: exposed-src/docs/api
+          retention-days: 1
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    if: needs.build.outputs.publish-tag != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: api-docs-publish
+    permissions: {}
+    env:
+      PUBLISH_TAG: ${{ needs.build.outputs.publish-tag }}
+      FORCE: ${{ inputs.force }}
+    steps:
+      - name: Mint App installation token
+        id: app-token
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        with:
+          app-id: ${{ vars.API_DOCS_APP_ID }}
+          private-key: ${{ secrets.API_DOCS_APP_PRIVATE_KEY }}
+          repositories: exposed-api-docs
+
+      - name: Checkout API docs repository (site branch)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: JetBrains/exposed-api-docs
+          ref: site
+          path: api-docs
+          token: ${{ steps.app-token.outputs.token }}
+          persist-credentials: false
+
+      - name: Download generated docs
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: api-docs-tree
+          path: docs-new
+
+      - name: Update the site tree
+        id: update
+        # No credential in this step's environment: update.sh never pushes
+        # (the next step does), and the App token exists only inside the
+        # checkout action and the push URL below.
+        run: |
+          set -euo pipefail
+          CURRENT=$(cat api-docs/VERSION)
+          echo "release: $PUBLISH_TAG; docs generated from: $CURRENT"
+          if [ "$PUBLISH_TAG" = "$CURRENT" ] && [ "$FORCE" != "true" ]; then
+            echo "docs already reflect $PUBLISH_TAG; nothing to do"
+            echo "updated=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          cd api-docs
+          git config user.name "exposed-api-docs-publisher[bot]"
+          git config user.email "exposed-api-docs-publisher[bot]@users.noreply.github.com"
+          bash .github/scripts/update.sh ../docs-new "$PUBLISH_TAG"
+          echo "updated=true" >> "$GITHUB_OUTPUT"
+
+      - name: Push
+        if: steps.update.outputs.updated != 'false'
+        env:
+          PUSH_URL: "https://x-access-token:${{ steps.app-token.outputs.token }}@github.com/JetBrains/exposed-api-docs.git"
+        run: |
+          set -euo pipefail
+          cd api-docs
+          git push "$PUSH_URL" HEAD:refs/heads/site
