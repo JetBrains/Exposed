@@ -5,10 +5,13 @@ import org.jetbrains.exposed.v1.plugin.core.tables.mapping.defaultValueFor
 import org.jetbrains.exposed.v1.plugin.core.tables.mapping.toColumnDefinition
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.DialectSyntax
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.H2Syntax
+import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.MariaDbSyntax
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.MySqlSyntax
+import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.SequenceReference
 import org.junit.jupiter.api.Test
 import java.sql.Types
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -154,6 +157,55 @@ class DefaultValuesTest {
         assertLiteral("7uL", "BIGINT UNSIGNED", "7", syntax = MySqlSyntax)
         val definition = assertNotNull(column(Types.INTEGER, "INT UNSIGNED").toColumnDefinition(MySqlSyntax))
         assertIs<DefaultValue.Unsupported>(definition.defaultValueFor("-1", DateTimeColumnType.KOTLIN_DATETIME, MySqlSyntax))
+    }
+
+    @Test
+    fun testDefaultsAsReportedByMariaDB() {
+        // the current date and time functions are reported under the server's own names
+        assertEquals("CURRENT_TIMESTAMP", MariaDbSyntax.normalizeDefault("current_timestamp()"))
+        assertEquals("CURRENT_TIMESTAMP", MariaDbSyntax.normalizeDefault("current_timestamp(6)"))
+        assertEquals("CURRENT_DATE", MariaDbSyntax.normalizeDefault("curdate()"))
+
+        // a string is reported in quotes, so it is never taken for a function
+        assertEquals("'current_timestamp()'", MariaDbSyntax.normalizeDefault("'current_timestamp()'"))
+        assertEquals("uuid()", MariaDbSyntax.normalizeDefault("uuid()"))
+
+        val onTimestamp = defaultFor("TIMESTAMP WITH LOCAL TIME ZONE", "current_timestamp(6)", syntax = MariaDbSyntax)
+        assertTrue(assertIs<DefaultValue.Expression>(onTimestamp).code.toString().endsWith("CurrentTimestamp"))
+        val onDatetime = defaultFor("DATETIME(6)", "current_timestamp(6)", syntax = MariaDbSyntax)
+        assertTrue(assertIs<DefaultValue.Expression>(onDatetime).code.toString().endsWith("CurrentDateTime"))
+        val onDate = defaultFor("DATE", "curdate()", syntax = MariaDbSyntax)
+        assertTrue(assertIs<DefaultValue.Expression>(onDate).code.toString().endsWith("CurrentDate"))
+
+        // a literal on a TIMESTAMP column is not a point in time without the time zone of the server
+        assertIs<DefaultValue.Unsupported>(defaultFor("TIMESTAMP WITH LOCAL TIME ZONE", "'2024-01-31 10:00:00'", syntax = MariaDbSyntax))
+        assertIs<DefaultValue.Unsupported>(defaultFor("VARCHAR(36)", "uuid()", syntax = MariaDbSyntax))
+        assertIs<DefaultValue.Unsupported>(defaultFor("INT", "(1 + 2)", syntax = MariaDbSyntax))
+        assertLiteral("\"it's\"", "VARCHAR(50)", "'it''s'", syntax = MariaDbSyntax)
+        assertLiteral("\"NULL\"", "VARCHAR(50)", "'NULL'", syntax = MariaDbSyntax)
+    }
+
+    @Test
+    fun testSequencesAndGeneratedNamesAsReportedByMariaDB() {
+        assertEquals(SequenceReference("shop", "order_seq"), MariaDbSyntax.sequenceInDefault("nextval(`shop`.`order_seq`)"))
+        assertEquals(SequenceReference("shop", "odd`name"), MariaDbSyntax.sequenceInDefault("nextval(`shop`.`odd``name`)"))
+        assertNull(MariaDbSyntax.sequenceInDefault("'nextval(`shop`.`order_seq`)'"))
+        assertNull(MariaDbSyntax.sequenceInDefault("uuid()"))
+
+        assertTrue(MariaDbSyntax.isGeneratedConstraintName("PRIMARY", "orders", listOf("id")))
+
+        // an unnamed foreign key is numbered within its table, or carries the name an older server gave it
+        assertTrue(MariaDbSyntax.isGeneratedConstraintName("1", "orders", listOf("user_id")))
+        assertTrue(MariaDbSyntax.isGeneratedConstraintName("12", "orders", listOf("user_id")))
+        assertTrue(MariaDbSyntax.isGeneratedConstraintName("orders_ibfk_2", "orders", listOf("user_id")))
+
+        // an unnamed UNIQUE constraint is named after its first column
+        assertTrue(MariaDbSyntax.isGeneratedConstraintName("code", "orders", listOf("code")))
+        assertTrue(MariaDbSyntax.isGeneratedConstraintName("code_2", "orders", listOf("code", "region")))
+        assertFalse(MariaDbSyntax.isGeneratedConstraintName("fk_orders_user", "orders", listOf("user_id")))
+        assertFalse(MariaDbSyntax.isGeneratedConstraintName("uq_orders_code", "orders", listOf("code")))
+
+        assertEquals(listOf("Bar", "it's"), MariaDbSyntax.enumerationValues("enum('Bar','it''s')"))
     }
 
     private fun assertLiteral(

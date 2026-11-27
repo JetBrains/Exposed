@@ -55,6 +55,8 @@ internal class TableCodeBuilder(
                 "reference each other while initializing fail at first use, so remove one of the references by hand"
             builder.addKdoc("TODO: %L\n", message)
         }
+        // already logged by the reader, which is where the note comes from
+        table.unsupportedNote?.let { builder.addKdoc("TODO: %L\n", it) }
 
         table.columns.forEach { column ->
             if (kind is TableKind.ExactId && column.name == kind.keyColumnName) {

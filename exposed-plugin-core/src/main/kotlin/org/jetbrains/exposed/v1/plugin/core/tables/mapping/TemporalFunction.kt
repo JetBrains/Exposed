@@ -8,28 +8,40 @@ internal enum class TemporalFunction(val function: String) {
     DATE(ColumnFunctions.DATE),
     TIME(ColumnFunctions.TIME),
     DATETIME(ColumnFunctions.DATETIME),
+
+    /** Not shared by all modules: `exposed-jodatime` has no `timestamp()`, see [hasTimestampFunction]. */
+    TIMESTAMP(ColumnFunctions.TIMESTAMP),
     TIMESTAMP_WITH_TIME_ZONE(ColumnFunctions.TIMESTAMP_WITH_TIME_ZONE),
 }
 
 private val JAVA_OFFSET_DATE_TIME: ClassName = ClassName("java.time", "OffsetDateTime")
 private val JODA_DATE_TIME: ClassName = ClassName("org.joda.time", "DateTime")
 
+private const val NO_JODA_TIMESTAMP: String = "exposed-jodatime has no timestamp() function"
+
+/** Whether this module has a `timestamp()` function, which stores a point in time. */
+internal val DateTimeColumnType.hasTimestampFunction: Boolean
+    get() = this != DateTimeColumnType.JODA_TIME
+
 internal fun DateTimeColumnType.typeNameOf(function: TemporalFunction): ClassName = when (this) {
     DateTimeColumnType.KOTLIN_DATETIME -> when (function) {
         TemporalFunction.DATE -> ClassName("kotlinx.datetime", "LocalDate")
         TemporalFunction.TIME -> ClassName("kotlinx.datetime", "LocalTime")
         TemporalFunction.DATETIME -> ClassName("kotlinx.datetime", "LocalDateTime")
+        TemporalFunction.TIMESTAMP -> ClassName("kotlin.time", "Instant")
         TemporalFunction.TIMESTAMP_WITH_TIME_ZONE -> JAVA_OFFSET_DATE_TIME
     }
     DateTimeColumnType.JAVA_TIME -> when (function) {
         TemporalFunction.DATE -> ClassName("java.time", "LocalDate")
         TemporalFunction.TIME -> ClassName("java.time", "LocalTime")
         TemporalFunction.DATETIME -> ClassName("java.time", "LocalDateTime")
+        TemporalFunction.TIMESTAMP -> ClassName("java.time", "Instant")
         TemporalFunction.TIMESTAMP_WITH_TIME_ZONE -> JAVA_OFFSET_DATE_TIME
     }
     DateTimeColumnType.JODA_TIME -> when (function) {
         TemporalFunction.TIME -> ClassName("org.joda.time", "LocalTime")
         TemporalFunction.DATE, TemporalFunction.DATETIME, TemporalFunction.TIMESTAMP_WITH_TIME_ZONE -> JODA_DATE_TIME
+        TemporalFunction.TIMESTAMP -> error(NO_JODA_TIMESTAMP)
     }
 }
 
@@ -38,18 +50,21 @@ private fun DateTimeColumnType.columnTypeNameOf(function: TemporalFunction): Str
         TemporalFunction.DATE -> "KotlinLocalDateColumnType"
         TemporalFunction.TIME -> "KotlinLocalTimeColumnType"
         TemporalFunction.DATETIME -> "KotlinLocalDateTimeColumnType"
+        TemporalFunction.TIMESTAMP -> "KotlinInstantColumnType"
         TemporalFunction.TIMESTAMP_WITH_TIME_ZONE -> "KotlinOffsetDateTimeColumnType"
     }
     DateTimeColumnType.JAVA_TIME -> when (function) {
         TemporalFunction.DATE -> "JavaLocalDateColumnType"
         TemporalFunction.TIME -> "JavaLocalTimeColumnType"
         TemporalFunction.DATETIME -> "JavaLocalDateTimeColumnType"
+        TemporalFunction.TIMESTAMP -> "JavaInstantColumnType"
         TemporalFunction.TIMESTAMP_WITH_TIME_ZONE -> "JavaOffsetDateTimeColumnType"
     }
     DateTimeColumnType.JODA_TIME -> when (function) {
         TemporalFunction.DATE -> "JodaLocalDateColumnType"
         TemporalFunction.TIME -> "JodaLocalTimeColumnType"
         TemporalFunction.DATETIME -> "JodaLocalDateTimeColumnType"
+        TemporalFunction.TIMESTAMP -> error(NO_JODA_TIMESTAMP)
         TemporalFunction.TIMESTAMP_WITH_TIME_ZONE -> "DateTimeWithTimeZoneColumnType"
     }
 }
@@ -61,3 +76,17 @@ internal fun DateTimeColumnType.toColumnDefinition(function: TemporalFunction): 
     requiredModule = module,
     columnTypeExpression = columnType(columnTypeNameOf(function), packageName = functionPackage),
 )
+
+/**
+ * The definition of a column that stores a point in time, which is `timestamp()` in the modules that have it. For
+ * `exposed-jodatime`, which has no such function, it is `datetime()` as for any other `TIMESTAMP`, with a note that the
+ * definition would create a column of another type.
+ */
+internal fun DateTimeColumnType.toInstantColumnDefinition(): ColumnDefinition = if (hasTimestampFunction) {
+    toColumnDefinition(TemporalFunction.TIMESTAMP)
+} else {
+    toColumnDefinition(TemporalFunction.DATETIME).copy(
+        mappingLog = "Generated as datetime(), because exposed-jodatime has no timestamp() function for a TIMESTAMP column. " +
+            "A table created from this definition gets a DATETIME column instead.",
+    )
+}

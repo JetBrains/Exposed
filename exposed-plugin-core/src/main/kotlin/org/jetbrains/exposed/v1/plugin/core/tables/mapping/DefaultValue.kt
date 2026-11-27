@@ -158,6 +158,7 @@ private fun ColumnDefinition.currentTimeExpression(
 ): CodeBlock? {
     val objectName = when (function) {
         "CURRENT_TIMESTAMP" if this.function == ColumnFunctions.DATETIME -> "CurrentDateTime"
+        "CURRENT_TIMESTAMP" if this.function == ColumnFunctions.TIMESTAMP -> "CurrentTimestamp"
         "CURRENT_TIMESTAMP" if this.function == ColumnFunctions.TIMESTAMP_WITH_TIME_ZONE &&
             dateTimeColumnType != DateTimeColumnType.JODA_TIME -> "CurrentTimestampWithTimeZone"
         "CURRENT_DATE" if this.function == ColumnFunctions.DATE -> "CurrentDate"

@@ -59,12 +59,12 @@ internal fun ColumnMetadata.toColumnDefinition(
     }
     val declaredType = reportedType.uppercase()
     syntax.arrayElement(declaredType)?.let { element ->
-        return toArrayDefinition(element, uuidColumnType, dateTimeColumnType, syntax.unboundedLength)
+        return toArrayDefinition(element, uuidColumnType, dateTimeColumnType, syntax)
     }
     val type = declaredType.toSqlType()
         ?: jdbcSqlType(syntax.unboundedLength).takeIf { syntax.usesJdbcTypeFallback }
         ?: return null
-    return toColumnDefinition(type, uuidColumnType, dateTimeColumnType, syntax.unboundedLength)
+    return toColumnDefinition(type, uuidColumnType, dateTimeColumnType, syntax)
 }
 
 /**
@@ -224,13 +224,17 @@ private fun ColumnMetadata.toColumnDefinition(
     type: SqlType,
     uuidColumnType: UuidColumnType,
     dateTimeColumnType: DateTimeColumnType,
-    unboundedLength: Int,
+    syntax: DialectSyntax,
 ): ColumnDefinition? = when (type.baseType) {
-    "UUID" -> uuidColumnType.toColumnDefinition()
+    "UUID" -> uuidColumnType.toColumnDefinition().takeIf { syntax.mapsUuidType }
     "DATE" -> dateTimeColumnType.toColumnDefinition(TemporalFunction.DATE)
     "TIME" -> dateTimeColumnType.toColumnDefinition(TemporalFunction.TIME)
     "TIMESTAMP", "DATETIME" -> dateTimeColumnType.toColumnDefinition(TemporalFunction.DATETIME)
     "TIMESTAMP WITH TIME ZONE" -> dateTimeColumnType.toColumnDefinition(TemporalFunction.TIMESTAMP_WITH_TIME_ZONE)
+    // The type that Exposed's timestamp() declares on a database where that differs from what its datetime() declares
+    // (like MariaDB): a point in time, stored in UTC and shown in the time zone of the session. It needs a name of its
+    // own because a plain TIMESTAMP is what both functions declare on other databases, where it is read as datetime()
+    "TIMESTAMP WITH LOCAL TIME ZONE" -> dateTimeColumnType.toInstantColumnDefinition()
     "TINYINT" -> BYTE
     "SMALLINT" -> SHORT
     "INT", "INTEGER" -> INTEGER
@@ -240,7 +244,7 @@ private fun ColumnMetadata.toColumnDefinition(
     "INT UNSIGNED", "INTEGER UNSIGNED" -> UINTEGER
     "BIGINT UNSIGNED" -> ULONG
     "NUMERIC", "DECIMAL" ->
-        (type.length ?: size?.takeIf { it < unboundedLength })
+        (type.length ?: size?.takeIf { it < syntax.unboundedLength })
             ?.let { precision -> decimal(precision, type.scale ?: scale ?: 0) }
     "FLOAT", "REAL" -> FLOAT
     "DOUBLE PRECISION", "DOUBLE" -> DOUBLE
@@ -266,10 +270,10 @@ private fun ColumnMetadata.toArrayDefinition(
     arrayElement: ArrayElement,
     uuidColumnType: UuidColumnType,
     dateTimeColumnType: DateTimeColumnType,
-    unboundedLength: Int,
+    syntax: DialectSyntax,
 ): ColumnDefinition? {
     val elementType = arrayElement.sqlType.toSqlType() ?: return null
-    val element = toColumnDefinition(elementType, uuidColumnType, dateTimeColumnType, unboundedLength) ?: return null
+    val element = toColumnDefinition(elementType, uuidColumnType, dateTimeColumnType, syntax) ?: return null
     val elementColumnType = element.columnTypeExpression ?: return null
 
     val elementTypeName = requireNotNull(element.typeName) { "A generated element definition always has a type" }
@@ -379,6 +383,7 @@ internal fun mappedKotlinType(
     ColumnFunctions.DATE -> dateTimeColumnType.typeNameOf(TemporalFunction.DATE)
     ColumnFunctions.TIME -> dateTimeColumnType.typeNameOf(TemporalFunction.TIME)
     ColumnFunctions.DATETIME -> dateTimeColumnType.typeNameOf(TemporalFunction.DATETIME)
+    ColumnFunctions.TIMESTAMP -> dateTimeColumnType.takeIf { it.hasTimestampFunction }?.typeNameOf(TemporalFunction.TIMESTAMP)
     ColumnFunctions.TIMESTAMP_WITH_TIME_ZONE -> dateTimeColumnType.typeNameOf(TemporalFunction.TIMESTAMP_WITH_TIME_ZONE)
     else -> null
 }

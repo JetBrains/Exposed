@@ -29,6 +29,12 @@ internal data class TableMetadata(
      * they belong to.
      */
     val compositeForeignKeys: List<ForeignKeyInfo> = emptyList(),
+
+    /**
+     * Something about the table as a whole that the generated definition cannot express (like MariaDB's
+     * `WITH SYSTEM VERSIONING`), to be left as a "TO-DO" on the generated object, or `null` when there is none.
+     */
+    val unsupportedNote: String? = null,
 ) {
     /**
      * Name of the table by Exposed's patterns.

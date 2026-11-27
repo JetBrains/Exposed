@@ -13,6 +13,7 @@ import org.jetbrains.exposed.v1.plugin.core.tables.mapping.JAVA_UUID_TYPE_NAME
 import org.jetbrains.exposed.v1.plugin.core.tables.mapping.UUID_TYPE_NAME
 import org.jetbrains.exposed.v1.plugin.core.tables.mapping.toColumnDefinition
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.H2Syntax
+import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.MariaDbSyntax
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.MySqlSyntax
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.SQLiteSyntax
 import org.junit.jupiter.api.Test
@@ -310,6 +311,46 @@ class ColumnMapperTest {
         )
         assertEquals("decimal", declared.function)
         assertEquals(", 10, 2", declared.arguments.toString())
+    }
+
+    @Test
+    fun testTimestampWithLocalTimeZoneIsTimestampInModulesThatHaveIt() {
+        val column = column(Types.TIMESTAMP, "TIMESTAMP WITH LOCAL TIME ZONE")
+
+        val kotlinDefinition = assertNotNull(column.toColumnDefinition(MariaDbSyntax))
+        assertEquals("timestamp", kotlinDefinition.function)
+        assertEquals(ClassName("kotlin.time", "Instant"), kotlinDefinition.typeName)
+        assertNull(kotlinDefinition.mappingLog)
+
+        val javaDefinition = assertNotNull(column.toColumnDefinition(MariaDbSyntax, dateTimeColumnType = DateTimeColumnType.JAVA_TIME))
+        assertEquals("timestamp", javaDefinition.function)
+        assertEquals(ClassName("java.time", "Instant"), javaDefinition.typeName)
+
+        // exposed-jodatime has no timestamp(), so the column is datetime() as for any other TIMESTAMP, with a note
+        val jodaDefinition = assertNotNull(column.toColumnDefinition(MariaDbSyntax, dateTimeColumnType = DateTimeColumnType.JODA_TIME))
+        assertEquals("datetime", jodaDefinition.function)
+        assertEquals(ClassName("org.joda.time", "DateTime"), jodaDefinition.typeName)
+        assertTrue(assertNotNull(jodaDefinition.mappingLog).contains("exposed-jodatime has no timestamp()"))
+
+        // a plain TIMESTAMP stays datetime() for every dialect
+        assertEquals("datetime", assertNotNull(column(Types.TIMESTAMP, "TIMESTAMP").toColumnDefinition(MariaDbSyntax)).function)
+    }
+
+    @Test
+    fun testTypesWithoutAnExactFunctionAreNotGuessedForMariaDB() {
+        // MariaDB has a UUID type of its own, while Exposed's uuid() declares BINARY(16) there
+        assertNull(column(Types.OTHER, "UUID").toColumnDefinition(MariaDbSyntax))
+        assertNotNull(column(Types.OTHER, "UUID").toColumnDefinition(H2Syntax))
+        assertNull(column(Types.OTHER, "INET4").toColumnDefinition(MariaDbSyntax))
+        assertNull(column(Types.OTHER, "INET6").toColumnDefinition(MariaDbSyntax))
+        assertNull(column(Types.INTEGER, "MEDIUMINT", size = 7).toColumnDefinition(MariaDbSyntax))
+        assertNull(column(Types.DATE, "YEAR").toColumnDefinition(MariaDbSyntax))
+        assertNull(column(Types.BIT, "BIT(8)", size = 8).toColumnDefinition(MariaDbSyntax))
+
+        val vector = assertNotNull(column(Types.OTHER, "VECTOR(3)", size = 12).toColumnDefinition(MariaDbSyntax))
+        assertEquals("vector", vector.function)
+        assertEquals(", 3", vector.arguments.toString())
+        assertEquals("json", assertNotNull(column(Types.LONGVARCHAR, "JSON").toColumnDefinition(MariaDbSyntax)).function)
     }
 
     private fun assertFunction(function: String, sqlType: String) {

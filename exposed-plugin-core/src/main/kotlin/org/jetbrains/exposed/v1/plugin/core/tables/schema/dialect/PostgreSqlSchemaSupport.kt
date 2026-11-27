@@ -156,6 +156,11 @@ internal object PostgreSqlSchemaSupport : DialectSchemaSupport {
 
     override fun columnDefaults(connection: Connection, schema: String, tableName: String): Map<String, String?>? = null
 
+    // Exposed lists the sequences of every schema of the connected database, which is left as it is
+    override fun sequences(connection: Connection, schemas: List<String>): List<SequenceReference>? = null
+
+    override fun unsupportedTableNote(connection: Connection, schema: String, tableName: String): String? = null
+
     override fun columnOverrides(
         connection: Connection,
         schema: String,

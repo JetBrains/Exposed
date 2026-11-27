@@ -116,8 +116,12 @@ internal object SQLiteSchemaSupport : DialectSchemaSupport {
     // its values whether or not `AUTOINCREMENT` is declared, and it never holds NULL.
     // However, the driver reports this column as nullable and as auto-incremented only with the keyword.
     // Any other primary key column may hold NULL unless it is declared `NOT NULL`, which Exposed cannot declare.
-
     override fun columnDefaults(connection: Connection, schema: String, tableName: String): Map<String, String?>? = null
+
+    // SQLite has no sequences
+    override fun sequences(connection: Connection, schemas: List<String>): List<SequenceReference>? = null
+
+    override fun unsupportedTableNote(connection: Connection, schema: String, tableName: String): String? = null
 
     override fun columnOverrides(connection: Connection, schema: String, tableName: String): Map<String, ColumnOverride> {
         val keyColumns = tableColumns(connection, tableName).filter { it.keyPosition > 0 }

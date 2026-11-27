@@ -13,6 +13,7 @@ import java.sql.Connection
  * The part of dialect support responsible for obtaining metadata from a database that cannot be obtained from standard
  * JDBC metadata, and which must instead be queried through the database's own catalog view.
  */
+@Suppress("TooManyFunctions")
 internal interface DialectSchemaSupport {
     /** Interprets the strings and codes that this support reads. */
     val syntax: DialectSyntax
@@ -115,6 +116,23 @@ internal interface DialectSchemaSupport {
      */
     fun columnDefaults(connection: Connection, schema: String, tableName: String): Map<String, String?>?
 
+    /**
+     * Returns the sequences of the searched [schemas], for a database on which Exposed's own list of sequences is not
+     * limited to them (like MariaDB, where it spans every database of the server). Only these are then considered when
+     * reporting sequences that no generated column uses.
+     *
+     * Should return `null` when Exposed's own list of sequences is to be used instead.
+     */
+    fun sequences(connection: Connection, schemas: List<String>): List<SequenceReference>?
+
+    /**
+     * Returns something about a table as a whole that the generated definition cannot express (like MariaDB's
+     * `WITH SYSTEM VERSIONING`), to be logged and left as a "TO-DO" on the generated object.
+     *
+     * Should return `null` when there is nothing of the kind to report.
+     */
+    fun unsupportedTableNote(connection: Connection, schema: String, tableName: String): String?
+
     companion object {
         fun forDialect(
             dialect: DatabaseDialect,
@@ -123,7 +141,7 @@ internal interface DialectSchemaSupport {
             is H2Dialect -> H2SchemaSupport(identifierManager)
             is PostgreSQLDialect -> PostgreSqlSchemaSupport
             is SQLiteDialect -> SQLiteSchemaSupport
-            is MariaDBDialect -> JdbcSchemaSupport
+            is MariaDBDialect -> MariaDbSchemaSupport
             is MysqlDialect -> MySqlSchemaSupport
             else -> JdbcSchemaSupport
         }
@@ -236,6 +254,10 @@ internal object JdbcSchemaSupport : DialectSchemaSupport {
     override fun foreignKeys(connection: Connection, schema: String, tableName: String): List<ReportedForeignKeyColumn>? = null
 
     override fun columnDefaults(connection: Connection, schema: String, tableName: String): Map<String, String?>? = null
+
+    override fun sequences(connection: Connection, schemas: List<String>): List<SequenceReference>? = null
+
+    override fun unsupportedTableNote(connection: Connection, schema: String, tableName: String): String? = null
 
     override fun columnOverrides(
         connection: Connection,

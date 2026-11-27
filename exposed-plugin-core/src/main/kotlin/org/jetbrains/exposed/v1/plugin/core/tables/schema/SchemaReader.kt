@@ -47,6 +47,12 @@ internal class SchemaReader(
     }
     private val mappings: ColumnMappingMatcher = ColumnMappingMatcher(columnMappings, identifierManager)
     private val sequencesInUse = hashSetOf<String>()
+
+    /** The same sequences with the schema they are in, for a dialect that lists its sequences per searched schema. */
+    private val qualifiedSequencesInUse = hashSetOf<SequenceReference>()
+
+    /** Resolved once, since resolving logs a warning for every pattern that matches nothing. */
+    private val searchedSchemas: List<String> by lazy { resolveSchemas() }
     private val enumerationTypesBySchema = hashMapOf<String, Map<String, List<String>>>()
 
     /**
@@ -56,7 +62,7 @@ internal class SchemaReader(
      * @throws IllegalStateException if a configured column mapping names a table that is not among them.
      */
     fun listTables(): List<TableReference> {
-        val tables = resolveSchemas().flatMap { schema ->
+        val tables = searchedSchemas.flatMap { schema ->
             val schemaName = schema.takeIf { it != currentSchema }?.let(identifierManager::toExposedIdentifier)
             val tableNames = metadata.getTables(catalogOf(schema), schema.orAnySchema(), "%", arrayOf("TABLE")).use { rs ->
                 rs.collect { getString("TABLE_NAME") }
@@ -82,7 +88,12 @@ internal class SchemaReader(
     fun readAllTables(tables: List<TableReference>): SchemaSnapshot {
         val tableMetadata = tables.map(::readTable)
         mappings.checkColumnsExist(tableMetadata)
-        val unreferencedSequences = currentDialectMetadata.sequences().filterNot { it in sequencesInUse }.sorted()
+        val schemaSequences = dialectSupport.sequences(connection, searchedSchemas)
+        val unreferencedSequences = schemaSequences
+            ?.filterNot { it in qualifiedSequencesInUse }
+            ?.map { it.toExposedSequenceName() }
+            ?.sorted()
+            ?: currentDialectMetadata.sequences().filterNot { it in sequencesInUse }.sorted()
         return SchemaSnapshot(tableMetadata, unreferencedSequences, dialectSupport.syntax)
     }
 
@@ -174,7 +185,10 @@ internal class SchemaReader(
                 sequence != null -> column.copy(name = name, autoIncrement = false)
                 else -> column.copy(name = name)
             }
-            val referencedSequence = sequence?.takeUnless { ownsSequence }?.also { sequencesInUse.add(it.name) }
+            val referencedSequence = sequence?.takeUnless { ownsSequence }?.also {
+                sequencesInUse.add(it.name)
+                qualifiedSequencesInUse.add(SequenceReference(it.schema ?: schema, it.name))
+            }
             ColumnInfo(
                 metadata = metadata,
                 sequenceName = referencedSequence?.toExposedSequenceName(),
@@ -211,6 +225,7 @@ internal class SchemaReader(
             primaryKey = primaryKey,
             compositeIndices = compositeIndices,
             compositeForeignKeys = compositeForeignKeys,
+            unsupportedNote = dialectSupport.unsupportedTableNote(connection, schema, tableName)?.also { logger.warn(it) },
         )
     }
 

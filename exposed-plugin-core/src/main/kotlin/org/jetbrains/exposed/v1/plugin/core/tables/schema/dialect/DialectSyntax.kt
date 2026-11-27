@@ -32,10 +32,20 @@ internal interface DialectSyntax {
         get() = false
 
     /**
-     * Whether the comment of a column is generated as `.comment("...")`.
+     * Whether the comment of a column is generated as `.comment("...")`. This is `true` only for a database on which
+     * Exposed both declares column comments and compares them during migrations, so that leaving a comment out of the
+     * generated definition would make a later migration propose to remove it.
      */
     val generatesColumnComments: Boolean
         get() = false
+
+    /**
+     * Whether a column declared as `UUID` is generated with Exposed's `uuid()` or `javaUUID()`. This is `false` for a
+     * database that has a `UUID` type of its own which Exposed does not declare for those functions (like MariaDB,
+     * where they declare `BINARY(16)`), so that such a column is reported as unsupported instead.
+     */
+    val mapsUuidType: Boolean
+        get() = true
 
     /**
      * Whether the index [name] is one that the database keeps for its own use, such as the index that backs a `UNIQUE`
