@@ -1,11 +1,19 @@
 package org.jetbrains.exposed.v1.spring7.transaction
 
+import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.support.TransactionSynchronization
 import org.springframework.transaction.support.TransactionSynchronizationManager
+import javax.sql.DataSource
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertSame
 
 class TransactionSynchronizationTest : SpringTransactionTestBase() {
 
@@ -23,6 +31,87 @@ class TransactionSynchronizationTest : SpringTransactionTestBase() {
         }
 
         assertTrue(synchronization.committed)
+    }
+
+    @Test
+    fun testNestedAfterCommitFailureStillReportsCommit() {
+        verifyNestedAfterCommitFailure(springFailure = null)
+    }
+
+    @Test
+    fun testSpringAfterCommitFailurePropagatesWhenNestedAfterCommitAlsoFails() {
+        verifyNestedAfterCommitFailure(springFailure = IllegalStateException("Spring afterCommit failed"))
+    }
+
+    private fun verifyNestedAfterCommitFailure(springFailure: RuntimeException?) {
+        val jdbc = JdbcTemplate(ctx.getBean(DataSource::class.java))
+        jdbc.execute("CREATE TABLE after_commit_test (id INT)")
+        try {
+            val failure = IllegalStateException("Nested afterCommit failed")
+            val callbacks = mutableListOf<String>()
+            var rollbackCalls = 0
+            val thrown = assertFailsWith<RuntimeException> {
+                transactionManager.execute {
+                    TransactionSynchronizationManager.registerSynchronization(synchronization)
+                    TransactionSynchronizationManager.registerSynchronization(object : TransactionSynchronization {
+                        override fun afterCommit() {
+                            callbacks += "spring"
+                            springFailure?.let { throw it }
+                        }
+                    })
+                    TransactionManager.current().registerInterceptor(object : StatementInterceptor {
+                        override fun afterRollback(transaction: Transaction) {
+                            rollbackCalls++
+                        }
+                    })
+                    transactionManager.execute(TransactionDefinition.PROPAGATION_NESTED) {
+                        jdbc.update("INSERT INTO after_commit_test VALUES (1)")
+                        TransactionManager.current().registerInterceptor(object : StatementInterceptor {
+                            override fun afterCommit(transaction: Transaction) {
+                                callbacks += "nested"
+                                throw failure
+                            }
+                        })
+                    }
+                }
+            }
+
+            assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM after_commit_test", Int::class.java))
+            assertTrue(synchronization.committed)
+            assertEquals(0, rollbackCalls)
+            assertEquals(listOf("nested", "spring"), callbacks)
+            assertSame(springFailure ?: failure, thrown)
+        } finally {
+            jdbc.execute("DROP TABLE after_commit_test")
+        }
+    }
+
+    @Test
+    fun testNestedAfterCommitRunsWhenSpringSynchronizationFails() {
+        val failure = IllegalStateException("Spring afterCommit failed")
+        var nestedCommitCalls = 0
+
+        val thrown = assertFailsWith<IllegalStateException> {
+            transactionManager.execute {
+                TransactionSynchronizationManager.registerSynchronization(synchronization)
+                TransactionSynchronizationManager.registerSynchronization(object : TransactionSynchronization {
+                    override fun afterCommit() {
+                        throw failure
+                    }
+                })
+                transactionManager.execute(TransactionDefinition.PROPAGATION_NESTED) {
+                    TransactionManager.current().registerInterceptor(object : StatementInterceptor {
+                        override fun afterCommit(transaction: Transaction) {
+                            nestedCommitCalls++
+                        }
+                    })
+                }
+            }
+        }
+
+        assertSame(failure, thrown)
+        assertTrue(synchronization.committed)
+        assertEquals(1, nestedCommitCalls)
     }
 
     @Test

@@ -20,6 +20,7 @@ import org.springframework.transaction.TransactionSystemException
 import org.springframework.transaction.support.AbstractPlatformTransactionManager
 import org.springframework.transaction.support.DefaultTransactionStatus
 import org.springframework.transaction.support.SmartTransactionObject
+import org.springframework.transaction.support.TransactionSynchronization
 import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.sql.Connection
 import javax.sql.DataSource
@@ -153,7 +154,7 @@ class SpringTransactionManager(
 
     override fun doCommit(status: DefaultTransactionStatus) {
         val trxObject = status.transaction as ExposedTransactionObject
-        trxObject.commit()
+        trxObject.commit(status.isNewSynchronization)
         // Spring JDBC implicitly committed since they share connection
     }
 
@@ -227,10 +228,22 @@ class SpringTransactionManager(
             }
         }
 
+        @OptIn(InternalApi::class)
         @Suppress("TooGenericExceptionCaught")
-        fun commit() {
+        fun commit(synchronize: Boolean) {
             try {
-                getCurrentTransaction()?.commit()
+                val transaction = getCurrentTransaction() ?: return
+                if (synchronize) {
+                    transaction.commitReturningAfterCommitFailure()?.let { failure ->
+                        TransactionSynchronizationManager.registerSynchronization(object : TransactionSynchronization {
+                            override fun afterCommit() {
+                                throw failure
+                            }
+                        })
+                    }
+                } else {
+                    transaction.commit()
+                }
             } catch (error: Exception) {
                 throw TransactionSystemException(error.message.orEmpty(), error)
             }
