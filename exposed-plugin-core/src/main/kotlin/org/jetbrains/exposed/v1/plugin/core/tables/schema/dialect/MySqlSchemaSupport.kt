@@ -83,6 +83,8 @@ internal object MySqlSchemaSupport : DialectSchemaSupport {
         }
     }
 
+    override fun indexFilters(connection: Connection, schema: String, tableName: String): Map<String, String> = emptyMap()
+
     override fun unsupportedTableNote(connection: Connection, schema: String, tableName: String): String? = null
 
     private fun normalizeDeclaredType(columnType: String): String {

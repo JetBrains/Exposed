@@ -216,4 +216,11 @@ internal data class IndexMetadata(
      * such as the index that backs a `UNIQUE` constraint on SQLite. When reported, this is usually not generated.
      */
     val isInternal: Boolean = false,
+
+    /**
+     * The condition of a filtered (partial) index, which covers only the rows that satisfy it, or `null` for an index
+     * over every row. When reported, the index is not generated, since without its condition it would declare
+     * something the database does not have.
+     */
+    val filterCondition: String? = null,
 )

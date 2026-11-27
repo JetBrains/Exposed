@@ -73,7 +73,10 @@ internal class TableCodeBuilder(
             if (definition == null) {
                 builder.reportSkipped(
                     "Column '${column.name}' of table '${table.name}' has unsupported type '${column.metadata.sqlType}' " +
-                        "(JDBC type ${column.metadata.jdbcType}) and was not generated"
+                        "(JDBC type ${column.metadata.jdbcType}) and was not generated" +
+                        context.syntax.closestFunction(column.metadata.sqlType)
+                            ?.let { ". The closest Exposed function is $it, which declares another type" }
+                            .orEmpty()
                 )
                 return@forEach
             }
@@ -183,6 +186,16 @@ internal class TableCodeBuilder(
         }
         val internalIndexNotes = mutableListOf<String>()
         indices.forEach { index ->
+            if (index.filterCondition != null) {
+                val function = if (index.unique) "uniqueIndex" else "index"
+                val note = "Column '$name' of table '${table.name}' has the filtered index '${index.name}', which covers only the rows " +
+                    "WHERE ${index.filterCondition}. It was not generated, since $function() without that condition would declare an index " +
+                    "over every row. If the intention is to create new schema from this definition, the index should be manually " +
+                    "added in an init {} block, with the filterCondition argument of $function()"
+                logger.warn(note)
+                internalIndexNotes.add(note)
+                return@forEach
+            }
             if (index.isInternal) {
                 val note = "Column '$name' of table '${table.name}' has a UNIQUE constraint whose index is internal to the database " +
                     "and ignored by Exposed's migration utilities, so uniqueIndex() was not generated. If the intention is to create new schema " +
@@ -338,6 +351,16 @@ internal class TableCodeBuilder(
             val columns = index.columnNames.mapNotNull { propertyNames[it] }
             if (columns.size != index.columnNames.size) {
                 logger.warn("Index '${index.name}' of table '${table.name}' references a column that was not generated and was skipped")
+                return@forEach
+            }
+            if (index.filterCondition != null) {
+                val function = if (index.unique) "uniqueIndex" else "index"
+                objectBuilder.reportSkipped(
+                    "Table '${table.name}' has the filtered index '${index.name}' on columns ${index.columnNames.joinToString()}, which " +
+                        "covers only the rows WHERE ${index.filterCondition}. It was not generated, since $function() without that " +
+                        "condition would declare an index over every row. If the intention is to create new schema from this definition, " +
+                        "the index should be manually added in an init {} block, with the filterCondition argument of $function()"
+                )
                 return@forEach
             }
             if (index.isInternal) {

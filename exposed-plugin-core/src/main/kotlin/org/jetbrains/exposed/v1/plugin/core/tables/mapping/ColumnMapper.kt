@@ -64,6 +64,10 @@ internal fun ColumnMetadata.toColumnDefinition(
     val type = declaredType.toSqlType()
         ?: jdbcSqlType(syntax.unboundedLength).takeIf { syntax.usesJdbcTypeFallback }
         ?: return null
+
+    // a type that the mapper knows from other databases, but that no Exposed function declares exactly on this one
+    if (type.baseType in syntax.unmappedTypes || declaredType in syntax.unmappedTypes) return null
+
     return toColumnDefinition(type, uuidColumnType, dateTimeColumnType, syntax)
 }
 
@@ -254,6 +258,12 @@ private fun ColumnMetadata.toColumnDefinition(
     "CHAR" -> type.length?.let(::char) ?: SINGLE_CHAR
     "VARCHAR" -> type.length?.let(::varchar) ?: TEXT
     "CLOB", "TEXT" -> TEXT
+    // A large object of national (Unicode) characters, which Exposed has no function of its own for (like SQL Server's
+    // NVARCHAR(MAX), which is also what json() declares there, so that the two cannot be told apart)
+    "NCLOB" -> TEXT.copy(
+        mappingLog = "Generated as text(), the closest function for a large object of national (Unicode) characters. " +
+            "A table created from this definition gets the type that text() declares instead.",
+    )
     "MEDIUMTEXT" -> MEDIUM_TEXT
     "LONGTEXT" -> LARGE_TEXT
     "VARBINARY", "BINARY" -> type.length?.let(::binary) ?: BINARY

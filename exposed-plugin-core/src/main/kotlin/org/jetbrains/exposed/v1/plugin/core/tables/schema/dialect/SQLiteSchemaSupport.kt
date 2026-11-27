@@ -121,6 +121,8 @@ internal object SQLiteSchemaSupport : DialectSchemaSupport {
     // SQLite has no sequences
     override fun sequences(connection: Connection, schemas: List<String>): List<SequenceReference>? = null
 
+    override fun indexFilters(connection: Connection, schema: String, tableName: String): Map<String, String> = emptyMap()
+
     override fun unsupportedTableNote(connection: Connection, schema: String, tableName: String): String? = null
 
     override fun columnOverrides(connection: Connection, schema: String, tableName: String): Map<String, ColumnOverride> {

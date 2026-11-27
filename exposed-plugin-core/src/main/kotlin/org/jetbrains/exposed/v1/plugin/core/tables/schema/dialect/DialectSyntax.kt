@@ -48,6 +48,22 @@ internal interface DialectSyntax {
         get() = true
 
     /**
+     * The base names of normalized types that have no exact Exposed function on this database, although the mapper
+     * knows them from other databases. A column of such a type is reported as unsupported instead of being generated
+     * with a function that would declare another type (like SQL Server's `REAL`, where Exposed's `float()` declares
+     * `FLOAT`, a type of twice the size).
+     */
+    val unmappedTypes: Set<String>
+        get() = emptySet()
+
+    /**
+     * The Exposed function call that comes closest to a column of [declaredType], a normalized type that is
+     * unsupported on this database, to be recommended where the column is reported. Its first argument is written as
+     * `name`. Returns `null` when no function comes close.
+     */
+    fun closestFunction(declaredType: String): String? = null
+
+    /**
      * Whether the index [name] is one that the database keeps for its own use, such as the index that backs a `UNIQUE`
      * constraint, and that Exposed's migration utilities ignore on this database.
      */

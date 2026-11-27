@@ -6,6 +6,7 @@ import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import java.sql.Connection
 
@@ -133,6 +134,15 @@ internal interface DialectSchemaSupport {
      */
     fun unsupportedTableNote(connection: Connection, schema: String, tableName: String): String?
 
+    /**
+     * Returns the filter condition of every filtered (partial) index of a table, keyed by raw index name, for a
+     * database whose driver does not report the condition with the index (like SQL Server). Such an index is reported
+     * instead of generated, since without its condition it would declare something the database does not have.
+     *
+     * Should return an empty map when the database has no such indices, or when they are not read yet.
+     */
+    fun indexFilters(connection: Connection, schema: String, tableName: String): Map<String, String>
+
     companion object {
         fun forDialect(
             dialect: DatabaseDialect,
@@ -143,6 +153,7 @@ internal interface DialectSchemaSupport {
             is SQLiteDialect -> SQLiteSchemaSupport
             is MariaDBDialect -> MariaDbSchemaSupport
             is MysqlDialect -> MySqlSchemaSupport
+            is SQLServerDialect -> SqlServerSchemaSupport
             else -> JdbcSchemaSupport
         }
     }
@@ -256,6 +267,8 @@ internal object JdbcSchemaSupport : DialectSchemaSupport {
     override fun columnDefaults(connection: Connection, schema: String, tableName: String): Map<String, String?>? = null
 
     override fun sequences(connection: Connection, schemas: List<String>): List<SequenceReference>? = null
+
+    override fun indexFilters(connection: Connection, schema: String, tableName: String): Map<String, String> = emptyMap()
 
     override fun unsupportedTableNote(connection: Connection, schema: String, tableName: String): String? = null
 

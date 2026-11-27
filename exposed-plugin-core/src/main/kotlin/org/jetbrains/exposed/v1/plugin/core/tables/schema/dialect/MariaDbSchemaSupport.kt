@@ -108,6 +108,8 @@ internal object MariaDbSchemaSupport : DialectSchemaSupport {
     // [MariaDbSyntax.normalizeDefault] for the spelling of functions
     override fun columnDefaults(connection: Connection, schema: String, tableName: String): Map<String, String?>? = null
 
+    override fun indexFilters(connection: Connection, schema: String, tableName: String): Map<String, String> = emptyMap()
+
     // A system-versioned table is listed as an ordinary table by the driver
     override fun unsupportedTableNote(connection: Connection, schema: String, tableName: String): String? {
         val tableType = connection.query(

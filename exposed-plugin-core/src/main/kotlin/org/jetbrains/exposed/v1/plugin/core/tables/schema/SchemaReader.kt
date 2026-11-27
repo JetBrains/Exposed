@@ -19,6 +19,7 @@ import org.jetbrains.exposed.v1.plugin.core.tables.warn
 import java.sql.Connection
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
+import java.sql.Types
 
 // TODO Reassess how much here might be shared by exposed-jdbc and attempt to reduce?
 /**
@@ -284,7 +285,7 @@ internal class SchemaReader(
         val declaredColumnTypes = dialectSupport.declaredColumnTypes(connection, schema, tableName)
         val overrides = dialectSupport.columnOverrides(connection, schema, tableName)
         val defaults = dialectSupport.columnDefaults(connection, schema, tableName)
-        return metadata.getColumns(catalogOf(schema), schema.orAnySchema(), tableName, "%").use { rs ->
+        val listedColumns = metadata.getColumns(catalogOf(schema), schema.orAnySchema(), tableName, "%").use { rs ->
             val row = JdbcResult(rs)
             rs.collect {
                 val column = with(ExposedMetadataUtils) { row.asColumnMetadata(declaredColumnTypes) }
@@ -294,6 +295,26 @@ internal class SchemaReader(
                 ReadColumn(column.withOverride(override), reportedDefault, override?.unsupportedNote)
             }
         }
+        // a column that the catalog declares, but that the driver does not list (like a JSON or VECTOR column on SQL Server),
+        // is added under its declared type, so that it is reported rather than lost
+        val listedNames = listedColumns.mapTo(hashSetOf()) { it.metadata.name }
+        val unlistedColumns = declaredColumnTypes.filterKeys { it !in listedNames }.map { (name, declaredType) ->
+            ReadColumn(
+                ColumnMetadata(
+                    name,
+                    Types.OTHER,
+                    declaredType,
+                    nullable = true,
+                    size = null,
+                    scale = null,
+                    autoIncrement = false,
+                    defaultDbValue = null
+                ),
+                reportedDefault = null,
+                unsupportedNote = null,
+            )
+        }
+        return listedColumns + unlistedColumns
     }
 
     private fun ColumnMetadata.withOverride(override: ColumnOverride?): ColumnMetadata {
@@ -359,6 +380,7 @@ internal class SchemaReader(
             }
         }
         val constraintNames = dialectSupport.uniqueConstraintNames(connection, schema, tableName)
+        val filterConditions = dialectSupport.indexFilters(connection, schema, tableName)
         val primaryKeyColumns = primaryKey?.columnNames?.toSet().orEmpty()
         return rows
             .groupBy { it.name }
@@ -380,6 +402,7 @@ internal class SchemaReader(
                             )
                             ),
                     isInternal = dialectSupport.syntax.isInternalIndexName(indexName),
+                    filterCondition = filterConditions[indexName],
                 )
             }
             .filterNot { it.unique && it.columnNames.toSet() == primaryKeyColumns }

@@ -16,6 +16,7 @@ import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.H2Syntax
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.MariaDbSyntax
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.MySqlSyntax
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.SQLiteSyntax
+import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.SqlServerSyntax
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.sql.Types
@@ -351,6 +352,58 @@ class ColumnMapperTest {
         assertEquals("vector", vector.function)
         assertEquals(", 3", vector.arguments.toString())
         assertEquals("json", assertNotNull(column(Types.LONGVARCHAR, "JSON").toColumnDefinition(MariaDbSyntax)).function)
+    }
+
+    @Test
+    fun testOnlyExactTypesAreMappedForSQLServer() {
+        // each of these is mapped for another database, but no Exposed function declares exactly it on SQL Server
+        assertNull(column(Types.REAL, "REAL").toColumnDefinition(SqlServerSyntax))
+        assertNull(column(Types.TIMESTAMP, "DATETIME").toColumnDefinition(SqlServerSyntax))
+        assertNull(column(Types.BINARY, "BINARY(16)", size = 16).toColumnDefinition(SqlServerSyntax))
+        assertNull(column(Types.LONGVARCHAR, "TEXT").toColumnDefinition(SqlServerSyntax))
+        assertNull(column(Types.TIME, "TIME(3)").toColumnDefinition(SqlServerSyntax))
+        assertNull(column(Types.OTHER, "JSON").toColumnDefinition(SqlServerSyntax))
+        assertNull(column(Types.OTHER, "VECTOR(3)").toColumnDefinition(SqlServerSyntax))
+
+        // and these are known to no database
+        assertNull(column(Types.NVARCHAR, "NVARCHAR(50)", size = 50).toColumnDefinition(SqlServerSyntax))
+        assertNull(column(Types.TIMESTAMP, "DATETIME2(3)").toColumnDefinition(SqlServerSyntax))
+        assertNull(column(Types.BINARY, "ROWVERSION", size = 8).toColumnDefinition(SqlServerSyntax))
+
+        // a uniqueidentifier is reported by the driver as CHAR, which is never used to guess
+        assertNull(column(Types.CHAR, "", size = 36).toColumnDefinition(SqlServerSyntax))
+
+        assertEquals("float", assertNotNull(column(Types.REAL, "REAL").toColumnDefinition(H2Syntax)).function)
+
+        assertEquals("ubyte", assertNotNull(column(Types.TINYINT, "TINYINT UNSIGNED").toColumnDefinition(SqlServerSyntax)).function)
+        assertEquals("double", assertNotNull(column(Types.DOUBLE, "DOUBLE PRECISION").toColumnDefinition(SqlServerSyntax)).function)
+        assertEquals("time", assertNotNull(column(Types.TIME, "TIME").toColumnDefinition(SqlServerSyntax)).function)
+        assertEquals("datetime", assertNotNull(column(Types.TIMESTAMP, "TIMESTAMP").toColumnDefinition(SqlServerSyntax)).function)
+        assertEquals("blob", assertNotNull(column(Types.VARBINARY, "BLOB").toColumnDefinition(SqlServerSyntax)).function)
+        assertEquals("binary", assertNotNull(column(Types.VARBINARY, "VARBINARY(32)", size = 32).toColumnDefinition(SqlServerSyntax)).function)
+
+        // a large object of national characters is text() with a note, since no function declares it
+        val nationalText = assertNotNull(column(Types.NVARCHAR, "NCLOB").toColumnDefinition(SqlServerSyntax))
+        assertEquals("text", nationalText.function)
+        assertTrue(assertNotNull(nationalText.mappingLog).contains("national (Unicode) characters"))
+        assertNull(assertNotNull(column(Types.VARCHAR, "CLOB").toColumnDefinition(SqlServerSyntax)).mappingLog)
+    }
+
+    @Test
+    fun testClosestFunctionIsRecommendedForUnsupportedSQLServerTypes() {
+        assertEquals("varchar(name, 50)", SqlServerSyntax.closestFunction("NVARCHAR(50)"))
+        assertEquals("char(name, 3)", SqlServerSyntax.closestFunction("NCHAR(3)"))
+        assertEquals("binary(name, 16)", SqlServerSyntax.closestFunction("BINARY(16)"))
+        assertEquals("float(name)", SqlServerSyntax.closestFunction("REAL"))
+        assertEquals("datetime(name)", SqlServerSyntax.closestFunction("DATETIME"))
+        assertEquals("datetime(name)", SqlServerSyntax.closestFunction("DATETIME2(3)"))
+        assertEquals("timestampWithTimeZone(name)", SqlServerSyntax.closestFunction("DATETIMEOFFSET(3)"))
+        assertEquals("time(name)", SqlServerSyntax.closestFunction("TIME(3)"))
+        assertEquals("decimal(name, 19, 4)", SqlServerSyntax.closestFunction("MONEY"))
+        assertEquals("vector(name, 3)", SqlServerSyntax.closestFunction("VECTOR(3)"))
+        assertNull(SqlServerSyntax.closestFunction("ROWVERSION"))
+        assertNull(SqlServerSyntax.closestFunction("XML"))
+        assertNull(H2Syntax.closestFunction("REAL"))
     }
 
     private fun assertFunction(function: String, sqlType: String) {

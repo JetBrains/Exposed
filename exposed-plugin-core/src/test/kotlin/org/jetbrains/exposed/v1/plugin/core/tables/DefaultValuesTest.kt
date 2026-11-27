@@ -8,6 +8,8 @@ import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.H2Syntax
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.MariaDbSyntax
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.MySqlSyntax
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.SequenceReference
+import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.SqlServerSchemaSupport
+import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.SqlServerSyntax
 import org.junit.jupiter.api.Test
 import java.sql.Types
 import kotlin.test.assertEquals
@@ -206,6 +208,50 @@ class DefaultValuesTest {
         assertFalse(MariaDbSyntax.isGeneratedConstraintName("uq_orders_code", "orders", listOf("code")))
 
         assertEquals(listOf("Bar", "it's"), MariaDbSyntax.enumerationValues("enum('Bar','it''s')"))
+    }
+
+    @Test
+    fun testDefaultsAsStoredBySQLServer() {
+        // a default is stored wrapped in parentheses, twice for a number
+        assertEquals("42", SqlServerSchemaSupport.normalizeDefault("((42))", isDateColumn = false))
+        assertEquals("-7", SqlServerSchemaSupport.normalizeDefault("((-7))", isDateColumn = false))
+        assertEquals("12.5", SqlServerSchemaSupport.normalizeDefault("((12.5))", isDateColumn = false))
+        assertEquals("5000000000", SqlServerSchemaSupport.normalizeDefault("((5000000000.))", isDateColumn = false))
+        assertEquals("'text'", SqlServerSchemaSupport.normalizeDefault("('text')", isDateColumn = false))
+        assertEquals("'it''s (here)'", SqlServerSchemaSupport.normalizeDefault("('it''s (here)')", isDateColumn = false))
+        assertEquals("'unicode'", SqlServerSchemaSupport.normalizeDefault("(N'unicode')", isDateColumn = false))
+        assertEquals("'NULL'", SqlServerSchemaSupport.normalizeDefault("('NULL')", isDateColumn = false))
+        assertNull(SqlServerSchemaSupport.normalizeDefault("(NULL)", isDateColumn = false))
+
+        // CURRENT_TIMESTAMP is stored as getdate(), which is also what Exposed writes for CurrentDate on a DATE column
+        assertEquals("CURRENT_TIMESTAMP", SqlServerSchemaSupport.normalizeDefault("(getdate())", isDateColumn = false))
+        assertEquals("CURRENT_DATE", SqlServerSchemaSupport.normalizeDefault("(getdate())", isDateColumn = true))
+        assertEquals("'getdate()'", SqlServerSchemaSupport.normalizeDefault("('getdate()')", isDateColumn = false))
+
+        assertEquals("sysdatetime()", SqlServerSchemaSupport.normalizeDefault("(sysdatetime())", isDateColumn = false))
+        assertEquals("(1)+(2)", SqlServerSchemaSupport.normalizeDefault("((1)+(2))", isDateColumn = false))
+        assertEquals("NEXT VALUE FOR [dbo].[seq]", SqlServerSchemaSupport.normalizeDefault("(NEXT VALUE FOR [dbo].[seq])", isDateColumn = false))
+
+        assertLiteral("5000000000L", "BIGINT", "5000000000", syntax = SqlServerSyntax)
+        assertIs<DefaultValue.Unsupported>(defaultFor("TIMESTAMP", "sysdatetime()", syntax = SqlServerSyntax))
+        assertIs<DefaultValue.Unsupported>(defaultFor("INT", "(1)+(2)", syntax = SqlServerSyntax))
+    }
+
+    @Test
+    fun testSequencesAndGeneratedNamesAsReportedBySQLServer() {
+        assertEquals(SequenceReference("dbo", "order_seq"), SqlServerSyntax.sequenceInDefault("NEXT VALUE FOR [dbo].[order_seq]"))
+        assertEquals(SequenceReference(null, "order_seq"), SqlServerSyntax.sequenceInDefault("NEXT VALUE FOR [order_seq]"))
+        assertEquals(SequenceReference("sales", "odd]name"), SqlServerSyntax.sequenceInDefault("NEXT VALUE FOR [sales].[odd]]name]"))
+        assertEquals(SequenceReference("dbo", "order_seq"), SqlServerSyntax.sequenceInDefault("next value for dbo.order_seq"))
+        assertNull(SqlServerSyntax.sequenceInDefault("'NEXT VALUE FOR [dbo].[order_seq]'"))
+        assertNull(SqlServerSyntax.sequenceInDefault("newid()"))
+
+        assertTrue(SqlServerSyntax.isGeneratedConstraintName("PK__orders__3213E83F4D1B48C9", "orders", listOf("id")))
+        assertTrue(SqlServerSyntax.isGeneratedConstraintName("UQ__orders__357D4CF9EDB2FF52", "orders", listOf("code")))
+        assertTrue(SqlServerSyntax.isGeneratedConstraintName("FK__orders__user_i__5070F446", "orders", listOf("user_id")))
+        assertFalse(SqlServerSyntax.isGeneratedConstraintName("pk_orders_custom", "orders", listOf("id")))
+        assertFalse(SqlServerSyntax.isGeneratedConstraintName("FK_orders_users", "orders", listOf("user_id")))
+        assertFalse(SqlServerSyntax.isGeneratedConstraintName("UQ__orders__code", "orders", listOf("code")))
     }
 
     private fun assertLiteral(
