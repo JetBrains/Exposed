@@ -12,7 +12,6 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.currentOrNull
 import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
-import org.springframework.core.Ordered
 import org.springframework.jdbc.datasource.ConnectionHandle
 import org.springframework.jdbc.datasource.ConnectionHolder
 import org.springframework.transaction.CannotCreateTransactionException
@@ -236,8 +235,6 @@ class SpringTransactionManager(
                 if (synchronize) {
                     transaction.commitReturningAfterCommitFailure()?.let { failure ->
                         TransactionSynchronizationManager.registerSynchronization(object : TransactionSynchronization {
-                            override fun getOrder(): Int = Ordered.HIGHEST_PRECEDENCE
-
                             override fun afterCommit() {
                                 throw failure
                             }

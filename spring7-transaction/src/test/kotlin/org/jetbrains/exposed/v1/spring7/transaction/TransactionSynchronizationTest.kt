@@ -35,14 +35,30 @@ class TransactionSynchronizationTest : SpringTransactionTestBase() {
 
     @Test
     fun testNestedAfterCommitFailureStillReportsCommit() {
+        verifyNestedAfterCommitFailure(springFailure = null)
+    }
+
+    @Test
+    fun testSpringAfterCommitFailurePropagatesWhenNestedAfterCommitAlsoFails() {
+        verifyNestedAfterCommitFailure(springFailure = IllegalStateException("Spring afterCommit failed"))
+    }
+
+    private fun verifyNestedAfterCommitFailure(springFailure: RuntimeException?) {
         val jdbc = JdbcTemplate(ctx.getBean(DataSource::class.java))
         jdbc.execute("CREATE TABLE after_commit_test (id INT)")
         try {
             val failure = IllegalStateException("Nested afterCommit failed")
+            val callbacks = mutableListOf<String>()
             var rollbackCalls = 0
             val thrown = assertFailsWith<RuntimeException> {
                 transactionManager.execute {
                     TransactionSynchronizationManager.registerSynchronization(synchronization)
+                    TransactionSynchronizationManager.registerSynchronization(object : TransactionSynchronization {
+                        override fun afterCommit() {
+                            callbacks += "spring"
+                            springFailure?.let { throw it }
+                        }
+                    })
                     TransactionManager.current().registerInterceptor(object : StatementInterceptor {
                         override fun afterRollback(transaction: Transaction) {
                             rollbackCalls++
@@ -52,6 +68,7 @@ class TransactionSynchronizationTest : SpringTransactionTestBase() {
                         jdbc.update("INSERT INTO after_commit_test VALUES (1)")
                         TransactionManager.current().registerInterceptor(object : StatementInterceptor {
                             override fun afterCommit(transaction: Transaction) {
+                                callbacks += "nested"
                                 throw failure
                             }
                         })
@@ -62,7 +79,8 @@ class TransactionSynchronizationTest : SpringTransactionTestBase() {
             assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM after_commit_test", Int::class.java))
             assertTrue(synchronization.committed)
             assertEquals(0, rollbackCalls)
-            assertSame(failure, thrown)
+            assertEquals(listOf("nested", "spring"), callbacks)
+            assertSame(springFailure ?: failure, thrown)
         } finally {
             jdbc.execute("DROP TABLE after_commit_test")
         }
