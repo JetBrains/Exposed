@@ -7,6 +7,8 @@ import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.DialectSyntax
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.H2Syntax
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.MariaDbSyntax
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.MySqlSyntax
+import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.OracleSchemaSupport
+import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.OracleSyntax
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.SequenceReference
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.SqlServerSchemaSupport
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.SqlServerSyntax
@@ -208,6 +210,42 @@ class DefaultValuesTest {
         assertFalse(MariaDbSyntax.isGeneratedConstraintName("uq_orders_code", "orders", listOf("code")))
 
         assertEquals(listOf("Bar", "it's"), MariaDbSyntax.enumerationValues("enum('Bar','it''s')"))
+    }
+
+    @Test
+    fun testDefaultsAsStoredByOracle() {
+        // a default is stored as written, with whatever whitespace followed it
+        assertEquals("42", OracleSchemaSupport.normalizeDefault("42 "))
+        assertEquals("'text'", OracleSchemaSupport.normalizeDefault("'text' "))
+        assertEquals("sysdate", OracleSchemaSupport.normalizeDefault("sysdate"))
+        assertEquals("CURRENT_TIMESTAMP", OracleSchemaSupport.normalizeDefault("CURRENT_TIMESTAMP "))
+
+        // what Exposed writes for a date and a date-time literal
+        assertEquals("DATE '2024-01-31'", OracleSchemaSupport.normalizeDefault("TO_DATE('2024-01-31', 'YYYY-MM-DD') "))
+        assertEquals(
+            "TIMESTAMP '2024-01-31 10:00:00.000'",
+            OracleSchemaSupport.normalizeDefault("TO_TIMESTAMP('2024-01-31 10:00:00.000', 'YYYY-MM-DD HH24:MI:SS.FF3')")
+        )
+
+        // any other format is left as written, to the database
+        assertEquals("TO_DATE('31.01.2024', 'DD.MM.YYYY')", OracleSchemaSupport.normalizeDefault("TO_DATE('31.01.2024', 'DD.MM.YYYY')"))
+    }
+
+    @Test
+    fun testSequenceDefaultsAsStoredByOracle() {
+        assertEquals(SequenceReference("PROBE_SRC", "SEQ_A"), OracleSyntax.sequenceInDefault("\"PROBE_SRC\".\"SEQ_A\".\"NEXTVAL\""))
+        assertEquals(SequenceReference("PROBE_SRC", "SEQ_A"), OracleSyntax.sequenceInDefault("\"PROBE_SRC\".\"SEQ_A\".NEXTVAL"))
+        assertEquals(SequenceReference(null, "SEQ_A"), OracleSyntax.sequenceInDefault("SEQ_A.nextval"))
+        assertEquals(SequenceReference("PROBE_SRC", "seq_lower"), OracleSyntax.sequenceInDefault("\"PROBE_SRC\".\"seq_lower\".\"NEXTVAL\""))
+
+        // the sequence behind an identity column is not a default of this kind
+        assertNull(OracleSyntax.sequenceInDefault("\"PROBE_SRC\".\"ISEQ\$\$_71701\".nextval"))
+        assertNull(OracleSyntax.sequenceInDefault("'SEQ_A.NEXTVAL'"))
+        assertNull(OracleSyntax.sequenceInDefault("42"))
+
+        assertTrue(OracleSyntax.isGeneratedConstraintName("SYS_C008740", "T", listOf("ID")))
+        assertFalse(OracleSyntax.isGeneratedConstraintName("SYS_CUSTOM", "T", listOf("ID")))
+        assertFalse(OracleSyntax.isGeneratedConstraintName("MY_PK", "T", listOf("ID")))
     }
 
     @Test

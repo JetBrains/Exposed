@@ -122,19 +122,20 @@ internal class SchemaReader(
             return listOf(currentSchema ?: "%")
         }
 
+        // every name is listed once and matched here, since not every driver honours an escaped search pattern
+        // (Oracle's ignores the escape, so that a pattern for a name with an underscore would match nothing)
+        val existing = if (dialectSupport.schemasAreCatalogs) {
+            metadata.catalogs.use { rs -> rs.collect { getString("TABLE_CAT") } }
+        } else {
+            metadata.getSchemas(catalog, null).use { rs -> rs.collect { getString("TABLE_SCHEM") } }
+        }
         val resolved = linkedSetOf<String>()
         schemaPatterns.forEach { pattern ->
             val literal = pattern.trim().removeSurrounding(identifierManager.quoteString)
-            val candidates = listOf(literal, identifierManager.inProperCase(literal)).distinct()
-            val matches = candidates.flatMap { candidate ->
-                if (dialectSupport.schemasAreCatalogs) {
-                    catalogsMatching(candidate)
-                } else {
-                    metadata.getSchemas(catalog, candidate.globToSearchPattern()).use { rs ->
-                        rs.collect { getString("TABLE_SCHEM") }
-                    }
-                }
-            }.filterNot(dialectSupport::isSystemSchema)
+            val candidates = listOf(literal, identifierManager.inProperCase(literal)).distinct().map { it.globToRegex() }
+            val matches = existing
+                .filter { name -> candidates.any { it.matches(name) } }
+                .filterNot { dialectSupport.isSystemSchema(connection, it) }
             if (matches.isEmpty()) {
                 logger.warn("No schema matches '$pattern'; it was ignored")
             }
@@ -145,23 +146,15 @@ internal class SchemaReader(
     }
 
     /**
-     * Converts a glob pattern (`*` matches any sequence of characters, `?` a single character) to the `LIKE`-style
-     * search pattern expected by [DatabaseMetaData]. The `%` and `_` wildcards of that syntax are escaped so that
-     * a literal schema name such as `SALES_ARCHIVE` matches only itself.
+     * Converts a glob pattern (`*` matches any sequence of characters, `?` a single character) to a regular expression
+     * that matches a whole name. Every other character stands for itself, so that a literal schema name such as
+     * `SALES_ARCHIVE` matches only itself.
      */
-    private fun String.globToSearchPattern(): String {
-        val escape = metadata.searchStringEscape.orEmpty()
-        return buildString {
-            for (char in this@globToSearchPattern) {
-                when (char) {
-                    '*' -> append('%')
-                    '?' -> append('_')
-                    '%', '_' -> append(escape).append(char)
-                    else -> append(char)
-                }
-            }
+    private fun String.globToRegex(): Regex = Regex(
+        split('*').joinToString(".*") { part ->
+            part.split('?').joinToString(".") { Regex.escape(it) }
         }
-    }
+    )
 
     private fun readTable(table: TableReference): TableMetadata {
         val (schema, tableName) = table
@@ -169,8 +162,9 @@ internal class SchemaReader(
         val (singleColumnForeignKeys, compositeForeignKeys) = readForeignKeys(schema, tableName)
             .partition { it.columnNames.size == 1 }
         val foreignKeyColumnSets = (singleColumnForeignKeys + compositeForeignKeys).map { it.columnNames.toSet() }
+        // an index on an expression belongs to no single column, whatever the number of its key parts
         val (singleColumnIndices, compositeIndices) = readIndices(schema, tableName, primaryKey, foreignKeyColumnSets)
-            .partition { it.columnNames.size == 1 }
+            .partition { it.columnNames.size == 1 && it.expressions == null }
         val generatedColumns = dialectSupport.generatedColumns(connection, schema, tableName)
         val ownedSequences = dialectSupport.ownedSequences(connection, schema, tableName)
         sequencesInUse.addAll(ownedSequences.values)
@@ -288,6 +282,10 @@ internal class SchemaReader(
         val listedColumns = metadata.getColumns(catalogOf(schema), schema.orAnySchema(), tableName, "%").use { rs ->
             val row = JdbcResult(rs)
             rs.collect {
+                // the table name is a search pattern to the driver, in which `_` matches any character, so that the
+                // columns of another table may be listed as well (`T_A` also matches `TXA`)
+                val listedTable = getString("TABLE_NAME")
+                if (listedTable != null && !listedTable.equals(tableName, ignoreCase = true)) return@collect null
                 val column = with(ExposedMetadataUtils) { row.asColumnMetadata(declaredColumnTypes) }
                     .withDeclaredType(declaredColumnTypes)
                 val override = overrides[column.name]
@@ -325,7 +323,7 @@ internal class SchemaReader(
         if (autoIncrement != this.autoIncrement) override.autoIncrementNote?.let(logger::lifecycle)
         if (nullable != this.nullable) override.nullableWarning?.let { logger.warn(it) }
         override.unsupportedNote?.let { logger.warn(it) }
-        return copy(autoIncrement = autoIncrement, nullable = nullable)
+        return copy(autoIncrement = autoIncrement, nullable = nullable, comment = comment ?: override.comment)
     }
 
     private fun ColumnMetadata.withDeclaredType(declaredColumnTypes: Map<String, String>): ColumnMetadata {
@@ -363,7 +361,9 @@ internal class SchemaReader(
         primaryKey: PrimaryKeyInfo?,
         foreignKeyColumnSets: List<Set<String>>,
     ): List<IndexMetadata> {
-        val rows = metadata.getIndexInfo(catalogOf(schema), schema.orAnySchema(), tableName, false, false).use { rs ->
+        // approximate, since only the names and columns are read: an exact request makes some drivers gather fresh
+        // statistics first (Oracle's analyzes the table, which changes the database and needs a privilege of its own)
+        val rows = metadata.getIndexInfo(catalogOf(schema), schema.orAnySchema(), tableName, false, true).use { rs ->
             rs.collect {
                 val name = getString("INDEX_NAME")
                 val columnName = getString("COLUMN_NAME")
@@ -381,6 +381,7 @@ internal class SchemaReader(
         }
         val constraintNames = dialectSupport.uniqueConstraintNames(connection, schema, tableName)
         val filterConditions = dialectSupport.indexFilters(connection, schema, tableName)
+        val expressions = dialectSupport.indexExpressions(connection, schema, tableName)
         val primaryKeyColumns = primaryKey?.columnNames?.toSet().orEmpty()
         return rows
             .groupBy { it.name }
@@ -403,6 +404,7 @@ internal class SchemaReader(
                             ),
                     isInternal = dialectSupport.syntax.isInternalIndexName(indexName),
                     filterCondition = filterConditions[indexName],
+                    expressions = expressions[indexName],
                 )
             }
             .filterNot { it.unique && it.columnNames.toSet() == primaryKeyColumns }
@@ -447,16 +449,6 @@ internal class SchemaReader(
 
     /** The catalog argument for [DatabaseMetaData], which is [schema] itself for a database whose schemas are catalogs. */
     private fun catalogOf(schema: String): String? = if (dialectSupport.schemasAreCatalogs) schema else catalog
-
-    /** The existing catalogs whose name matches the glob [pattern], for a database whose schemas are catalogs. */
-    private fun catalogsMatching(pattern: String): List<String> {
-        val regex = Regex(
-            pattern.split('*').joinToString(".*") { part ->
-                part.split('?').joinToString(".") { Regex.escape(it) }
-            }
-        )
-        return metadata.catalogs.use { rs -> rs.collect { getString("TABLE_CAT") } }.filter(regex::matches)
-    }
 
     /** Index metadata directly from a ResultSet. */
     private data class IndexRow(val name: String, val unique: Boolean, val position: Int, val columnName: String)

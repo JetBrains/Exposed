@@ -23,7 +23,7 @@ internal object SqlServerSchemaSupport : DialectSchemaSupport {
 
     // Every database comes with `sys`, `INFORMATION_SCHEMA`, `guest` and one schema per fixed database role (`db_owner`,
     // `db_datareader` and so on), none of which hold user tables
-    override fun isSystemSchema(name: String): Boolean {
+    override fun isSystemSchema(connection: Connection, name: String): Boolean {
         val lowerCaseName = name.lowercase()
         return lowerCaseName in SYSTEM_SCHEMAS || lowerCaseName.startsWith(ROLE_SCHEMA_PREFIX)
     }
@@ -154,6 +154,12 @@ internal object SqlServerSchemaSupport : DialectSchemaSupport {
             }
         }
     }
+
+    override fun indexExpressions(
+        connection: Connection,
+        schema: String,
+        tableName: String
+    ): Map<String, List<String>> = emptyMap()
 
     // A temporal table and its history table are both listed as ordinary tables by the driver
     override fun unsupportedTableNote(connection: Connection, schema: String, tableName: String): String? {

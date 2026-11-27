@@ -223,4 +223,12 @@ internal data class IndexMetadata(
      * something the database does not have.
      */
     val filterCondition: String? = null,
+
+    /**
+     * The whole key of an index that is built on an expression rather than on columns alone (a function-based index,
+     * or a descending one on a database that stores it as such), in order and as the database reports each part, or
+     * `null` for an index on plain columns. When reported, the index is not generated, and [columnNames] may then hold
+     * names that are not columns of the table.
+     */
+    val expressions: List<String>? = null,
 )

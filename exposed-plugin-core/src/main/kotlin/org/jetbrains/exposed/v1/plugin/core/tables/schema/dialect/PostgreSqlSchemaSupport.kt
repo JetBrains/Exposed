@@ -16,7 +16,7 @@ internal object PostgreSqlSchemaSupport : DialectSchemaSupport {
     override val supportsSchemas: Boolean = true
 
     override val schemasAreCatalogs: Boolean = false
-    override fun isSystemSchema(name: String): Boolean = name == "information_schema" ||
+    override fun isSystemSchema(connection: Connection, name: String): Boolean = name == "information_schema" ||
         name == "pg_catalog" ||
         name.startsWith("pg_toast") ||
         name.startsWith("pg_temp_")
@@ -160,6 +160,12 @@ internal object PostgreSqlSchemaSupport : DialectSchemaSupport {
     override fun sequences(connection: Connection, schemas: List<String>): List<SequenceReference>? = null
 
     override fun indexFilters(connection: Connection, schema: String, tableName: String): Map<String, String> = emptyMap()
+
+    override fun indexExpressions(
+        connection: Connection,
+        schema: String,
+        tableName: String
+    ): Map<String, List<String>> = emptyMap()
 
     override fun unsupportedTableNote(connection: Connection, schema: String, tableName: String): String? = null
 

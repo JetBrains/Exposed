@@ -348,6 +348,16 @@ internal class TableCodeBuilder(
     private fun List<IndexMetadata>.toInitializerBlock(propertyNames: Map<String, String>, objectBuilder: TypeSpec.Builder): CodeBlock {
         val block = CodeBlock.builder()
         forEach { index ->
+            if (index.expressions != null) {
+                val function = if (index.unique) "uniqueIndex" else "index"
+                objectBuilder.reportSkipped(
+                    "Table '${table.name}' has the index '${index.name}' on (${index.expressions.joinToString()}), which is built on " +
+                        "an expression or a descending key rather than on columns alone. It was not generated, since $function() on " +
+                        "columns would declare another index. If the intention is to create new schema from this definition, the index " +
+                        "should be manually added in an init {} block, with the functions argument of $function()"
+                )
+                return@forEach
+            }
             val columns = index.columnNames.mapNotNull { propertyNames[it] }
             if (columns.size != index.columnNames.size) {
                 logger.warn("Index '${index.name}' of table '${table.name}' references a column that was not generated and was skipped")

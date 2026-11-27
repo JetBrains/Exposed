@@ -17,7 +17,9 @@ internal class H2SchemaSupport(private val identifierManager: IdentifierManagerA
 
     override val schemasAreCatalogs: Boolean = false
 
-    override fun isSystemSchema(name: String): Boolean = name.equals("INFORMATION_SCHEMA", ignoreCase = true)
+    override fun isSystemSchema(connection: Connection, name: String): Boolean {
+        return name.equals("INFORMATION_SCHEMA", ignoreCase = true)
+    }
 
     // Reads the declared types through `SHOW COLUMNS`, mirroring the prefetch that is done by `exposed-jdbc`.
     // Unlike the JDBC `TYPE_NAME`, the declared type keeps length and precision arguments and preserves distinctions
@@ -113,6 +115,12 @@ internal class H2SchemaSupport(private val identifierManager: IdentifierManagerA
     override fun sequences(connection: Connection, schemas: List<String>): List<SequenceReference>? = null
 
     override fun indexFilters(connection: Connection, schema: String, tableName: String): Map<String, String> = emptyMap()
+
+    override fun indexExpressions(
+        connection: Connection,
+        schema: String,
+        tableName: String
+    ): Map<String, List<String>> = emptyMap()
 
     override fun unsupportedTableNote(connection: Connection, schema: String, tableName: String): String? = null
 

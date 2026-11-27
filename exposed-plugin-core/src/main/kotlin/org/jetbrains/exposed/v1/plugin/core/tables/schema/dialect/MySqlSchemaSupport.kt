@@ -19,7 +19,9 @@ internal object MySqlSchemaSupport : DialectSchemaSupport {
 
     override val schemasAreCatalogs: Boolean = true
 
-    override fun isSystemSchema(name: String): Boolean = name.lowercase() in MySqlFamilyCatalog.SYSTEM_DATABASES
+    override fun isSystemSchema(connection: Connection, name: String): Boolean {
+        return name.lowercase() in MySqlFamilyCatalog.SYSTEM_DATABASES
+    }
 
     override fun declaredColumnTypes(
         connection: Connection,
@@ -84,6 +86,12 @@ internal object MySqlSchemaSupport : DialectSchemaSupport {
     }
 
     override fun indexFilters(connection: Connection, schema: String, tableName: String): Map<String, String> = emptyMap()
+
+    override fun indexExpressions(
+        connection: Connection,
+        schema: String,
+        tableName: String
+    ): Map<String, List<String>> = emptyMap()
 
     override fun unsupportedTableNote(connection: Connection, schema: String, tableName: String): String? = null
 

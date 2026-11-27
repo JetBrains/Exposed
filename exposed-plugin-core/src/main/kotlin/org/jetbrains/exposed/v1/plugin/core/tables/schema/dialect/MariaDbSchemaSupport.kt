@@ -21,7 +21,9 @@ internal object MariaDbSchemaSupport : DialectSchemaSupport {
 
     override val schemasAreCatalogs: Boolean = true
 
-    override fun isSystemSchema(name: String): Boolean = name.lowercase() in MySqlFamilyCatalog.SYSTEM_DATABASES
+    override fun isSystemSchema(connection: Connection, name: String): Boolean {
+        return name.lowercase() in MySqlFamilyCatalog.SYSTEM_DATABASES
+    }
 
     override fun declaredColumnTypes(
         connection: Connection,
@@ -109,6 +111,12 @@ internal object MariaDbSchemaSupport : DialectSchemaSupport {
     override fun columnDefaults(connection: Connection, schema: String, tableName: String): Map<String, String?>? = null
 
     override fun indexFilters(connection: Connection, schema: String, tableName: String): Map<String, String> = emptyMap()
+
+    override fun indexExpressions(
+        connection: Connection,
+        schema: String,
+        tableName: String
+    ): Map<String, List<String>> = emptyMap()
 
     // A system-versioned table is listed as an ordinary table by the driver
     override fun unsupportedTableNote(connection: Connection, schema: String, tableName: String): String? {

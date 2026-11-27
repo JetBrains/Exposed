@@ -15,6 +15,8 @@ import org.jetbrains.exposed.v1.plugin.core.tables.mapping.toColumnDefinition
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.H2Syntax
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.MariaDbSyntax
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.MySqlSyntax
+import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.OracleSchemaSupport
+import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.OracleSyntax
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.SQLiteSyntax
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.SqlServerSyntax
 import org.junit.jupiter.api.Test
@@ -404,6 +406,74 @@ class ColumnMapperTest {
         assertNull(SqlServerSyntax.closestFunction("ROWVERSION"))
         assertNull(SqlServerSyntax.closestFunction("XML"))
         assertNull(H2Syntax.closestFunction("REAL"))
+    }
+
+    @Test
+    fun testOnlyExactTypesAreMappedForOracle() {
+        // each of these is mapped for another database, but no Exposed function declares exactly it on Oracle
+        assertNull(column(Types.FLOAT, "FLOAT(63)").toColumnDefinition(OracleSyntax))
+        assertNull(column(Types.NCLOB, "NCLOB").toColumnDefinition(OracleSyntax))
+        assertNull(column(Types.BOOLEAN, "BOOLEAN").toColumnDefinition(OracleSyntax))
+        assertNull(column(Types.OTHER, "JSON").toColumnDefinition(OracleSyntax))
+        assertNull(column(Types.TIMESTAMP, "TIMESTAMP(3)").toColumnDefinition(OracleSyntax))
+        assertNull(column(Types.OTHER, "TIMESTAMP(3) WITH TIME ZONE").toColumnDefinition(OracleSyntax))
+        assertNull(column(Types.OTHER, "TIMESTAMP(6) WITH LOCAL TIME ZONE").toColumnDefinition(OracleSyntax))
+
+        // and these are known to no database
+        assertNull(column(Types.NUMERIC, "NUMBER").toColumnDefinition(OracleSyntax))
+        assertNull(column(Types.NUMERIC, "NUMBER(*, 2)", size = 38, scale = 2).toColumnDefinition(OracleSyntax))
+        assertNull(column(Types.NUMERIC, "NUMBER(5, -2)", size = 5).toColumnDefinition(OracleSyntax))
+        assertNull(column(Types.OTHER, "BINARY_DOUBLE").toColumnDefinition(OracleSyntax))
+        assertNull(column(Types.NVARCHAR, "NVARCHAR2(50)", size = 50).toColumnDefinition(OracleSyntax))
+        assertNull(column(Types.VARBINARY, "RAW(2000)", size = 2000).toColumnDefinition(OracleSyntax))
+        assertNull(column(Types.LONGVARCHAR, "LONG").toColumnDefinition(OracleSyntax))
+        assertNull(column(Types.OTHER, "INTERVAL DAY(2) TO SECOND(6)").toColumnDefinition(OracleSyntax))
+        assertNull(column(Types.OTHER, "VECTOR(3, INT8, DENSE)").toColumnDefinition(OracleSyntax))
+
+        // every number is reported by the driver as NUMERIC, which is never used to guess
+        assertNull(column(Types.NUMERIC, "", size = 10).toColumnDefinition(OracleSyntax))
+
+        assertEquals("integer", assertNotNull(column(Types.NUMERIC, "INT", size = 10).toColumnDefinition(OracleSyntax)).function)
+        assertEquals("ulong", assertNotNull(column(Types.NUMERIC, "BIGINT UNSIGNED", size = 20).toColumnDefinition(OracleSyntax)).function)
+        assertEquals("decimal", assertNotNull(column(Types.NUMERIC, "DECIMAL(7, 0)", size = 7).toColumnDefinition(OracleSyntax)).function)
+        assertEquals("double", assertNotNull(column(Types.FLOAT, "DOUBLE PRECISION").toColumnDefinition(OracleSyntax)).function)
+        assertEquals("datetime", assertNotNull(column(Types.TIMESTAMP, "TIMESTAMP").toColumnDefinition(OracleSyntax)).function)
+        assertEquals("date", assertNotNull(column(Types.TIMESTAMP, "DATE").toColumnDefinition(OracleSyntax)).function)
+        assertEquals("binary", assertNotNull(column(Types.VARBINARY, "VARBINARY(16)", size = 16).toColumnDefinition(OracleSyntax)).function)
+        assertEquals("vector", assertNotNull(column(Types.OTHER, "VECTOR(3)").toColumnDefinition(OracleSyntax)).function)
+        assertEquals("vector", assertNotNull(column(Types.OTHER, "VECTOR").toColumnDefinition(OracleSyntax)).function)
+    }
+
+    @Test
+    fun testVectorTypesAsDescribedByOracle() {
+        assertEquals("VECTOR(3)", OracleSchemaSupport.normalizeVectorType("VECTOR(3,FLOAT32,DENSE)"))
+        assertEquals("VECTOR", OracleSchemaSupport.normalizeVectorType("VECTOR(*,FLOAT32,DENSE)"))
+        assertEquals("VECTOR(3, INT8, DENSE)", OracleSchemaSupport.normalizeVectorType("VECTOR(3,INT8,DENSE)"))
+        assertEquals("VECTOR(3, *, DENSE)", OracleSchemaSupport.normalizeVectorType("VECTOR(3,*,DENSE)"))
+        assertEquals("VECTOR(3, FLOAT32, SPARSE)", OracleSchemaSupport.normalizeVectorType("VECTOR(3,FLOAT32,SPARSE)"))
+    }
+
+    @Test
+    fun testClosestFunctionIsRecommendedForUnsupportedOracleTypes() {
+        assertEquals("decimal(name, 38, 2)", OracleSyntax.closestFunction("NUMBER(*, 2)"))
+        assertEquals("decimal(name, 5, 0)", OracleSyntax.closestFunction("NUMBER(5, -2)"))
+        assertNull(OracleSyntax.closestFunction("NUMBER"))
+        assertEquals("double(name)", OracleSyntax.closestFunction("FLOAT(63)"))
+        assertEquals("double(name)", OracleSyntax.closestFunction("BINARY_DOUBLE"))
+        assertEquals("float(name)", OracleSyntax.closestFunction("BINARY_FLOAT"))
+        assertEquals("char(name, 5)", OracleSyntax.closestFunction("NCHAR(5)"))
+        assertEquals("varchar(name, 50)", OracleSyntax.closestFunction("NVARCHAR2(50)"))
+        assertEquals("text(name)", OracleSyntax.closestFunction("NCLOB"))
+        assertEquals("text(name)", OracleSyntax.closestFunction("LONG"))
+        assertEquals("blob(name)", OracleSyntax.closestFunction("RAW(2000)"))
+        assertEquals("blob(name)", OracleSyntax.closestFunction("LONG RAW"))
+        assertEquals("datetime(name)", OracleSyntax.closestFunction("TIMESTAMP(3)"))
+        assertEquals("timestampWithTimeZone(name)", OracleSyntax.closestFunction("TIMESTAMP(3) WITH TIME ZONE"))
+        assertEquals("timestamp(name)", OracleSyntax.closestFunction("TIMESTAMP(6) WITH LOCAL TIME ZONE"))
+        assertEquals("bool(name)", OracleSyntax.closestFunction("BOOLEAN"))
+        assertEquals("vector(name, 3)", OracleSyntax.closestFunction("VECTOR(3, INT8, DENSE)"))
+        assertNull(OracleSyntax.closestFunction("ROWID"))
+        assertNull(OracleSyntax.closestFunction("INTERVAL DAY(2) TO SECOND(6)"))
     }
 
     private fun assertFunction(function: String, sqlType: String) {

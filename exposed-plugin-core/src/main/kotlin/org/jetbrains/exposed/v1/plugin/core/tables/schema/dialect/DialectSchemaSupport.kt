@@ -5,6 +5,7 @@ import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.OracleDialect
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
@@ -37,8 +38,12 @@ internal interface DialectSchemaSupport {
      */
     val schemasAreCatalogs: Boolean
 
-    /** Whether the schema [name], as reported by the database, holds unneeded system objects rather than user tables. */
-    fun isSystemSchema(name: String): Boolean
+    /**
+     * Whether the schema [name], as reported by the database, holds unneeded system objects rather than user tables.
+     * The [connection] is for a database that marks such schemas in its catalog rather than by a fixed set of names
+     * (like Oracle, where every schema is a user).
+     */
+    fun isSystemSchema(connection: Connection, name: String): Boolean
 
     /**
      * Returns the declared type of every column of a table, keyed by raw column name, in the normalized form that
@@ -143,6 +148,17 @@ internal interface DialectSchemaSupport {
      */
     fun indexFilters(connection: Connection, schema: String, tableName: String): Map<String, String>
 
+    /**
+     * Returns the key of every index of a table that is built on an expression rather than on columns alone, keyed by
+     * raw index name, for a database whose driver reports such a key part under a hidden column (like Oracle, for a
+     * function-based index and for a descending one). Each value lists the whole key in order: an expression as the
+     * database stores it, followed by `DESC` when it is descending, and a plain column by its raw name. Such an index
+     * is reported instead of generated, since no column of the table stands for its expression.
+     *
+     * Should return an empty map when the database has no such indices, or when they are not read yet.
+     */
+    fun indexExpressions(connection: Connection, schema: String, tableName: String): Map<String, List<String>>
+
     companion object {
         fun forDialect(
             dialect: DatabaseDialect,
@@ -154,6 +170,7 @@ internal interface DialectSchemaSupport {
             is MariaDBDialect -> MariaDbSchemaSupport
             is MysqlDialect -> MySqlSchemaSupport
             is SQLServerDialect -> SqlServerSchemaSupport
+            is OracleDialect -> OracleSchemaSupport
             else -> JdbcSchemaSupport
         }
     }
@@ -198,6 +215,9 @@ internal data class ColumnOverride(
 
     /** Something about the column that the generated definition cannot express. */
     val unsupportedNote: String? = null,
+
+    /** The comment of the column, for a database whose driver does not report it (like Oracle). */
+    val comment: String? = null,
 )
 
 /**
@@ -227,7 +247,7 @@ internal object JdbcSchemaSupport : DialectSchemaSupport {
 
     override val schemasAreCatalogs: Boolean = false
 
-    override fun isSystemSchema(name: String): Boolean = false
+    override fun isSystemSchema(connection: Connection, name: String): Boolean = false
 
     override fun declaredColumnTypes(
         connection: Connection,
@@ -269,6 +289,8 @@ internal object JdbcSchemaSupport : DialectSchemaSupport {
     override fun sequences(connection: Connection, schemas: List<String>): List<SequenceReference>? = null
 
     override fun indexFilters(connection: Connection, schema: String, tableName: String): Map<String, String> = emptyMap()
+
+    override fun indexExpressions(connection: Connection, schema: String, tableName: String): Map<String, List<String>> = emptyMap()
 
     override fun unsupportedTableNote(connection: Connection, schema: String, tableName: String): String? = null
 
