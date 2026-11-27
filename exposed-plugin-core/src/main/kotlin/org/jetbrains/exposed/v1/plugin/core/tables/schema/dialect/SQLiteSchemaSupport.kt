@@ -18,6 +18,8 @@ internal object SQLiteSchemaSupport : DialectSchemaSupport {
 
     override val supportsSchemas: Boolean = false
 
+    override val schemasAreCatalogs: Boolean = false
+
     override fun isSystemSchema(name: String): Boolean = false
 
     override fun declaredColumnTypes(connection: Connection, schema: String, tableName: String): Map<String, String> {
@@ -114,6 +116,9 @@ internal object SQLiteSchemaSupport : DialectSchemaSupport {
     // its values whether or not `AUTOINCREMENT` is declared, and it never holds NULL.
     // However, the driver reports this column as nullable and as auto-incremented only with the keyword.
     // Any other primary key column may hold NULL unless it is declared `NOT NULL`, which Exposed cannot declare.
+
+    override fun columnDefaults(connection: Connection, schema: String, tableName: String): Map<String, String?>? = null
+
     override fun columnOverrides(connection: Connection, schema: String, tableName: String): Map<String, ColumnOverride> {
         val keyColumns = tableColumns(connection, tableName).filter { it.keyPosition > 0 }
         if (keyColumns.isEmpty()) return emptyMap()

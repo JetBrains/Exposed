@@ -32,6 +32,12 @@ internal interface DialectSyntax {
         get() = false
 
     /**
+     * Whether the comment of a column is generated as `.comment("...")`.
+     */
+    val generatesColumnComments: Boolean
+        get() = false
+
+    /**
      * Whether the index [name] is one that the database keeps for its own use, such as the index that backs a `UNIQUE`
      * constraint, and that Exposed's migration utilities ignore on this database.
      */

@@ -23,6 +23,7 @@ internal sealed interface DefaultValue {
 
 private val STRING_LITERAL: Regex = Regex("""^'((?:[^']|'')*)'$""", RegexOption.DOT_MATCHES_ALL)
 private val INTEGER_LITERAL: Regex = Regex("""^-?\d+$""")
+private val UNSIGNED_INTEGER_LITERAL: Regex = Regex("""^\d+$""")
 private val DECIMAL_LITERAL: Regex = Regex("""^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$""")
 private val UUID_LITERAL: Regex = Regex("""^'([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})'$""")
 private val DATE_LITERAL: Regex = Regex("""^(?:DATE )?'(\d{4})-(\d{2})-(\d{2})'$""", RegexOption.IGNORE_CASE)
@@ -65,11 +66,15 @@ private fun ColumnDefinition.literalDefault(
     ColumnFunctions.BYTE, ColumnFunctions.SHORT, ColumnFunctions.INTEGER -> value.takeIf(INTEGER_LITERAL::matches)
         ?.let { CodeBlock.of("%L", it) }
     ColumnFunctions.LONG -> value.takeIf(INTEGER_LITERAL::matches)?.let { CodeBlock.of("%LL", it) }
+    ColumnFunctions.UBYTE, ColumnFunctions.USHORT, ColumnFunctions.UINTEGER -> value.takeIf(UNSIGNED_INTEGER_LITERAL::matches)
+        ?.let { CodeBlock.of("%Lu", it) }
+    ColumnFunctions.ULONG -> value.takeIf(UNSIGNED_INTEGER_LITERAL::matches)?.let { CodeBlock.of("%LuL", it) }
     ColumnFunctions.FLOAT -> value.takeIf(DECIMAL_LITERAL::matches)?.let { CodeBlock.of("%Lf", it) }
     ColumnFunctions.DOUBLE -> value.takeIf(DECIMAL_LITERAL::matches)?.let { CodeBlock.of("%L", it.asDoubleLiteral()) }
     ColumnFunctions.DECIMAL -> value.takeIf(DECIMAL_LITERAL::matches)?.let { CodeBlock.of("%T(%S)", BigDecimal::class, it) }
     ColumnFunctions.BOOL -> booleanLiteral(value)
-    ColumnFunctions.VARCHAR, ColumnFunctions.TEXT -> value.stringLiteral()?.let { CodeBlock.of("%S", it) }
+    ColumnFunctions.VARCHAR, ColumnFunctions.TEXT, ColumnFunctions.MEDIUM_TEXT, ColumnFunctions.LARGE_TEXT ->
+        value.stringLiteral()?.let { CodeBlock.of("%S", it) }
     ColumnFunctions.CHAR -> value.stringLiteral()?.let(::charLiteral)
     ColumnFunctions.UUID -> UUID_LITERAL.matchEntire(value)
         ?.let { CodeBlock.of("%T.parse(%S)", UUID_TYPE_NAME, it.groupValues[1]) }

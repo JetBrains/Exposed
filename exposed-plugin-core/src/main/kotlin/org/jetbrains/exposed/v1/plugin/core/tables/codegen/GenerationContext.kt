@@ -167,12 +167,15 @@ internal class GenerationContext(
     private fun ColumnInfo.exactIdTableClass(definition: ColumnDefinition): ClassName? {
         val hasOwnDefault = reportedDefault != null && sequenceName == null
         val keyHasMoreToSay = mapping != null || foreignKey != null || indices.isNotEmpty() ||
-            hasOwnDefault || sequenceParameters != null || generationExpression != null
+            hasOwnDefault || sequenceParameters != null || generationExpression != null ||
+            unsupportedNote != null || (syntax.generatesColumnComments && metadata.comment != null)
         if (keyHasMoreToSay) return null
         val isAutoIncrement = metadata.autoIncrement || sequenceName != null
         return when (definition.function) {
             ColumnFunctions.INTEGER if isAutoIncrement -> ClassName(DAO_ID_PACKAGE, "IntIdTable")
             ColumnFunctions.LONG if isAutoIncrement -> ClassName(DAO_ID_PACKAGE, "LongIdTable")
+            ColumnFunctions.UINTEGER if isAutoIncrement -> ClassName(DAO_ID_PACKAGE, "UIntIdTable")
+            ColumnFunctions.ULONG if isAutoIncrement -> ClassName(DAO_ID_PACKAGE, "ULongIdTable")
             ColumnFunctions.UUID -> ClassName(DAO_ID_PACKAGE, "UuidTable")
             ColumnFunctions.JAVA_UUID -> ClassName("$DAO_ID_PACKAGE.java", "UUIDTable")
             else -> null

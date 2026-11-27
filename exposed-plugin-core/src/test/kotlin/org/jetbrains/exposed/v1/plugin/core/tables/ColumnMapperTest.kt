@@ -13,6 +13,7 @@ import org.jetbrains.exposed.v1.plugin.core.tables.mapping.JAVA_UUID_TYPE_NAME
 import org.jetbrains.exposed.v1.plugin.core.tables.mapping.UUID_TYPE_NAME
 import org.jetbrains.exposed.v1.plugin.core.tables.mapping.toColumnDefinition
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.H2Syntax
+import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.MySqlSyntax
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.SQLiteSyntax
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -249,6 +250,19 @@ class ColumnMapperTest {
     }
 
     @Test
+    fun testUnsignedAndSizedTextTypes() {
+        assertFunction("ubyte", "TINYINT UNSIGNED")
+        assertFunction("ushort", "SMALLINT UNSIGNED")
+        assertFunction("uinteger", "INT UNSIGNED")
+        assertFunction("ulong", "BIGINT UNSIGNED")
+        assertFunction("mediumText", "MEDIUMTEXT")
+        assertFunction("largeText", "LONGTEXT")
+        assertFunction("bool", "BOOLEAN")
+        assertFunction("timestampWithTimeZone", "TIMESTAMP WITH TIME ZONE")
+        assertFunction("datetime", "DATETIME(6)")
+    }
+
+    @Test
     fun testUnsupportedTypesAreNotMapped() {
         assertNull(column(Types.TIME_WITH_TIMEZONE, "TIME(0) WITH TIME ZONE").toColumnDefinition())
         assertNull(column(Types.OTHER, "INTERVAL DAY").toColumnDefinition())
@@ -256,6 +270,17 @@ class ColumnMapperTest {
         assertNull(column(Types.OTHER, "GEOMETRY").toColumnDefinition())
         assertNull(column(Types.JAVA_OBJECT, "OBJECT").toColumnDefinition())
         assertNull(column(Types.OTHER, "").toColumnDefinition())
+    }
+
+    @Test
+    fun testTypesWithoutAnExactFunctionAreNotGuessedForMySQL() {
+        // the JDBC type would map each of these to a neighbouring function
+        assertNull(column(Types.INTEGER, "MEDIUMINT", size = 7).toColumnDefinition(MySqlSyntax))
+        assertNull(column(Types.SMALLINT, "YEAR", size = 4).toColumnDefinition(MySqlSyntax))
+        assertNull(column(Types.BIT, "BIT(1)", size = 1).toColumnDefinition(MySqlSyntax))
+        assertNull(column(Types.VARCHAR, "TINYTEXT", size = 255).toColumnDefinition(MySqlSyntax))
+        assertNull(column(Types.LONGVARBINARY, "LONGBLOB", size = Int.MAX_VALUE).toColumnDefinition(MySqlSyntax))
+        assertNull(column(Types.DECIMAL, "DECIMAL(10,2) UNSIGNED", size = 10, scale = 2).toColumnDefinition(MySqlSyntax))
     }
 
     @Test
@@ -285,6 +310,15 @@ class ColumnMapperTest {
         )
         assertEquals("decimal", declared.function)
         assertEquals(", 10, 2", declared.arguments.toString())
+    }
+
+    private fun assertFunction(function: String, sqlType: String) {
+        val definition = assertNotNull(
+            column(Types.OTHER, sqlType)
+                .toColumnDefinition(MySqlSyntax),
+            "Expected $sqlType to be mapped"
+        )
+        assertEquals(function, definition.function)
     }
 
     private fun assertArray(

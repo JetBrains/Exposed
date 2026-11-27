@@ -120,6 +120,20 @@ private val BYTE = ColumnDefinition(ColumnFunctions.BYTE, Byte::class.asTypeName
 private val SHORT = ColumnDefinition(ColumnFunctions.SHORT, Short::class.asTypeName(), columnTypeExpression = columnType("ShortColumnType"))
 private val INTEGER = ColumnDefinition(ColumnFunctions.INTEGER, INT_TYPE_NAME, columnTypeExpression = columnType("IntegerColumnType"))
 private val LONG = ColumnDefinition(ColumnFunctions.LONG, LONG_TYPE_NAME, columnTypeExpression = columnType("LongColumnType"))
+private val UBYTE = ColumnDefinition(ColumnFunctions.UBYTE, UByte::class.asTypeName(), columnTypeExpression = columnType("UByteColumnType"))
+private val USHORT = ColumnDefinition(ColumnFunctions.USHORT, UShort::class.asTypeName(), columnTypeExpression = columnType("UShortColumnType"))
+private val UINTEGER = ColumnDefinition(ColumnFunctions.UINTEGER, UInt::class.asTypeName(), columnTypeExpression = columnType("UIntegerColumnType"))
+private val ULONG = ColumnDefinition(ColumnFunctions.ULONG, ULong::class.asTypeName(), columnTypeExpression = columnType("ULongColumnType"))
+private val MEDIUM_TEXT = ColumnDefinition(
+    ColumnFunctions.MEDIUM_TEXT,
+    String::class.asTypeName(),
+    columnTypeExpression = columnType("MediumTextColumnType")
+)
+private val LARGE_TEXT = ColumnDefinition(
+    ColumnFunctions.LARGE_TEXT,
+    String::class.asTypeName(),
+    columnTypeExpression = columnType("LargeTextColumnType")
+)
 private val FLOAT = ColumnDefinition(ColumnFunctions.FLOAT, Float::class.asTypeName(), columnTypeExpression = columnType("FloatColumnType"))
 private val DOUBLE = ColumnDefinition(ColumnFunctions.DOUBLE, Double::class.asTypeName(), columnTypeExpression = columnType("DoubleColumnType"))
 private val BOOL = ColumnDefinition(ColumnFunctions.BOOL, Boolean::class.asTypeName(), columnTypeExpression = columnType("BooleanColumnType"))
@@ -221,16 +235,23 @@ private fun ColumnMetadata.toColumnDefinition(
     "SMALLINT" -> SHORT
     "INT", "INTEGER" -> INTEGER
     "BIGINT" -> LONG
+    "TINYINT UNSIGNED" -> UBYTE
+    "SMALLINT UNSIGNED" -> USHORT
+    "INT UNSIGNED", "INTEGER UNSIGNED" -> UINTEGER
+    "BIGINT UNSIGNED" -> ULONG
     "NUMERIC", "DECIMAL" ->
         (type.length ?: size?.takeIf { it < unboundedLength })
             ?.let { precision -> decimal(precision, type.scale ?: scale ?: 0) }
     "FLOAT", "REAL" -> FLOAT
     "DOUBLE PRECISION", "DOUBLE" -> DOUBLE
-    "BOOLEAN", "BIT" -> BOOL
+    "BOOLEAN" -> BOOL
+    "BIT" -> BOOL.takeIf { type.length == null }
     // a bare CHAR is Exposed's char() of a single Char; CHAR(n) is char(name, n) of String
     "CHAR" -> type.length?.let(::char) ?: SINGLE_CHAR
     "VARCHAR" -> type.length?.let(::varchar) ?: TEXT
     "CLOB", "TEXT" -> TEXT
+    "MEDIUMTEXT" -> MEDIUM_TEXT
+    "LONGTEXT" -> LARGE_TEXT
     "VARBINARY", "BINARY" -> type.length?.let(::binary) ?: BINARY
     "BLOB" -> BLOB
     "JSON" -> JSON

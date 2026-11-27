@@ -14,6 +14,8 @@ internal object PostgreSqlSchemaSupport : DialectSchemaSupport {
     override val createsIndexForForeignKeys: Boolean = false
 
     override val supportsSchemas: Boolean = true
+
+    override val schemasAreCatalogs: Boolean = false
     override fun isSystemSchema(name: String): Boolean = name == "information_schema" ||
         name == "pg_catalog" ||
         name.startsWith("pg_toast") ||
@@ -151,6 +153,8 @@ internal object PostgreSqlSchemaSupport : DialectSchemaSupport {
     }
 
     override fun foreignKeys(connection: Connection, schema: String, tableName: String): List<ReportedForeignKeyColumn>? = null
+
+    override fun columnDefaults(connection: Connection, schema: String, tableName: String): Map<String, String?>? = null
 
     override fun columnOverrides(
         connection: Connection,

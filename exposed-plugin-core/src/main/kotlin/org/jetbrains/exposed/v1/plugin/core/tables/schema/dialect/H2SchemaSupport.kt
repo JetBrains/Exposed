@@ -15,6 +15,8 @@ internal class H2SchemaSupport(private val identifierManager: IdentifierManagerA
 
     override val supportsSchemas: Boolean = true
 
+    override val schemasAreCatalogs: Boolean = false
+
     override fun isSystemSchema(name: String): Boolean = name.equals("INFORMATION_SCHEMA", ignoreCase = true)
 
     // Reads the declared types through `SHOW COLUMNS`, mirroring the prefetch that is done by `exposed-jdbc`.
@@ -104,6 +106,8 @@ internal class H2SchemaSupport(private val identifierManager: IdentifierManagerA
     override fun enumerationTypes(connection: Connection, schema: String): Map<String, List<String>> = emptyMap()
 
     override fun foreignKeys(connection: Connection, schema: String, tableName: String): List<ReportedForeignKeyColumn>? = null
+
+    override fun columnDefaults(connection: Connection, schema: String, tableName: String): Map<String, String?>? = null
 
     override fun columnOverrides(
         connection: Connection,

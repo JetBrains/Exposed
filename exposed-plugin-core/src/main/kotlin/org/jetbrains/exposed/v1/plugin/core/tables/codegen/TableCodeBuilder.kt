@@ -208,6 +208,9 @@ internal class TableCodeBuilder(
                     "Add withDefinition(\"GENERATED ALWAYS AS ($generationExpression)\") manually if the table is created from this definition"
             )
         }
+        metadata.comment?.takeIf { context.syntax.generatesColumnComments }?.let { comment ->
+            initializer.add(".%N(%S)", "comment", comment)
+        }
         if (isEntityId && referenceForm == null) {
             initializer.add(".%N()", "entityId")
         }
@@ -234,6 +237,7 @@ internal class TableCodeBuilder(
         }
         unresolvedForeignKey?.let { property.addKdoc("TODO: %L\n", it) }
         internalIndexNotes.forEach { property.addKdoc("TODO: %L\n", it) }
+        unsupportedNote?.let { property.addKdoc("TODO: %L\n", it) }
         return property.build()
     }
 

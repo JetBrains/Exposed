@@ -3,12 +3,15 @@ package org.jetbrains.exposed.v1.plugin.core.tables
 import org.jetbrains.exposed.v1.plugin.core.tables.mapping.DefaultValue
 import org.jetbrains.exposed.v1.plugin.core.tables.mapping.defaultValueFor
 import org.jetbrains.exposed.v1.plugin.core.tables.mapping.toColumnDefinition
+import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.DialectSyntax
 import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.H2Syntax
+import org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect.MySqlSyntax
 import org.junit.jupiter.api.Test
 import java.sql.Types
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class DefaultValuesTest {
@@ -104,6 +107,10 @@ class DefaultValuesTest {
     fun testEnumerationValues() {
         assertLiteral("Col.Baz", "ENUM('Bar', 'Baz')", "'Baz'")
         assertUnsupported("ENUM('Bar', 'Baz')", "'Qux'")
+
+        assertEquals(listOf("Bar", "Baz"), MySqlSyntax.enumerationValues("enum('Bar','Baz')"))
+        assertEquals(listOf("it's", "a b"), MySqlSyntax.enumerationValues("enum('it''s','a b')"))
+        assertNull(MySqlSyntax.enumerationValues("VARCHAR(10)"))
     }
 
     // TODO Try to make these types of defaults work
@@ -141,14 +148,23 @@ class DefaultValuesTest {
         assertUnsupported("BOOLEAN", "2")
     }
 
+    @Test
+    fun testUnsignedDefaults() {
+        assertLiteral("7u", "INT UNSIGNED", "7", syntax = MySqlSyntax)
+        assertLiteral("7uL", "BIGINT UNSIGNED", "7", syntax = MySqlSyntax)
+        val definition = assertNotNull(column(Types.INTEGER, "INT UNSIGNED").toColumnDefinition(MySqlSyntax))
+        assertIs<DefaultValue.Unsupported>(definition.defaultValueFor("-1", DateTimeColumnType.KOTLIN_DATETIME, MySqlSyntax))
+    }
+
     private fun assertLiteral(
         expectedGenerated: String,
         sqlType: String,
         metadataReported: String,
         uuidColumnType: UuidColumnType = UuidColumnType.KOTLIN,
         dateTimeColumnType: DateTimeColumnType = DateTimeColumnType.KOTLIN_DATETIME,
+        syntax: DialectSyntax = H2Syntax,
     ) {
-        val default = defaultFor(sqlType, metadataReported, uuidColumnType, dateTimeColumnType)
+        val default = defaultFor(sqlType, metadataReported, uuidColumnType, dateTimeColumnType, syntax)
         val literal = assertIs<DefaultValue.Literal>(default, "Expected a literal for $metadataReported on $sqlType, got $default")
         assertTrue(
             literal.code.toString().endsWith(expectedGenerated),
@@ -188,12 +204,13 @@ class DefaultValuesTest {
         metadataReported: String,
         uuidColumnType: UuidColumnType = UuidColumnType.KOTLIN,
         dateTimeColumnType: DateTimeColumnType = DateTimeColumnType.KOTLIN_DATETIME,
+        syntax: DialectSyntax = H2Syntax,
     ): DefaultValue {
         val column = column(Types.OTHER, sqlType, size = null, scale = null)
         val definition = assertNotNull(
             column.toColumnDefinition(H2Syntax, uuidColumnType, dateTimeColumnType),
             "Expected $sqlType to be mapped"
         )
-        return definition.defaultValueFor(metadataReported, dateTimeColumnType, H2Syntax)
+        return definition.defaultValueFor(metadataReported, dateTimeColumnType, syntax)
     }
 }

@@ -113,6 +113,12 @@ internal data class ColumnInfo(
 
     /** Metadata for any foreign key associated with this column alone. */
     val foreignKey: ForeignKeyInfo? = null,
+
+    /**
+     * Something about the column that the generated definition cannot express (like MySQL's
+     * `ON UPDATE CURRENT_TIMESTAMP`), to be left as a "TO-DO" on the generated property, or `null` when there is none.
+     */
+    val unsupportedNote: String? = null,
 ) {
     /**
      * Name of the column by Exposed's patterns.

@@ -3,6 +3,8 @@ package org.jetbrains.exposed.v1.plugin.core.tables.schema.dialect
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import java.sql.Connection
@@ -26,6 +28,12 @@ internal interface DialectSchemaSupport {
      * unnamed namespace and no schema can be configured for a specific search scope.
      */
     val supportsSchemas: Boolean
+
+    /**
+     * Whether a schema of this database is what JDBC calls a catalog (like a MySQL database). When `true`, the name of
+     * a schema is read from and passed to the catalog argument of `DatabaseMetaData`, and the schema argument is unused.
+     */
+    val schemasAreCatalogs: Boolean
 
     /** Whether the schema [name], as reported by the database, holds unneeded system objects rather than user tables. */
     fun isSystemSchema(name: String): Boolean
@@ -97,6 +105,16 @@ internal interface DialectSchemaSupport {
      */
     fun columnOverrides(connection: Connection, schema: String, tableName: String): Map<String, ColumnOverride>
 
+    /**
+     * Returns the default of every column of a table, keyed by raw column name, for a database whose driver reports
+     * defaults in a form that cannot be interpreted without knowing more about the column (like MySQL, which reports
+     * a string default without its quotes). A value is in the form that the driver of other databases reports: a
+     * string literal in single quotes, anything else as written. A column without a default has a `null` value.
+     *
+     * Should return `null` when the default that the driver reports for each column is to be used instead.
+     */
+    fun columnDefaults(connection: Connection, schema: String, tableName: String): Map<String, String?>?
+
     companion object {
         fun forDialect(
             dialect: DatabaseDialect,
@@ -105,6 +123,8 @@ internal interface DialectSchemaSupport {
             is H2Dialect -> H2SchemaSupport(identifierManager)
             is PostgreSQLDialect -> PostgreSqlSchemaSupport
             is SQLiteDialect -> SQLiteSchemaSupport
+            is MariaDBDialect -> JdbcSchemaSupport
+            is MysqlDialect -> MySqlSchemaSupport
             else -> JdbcSchemaSupport
         }
     }
@@ -146,6 +166,9 @@ internal data class ColumnOverride(
 
     /** Logged as a warning when [nullable] changes what the driver reported, to say why. */
     val nullableWarning: String? = null,
+
+    /** Something about the column that the generated definition cannot express. */
+    val unsupportedNote: String? = null,
 )
 
 /**
@@ -172,6 +195,8 @@ internal object JdbcSchemaSupport : DialectSchemaSupport {
     override val createsIndexForForeignKeys: Boolean = false
 
     override val supportsSchemas: Boolean = true
+
+    override val schemasAreCatalogs: Boolean = false
 
     override fun isSystemSchema(name: String): Boolean = false
 
@@ -209,6 +234,8 @@ internal object JdbcSchemaSupport : DialectSchemaSupport {
     override fun enumerationTypes(connection: Connection, schema: String): Map<String, List<String>> = emptyMap()
 
     override fun foreignKeys(connection: Connection, schema: String, tableName: String): List<ReportedForeignKeyColumn>? = null
+
+    override fun columnDefaults(connection: Connection, schema: String, tableName: String): Map<String, String?>? = null
 
     override fun columnOverrides(
         connection: Connection,
